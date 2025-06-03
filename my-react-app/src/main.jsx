@@ -7,8 +7,10 @@ import ADD from './components/ADD/ADD.JSX';
 import QUIZS from './components/quizs/QUIZS.jsx';
 import QUIZ from './components/Quiz/QUIZ.jsx';
 import ADDQ from './components/ADD/ADDQ.jsx';
+import Analysis from './components/analysis/analysis.JSX'
 
 const getHostUrl = "http://localhost:3000"
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -30,6 +32,12 @@ const router = createBrowserRouter([
     path: "/ADDQ",
     element: <ADDQ host={getHostUrl} />,
   },
+  {
+    path: "/analysis",
+    element: <Analysis/>,
+  },
+
+
 ]);
 
 createRoot(document.getElementById('root')).render(

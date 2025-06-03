@@ -1,14 +1,15 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate  , useLocation } from 'react-router-dom';
 import './QUIZS.css';
 
 const QUIZS = () => {
     const navigate = useNavigate();
-
+    const location = useLocation();
+    const id = location.state?.id || location.state?.user.id ; 
     const quizOptions = [10, 30, 50, 100, 200];
 
     const handleOptionClick = (numQuestions) => {
-        navigate(`/quiz/${numQuestions}`);
+        navigate(`/quiz/${numQuestions}` , {state:{id:id}} );
     };
 
     return (

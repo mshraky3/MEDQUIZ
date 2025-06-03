@@ -55,7 +55,6 @@ const ADDQ = () => {
             const response = await axios.post('http://localhost:3000/api/questions', newQuestion);
             setMessage(response.data.message || 'Question added successfully!');
             setError('');
-            // Reset form
             setQuestionText('');
             setOption1('');
             setOption2('');

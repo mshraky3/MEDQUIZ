@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState, useRef } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import './QUIZ.css';
 
 const QUIZ = () => {
     const { numQuestions } = useParams();
     const navigate = useNavigate();
-
+    const location = useLocation();
+    const id = location.state?.id;
     const [questions, setQuestions] = useState([]);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [selectedAnswer, setSelectedAnswer] = useState(null);
@@ -14,8 +15,9 @@ const QUIZ = () => {
     const [quizFinished, setQuizFinished] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const quizStartTimeRef = useRef(Date.now());
+    const [dataSent, setDataSent] = useState(false);
 
-    // Fetch questions from backend
     useEffect(() => {
         const fetchQuestions = async () => {
             try {
@@ -35,19 +37,17 @@ const QUIZ = () => {
                 setError("Failed to load questions.");
                 setLoading(false);
                 alert("Could not load quiz. Redirecting...");
-                navigate("/quizs"); // Go back to selection
+                navigate("/quizs");
             }
         };
 
         fetchQuestions();
     }, [numQuestions, navigate]);
 
-    // Handle answer selection
     const handleSelectOption = (option) => {
         setSelectedAnswer(option);
     };
 
-    // Submit answer and move to next question
     const handleSubmitAnswer = () => {
         const currentQuestion = questions[currentQuestionIndex];
         const isCorrect = selectedAnswer === currentQuestion.correct_answer;
@@ -71,15 +71,99 @@ const QUIZ = () => {
         }
     };
 
-    // Restart quiz
-    const handleRestartQuiz = () => {
-        setCurrentQuestionIndex(0);
-        setSelectedAnswer(null);
-        setAnswers([]);
-        setQuizFinished(false);
-    };
+    // Handle sending quiz data once when quiz finishes
+    useEffect(() => {
+        const sendQuizData = async () => {
+            if (!id || dataSent || !quizFinished) return;
+            setDataSent(true);
 
-    // Show loading state
+            const duration = Math.floor((Date.now() - quizStartTimeRef.current) / 1000);
+            const totalQuestions = answers.length;
+            const correctCount = answers.filter(a => a.isCorrect).length;
+            const accuracy = ((correctCount / totalQuestions) * 100); // as number
+
+            const topicsCovered = [...new Set(questions.map(q => q.question_type))];
+            console.log("Topics covered:", topicsCovered);
+            if (topicsCovered.includes(undefined)) {
+                console.warn("⚠️ One or more questions have no question_type!");
+            }
+
+            try {
+                console.log("Sending quiz session data:", {
+                    user_id: id,
+                    total_questions: parseInt(totalQuestions),
+                    correct_answers: parseInt(correctCount),
+                    quiz_accuracy: parseFloat(accuracy.toFixed(2)),
+                    duration: parseInt(duration),
+                    avg_time_per_question: parseFloat((duration / totalQuestions).toFixed(2)),
+                    topics_covered: topicsCovered
+                });
+
+                const sessionRes = await axios.post("http://localhost:3000/quiz-sessions", {
+                    user_id: id,
+                    total_questions: parseInt(totalQuestions),
+                    correct_answers: parseInt(correctCount),
+                    quiz_accuracy: parseFloat(accuracy.toFixed(2)),
+                    duration: parseInt(duration),
+                    avg_time_per_question: parseFloat((duration / totalQuestions).toFixed(2)),
+                    topics_covered: topicsCovered
+                });
+
+                const quiz_session_id = sessionRes.data.id;
+
+                // 2. Topic analysis
+                const topicMap = {};
+                answers.forEach((ans, i) => {
+                    const topic = questions[i]?.question_type;
+
+                    if (!topic) {
+                        console.warn("⚠️ Question at index", i, "has no topic:", questions[i]);
+                        return; // skip invalid
+                    }
+
+                    if (!topicMap[topic]) {
+                        topicMap[topic] = { total: 0, correct: 0 };
+                    }
+
+                    topicMap[topic].total += 1;
+                    if (ans.isCorrect) topicMap[topic].correct += 1;
+                });
+
+                if (Object.keys(topicMap).length === 0) {
+                    console.warn("⚠️ No valid topics to send");
+                } else {
+                    console.log("Sending topic analysis:", topicMap);
+
+                    for (const [topic, data] of Object.entries(topicMap)) {
+                        await axios.post("http://localhost:3000/topic-analysis", {
+                            user_id: id,
+                            question_type: topic,
+                            total_answered: data.total,
+                            total_correct: data.correct,
+                            accuracy: parseFloat(((data.correct / data.total) * 100).toFixed(2)),
+                            avg_time: parseFloat((duration / totalQuestions).toFixed(2))
+                        });
+                    }
+                }
+
+                // 3. Update streak and user analysis
+                await axios.post("http://localhost:3000/user-streaks", { user_id: id });
+
+                try {
+                    await axios.post("http://localhost:3000/user-analysis", { user_id: id });
+                } catch (err) {
+                    console.error("Failed to update user analysis:", err.response?.data || err.message);
+                }
+
+            } catch (err) {
+                console.error("Failed to submit quiz analysis:", err);
+                alert("There was an issue saving your quiz results.");
+            }
+        };
+
+        sendQuizData();
+    }, [quizFinished, id, answers, dataSent]);
+
     if (loading) {
         return (
             <div className="quiz-container">
@@ -88,38 +172,36 @@ const QUIZ = () => {
         );
     }
 
-    // Show error
     if (error) {
         return (
             <div className="quiz-container">
                 <h2>Error</h2>
                 <p>{error}</p>
-                <button onClick={() => navigate("/quizs")}>Go Back</button>
+                <button onClick={() => navigate("/quizs", { state: { id: id } })}>Go Back</button>
             </div>
         );
     }
 
-    // If no questions found
     if (questions.length === 0) {
         return (
             <div className="quiz-container">
                 <h2>No Questions Found</h2>
                 <p>There are no questions available in the database.</p>
-                <button onClick={() => navigate("/quizs")}>Go Back</button>
+                <button onClick={() => navigate("/quizs", { state: { id: id } })}>Go Back</button>
             </div>
         );
     }
 
-    // If quiz finished
     if (quizFinished) {
+        const totalQuestions = answers.length;
         const correctCount = answers.filter(a => a.isCorrect).length;
 
         return (
             <div className="quiz-result">
                 <h2>Quiz Completed!</h2>
-                <p>You got <strong>{correctCount}</strong> out of <strong>{answers.length}</strong> correct.</p>
-                <button onClick={handleRestartQuiz} className="restart-button">Try Again</button>
-                <button onClick={() => navigate("/")} className="home-button">Go Home</button>
+                <p>You got <strong>{correctCount}</strong> out of <strong>{totalQuestions}</strong> correct.</p>
+                <button onClick={() => navigate("/quizs" , {state:{id:id}})} className="restart-button">Take another quiz</button>
+                <button onClick={() => navigate("/analysis", { state: { id: id } })} className="home-button">View Analysis</button>
             </div>
         );
     }

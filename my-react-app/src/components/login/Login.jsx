@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import './Login.css'; 
-import { Router , useNavigate } from 'react-router-dom';
+import './Login.css';
+import { Router, useNavigate } from 'react-router-dom';
 
 const Login = () => {
     const [form, setForm] = useState({ username: '', password: '' });
@@ -22,12 +22,13 @@ const Login = () => {
         }
         setError('');
         axios.post('http://localhost:3000/login', {
-                username: form.username,
-                password: form.password,
-            })
+            username: form.username,
+            password: form.password,
+        })
             .then((response) => {
                 setSuccessMessage(response.data.message);
-                navigate('/quizs' , {state:response.data} );
+                navigate('/quizs', { state: response.data });
+                console.log('Login successful:', response.data);
                 setError('');
             })
             .catch((error) => {
@@ -36,8 +37,14 @@ const Login = () => {
             });
     };
 
-    return (
+    return (<>
+        <center>
+            <h1>
+                Welcome to the Quiz App
+            </h1>
+        </center>
         <div className="login-container">
+
             <h2 className="login-title">Login</h2>
             {error && <div className="login-error">{error}</div>}
             {successMessage && <div className="login-success">{successMessage}</div>}
@@ -72,8 +79,15 @@ const Login = () => {
                     Login
                 </button>
             </form>
+
         </div>
-    );
+        <center>
+                <button type="submit" className="button">
+            contact us
+        </button>
+        </center>
+
+    </>);
 };
 
 export default Login;
