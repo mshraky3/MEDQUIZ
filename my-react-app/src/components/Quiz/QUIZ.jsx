@@ -8,6 +8,7 @@ const QUIZ = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const id = location.state?.id;
+    
     const [questions, setQuestions] = useState([]);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [selectedAnswer, setSelectedAnswer] = useState(null);
@@ -18,6 +19,7 @@ const QUIZ = () => {
     const quizStartTimeRef = useRef(Date.now());
     const [dataSent, setDataSent] = useState(false);
 
+    // Fetch quiz questions
     useEffect(() => {
         const fetchQuestions = async () => {
             try {
@@ -44,10 +46,12 @@ const QUIZ = () => {
         fetchQuestions();
     }, [numQuestions, navigate]);
 
+    // Handle option selection
     const handleSelectOption = (option) => {
         setSelectedAnswer(option);
     };
 
+    // Submit current answer
     const handleSubmitAnswer = () => {
         const currentQuestion = questions[currentQuestionIndex];
         const isCorrect = selectedAnswer === currentQuestion.correct_answer;
@@ -71,7 +75,7 @@ const QUIZ = () => {
         }
     };
 
-    // Handle sending quiz data once when quiz finishes
+    // Send quiz data when finished
     useEffect(() => {
         const sendQuizData = async () => {
             if (!id || dataSent || !quizFinished) return;
@@ -80,30 +84,17 @@ const QUIZ = () => {
             const duration = Math.floor((Date.now() - quizStartTimeRef.current) / 1000);
             const totalQuestions = answers.length;
             const correctCount = answers.filter(a => a.isCorrect).length;
-            const accuracy = ((correctCount / totalQuestions) * 100); // as number
+            const accuracy = ((correctCount / totalQuestions) * 100).toFixed(2);
 
             const topicsCovered = [...new Set(questions.map(q => q.question_type))];
-            console.log("Topics covered:", topicsCovered);
-            if (topicsCovered.includes(undefined)) {
-                console.warn("⚠️ One or more questions have no question_type!");
-            }
 
             try {
-                console.log("Sending quiz session data:", {
-                    user_id: id,
-                    total_questions: parseInt(totalQuestions),
-                    correct_answers: parseInt(correctCount),
-                    quiz_accuracy: parseFloat(accuracy.toFixed(2)),
-                    duration: parseInt(duration),
-                    avg_time_per_question: parseFloat((duration / totalQuestions).toFixed(2)),
-                    topics_covered: topicsCovered
-                });
-
+                // 1. Insert quiz session
                 const sessionRes = await axios.post("http://localhost:3000/quiz-sessions", {
                     user_id: id,
                     total_questions: parseInt(totalQuestions),
                     correct_answers: parseInt(correctCount),
-                    quiz_accuracy: parseFloat(accuracy.toFixed(2)),
+                    quiz_accuracy: parseFloat(accuracy),
                     duration: parseInt(duration),
                     avg_time_per_question: parseFloat((duration / totalQuestions).toFixed(2)),
                     topics_covered: topicsCovered
@@ -115,11 +106,7 @@ const QUIZ = () => {
                 const topicMap = {};
                 answers.forEach((ans, i) => {
                     const topic = questions[i]?.question_type;
-
-                    if (!topic) {
-                        console.warn("⚠️ Question at index", i, "has no topic:", questions[i]);
-                        return; // skip invalid
-                    }
+                    if (!topic) return;
 
                     if (!topicMap[topic]) {
                         topicMap[topic] = { total: 0, correct: 0 };
@@ -129,30 +116,49 @@ const QUIZ = () => {
                     if (ans.isCorrect) topicMap[topic].correct += 1;
                 });
 
-                if (Object.keys(topicMap).length === 0) {
-                    console.warn("⚠️ No valid topics to send");
-                } else {
-                    console.log("Sending topic analysis:", topicMap);
+                for (const [topic, data] of Object.entries(topicMap)) {
+                    await axios.post("http://localhost:3000/topic-analysis", {
+                        user_id: id,
+                        question_type: topic,
+                        total_answered: data.total,
+                        total_correct: data.correct,
+                        accuracy: parseFloat(((data.correct / data.total) * 100).toFixed(2)),
+                        avg_time: parseFloat((duration / totalQuestions).toFixed(2))
+                    });
+                }
 
-                    for (const [topic, data] of Object.entries(topicMap)) {
-                        await axios.post("http://localhost:3000/topic-analysis", {
+                // 3. Send individual question attempts
+                for (let i = 0; i < answers.length; i++) {
+                    const ans = answers[i];
+                    const q = questions[i];
+
+                    if (!q.id || !ans.selected) {
+                        console.warn("Skipping incomplete attempt:", { index: i, question: q, answer: ans });
+                        continue;
+                    }
+
+                    try {
+                        await axios.post("http://localhost:3000/question-attempts", {
                             user_id: id,
-                            question_type: topic,
-                            total_answered: data.total,
-                            total_correct: data.correct,
-                            accuracy: parseFloat(((data.correct / data.total) * 100).toFixed(2)),
-                            avg_time: parseFloat((duration / totalQuestions).toFixed(2))
+                            question_id: q.id,
+                            selected_option: ans.selected,
+                            is_correct: ans.isCorrect,
+                            time_taken: parseFloat((duration / totalQuestions).toFixed(2)),
+                            quiz_session_id: quiz_session_id
                         });
+                    } catch (err) {
+                        console.error("Failed to record attempt:", err.response?.data || err.message);
                     }
                 }
 
-                // 3. Update streak and user analysis
+                // 4. Update streak
                 await axios.post("http://localhost:3000/user-streaks", { user_id: id });
 
+                // 5. Trigger user analysis update
                 try {
                     await axios.post("http://localhost:3000/user-analysis", { user_id: id });
                 } catch (err) {
-                    console.error("Failed to update user analysis:", err.response?.data || err.message);
+                    console.error("Failed to update user analysis:", err.message);
                 }
 
             } catch (err) {
@@ -162,7 +168,7 @@ const QUIZ = () => {
         };
 
         sendQuizData();
-    }, [quizFinished, id, answers, dataSent]);
+    }, [quizFinished, id, answers, dataSent, questions]);
 
     if (loading) {
         return (
@@ -200,7 +206,7 @@ const QUIZ = () => {
             <div className="quiz-result">
                 <h2>Quiz Completed!</h2>
                 <p>You got <strong>{correctCount}</strong> out of <strong>{totalQuestions}</strong> correct.</p>
-                <button onClick={() => navigate("/quizs" , {state:{id:id}})} className="restart-button">Take another quiz</button>
+                <button onClick={() => navigate("/quizs", { state: { id: id } })} className="restart-button">Take another quiz</button>
                 <button onClick={() => navigate("/analysis", { state: { id: id } })} className="home-button">View Analysis</button>
             </div>
         );

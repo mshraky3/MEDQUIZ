@@ -27,6 +27,12 @@ const QUIZS = () => {
                     </button>
                 ))}
             </div>
+            <button
+                className="analysis-btn"
+                onClick={() => navigate('/analysis', { state: { id: id } })}
+            >
+                Go to Analysis
+            </button>
         </div>
     );
 };
