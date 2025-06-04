@@ -136,6 +136,7 @@ app.get('/user-analysis/:userId', async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 });
+
 app.get('/topic-analysis/user/:userId', async (req, res) => {
     const { userId } = req.params;
     try {
@@ -150,7 +151,10 @@ app.get('/topic-analysis/user/:userId', async (req, res) => {
 app.get('/question-attempts/user/:userId', async (req, res) => {
     const { userId } = req.params;
     try {
-        const result = await db.query("SELECT * FROM user_question_attempts WHERE user_id = $1", [userId]);
+        const result = await db.query(
+            "SELECT * FROM user_question_attempts WHERE user_id = $1 ORDER BY attempted_at DESC", 
+            [userId]
+        );
         res.json(result.rows);
     } catch (err) {
         console.error(err);
@@ -158,20 +162,16 @@ app.get('/question-attempts/user/:userId', async (req, res) => {
     }
 });
 
-app.get('/user-streaks/:userId', async (req, res) => {
-    const { userId } = req.params;
+
+app.get('/api/all-questions', async (req, res) => {
     try {
-        const result = await db.query("SELECT * FROM user_streaks WHERE user_id = $1", [userId]);
-        if (result.rows.length === 0) {
-            return res.status(404).json({ message: 'No streak data found' });
-        }
-        res.json(result.rows[0]);
+        const result = await db.query("SELECT * FROM questions");
+        res.json({ questions: result.rows });
     } catch (err) {
-        console.error(err);
+        console.error("Error fetching all questions:", err);
         res.status(500).json({ message: 'Server error' });
     }
 });
-
 
 app.post('/user-streaks', async (req, res) => {
     const { user_id } = req.body;
@@ -181,31 +181,139 @@ app.post('/user-streaks', async (req, res) => {
     }
 
     try {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        // 1. Verify the user actually completed a quiz today
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        
+        const todayEnd = new Date();
+        todayEnd.setHours(23, 59, 59, 999);
 
-        const result = await db.query(
-            `INSERT INTO user_streaks (user_id, current_streak, longest_streak, last_active_date)
-             VALUES ($1, 1, 1, $2)
-             ON CONFLICT (user_id)
-             DO UPDATE SET
-                 current_streak = CASE
-                     WHEN user_streaks.last_active_date < CURRENT_DATE THEN user_streaks.current_streak + 1
-                     ELSE user_streaks.current_streak
-                 END,
-                 longest_streak = GREATEST(user_streaks.longest_streak, user_streaks.current_streak + 1),
-                 last_active_date = NOW(),
-                 updated_at = NOW()
-             RETURNING *`,
-            [user_id, today]
+        const hasQuizToday = await db.query(
+            `SELECT 1 FROM user_quiz_sessions 
+             WHERE user_id = $1 
+             AND end_time BETWEEN $2 AND $3 
+             LIMIT 1`,
+            [user_id, todayStart, todayEnd]
         );
 
-        res.status(201).json(result.rows[0]);
+        if (!hasQuizToday.rows.length) {
+            return res.status(400).json({ message: "No quiz completed today" });
+        }
+
+        // 2. Get current streak data
+        const currentStreakData = await db.query(
+            `SELECT * FROM user_streaks WHERE user_id = $1`,
+            [user_id]
+        );
+
+        // 3. Calculate streak changes
+        let currentStreak = 1;
+        let longestStreak = 1;
+        let lastActiveDate = new Date();
+
+        if (currentStreakData.rows.length > 0) {
+            const existing = currentStreakData.rows[0];
+            const lastDate = new Date(existing.last_active_date);
+            lastDate.setHours(0, 0, 0, 0);
+            
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            yesterday.setHours(0, 0, 0, 0);
+
+            // Check if streak continues
+            if (lastDate.getTime() === yesterday.getTime()) {
+                currentStreak = existing.current_streak + 1;
+            } else if (lastDate.getTime() < yesterday.getTime()) {
+                currentStreak = 1; // Streak broken
+            } else {
+                currentStreak = existing.current_streak; // Same day
+            }
+
+            longestStreak = Math.max(existing.longest_streak, currentStreak);
+        }
+
+        // 4. Update streak record
+        const result = await db.query(
+            `INSERT INTO user_streaks (user_id, current_streak, longest_streak, last_active_date)
+             VALUES ($1, $2, $3, $4)
+             ON CONFLICT (user_id)
+             DO UPDATE SET
+                 current_streak = EXCLUDED.current_streak,
+                 longest_streak = EXCLUDED.longest_streak,
+                 last_active_date = EXCLUDED.last_active_date,
+                 updated_at = NOW()
+             RETURNING *`,
+            [user_id, currentStreak, longestStreak, lastActiveDate]
+        );
+
+        res.status(200).json(result.rows[0]);
     } catch (err) {
         console.error("Error in /user-streaks:", err.message, err.stack);
         res.status(500).json({ message: 'Failed to update streak' });
     }
 });
+
+app.get('/user-streaks/:user_id', async (req, res) => {
+    try {
+        const { user_id } = req.params;
+        
+        // Get all completed quiz dates from user_quiz_sessions
+        const quizDates = await db.query(
+            `SELECT DISTINCT DATE(end_time) as quiz_date 
+             FROM user_quiz_sessions 
+             WHERE user_id = $1 AND end_time IS NOT NULL
+             ORDER BY quiz_date ASC`,
+            [user_id]
+        );
+        
+        // Calculate streaks from actual quiz history
+        let currentStreak = 0;
+        let longestStreak = 0;
+        let prevDate = null;
+        let runningStreak = 0;
+        
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const dates = quizDates.rows.map(row => new Date(row.quiz_date));
+        
+        dates.forEach(date => {
+            date.setHours(0, 0, 0, 0);
+            
+            if (!prevDate) {
+                runningStreak = 1;
+            } else {
+                const diffDays = (date - prevDate) / (1000 * 60 * 60 * 24);
+                if (diffDays === 1) {
+                    runningStreak++;
+                } else if (diffDays > 1) {
+                    runningStreak = 1; // Reset streak
+                }
+                // diffDays < 1 means same day - don't change runningStreak
+            }
+            
+            longestStreak = Math.max(longestStreak, runningStreak);
+            prevDate = date;
+            
+            // Check if this date contributes to current streak
+            if (date.getTime() === today.getTime() || 
+                (runningStreak === 1 && date.getTime() === today.getTime() - 86400000)) {
+                currentStreak = runningStreak;
+            }
+        });
+        
+        res.json({
+            current_streak: currentStreak,
+            longest_streak: longestStreak,
+            last_active_date: dates.length ? dates[dates.length - 1] : null
+        });
+        
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 
 app.post('/topic-analysis', async (req, res) => {
     const { user_id, question_type, total_answered, total_correct, accuracy, avg_time } = req.body;
