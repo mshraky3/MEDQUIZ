@@ -1,9 +1,8 @@
-// Analysis.jsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import './analysis.css';
-
+import Globals from '../../global';
 // Component imports
 import OverallStats from './OverallStats';
 import StreakInfo from './StreakInfo';
@@ -39,13 +38,13 @@ const Analysis = () => {
                     streakRes,
                     topicRes,
                     questionRes,
-                    questionsRes // 🔥 New request for full question data
+                    questionsRes 
                 ] = await Promise.all([
-                    axios.get(`http://localhost:3000/user-analysis/${id}`),
-                    axios.get(`http://localhost:3000/user-streaks/${id}`),
-                    axios.get(`http://localhost:3000/topic-analysis/user/${id}`),
-                    axios.get(`http://localhost:3000/question-attempts/user/${id}`),
-                    axios.get(`http://localhost:3000/api/all-questions?nocache=${Date.now()}`)
+                    axios.get(`${Globals.URL}/user-analysis/${id}`),
+                    axios.get(`${Globals.URL}/user-streaks/${id}`),
+                    axios.get(`${Globals.URL}/topic-analysis/user/${id}`),
+                    axios.get(`${Globals.URL}/question-attempts/user/${id}`),
+                    axios.get(`${Globals.URL}/api/all-questions?nocache=${Date.now()}`)
                 ]);
                 setUserAnalysis(userRes.data);
                 setStreakData(streakRes.data);

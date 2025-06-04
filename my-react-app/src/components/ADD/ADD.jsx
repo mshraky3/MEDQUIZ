@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
-import "./ADD.css"; // Import external CSS
+import "./ADD.css";
 
 const ADD = (props) => {
     const [email, setEmail] = useState("");

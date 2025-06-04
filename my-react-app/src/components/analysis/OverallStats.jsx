@@ -11,6 +11,7 @@ const OverallStats = ({ userAnalysis }) => {
                         {userAnalysis.total_questions_answered > 0
                             ? ((userAnalysis.total_correct_answers / userAnalysis.total_questions_answered) * 100).toFixed(2)
                             : "000"
+                            
                         }%
                     </li>
                     <li><strong>Total Questions Answered:</strong> {userAnalysis.total_questions_answered ?? 0}</li>

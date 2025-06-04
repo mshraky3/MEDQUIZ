@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import './ADDQ.css';
+import Globals from '../../global';
 
 const ADDQ = () => {
     const [questionText, setQuestionText] = useState('');
@@ -52,7 +53,7 @@ const ADDQ = () => {
         };
 
         try {
-            const response = await axios.post('http://localhost:3000/api/questions', newQuestion);
+            const response = await axios.post(`${Globals.URL}/api/questions`, newQuestion);
             setMessage(response.data.message || 'Question added successfully!');
             setError('');
             setQuestionText('');

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import './Login.css';
 import { Router, useNavigate } from 'react-router-dom';
-
+import Globals from '../../global';
 const Login = () => {
     const [form, setForm] = useState({ username: '', password: '' });
     const [error, setError] = useState('');
@@ -21,7 +21,7 @@ const Login = () => {
             return;
         }
         setError('');
-        axios.post('http://localhost:3000/login', {
+        axios.post(`${Globals.URL}/login`, {
             username: form.username,
             password: form.password,
         })
