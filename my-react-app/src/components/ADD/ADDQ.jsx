@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import './ADDQ.css';
+import './addq.css';
 import Globals from '../../global';
 
 const ADDQ = () => {

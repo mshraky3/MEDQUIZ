@@ -2,7 +2,7 @@ import { StrictMode } from 'react'
 import './index.css'
 import App from './App.jsx'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import { createRoot } from 'react-dom/client'; // Correct import path
+import { createRoot } from 'react-dom/client'; 
 import ADD from './components/ADD/ADD.jsx';
 import QUIZS from './components/quizs/QUIZS.jsx';
 import QUIZ from './components/Quiz/QUIZ.jsx';
