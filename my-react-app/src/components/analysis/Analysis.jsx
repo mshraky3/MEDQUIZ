@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import './analysis.css';
 import Globals from '../../global';
-// Component imports
 import OverallStats from './OverallStats';
 import StreakInfo from './StreakInfo';
 import TopicAnalysisTable from './TopicAnalysisTable';

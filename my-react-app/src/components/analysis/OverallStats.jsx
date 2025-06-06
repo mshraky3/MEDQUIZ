@@ -1,4 +1,3 @@
-// OverallStats.jsx
 const OverallStats = ({ userAnalysis }) => {
     return (
         <section className="analysis-section">

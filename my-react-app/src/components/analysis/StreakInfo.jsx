@@ -1,6 +1,5 @@
-// StreakInfo.jsx
 import React from 'react';
-import './StreakInfo.css'; // Create this new CSS file
+import './StreakInfo.css'; 
 
 const StreakInfo = ({ streakData }) => {
     return (

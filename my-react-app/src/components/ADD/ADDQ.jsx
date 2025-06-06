@@ -31,7 +31,6 @@ const ADDQ = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Basic validation
         if (!questionText || !option1 || !option2 || !option3 || !option4 || !correctAnswer) {
             setError("Please fill in all fields and select a correct answer.");
             return;

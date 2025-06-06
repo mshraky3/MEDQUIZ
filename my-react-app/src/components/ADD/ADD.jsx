@@ -7,8 +7,8 @@ const ADD = (props) => {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [message, setMessage] = useState("");
-    const [users, setUsers] = useState([]); // Store user list
-    const [showUsers, setShowUsers] = useState(false); // Toggle visibility
+    const [users, setUsers] = useState([]);
+    const [showUsers, setShowUsers] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -37,7 +37,6 @@ const ADD = (props) => {
         }
     };
 
-    // Fetch all users
     const handleShowUsers = async () => {
         try {
             const response = await axios.get(`${props.host}/get_all_users`);
