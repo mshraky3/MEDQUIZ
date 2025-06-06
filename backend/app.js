@@ -225,7 +225,6 @@ app.get('/user-streaks/:user_id', async (req, res) => {
     try {
         const { user_id } = req.params;
 
-        // Get all completed quiz dates from user_quiz_sessions
         const quizDates = await db.query(
             `SELECT DISTINCT DATE(COALESCE(end_time, start_time)) AS quiz_date
         FROM user_quiz_sessions 
@@ -233,7 +232,6 @@ app.get('/user-streaks/:user_id', async (req, res) => {
         ORDER BY quiz_date ASC`,
             [user_id]
         );
-        // Initialize values
         let currentStreak = 0;
         let longestStreak = 0;
         let lastActiveDate = null;
