@@ -7,7 +7,9 @@ import ADD from './components/ADD/ADD.jsx';
 import QUIZS from './components/quizs/QUIZS.jsx';
 import QUIZ from './components/Quiz/QUIZ.jsx';
 import ADDQ from './components/ADD/ADDQ.jsx';
-import Analysis from './components/analysis/analysis.jsx'
+
+import Analysis from './components/analysis/Analysis.jsx'
+
 import Globals from "./global.js"
 const getHostUrl = Globals.URL;
 
