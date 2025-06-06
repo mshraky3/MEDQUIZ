@@ -3,13 +3,13 @@ import './index.css'
 import App from './App.jsx'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { createRoot } from 'react-dom/client'; // Correct import path
-import ADD from './components/ADD/ADD.JSX';
+import ADD from './components/ADD/ADD.jsx';
 import QUIZS from './components/quizs/QUIZS.jsx';
 import QUIZ from './components/Quiz/QUIZ.jsx';
 import ADDQ from './components/ADD/ADDQ.jsx';
-import Analysis from './components/analysis/analysis.JSX'
+import Analysis from './components/analysis/analysis.jsx'
 import Globals from "./global.js"
-const getHostUrl = "http://localhost:3000"
+const getHostUrl = Globals.URL;
 
 const router = createBrowserRouter([
   {
@@ -22,11 +22,11 @@ const router = createBrowserRouter([
   },
   {
     path: "/quizs",
-    element: <QUIZS/>, 
+    element: <QUIZS />,
   },
   {
     path: "/quiz/:numQuestions",
-    element: <QUIZ/>,
+    element: <QUIZ />,
   },
   {
     path: "/ADDQ",
@@ -34,7 +34,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/analysis",
-    element: <Analysis/>,
+    element: <Analysis />,
   },
 
 
