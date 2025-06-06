@@ -50,9 +50,9 @@ const ADDQ = () => {
             question_type: questionType,
             correct_answer: correctAnswer
         };
-
         try {
             const response = await axios.post(`${Globals.URL}/api/questions`, newQuestion);
+            console.log(Globals.URL)
             setMessage(response.data.message || 'Question added successfully!');
             setError('');
             setQuestionText('');
@@ -126,7 +126,6 @@ const ADDQ = () => {
                     />
                 </label>
 
-                {/* Dropdown to choose correct answer */}
                 <label>
                     Select Correct Answer:
                     <select
