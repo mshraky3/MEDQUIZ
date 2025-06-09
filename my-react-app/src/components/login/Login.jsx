@@ -50,7 +50,7 @@ const Login = () => {
     <div className="login-wrapper">
       <div className="login-header">
         
-        <div className="login-icon" />
+        <div className="login-icon"/> 
         <h2>Future Doctors Service!</h2>
       </div>
 
