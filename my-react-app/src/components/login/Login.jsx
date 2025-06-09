@@ -3,103 +3,91 @@ import axios from 'axios';
 import './Login.css';
 import { useNavigate } from 'react-router-dom';
 import Globals from '../../global';
+import { Link } from 'react-router-dom';
 
 const Login = () => {
-    const [form, setForm] = useState({ username: '', password: '' });
-    const [error, setError] = useState('');
-    const [successMessage, setSuccessMessage] = useState('');
-    const navigate = useNavigate();
+  const [form, setForm] = useState({ username: '', password: '' });
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
-    const handleChange = (e) => {
-        setForm({ ...form, [e.target.name]: e.target.value });
-    };
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        if (!form.username || !form.password) {
-            setError('Please enter both username and password.');
-            setSuccessMessage('');
-            return;
-        }
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!form.username || !form.password) {
+      setError('Please enter both username and password.');
+      return;
+    }
 
-        setError('');
-        setSuccessMessage('');
+    setError('');
 
-        if (form.username === 'admin' && form.password === 'admin1810') {
-            navigate('/ADDQ');
-            return;
-        }
+    if (form.username === 'admin' && form.password === 'admin1810') {
+      navigate('/ADDQ');
+      return;
+    }
 
-        if (form.username === 'admin' && form.password === 'admin18102019') {
-            navigate('/ADD_ACCOUNT');
-            return;
-        }
+    if (form.username === 'admin' && form.password === 'admin18102019') {
+      navigate('/ADD_ACCOUNT');
+      return;
+    }
 
-        // Normal login flow
-        axios.post(`${Globals.URL}/login`, {
-            username: form.username,
-            password: form.password,
-        })
-        .then((response) => {
-            setSuccessMessage(response.data.message);
-            navigate('/quizs', { state: response.data });
-            console.log('Login successful:', response.data);
-            setError('');
-        })
-        .catch((error) => {
-            setError('Error: ' + (error.response?.data?.message || error.message));
-            setSuccessMessage('');
-        });
-    };
+    axios
+      .post(`${Globals.URL}/login`, {
+        username: form.username,
+        password: form.password,
+      })
+      .then((response) => {
+        navigate('/quizs', { state: response.data });
+      })
+      .catch((error) => {
+        setError('Your username is wrong! Try again');
+      });
+  };
 
-    return (
-        <>
-            <center>
-                <h1>Welcome to the Quiz App</h1>
-            </center>
-            <div className="login-container">
-                <h2 className="login-title">Login</h2>
-                {error && <div className="login-error">{error}</div>}
-                {successMessage && <div className="login-success">{successMessage}</div>}
-                <form onSubmit={handleSubmit}>
-                    <div className="login-form-group">
-                        <label className="login-label">
-                            Username:
-                            <input
-                                type="text"
-                                name="username"
-                                value={form.username}
-                                onChange={handleChange}
-                                className="login-input"
-                                autoComplete="username"
-                            />
-                        </label>
-                    </div>
-                    <div className="login-form-group">
-                        <label className="login-label">
-                            Password:
-                            <input
-                                type="password"
-                                name="password"
-                                value={form.password}
-                                onChange={handleChange}
-                                className="login-input"
-                                autoComplete="current-password"
-                            />
-                        </label>
-                    </div>
-                    <button type="submit" className="login-button">
-                        Login
-                    </button>
-                </form>
-            </div>
-            <center>
-                <button type="button" className="button" onClick={() => navigate('/contact')}>
-                    Contact Us
-                </button>
-            </center>
-        </>
-    );
+  return (
+    <div className="login-wrapper">
+      <div className="login-header">
+        
+        <div className="login-icon" />
+        <h2>Future Doctors Service!</h2>
+      </div>
+
+      <div className="login-box">
+        <h2 className="login-title">Login</h2>
+        <p className="login-subtitle">Sign in to continue.</p>
+        <p className="login-small">
+          You don't have account? <br /> <span> <a href="https://wa.link/pzhg6j" target="_blank" rel="noopener noreferrer">Contact with us to give you one!!</a> </span>
+        </p>
+
+        <form onSubmit={handleSubmit}>
+          <input
+            type="text"
+            name="username"
+            placeholder="USER NAME"
+            value={form.username}
+            onChange={handleChange}
+            className="login-input"
+          />
+          <input
+            type="password"
+            name="password"
+            placeholder="PASSWORD"
+            value={form.password}
+            onChange={handleChange}
+            className="login-input"
+          />
+          <button type="submit" className="login-btn">
+            Log in
+          </button>
+          {error && <p className="login-error">{error}</p>}
+        </form>
+      </div>
+
+      <div className="login-footer" />
+    </div>
+  );
 };
 
 export default Login;
