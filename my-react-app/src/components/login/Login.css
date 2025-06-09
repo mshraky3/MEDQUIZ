@@ -108,14 +108,15 @@
   background: linear-gradient(270deg, #01b3d9, #c7e941, #01b3d9);
   background-size: 600% 600%;
   animation: moveGradient 30s ease infinite;
-  height: 120px;
+  height: 150px;
   width: 100%;
-  border-top-left-radius: 60px;
-  border-top-right-radius: 60px;
   position: fixed;
   bottom: 0;
   left: 0;
+  clip-path: polygon(0 45px, 45px 0, calc(100% - 45px) 0, 100% 45px, 100% 100%, 0 100%);
 }
+
+
 
 
 @keyframes moveGradient {
@@ -182,7 +183,7 @@ a {
   }
 
   .login-footer {
-    height: 80px;
+    height: 60px;
     border-top-left-radius: 40px;
     border-top-right-radius: 40px;
   }
@@ -196,6 +197,15 @@ a {
 
   }
     .login-footer {
+    height: 30px;
+    border-top-left-radius: 40px;
+    border-top-right-radius: 40px;
+  }
+}
+
+@media (max-height: 600px) {
+
+  .login-footer {
     height: 30px;
     border-top-left-radius: 40px;
     border-top-right-radius: 40px;
