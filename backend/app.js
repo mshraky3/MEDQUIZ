@@ -71,6 +71,7 @@ app.post('/login', async (req, res) => {
         const updatedUser = await db.query("SELECT * FROM accounts WHERE id = $1", [userRow.id]);
         return res.status(200).json({ message: 'Login successful', user: updatedUser.rows[0] });
     } catch (error) {
+        console.log(error)
         res.status(500).json({ message: 'Internal server error' });
     }
 });
@@ -237,7 +238,6 @@ app.get('/user-streaks/:user_id', async (req, res) => {
         let longestStreak = 0;
         let lastActiveDate = null;
 
-        // Only calculate if we have data
         if (quizDates.rows.length > 0) {
             const dates = quizDates.rows.map(row => new Date(row.quiz_date))
                 .map(d => {
@@ -259,7 +259,7 @@ app.get('/user-streaks/:user_id', async (req, res) => {
                     if (diffDays === 1) {
                         runningStreak++;
                     } else if (diffDays > 1) {
-                        runningStreak = 1; // Reset streak
+                        runningStreak = 1; 
                     }
                 }
 
@@ -277,7 +277,6 @@ app.get('/user-streaks/:user_id', async (req, res) => {
             lastActiveDate = dates[dates.length - 1];
         }
 
-        // Always return valid JSON structure
         res.json({
             current_streak: currentStreak,
             longest_streak: longestStreak,
