@@ -2,9 +2,10 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { Pool } from 'pg';
+import https from "https";
 
 dotenv.config();
-
+const agent = new https.Agent({ keepAlive: true });
 const db = new Pool({
     user: process.env.DBUSER,
     host: process.env.DBHOST,
@@ -458,34 +459,38 @@ app.post('/api/questions', async (req, res) => {
 
 app.post("/ai-analysis", async (req, res) => {
     const { question, selected_answer, correct_answer } = req.body;
-    try {
-        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Authorization": "Bearer " + process.env.APIKEY,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                model: "deepseek/deepseek-r1-0528:free",
-                messages: [
-                    {
-                        role: "user",
-                        content: `Here’s a multiple-choice question:\n\nQuestion: ${question}\nUser's Answer: ${selected_answer}\nCorrect Answer: ${correct_answer}\n\nWhich one is more accurate and why?`
-                    }
-                ]
-            })
-        });
 
-        const data = await response.json();
-        const aiAnswer = data.choices[0]?.message?.content || "No response from AI.";
+    const payload = {
+        model: "deepseek/deepseek-r1-0528:free",
+        messages: [
+            {
+                role: "user",
+                content: `Here’s a multiple-choice question:\n\nQuestion: ${question}\nUser's Answer: ${selected_answer}\nCorrect Answer: ${correct_answer}\n\nWhich one is more accurate and why? in no longer than 40 words.`
+            }
+        ]
+    };
+
+    const config = {
+        headers: {
+            "Authorization": `Bearer ${process.env.APIKEY}`,
+            "Content-Type": "application/json"
+        },
+        httpsAgent: agent,
+        timeout: 8000
+    };
+
+    try {
+        const response = await axios.post("https://openrouter.ai/api/v1/chat/completions", payload, config);
+        const aiAnswer = response.data.choices[0]?.message?.content || "No response from AI.";
 
         res.json({ answer: aiAnswer });
 
     } catch (error) {
-        console.error("AI analysis error:", error);
+        console.error("AI analysis error:", error.message);
         res.status(500).json({ error: "Failed to fetch AI analysis." });
     }
 });
+
 
 
 
