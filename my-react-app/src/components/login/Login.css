@@ -21,7 +21,7 @@
   justify-self: center;
   max-height: 100vh;
   overflow: hidden;
-  padding: 0px 0px 100px 0px; /* added bottom padding for footer */
+  padding: 0px 0px 100px 0px; 
   margin-top: 10%;
   gap: 10%;
   font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
@@ -48,7 +48,7 @@
 }
 
 .login-title {
-  color: #0296c9;
+  color: #0296c9; 
   font-size: 35px;
   margin-bottom: 8px;
 }
@@ -108,7 +108,7 @@
   background: linear-gradient(270deg, #01b3d9, #c7e941, #01b3d9);
   background-size: 600% 600%;
   animation: moveGradient 30s ease infinite;
-  height: 150px;
+  height: 80px;
   width: 100%;
   position: fixed;
   bottom: 0;
@@ -183,7 +183,7 @@ a {
   }
 
   .login-footer {
-    height: 60px;
+    height: 40px;
     border-top-left-radius: 40px;
     border-top-right-radius: 40px;
   }

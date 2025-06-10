@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import axios from 'axios';
+import Global from '../../Global';
 
 const QuestionAttemptsTable = ({ questionAttempts, questions }) => {
     const navigate = useNavigate();
@@ -11,6 +13,22 @@ const QuestionAttemptsTable = ({ questionAttempts, questions }) => {
         .filter(attempt => !attempt.is_correct);
 
     const displayedAttempts = showAll ? sortedIncorrectAttempts : sortedIncorrectAttempts.slice(0, 5);
+
+    const handleSeeMore = async (questionText, selectedAnswer, correctAnswer) => {
+        try {
+            const response = await axios.post(Global.URL +'/ai-analysis', {
+                question: questionText,
+                selected_answer: selectedAnswer,
+                correct_answer: correctAnswer
+            });
+
+            const aiResponse = response.data.answer;
+            alert(`AI Analysis:\n\n${aiResponse}`); 
+        } catch (error) {
+            console.error("Error fetching AI analysis:", error);
+            alert("Failed to get AI analysis.");
+        }
+    };
 
     return (
         <section className="analysis-section">
@@ -41,11 +59,7 @@ const QuestionAttemptsTable = ({ questionAttempts, questions }) => {
                                         <td style={{ color: "green" }}>{correctAnswer}</td>
                                         <td>
                                             <button
-                                                onClick={() =>
-                                                    navigate(`/review-question/${attempt.question_id}`, {
-                                                        state: { id: location.state?.id }
-                                                    })
-                                                }
+                                                onClick={() => handleSeeMore(questionText, attempt.selected_option, correctAnswer)}
                                                 className="see-more-button"
                                             >
                                                 See More
@@ -59,8 +73,8 @@ const QuestionAttemptsTable = ({ questionAttempts, questions }) => {
 
                     {sortedIncorrectAttempts.length > 5 && (
                         <div className="see-all-container">
-                            <button 
-                                onClick={() => setShowAll(!showAll)} 
+                            <button
+                                onClick={() => setShowAll(!showAll)}
                                 className="see-all-button"
                             >
                                 {showAll ? (
