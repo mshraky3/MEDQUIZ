@@ -460,38 +460,49 @@ app.post('/api/questions', async (req, res) => {
 app.post("/ai-analysis", async (req, res) => {
     const { question, selected_answer, correct_answer } = req.body;
 
-    const payload = {
-        model: "deepseek/deepseek-r1-0528:free",
-        messages: [
-            {
-                role: "user",
-                content: `Here’s a multiple-choice question:\n\nQuestion: ${question}\nUser's Answer: ${selected_answer}\nCorrect Answer: ${correct_answer}\n\nWhich one is more accurate and why? in no longer than 40 words.`
-            }
-        ]
-    };
-
-    const config = {
-        headers: {
-            "Authorization": `Bearer ${process.env.APIKEY}`,
-            "Content-Type": "application/json"
-        },
-        httpsAgent: agent,
-        timeout: 8000
-    };
+    if (!question || !selected_answer || !correct_answer) {
+        return res.status(400).json({ error: "Missing required fields." });
+    }
 
     try {
-        const response = await axios.post("https://openrouter.ai/api/v1/chat/completions", payload, config);
-        const aiAnswer = response.data.choices[0]?.message?.content || "No response from AI.";
+        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${process.env.APIKEY}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                model: "deepseek/deepseek-r1-0528:free",
+                messages: [
+                    {
+                        role: "user",
+                        content: `Here’s a multiple-choice question:\n\nQuestion: ${question}\nUser's Answer: ${selected_answer}\nCorrect Answer: ${correct_answer}\n\nWhich one is more accurate and why? in no longer than 40 words. if the words are less than 40 . dont say the number of words . and ne style needed just text `
+                    }
+                ]
+            })
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("OpenRouter API Error:", response.status, errorText);
+            return res.status(500).json({ error: "AI service failed." });
+        }
+
+        const data = await response.json();
+        const aiAnswer = data.choices?.[0]?.message?.content;
+
+        if (!aiAnswer) {
+            console.error("OpenRouter API responded with no choices.", data);
+            return res.status(500).json({ error: "Invalid AI response format." });
+        }
 
         res.json({ answer: aiAnswer });
 
     } catch (error) {
-        console.error("AI analysis error:", error.message);
+        console.error("AI analysis error:", error);
         res.status(500).json({ error: "Failed to fetch AI analysis." });
     }
 });
-
-
 
 
 const PORT = process.env.PORT || 3000;
