@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
-import Global from '../../Global';
+import Global from '../../global.js';
 
 const QuestionAttemptsTable = ({ questionAttempts, questions }) => {
     const navigate = useNavigate();
@@ -29,7 +29,7 @@ const QuestionAttemptsTable = ({ questionAttempts, questions }) => {
             alert("Failed to get AI analysis.");
         }
     };
-
+    console.log(Global.URL +'/ai-analysis');
     return (
         <section className="analysis-section">
             <h3>✍️ Questions You Got Wrong</h3>
