@@ -16,40 +16,44 @@ const Login = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!form.username || !form.password) {
+
+    // Clean username: trim whitespace and convert to lowercase
+    const cleanedUsername = form.username.trim().toLowerCase();
+    const password = form.password;
+
+    if (!cleanedUsername || !password) {
       setError('Please enter both username and password.');
       return;
     }
 
     setError('');
 
-    if (form.username === 'admin' && form.password === 'admin1810') {
+    if (cleanedUsername === 'admin' && password === 'admin1810') {
       navigate('/ADDQ');
       return;
     }
 
-    if (form.username === 'admin' && form.password === 'admin18102019') {
+    if (cleanedUsername === 'admin' && password === 'admin18102019') {
       navigate('/ADD_ACCOUNT');
       return;
     }
 
     axios
       .post(`${Globals.URL}/login`, {
-        username: form.username,
-        password: form.password,
+        username: cleanedUsername,
+        password: password,
       })
       .then((response) => {
         navigate('/quizs', { state: response.data });
       })
       .catch((error) => {
-        setError('Your username is wrong! Try again');
+        setError('Your username is wrong! Try again' + error);
       });
   };
 
   return (
     <div className="login-wrapper">
       <div className="login-header">
-        
         <div className="login-icon"/> 
         <h2>Future Doctors Service!</h2>
       </div>
