@@ -454,6 +454,41 @@ app.post('/api/questions', async (req, res) => {
     }
 });
 
+
+
+app.post("/ai-analysis", async (req, res) => {
+    const { question, selected_answer, correct_answer } = req.body;
+    try {
+        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Authorization": "Bearer " + process.env.APIKEY,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                model: "deepseek/deepseek-r1-0528:free",
+                messages: [
+                    {
+                        role: "user",
+                        content: `Here’s a multiple-choice question:\n\nQuestion: ${question}\nUser's Answer: ${selected_answer}\nCorrect Answer: ${correct_answer}\n\nWhich one is more accurate and why?`
+                    }
+                ]
+            })
+        });
+
+        const data = await response.json();
+        const aiAnswer = data.choices[0]?.message?.content || "No response from AI.";
+
+        res.json({ answer: aiAnswer });
+
+    } catch (error) {
+        console.error("AI analysis error:", error);
+        res.status(500).json({ error: "Failed to fetch AI analysis." });
+    }
+});
+
+
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
