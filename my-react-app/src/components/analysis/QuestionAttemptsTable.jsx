@@ -7,6 +7,8 @@ const QuestionAttemptsTable = ({ questionAttempts, questions }) => {
     const navigate = useNavigate();
     const location = useLocation();
     const [showAll, setShowAll] = useState(false);
+    const [modalOpen, setModalOpen] = useState(false);
+    const [aiAnalysis, setAiAnalysis] = useState("");
 
     const sortedIncorrectAttempts = [...questionAttempts]
         .sort((a, b) => new Date(b.attempted_at) - new Date(a.attempted_at))
@@ -16,20 +18,21 @@ const QuestionAttemptsTable = ({ questionAttempts, questions }) => {
 
     const handleSeeMore = async (questionText, selectedAnswer, correctAnswer) => {
         try {
-            const response = await axios.post(Global.URL +'/ai-analysis', {
+            const response = await axios.post(Global.URL + '/ai-analysis', {
                 question: questionText,
                 selected_answer: selectedAnswer,
                 correct_answer: correctAnswer
             });
 
-            const aiResponse = response.data.answer;
-            alert(`AI Analysis:\n\n${aiResponse}`); 
+            setAiAnalysis(response.data.answer);
+            setModalOpen(true);
         } catch (error) {
             console.error("Error fetching AI analysis:", error);
-            alert("Failed to get AI analysis.");
+            setAiAnalysis("Failed to get AI analysis.");
+            setModalOpen(true);
         }
     };
-    console.log(Global.URL +'/ai-analysis');
+
     return (
         <section className="analysis-section">
             <h3>✍️ Questions You Got Wrong</h3>
@@ -94,6 +97,17 @@ const QuestionAttemptsTable = ({ questionAttempts, questions }) => {
                 </>
             ) : (
                 <p>No incorrect attempts recorded yet.</p>
+            )}
+
+            {/* Modal */}
+            {modalOpen && (
+                <div className="modal-overlay" onClick={() => setModalOpen(false)}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <h3>🧠 AI Analysis</h3>
+                        <p>{aiAnalysis}</p>
+                        <button className="close-button" onClick={() => setModalOpen(false)}>Close</button>
+                    </div>
+                </div>
             )}
         </section>
     );
