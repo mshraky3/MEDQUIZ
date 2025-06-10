@@ -1,5 +1,5 @@
 const Globals = {
-    URL: 'https://medquiz.vercel.app',
+    URL: 'http://localhost:3000'  
 };
 
 export default Globals;

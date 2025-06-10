@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import Global from '../../global.js';
+import './QuestionAttemptsTable.css';
+
+
 
 const QuestionAttemptsTable = ({ questionAttempts, questions }) => {
-    const navigate = useNavigate();
-    const location = useLocation();
+
+
     const [showAll, setShowAll] = useState(false);
     const [modalOpen, setModalOpen] = useState(false);
     const [aiAnalysis, setAiAnalysis] = useState("");
+    const [loadingButtons, setLoadingButtons] = useState({}); 
+    const [currentQuestion, setCurrentQuestion] = useState("");
 
     const sortedIncorrectAttempts = [...questionAttempts]
         .sort((a, b) => new Date(b.attempted_at) - new Date(a.attempted_at))
@@ -16,22 +20,29 @@ const QuestionAttemptsTable = ({ questionAttempts, questions }) => {
 
     const displayedAttempts = showAll ? sortedIncorrectAttempts : sortedIncorrectAttempts.slice(0, 5);
 
-    const handleSeeMore = async (questionText, selectedAnswer, correctAnswer) => {
-        try {
-            const response = await axios.post(Global.URL + '/ai-analysis', {
-                question: questionText,
-                selected_answer: selectedAnswer,
-                correct_answer: correctAnswer
-            });
+const handleSeeMore = async (attemptId, questionText, selectedAnswer, correctAnswer) => {
+    setCurrentQuestion(questionText);
+    setAiAnalysis("");
+    
+    // Set loading only for this question
+    setLoadingButtons(prev => ({ ...prev, [attemptId]: true }));
+    
+    try {
+        const response = await axios.post(Global.URL + '/ai-analysis', {
+            question: questionText,
+            selected_answer: selectedAnswer,
+            correct_answer: correctAnswer
+        });
 
-            setAiAnalysis(response.data.answer);
-            setModalOpen(true);
-        } catch (error) {
-            console.error("Error fetching AI analysis:", error);
-            setAiAnalysis("Failed to get AI analysis.");
-            setModalOpen(true);
-        }
-    };
+        setAiAnalysis(response.data.answer || "No explanation received.");
+    } catch (error) {
+        console.error("Error fetching AI analysis:", error);
+        setAiAnalysis("Failed to get AI analysis.");
+    } finally {
+        setLoadingButtons(prev => ({ ...prev, [attemptId]: false }));
+        setModalOpen(true);
+    }
+};
 
     return (
         <section className="analysis-section">
@@ -62,10 +73,15 @@ const QuestionAttemptsTable = ({ questionAttempts, questions }) => {
                                         <td style={{ color: "green" }}>{correctAnswer}</td>
                                         <td>
                                             <button
-                                                onClick={() => handleSeeMore(questionText, attempt.selected_option, correctAnswer)}
+                                                onClick={() => handleSeeMore(attempt.id, questionText, attempt.selected_option, correctAnswer)}
                                                 className="see-more-button"
+                                                disabled={loadingButtons[attempt.id]}
                                             >
-                                                See More
+                                                {loadingButtons[attempt.id] ? (
+                                                    <span className="button-loader">
+                                                        <span className="spinner"></span> Loading...
+                                                    </span>
+                                                ) : "See More"}
                                             </button>
                                         </td>
                                     </tr>
@@ -100,15 +116,34 @@ const QuestionAttemptsTable = ({ questionAttempts, questions }) => {
             )}
 
             {/* Modal */}
-            {modalOpen && (
-                <div className="modal-overlay" onClick={() => setModalOpen(false)}>
-                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                        <h3>🧠 AI Analysis</h3>
-                        <p>{aiAnalysis}</p>
-                        <button className="close-button" onClick={() => setModalOpen(false)}>Close</button>
-                    </div>
+
+{/* Modal */}
+{modalOpen && (
+    <div className="modal-overlay" onClick={() => setModalOpen(false)}>
+        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3>🧠 AI Analysis</h3>
+
+            {/* Show loading state if aiAnalysis is empty AND there's a current question */}
+            {aiAnalysis === "" && currentQuestion !== "" ? (
+                <div className="loading-state">
+                    <p>Analyzing this question:</p>
+                    <p><strong>"{currentQuestion}"</strong></p>
+                    <div className="spinner"></div>
+                    <p className="loading-subtext">Please wait while we generate an explanation...</p>
+                </div>
+            ) : (
+                <div className="analysis-result fade-in">
+                    <p>{aiAnalysis}</p>
                 </div>
             )}
+
+            {/* Only show close button when analysis is done */}
+            {aiAnalysis !== "" && (
+                <button className="close-button" onClick={() => setModalOpen(false)}>Close</button>
+            )}
+        </div>
+    </div>
+)}
         </section>
     );
 };

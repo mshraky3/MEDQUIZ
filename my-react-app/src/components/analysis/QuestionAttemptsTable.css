@@ -1,0 +1,258 @@
+.loading-state {
+  text-align: center;
+  padding: 20px;
+}
+
+.loading-state .spinner {
+  margin: 15px auto;
+  width: 30px;
+  height: 30px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-state .loading-subtext {
+  font-style: italic;
+  color: #666;
+}
+
+.analysis-result {
+  white-space: pre-wrap; /* preserves line breaks if needed */
+  padding: 10px 0;
+}
+
+.modal-content {
+  background: #fff;
+  padding: 25px;
+  border-radius: 10px;
+  max-width: 600px;
+  width: 90%;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  position: relative;
+  transition: opacity 0.3s ease;
+}
+
+.close-button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+
+.see-more-button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+.see-more-button:hover:not(:disabled) {
+    background-color: #0056b3;
+}
+
+.button-loader {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #ffffff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+.analysis-section {
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.analysis-section h3 {
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.analysis-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    background-color: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    overflow: hidden;
+    
+}
+
+.analysis-table thead {
+    background-color: #007bff;
+    color: #333;
+}
+
+.analysis-table th,
+.analysis-table td {
+    text-align: left;
+    padding: 14px 16px;
+    border-bottom: 1px solid #eee;
+}
+
+.analysis-table tr:hover {
+    background-color: #f1f1f1;
+    transition: background-color 0.2s ease;
+}
+
+.analysis-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.see-more-button {
+    background-color: #007bff;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+.see-more-button:hover:not(:disabled) {
+    background-color: #0056b3;
+}
+
+.button-loader {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #ffffff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.see-all-container {
+    margin-top: 15px;
+    display: flex;
+    justify-content: center;
+}
+
+.see-all-button {
+    background-color: transparent;
+    border: none;
+    color: #007bff;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.3s ease;
+}
+
+.see-all-button:hover {
+    color: #0056b3;
+}
+
+.arrow {
+    font-size: 12px;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    max-width: 600px;
+    width: 90%;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    position: relative;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.loading-state {
+    text-align: center;
+    padding: 20px;
+}
+
+.loading-state .spinner {
+    margin: 15px auto;
+    width: 30px;
+    height: 30px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.loading-subtext {
+    font-style: italic;
+    color: #666;
+    margin-top: 10px;
+}
+
+.analysis-result {
+    white-space: pre-wrap;
+    padding: 10px 0;
+    line-height: 1.6;
+}
+
+.close-button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+.close-button:hover {
+    background-color: #0056b3;
+}
