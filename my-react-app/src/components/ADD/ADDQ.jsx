@@ -52,7 +52,6 @@ const ADDQ = () => {
         };
         try {
             const response = await axios.post(`${Globals.URL}/api/questions`, newQuestion);
-            console.log(Globals.URL)
             setMessage(response.data.message || 'Question added successfully!');
             setError('');
             setQuestionText('');
@@ -63,7 +62,6 @@ const ADDQ = () => {
             setCorrectAnswer('');
             setQuestionType('pediatric');
         } catch (err) {
-            console.error("Error adding question:", err);
             setError("Failed to add question. Please try again.");
             setMessage('');
         }
@@ -75,7 +73,7 @@ const ADDQ = () => {
             {error && <div className="error">{error}</div>}
             {message && <div className="success">{message}</div>}
 
-            <form onSubmit={handleSubmit} className="question-form">
+            <form onSubmit={handleSubmit} className="question-form" autoComplete="off">
 
                 <label>
                     Question Text:
@@ -83,6 +81,10 @@ const ADDQ = () => {
                         value={questionText}
                         onChange={(e) => setQuestionText(e.target.value)}
                         required
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck="false"
+                        autoComplete="off"
                     />
                 </label>
 
@@ -96,6 +98,7 @@ const ADDQ = () => {
                         autoCorrect="off"
                         autoCapitalize="off"
                         spellCheck="false"
+                        autoComplete="off"
                     />
                 </label>
 
@@ -106,6 +109,10 @@ const ADDQ = () => {
                         value={option2}
                         onChange={(e) => setOption2(e.target.value)}
                         required
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck="false"
+                        autoComplete="off"
                     />
                 </label>
 
@@ -116,6 +123,10 @@ const ADDQ = () => {
                         value={option3}
                         onChange={(e) => setOption3(e.target.value)}
                         required
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck="false"
+                        autoComplete="off"
                     />
                 </label>
 
@@ -126,6 +137,10 @@ const ADDQ = () => {
                         value={option4}
                         onChange={(e) => setOption4(e.target.value)}
                         required
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck="false"
+                        autoComplete="off"
                     />
                 </label>
 
@@ -135,6 +150,7 @@ const ADDQ = () => {
                         value={correctAnswer}
                         onChange={(e) => setCorrectAnswer(e.target.value)}
                         required
+                        autoComplete="off"
                     >
                         <option value="">-- Select Correct Option --</option>
                         {options.map((opt, index) =>
@@ -152,6 +168,7 @@ const ADDQ = () => {
                     <select
                         value={questionType}
                         onChange={(e) => setQuestionType(e.target.value)}
+                        autoComplete="off"
                     >
                         {questionTypes.map((type, index) => (
                             <option key={index} value={type}>
