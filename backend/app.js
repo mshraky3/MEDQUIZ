@@ -3,7 +3,6 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { Pool } from 'pg';
 import https from "https";
-import compression from 'compression';
 
 dotenv.config();
 const agent = new https.Agent({ keepAlive: true });
@@ -21,12 +20,12 @@ const db = new Pool({
 const app = express();
 
 
-app.use(compression());
+
 app.use(cors({
-  origin: (origin, callback) => {
-    callback(null, true); 
-  },
-  credentials: true
+    origin: (origin, callback) => {
+        callback(null, true);
+    },
+    credentials: true
 }));
 
 
@@ -269,7 +268,7 @@ app.get('/user-streaks/:user_id', async (req, res) => {
                     if (diffDays === 1) {
                         runningStreak++;
                     } else if (diffDays > 1) {
-                        runningStreak = 1; 
+                        runningStreak = 1;
                     }
                 }
 
