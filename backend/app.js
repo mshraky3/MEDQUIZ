@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { Pool } from 'pg';
 import https from "https";
+import compression from 'compression';
 
 dotenv.config();
 const agent = new https.Agent({ keepAlive: true });
@@ -18,7 +19,19 @@ const db = new Pool({
 });
 
 const app = express();
-app.use(cors());
+
+
+app.use(compression());
+app.use(cors({
+  origin: (origin, callback) => {
+    callback(null, true); 
+  },
+  credentials: true
+}));
+
+
+
+
 app.use(express.json());
 
 app.get('/', async (req, res) => {
