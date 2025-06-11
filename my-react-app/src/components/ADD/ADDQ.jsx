@@ -93,6 +93,9 @@ const ADDQ = () => {
                         value={option1}
                         onChange={(e) => setOption1(e.target.value)}
                         required
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck="false"
                     />
                 </label>
 
