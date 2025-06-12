@@ -5,10 +5,10 @@ import { visualizer } from 'rollup-plugin-visualizer'
 export default defineConfig({
   plugins: [
     react(),
-    visualizer() // Optional: see bundle size breakdown
+    visualizer() 
   ],
   build: {
-    target: 'es2022', // modern JS support
+    target: 'es2022', 
     minify: 'terser',
     terserOptions: {
       compress: {

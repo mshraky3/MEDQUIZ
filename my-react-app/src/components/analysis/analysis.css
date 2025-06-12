@@ -350,7 +350,7 @@
   opacity: 0.85;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 800px) {
   .summary-table th, 
   .summary-table td {
     padding: 0.7rem;
