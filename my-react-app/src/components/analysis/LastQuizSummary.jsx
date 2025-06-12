@@ -1,4 +1,5 @@
 import React from 'react';
+import './LastQuizSummary.css';
 
 const getRelativeDate = (dateString) => {
     if (!dateString) return "Never";
@@ -19,42 +20,41 @@ const getRelativeDate = (dateString) => {
 
 const LastQuizSummary = ({ latest_quiz }) => {
     return (
-        <section className="analysis-section">
-            <h3>🕒 Last Quiz Summary</h3>
+        <section className="summary-section">
+            <h3 className="section-header"> Last Quiz Summary</h3>
             {latest_quiz?.id ? (
-                <table className="analysis-table">
-                    <thead>
-                        <tr>
-                            <th>Metric</th>
-                            <th>Value</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>Total Questions:</strong></td>
-                            <td>{latest_quiz.total_questions}</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Correct Answers:</strong></td>
-                            <td>{latest_quiz.correct_answers}</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Accuracy:</strong></td>
-                            <td>
-                                {latest_quiz.total_questions > 0
-                                    ? ((latest_quiz.correct_answers / latest_quiz.total_questions) * 100).toFixed(2)
-                                    : "0.00"
-                                }%
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><strong>Total Questions Answered:</strong></td>
-                            <td>{latest_quiz.total_questions}</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div className="table-wrapper">
+                    <table className="summary-table">
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Total Questions</td>
+                                <td>{latest_quiz.total_questions}</td>
+                            </tr>
+                            <tr>
+                                <td>Correct Answers</td>
+                                <td>{latest_quiz.correct_answers}</td>
+                            </tr>
+                            <tr>
+                                <td>Accuracy</td>
+                                <td>
+                                    {latest_quiz.total_questions > 0
+                                        ? ((latest_quiz.correct_answers / latest_quiz.total_questions) * 100).toFixed(2)
+                                        : "0.00"
+                                    }%
+                                </td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                </div>
             ) : (
-                <p>No previous quiz found.</p>
+                <p className="no-data">No previous quiz found.</p>
             )}
         </section>
     );

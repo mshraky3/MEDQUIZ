@@ -7,12 +7,12 @@ import ErrorScreen from './ErrorScreen';
 import Result from './Result';
 import Question from './Question';
 import Globals from '../../global';
+
 const QUIZ = () => {
   const { numQuestions } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const id = location.state?.id;
-
   const [questions, setQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
@@ -21,9 +21,7 @@ const QUIZ = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [dataSent, setDataSent] = useState(false);
-
   const quizStartTimeRef = useRef(Date.now());
-
   useEffect(() => {
     const fetchQuestions = async () => {
       try {

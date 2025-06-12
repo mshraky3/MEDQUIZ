@@ -14,48 +14,36 @@
     padding-bottom: 0.5rem;
 }
 
-.streak-cards {
-    display: flex;
-    justify-content: center;
-    gap: 1.5rem;
-    flex-wrap: wrap;
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1.2rem;
 }
 
-.streak-card {
+.stat-card {
     background: #f8f9fa;
+    padding: 1.4rem;
     border-radius: 10px;
-    padding: 1.2rem;
-    min-width: 140px;
     text-align: center;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
-    transition: transform 0.3s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    transition: transform 0.25s ease;
 }
 
-.streak-card.active {
-    background: linear-gradient(135deg, #01b3d9, #c7e941);
-    color: #fff;
+.stat-card:hover {
+    transform: translateY(-4px);
 }
 
-.streak-card:hover {
-    transform: translateY(-5px);
-}
-
-.streak-label {
+.stat-label {
     font-size: 1rem;
+    color: #01b3d9;
+    margin-bottom: 0.4rem;
     font-weight: 600;
-    margin-bottom: 0.5rem;
-    color: inherit;
 }
 
-.streak-value {
-    font-size: 2.2rem;
+.stat-value {
+    font-size: 2rem;
+    color: #333;
     font-weight: 700;
-    line-height: 1;
-}
-
-.streak-unit {
-    font-size: 0.9rem;
-    opacity: 0.85;
 }
 
 .no-streak {
@@ -64,11 +52,15 @@
     padding: 1rem;
     background: rgba(255, 255, 255, 0.9);
     border-radius: 8px;
+    margin-top: 1rem;
 }
 
 @media (max-width: 768px) {
-    .streak-cards {
-        flex-direction: column;
-        align-items: center;
+    .stat-value {
+        font-size: 1.8rem;
+    }
+
+    .section-header {
+        font-size: 1.4rem;
     }
 }

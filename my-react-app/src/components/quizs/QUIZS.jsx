@@ -33,6 +33,8 @@ const QUIZS = () => {
             >
                 Go to Analysis
             </button>
+            <div className="quiz-footer" />
+
         </div>
     );
 };

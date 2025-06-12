@@ -1,10 +1,10 @@
 import React from 'react';
-import './StreakInfo.css'; 
+import './StreakInfo.css';
 
 const StreakInfo = ({ streakData }) => {
     return (
         <section className="streak-section">
-            <h3 className="streak-header">🔥 Your Streaks</h3>
+            <h3 className="section-header"> Your Streaks</h3>
             {streakData ? (
                 <div className="streak-cards">
                     <div className={`streak-card ${streakData.current_streak > 0 ? 'active' : ''}`}>

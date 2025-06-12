@@ -1,0 +1,75 @@
+.streak-section {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.section-header {
+    font-size: 1.6rem;
+    margin-bottom: 1rem;
+    color: #01b3d9;
+    border-bottom: 2px solid #c7e941;
+    padding-bottom: 0.5rem;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+}
+
+.analysis-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    background: #f8f9fa;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.analysis-table th,
+.analysis-table td {
+    padding: 1rem;
+    border: 1px solid #e0e0e0;
+    text-align: center;
+    font-size: 0.95rem;
+}
+
+.analysis-table th {
+    background: #e5f8fa;
+    color: #333;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.analysis-table td {
+    background: #ffffff;
+    color: #333;
+}
+
+.analysis-table tbody tr:hover {
+    background: #f0fdfd;
+    transition: background 0.2s ease;
+}
+
+.no-streak {
+    text-align: center;
+    color: #666;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    margin-top: 1rem;
+}
+
+@media (max-width: 768px) {
+    .analysis-table th,
+    .analysis-table td {
+        padding: 0.8rem;
+        font-size: 0.85rem;
+    }
+
+    .section-header {
+        font-size: 1.4rem;
+    }
+}
