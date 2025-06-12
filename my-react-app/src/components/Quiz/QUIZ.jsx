@@ -128,9 +128,13 @@ const QUIZ = () => {
           });
         }
 
+        await new Promise(resolve => setTimeout(resolve, 300));
+
         await axios.post(`${Globals.URL}/user-streaks`, { user_id: id });
         await axios.post(`${Globals.URL}/user-analysis`, { user_id: id });
+
       } catch (err) {
+        console.error(err.message);
         alert("There was an issue saving your quiz results.");
       }
     };
