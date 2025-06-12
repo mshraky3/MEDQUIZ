@@ -52,45 +52,47 @@ const Login = () => {
   };
 
   return (
-    <div className="login-wrapper">
-      <div className="login-header">
-        <div className="login-icon"/> 
-        <h2>Future Doctors Service!</h2>
+    <div className="login-body">
+      <div className="login-wrapper">
+        <div className="login-header">
+          <div className="login-icon" />
+          <h2>Future Doctors Service!</h2>
+        </div>
+
+        <div className="login-box">
+          <h2 className="login-title">Login</h2>
+          <p className="login-subtitle">Sign in to continue.</p>
+          <p className="login-small">
+            You don't have account? <br /> <span> <a href="https://wa.link/pzhg6j" target="_blank" rel="noopener noreferrer">Contact with us to give you one!!</a> </span>
+          </p>
+
+          <form onSubmit={handleSubmit}>
+            <input
+              type="text"
+              name="username"
+              placeholder="USERNAME"
+              value={form.username}
+              onChange={handleChange}
+              className="login-input"
+            />
+            <input
+              type="password"
+              name="password"
+              placeholder="PASSWORD"
+              value={form.password}
+              onChange={handleChange}
+              className="login-input"
+            />
+            <button type="submit" className="login-btn">
+              Log in
+            </button>
+            {error && <p className="login-error">{error}</p>}
+          </form>
+        </div>
+
+        <div className="login-footer" />
       </div>
-
-      <div className="login-box">
-        <h2 className="login-title">Login</h2>
-        <p className="login-subtitle">Sign in to continue.</p>
-        <p className="login-small">
-          You don't have account? <br /> <span> <a href="https://wa.link/pzhg6j" target="_blank" rel="noopener noreferrer">Contact with us to give you one!!</a> </span>
-        </p>
-
-        <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            name="username"
-            placeholder="USERNAME"
-            value={form.username}
-            onChange={handleChange}
-            className="login-input"
-          />
-          <input
-            type="password"
-            name="password"
-            placeholder="PASSWORD"
-            value={form.password}
-            onChange={handleChange}
-            className="login-input"
-          />
-          <button type="submit" className="login-btn">
-            Log in
-          </button>
-          {error && <p className="login-error">{error}</p>}
-        </form>
-      </div>
-
-      <div className="login-footer" />
-    </div>
+    </div >
   );
 };
 

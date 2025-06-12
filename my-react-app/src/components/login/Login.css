@@ -4,7 +4,7 @@
   right: 0;
   width: 20%;
   aspect-ratio: 1;
-  background-image: url('./login-icon.jpg');
+  background-image: url('./login-icon.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -12,6 +12,7 @@
   padding: 0;
   z-index: -1;
 }
+
 
 .login-wrapper {
   display: flex;
@@ -22,12 +23,14 @@
   max-height: 100vh;
   overflow: hidden;
   padding: 0px 0px 100px 0px; 
-  margin-top: 10%;
+
   gap: 10%;
   font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+ 
 }
 
 .login-header {
+  padding-top: 10%;
   text-align: center;
   margin-top: 40px;
 }
@@ -191,7 +194,7 @@ a {
 
 @media screen and (orientation: landscape) and (max-height: 500px) {
   .login-wrapper {
-    margin-top: 5%;
+    
     padding-bottom: 120px;
     gap: 5%;
 

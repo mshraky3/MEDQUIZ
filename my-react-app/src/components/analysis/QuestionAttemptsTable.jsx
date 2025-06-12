@@ -26,10 +26,16 @@ const QuestionAttemptsTable = ({ questionAttempts, questions }) => {
         ? sortedIncorrectAttempts
         : sortedIncorrectAttempts.slice(0, 5);
 
-    const handleSeeMore = async (attemptId, questionText, selectedAnswer, correctAnswer) => {
+    const handleSeeMore = async (attemptId, questionText, selectedAnswer, correctAnswer, event) => {
         setCurrentQuestion(questionText);
         setAiAnalysis('');
         setLoadingButtons((prev) => ({ ...prev, [attemptId]: true }));
+
+        // Get button position for mobile
+        if (window.innerWidth <= 768) {
+            const buttonTop = event.target.getBoundingClientRect().top + window.scrollY;
+            document.documentElement.style.setProperty('--modal-top', `${buttonTop + 40}px`);
+        }
 
         try {
             const response = await axios.post(`${Global.URL}/ai-analysis`, {
@@ -76,14 +82,16 @@ const QuestionAttemptsTable = ({ questionAttempts, questions }) => {
                                             <td className="correct-answer right">{correctAnswer}</td>
                                             <td>
                                                 <button
-                                                    onClick={() =>
+                                                    onClick={(e) =>
                                                         handleSeeMore(
                                                             attempt.id,
                                                             questionText,
                                                             attempt.selected_option,
-                                                            correctAnswer
+                                                            correctAnswer,
+                                                            e
                                                         )
                                                     }
+
                                                     className="see-more-button"
                                                     disabled={loadingButtons[attempt.id]}
                                                 >
