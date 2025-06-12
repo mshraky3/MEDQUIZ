@@ -254,12 +254,10 @@ app.get('/user-streaks/:user_id', async (req, res) => {
                     return d;
                 })
                 .sort((a, b) => a.getTime() - b.getTime());
-
             let runningStreak = 0;
             let prevDate = null;
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-
             for (const date of dates) {
                 if (!prevDate) {
                     runningStreak = 1;
@@ -271,10 +269,8 @@ app.get('/user-streaks/:user_id', async (req, res) => {
                         runningStreak = 1;
                     }
                 }
-
                 longestStreak = Math.max(longestStreak, runningStreak);
                 prevDate = date;
-
                 if (
                     date.getTime() === today.getTime() ||
                     (runningStreak === 1 && date.getTime() === today.getTime() - 86400000)
@@ -282,7 +278,6 @@ app.get('/user-streaks/:user_id', async (req, res) => {
                     currentStreak = runningStreak;
                 }
             }
-
             lastActiveDate = dates[dates.length - 1];
         }
 
@@ -349,64 +344,81 @@ app.post('/question-attempts', async (req, res) => {
 });
 
 app.post('/user-analysis', async (req, res) => {
-    const { user_id } = req.body;
-    if (!user_id) {
-        return res.status(400).json({ message: "User ID is required" });
+  const { user_id } = req.body;
+  if (!user_id) {
+    return res.status(400).json({ message: "User ID is required" });
+  }
+
+  try {
+    // Get quiz stats
+    const statsRes = await db.query(`
+      SELECT 
+        COUNT(*) AS total_quizzes,
+        SUM(total_questions) AS total_questions_answered,
+        SUM(correct_answers) AS total_correct_answers
+      FROM user_quiz_sessions
+      WHERE user_id = $1;
+    `, [user_id]);
+
+    const stats = statsRes.rows[0];
+
+    // Safely coerce values to numbers (or 0 if null)
+    const totalQuizzes = parseInt(stats.total_quizzes) || 0;
+    const totalQuestionsAnswered = parseInt(stats.total_questions_answered) || 0;
+    const totalCorrectAnswers = parseInt(stats.total_correct_answers) || 0;
+
+    let accuracy = 0;
+    if (totalQuestionsAnswered > 0) {
+      accuracy = parseFloat(((totalCorrectAnswers / totalQuestionsAnswered) * 100).toFixed(2));
     }
-    try {
-        const statsRes = await db.query(`
-            SELECT 
-                COUNT(*) AS total_quizzes,
-                SUM(total_questions) AS total_questions_answered,
-                SUM(correct_answers) AS total_correct_answers
-            FROM user_quiz_sessions
-            WHERE user_id = $1;
-        `, [user_id]);
 
-        const stats = statsRes.rows[0];
-        let accuracy = 0;
-        if (stats.total_questions_answered > 0) {
-            accuracy = parseFloat(((stats.total_correct_answers / stats.total_questions_answered) * 100).toFixed(2));
-        }
+    // Get response times
+    const timeRes = await db.query(`
+      SELECT 
+        MIN(time_taken) AS fastest, 
+        MAX(time_taken) AS slowest 
+      FROM user_question_attempts 
+      WHERE user_id = $1;
+    `, [user_id]);
 
-        const timeRes = await db.query(`
-            SELECT 
-                MIN(time_taken) AS fastest, 
-                MAX(time_taken) AS slowest 
-            FROM user_question_attempts 
-            WHERE user_id = $1;
-        `, [user_id]);
+    const times = timeRes.rows[0];
 
-        const times = timeRes.rows[0];
+    const fastestResponse = parseFloat(times.fastest) || 0;
+    const slowestResponse = parseFloat(times.slowest) || 0;
 
-        const result = await db.query(`
-            INSERT INTO user_analysis 
-            (user_id, total_quizzes, total_questions_answered, total_correct_answers, accuracy, fastest_response, slowest_response, last_active)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
-            ON CONFLICT (user_id)
-            DO UPDATE SET
-                total_quizzes = EXCLUDED.total_quizzes,
-                total_questions_answered = EXCLUDED.total_questions_answered,
-                total_correct_answers = EXCLUDED.total_correct_answers,
-                accuracy = EXCLUDED.accuracy,
-                fastest_response = EXCLUDED.fastest_response,
-                slowest_response = EXCLUDED.slowest_response,
-                last_active = NOW()
-            RETURNING *
-        `, [
-            user_id,
-            stats.total_quizzes,
-            stats.total_questions_answered,
-            stats.total_correct_answers,
-            accuracy,
-            times.fastest,
-            times.slowest
-        ]);
-        res.status(200).json(result.rows[0]);
-    } catch (err) {
-        res.status(500).json({ message: 'Failed to update user analysis' });
-    }
+    // Insert or update user analysis
+    const result = await db.query(`
+      INSERT INTO user_analysis 
+      (user_id, total_quizzes, total_questions_answered, total_correct_answers, accuracy, fastest_response, slowest_response, last_active)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+      ON CONFLICT (user_id)
+      DO UPDATE SET
+        total_quizzes = EXCLUDED.total_quizzes,
+        total_questions_answered = EXCLUDED.total_questions_answered,
+        total_correct_answers = EXCLUDED.total_correct_answers,
+        accuracy = EXCLUDED.accuracy,
+        fastest_response = EXCLUDED.fastest_response,
+        slowest_response = EXCLUDED.slowest_response,
+        last_active = NOW()
+      RETURNING *
+    `, [
+      user_id,
+      totalQuizzes,
+      totalQuestionsAnswered,
+      totalCorrectAnswers,
+      accuracy,
+      fastestResponse,
+      slowestResponse
+    ]);
+
+    res.status(200).json(result.rows[0]);
+
+  } catch (err) {
+    console.error('Error in /user-analysis:', err);
+    res.status(500).json({ message: 'Failed to update user analysis' });
+  }
 });
+
 
 app.post('/quiz-sessions', async (req, res) => {
     const { user_id, total_questions, correct_answers, quiz_accuracy, duration, avg_time_per_question, topics_covered } = req.body;
@@ -513,7 +525,7 @@ app.post("/ai-analysis", async (req, res) => {
 });
 
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
