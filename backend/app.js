@@ -525,6 +525,132 @@ app.post("/ai-analysis", async (req, res) => {
 });
 
 
+
+
+
+
+
+
+// Existing code remains unchanged until...
+
+// === NEW ROUTES FOR QUESTIONS ===
+
+// Get all questions
+app.get('/questions', async (req, res) => {
+    try {
+        const result = await db.query("SELECT * FROM questions ORDER BY id");
+        res.json({ questions: result.rows });
+    } catch (err) {
+        console.error("Error fetching questions:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+// Get single question by ID
+app.get('/questions/:id', async (req, res) => {
+    const { id } = req.params;
+    
+    if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid question ID" });
+    }
+    
+    try {
+        const result = await db.query("SELECT * FROM questions WHERE id = $1", [id]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: "Question not found" });
+        }
+        
+        res.json({ question: result.rows[0] });
+    } catch (err) {
+        console.error("Error fetching question:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+// Delete a question by ID
+app.delete('/questions/:id', async (req, res) => {
+    const { id } = req.params;
+    
+    if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid question ID" });
+    }
+    
+    try {
+        const result = await db.query(
+            "DELETE FROM questions WHERE id = $1 RETURNING *", 
+            [id]
+        );
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: "Question not found" });
+        }
+        
+        res.json({ 
+            message: "Question deleted successfully",
+            question: result.rows[0] 
+        });
+    } catch (err) {
+        console.error("Error deleting question:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+app.put('/questions/:id', async (req, res) => {
+    const { id } = req.params;
+    const {
+        question_text,
+        option1,
+        option2,
+        option3,
+        option4,
+        question_type,
+        correct_option,
+        correct_answer
+    } = req.body;
+
+    // Input validation
+    if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid question ID" });
+    }
+
+    if (!question_text || !option1 || !option2 || !option3 || !option4 || !correct_answer) {
+        return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    try {
+        const result = await db.query(
+            `UPDATE questions 
+             SET question_text = $1,
+                 option1 = $2,
+                 option2 = $3,
+                 option3 = $4,
+                 option4 = $5,
+                 question_type = $6,
+                 correct_option = $7,
+                 correct_answer = $8
+             WHERE id = $9
+             RETURNING *`,
+            [question_text, option1, option2, option3, option4, 
+             question_type, correct_option, correct_answer, id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: "Question not found" });
+        }
+
+        res.json({
+            message: "Question updated successfully",
+            question: result.rows[0]
+        });
+    } catch (err) {
+        console.error("Error updating question:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+
+
 const PORT = process.env.PORT;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
