@@ -17,7 +17,6 @@ const Login = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Clean username: trim whitespace and convert to lowercase
     const cleanedUsername = form.username.trim().toLowerCase();
     const password = form.password;
 
@@ -29,12 +28,7 @@ const Login = () => {
     setError('');
 
     if (cleanedUsername === 'admin' && password === 'admin1810') {
-      navigate('/ADDQ');
-      return;
-    }
-
-    if (cleanedUsername === 'admin' && password === 'admin18102019') {
-      navigate('/ADD_ACCOUNT');
+      navigate('/admin');
       return;
     }
 
