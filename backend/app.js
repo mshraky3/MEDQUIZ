@@ -93,7 +93,7 @@ app.get('/user-analysis/:userId', async (req, res) => {
                 SELECT 
                     COUNT(*) AS total_quizzes,
                     SUM(total_questions) AS total_questions_answered,
-                    SUM(correct_answers) AS total_correct_answers
+                    SUM(correct_options) AS total_correct_options
                 FROM user_quiz_sessions
                 WHERE user_id = $1;
             `, [userId]),
@@ -112,19 +112,19 @@ app.get('/user-analysis/:userId', async (req, res) => {
 
         let accuracy = 0;
         if (stats.total_questions_answered > 0) {
-            accuracy = parseFloat(((stats.total_correct_answers / stats.total_questions_answered) * 100).toFixed(2));
+            accuracy = parseFloat(((stats.total_correct_options / stats.total_questions_answered) * 100).toFixed(2));
         }
 
         const result = {
             total_quizzes: parseInt(stats.total_quizzes || 0),
             total_questions_answered: parseInt(stats.total_questions_answered || 0),
-            total_correct_answers: parseInt(stats.total_correct_answers || 0),
+            total_correct_options: parseInt(stats.total_correct_options || 0),
             avg_accuracy: accuracy,
             last_active: lastActive,
             latest_quiz: {
                 id: latestQuiz.id,
                 total_questions: latestQuiz.total_questions || 0,
-                correct_answers: latestQuiz.correct_answers || 0,
+                correct_options: latestQuiz.correct_options || 0,
                 quiz_accuracy: latestQuiz.quiz_accuracy || 0,
                 start_time: latestQuiz.start_time
             }
@@ -355,7 +355,7 @@ app.post('/user-analysis', async (req, res) => {
       SELECT 
         COUNT(*) AS total_quizzes,
         SUM(total_questions) AS total_questions_answered,
-        SUM(correct_answers) AS total_correct_answers
+        SUM(correct_options) AS total_correct_options
       FROM user_quiz_sessions
       WHERE user_id = $1;
     `, [user_id]);
@@ -365,7 +365,7 @@ app.post('/user-analysis', async (req, res) => {
     // Safely coerce values to numbers (or 0 if null)
     const totalQuizzes = parseInt(stats.total_quizzes) || 0;
     const totalQuestionsAnswered = parseInt(stats.total_questions_answered) || 0;
-    const totalCorrectAnswers = parseInt(stats.total_correct_answers) || 0;
+    const totalCorrectAnswers = parseInt(stats.total_correct_options) || 0;
 
     let accuracy = 0;
     if (totalQuestionsAnswered > 0) {
@@ -389,13 +389,13 @@ app.post('/user-analysis', async (req, res) => {
     // Insert or update user analysis
     const result = await db.query(`
       INSERT INTO user_analysis 
-      (user_id, total_quizzes, total_questions_answered, total_correct_answers, accuracy, fastest_response, slowest_response, last_active)
+      (user_id, total_quizzes, total_questions_answered, total_correct_options, accuracy, fastest_response, slowest_response, last_active)
       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
       ON CONFLICT (user_id)
       DO UPDATE SET
         total_quizzes = EXCLUDED.total_quizzes,
         total_questions_answered = EXCLUDED.total_questions_answered,
-        total_correct_answers = EXCLUDED.total_correct_answers,
+        total_correct_options = EXCLUDED.total_correct_options,
         accuracy = EXCLUDED.accuracy,
         fastest_response = EXCLUDED.fastest_response,
         slowest_response = EXCLUDED.slowest_response,
@@ -421,16 +421,16 @@ app.post('/user-analysis', async (req, res) => {
 
 
 app.post('/quiz-sessions', async (req, res) => {
-    const { user_id, total_questions, correct_answers, quiz_accuracy, duration, avg_time_per_question, topics_covered } = req.body;
+    const { user_id, total_questions, correct_options, quiz_accuracy, duration, avg_time_per_question, topics_covered } = req.body;
     if (!user_id || !total_questions || typeof quiz_accuracy !== 'number') {
         return res.status(400).json({ message: "Missing required fields" });
     }
     try {
         const result = await db.query(
             `INSERT INTO user_quiz_sessions 
-            (user_id, total_questions, correct_answers, quiz_accuracy, duration, avg_time_per_question, topics_covered) 
+            (user_id, total_questions, correct_options, quiz_accuracy, duration, avg_time_per_question, topics_covered) 
             VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-            [user_id, total_questions, correct_answers, quiz_accuracy, duration, avg_time_per_question, JSON.stringify(topics_covered)]
+            [user_id, total_questions, correct_options, quiz_accuracy, duration, avg_time_per_question, JSON.stringify(topics_covered)]
         );
         res.status(201).json(result.rows[0]);
     } catch (err) {
@@ -458,13 +458,13 @@ app.post('/api/questions', async (req, res) => {
         option3,
         option4,
         question_type,
-        correct_answer
+        correct_option
     } = req.body;
     try {
         const result = await db.query(
-            `INSERT INTO questions (question_text, option1, option2, option3, option4, question_type, correct_answer)
+            `INSERT INTO questions (question_text, option1, option2, option3, option4, question_type, correct_option)
              VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-            [question_text, option1, option2, option3, option4, question_type, correct_answer]
+            [question_text, option1, option2, option3, option4, question_type, correct_option]
         );
         res.status(201).json({
             message: "Question added successfully",
@@ -478,9 +478,9 @@ app.post('/api/questions', async (req, res) => {
 
 
 app.post("/ai-analysis", async (req, res) => {
-    const { question, selected_answer, correct_answer } = req.body;
+    const { question, selected_answer, correct_option } = req.body;
 
-    if (!question || !selected_answer || !correct_answer) {
+    if (!question || !selected_answer || !correct_option) {
         return res.status(400).json({ error: "Missing required fields." });
     }
 
@@ -496,7 +496,7 @@ app.post("/ai-analysis", async (req, res) => {
                 messages: [
                     {
                         role: "user",
-                        content: `Here’s a multiple-choice question:\n\nQuestion: ${question}\nUser's Answer: ${selected_answer}\nCorrect Answer: ${correct_answer}\n\nWhich one is more accurate and why? in no longer than 40 words. if the words are less than 40 . dont say the number of words . and ne style needed just text `
+                        content: `Here’s a multiple-choice question:\n\nQuestion: ${question}\nUser's Answer: ${selected_answer}\nCorrect Answer: ${correct_option}\n\nWhich one is more accurate and why? in no longer than 40 words. if the words are less than 40 . dont say the number of words . and ne style needed just text `
                     }
                 ]
             })
@@ -605,8 +605,7 @@ app.put('/questions/:id', async (req, res) => {
         option3,
         option4,
         question_type,
-        correct_option,
-        correct_answer
+        correct_option
     } = req.body;
 
     // Input validation
@@ -614,7 +613,7 @@ app.put('/questions/:id', async (req, res) => {
         return res.status(400).json({ message: "Invalid question ID" });
     }
 
-    if (!question_text || !option1 || !option2 || !option3 || !option4 || !correct_answer) {
+    if (!question_text || !option1 || !option2 || !option3 || !option4 || !correct_option) {
         return res.status(400).json({ message: "Missing required fields" });
     }
 
@@ -627,12 +626,11 @@ app.put('/questions/:id', async (req, res) => {
                  option3 = $4,
                  option4 = $5,
                  question_type = $6,
-                 correct_option = $7,
-                 correct_answer = $8
-             WHERE id = $9
+                 correct_option = $7
+             WHERE id = $8
              RETURNING *`,
             [question_text, option1, option2, option3, option4, 
-             question_type, correct_option, correct_answer, id]
+             question_type, correct_option, id]
         );
 
         if (result.rows.length === 0) {
