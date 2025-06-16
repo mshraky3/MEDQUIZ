@@ -48,7 +48,7 @@ const ADDQ = () => {
             option3,
             option4,
             question_type: questionType,
-            correct_answer: correctAnswer
+            correct_option: correctAnswer
         };
         try {
             const response = await axios.post(`${Globals.URL}/api/questions`, newQuestion);

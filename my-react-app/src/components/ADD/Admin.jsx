@@ -1,30 +1,32 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import './Admin.css';  // import the CSS file
 
 const Admin = () => {
-    const navigate = useNavigate();
-    return (
-        <div style={{ padding: '2rem', textAlign: 'center' }}>
-            <button
-                style={{ margin: '1rem', padding: '1rem 2rem' }}
-                onClick={() => navigate('/ADD_ACCOUNT')}
-            >
-                Add Account
-            </button>
-            <button
-                style={{ margin: '1rem', padding: '1rem 2rem' }}
-                onClick={() => navigate('/ADDQ')}
-            >
-                Add question
-            </button>
-            <button
-                style={{ margin: '1rem', padding: '1rem 2rem' }}
-                onClick={() => navigate('/Bank')}
-                >
-                show all questions
-            </button>
-        </div>
-    );
+  const navigate = useNavigate();
+
+  return (
+    <div className="admin-container">
+      <button
+        className="admin-button"
+        onClick={() => navigate('/ADD_ACCOUNT')}
+      >
+        Add Account
+      </button>
+      <button
+        className="admin-button"
+        onClick={() => navigate('/ADDQ')}
+      >
+        Add Question
+      </button>
+      <button
+        className="admin-button"
+        onClick={() => navigate('/Bank')}
+      >
+        Show All Questions
+      </button>
+    </div>
+  );
 };
 
 export default Admin;

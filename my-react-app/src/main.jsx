@@ -9,8 +9,13 @@ import QUIZ from './components/Quiz/QUIZ.jsx';
 import ADDQ from './components/ADD/ADDQ.jsx';
 
 import Analysis from './components/analysis/Analysis.jsx'
+import Admin from './components/ADD/Admin.jsx';
+import Bank from './components/ADD/Bank.jsx';
+
 
 import Globals from "./global.js"
+
+
 const getHostUrl = Globals.URL;
 
 const router = createBrowserRouter([
@@ -37,8 +42,16 @@ const router = createBrowserRouter([
   {
     path: "/analysis",
     element: <Analysis />,
-  },
 
+  },
+  {
+    path: "/admin",
+    element: <Admin/>,
+  },
+  {
+    path: "/Bank",
+    element: <Bank />,
+  }
 
 ]);
 

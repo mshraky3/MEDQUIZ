@@ -38,13 +38,13 @@ const LastQuizSummary = ({ latest_quiz }) => {
                             </tr>
                             <tr>
                                 <td>Correct Answers</td>
-                                <td>{latest_quiz.correct_answers}</td>
+                                <td>{latest_quiz.correct_options}</td>
                             </tr>
                             <tr>
                                 <td>Accuracy</td>
                                 <td>
                                     {latest_quiz.total_questions > 0
-                                        ? ((latest_quiz.correct_answers / latest_quiz.total_questions) * 100).toFixed(2)
+                                        ? ((latest_quiz.correct_options / latest_quiz.total_questions) * 100).toFixed(2)
                                         : "0.00"
                                     }%
                                 </td>

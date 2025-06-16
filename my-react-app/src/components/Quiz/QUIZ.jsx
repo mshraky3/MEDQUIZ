@@ -52,12 +52,12 @@ const QUIZ = () => {
 
   const handleSubmitAnswer = () => {
     const currentQuestion = questions[currentQuestionIndex];
-    const isCorrect = selectedAnswer === currentQuestion.correct_answer;
+    const isCorrect = selectedAnswer === currentQuestion.correct_option;
 
     setAnswers(prev => [...prev, {
       question: currentQuestion.question_text,
       selected: selectedAnswer,
-      correct: currentQuestion.correct_answer,
+      correct: currentQuestion.correct_option,
       isCorrect
     }]);
 
@@ -85,7 +85,7 @@ const QUIZ = () => {
         const sessionRes = await axios.post(`${Globals.URL}/quiz-sessions`, {
           user_id: id,
           total_questions: totalQuestions,
-          correct_answers: correctCount,
+          correct_options: correctCount,
           quiz_accuracy: parseFloat(accuracy),
           duration,
           avg_time_per_question: parseFloat((duration / totalQuestions).toFixed(2)),

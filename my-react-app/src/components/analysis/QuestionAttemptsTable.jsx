@@ -41,7 +41,7 @@ const QuestionAttemptsTable = ({ questionAttempts, questions }) => {
             const response = await axios.post(`${Global.URL}/ai-analysis`, {
                 question: questionText,
                 selected_answer: selectedAnswer,
-                correct_answer: correctAnswer,
+                correct_option: correctAnswer,
             });
             setAiAnalysis(response.data.answer || 'No explanation received.');
         } catch (error) {
@@ -73,7 +73,7 @@ const QuestionAttemptsTable = ({ questionAttempts, questions }) => {
                                 {displayedAttempts.map((attempt, index) => {
                                     const questionRow = questions.find(q => q.id === attempt.question_id);
                                     const questionText = questionRow?.question_text || 'Unknown question';
-                                    const correctAnswer = questionRow?.correct_answer || 'N/A';
+                                    const correctAnswer = questionRow?.correct_option || 'N/A';
 
                                     return (
                                         <tr key={attempt.id || index}>
