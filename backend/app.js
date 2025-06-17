@@ -93,7 +93,7 @@ app.get('/user-analysis/:userId', async (req, res) => {
                 SELECT 
                     COUNT(*) AS total_quizzes,
                     SUM(total_questions) AS total_questions_answered,
-                    SUM(correct_options) AS total_correct_options
+                    SUM(correct_answers) AS total_correct_options
                 FROM user_quiz_sessions
                 WHERE user_id = $1;
             `, [userId]),
@@ -124,13 +124,14 @@ app.get('/user-analysis/:userId', async (req, res) => {
             latest_quiz: {
                 id: latestQuiz.id,
                 total_questions: latestQuiz.total_questions || 0,
-                correct_options: latestQuiz.correct_options || 0,
+                correct_options: latestQuiz.correct_answers || 0,  // matches DB
                 quiz_accuracy: latestQuiz.quiz_accuracy || 0,
                 start_time: latestQuiz.start_time
             }
         };
         res.json(result);
     } catch (err) {
+        console.error("Error fetching topic analysis:", err);
         res.status(500).json({ message: 'Server error' });
     }
 });
@@ -344,14 +345,14 @@ app.post('/question-attempts', async (req, res) => {
 });
 
 app.post('/user-analysis', async (req, res) => {
-  const { user_id } = req.body;
-  if (!user_id) {
-    return res.status(400).json({ message: "User ID is required" });
-  }
+    const { user_id } = req.body;
+    if (!user_id) {
+        return res.status(400).json({ message: "User ID is required" });
+    }
 
-  try {
-    // Get quiz stats
-    const statsRes = await db.query(`
+    try {
+        // Get quiz stats
+        const statsRes = await db.query(`
       SELECT 
         COUNT(*) AS total_quizzes,
         SUM(total_questions) AS total_questions_answered,
@@ -360,20 +361,20 @@ app.post('/user-analysis', async (req, res) => {
       WHERE user_id = $1;
     `, [user_id]);
 
-    const stats = statsRes.rows[0];
+        const stats = statsRes.rows[0];
 
-    // Safely coerce values to numbers (or 0 if null)
-    const totalQuizzes = parseInt(stats.total_quizzes) || 0;
-    const totalQuestionsAnswered = parseInt(stats.total_questions_answered) || 0;
-    const totalCorrectAnswers = parseInt(stats.total_correct_options) || 0;
+        // Safely coerce values to numbers (or 0 if null)
+        const totalQuizzes = parseInt(stats.total_quizzes) || 0;
+        const totalQuestionsAnswered = parseInt(stats.total_questions_answered) || 0;
+        const totalCorrectAnswers = parseInt(stats.total_correct_options) || 0;
 
-    let accuracy = 0;
-    if (totalQuestionsAnswered > 0) {
-      accuracy = parseFloat(((totalCorrectAnswers / totalQuestionsAnswered) * 100).toFixed(2));
-    }
+        let accuracy = 0;
+        if (totalQuestionsAnswered > 0) {
+            accuracy = parseFloat(((totalCorrectAnswers / totalQuestionsAnswered) * 100).toFixed(2));
+        }
 
-    // Get response times
-    const timeRes = await db.query(`
+        // Get response times
+        const timeRes = await db.query(`
       SELECT 
         MIN(time_taken) AS fastest, 
         MAX(time_taken) AS slowest 
@@ -381,13 +382,13 @@ app.post('/user-analysis', async (req, res) => {
       WHERE user_id = $1;
     `, [user_id]);
 
-    const times = timeRes.rows[0];
+        const times = timeRes.rows[0];
 
-    const fastestResponse = parseFloat(times.fastest) || 0;
-    const slowestResponse = parseFloat(times.slowest) || 0;
+        const fastestResponse = parseFloat(times.fastest) || 0;
+        const slowestResponse = parseFloat(times.slowest) || 0;
 
-    // Insert or update user analysis
-    const result = await db.query(`
+        // Insert or update user analysis
+        const result = await db.query(`
       INSERT INTO user_analysis 
       (user_id, total_quizzes, total_questions_answered, total_correct_options, accuracy, fastest_response, slowest_response, last_active)
       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
@@ -402,21 +403,21 @@ app.post('/user-analysis', async (req, res) => {
         last_active = NOW()
       RETURNING *
     `, [
-      user_id,
-      totalQuizzes,
-      totalQuestionsAnswered,
-      totalCorrectAnswers,
-      accuracy,
-      fastestResponse,
-      slowestResponse
-    ]);
+            user_id,
+            totalQuizzes,
+            totalQuestionsAnswered,
+            totalCorrectAnswers,
+            accuracy,
+            fastestResponse,
+            slowestResponse
+        ]);
 
-    res.status(200).json(result.rows[0]);
+        res.status(200).json(result.rows[0]);
 
-  } catch (err) {
-    console.error('Error in /user-analysis:', err);
-    res.status(500).json({ message: 'Failed to update user analysis' });
-  }
+    } catch (err) {
+        console.error('Error in /user-analysis:', err);
+        res.status(500).json({ message: 'Failed to update user analysis' });
+    }
 });
 
 
@@ -549,18 +550,18 @@ app.get('/questions', async (req, res) => {
 // Get single question by ID
 app.get('/questions/:id', async (req, res) => {
     const { id } = req.params;
-    
+
     if (isNaN(id)) {
         return res.status(400).json({ message: "Invalid question ID" });
     }
-    
+
     try {
         const result = await db.query("SELECT * FROM questions WHERE id = $1", [id]);
-        
+
         if (result.rows.length === 0) {
             return res.status(404).json({ message: "Question not found" });
         }
-        
+
         res.json({ question: result.rows[0] });
     } catch (err) {
         console.error("Error fetching question:", err);
@@ -571,24 +572,24 @@ app.get('/questions/:id', async (req, res) => {
 // Delete a question by ID
 app.delete('/questions/:id', async (req, res) => {
     const { id } = req.params;
-    
+
     if (isNaN(id)) {
         return res.status(400).json({ message: "Invalid question ID" });
     }
-    
+
     try {
         const result = await db.query(
-            "DELETE FROM questions WHERE id = $1 RETURNING *", 
+            "DELETE FROM questions WHERE id = $1 RETURNING *",
             [id]
         );
-        
+
         if (result.rows.length === 0) {
             return res.status(404).json({ message: "Question not found" });
         }
-        
-        res.json({ 
+
+        res.json({
             message: "Question deleted successfully",
-            question: result.rows[0] 
+            question: result.rows[0]
         });
     } catch (err) {
         console.error("Error deleting question:", err);
@@ -629,8 +630,8 @@ app.put('/questions/:id', async (req, res) => {
                  correct_option = $7
              WHERE id = $8
              RETURNING *`,
-            [question_text, option1, option2, option3, option4, 
-             question_type, correct_option, id]
+            [question_text, option1, option2, option3, option4,
+                question_type, correct_option, id]
         );
 
         if (result.rows.length === 0) {
