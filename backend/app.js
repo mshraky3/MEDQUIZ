@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { Pool } from 'pg';
 import https from "https";
+import { console } from 'inspector';
 
 dotenv.config();
 const agent = new https.Agent({ keepAlive: true });
@@ -29,15 +30,15 @@ app.use(cors({
 }));
 
 
-
-
 app.use(express.json());
 
 app.get('/', async (req, res) => {
     try {
         const resal = await db.query("SELECT * FROM test");
+        console.log(resal.rows);
         res.send(resal.rows[0]?.test || "No data found in test table.");
     } catch (err) {
+        console.error(err);
         res.status(500).send("Server error");
     }
 });
@@ -204,7 +205,6 @@ app.post('/user-streaks', async (req, res) => {
             const yesterday = new Date();
             yesterday.setDate(yesterday.getDate() - 1);
             yesterday.setHours(0, 0, 0, 0);
-
             if (lastDate.getTime() === yesterday.getTime()) {
                 currentStreak = existing.current_streak + 1;
             } else if (lastDate.getTime() < yesterday.getTime()) {
@@ -532,9 +532,7 @@ app.post("/ai-analysis", async (req, res) => {
 
 
 
-// Existing code remains unchanged until...
 
-// === NEW ROUTES FOR QUESTIONS ===
 
 // Get all questions
 app.get('/questions', async (req, res) => {
