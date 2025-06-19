@@ -15,7 +15,7 @@ const Bank = () => {
     option3: "",
     option4: "",
     question_type: "",
-    correct_answer: ""
+    correct_option: ""
   });
   const [loading, setLoading] = useState(true);
   const [successMessage, setSuccessMessage] = useState("");
@@ -71,7 +71,7 @@ const Bank = () => {
       option3: question.option3,
       option4: question.option4,
       question_type: question.question_type || "",
-      correct_answer: question.correct_answer
+      correct_option: question.correct_option
     });
   };
 
@@ -84,7 +84,7 @@ const Bank = () => {
       option3: "",
       option4: "",
       question_type: "",
-      correct_answer: ""
+      correct_option: ""
     });
   };
 
@@ -197,8 +197,8 @@ const Bank = () => {
                       <div className="form-group">
                         <label>Correct Answer:</label>
                         <select
-                          name="correct_answer"
-                          value={formData.correct_answer}
+                          name="correct_option"
+                          value={formData.correct_option}
                           onChange={handleInputChange}
                         >
                           <option value="">Select Correct Option</option>
@@ -234,7 +234,7 @@ const Bank = () => {
                       </div>
 
                       <p className="correct-answer">
-                        <strong>Answer:</strong> {q.correct_answer}
+                        <strong>Answer:</strong> {q.correct_option}
                       </p>
                       <p className="question-type">
                         <strong>Type:</strong> {q.question_type || "N/A"}

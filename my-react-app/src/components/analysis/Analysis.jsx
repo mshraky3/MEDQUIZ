@@ -36,10 +36,10 @@ const Analysis = () => {
           questionRes,
           questionsRes
         ] = await Promise.all([
-          axios.get(`${Globals.URL}/user-analysis/${id}`),
-          axios.get(`${Globals.URL}/user-streaks/${id}`),
-          axios.get(`${Globals.URL}/topic-analysis/user/${id}`),
-          axios.get(`${Globals.URL}/question-attempts/user/${id}`),
+          axios.get(`${Globals.URL}/user-analysis/${id}?nocache=${Date.now()}`),
+          axios.get(`${Globals.URL}/user-streaks/${id}?nocache=${Date.now()}`),
+          axios.get(`${Globals.URL}/topic-analysis/user/${id}?nocache=${Date.now()}`),
+          axios.get(`${Globals.URL}/question-attempts/user/${id}?nocache=${Date.now()}`),
           axios.get(`${Globals.URL}/api/all-questions?nocache=${Date.now()}`)
         ]);
         setUserAnalysis(userRes.data);
@@ -79,7 +79,6 @@ const Analysis = () => {
   return (
     <div className="analysis-wrapper fade-in">
       <h2 className="screen-title">Quiz Health Report</h2>
-
       {userAnalysis || streakData || topicAnalysis.length || questionAttempts.length ? (
         <>
           <OverallStats userAnalysis={userAnalysis} />
@@ -97,7 +96,7 @@ const Analysis = () => {
           onClick={() => navigate("/quizs", { state: { id } })}
           className="primary-button"
         >
-           Take Another Quiz
+          Take Another Quiz
         </button>
       </div>
     </div>
