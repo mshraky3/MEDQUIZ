@@ -36,11 +36,11 @@ const Analysis = () => {
           questionRes,
           questionsRes
         ] = await Promise.all([
-          axios.get(`${Globals.URL}/user-analysis/${id}?nocache=${Date.now()}`),
-          axios.get(`${Globals.URL}/user-streaks/${id}?nocache=${Date.now()}`),
-          axios.get(`${Globals.URL}/topic-analysis/user/${id}?nocache=${Date.now()}`),
-          axios.get(`${Globals.URL}/question-attempts/user/${id}?nocache=${Date.now()}`),
-          axios.get(`${Globals.URL}/api/all-questions?nocache=${Date.now()}`)
+          axios.get(`${Globals.URL}/user-analysis/${id} `),
+          axios.get(`${Globals.URL}/user-streaks/${id} `),
+          axios.get(`${Globals.URL}/topic-analysis/user/${id} `),
+          axios.get(`${Globals.URL}/question-attempts/user/${id} `),
+          axios.get(`${Globals.URL}/api/all-questions `)
         ]);
         setUserAnalysis(userRes.data);
         setStreakData(streakRes.data);

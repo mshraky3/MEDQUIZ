@@ -22,6 +22,7 @@ const QUIZ = () => {
   const [error, setError] = useState(null);
   const [dataSent, setDataSent] = useState(false);
   const quizStartTimeRef = useRef(Date.now());
+
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
@@ -70,11 +71,13 @@ const QUIZ = () => {
     }
   };
 
+  // send data only when quiz is finished AND answers array is fully populated
   useEffect(() => {
     const sendQuizData = async () => {
       if (!id || dataSent || !quizFinished) return;
-      setDataSent(true);
+      if (answers.length !== questions.length) return;
 
+      setDataSent(true);
       const duration = Math.floor((Date.now() - quizStartTimeRef.current) / 1000);
       const totalQuestions = answers.length;
       const correctCount = answers.filter(a => a.isCorrect).length;
@@ -82,18 +85,19 @@ const QUIZ = () => {
       const topicsCovered = [...new Set(questions.map(q => q.question_type))];
 
       try {
+        // Save quiz session
         const sessionRes = await axios.post(`${Globals.URL}/quiz-sessions`, {
           user_id: id,
           total_questions: totalQuestions,
-          correct_options: correctCount,
+          correct: correctCount, // ✅ Changed from correct_options
           quiz_accuracy: parseFloat(accuracy),
           duration,
           avg_time_per_question: parseFloat((duration / totalQuestions).toFixed(2)),
           topics_covered: topicsCovered
         });
-
         const quiz_session_id = sessionRes.data.id;
 
+        // Save topic analysis
         const topicMap = {};
         answers.forEach((ans, i) => {
           const topic = questions[i]?.question_type;
@@ -117,26 +121,38 @@ const QUIZ = () => {
         for (let i = 0; i < answers.length; i++) {
           const ans = answers[i];
           const q = questions[i];
-          if (!q.id || !ans.selected) continue;
-          await axios.post(`${Globals.URL}/question-attempts`, {
+          if (!id || !q.id || !ans.selected || quiz_session_id === undefined) {
+            console.warn('Skipping invalid attempt', { id, qid: q?.id, selected: ans?.selected, quiz_session_id });
+            continue;
+          }
+
+          const payload = {
             user_id: id,
             question_id: q.id,
             selected_option: ans.selected,
             is_correct: ans.isCorrect,
             time_taken: parseFloat((duration / totalQuestions).toFixed(2)),
             quiz_session_id
-          });
+          };
+
+          console.log("Sending attempt:", payload);
+
+          await axios.post(`${Globals.URL}/question-attempts`, payload);
         }
 
+        // Update user streak
         await axios.post(`${Globals.URL}/user-streaks`, { user_id: id });
+
+        // Update user analysis
         await axios.post(`${Globals.URL}/user-analysis`, { user_id: id });
+
       } catch (err) {
-        console.error(err.message);
+        console.error('Error sending quiz data:', err.message);
       }
     };
 
     sendQuizData();
-  }, [quizFinished, id, answers, dataSent, questions]);
+  }, [quizFinished, answers, id, dataSent, questions]);
 
   if (loading) return <Loading />;
   if (error) return <ErrorScreen message={error} navigate={navigate} id={id} />;
