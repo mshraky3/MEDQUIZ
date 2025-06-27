@@ -3,7 +3,6 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { Pool } from 'pg';
 import https from "https";
-import { console } from 'inspector';
 
 dotenv.config();
 const agent = new https.Agent({ keepAlive: true });
@@ -67,6 +66,7 @@ app.get('/get_all_users', async (req, res) => {
 });
 
 app.post('/login', async (req, res) => {
+    console.log("Login request received:", req.body);
     const { username, password } = req.body;
     try {
         const user = await db.query("SELECT * FROM accounts WHERE username = $1", [username]);
@@ -86,6 +86,7 @@ app.post('/login', async (req, res) => {
     }
 });
 
+
 app.get('/user-analysis/:userId', async (req, res) => {
     const { userId } = req.params;
     try {
@@ -94,7 +95,7 @@ app.get('/user-analysis/:userId', async (req, res) => {
                 SELECT 
                     COUNT(*) AS total_quizzes,
                     SUM(total_questions) AS total_questions_answered,
-                    SUM(correct_answers) AS total_correct_options
+                    SUM(correct_answers) AS total_correct_answers
                 FROM user_quiz_sessions
                 WHERE user_id = $1;
             `, [userId]),
@@ -169,6 +170,84 @@ app.get('/api/all-questions', async (req, res) => {
     }
 });
 
+
+app.get('/user-streaks/:user_id', async (req, res) => {
+    try {
+        const { user_id } = req.params;
+
+        const quizDates = await db.query(
+            `SELECT DISTINCT DATE(COALESCE(end_time, start_time)) AS quiz_date
+        FROM user_quiz_sessions 
+        WHERE user_id = $1
+        ORDER BY quiz_date ASC`,
+            [user_id]
+        );
+        let currentStreak = 0;
+        let longestStreak = 0;
+        let lastActiveDate = null;
+
+        if (quizDates.rows.length > 0) {
+            const dates = quizDates.rows.map(row => new Date(row.quiz_date))
+                .map(d => {
+                    d.setHours(0, 0, 0, 0);
+                    return d;
+                })
+                .sort((a, b) => a.getTime() - b.getTime());
+            let runningStreak = 0;
+            let prevDate = null;
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            for (const date of dates) {
+                if (!prevDate) {
+                    runningStreak = 1;
+                } else {
+                    const diffDays = (date.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24);
+                    if (diffDays === 1) {
+                        runningStreak++;
+                    } else if (diffDays > 1) {
+                        runningStreak = 1;
+                    }
+                }
+                longestStreak = Math.max(longestStreak, runningStreak);
+                prevDate = date;
+                if (
+                    date.getTime() === today.getTime() ||
+                    (runningStreak === 1 && date.getTime() === today.getTime() - 86400000)
+                ) {
+                    currentStreak = runningStreak;
+                }
+            }
+            lastActiveDate = dates[dates.length - 1];
+        }
+
+        res.json({
+            current_streak: currentStreak,
+            longest_streak: longestStreak,
+            last_active_date: lastActiveDate
+        });
+
+    } catch (err) {
+        console.error("Error in GET /user-streaks/:user_id", err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+app.get('/api/questions', async (req, res) => {
+    const limit = parseInt(req.query.limit) || 10;
+    try {
+        const result = await db.query(
+            `SELECT * FROM questions ORDER BY RANDOM() LIMIT $1`, [limit]
+        );
+        res.json({ questions: result.rows });
+    } catch (err) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+
+
+
+
 app.post('/user-streaks', async (req, res) => {
     const { user_id } = req.body;
     if (!user_id) {
@@ -233,68 +312,9 @@ app.post('/user-streaks', async (req, res) => {
     }
 });
 
-app.get('/user-streaks/:user_id', async (req, res) => {
-    try {
-        const { user_id } = req.params;
-
-        const quizDates = await db.query(
-            `SELECT DISTINCT DATE(COALESCE(end_time, start_time)) AS quiz_date
-        FROM user_quiz_sessions 
-        WHERE user_id = $1
-        ORDER BY quiz_date ASC`,
-            [user_id]
-        );
-        let currentStreak = 0;
-        let longestStreak = 0;
-        let lastActiveDate = null;
-
-        if (quizDates.rows.length > 0) {
-            const dates = quizDates.rows.map(row => new Date(row.quiz_date))
-                .map(d => {
-                    d.setHours(0, 0, 0, 0);
-                    return d;
-                })
-                .sort((a, b) => a.getTime() - b.getTime());
-            let runningStreak = 0;
-            let prevDate = null;
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            for (const date of dates) {
-                if (!prevDate) {
-                    runningStreak = 1;
-                } else {
-                    const diffDays = (date.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24);
-                    if (diffDays === 1) {
-                        runningStreak++;
-                    } else if (diffDays > 1) {
-                        runningStreak = 1;
-                    }
-                }
-                longestStreak = Math.max(longestStreak, runningStreak);
-                prevDate = date;
-                if (
-                    date.getTime() === today.getTime() ||
-                    (runningStreak === 1 && date.getTime() === today.getTime() - 86400000)
-                ) {
-                    currentStreak = runningStreak;
-                }
-            }
-            lastActiveDate = dates[dates.length - 1];
-        }
-
-        res.json({
-            current_streak: currentStreak,
-            longest_streak: longestStreak,
-            last_active_date: lastActiveDate
-        });
-
-    } catch (err) {
-        console.error("Error in GET /user-streaks/:user_id", err);
-        res.status(500).json({ message: 'Server error' });
-    }
-});
-
 app.post('/topic-analysis', async (req, res) => {
+
+    console.log("Received topic analysis request:", req.body);
     const { user_id, question_type, total_answered, total_correct, accuracy, avg_time } = req.body;
     if (!user_id || !question_type || typeof accuracy !== 'number') {
         return res.status(400).json({ message: "Invalid or missing topic analysis data" });
@@ -327,8 +347,9 @@ app.post('/topic-analysis', async (req, res) => {
 });
 
 app.post('/question-attempts', async (req, res) => {
+    console.log("Received question attempt data:", req.body);
     const { user_id, question_id, selected_option, is_correct, time_taken, quiz_session_id } = req.body;
-    if (!user_id || !question_id || selected_option === undefined || is_correct === undefined || time_taken === undefined) {
+    if (!user_id || !question_id || selected_option === undefined || is_correct === undefined || time_taken === undefined || quiz_session_id === undefined) {
         return res.status(400).json({ message: "Missing required attempt data" });
     }
     try {
@@ -340,11 +361,14 @@ app.post('/question-attempts', async (req, res) => {
         );
         res.status(201).json(result.rows[0]);
     } catch (err) {
+        console.error("Error inserting question attempt:", err);
         res.status(500).json({ message: 'Failed to record question attempt' });
     }
+
 });
 
 app.post('/user-analysis', async (req, res) => {
+    console.log("Received user analysis request:", req.body);
     const { user_id } = req.body;
     if (!user_id) {
         return res.status(400).json({ message: "User ID is required" });
@@ -422,36 +446,48 @@ app.post('/user-analysis', async (req, res) => {
 
 
 app.post('/quiz-sessions', async (req, res) => {
-    const { user_id, total_questions, correct_options, quiz_accuracy, duration, avg_time_per_question, topics_covered } = req.body;
+    console.log("Received quiz session data:", req.body);
+    const {
+        user_id,
+        total_questions,
+        correct_answers, // ✅ Changed from correct_options
+        quiz_accuracy,
+        duration,
+        avg_time_per_question,
+        topics_covered
+    } = req.body;
+
     if (!user_id || !total_questions || typeof quiz_accuracy !== 'number') {
         return res.status(400).json({ message: "Missing required fields" });
     }
+
     try {
         const result = await db.query(
             `INSERT INTO user_quiz_sessions 
-            (user_id, total_questions, correct_options, quiz_accuracy, duration, avg_time_per_question, topics_covered) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-            [user_id, total_questions, correct_options, quiz_accuracy, duration, avg_time_per_question, JSON.stringify(topics_covered)]
+            (user_id, total_questions, correct_answers, quiz_accuracy, duration, avg_time_per_question, topics_covered) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+            [
+                user_id,
+                total_questions,
+                correct_answers,
+                quiz_accuracy,
+                duration,
+                avg_time_per_question,
+                JSON.stringify(topics_covered)
+            ]
         );
-        res.status(201).json(result.rows[0]);
+
+        res.status(201).json({ id: result.rows[0].id });
     } catch (err) {
+        console.error("Failed to record quiz session", err.message, err.stack);
         res.status(500).json({ message: 'Failed to record quiz session' });
     }
 });
 
-app.get('/api/questions', async (req, res) => {
-    const limit = parseInt(req.query.limit) || 10;
-    try {
-        const result = await db.query(
-            `SELECT * FROM questions ORDER BY RANDOM() LIMIT $1`, [limit]
-        );
-        res.json({ questions: result.rows });
-    } catch (err) {
-        res.status(500).json({ message: 'Server error' });
-    }
-});
+
 
 app.post('/api/questions', async (req, res) => {
+    console.log("Received new question data:", req.body);
     const {
         question_text,
         option1,
@@ -528,13 +564,6 @@ app.post("/ai-analysis", async (req, res) => {
 
 
 
-
-
-
-
-
-
-// Get all questions
 app.get('/questions', async (req, res) => {
     try {
         const result = await db.query("SELECT * FROM questions ORDER BY id");
@@ -545,7 +574,6 @@ app.get('/questions', async (req, res) => {
     }
 });
 
-// Get single question by ID
 app.get('/questions/:id', async (req, res) => {
     const { id } = req.params;
 
@@ -567,7 +595,6 @@ app.get('/questions/:id', async (req, res) => {
     }
 });
 
-// Delete a question by ID
 app.delete('/questions/:id', async (req, res) => {
     const { id } = req.params;
 
