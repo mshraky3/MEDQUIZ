@@ -85,11 +85,10 @@ const QUIZ = () => {
       const topicsCovered = [...new Set(questions.map(q => q.question_type))];
 
       try {
-        // Save quiz session
         const sessionRes = await axios.post(`${Globals.URL}/quiz-sessions`, {
           user_id: id,
           total_questions: totalQuestions,
-          correct: correctCount, // ✅ Changed from correct_options
+          correct_answers: correctCount, // ✅ Changed from correct_options
           quiz_accuracy: parseFloat(accuracy),
           duration,
           avg_time_per_question: parseFloat((duration / totalQuestions).toFixed(2)),

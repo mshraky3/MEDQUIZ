@@ -2,9 +2,27 @@ import React from 'react';
 import './analysis.css';
 
 const OverallStats = ({ userAnalysis }) => {
+    console.log(userAnalysis);
+
+    // Use avg_accuracy if available, otherwise calculate manually (fallback)
+    const calculateAccuracy = () => {
+        if (userAnalysis?.avg_accuracy !== undefined) {
+            return Number(userAnalysis.avg_accuracy).toFixed(2);
+        }
+
+        const correct = userAnalysis?.total_correct_answers;
+        const total = userAnalysis?.total_questions_answered;
+
+        if (typeof correct === 'number' && typeof total === 'number' && total > 0) {
+            return ((correct / total) * 100).toFixed(2);
+        }
+
+        return "0.00";
+    };
+
     return (
         <section className="streak-section">
-            <h3 className="section-header"> Overall Performance</h3>
+            <h3 className="section-header">Overall Performance</h3>
 
             {userAnalysis ? (
                 <div className="stats-grid">
@@ -15,10 +33,7 @@ const OverallStats = ({ userAnalysis }) => {
                     <div className="stat-card">
                         <div className="stat-label">Average Accuracy</div>
                         <div className="stat-value">
-                            {userAnalysis.total_questions_answered > 0
-                                ? ((userAnalysis.total_correct_options / userAnalysis.total_questions_answered) * 100).toFixed(2)
-                                : "0.00"
-                            }%
+                            {calculateAccuracy()}%
                         </div>
                     </div>
                     <div className="stat-card">
