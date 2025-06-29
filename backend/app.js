@@ -34,7 +34,6 @@ app.use(express.json());
 app.get('/', async (req, res) => {
     try {
         const resal = await db.query("SELECT * FROM test");
-        console.log(resal.rows);
         res.send(resal.rows[0]?.test || "No data found in test table.");
     } catch (err) {
         console.error(err);
@@ -112,31 +111,38 @@ app.get('/user-analysis/:userId', async (req, res) => {
         const latestQuiz = latestQuizRes.rows[0] || {};
         const lastActive = analysisRes.rows[0]?.last_active;
 
+        const totalQuizzes = parseInt(stats.total_quizzes) || 0;
+        const totalQuestionsAnswered = parseInt(stats.total_questions_answered) || 0;
+        const totalCorrectAnswers = parseInt(stats.total_correct_answers) || 0;
+
+
         let accuracy = 0;
-        if (stats.total_questions_answered > 0) {
-            accuracy = parseFloat(((stats.total_correct_options / stats.total_questions_answered) * 100).toFixed(2));
+        if (totalQuestionsAnswered > 0) {
+            accuracy = parseFloat(((totalCorrectAnswers / totalQuestionsAnswered) * 100).toFixed(2));
         }
 
         const result = {
-            total_quizzes: parseInt(stats.total_quizzes || 0),
-            total_questions_answered: parseInt(stats.total_questions_answered || 0),
-            total_correct_options: parseInt(stats.total_correct_options || 0),
+            total_quizzes: totalQuizzes,
+            total_questions_answered: totalQuestionsAnswered,
+            total_correct_answers: totalCorrectAnswers,  // ✅ renamed to match DB
             avg_accuracy: accuracy,
             last_active: lastActive,
             latest_quiz: {
                 id: latestQuiz.id,
                 total_questions: latestQuiz.total_questions || 0,
-                correct_options: latestQuiz.correct_answers || 0,  // matches DB
+                correct_answers: latestQuiz.correct_answers || 0,  // ✅ matches your DB column
                 quiz_accuracy: latestQuiz.quiz_accuracy || 0,
                 start_time: latestQuiz.start_time
             }
         };
+
         res.json(result);
     } catch (err) {
-        console.error("Error fetching topic analysis:", err);
+        console.error("Error fetching user analysis:", err);
         res.status(500).json({ message: 'Server error' });
     }
 });
+
 
 app.get('/topic-analysis/user/:userId', async (req, res) => {
     const { userId } = req.params;
@@ -314,7 +320,6 @@ app.post('/user-streaks', async (req, res) => {
 
 app.post('/topic-analysis', async (req, res) => {
 
-    console.log("Received topic analysis request:", req.body);
     const { user_id, question_type, total_answered, total_correct, accuracy, avg_time } = req.body;
     if (!user_id || !question_type || typeof accuracy !== 'number') {
         return res.status(400).json({ message: "Invalid or missing topic analysis data" });
@@ -347,7 +352,6 @@ app.post('/topic-analysis', async (req, res) => {
 });
 
 app.post('/question-attempts', async (req, res) => {
-    console.log("Received question attempt data:", req.body);
     const { user_id, question_id, selected_option, is_correct, time_taken, quiz_session_id } = req.body;
     if (!user_id || !question_id || selected_option === undefined || is_correct === undefined || time_taken === undefined || quiz_session_id === undefined) {
         return res.status(400).json({ message: "Missing required attempt data" });
@@ -368,14 +372,12 @@ app.post('/question-attempts', async (req, res) => {
 });
 
 app.post('/user-analysis', async (req, res) => {
-    console.log("Received user analysis request:", req.body);
     const { user_id } = req.body;
     if (!user_id) {
         return res.status(400).json({ message: "User ID is required" });
     }
 
     try {
-        // Get quiz stats
         const statsRes = await db.query(`
       SELECT 
         COUNT(*) AS total_quizzes,
@@ -387,17 +389,16 @@ app.post('/user-analysis', async (req, res) => {
 
         const stats = statsRes.rows[0];
 
-        // Safely coerce values to numbers (or 0 if null)
         const totalQuizzes = parseInt(stats.total_quizzes) || 0;
         const totalQuestionsAnswered = parseInt(stats.total_questions_answered) || 0;
-        const totalCorrectAnswers = parseInt(stats.total_correct_options) || 0;
+        const totalCorrectAnswers = parseInt(stats.total_correct_answers) || 0;
 
         let accuracy = 0;
         if (totalQuestionsAnswered > 0) {
             accuracy = parseFloat(((totalCorrectAnswers / totalQuestionsAnswered) * 100).toFixed(2));
         }
 
-        // Get response times
+
         const timeRes = await db.query(`
       SELECT 
         MIN(time_taken) AS fastest, 
@@ -411,7 +412,6 @@ app.post('/user-analysis', async (req, res) => {
         const fastestResponse = parseFloat(times.fastest) || 0;
         const slowestResponse = parseFloat(times.slowest) || 0;
 
-        // Insert or update user analysis
         const result = await db.query(`
       INSERT INTO user_analysis 
       (user_id, total_quizzes, total_questions_answered, total_correct_options, accuracy, fastest_response, slowest_response, last_active)
@@ -446,11 +446,10 @@ app.post('/user-analysis', async (req, res) => {
 
 
 app.post('/quiz-sessions', async (req, res) => {
-    console.log("Received quiz session data:", req.body);
     const {
         user_id,
         total_questions,
-        correct_answers, // ✅ Changed from correct_options
+        correct_answers,
         quiz_accuracy,
         duration,
         avg_time_per_question,
@@ -462,6 +461,9 @@ app.post('/quiz-sessions', async (req, res) => {
     }
 
     try {
+        console.log("Inserting quiz session for user:", [
+            correct_answers,
+        ]);
         const result = await db.query(
             `INSERT INTO user_quiz_sessions 
             (user_id, total_questions, correct_answers, quiz_accuracy, duration, avg_time_per_question, topics_covered) 
@@ -487,7 +489,6 @@ app.post('/quiz-sessions', async (req, res) => {
 
 
 app.post('/api/questions', async (req, res) => {
-    console.log("Received new question data:", req.body);
     const {
         question_text,
         option1,
