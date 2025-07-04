@@ -19,6 +19,7 @@ const Bank = () => {
   });
   const [loading, setLoading] = useState(true);
   const [successMessage, setSuccessMessage] = useState("");
+  const [currentIndex, setCurrentIndex] = useState(0); // Track current question index
 
   const questionTypes = [
     "pediatric",
@@ -52,6 +53,7 @@ const Bank = () => {
       );
       setQuestions(filtered);
     }
+    setCurrentIndex(0); // Reset to first question on search
   }, [searchTerm, allQuestions]);
 
   const handleInputChange = (e) => {
@@ -94,16 +96,13 @@ const Bank = () => {
         `${Globals.URL}/questions/${editingQuestion}`,
         formData
       );
-
       setQuestions((prev) =>
         prev.map((q) => (q.id === editingQuestion ? response.data.question : q))
       );
       setAllQuestions((prev) =>
         prev.map((q) => (q.id === editingQuestion ? response.data.question : q))
       );
-
       cancelEditing();
-
       setSuccessMessage("✅ Question updated successfully!");
       setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
@@ -111,10 +110,24 @@ const Bank = () => {
     }
   };
 
+  const goToNext = () => {
+    if (currentIndex < questions.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+    }
+  };
+
+  const goToPrev = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex(currentIndex - 1);
+    }
+  };
+
+  const currentQuestion = questions[currentIndex];
+  const nextQuestion = currentIndex < questions.length - 1 ? questions[currentIndex + 1] : null;
+
   return (
     <div className="app-container">
       <h1 className="title">Question Bank</h1>
-
       {loading ? (
         <div className="loading-screen">
           <div className="spinner"></div>
@@ -125,7 +138,6 @@ const Bank = () => {
           {successMessage && (
             <div className="success-message">{successMessage}</div>
           )}
-
           <div className="search-bar">
             <input
               type="text"
@@ -140,9 +152,10 @@ const Bank = () => {
             {questions.length === 0 ? (
               <p>No questions found.</p>
             ) : (
-              questions.map((q) => (
-                <div key={q.id} className="question-card">
-                  {editingQuestion === q.id ? (
+              <div className="card-wrapper">
+                {/* Main Question Card */}
+                <div className="question-card">
+                  {editingQuestion === currentQuestion?.id ? (
                     <div className="edit-form">
                       <div className="form-group">
                         <label>Question Text:</label>
@@ -153,7 +166,6 @@ const Bank = () => {
                           rows="3"
                         />
                       </div>
-
                       <div className="form-group">
                         <label>Options:</label>
                         <input
@@ -177,7 +189,6 @@ const Bank = () => {
                           onChange={handleInputChange}
                         />
                       </div>
-
                       <div className="form-group">
                         <label>Question Type:</label>
                         <select
@@ -193,7 +204,6 @@ const Bank = () => {
                           ))}
                         </select>
                       </div>
-
                       <div className="form-group">
                         <label>Correct Answer:</label>
                         <select
@@ -209,7 +219,6 @@ const Bank = () => {
                           ))}
                         </select>
                       </div>
-
                       <div className="button-group">
                         <button className="quiz-button" onClick={saveQuestion}>
                           Save
@@ -224,32 +233,46 @@ const Bank = () => {
                     </div>
                   ) : (
                     <>
-                      <p className="question-text">{q.question_text}</p>
-
+                      <p className="question-text">{currentQuestion.question_text}</p>
                       <div className="options">
-                        <p>1. {q.option1}</p>
-                        <p>2. {q.option2}</p>
-                        <p>3. {q.option3}</p>
-                        <p>4. {q.option4}</p>
+                        <p>1. {currentQuestion.option1}</p>
+                        <p>2. {currentQuestion.option2}</p>
+                        <p>3. {currentQuestion.option3}</p>
+                        <p>4. {currentQuestion.option4}</p>
                       </div>
-
                       <p className="correct-answer">
-                        <strong>Answer:</strong> {q.correct_option}
+                        <strong>Answer:</strong> {currentQuestion.correct_option}
                       </p>
                       <p className="question-type">
-                        <strong>Type:</strong> {q.question_type || "N/A"}
+                        <strong>Type:</strong> {currentQuestion.question_type || "N/A"}
                       </p>
-
                       <button
                         className="quiz-button"
-                        onClick={() => startEditing(q)}
+                        onClick={() => startEditing(currentQuestion)}
                       >
                         Edit
                       </button>
                     </>
                   )}
                 </div>
-              ))
+                <div className="navigation-buttons">
+                  <button
+                    className="quiz-button"
+                    disabled={currentIndex === 0}
+                    onClick={goToPrev}
+                  >
+                    Previous
+                  </button>
+                  <span>{currentIndex + 1} / {questions.length}</span>
+                  <button
+                    className="quiz-button"
+                    disabled={currentIndex === questions.length - 1}
+                    onClick={goToNext}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         </>

@@ -72,9 +72,7 @@ const ADDQ = () => {
             <h2>Add New Question</h2>
             {error && <div className="error">{error}</div>}
             {message && <div className="success">{message}</div>}
-
             <form onSubmit={handleSubmit} className="question-form" autoComplete="off">
-
                 <label>
                     Question Text:
                     <textarea
