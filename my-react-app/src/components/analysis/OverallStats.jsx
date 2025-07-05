@@ -2,9 +2,7 @@ import React from 'react';
 import './analysis.css';
 
 const OverallStats = ({ userAnalysis }) => {
-    console.log(userAnalysis);
 
-    // Use avg_accuracy if available, otherwise calculate manually (fallback)
     const calculateAccuracy = () => {
         if (userAnalysis?.avg_accuracy !== undefined) {
             return Number(userAnalysis.avg_accuracy).toFixed(2);

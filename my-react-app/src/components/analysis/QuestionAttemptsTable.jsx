@@ -45,7 +45,6 @@ const QuestionAttemptsTable = ({ questionAttempts, questions }) => {
             });
             setAiAnalysis(response.data.answer || 'No explanation received.');
         } catch (error) {
-            console.error('Error fetching AI analysis:', error);
             setAiAnalysis('Failed to get AI analysis.');
         } finally {
             setLoadingButtons((prev) => ({ ...prev, [attemptId]: false }));
@@ -104,7 +103,6 @@ const QuestionAttemptsTable = ({ questionAttempts, questions }) => {
                             </tbody>
                         </table>
                     </div>
-
                     {sortedIncorrectAttempts.length > 5 && (
                         <div className="see-all-container">
                             <button
