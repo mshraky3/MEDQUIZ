@@ -2,6 +2,7 @@ import React from 'react';
 import './analysis.css';
 
 const StreakInfo = ({ streakData }) => {
+    console.log("Streak Data:", streakData);
     return (
         <section className="streak-section">
             <h3 className="section-header"> Your Streaks</h3>

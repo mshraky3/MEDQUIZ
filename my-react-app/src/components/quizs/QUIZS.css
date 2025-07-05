@@ -206,3 +206,35 @@
     clip-path: polygon(0 15px, 15px 0, calc(100% - 15px) 0, 100% 15px, 100% 100%, 0 100%);
   }
 }
+.streak-badge {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 25px;
+    padding: 8px 12px 6px 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: sans-serif;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    background: linear-gradient(to right, #fff9e6, #f0f8fb);
+    font-size: 14px;
+    transition: transform 0.2s ease;
+    cursor: default;
+}
+
+.streak-badge:hover {
+    transform: scale(1.05);
+}
+
+.streak-emoji {
+    font-size: 18px;
+}
+
+.streak-count {
+    font-weight: bold;
+    color: #00b6e0;
+    font-size: 16px;
+}

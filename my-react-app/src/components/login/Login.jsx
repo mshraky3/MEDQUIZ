@@ -29,7 +29,6 @@ const Login = () => {
 
     setError('');
 
-    // Admin bypass
     if (cleanedUsername === 'admin' && password === 'admin1810') {
       navigate('/admin');
       return;
