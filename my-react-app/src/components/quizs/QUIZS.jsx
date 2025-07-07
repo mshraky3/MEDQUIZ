@@ -8,7 +8,6 @@ const QUIZS = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const id = location.state?.id || location.state?.user?.id;
-
     const [currentStreak, setCurrentStreak] = useState(0);
     const [showTypeSelector, setShowTypeSelector] = useState(false);
     const [selectedTypes, setSelectedTypes] = useState([]);
@@ -51,7 +50,7 @@ const QUIZS = () => {
         });
     };
 
-    // Apply custom checkbox styles after render
+  
     const checkboxRef = useRef(null);
 
     useEffect(() => {

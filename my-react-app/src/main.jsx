@@ -11,8 +11,7 @@ import ADDQ from './components/ADD/ADDQ.jsx';
 import Analysis from './components/analysis/Analysis.jsx'
 import Admin from './components/ADD/Admin.jsx';
 import Bank from './components/ADD/Bank.jsx';
-import TempQUIZ from './components/login/TempQUIZ.jsx';
-import AnalysisTemp from './components/login/AnalysisTemp.jsx';
+
 import Globals from "./global.js"
 
 
@@ -52,14 +51,7 @@ const router = createBrowserRouter([
     path: "/Bank",
     element: <Bank />,
   },
-  {
-    path:'/temp-quiz',
-    element: <TempQUIZ/>
-  },
-  {
-    path: "/analysis-temp",
-    element: <AnalysisTemp/>,
-  }
+
 
 ]);
 

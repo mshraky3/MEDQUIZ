@@ -76,17 +76,13 @@ const Login = () => {
   const handleAcceptTerms = () => {
     if (!termsChecked) return;
     setShowTermsPopup(false);
-    navigate('/quizs'); // Navigate after accepting terms
+    navigate('/quizs');
   };
 
   const handleContactClick = (e) => {
     e.preventDefault();
-    setShowPopup(true);
-  };
 
-  const handleTryFreeQuiz = () => {
-    setShowPopup(false);
-    navigate('/temp-quiz');
+    setShowPopup(true);
   };
 
   const handleClosePopup = () => {
@@ -98,19 +94,11 @@ const Login = () => {
       <div className="login-wrapper">
         <div className="login-header">
           <div className="login-icon" />
-          <h2>question bank for SCFHS</h2>
+          <h2>question bank for SMLE</h2>
         </div>
 
         <div className="login-box">
           <h2 className="login-title">Login</h2>
-          <p className="login-small">
-            You don't have account ? <br />
-            <span>
-              <a href="#contact" onClick={handleContactClick} rel="noopener noreferrer">
-                Contact with us to give you one!!
-              </a>
-            </span>
-          </p>
 
           <form onSubmit={handleSubmit}>
             <input
@@ -132,6 +120,9 @@ const Login = () => {
             <button type="submit" className="login-btn">
               Log in
             </button>
+                        <a href="#contact" onClick={handleContactClick} className='login-small' rel="noopener noreferrer">
+              click to create an account or get  free trial
+            </a>
             {error && <p className="login-error">{error}</p>}
           </form>
         </div>
@@ -206,11 +197,11 @@ const Login = () => {
         </div>
       )}
 
-      {/* Trial Account Popup */}
+
       {showPopup && (
         <div className="popup-overlay">
           <div className="popup-content large-popup">
-            <h3>Subscription Expired</h3>
+            <h3>Subscription Expired </h3>
             <p>Your subscription has expired. Please contact us to renew it.</p>
             <a href="#contact" onClick={handleContactClick} rel="noopener noreferrer">
               Contact Us
