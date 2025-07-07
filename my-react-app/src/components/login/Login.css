@@ -327,3 +327,12 @@ a {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.popup-content.large-popup {
+  max-width: 500px;
+  padding: 20px;
+}
+
+.popup-content h3 {
+  margin-top: 0;
+}

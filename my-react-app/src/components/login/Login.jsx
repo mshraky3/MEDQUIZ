@@ -45,6 +45,12 @@ const Login = () => {
       .then((response) => {
         const username = cleanedUsername;
 
+        if (response.data.expired) {
+          // Show subscription expired message
+          setShowPopup(true);
+          return;
+        }
+
         // Check localStorage for previous login
         const hasLoggedInBefore = localStorage.getItem(`hasLoggedIn_${username}`);
 
@@ -63,7 +69,7 @@ const Login = () => {
         if (newAttempts >= 3) {
           setShowPopup(true);
         }
-        setError('Your username is wrong! Try again.');
+        setError('Your username or password is wrong! Try again.');
       });
   };
 
@@ -203,16 +209,15 @@ const Login = () => {
       {/* Trial Account Popup */}
       {showPopup && (
         <div className="popup-overlay">
-          <div className="popup-content">
-            <p>
-              Don't have an account? You can try a small trial for free first!
-            </p>
+          <div className="popup-content large-popup">
+            <h3>Subscription Expired</h3>
+            <p>Your subscription has expired. Please contact us to renew it.</p>
+            <a href="#contact" onClick={handleContactClick} rel="noopener noreferrer">
+              Contact Us
+            </a>
             <div className="popup-buttons">
               <button onClick={handleClosePopup} className="popup-btn no-thanks">
-                No thanks
-              </button>
-              <button onClick={handleTryFreeQuiz} className="popup-btn try-free">
-                OK, try free quiz
+                Close
               </button>
             </div>
           </div>
