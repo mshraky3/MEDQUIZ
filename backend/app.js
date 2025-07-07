@@ -81,7 +81,7 @@ app.get('/get_all_users', async (req, res) => {
     }
 });
 
-aapp.post('/login', async (req, res) => {
+app.post('/login', async (req, res) => {
     console.log("Login request received:", req.body);
     const { username, password } = req.body;
     try {
