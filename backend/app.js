@@ -300,17 +300,33 @@ app.get('/user-streaks/:user_id', async (req, res) => {
 
 app.get('/api/questions', async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
+    const typesParam = req.query.types; // e.g., 'mix' or 'medicine,surgery'
+    let query = 'SELECT * FROM questions';
+    let values = [];
+    let conditions = [];
+
+    if (!typesParam || typesParam === 'mix') {
+        // No filter – return all
+    } else {
+        const selectedTypes = typesParam.split(',');
+        conditions.push(`question_type = ANY($1::text[])`);
+        values.push(selectedTypes);
+    }
+
+    if (conditions.length > 0) {
+        query += ' WHERE ' + conditions.join(' AND ');
+    }
+
+    query += ' ORDER BY RANDOM() LIMIT $' + (values.length + 1);
+
     try {
-        const result = await db.query(
-            `SELECT * FROM questions ORDER BY RANDOM() LIMIT $1`, [limit]
-        );
+        const result = await db.query(query, [...values, limit]);
         res.json({ questions: result.rows });
     } catch (err) {
+        console.error(err);
         res.status(500).json({ message: 'Server error' });
     }
 });
-
-
 
 
 
