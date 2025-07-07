@@ -261,3 +261,179 @@ footer{
   border-radius: 12px;
   cursor: pointer;
 }
+
+/* Custom Modal */
+.custom-type-selector-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.custom-modal-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 450px;
+    box-shadow: 0 8px 20px rgba(0, 182, 224, 0.2);
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Custom Checkbox Styles */
+.custom-checkbox-group label {
+    position: relative;
+    padding-left: 30px;
+    cursor: pointer;
+    font-size: 16px;
+    color: #333;
+    display: block;
+    margin-bottom: 14px;
+    user-select: none;
+    transition: color 0.2s ease;
+}
+
+.custom-checkbox-group label:hover {
+    color: #00b6e0;
+}
+
+.custom-checkbox-group input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.checkbox-custom {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 20px;
+    width: 20px;
+    background-color: #eee;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.checkbox-custom.checked {
+    background-color: #00b6e0;
+}
+
+.checkbox-custom.checked::after {
+    content: "";
+    position: absolute;
+    display: block;
+    left: 7px;
+    top: 4px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+/* Modal Buttons */
+.custom-modal-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.custom-start-btn,
+.custom-mix-btn,
+.custom-cancel-btn {
+    padding: 12px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0, 182, 224, 0.2);
+}
+
+.custom-start-btn {
+    background-color: #00b6e0;
+    color: white;
+}
+
+.custom-start-btn:hover {
+    background-color: #0191c0;
+    transform: scale(1.03);
+}
+
+.custom-mix-btn {
+    background: linear-gradient(270deg, #01b3d9, #c7e941, #01b3d9);
+    background-size: 600% 600%;
+    animation: moveGradient 30s ease infinite;
+    color: white;
+}
+
+.custom-mix-btn:hover {
+    transform: scale(1.03);
+}
+
+.custom-cancel-btn {
+    background-color: #f1f1f1;
+    color: #555;
+}
+
+.custom-cancel-btn:hover {
+    background-color: #e0e0e0;
+    transform: scale(1.03);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes moveGradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 800px) {
+    .custom-modal-content {
+        padding: 1.5rem;
+    }
+
+    .custom-checkbox-group label {
+        font-size: 15px;
+    }
+
+    .custom-start-btn,
+    .custom-mix-btn,
+    .custom-cancel-btn {
+        font-size: 14px;
+        padding: 10px 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .custom-modal-content {
+        padding: 1rem;
+    }
+
+    .custom-checkbox-group label {
+        font-size: 14px;
+    }
+
+    .custom-start-btn,
+    .custom-mix-btn,
+    .custom-cancel-btn {
+        font-size: 13px;
+        padding: 8px 14px;
+    }
+}

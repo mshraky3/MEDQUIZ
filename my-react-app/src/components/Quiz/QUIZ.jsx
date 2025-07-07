@@ -71,7 +71,6 @@ const QUIZ = () => {
     }
   };
 
-  // send data only when quiz is finished AND answers array is fully populated
   useEffect(() => {
     const sendQuizData = async () => {
       if (!id || dataSent || !quizFinished) return;
