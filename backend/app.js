@@ -64,23 +64,66 @@ app.get('/get_all_users', async (req, res) => {
     }
 });
 
-app.post('/login', async (req, res) => {
+aapp.post('/login', async (req, res) => {
     console.log("Login request received:", req.body);
     const { username, password } = req.body;
     try {
         const user = await db.query("SELECT * FROM accounts WHERE username = $1", [username]);
         const userRow = user.rows[0];
+
         if (!userRow) {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
+
         if (password !== userRow.password) {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
-        await db.query("UPDATE accounts SET logged = $1 WHERE id = $2", [true, userRow.id]);
+
+        // Check if already active or not
+        if (!userRow.isactive) {
+            return res.status(403).json({
+                message: 'Subscription expired',
+                expired: true,
+                user: userRow
+            });
+        }
+
+        let firstLogin = false;
+        let now = new Date();
+
+        // If this is the first login, set logged_date
+        if (!userRow.logged_date) {
+            await db.query("UPDATE accounts SET logged = $1, logged_date = $2 WHERE id = $3", [true, now, userRow.id]);
+            firstLogin = true;
+        } else {
+            // Check if last login was more than 1 year ago
+            const lastLoginDate = new Date(userRow.logged_date);
+            const diffYears = (now.getFullYear() - lastLoginDate.getFullYear());
+
+            if (diffYears >= 1) {
+                await db.query("UPDATE accounts SET logged = $1, isactive = $2 WHERE id = $3", [true, false, userRow.id]);
+
+                return res.status(403).json({
+                    message: 'Subscription expired',
+                    expired: true,
+                    user: userRow
+                });
+            }
+
+            // Update current login date
+            await db.query("UPDATE accounts SET logged = $1, logged_date = $2 WHERE id = $3", [true, now, userRow.id]);
+        }
+
         const updatedUser = await db.query("SELECT * FROM accounts WHERE id = $1", [userRow.id]);
-        return res.status(200).json({ message: 'Login successful', user: updatedUser.rows[0] });
+
+        return res.status(200).json({
+            message: 'Login successful',
+            expired: false,
+            user: updatedUser.rows[0]
+        });
+
     } catch (error) {
-        console.log(error)
+        console.error(error);
         res.status(500).json({ message: 'Internal server error' });
     }
 });
