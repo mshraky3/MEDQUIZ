@@ -41,26 +41,43 @@ app.get('/', async (req, res) => {
     }
 });
 
-app.post('/ADD_ACCOUNT', async (req, res) => {
-    const { email, password } = req.body;
+app.post('/add_account', async (req, res) => {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+        return res.status(400).json({ message: 'Missing username or password' });
+    }
+
     try {
-        const check = await db.query("SELECT * FROM accounts WHERE username = $1", [email]);
+        // Check if username already exists
+        const check = await db.query("SELECT * FROM accounts WHERE username = $1", [username]);
         if (check.rows.length > 0) {
-            return res.status(400).json({ message: 'Email already exists' });
+            return res.status(400).json({ message: 'Username already exists' });
         }
-        await db.query("INSERT INTO accounts (username, password) VALUES ($1, $2)", [email, password]);
+
+        // Insert new account
+        await db.query(
+            "INSERT INTO accounts (username, password) VALUES ($1, $2)",
+            [username, password]
+        );
+
         return res.status(201).json({ message: 'Account created successfully' });
+
     } catch (err) {
-        res.status(500).json({ message: 'Server error' });
+        console.error(err);
+        return res.status(500).json({ message: 'Server error' });
     }
 });
 
 app.get('/get_all_users', async (req, res) => {
     try {
-        const result = await db.query("SELECT username, password, logged FROM accounts");
+        const result = await db.query(
+            "SELECT id, username, password, logged, logged_date, isactive FROM accounts"
+        );
         res.json({ users: result.rows });
     } catch (err) {
-        res.status(500).json({ message: "Server error" });
+        console.error(err);
+        res.status(500).json({ message: "Server error while fetching users" });
     }
 });
 
