@@ -3,7 +3,7 @@ import axios from "axios";
 import "./add.css";
 
 const ADD = (props) => {
-    const [email, setEmail] = useState("");
+    const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [message, setMessage] = useState("");
@@ -13,8 +13,8 @@ const ADD = (props) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!email || !password) {
-            setError("Please enter both email and password.");
+        if (!username || !password) {
+            setError("Please enter both username and password.");
             setMessage("");
             return;
         }
@@ -24,11 +24,13 @@ const ADD = (props) => {
 
         try {
             const response = await axios.post(`${props.host}/add_account`, {
-                email,
+                username,
                 password,
             });
 
             setMessage(response.data.message);
+            setUsername(""); // Clear input after success
+            setPassword("");
         } catch (err) {
             const errorMessage =
                 err.response?.data?.message || "Failed to add account. Please try again.";
@@ -55,10 +57,10 @@ const ADD = (props) => {
                 {message && <div className="success">{message}</div>}
 
                 <input
-                    type="email"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    type="text"
+                    placeholder="Username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
                     className="input"
                 />
                 <input
@@ -89,9 +91,11 @@ const ADD = (props) => {
                             {users.length > 0 ? (
                                 users.map((user, index) => (
                                     <li key={index}>
-                                        <strong>Email:</strong> {user.username}<br />
+                                        <strong>Username:</strong> {user.username}<br />
                                         <strong>Password:</strong> {user.password}<br />
-                                        <strong>Logged In:</strong> {user.logged ? "Yes" : "No"}
+                                        <strong>Logged In:</strong> {user.logged ? "Yes" : "No"}<br />
+                                        <strong>Last Login Date:</strong> {user.logged_date ? new Date(user.logged_date).toLocaleDateString() : 'Never'}<br />
+                                        <strong>Status:</strong> {user.isactive ? "Active" : "Inactive"}
                                         <hr />
                                     </li>
                                 ))
