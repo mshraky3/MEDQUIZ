@@ -39,7 +39,6 @@ const QUIZS = () => {
 
             <h1>Choose Your Quiz</h1>
 
-
             <div className="options-container">
                 {quizOptions.map((num) => (
                     <button
@@ -58,7 +57,12 @@ const QUIZS = () => {
             >
                 Go to Analysis
             </button>
+            <footer>
+                <button onClick={() => window.open("https://wa.link/wh0xrv", "_blank", "noopener,noreferrer")} className="contact-me-btn">
+                    contact us  for any issues or suggestions
 
+                </button>
+            </footer>
             <div className="quiz-footer" />
         </div>
     );
