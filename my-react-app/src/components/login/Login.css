@@ -293,3 +293,37 @@ a {
 .try-free:hover {
   background-color: #0191c0;
 }
+/* For large popup */
+.large-popup {
+  max-width: 700px;
+  padding: 20px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* Style each terms section */
+.terms-section {
+  margin-bottom: 20px;
+}
+
+.terms-section h4 {
+  margin-bottom: 10px;
+  font-size: 16px;
+  color: #333;
+}
+
+.checkbox-label {
+  display: block;
+  margin-top: 15px;
+  font-size: 14px;
+}
+
+.checkbox-label input {
+  margin-right: 10px;
+  transform: scale(1.2);
+}
+
+.popup-btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

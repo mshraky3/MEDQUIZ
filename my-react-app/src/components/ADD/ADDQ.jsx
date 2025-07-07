@@ -85,7 +85,6 @@ const ADDQ = () => {
                         autoComplete="off"
                     />
                 </label>
-
                 <label>
                     Option 1:
                     <input
@@ -181,5 +180,4 @@ const ADDQ = () => {
         </div>
     );
 };
-
 export default ADDQ;
