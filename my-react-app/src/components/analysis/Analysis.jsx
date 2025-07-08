@@ -15,6 +15,8 @@ const Analysis = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const timer = setTimeout(() => {}, 100);
+    return () => clearTimeout(timer);
     if (!id) navigate("/");
   }, [id, navigate]);
 
