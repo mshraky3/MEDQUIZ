@@ -27,14 +27,11 @@ const ADD = (props) => {
                 username,
                 password,
             });
-
             setMessage(response.data.message);
             setUsername(""); // Clear input after success
             setPassword("");
         } catch (err) {
-            const errorMessage =
-                err.response?.data?.message || "Failed to add account. Please try again.";
-            setError(errorMessage);
+            setError(err.response?.data?.message || "Failed to add account. Please try again.");
             setMessage("");
         }
     };
@@ -45,7 +42,7 @@ const ADD = (props) => {
             setUsers(response.data.users);
             setShowUsers(!showUsers);
         } catch (err) {
-            setError("Failed to fetch users.");
+            setError(err.response?.data?.message || "Failed to fetch users.");
         }
     };
 

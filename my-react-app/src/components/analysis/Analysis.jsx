@@ -29,6 +29,8 @@ const Analysis = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const timestamp = Date.now(); // Cache-buster
+
         const [
           userRes,
           streakRes,
@@ -36,24 +38,27 @@ const Analysis = () => {
           questionRes,
           questionsRes
         ] = await Promise.all([
-          axios.get(`${Globals.URL}/user-analysis/${id} `),
-          axios.get(`${Globals.URL}/user-streaks/${id} `),
-          axios.get(`${Globals.URL}/topic-analysis/user/${id} `),
-          axios.get(`${Globals.URL}/question-attempts/user/${id} `),
-          axios.get(`${Globals.URL}/api/all-questions `)
+          axios.get(`${Globals.URL}/user-analysis/${id}?_=${timestamp}`),
+          axios.get(`${Globals.URL}/user-streaks/${id}?_=${timestamp}`),
+          axios.get(`${Globals.URL}/topic-analysis/user/${id}?_=${timestamp}`),
+          axios.get(`${Globals.URL}/question-attempts/user/${id}?_=${timestamp}`),
+          axios.get(`${Globals.URL}/api/questions?_=${timestamp}`)
         ]);
+
         setUserAnalysis(userRes.data);
         setStreakData(streakRes.data);
-        setTopicAnalysis(topicRes.data);
-        setQuestionAttempts(questionRes.data);
+        setTopicAnalysis(topicRes.data || []);
+        setQuestionAttempts(questionRes.data || []);
         setQuestions(questionsRes.data.questions || []);
         setError(null);
       } catch (err) {
+        console.error("Error fetching data:", err);
         setError("Failed to load analysis. Please try again later.");
       } finally {
         setLoading(false);
       }
     };
+
     fetchData();
   }, [id]);
 
@@ -79,7 +84,9 @@ const Analysis = () => {
   return (
     <div className="analysis-wrapper fade-in">
       <h2 className="screen-title">Quiz Health Report</h2>
-      {userAnalysis || streakData || topicAnalysis.length || questionAttempts.length ? (
+
+      {/* Only render components if data exists */}
+      {(userAnalysis || streakData || topicAnalysis.length > 0 || questionAttempts.length > 0) ? (
         <>
           <OverallStats userAnalysis={userAnalysis} />
           <StreakInfo streakData={streakData} />
