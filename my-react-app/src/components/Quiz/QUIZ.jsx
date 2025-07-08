@@ -22,12 +22,12 @@ const QUIZ = () => {
   const [error, setError] = useState(null);
   const [dataSent, setDataSent] = useState(false);
   const quizStartTimeRef = useRef(Date.now());
-
+  const types = location.state?.types || 'mix';
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
         const response = await axios.get(`${Globals.URL}/api/questions`, {
-          params: { limit: numQuestions }
+          params: { limit: numQuestions, types: types }
         });
 
         if (response.data.questions?.length > 0) {

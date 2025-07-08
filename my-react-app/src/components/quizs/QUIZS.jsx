@@ -50,7 +50,7 @@ const QUIZS = () => {
         });
     };
 
-  
+
     const checkboxRef = useRef(null);
 
     useEffect(() => {
