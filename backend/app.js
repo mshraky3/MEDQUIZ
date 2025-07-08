@@ -299,12 +299,12 @@ app.get('/user-streaks/:user_id', async (req, res) => {
 });
 
 app.get('/api/questions', async (req, res) => {
+
     const limit = parseInt(req.query.limit) || 10;
     const typesParam = req.query.types; // e.g., 'mix' or 'medicine,surgery'
     let query = 'SELECT * FROM questions';
     let values = [];
     let conditions = [];
-
     if (!typesParam || typesParam === 'mix') {
         // No filter – return all
     } else {
