@@ -106,18 +106,14 @@ const QUIZ = () => {
         });
 
         for (const [topic, data] of Object.entries(topicMap)) {
-          try {
-            await axios.post(`${Globals.URL}/topic-analysis`, {
-              user_id: id,
-              question_type: topic,
-              total_answered: data.total,
-              total_correct: data.correct,
-              accuracy: parseFloat(((data.correct / data.total) * 100).toFixed(2)),
-              avg_time: parseFloat((duration / totalQuestions).toFixed(2))
-            });
-          } catch (err) {
-            console.error('Error sending topic analysis:', err);
-          }
+          await axios.post(`${Globals.URL}/topic-analysis`, {
+            user_id: id,
+            question_type: topic,
+            total_answered: data.total,
+            total_correct: data.correct,
+            accuracy: parseFloat(((data.correct / data.total) * 100).toFixed(2)),
+            avg_time: parseFloat((duration / totalQuestions).toFixed(2))
+          });
         }
 
         for (let i = 0; i < answers.length; i++) {
@@ -127,6 +123,7 @@ const QUIZ = () => {
             console.warn('Skipping invalid attempt', { id, qid: q?.id, selected: ans?.selected, quiz_session_id });
             continue;
           }
+
           const payload = {
             user_id: id,
             question_id: q.id,
@@ -138,30 +135,17 @@ const QUIZ = () => {
 
           console.log("Sending attempt:", payload);
 
-          try {
-            await axios.post(`${Globals.URL}/question-attempts`, payload);
-          } catch (err) {
-            console.error('Error sending question attempt:', err);
-          }
+          await axios.post(`${Globals.URL}/question-attempts`, payload);
         }
 
         // Update user streak
-        try {
-          await axios.post(`${Globals.URL}/user-streaks`, { user_id: id });
-        } catch (err) {
-          console.error('Error updating user streak:', err);
-        }
+        await axios.post(`${Globals.URL}/user-streaks`, { user_id: id });
 
         // Update user analysis
-        try {
-          await axios.post(`${Globals.URL}/user-analysis`, { user_id: id });
-        } catch (err) {
-          console.error('Error updating user analysis:', err);
-        }
+        await axios.post(`${Globals.URL}/user-analysis`, { user_id: id });
 
       } catch (err) {
-        console.error('Error sending quiz session data:', err.message);
-        alert('There was a problem saving your quiz results. Please check your connection.');
+        console.error('Error sending quiz data:', err.message);
       }
     };
 

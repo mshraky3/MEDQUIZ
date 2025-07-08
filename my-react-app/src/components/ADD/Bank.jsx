@@ -34,7 +34,7 @@ const Bank = () => {
 
   const fetchQuestions = async () => {
     try {
-      const response = await axios.get(`${Globals.URL}/api/questions`);
+      const response = await axios.get(`${Globals.URL}/api/all-questions`);
       setQuestions(response.data.questions);
       setAllQuestions(response.data.questions);
       setLoading(false);
@@ -93,7 +93,7 @@ const Bank = () => {
   const saveQuestion = async () => {
     try {
       const response = await axios.put(
-        `${Globals.URL}/api/questions/${editingQuestion}`,
+        `${Globals.URL}/questions/${editingQuestion}`,
         formData
       );
       setQuestions((prev) =>
@@ -107,8 +107,6 @@ const Bank = () => {
       setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
       console.error("Error updating question:", error);
-      setSuccessMessage("");
-      alert("Failed to update question. Please try again.");
     }
   };
 

@@ -42,7 +42,7 @@ const Analysis = () => {
           axios.get(`${Globals.URL}/user-streaks/${id}?_=${timestamp}`),
           axios.get(`${Globals.URL}/topic-analysis/user/${id}?_=${timestamp}`),
           axios.get(`${Globals.URL}/question-attempts/user/${id}?_=${timestamp}`),
-          axios.get(`${Globals.URL}/api/questions?_=${timestamp}`)
+          axios.get(`${Globals.URL}/api/all-questions?_=${timestamp}`)
         ]);
 
         setUserAnalysis(userRes.data);

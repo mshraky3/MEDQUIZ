@@ -62,7 +62,7 @@ const ADDQ = () => {
             setCorrectAnswer('');
             setQuestionType('pediatric');
         } catch (err) {
-            setError(err.response?.data?.message || "Failed to add question. Please try again.");
+            setError("Failed to add question. Please try again.");
             setMessage('');
         }
     };
