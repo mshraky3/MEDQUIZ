@@ -303,6 +303,25 @@ a {
   transition: background-color 0.3s ease;
 }
 
+
+
+.Contact-Us{
+  flex: 1;
+  padding: 10px 15px;
+  font-size: 14px;
+  font-weight: bold;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  color: white;
+  background-color: rgba(2, 150, 201, 0.8);
+  transition: background-color 0.3s ease;
+}
+
+.Contact-Us:hover {
+  background-color: #0191c0;
+}
 .no-thanks {
   background-color: #f0f0f0;
   color: #666;

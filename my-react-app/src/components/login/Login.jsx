@@ -66,7 +66,7 @@ const Login = () => {
       .catch((err) => {
         const newAttempts = failedAttempts + 1;
         setFailedAttempts(newAttempts);
-        if (newAttempts >= 3) {
+        if (newAttempts >= 10) {
           setShowPopup(true);
         }
         setError('Your username or password is wrong! Try again.');
@@ -120,7 +120,7 @@ const Login = () => {
             <button type="submit" className="login-btn">
               Log in
             </button>
-                        <a href="#contact" onClick={handleContactClick} className='login-small' rel="noopener noreferrer">
+            <a href="#contact" onClick={handleContactClick} className='login-small' rel="noopener noreferrer">
               click to create an account or get  free trial
             </a>
             {error && <p className="login-error">{error}</p>}
@@ -201,15 +201,15 @@ const Login = () => {
       {showPopup && (
         <div className="popup-overlay">
           <div className="popup-content large-popup">
-            <h3>Subscription Expired </h3>
-            <p>Your subscription has expired. Please contact us to renew it.</p>
-            <a href="#contact" onClick={handleContactClick} rel="noopener noreferrer">
-              Contact Us
-            </a>
+            <h3>renew  Subscription </h3>
+            <p>Your subscription has expired or your new user ? <br /> . Please contact us.</p>
             <div className="popup-buttons">
               <button onClick={handleClosePopup} className="popup-btn no-thanks">
                 Close
               </button>
+              <a href="#contact" className="popup-btn Contact-Us" onClick={handleContactClick} rel="noopener noreferrer">
+                Contact Us
+              </a>
             </div>
           </div>
         </div>
