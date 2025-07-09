@@ -26,8 +26,11 @@ const Landing = () => {
     <div className="landing-body">
       {/* Decorative SVG Wave at the Top */}
       <div className="landing-top-wave">
-        <svg viewBox="0 0 1440 180" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-          <path d="M0,80 C360,180 1080,0 1440,100 L1440,0 L0,0 Z" fill="#00b6e0" fillOpacity="0.10" />
+        <svg viewBox="0 0 2880 180" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+          <g className="wave-anim-group">
+            <path d="M0,80 C360,180 1080,0 1440,100 L1440,0 L0,0 Z" fill="#00b6e0" fillOpacity="0.10" />
+            <path d="M0,80 C360,180 1080,0 1440,100 L1440,0 L0,0 Z" fill="#00b6e0" fillOpacity="0.10" transform="scale(-1,1) translate(-2880,0)" />
+          </g>
         </svg>
       </div>
       {/* Faint Background Icon */}
@@ -37,7 +40,6 @@ const Landing = () => {
         <div className="landing-badge">#1 Affordable SMLE Prep</div>
         {/* Header Section */}
         <div className="landing-header">
-          <div className="landing-icon" />
           <h1 className="landing-main-title landing-title-shadow">SQB</h1>
           <h2 className="landing-subtitle">Your Ultimate SMLE Question Bank</h2>
           <p className="landing-description">

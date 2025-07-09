@@ -360,17 +360,17 @@
   font-weight: bold;
 }
 
-/* Footer */
+/* Footer - match QUIZS.css */
 .landing-footer {
   background: linear-gradient(270deg, #01b3d9, #c7e941, #01b3d9);
   background-size: 600% 600%;
   animation: moveGradient 30s ease infinite;
-  height: 80px;
+  height: 60px;
   width: 100%;
   position: fixed;
   bottom: 0;
   left: 0;
-  clip-path: polygon(0 45px, 45px 0, calc(100% - 45px) 0, 100% 45px, 100% 100%, 0 100%);
+  clip-path: polygon(0 30px, 30px 0, calc(100% - 30px) 0, 100% 30px, 100% 100%, 0 100%);
 }
 
 @keyframes moveGradient {
@@ -382,6 +382,20 @@
   }
   100% {
     background-position: 0% 50%;
+  }
+}
+
+@media (max-width: 480px) {
+  .landing-footer {
+    height: 40px;
+    clip-path: polygon(0 20px, 20px 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 0 100%);
+  }
+}
+
+@media screen and (orientation: landscape) and (max-height: 500px) {
+  .landing-footer {
+    height: 30px;
+    clip-path: polygon(0 15px, 15px 0, calc(100% - 15px) 0, 100% 15px, 100% 100%, 0 100%);
   }
 }
 
@@ -676,10 +690,6 @@
 
 /* Mobile Large (576px to 767px) */
 @media (max-width: 767px) and (min-width: 576px) {
-  .landing-icon {
-    width: 25%;
-  }
-
   .landing-wrapper {
     padding: 15px;
     gap: 30px;
@@ -790,10 +800,6 @@
 
 /* Mobile Medium (375px to 575px) */
 @media (max-width: 575px) and (min-width: 375px) {
-  .landing-icon {
-    width: 30%;
-  }
-
   .landing-wrapper {
     padding: 10px;
     gap: 25px;
@@ -965,10 +971,6 @@
 
 /* Mobile Small (320px to 374px) */
 @media (max-width: 374px) {
-  .landing-icon {
-    width: 35%;
-  }
-
   .landing-wrapper {
     padding: 8px;
     gap: 20px;
@@ -1215,8 +1217,8 @@
 /* Height-based adjustments */
 @media (max-height: 600px) {
   .landing-footer {
-    height: 60px;
-    clip-path: polygon(0 35px, 35px 0, calc(100% - 35px) 0, 100% 35px, 100% 100%, 0 100%);
+    height: 30px;
+    clip-path: polygon(0 15px, 15px 0, calc(100% - 15px) 0, 100% 15px, 100% 100%, 0 100%);
   }
 }
 
@@ -1262,24 +1264,23 @@
   overflow: hidden;
 }
 .landing-top-wave svg {
-  width: 100vw;
+  width: 200vw;
+  min-width: 200vw;
   height: 120px;
   display: block;
+}
+.landing-top-wave .wave-anim-group {
+  animation: waveMove 10s linear infinite;
+  will-change: transform;
+}
+@keyframes waveMove {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50vw); }
 }
 
 /* Faint Background Icon */
 .landing-bg-icon {
-  position: absolute;
-  top: 40px;
-  right: 5vw;
-  font-size: 160px;
-  color: #00b6e0;
-  opacity: 0.06;
-  font-weight: bold;
-  z-index: 2;
-  pointer-events: none;
-  user-select: none;
-  line-height: 1;
+  display: none;
 }
 
 /* Main Container with Side Padding */
