@@ -3,28 +3,25 @@ import axios from 'axios';
 import Global from '../../global.js';
 import './analysis.css';
 
-const QuestionAttemptsTable = ({ questionAttempts, questions }) => {
+const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz }) => {
     const [showAll, setShowAll] = useState(false);
     const [modalOpen, setModalOpen] = useState(false);
     const [aiAnalysis, setAiAnalysis] = useState('');
     const [loadingButtons, setLoadingButtons] = useState({});
     const [currentQuestion, setCurrentQuestion] = useState('');
 
-    const sortedIncorrectAttempts = [];
-    const seenQuestionIds = new Set();
 
-    [...questionAttempts]
-        .sort((a, b) => new Date(b.attempted_at) - new Date(a.attempted_at))
-        .forEach((attempt) => {
-            if (!attempt.is_correct && !seenQuestionIds.has(attempt.question_id)) {
-                sortedIncorrectAttempts.push(attempt);
-                seenQuestionIds.add(attempt.question_id);
-            }
-        });
+    // Filter attempts for the last quiz session only
+    let lastQuizAttempts = [];
+    if (latestQuiz && latestQuiz.id) {
+        lastQuizAttempts = questionAttempts
+            .filter(a => a.quiz_session_id === latestQuiz.id)
+            .sort((a, b) => new Date(a.attempted_at) - new Date(b.attempted_at));
+    }
 
     const displayedAttempts = showAll
-        ? sortedIncorrectAttempts
-        : sortedIncorrectAttempts.slice(0, 5);
+        ? lastQuizAttempts
+        : lastQuizAttempts.slice(0, 5);
 
     const handleSeeMore = async (attemptId, questionText, selectedAnswer, correctAnswer, event) => {
         setCurrentQuestion(questionText);
@@ -54,9 +51,9 @@ const QuestionAttemptsTable = ({ questionAttempts, questions }) => {
 
     return (
         <section className="streak-section">
-            <h3 className="section-header"> Questions You Got Wrong</h3>
+            <h3 className="section-header">Last Quiz Questions</h3>
 
-            {sortedIncorrectAttempts.length > 0 ? (
+            {lastQuizAttempts.length > 0 ? (
                 <>
                     <div className="table-wrapper">
                         <table className="analysis-tableQ">
@@ -65,6 +62,7 @@ const QuestionAttemptsTable = ({ questionAttempts, questions }) => {
                                     <th>Question</th>
                                     <th>Your Answer</th>
                                     <th>Correct Answer</th>
+                                    <th>Result</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -73,12 +71,13 @@ const QuestionAttemptsTable = ({ questionAttempts, questions }) => {
                                     const questionRow = questions.find(q => q.id === attempt.question_id);
                                     const questionText = questionRow?.question_text || 'Unknown question';
                                     const correctAnswer = questionRow?.correct_option || 'N/A';
-
+                                    const isCorrect = attempt.is_correct;
                                     return (
                                         <tr key={attempt.id || index}>
                                             <td>{questionText}</td>
-                                            <td className="user-answer wrong">{attempt.selected_option}</td>
+                                            <td className={isCorrect ? 'user-answer right' : 'user-answer wrong'}>{attempt.selected_option}</td>
                                             <td className="correct-answer right">{correctAnswer}</td>
+                                            <td>{isCorrect ? '✔️' : '❌'}</td>
                                             <td>
                                                 <button
                                                     onClick={(e) =>
@@ -90,7 +89,6 @@ const QuestionAttemptsTable = ({ questionAttempts, questions }) => {
                                                             e
                                                         )
                                                     }
-
                                                     className="see-more-button"
                                                     disabled={loadingButtons[attempt.id]}
                                                 >
@@ -103,19 +101,19 @@ const QuestionAttemptsTable = ({ questionAttempts, questions }) => {
                             </tbody>
                         </table>
                     </div>
-                    {sortedIncorrectAttempts.length > 5 && (
+                    {lastQuizAttempts.length > 5 && (
                         <div className="see-all-container">
                             <button
                                 onClick={() => setShowAll(!showAll)}
                                 className="see-all-button"
                             >
-                                {showAll ? '▲ Show Less' : `▼ See All (${sortedIncorrectAttempts.length})`}
+                                {showAll ? '▲ Show Less' : `▼ See All (${lastQuizAttempts.length})`}
                             </button>
                         </div>
                     )}
                 </>
             ) : (
-                <p className="no-streak">No incorrect attempts recorded yet.</p>
+                <p className="no-streak">No questions found for your last quiz.</p>
             )}
 
             {modalOpen && (

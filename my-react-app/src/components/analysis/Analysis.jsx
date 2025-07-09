@@ -35,6 +35,10 @@ const Analysis = () => {
   const [questionsLoading, setQuestionsLoading] = useState(true);
   const [questionsError, setQuestionsError] = useState(null);
 
+  const [lastQuizAttempts, setLastQuizAttempts] = useState([]);
+  const [lastQuizAttemptsLoading, setLastQuizAttemptsLoading] = useState(true);
+  const [lastQuizAttemptsError, setLastQuizAttemptsError] = useState(null);
+
   const [refreshing, setRefreshing] = useState(false);
   const pollingRef = useRef();
 
@@ -109,6 +113,26 @@ const Analysis = () => {
     }
   }, []);
 
+  // Fetch only last quiz attempts
+  const fetchLastQuizAttempts = useCallback(async (latestQuizId) => {
+    if (!latestQuizId) {
+      setLastQuizAttempts([]);
+      setLastQuizAttemptsLoading(false);
+      setLastQuizAttemptsError(null);
+      return;
+    }
+    setLastQuizAttemptsLoading(true);
+    setLastQuizAttemptsError(null);
+    try {
+      const res = await axios.get(`${Globals.URL}/question-attempts/session/${latestQuizId}`);
+      setLastQuizAttempts(res.data || []);
+    } catch (err) {
+      setLastQuizAttemptsError('Failed to load last quiz attempts.');
+    } finally {
+      setLastQuizAttemptsLoading(false);
+    }
+  }, []);
+
   // Fetch all sections
   const fetchAll = useCallback(async () => {
     setRefreshing(true);
@@ -119,8 +143,16 @@ const Analysis = () => {
       fetchQuestionAttempts(),
       fetchQuestions()
     ]);
+    // Fetch last quiz attempts after userAnalysis is loaded
+    if (userAnalysis && userAnalysis.latest_quiz && userAnalysis.latest_quiz.id) {
+      await fetchLastQuizAttempts(userAnalysis.latest_quiz.id);
+    } else {
+      setLastQuizAttempts([]);
+      setLastQuizAttemptsLoading(false);
+      setLastQuizAttemptsError(null);
+    }
     setRefreshing(false);
-  }, [fetchUserAnalysis, fetchStreakData, fetchTopicAnalysis, fetchQuestionAttempts, fetchQuestions]);
+  }, [fetchUserAnalysis, fetchStreakData, fetchTopicAnalysis, fetchQuestionAttempts, fetchQuestions, fetchLastQuizAttempts, userAnalysis]);
 
   // Initial fetch and polling
   useEffect(() => {
@@ -129,8 +161,7 @@ const Analysis = () => {
       return;
     }
     fetchAll();
-    // Polling every 30 seconds
-    pollingRef.current = setInterval(fetchAll, 30000);
+    pollingRef.current = setInterval(fetchAll, 30000000);
     return () => clearInterval(pollingRef.current);
   }, [id, fetchAll, navigate]);
 
@@ -184,12 +215,12 @@ const Analysis = () => {
       )}
 
       {/* Question Attempts Table */}
-      {questionAttemptsLoading || questionsLoading ? (
-        <SectionLoader message="Loading question attempts..." />
-      ) : questionAttemptsError || questionsError ? (
-        <div className="error-screen"><p>{questionAttemptsError || questionsError}</p></div>
+      {lastQuizAttemptsLoading || questionsLoading ? (
+        <SectionLoader message="Loading last quiz questions..." />
+      ) : lastQuizAttemptsError || questionsError ? (
+        <div className="error-screen"><p>{lastQuizAttemptsError || questionsError}</p></div>
       ) : (
-        <QuestionAttemptsTable questionAttempts={questionAttempts} questions={questions} />
+        <QuestionAttemptsTable questionAttempts={lastQuizAttempts} questions={questions} latestQuiz={userAnalysis?.latest_quiz} />
       )}
 
       <div className="button-bar">

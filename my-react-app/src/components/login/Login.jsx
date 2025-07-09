@@ -11,6 +11,7 @@ const Login = () => {
   const [showTermsPopup, setShowTermsPopup] = useState(false);
   const [termsChecked, setTermsChecked] = useState(false);
   const [failedAttempts, setFailedAttempts] = useState(0);
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
 
@@ -20,6 +21,7 @@ const Login = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (loading) return;
 
     const cleanedUsername = form.username.trim().toLowerCase();
     const password = form.password;
@@ -30,9 +32,11 @@ const Login = () => {
     }
 
     setError('');
+    setLoading(true);
 
     // Admin bypass
     if (cleanedUsername === 'admin' && password === 'admin1810') {
+      setLoading(false);
       navigate('/admin');
       return;
     }
@@ -48,6 +52,7 @@ const Login = () => {
         if (response.data.expired) {
           // Show subscription expired message
           setShowPopup(true);
+          setLoading(false);
           return;
         }
 
@@ -58,8 +63,10 @@ const Login = () => {
           // First login → show Terms of Use
           localStorage.setItem(`hasLoggedIn_${username}`, 'true');
           setShowTermsPopup(true);
+          setLoading(false);
         } else {
           // Already logged in before → go to quizs
+          setLoading(false);
           navigate('/quizs', { state: response.data });
         }
       })
@@ -70,6 +77,7 @@ const Login = () => {
           setShowPopup(true);
         }
         setError('Your username or password is wrong! Try again.');
+        setLoading(false);
       });
   };
 
@@ -117,8 +125,8 @@ const Login = () => {
               onChange={handleChange}
               className="login-input"
             />
-            <button type="submit" className="login-btn">
-              Log in
+            <button type="submit" className="login-btn" disabled={loading}>
+              {loading ? 'Logging in...' : 'Log in'}
             </button>
             <a href="#contact" onClick={handleContactClick} className='login-small' rel="noopener noreferrer">
               click to create an account or get  free trial

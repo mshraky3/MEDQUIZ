@@ -60,7 +60,7 @@ const ADD = (props) => {
                     type="text"
                     placeholder="Username"
                     value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    onChange={(e) => setUsername(e.target.value.replace(/\s+/g, '').toLowerCase())}
                     className="input"
                 />
                 <input
