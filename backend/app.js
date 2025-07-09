@@ -227,6 +227,19 @@ app.get('/question-attempts/user/:userId', async (req, res) => {
     }
 });
 
+app.get('/question-attempts/session/:sessionId', async (req, res) => {
+    const { sessionId } = req.params;
+    try {
+        const result = await db.query(
+            "SELECT * FROM user_question_attempts WHERE quiz_session_id = $1 ORDER BY attempted_at ASC",
+            [sessionId]
+        );
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 app.get('/api/all-questions', async (req, res) => {
     try {
         const result = await db.query("SELECT * FROM questions");
