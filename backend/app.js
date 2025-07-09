@@ -17,9 +17,24 @@ const db = new Pool({
     },
 });
 
+// Simple in-memory cache for questions
+const questionsCache = {
+    data: null,
+    timestamp: null,
+    ttl: 5 * 60 * 1000 // 5 minutes
+};
+
 const app = express();
 
-
+// Performance monitoring middleware
+app.use((req, res, next) => {
+    const start = Date.now();
+    res.on('finish', () => {
+        const duration = Date.now() - start;
+        console.log(`${req.method} ${req.path} - ${res.statusCode} - ${duration}ms`);
+    });
+    next();
+});
 
 app.use(cors({
     origin: (origin, callback) => {
@@ -27,7 +42,6 @@ app.use(cors({
     },
     credentials: true
 }));
-
 
 app.use(express.json());
 
@@ -108,18 +122,19 @@ app.post('/login', async (req, res) => {
         let firstLogin = false;
         let now = new Date();
 
-        // If this is the first login, set logged_date
+        // Simplified login logic - only update if needed
         if (!userRow.logged_date) {
+            // First login
             await db.query("UPDATE accounts SET logged = $1, logged_date = $2 WHERE id = $3", [true, now, userRow.id]);
             firstLogin = true;
         } else {
-            // Check if last login was more than 1 year ago
+            // Check if last login was more than 1 year ago (simplified calculation)
             const lastLoginDate = new Date(userRow.logged_date);
-            const diffYears = (now.getFullYear() - lastLoginDate.getFullYear());
-
-            if (diffYears >= 1) {
+            const oneYearAgo = new Date();
+            oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+            
+            if (lastLoginDate < oneYearAgo) {
                 await db.query("UPDATE accounts SET logged = $1, isactive = $2 WHERE id = $3", [true, false, userRow.id]);
-
                 return res.status(403).json({
                     message: 'Subscription expired',
                     expired: true,
@@ -131,12 +146,17 @@ app.post('/login', async (req, res) => {
             await db.query("UPDATE accounts SET logged = $1, logged_date = $2 WHERE id = $3", [true, now, userRow.id]);
         }
 
-        const updatedUser = await db.query("SELECT * FROM accounts WHERE id = $1", [userRow.id]);
+        // Return updated user data without additional query
+        const updatedUser = {
+            ...userRow,
+            logged: true,
+            logged_date: now
+        };
 
         return res.status(200).json({
             message: 'Login successful',
             expired: false,
-            user: updatedUser.rows[0]
+            user: updatedUser
         });
 
     } catch (error) {
@@ -149,7 +169,8 @@ app.post('/login', async (req, res) => {
 app.get('/user-analysis/:userId', async (req, res) => {
     const { userId } = req.params;
     try {
-        const [statsRes, latestQuizRes, analysisRes] = await Promise.all([
+        // Get overall stats, latest quiz, and last active
+        const [statsRes, latestQuizRes, analysisRes, topicRes, durationRes] = await Promise.all([
             db.query(`
                 SELECT 
                     COUNT(*) AS total_quizzes,
@@ -164,36 +185,60 @@ app.get('/user-analysis/:userId', async (req, res) => {
                 ORDER BY start_time DESC
                 LIMIT 1;
             `, [userId]),
-            db.query(`SELECT last_active FROM user_analysis WHERE user_id = $1`, [userId])
+            db.query(`SELECT last_active FROM user_analysis WHERE user_id = $1`, [userId]),
+            db.query(`SELECT question_type, total_answered, total_correct, accuracy
+                      FROM user_topic_analysis WHERE user_id = $1`, [userId]),
+            db.query(`SELECT SUM(duration) AS total_duration, AVG(duration) AS avg_duration
+                      FROM user_quiz_sessions WHERE user_id = $1`, [userId])
         ]);
 
         const stats = statsRes.rows[0];
         const latestQuiz = latestQuizRes.rows[0] || {};
         const lastActive = analysisRes.rows[0]?.last_active;
+        const topics = topicRes.rows;
+        const durationStats = durationRes.rows[0];
 
         const totalQuizzes = parseInt(stats.total_quizzes) || 0;
         const totalQuestionsAnswered = parseInt(stats.total_questions_answered) || 0;
         const totalCorrectAnswers = parseInt(stats.total_correct_answers) || 0;
-
 
         let accuracy = 0;
         if (totalQuestionsAnswered > 0) {
             accuracy = parseFloat(((totalCorrectAnswers / totalQuestionsAnswered) * 100).toFixed(2));
         }
 
+        // Best/Worst topic (min 5 questions answered for reliability)
+        let best_topic = null;
+        let worst_topic = null;
+        if (topics.length > 0) {
+            const filtered = topics.filter(t => t.total_answered >= 5);
+            if (filtered.length > 0) {
+                best_topic = filtered.reduce((a, b) => (a.accuracy > b.accuracy ? a : b));
+                worst_topic = filtered.reduce((a, b) => (a.accuracy < b.accuracy ? a : b));
+            }
+        }
+
+        // Session duration
+        const total_duration = parseInt(durationStats.total_duration) || 0;
+        const avg_duration = parseFloat(durationStats.avg_duration) || 0;
+
         const result = {
             total_quizzes: totalQuizzes,
             total_questions_answered: totalQuestionsAnswered,
-            total_correct_answers: totalCorrectAnswers,  // ✅ renamed to match DB
+            total_correct_answers: totalCorrectAnswers,
             avg_accuracy: accuracy,
             last_active: lastActive,
             latest_quiz: {
                 id: latestQuiz.id,
                 total_questions: latestQuiz.total_questions || 0,
-                correct_answers: latestQuiz.correct_answers || 0,  // ✅ matches your DB column
+                correct_answers: latestQuiz.correct_answers || 0,
                 quiz_accuracy: latestQuiz.quiz_accuracy || 0,
                 start_time: latestQuiz.start_time
-            }
+            },
+            best_topic,
+            worst_topic,
+            total_duration,
+            avg_duration
         };
 
         res.json(result);
@@ -218,7 +263,7 @@ app.get('/question-attempts/user/:userId', async (req, res) => {
     const { userId } = req.params;
     try {
         const result = await db.query(
-            "SELECT * FROM user_question_attempts WHERE user_id = $1 ORDER BY attempted_at DESC",
+            "SELECT * FROM user_question_attempts WHERE user_id = $1 ORDER BY attempted_at DESC LIMIT 100",
             [userId]
         );
         res.json(result.rows);
@@ -242,7 +287,19 @@ app.get('/question-attempts/session/:sessionId', async (req, res) => {
 
 app.get('/api/all-questions', async (req, res) => {
     try {
-        const result = await db.query("SELECT * FROM questions");
+        // Check cache first
+        const now = Date.now();
+        if (questionsCache.data && questionsCache.timestamp && (now - questionsCache.timestamp) < questionsCache.ttl) {
+            return res.json({ questions: questionsCache.data });
+        }
+
+        // Only fetch necessary fields for analysis page
+        const result = await db.query("SELECT id, question_text, correct_option FROM questions");
+        
+        // Update cache
+        questionsCache.data = result.rows;
+        questionsCache.timestamp = now;
+        
         res.json({ questions: result.rows });
     } catch (err) {
         res.status(500).json({ message: 'Server error' });
@@ -272,30 +329,39 @@ app.get('/user-streaks/:user_id', async (req, res) => {
                     return d;
                 })
                 .sort((a, b) => a.getTime() - b.getTime());
+            
             let runningStreak = 0;
             let prevDate = null;
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            for (const date of dates) {
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            
+            // Calculate streaks from most recent to oldest
+            for (let i = dates.length - 1; i >= 0; i--) {
+                const date = dates[i];
+                
                 if (!prevDate) {
                     runningStreak = 1;
                 } else {
-                    const diffDays = (date.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24);
+                    const diffDays = (prevDate.getTime() - date.getTime()) / (1000 * 60 * 60 * 24);
                     if (diffDays === 1) {
                         runningStreak++;
                     } else if (diffDays > 1) {
                         runningStreak = 1;
                     }
                 }
+                
                 longestStreak = Math.max(longestStreak, runningStreak);
                 prevDate = date;
-                if (
-                    date.getTime() === today.getTime() ||
-                    (runningStreak === 1 && date.getTime() === today.getTime() - 86400000)
-                ) {
+                
+                // Current streak is the streak ending on the most recent quiz date
+                // or yesterday if they haven't taken a quiz today
+                if (date.getTime() === today.getTime() || date.getTime() === yesterday.getTime()) {
                     currentStreak = runningStreak;
                 }
             }
+            
             lastActiveDate = dates[dates.length - 1];
         }
 
@@ -593,6 +659,11 @@ app.post('/api/questions', async (req, res) => {
              VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
             [question_text, option1, option2, option3, option4, question_type, correct_option]
         );
+        
+        // Invalidate cache when new question is added
+        questionsCache.data = null;
+        questionsCache.timestamp = null;
+        
         res.status(201).json({
             message: "Question added successfully",
             question: result.rows[0]
@@ -702,6 +773,10 @@ app.delete('/questions/:id', async (req, res) => {
             return res.status(404).json({ message: "Question not found" });
         }
 
+        // Invalidate cache when question is deleted
+        questionsCache.data = null;
+        questionsCache.timestamp = null;
+
         res.json({
             message: "Question deleted successfully",
             question: result.rows[0]
@@ -752,6 +827,10 @@ app.put('/questions/:id', async (req, res) => {
         if (result.rows.length === 0) {
             return res.status(404).json({ message: "Question not found" });
         }
+
+        // Invalidate cache when question is updated
+        questionsCache.data = null;
+        questionsCache.timestamp = null;
 
         res.json({
             message: "Question updated successfully",
