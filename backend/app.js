@@ -261,18 +261,65 @@ app.get('/user-analysis/:userId', async (req, res) => {
             accuracy = parseFloat(((totalCorrectAnswers / totalQuestionsAnswered) * 100).toFixed(2));
         }
 
-        // Best/Worst topic (min 5 questions answered for reliability)
+        // Best/Worst topic calculation
         let best_topic = null;
         let worst_topic = null;
         if (topics.length > 0) {
-            const filtered = topics.filter(t => t.total_answered >= 5);
-            if (filtered.length > 0) {
-                best_topic = filtered.reduce((a, b) => (a.accuracy > b.accuracy ? a : b));
-                worst_topic = filtered.reduce((a, b) => (a.accuracy < b.accuracy ? a : b));
+            // First try to find topics with 5+ questions for reliability
+            const reliableTopics = topics.filter(t => t.total_answered >= 5);
+            
+            if (reliableTopics.length >= 2) {
+                // We have enough reliable topics
+                best_topic = reliableTopics.reduce((a, b) => {
+                    const aAccuracy = parseFloat(a.accuracy) || 0;
+                    const bAccuracy = parseFloat(b.accuracy) || 0;
+                    return aAccuracy > bAccuracy ? a : b;
+                });
+                worst_topic = reliableTopics.reduce((a, b) => {
+                    const aAccuracy = parseFloat(a.accuracy) || 0;
+                    const bAccuracy = parseFloat(b.accuracy) || 0;
+                    return aAccuracy < bAccuracy ? a : b;
+                });
+            } else if (reliableTopics.length === 1) {
+                // Only one reliable topic, include all topics for comparison
+                const allTopics = topics.filter(t => t.total_answered > 0);
+                if (allTopics.length >= 2) {
+                    best_topic = allTopics.reduce((a, b) => {
+                        const aAccuracy = parseFloat(a.accuracy) || 0;
+                        const bAccuracy = parseFloat(b.accuracy) || 0;
+                        return aAccuracy > bAccuracy ? a : b;
+                    });
+                    worst_topic = allTopics.reduce((a, b) => {
+                        const aAccuracy = parseFloat(a.accuracy) || 0;
+                        const bAccuracy = parseFloat(b.accuracy) || 0;
+                        return aAccuracy < bAccuracy ? a : b;
+                    });
+                } else {
+                    // Only one topic total
+                    best_topic = allTopics[0];
+                    worst_topic = allTopics[0];
+                }
+            } else {
+                // No reliable topics, use all topics with at least 1 question
+                const allTopics = topics.filter(t => t.total_answered > 0);
+                if (allTopics.length >= 2) {
+                    best_topic = allTopics.reduce((a, b) => {
+                        const aAccuracy = parseFloat(a.accuracy) || 0;
+                        const bAccuracy = parseFloat(b.accuracy) || 0;
+                        return aAccuracy > bAccuracy ? a : b;
+                    });
+                    worst_topic = allTopics.reduce((a, b) => {
+                        const aAccuracy = parseFloat(a.accuracy) || 0;
+                        const bAccuracy = parseFloat(b.accuracy) || 0;
+                        return aAccuracy < bAccuracy ? a : b;
+                    });
+                } else if (allTopics.length === 1) {
+                    best_topic = allTopics[0];
+                    worst_topic = allTopics[0];
+                }
             }
         }
 
-        // Session duration
         const total_duration = parseInt(durationStats.total_duration) || 0;
         const avg_duration = parseFloat(durationStats.avg_duration) || 0;
 
