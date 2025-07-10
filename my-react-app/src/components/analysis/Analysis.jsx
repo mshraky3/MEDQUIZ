@@ -219,11 +219,19 @@ const Analysis = () => {
   // Initial fetch and polling
   useEffect(() => {
     if (!id) {
-      navigate('/');
-      return;
+      let attempts = 0;
+      const interval = setInterval(() => {
+        attempts++;
+        if (window.location.state?.id) {
+          clearInterval(interval);
+        } else if (attempts >= 3) {
+          clearInterval(interval);
+          navigate('/');
+        }
+      }, 1000);
+      return () => clearInterval(interval);
     }
     
-    // Only fetch once on mount
     if (!isInitializedRef.current) {
       isInitializedRef.current = true;
       fetchAll();
@@ -327,7 +335,7 @@ const Analysis = () => {
       ) : (
         <TopicAnalysisTable topicAnalysis={data.topicAnalysis} />
       )}
-
+      
       {/* Last Quiz Summary (from userAnalysis) */}
       {loading.userAnalysis ? (
         <SectionLoader message="Loading last quiz summary..." />

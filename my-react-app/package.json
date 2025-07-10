@@ -19,7 +19,8 @@
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.6.1",
     "react-virtualized-auto-sizer": "^1.0.26",
-    "react-window": "^1.8.11"
+    "react-window": "^1.8.11",
+    "stripe": "^18.3.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",

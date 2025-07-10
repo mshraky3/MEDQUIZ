@@ -89,7 +89,7 @@ const Login = () => {
 
   const handleContactClick = (e) => {
     e.preventDefault();
-
+    window.open('https://wa.link/pzhg6j', '_blank');
     setShowPopup(true);
   };
 

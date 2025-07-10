@@ -13,6 +13,7 @@ const QUIZ = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const id = location.state?.id;
+  const isTrial = location.state?.isTrial || false;
   const [questions, setQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
@@ -23,10 +24,13 @@ const QUIZ = () => {
   const [dataSent, setDataSent] = useState(false);
   const quizStartTimeRef = useRef(Date.now());
   const types = location.state?.types || 'mix';
+  
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        const response = await axios.get(`${Globals.URL}/api/questions`, {
+        // Use different endpoint for trial users
+        const endpoint = isTrial ? '/free-trial/questions' : '/api/questions';
+        const response = await axios.get(`${Globals.URL}${endpoint}`, {
           params: { limit: numQuestions, types: types }
         });
 
@@ -45,7 +49,7 @@ const QUIZ = () => {
     };
 
     fetchQuestions();
-  }, [numQuestions, navigate]);
+  }, [numQuestions, navigate, isTrial, types]);
 
   const handleSelectOption = (option) => {
     setSelectedAnswer(option);
@@ -59,7 +63,8 @@ const QUIZ = () => {
       question: currentQuestion.question_text,
       selected: selectedAnswer,
       correct: currentQuestion.correct_option,
-      isCorrect
+      isCorrect,
+      topic: currentQuestion.question_type
     }]);
 
     setSelectedAnswer(null);
@@ -70,6 +75,13 @@ const QUIZ = () => {
       setQuizFinished(true);
     }
   };
+
+  useEffect(() => {
+    // Save trial answers for analysis
+    if (isTrial && quizFinished && answers.length === questions.length) {
+      window.sessionStorage.setItem('trialAnswers', JSON.stringify(answers));
+    }
+  }, [isTrial, quizFinished, answers, questions]);
 
   useEffect(() => {
     const sendQuizData = async () => {
@@ -84,86 +96,139 @@ const QUIZ = () => {
       const topicsCovered = [...new Set(questions.map(q => q.question_type))];
 
       try {
-        const sessionRes = await axios.post(`${Globals.URL}/quiz-sessions`, {
-          user_id: id,
-          total_questions: totalQuestions,
-          correct_answers: correctCount, // ✅ Changed from correct_options
-          quiz_accuracy: parseFloat(accuracy),
-          duration,
-          avg_time_per_question: parseFloat((duration / totalQuestions).toFixed(2)),
-          topics_covered: topicsCovered
-        });
+        // Use different endpoint for trial users
+        const endpoint = isTrial ? '/free-trial/quiz-sessions' : '/quiz-sessions';
+        const sessionData = isTrial 
+          ? {
+              trialId: id,
+              total_questions: totalQuestions,
+              correct_answers: correctCount,
+              quiz_accuracy: parseFloat(accuracy),
+              duration,
+              avg_time_per_question: parseFloat((duration / totalQuestions).toFixed(2)),
+              topics_covered: topicsCovered
+            }
+          : {
+              user_id: id,
+              total_questions: totalQuestions,
+              correct_answers: correctCount,
+              quiz_accuracy: parseFloat(accuracy),
+              duration,
+              avg_time_per_question: parseFloat((duration / totalQuestions).toFixed(2)),
+              topics_covered: topicsCovered
+            };
+
+        const sessionRes = await axios.post(`${Globals.URL}${endpoint}`, sessionData);
         const quiz_session_id = sessionRes.data.id;
 
-        // Save topic analysis
-        const topicMap = {};
-        answers.forEach((ans, i) => {
-          const topic = questions[i]?.question_type;
-          if (!topic) return;
-          if (!topicMap[topic]) topicMap[topic] = { total: 0, correct: 0 };
-          topicMap[topic].total += 1;
-          if (ans.isCorrect) topicMap[topic].correct += 1;
+        // Send individual question attempts
+        const attemptPromises = answers.map((answer, index) => {
+          const question = questions[index];
+          const attemptData = isTrial
+            ? {
+                trialId: id,
+                question_id: question.id,
+                selected_option: answer.selected,
+                is_correct: answer.isCorrect,
+                time_taken: Math.floor(duration / totalQuestions),
+                quiz_session_id: quiz_session_id
+              }
+            : {
+                user_id: id,
+                question_id: question.id,
+                selected_option: answer.selected,
+                is_correct: answer.isCorrect,
+                time_taken: Math.floor(duration / totalQuestions),
+                quiz_session_id: quiz_session_id
+              };
+
+          const attemptEndpoint = isTrial ? '/free-trial/question-attempts' : '/question-attempts';
+          return axios.post(`${Globals.URL}${attemptEndpoint}`, attemptData);
         });
 
-        for (const [topic, data] of Object.entries(topicMap)) {
-          await axios.post(`${Globals.URL}/topic-analysis`, {
-            user_id: id,
-            question_type: topic,
-            total_answered: data.total,
-            total_correct: data.correct,
-            accuracy: parseFloat(((data.correct / data.total) * 100).toFixed(2)),
-            avg_time: parseFloat((duration / totalQuestions).toFixed(2))
+        await Promise.all(attemptPromises);
+
+        // Update topic analysis for non-trial users
+        if (!isTrial) {
+          const topicAnalysisPromises = topicsCovered.map(topic => {
+            const topicQuestions = questions.filter(q => q.question_type === topic);
+            const topicAnswers = answers.filter((_, index) => questions[index].question_type === topic);
+            const topicCorrect = topicAnswers.filter(a => a.isCorrect).length;
+            const topicAccuracy = topicQuestions.length > 0 ? (topicCorrect / topicQuestions.length) * 100 : 0;
+
+            return axios.post(`${Globals.URL}/topic-analysis`, {
+              user_id: id,
+              question_type: topic,
+              total_answered: topicQuestions.length,
+              total_correct: topicCorrect,
+              accuracy: topicAccuracy,
+              avg_time: Math.floor(duration / totalQuestions)
+            });
           });
+
+          await Promise.all(topicAnalysisPromises);
         }
 
-        for (let i = 0; i < answers.length; i++) {
-          const ans = answers[i];
-          const q = questions[i];
-          if (!id || !q.id || !ans.selected || quiz_session_id === undefined) {
-            console.warn('Skipping invalid attempt', { id, qid: q?.id, selected: ans?.selected, quiz_session_id });
-            continue;
-          }
-
-          const payload = {
-            user_id: id,
-            question_id: q.id,
-            selected_option: ans.selected,
-            is_correct: ans.isCorrect,
-            time_taken: parseFloat((duration / totalQuestions).toFixed(2)),
-            quiz_session_id
-          };
-
-          console.log("Sending attempt:", payload);
-
-          await axios.post(`${Globals.URL}/question-attempts`, payload);
-        }
-
-        // Update user streak
-        await axios.post(`${Globals.URL}/user-streaks`, { user_id: id });
-
-        // Update user analysis
-        await axios.post(`${Globals.URL}/user-analysis`, { user_id: id });
-
-      } catch (err) {
-        console.error('Error sending quiz data:', err.message);
+      } catch (error) {
+        console.error("Error sending quiz data:", error);
       }
     };
 
     sendQuizData();
-  }, [quizFinished, answers, id, dataSent, questions]);
+  }, [quizFinished, answers, questions, id, dataSent, isTrial]);
 
-  if (loading) return <Loading />;
-  if (error) return <ErrorScreen message={error} navigate={navigate} id={id} />;
-  if (quizFinished) return <Result answers={answers} navigate={navigate} id={id} />;
+  if (loading) {
+    return <Loading />;
+  }
+
+  if (error) {
+    return <ErrorScreen error={error} onRetry={() => window.location.reload()} />;
+  }
+
+  if (quizFinished) {
+    const correctCount = answers.filter(a => a.isCorrect).length;
+    const totalQuestions = answers.length;
+    const accuracy = ((correctCount / totalQuestions) * 100).toFixed(2);
+    const duration = Math.floor((Date.now() - quizStartTimeRef.current) / 1000);
+
+    return (
+      <Result
+        correctAnswers={correctCount}
+        totalQuestions={totalQuestions}
+        accuracy={accuracy}
+        duration={duration}
+        answers={answers}
+        isTrial={isTrial}
+        userId={id}
+        onRetry={() => {
+          setCurrentQuestionIndex(0);
+          setSelectedAnswer(null);
+          setAnswers([]);
+          setQuizFinished(false);
+          setDataSent(false);
+          quizStartTimeRef.current = Date.now();
+        }}
+        onBackToQuizs={() => navigate('/quizs', { 
+          state: { 
+            id: id, 
+            isTrial: isTrial 
+          } 
+        })}
+      />
+    );
+  }
+
+  const currentQuestion = questions[currentQuestionIndex];
 
   return (
     <Question
-      currentQuestion={questions[currentQuestionIndex]}
-      currentIndex={currentQuestionIndex}
+      question={currentQuestion}
+      questionNumber={currentQuestionIndex + 1}
       totalQuestions={questions.length}
       selectedAnswer={selectedAnswer}
       onSelectOption={handleSelectOption}
       onSubmitAnswer={handleSubmitAnswer}
+      isTrial={isTrial}
     />
   );
 };

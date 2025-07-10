@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import './Landing.css';
+import Globals from '../../global';
 
 const Landing = () => {
   const [showBetaPopup, setShowBetaPopup] = useState(false);
+  const [showTrialPopup, setShowTrialPopup] = useState(false);
+  const [isStartingTrial, setIsStartingTrial] = useState(false);
   const navigate = useNavigate();
 
   const handleGetStarted = () => {
-    setShowBetaPopup(true);
+    setShowTrialPopup(true);
   };
 
   const handleLogin = () => {
@@ -20,6 +24,35 @@ const Landing = () => {
 
   const handleClosePopup = () => {
     setShowBetaPopup(false);
+    setShowTrialPopup(false);
+  };
+
+  const handleStartFreeTrial = async () => {
+    setIsStartingTrial(true);
+    try {
+      const response = await axios.post(`${Globals.URL}/free-trial/start`);
+      const { trialId, user } = response.data;
+      
+      // Navigate directly to quiz selection with trial user data
+      navigate('/quizs', { 
+        state: { 
+          id: trialId, 
+          user: user,
+          isTrial: true 
+        } 
+      });
+    } catch (error) {
+      console.error('Error starting free trial:', error);
+      alert('Failed to start free trial. Please try again.');
+    } finally {
+      setIsStartingTrial(false);
+      setShowTrialPopup(false);
+    }
+  };
+
+  const handleContactWhatsApp = () => {
+    setShowTrialPopup(false);
+    setShowBetaPopup(true);
   };
 
   return (
@@ -139,6 +172,62 @@ const Landing = () => {
         {/* Footer */}
         <div className="landing-footer" />
       </div>
+      
+      {/* Free Trial Popup */}
+      {showTrialPopup && (
+        <div className="popup-overlay" style={{ zIndex: 1000 }}>
+          <div className="popup-content">
+            <h3>🚀 Choose Your Experience</h3>
+            <p>
+              Welcome to MEDQIZE! You have two options to get started:
+            </p>
+            <div className="trial-options">
+              <div className="trial-option">
+                <h4>🎯 Free Trial</h4>
+                <p>Try our platform with 40 carefully selected questions from all 4 topics. No registration required!</p>
+                <ul>
+                  <li>✓ 40 sample questions</li>
+                  <li>✓ All 4 question types</li>
+                  <li>✓ Instant access</li>
+                  <li>✓ No login needed</li>
+                </ul>
+              </div>
+              <div className="trial-option">
+                <h4>📞 Full Access</h4>
+                <p>Get complete access to all 5,000+ questions and features through our WhatsApp support team.</p>
+                <ul>
+                  <li>✓ All 5,000+ questions</li>
+                  <li>✓ Detailed analytics</li>
+                  <li>✓ Progress tracking</li>
+                  <li>✓ Personal support</li>
+                </ul>
+              </div>
+            </div>
+            <div className="popup-buttons">
+              <button
+                className="popup-btn primary"
+                onClick={handleStartFreeTrial}
+                disabled={isStartingTrial}
+              >
+                {isStartingTrial ? 'Starting Trial...' : 'Start Free Trial'}
+              </button>
+              <button
+                className="popup-btn secondary"
+                onClick={handleContactWhatsApp}
+              >
+                Contact via WhatsApp
+              </button>
+              <button
+                className="popup-btn no-thanks"
+                onClick={handleClosePopup}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Beta Version Popup */}
       {showBetaPopup && (
         <div className="popup-overlay" style={{ zIndex: 1000 }}>

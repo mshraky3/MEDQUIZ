@@ -8,6 +8,7 @@ const QUIZS = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const id = location.state?.id || location.state?.user?.id;
+    const isTrial = location.state?.isTrial || false;
     const [currentStreak, setCurrentStreak] = useState(0);
     const [showTypeSelector, setShowTypeSelector] = useState(false);
     const [selectedTypes, setSelectedTypes] = useState([]);
@@ -39,17 +40,24 @@ const QUIZS = () => {
         const typesStr = selectedTypes.join(',');
         setShowTypeSelector(false);
         navigate(`/quiz/${numQuestions}`, {
-            state: { id: id, types: typesStr }
+            state: { 
+                id: id, 
+                types: typesStr,
+                isTrial: isTrial 
+            }
         });
     };
 
     const handleMixAll = () => {
         setShowTypeSelector(false);
         navigate(`/quiz/${numQuestions}`, {
-            state: { id: id, types: 'mix' }
+            state: { 
+                id: id, 
+                types: 'mix',
+                isTrial: isTrial 
+            }
         });
     };
-
 
     const checkboxRef = useRef(null);
 
@@ -92,7 +100,7 @@ const QUIZS = () => {
 
     useEffect(() => {
         const fetchStreaks = async () => {
-            if (!id) return;
+            if (!id || isTrial) return; // Don't fetch streaks for trial users
             try {
                 const response = await axios.get(`${Globals.URL}/user-streaks/${id}`);
                 setCurrentStreak(response.data.current_streak || 0);
@@ -101,15 +109,25 @@ const QUIZS = () => {
             }
         };
         fetchStreaks();
-    }, [id]);
+    }, [id, isTrial]);
 
     return (
         <div className="quiz-selection">
-            {/* Streak Badge */}
-            <div className="streak-badge">
-                <span className="streak-emoji">🔥</span>
-                <span className="streak-count">{currentStreak}</span>
-            </div>
+            {/* Streak Badge - Only show for non-trial users */}
+            {!isTrial && (
+                <div className="streak-badge">
+                    <span className="streak-emoji">🔥</span>
+                    <span className="streak-count">{currentStreak}</span>
+                </div>
+            )}
+
+            {/* Trial User Notice */}
+            {isTrial && (
+                <div className="trial-notice">
+                    <span className="trial-emoji">🎯</span>
+                    <span className="trial-text">Free Trial Mode - 40 Sample Questions</span>
+                </div>
+            )}
 
             <h1>Choose Your Quiz</h1>
 
@@ -125,12 +143,15 @@ const QUIZS = () => {
                 ))}
             </div>
 
-            <button
-                className="analysis-btn"
-                onClick={() => navigate('/analysis', { state: { id: id } })}
-            >
-                Go to Analysis
-            </button>
+            {/* Analysis button - Only show for non-trial users */}
+            {!isTrial && (
+                <button
+                    className="analysis-btn"
+                    onClick={() => navigate('/analysis', { state: { id: id } })}
+                >
+                    Go to Analysis
+                </button>
+            )}
 
             <footer>
                 <button
@@ -146,6 +167,11 @@ const QUIZS = () => {
                 <div className="custom-type-selector-modal">
                     <div className="custom-modal-content">
                         <h2>Select Question Types</h2>
+                        {isTrial && (
+                            <p className="trial-modal-notice">
+                                🎯 Free trial includes questions from all selected types
+                            </p>
+                        )}
                         <div className="custom-checkbox-group">
                             {availableTypes.map((type) => (
                                 <label key={type}>

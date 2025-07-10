@@ -456,3 +456,94 @@ footer {
     padding: 8px 14px;
   }
 }
+
+/* Trial Notice Styles */
+.trial-notice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 25px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+  font-weight: bold;
+  font-size: 16px;
+  animation: pulse 2s infinite;
+}
+
+.trial-emoji {
+  font-size: 20px;
+}
+
+.trial-text {
+  font-size: 14px;
+}
+
+.trial-modal-notice {
+  background: #fff3cd;
+  color: #856404;
+  padding: 10px 15px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  font-size: 14px;
+  border-left: 4px solid #ffc107;
+  text-align: center;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Responsive design for trial notice */
+@media (max-width: 800px) {
+  .trial-notice {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+  
+  .trial-emoji {
+    font-size: 18px;
+  }
+  
+  .trial-text {
+    font-size: 13px;
+  }
+  
+  .trial-modal-notice {
+    font-size: 13px;
+    padding: 8px 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .trial-notice {
+    padding: 8px 12px;
+    font-size: 12px;
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .trial-emoji {
+    font-size: 16px;
+  }
+  
+  .trial-text {
+    font-size: 11px;
+  }
+  
+  .trial-modal-notice {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+}

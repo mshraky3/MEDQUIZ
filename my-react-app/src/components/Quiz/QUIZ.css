@@ -215,6 +215,76 @@ body {
   background-color: #1259a6;
 }
 
+/* Trial Quiz Notice Styles */
+.trial-quiz-notice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 3px 10px rgba(255, 107, 107, 0.3);
+  font-weight: bold;
+  font-size: 14px;
+  animation: pulse 2s infinite;
+}
+
+.trial-quiz-notice .trial-emoji {
+  font-size: 16px;
+}
+
+.trial-quiz-notice .trial-text {
+  font-size: 12px;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Responsive design for trial quiz notice */
+@media (max-width: 600px) {
+  .trial-quiz-notice {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  
+  .trial-quiz-notice .trial-emoji {
+    font-size: 14px;
+  }
+  
+  .trial-quiz-notice .trial-text {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 500px) {
+  .trial-quiz-notice {
+    padding: 5px 10px;
+    font-size: 11px;
+    flex-direction: column;
+    gap: 3px;
+  }
+  
+  .trial-quiz-notice .trial-emoji {
+    font-size: 12px;
+  }
+  
+  .trial-quiz-notice .trial-text {
+    font-size: 10px;
+  }
+}
+
 @media (max-width: 600px) {
   .quiz-container,
   .quiz-result,
@@ -347,5 +417,151 @@ body {
   .submit-button {
     padding: 0.65rem 1.3rem;
     font-size: 0.85rem;
+  }
+}
+
+/* Trial Result Styles */
+.trial-result-notice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  padding: 10px 18px;
+  border-radius: 25px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+  font-weight: bold;
+  font-size: 16px;
+  animation: pulse 2s infinite;
+}
+
+.trial-result-notice .trial-emoji {
+  font-size: 18px;
+}
+
+.trial-result-notice .trial-text {
+  font-size: 14px;
+}
+
+.result-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+.upgrade-button {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+}
+
+.upgrade-button:hover {
+  background: linear-gradient(135deg, #ff5252 0%, #ff7676 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+}
+
+.trial-completion-message {
+  background: #f8f9fa;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 20px;
+  text-align: center;
+}
+
+.trial-completion-message p {
+  margin: 8px 0;
+  color: #666;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.trial-completion-message p:first-child {
+  color: #28a745;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+/* Responsive design for trial result */
+@media (max-width: 600px) {
+  .trial-result-notice {
+    padding: 8px 14px;
+    font-size: 14px;
+  }
+  
+  .trial-result-notice .trial-emoji {
+    font-size: 16px;
+  }
+  
+  .trial-result-notice .trial-text {
+    font-size: 12px;
+  }
+  
+  .upgrade-button {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+  
+  .result-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .trial-completion-message {
+    padding: 15px;
+  }
+  
+  .trial-completion-message p {
+    font-size: 13px;
+  }
+  
+  .trial-completion-message p:first-child {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 500px) {
+  .trial-result-notice {
+    padding: 6px 12px;
+    font-size: 12px;
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .trial-result-notice .trial-emoji {
+    font-size: 14px;
+  }
+  
+  .trial-result-notice .trial-text {
+    font-size: 11px;
+  }
+  
+  .upgrade-button {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+  
+  .trial-completion-message {
+    padding: 12px;
+  }
+  
+  .trial-completion-message p {
+    font-size: 12px;
+  }
+  
+  .trial-completion-message p:first-child {
+    font-size: 14px;
   }
 }

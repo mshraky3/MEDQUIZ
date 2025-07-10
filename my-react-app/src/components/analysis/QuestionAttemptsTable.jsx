@@ -3,7 +3,7 @@ import axios from 'axios';
 import Global from '../../global.js';
 import './analysis.css';
 
-const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz }) => {
+const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz, isTrial }) => {
     const [showAll, setShowAll] = useState(false);
     const [modalOpen, setModalOpen] = useState(false);
     const [aiAnalysis, setAiAnalysis] = useState('');
@@ -31,6 +31,14 @@ const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz }) => {
     }, [questions]);
 
     const handleSeeMore = useCallback(async (attemptId, questionText, selectedAnswer, correctAnswer, event) => {
+        if (isTrial) {
+            // For trial users, show a message about AI analysis being available with full access
+            setCurrentQuestion(questionText);
+            setAiAnalysis('AI-powered question analysis is available with full access. Get in touch to unlock this feature!');
+            setModalOpen(true);
+            return;
+        }
+
         setCurrentQuestion(questionText);
         setAiAnalysis('');
         setLoadingButtons((prev) => ({ ...prev, [attemptId]: true }));
@@ -54,7 +62,7 @@ const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz }) => {
             setLoadingButtons((prev) => ({ ...prev, [attemptId]: false }));
             setModalOpen(true);
         }
-    }, []);
+    }, [isTrial]);
 
     const handleCloseModal = useCallback(() => {
         setModalOpen(false);
