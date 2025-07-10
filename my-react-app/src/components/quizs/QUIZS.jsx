@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './QUIZS.css';
 import Globals from '../../global';
+import SEO from '../common/SEO';
 
 const QUIZS = () => {
     const navigate = useNavigate();
@@ -21,6 +22,24 @@ const QUIZS = () => {
         'medicine',
         'surgery'
     ];
+
+    // SEO structured data for quiz selection page
+    const structuredData = {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": "SMLE Quiz Selection - Choose Your Practice Questions",
+        "description": "Select from 10 to 200 SMLE practice questions. Choose specific medical topics or mix all types. Start your SMLE preparation with targeted practice sessions.",
+        "url": "https://medquiz.vercel.app/quizs",
+        "mainEntity": {
+            "@type": "EducationalService",
+            "name": "SMLE Quiz Selection",
+            "description": "Choose your SMLE practice quiz with customizable question counts and topic selection",
+            "offers": {
+                "@type": "Offer",
+                "availability": "https://schema.org/InStock"
+            }
+        }
+    };
 
     const handleOptionClick = (num) => {
         setNumQuestions(num);
@@ -112,99 +131,108 @@ const QUIZS = () => {
     }, [id, isTrial]);
 
     return (
-        <div className="quiz-selection">
-            {/* Streak Badge - Only show for non-trial users */}
-            {!isTrial && (
-                <div className="streak-badge">
-                    <span className="streak-emoji">🔥</span>
-                    <span className="streak-count">{currentStreak}</span>
+        <>
+            <SEO 
+                title="Quiz Selection - Choose Your SMLE Practice Questions"
+                description="Select from 10 to 200 SMLE practice questions. Choose specific medical topics (pediatrics, OB/GYN, medicine, surgery) or mix all types. Start your SMLE preparation with targeted practice sessions."
+                keywords="SMLE quiz selection, medical practice questions, SMLE practice test, medical exam questions, Saudi medical license quiz, medical topic selection"
+                url="https://medquiz.vercel.app/quizs"
+                structuredData={structuredData}
+            />
+            <div className="quiz-selection">
+                {/* Streak Badge - Only show for non-trial users */}
+                {!isTrial && (
+                    <div className="streak-badge">
+                        <span className="streak-emoji">🔥</span>
+                        <span className="streak-count">{currentStreak}</span>
+                    </div>
+                )}
+
+                {/* Trial User Notice */}
+                {isTrial && (
+                    <div className="trial-notice">
+                        <span className="trial-emoji">🎯</span>
+                        <span className="trial-text">Free Trial Mode - 40 Sample Questions</span>
+                    </div>
+                )}
+
+                <h1>Choose Your Quiz</h1>
+
+                <div className="options-container">
+                    {quizOptions.map((num) => (
+                        <button
+                            key={num}
+                            className="quiz-option-btn"
+                            onClick={() => handleOptionClick(num)}
+                        >
+                            {num} Questions
+                        </button>
+                    ))}
                 </div>
-            )}
 
-            {/* Trial User Notice */}
-            {isTrial && (
-                <div className="trial-notice">
-                    <span className="trial-emoji">🎯</span>
-                    <span className="trial-text">Free Trial Mode - 40 Sample Questions</span>
-                </div>
-            )}
-
-            <h1>Choose Your Quiz</h1>
-
-            <div className="options-container">
-                {quizOptions.map((num) => (
+                {/* Analysis button - Only show for non-trial users */}
+                {!isTrial && (
                     <button
-                        key={num}
-                        className="quiz-option-btn"
-                        onClick={() => handleOptionClick(num)}
+                        className="analysis-btn"
+                        onClick={() => navigate('/analysis', { state: { id: id } })}
                     >
-                        {num} Questions
+                        Go to Analysis
                     </button>
-                ))}
-            </div>
+                )}
 
-            {/* Analysis button - Only show for non-trial users */}
-            {!isTrial && (
-                <button
-                    className="analysis-btn"
-                    onClick={() => navigate('/analysis', { state: { id: id } })}
-                >
-                    Go to Analysis
-                </button>
-            )}
+                <footer>
+                    <button
+                        onClick={() => window.open("https://wa.link/wh0xrv ", "_blank", "noopener,noreferrer")}
+                        className="contact-me-btn"
+                    >
+                        Contact us for any issues or suggestions
+                    </button>
+                </footer>
 
-            <footer>
-                <button
-                    onClick={() => window.open("https://wa.link/wh0xrv ", "_blank", "noopener,noreferrer")}
-                    className="contact-me-btn"
-                >
-                    Contact us for any issues or suggestions
-                </button>
-            </footer>
-
-            {/* Type Selector Modal */}
-            {showTypeSelector && (
-                <div className="custom-type-selector-modal">
-                    <div className="custom-modal-content">
-                        <h2>Select Question Types</h2>
-                        {isTrial && (
-                            <p className="trial-modal-notice">
-                                🎯 Free trial includes questions from all selected types
-                            </p>
-                        )}
-                        <div className="custom-checkbox-group">
-                            {availableTypes.map((type) => (
-                                <label key={type}>
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedTypes.includes(type)}
-                                        onChange={() => handleCheckboxChange(type)}
-                                    />
-                                    {type}
-                                </label>
-                            ))}
-                        </div>
-                        <div className="custom-modal-buttons">
-                            <button
-                                onClick={handleStartQuiz}
-                                disabled={selectedTypes.length === 0}
-                                className="custom-start-btn"
-                            >
-                                Start Selected
-                            </button>
-                            <button onClick={handleMixAll} className="custom-mix-btn">
-                                Mix All Types
-                            </button>
-                            <button onClick={() => setShowTypeSelector(false)} className="custom-cancel-btn">
-                                Cancel
-                            </button>
+                {/* Type Selector Modal */}
+                {showTypeSelector && (
+                    <div className="custom-type-selector-modal">
+                        <div className="custom-modal-content">
+                            <h2>Select Question Types</h2>
+                            {isTrial && (
+                                <p className="trial-modal-notice">
+                                    🎯 Free trial includes questions from all selected types
+                                </p>
+                            )}
+                            <div className="custom-checkbox-group">
+                                {availableTypes.map((type) => (
+                                    <label key={type}>
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedTypes.includes(type)}
+                                            onChange={() => handleCheckboxChange(type)}
+                                        />
+                                        {type}
+                                    </label>
+                                ))}
+                            </div>
+                            <div className="custom-modal-buttons">
+                                <button
+                                    onClick={handleStartQuiz}
+                                    disabled={selectedTypes.length === 0}
+                                    className="custom-start-btn"
+                                >
+                                    Start Selected
+                                </button>
+                                <button onClick={handleMixAll} className="custom-mix-btn">
+                                    Mix All Types
+                                </button>
+                                <button onClick={() => setShowTypeSelector(false)} className="custom-cancel-btn">
+                                    Cancel
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
 
-            <div className="quiz-footer" />
-        </div>
+                <div className="quiz-footer" />
+            </div>
+        </>
     );
 };
 

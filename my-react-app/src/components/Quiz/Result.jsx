@@ -27,8 +27,8 @@ const Result = ({
       // For trial users, navigate to separate trial analysis page
       navigate('/trial-analysis', { state: { id: userId } });
     } else {
-      // For regular users, navigate to analysis
-      window.location.href = '/analysis';
+      // For regular users, navigate to analysis with user ID
+      navigate('/analysis', { state: { id: userId } });
     }
   };
 
@@ -54,7 +54,7 @@ const Result = ({
             <button onClick={onRetry} className="restart-button">
               Take another quiz
             </button>
-            <button onClick={() => window.location.href = '/analysis'} className="home-button">
+            <button onClick={handleViewAnalysis} className="home-button">
               View Analysis
             </button>
           </>

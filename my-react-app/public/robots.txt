@@ -1,4 +1,23 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://www.smle-question-bank.com/sitemap.xml 
+# Disallow admin and sensitive areas
+Disallow: /admin
+Disallow: /ADD_ACCOUNT
+Disallow: /ADDQ
+Disallow: /Bank
+
+# Allow important pages
+Allow: /login
+Allow: /quizs
+Allow: /analysis
+Allow: /trial-analysis
+
+# Crawl delay to be respectful to the server
+Crawl-delay: 1
+
+# Sitemap location
+Sitemap: https://medquiz.vercel.app/sitemap.xml
+
+# Additional sitemaps for different content types
+Sitemap: https://medquiz.vercel.app/sitemap-questions.xml 
