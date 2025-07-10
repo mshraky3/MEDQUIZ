@@ -38,6 +38,18 @@ const OverallStats = ({ userAnalysis }) => {
                         <div className="stat-label">Questions Answered</div>
                         <div className="stat-value">{userAnalysis.total_questions_answered ?? 0}</div>
                     </div>
+                    <div className="stat-card">
+                        <div className="stat-label">Total Time Spent</div>
+                        <div className="stat-value">
+                            {userAnalysis.total_duration ? (userAnalysis.total_duration/60).toFixed(1) : 0} min
+                        </div>
+                    </div>
+                    <div className="stat-card">
+                        <div className="stat-label">Avg. Session Duration</div>
+                        <div className="stat-value">
+                            {userAnalysis.avg_duration ? (userAnalysis.avg_duration/60).toFixed(1) : 0} min
+                        </div>
+                    </div>
                 </div>
             ) : (
                 <p className="no-streak">No overall data available.</p>

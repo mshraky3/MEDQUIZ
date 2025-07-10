@@ -9,150 +9,212 @@ import TopicAnalysisTable from './TopicAnalysisTable';
 import QuestionAttemptsTable from './QuestionAttemptsTable';
 import LastQuizSummary from './LastQuizSummary';
 
+const BestWorstTopic = ({ best, worst }) => (
+  <section className="streak-section">
+    <h3 className="section-header">Your Best & Worst Topics</h3>
+    <div className="stats-grid">
+      <div className="stat-card" style={{ background: 'var(--bg-light)' }}>
+        <div className="stat-label">Best Topic</div>
+        {best ? (
+          <>
+            <div className="stat-value">{best.question_type}</div>
+            <div style={{ color: 'var(--accent-color)', fontWeight: 600 }}>
+              {Number(best.accuracy).toFixed(1)}% accuracy
+            </div>
+            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-light)' }}>
+              {best.total_answered} questions
+            </div>
+          </>
+        ) : <div className="stat-value">N/A</div>}
+      </div>
+      <div className="stat-card" style={{ background: 'var(--bg-light)' }}>
+        <div className="stat-label">Weakest Topic</div>
+        {worst ? (
+          <>
+            <div className="stat-value">{worst.question_type}</div>
+            <div style={{ color: 'var(--error-color)', fontWeight: 600 }}>
+              {Number(worst.accuracy).toFixed(1)}% accuracy
+            </div>
+            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-light)' }}>
+              {worst.total_answered} questions
+            </div>
+          </>
+        ) : <div className="stat-value">N/A</div>}
+      </div>
+    </div>
+  </section>
+);
+
 const Analysis = () => {
   const location = useLocation();
   const id = location.state?.id;
   const navigate = useNavigate();
 
-  // Section states
-  const [userAnalysis, setUserAnalysis] = useState(null);
-  const [userAnalysisLoading, setUserAnalysisLoading] = useState(true);
-  const [userAnalysisError, setUserAnalysisError] = useState(null);
-
-  const [streakData, setStreakData] = useState(null);
-  const [streakLoading, setStreakLoading] = useState(true);
-  const [streakError, setStreakError] = useState(null);
-
-  const [topicAnalysis, setTopicAnalysis] = useState([]);
-  const [topicLoading, setTopicLoading] = useState(true);
-  const [topicError, setTopicError] = useState(null);
-
-  const [questionAttempts, setQuestionAttempts] = useState([]);
-  const [questionAttemptsLoading, setQuestionAttemptsLoading] = useState(true);
-  const [questionAttemptsError, setQuestionAttemptsError] = useState(null);
-
-  const [questions, setQuestions] = useState([]);
-  const [questionsLoading, setQuestionsLoading] = useState(true);
-  const [questionsError, setQuestionsError] = useState(null);
-
-  const [lastQuizAttempts, setLastQuizAttempts] = useState([]);
-  const [lastQuizAttemptsLoading, setLastQuizAttemptsLoading] = useState(true);
-  const [lastQuizAttemptsError, setLastQuizAttemptsError] = useState(null);
+  const [data, setData] = useState({
+    userAnalysis: null,
+    streakData: null,
+    topicAnalysis: [],
+    questionAttempts: [],
+    questions: [],
+    lastQuizAttempts: []
+  });
+  
+  const [loading, setLoading] = useState({
+    userAnalysis: true,
+    streakData: true,
+    topicAnalysis: true,
+    questionAttempts: true,
+    questions: true,
+    lastQuizAttempts: true
+  });
+  
+  const [errors, setErrors] = useState({
+    userAnalysis: null,
+    streakData: null,
+    topicAnalysis: null,
+    questionAttempts: null,
+    questions: null,
+    lastQuizAttempts: null
+  });
 
   const [refreshing, setRefreshing] = useState(false);
   const pollingRef = useRef();
+  const isInitializedRef = useRef(false);
 
-  // Fetch functions
+  // Optimized fetch functions with better error handling
   const fetchUserAnalysis = useCallback(async () => {
-    setUserAnalysisLoading(true);
-    setUserAnalysisError(null);
+    setLoading(prev => ({ ...prev, userAnalysis: true }));
+    setErrors(prev => ({ ...prev, userAnalysis: null }));
     try {
       const timestamp = Date.now();
       const res = await axios.get(`${Globals.URL}/user-analysis/${id}?_=${timestamp}`);
-      setUserAnalysis(res.data);
+      setData(prev => ({ ...prev, userAnalysis: res.data }));
     } catch (err) {
-      setUserAnalysisError('Failed to load user analysis.');
+      setErrors(prev => ({ ...prev, userAnalysis: 'Failed to load user analysis.' }));
     } finally {
-      setUserAnalysisLoading(false);
+      setLoading(prev => ({ ...prev, userAnalysis: false }));
     }
   }, [id]);
 
   const fetchStreakData = useCallback(async () => {
-    setStreakLoading(true);
-    setStreakError(null);
+    setLoading(prev => ({ ...prev, streakData: true }));
+    setErrors(prev => ({ ...prev, streakData: null }));
     try {
       const timestamp = Date.now();
       const res = await axios.get(`${Globals.URL}/user-streaks/${id}?_=${timestamp}`);
-      setStreakData(res.data);
+      setData(prev => ({ ...prev, streakData: res.data }));
     } catch (err) {
-      setStreakError('Failed to load streak data.');
+      setErrors(prev => ({ ...prev, streakData: 'Failed to load streak data.' }));
     } finally {
-      setStreakLoading(false);
+      setLoading(prev => ({ ...prev, streakData: false }));
     }
   }, [id]);
 
   const fetchTopicAnalysis = useCallback(async () => {
-    setTopicLoading(true);
-    setTopicError(null);
+    setLoading(prev => ({ ...prev, topicAnalysis: true }));
+    setErrors(prev => ({ ...prev, topicAnalysis: null }));
     try {
       const timestamp = Date.now();
       const res = await axios.get(`${Globals.URL}/topic-analysis/user/${id}?_=${timestamp}`);
-      setTopicAnalysis(res.data || []);
+      setData(prev => ({ ...prev, topicAnalysis: res.data || [] }));
     } catch (err) {
-      setTopicError('Failed to load topic analysis.');
+      setErrors(prev => ({ ...prev, topicAnalysis: 'Failed to load topic analysis.' }));
     } finally {
-      setTopicLoading(false);
+      setLoading(prev => ({ ...prev, topicAnalysis: false }));
     }
   }, [id]);
 
   const fetchQuestionAttempts = useCallback(async () => {
-    setQuestionAttemptsLoading(true);
-    setQuestionAttemptsError(null);
+    setLoading(prev => ({ ...prev, questionAttempts: true }));
+    setErrors(prev => ({ ...prev, questionAttempts: null }));
     try {
       const timestamp = Date.now();
-      const res = await axios.get(`${Globals.URL}/question-attempts/user/${id}?_=${timestamp}`);
-      setQuestionAttempts(res.data || []);
+      const res = await axios.get(`${Globals.URL}/question-attempts/user/${id}?_=${timestamp}`, {
+        timeout: 10000 // 10 second timeout
+      });
+      setData(prev => ({ ...prev, questionAttempts: res.data || [] }));
     } catch (err) {
-      setQuestionAttemptsError('Failed to load question attempts.');
+      console.error('Error fetching question attempts:', err);
+      setErrors(prev => ({ 
+        ...prev, 
+        questionAttempts: err.code === 'ECONNABORTED' 
+          ? 'Request timed out. Please try again.' 
+          : 'Failed to load question attempts.' 
+      }));
     } finally {
-      setQuestionAttemptsLoading(false);
+      setLoading(prev => ({ ...prev, questionAttempts: false }));
     }
   }, [id]);
 
   const fetchQuestions = useCallback(async () => {
-    setQuestionsLoading(true);
-    setQuestionsError(null);
+    setLoading(prev => ({ ...prev, questions: true }));
+    setErrors(prev => ({ ...prev, questions: null }));
     try {
       const timestamp = Date.now();
       const res = await axios.get(`${Globals.URL}/api/all-questions?_=${timestamp}`);
-      setQuestions(res.data.questions || []);
+      setData(prev => ({ ...prev, questions: res.data.questions || [] }));
     } catch (err) {
-      setQuestionsError('Failed to load questions.');
+      setErrors(prev => ({ ...prev, questions: 'Failed to load questions.' }));
     } finally {
-      setQuestionsLoading(false);
+      setLoading(prev => ({ ...prev, questions: false }));
     }
   }, []);
 
-  // Fetch only last quiz attempts
   const fetchLastQuizAttempts = useCallback(async (latestQuizId) => {
     if (!latestQuizId) {
-      setLastQuizAttempts([]);
-      setLastQuizAttemptsLoading(false);
-      setLastQuizAttemptsError(null);
+      setData(prev => ({ ...prev, lastQuizAttempts: [] }));
+      setLoading(prev => ({ ...prev, lastQuizAttempts: false }));
+      setErrors(prev => ({ ...prev, lastQuizAttempts: null }));
       return;
     }
-    setLastQuizAttemptsLoading(true);
-    setLastQuizAttemptsError(null);
+    setLoading(prev => ({ ...prev, lastQuizAttempts: true }));
+    setErrors(prev => ({ ...prev, lastQuizAttempts: null }));
     try {
       const res = await axios.get(`${Globals.URL}/question-attempts/session/${latestQuizId}`);
-      setLastQuizAttempts(res.data || []);
+      setData(prev => ({ ...prev, lastQuizAttempts: res.data || [] }));
     } catch (err) {
-      setLastQuizAttemptsError('Failed to load last quiz attempts.');
+      setErrors(prev => ({ ...prev, lastQuizAttempts: 'Failed to load last quiz attempts.' }));
     } finally {
-      setLastQuizAttemptsLoading(false);
+      setLoading(prev => ({ ...prev, lastQuizAttempts: false }));
     }
   }, []);
 
-  // Fetch all sections
+  // Sequential loading for better performance
   const fetchAll = useCallback(async () => {
+    if (refreshing) return; // Prevent multiple simultaneous calls
+    
     setRefreshing(true);
-    await Promise.all([
-      fetchUserAnalysis(),
-      fetchStreakData(),
-      fetchTopicAnalysis(),
-      fetchQuestionAttempts(),
-      fetchQuestions()
-    ]);
-    // Fetch last quiz attempts after userAnalysis is loaded
-    if (userAnalysis && userAnalysis.latest_quiz && userAnalysis.latest_quiz.id) {
-      await fetchLastQuizAttempts(userAnalysis.latest_quiz.id);
-    } else {
-      setLastQuizAttempts([]);
-      setLastQuizAttemptsLoading(false);
-      setLastQuizAttemptsError(null);
+    
+    try {
+      // Load critical data first
+      await fetchUserAnalysis();
+      await fetchStreakData();
+      
+      // Load secondary data in parallel
+      await Promise.all([
+        fetchTopicAnalysis(),
+        fetchQuestionAttempts(),
+        fetchQuestions()
+      ]);
+      
+      // Get the current userAnalysis data to check for latest quiz
+      const currentData = await axios.get(`${Globals.URL}/user-analysis/${id}`);
+      const userAnalysisData = currentData.data;
+      
+      // Load last quiz attempts after userAnalysis is available
+      if (userAnalysisData && userAnalysisData.latest_quiz && userAnalysisData.latest_quiz.id) {
+        await fetchLastQuizAttempts(userAnalysisData.latest_quiz.id);
+      } else {
+        setData(prev => ({ ...prev, lastQuizAttempts: [] }));
+        setLoading(prev => ({ ...prev, lastQuizAttempts: false }));
+        setErrors(prev => ({ ...prev, lastQuizAttempts: null }));
+      }
+    } catch (error) {
+      console.error('Error loading analysis data:', error);
+    } finally {
+      setRefreshing(false);
     }
-    setRefreshing(false);
-  }, [fetchUserAnalysis, fetchStreakData, fetchTopicAnalysis, fetchQuestionAttempts, fetchQuestions, fetchLastQuizAttempts, userAnalysis]);
+  }, [fetchUserAnalysis, fetchStreakData, fetchTopicAnalysis, fetchQuestionAttempts, fetchQuestions, fetchLastQuizAttempts, id, refreshing]);
 
   // Initial fetch and polling
   useEffect(() => {
@@ -160,15 +222,33 @@ const Analysis = () => {
       navigate('/');
       return;
     }
-    fetchAll();
-    pollingRef.current = setInterval(fetchAll, 30000000);
-    return () => clearInterval(pollingRef.current);
-  }, [id, fetchAll, navigate]);
+    
+    // Only fetch once on mount
+    if (!isInitializedRef.current) {
+      isInitializedRef.current = true;
+      fetchAll();
+    }
+    
+    // Set up polling
+    pollingRef.current = setInterval(() => {
+      if (!refreshing) {
+        fetchAll();
+      }
+    }, 300000); // 5 minutes
+    
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+      }
+    };
+  }, [id, navigate]); // Remove fetchAll from dependencies to prevent re-runs
 
   // Manual refresh
-  const handleRefresh = () => {
-    fetchAll();
-  };
+  const handleRefresh = useCallback(() => {
+    if (!refreshing) {
+      fetchAll();
+    }
+  }, [fetchAll, refreshing]);
 
   // Section loading indicators
   const SectionLoader = ({ message }) => (
@@ -178,49 +258,109 @@ const Analysis = () => {
     </div>
   );
 
+  // Error component with retry button
+  const ErrorWithRetry = ({ error, onRetry, retryFunction }) => (
+    <div className="error-screen">
+      <p>{error}</p>
+      <button 
+        onClick={() => {
+          onRetry();
+          retryFunction();
+        }}
+        className="retry-button"
+        style={{
+          marginTop: '10px',
+          padding: '8px 16px',
+          backgroundColor: '#007bff',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer'
+        }}
+      >
+        Retry
+      </button>
+    </div>
+  );
+
   return (
     <div className="analysis-wrapper fade-in">
       <h2 className="screen-title">Quiz Health Report</h2>
-      {userAnalysisLoading ? (
+      
+      {loading.userAnalysis ? (
         <SectionLoader message="Loading overall stats..." />
-      ) : userAnalysisError ? (
-        <div className="error-screen"><p>{userAnalysisError}</p></div>
+      ) : errors.userAnalysis ? (
+        <ErrorWithRetry 
+          error={errors.userAnalysis} 
+          onRetry={() => setErrors(prev => ({ ...prev, userAnalysis: null }))}
+          retryFunction={fetchUserAnalysis}
+        />
       ) : (
-        <OverallStats userAnalysis={userAnalysis} />
+        <>
+          <OverallStats userAnalysis={data.userAnalysis} />
+          <BestWorstTopic best={data.userAnalysis?.best_topic} worst={data.userAnalysis?.worst_topic} />
+        </>
       )}
 
       {/* Streak Info */}
-      {streakLoading ? (
+      {loading.streakData ? (
         <SectionLoader message="Loading streak info..." />
-      ) : streakError ? (
-        <div className="error-screen"><p>{streakError}</p></div>
+      ) : errors.streakData ? (
+        <ErrorWithRetry 
+          error={errors.streakData} 
+          onRetry={() => setErrors(prev => ({ ...prev, streakData: null }))}
+          retryFunction={fetchStreakData}
+        />
       ) : (
-        <StreakInfo streakData={streakData} />
+        <StreakInfo streakData={data.streakData} />
       )}
 
       {/* Topic Analysis */}
-      {topicLoading ? (
+      {loading.topicAnalysis ? (
         <SectionLoader message="Loading topic analysis..." />
-      ) : topicError ? (
-        <div className="error-screen"><p>{topicError}</p></div>
+      ) : errors.topicAnalysis ? (
+        <ErrorWithRetry 
+          error={errors.topicAnalysis} 
+          onRetry={() => setErrors(prev => ({ ...prev, topicAnalysis: null }))}
+          retryFunction={fetchTopicAnalysis}
+        />
       ) : (
-        <TopicAnalysisTable topicAnalysis={topicAnalysis} />
+        <TopicAnalysisTable topicAnalysis={data.topicAnalysis} />
       )}
 
       {/* Last Quiz Summary (from userAnalysis) */}
-      {userAnalysisLoading ? (
+      {loading.userAnalysis ? (
         <SectionLoader message="Loading last quiz summary..." />
-      ) : userAnalysisError ? null : (
-        <LastQuizSummary latest_quiz={userAnalysis?.latest_quiz} />
+      ) : errors.userAnalysis ? null : (
+        <LastQuizSummary latest_quiz={data.userAnalysis?.latest_quiz} />
       )}
 
       {/* Question Attempts Table */}
-      {lastQuizAttemptsLoading || questionsLoading ? (
+      {loading.lastQuizAttempts || loading.questions ? (
         <SectionLoader message="Loading last quiz questions..." />
-      ) : lastQuizAttemptsError || questionsError ? (
-        <div className="error-screen"><p>{lastQuizAttemptsError || questionsError}</p></div>
+      ) : errors.lastQuizAttempts || errors.questions ? (
+        <ErrorWithRetry 
+          error={errors.lastQuizAttempts || errors.questions} 
+          onRetry={() => {
+            setErrors(prev => ({ 
+              ...prev, 
+              lastQuizAttempts: null,
+              questions: null 
+            }));
+          }}
+          retryFunction={() => {
+            fetchQuestions();
+            if (data.userAnalysis?.latest_quiz?.id) {
+              fetchLastQuizAttempts(data.userAnalysis.latest_quiz.id);
+            }
+          }}
+        />
       ) : (
-        <QuestionAttemptsTable questionAttempts={lastQuizAttempts} questions={questions} latestQuiz={userAnalysis?.latest_quiz} />
+        <QuestionAttemptsTable 
+          questionAttempts={data.lastQuizAttempts} 
+          questions={data.questions} 
+          latestQuiz={data.userAnalysis?.latest_quiz} 
+        />
       )}
 
       <div className="button-bar">

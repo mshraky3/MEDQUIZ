@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import axios from 'axios';
 import Global from '../../global.js';
 import './analysis.css';
@@ -10,20 +10,27 @@ const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz }) => {
     const [loadingButtons, setLoadingButtons] = useState({});
     const [currentQuestion, setCurrentQuestion] = useState('');
 
-
-    // Filter attempts for the last quiz session only
-    let lastQuizAttempts = [];
-    if (latestQuiz && latestQuiz.id) {
-        lastQuizAttempts = questionAttempts
+    // Memoize expensive filtering and sorting operations
+    const lastQuizAttempts = useMemo(() => {
+        if (!latestQuiz || !latestQuiz.id) return [];
+        
+        return questionAttempts
             .filter(a => a.quiz_session_id === latestQuiz.id)
             .sort((a, b) => new Date(a.attempted_at) - new Date(b.attempted_at));
-    }
+    }, [questionAttempts, latestQuiz]);
 
-    const displayedAttempts = showAll
-        ? lastQuizAttempts
-        : lastQuizAttempts.slice(0, 5);
+    const displayedAttempts = useMemo(() => {
+        return showAll ? lastQuizAttempts : lastQuizAttempts.slice(0, 5);
+    }, [lastQuizAttempts, showAll]);
 
-    const handleSeeMore = async (attemptId, questionText, selectedAnswer, correctAnswer, event) => {
+    // Memoize questions lookup for better performance
+    const questionsMap = useMemo(() => {
+        const map = new Map();
+        questions.forEach(q => map.set(q.id, q));
+        return map;
+    }, [questions]);
+
+    const handleSeeMore = useCallback(async (attemptId, questionText, selectedAnswer, correctAnswer, event) => {
         setCurrentQuestion(questionText);
         setAiAnalysis('');
         setLoadingButtons((prev) => ({ ...prev, [attemptId]: true }));
@@ -47,7 +54,17 @@ const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz }) => {
             setLoadingButtons((prev) => ({ ...prev, [attemptId]: false }));
             setModalOpen(true);
         }
-    };
+    }, []);
+
+    const handleCloseModal = useCallback(() => {
+        setModalOpen(false);
+        setAiAnalysis('');
+        setCurrentQuestion('');
+    }, []);
+
+    const toggleShowAll = useCallback(() => {
+        setShowAll(prev => !prev);
+    }, []);
 
     return (
         <section className="streak-section">
@@ -68,7 +85,7 @@ const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz }) => {
                             </thead>
                             <tbody>
                                 {displayedAttempts.map((attempt, index) => {
-                                    const questionRow = questions.find(q => q.id === attempt.question_id);
+                                    const questionRow = questionsMap.get(attempt.question_id);
                                     const questionText = questionRow?.question_text || 'Unknown question';
                                     const correctAnswer = questionRow?.correct_option || 'N/A';
                                     const isCorrect = attempt.is_correct;
@@ -104,7 +121,7 @@ const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz }) => {
                     {lastQuizAttempts.length > 5 && (
                         <div className="see-all-container">
                             <button
-                                onClick={() => setShowAll(!showAll)}
+                                onClick={toggleShowAll}
                                 className="see-all-button"
                             >
                                 {showAll ? '▲ Show Less' : `▼ See All (${lastQuizAttempts.length})`}
@@ -117,7 +134,7 @@ const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz }) => {
             )}
 
             {modalOpen && (
-                <div className="modal-overlay" onClick={() => setModalOpen(false)}>
+                <div className="modal-overlay" onClick={handleCloseModal}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                         <h3 className="section-header">🧠 AI Analysis</h3>
                         {aiAnalysis === '' && currentQuestion !== '' ? (
@@ -133,7 +150,7 @@ const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz }) => {
                             </div>
                         )}
                         {aiAnalysis !== '' && (
-                            <button className="close-button" onClick={() => setModalOpen(false)}>
+                            <button className="close-button" onClick={handleCloseModal}>
                                 Close
                             </button>
                         )}
