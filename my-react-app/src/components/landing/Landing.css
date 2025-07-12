@@ -196,6 +196,17 @@
   align-items: center;
 }
 
+.paypal-section {
+  margin-top: 30px;
+  text-align: center;
+}
+
+.paypal-text {
+  color: #666;
+  margin-bottom: 15px;
+  font-size: 16px;
+}
+
 .landing-btn {
   padding: 18px 40px;
   font-weight: bold;
@@ -404,27 +415,32 @@
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.7);
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
   animation: fadeInPopup 0.3s ease;
-  padding: 20px;
+  padding: 24px;
   box-sizing: border-box;
 }
 
 .popup-content {
-  background: white;
-  padding: 30px;
-  border-radius: 15px;
-  max-width: 500px;
+  background: #fff;
+  padding: 40px 36px 32px 36px;
+  border-radius: 32px;
+  max-width: 1100px;
   width: 100%;
   text-align: center;
   animation: fadeInPopup 0.3s ease;
   box-sizing: border-box;
+  box-shadow: 0 12px 48px rgba(2, 150, 201, 0.18), 0 2px 8px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 @keyframes fadeInPopup {
@@ -1358,29 +1374,39 @@ body, .landing-body {
 
 /* Trial Options Styles */
 .trial-options {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  display: flex;
+  flex-direction: row;
+  gap: 24px;
+  justify-content: center;
   margin: 20px 0;
+  width: 100%;
+  max-width: 900px;
 }
 
 .trial-option {
-  background: #f8f9fa;
+  background: #fff;
   border: 2px solid #e9ecef;
-  border-radius: 12px;
-  padding: 20px;
+  border-radius: 16px;
+  padding: 28px 20px 20px 20px;
   text-align: left;
-  transition: all 0.3s ease;
+  min-width: 220px;
+  max-width: 300px;
+  flex: 1 1 0;
+  box-shadow: 0 4px 16px rgba(2, 150, 201, 0.07);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  transition: box-shadow 0.2s, border-color 0.2s;
 }
 
 .trial-option:hover {
   border-color: #0296c9;
-  box-shadow: 0 4px 12px rgba(2, 150, 201, 0.1);
+  box-shadow: 0 8px 24px rgba(2, 150, 201, 0.13);
 }
 
 .trial-option h4 {
   color: #0296c9;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: bold;
   margin: 0 0 10px 0;
   display: flex;
@@ -1389,8 +1415,8 @@ body, .landing-body {
 }
 
 .trial-option p {
-  color: #666;
-  font-size: 14px;
+  color: #444;
+  font-size: 15px;
   line-height: 1.5;
   margin: 0 0 15px 0;
 }
@@ -1398,12 +1424,12 @@ body, .landing-body {
 .trial-option ul {
   list-style: none;
   padding: 0;
-  margin: 0;
+  margin: 0 0 12px 0;
 }
 
 .trial-option li {
   color: #666;
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.4;
   margin: 5px 0;
   display: flex;
@@ -1415,7 +1441,21 @@ body, .landing-body {
   content: "✓";
   color: #28a745;
   font-weight: bold;
-  font-size: 14px;
+  font-size: 15px;
+}
+
+@media (max-width: 991px) {
+  .trial-options {
+    flex-direction: column;
+    gap: 18px;
+    align-items: center;
+    max-width: 100vw;
+  }
+  .trial-option {
+    max-width: 95vw;
+    width: 100%;
+    align-items: flex-start;
+  }
 }
 
 /* Enhanced popup button styles */
@@ -1499,5 +1539,74 @@ body, .landing-body {
   .trial-option li {
     font-size: 11px;
     margin: 4px 0;
+  }
+} 
+
+/* Make modal wider for 3 cards */
+.popup-content {
+  max-width: 1050px;
+} 
+
+@media (max-width: 767px) {
+  .popup-content {
+    max-width: 99vw;
+    width: 99vw;
+    min-width: 0;
+    padding: 12px 2vw 12px 2vw;
+    border-radius: 10px;
+    box-sizing: border-box;
+    overflow-y: auto;
+    max-height: 95vh;
+  }
+  .trial-options {
+    flex-direction: column;
+    gap: 18px;
+    align-items: center;
+    max-width: 100vw;
+    margin-top: 18px;
+  }
+  .trial-option {
+    max-width: 98vw;
+    width: 100%;
+    align-items: flex-start;
+    border: 1.5px solid #e0e0e0;
+    box-shadow: 0 2px 10px rgba(2,150,201,0.08);
+    margin-bottom: 0;
+  }
+  .trial-option button {
+    width: 100%;
+    min-width: 0;
+    margin-left: 0;
+    margin-right: 0;
+  }
+}
+
+.popup-content h3 {
+  margin-bottom: 28px;
+}
+
+.trial-options {
+  margin-top: 28px;
+} 
+
+.paypal-modal-container {
+  display: block;
+  width: 420px;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+@media (max-width: 480px) {
+  .paypal-modal-container {
+    width: 100%;
+    min-width: 260px;
+    overflow-x: auto;
+  }
+}
+
+/* Ensure popup-content is wide enough for PayPal on desktop */
+@media (min-width: 481px) {
+  .popup-content.paypal-active {
+    min-width: 420px;
   }
 } 

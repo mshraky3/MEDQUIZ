@@ -12,6 +12,7 @@ import Analysis from './components/analysis/Analysis.jsx'
 import Admin from './components/ADD/Admin.jsx';
 import Bank from './components/ADD/Bank.jsx';
 import TrialAnalysis from './components/analysis/TrialAnalysis.jsx';
+import PayPalSuccess from './components/paypal/PayPalSuccess.jsx';
 import Globals from "./global.js"
 
 const getHostUrl = Globals.URL;
@@ -24,6 +25,10 @@ const router = createBrowserRouter([
   {
     path: "/login",
     element: <Login />,
+  },
+  {
+    path: "/paypal-success",
+    element: <PayPalSuccess />,
   },
   {
     path: "/ADD_ACCOUNT",
