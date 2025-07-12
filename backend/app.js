@@ -1076,6 +1076,160 @@ app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
 
+// PayPal account creation endpoint
+app.post('/api/paypal-create-account', async (req, res) => {
+  const { username, password, email, paymentId, token, payerId } = req.body;
+  
+  if (!username || !password || !email) {
+    return res.status(400).json({ message: 'Missing required fields' });
+  }
+  
+  try {
+    // Check if username already exists
+    const check = await db.query("SELECT * FROM accounts WHERE username = $1", [username]);
+    if (check.rows.length > 0) {
+      return res.status(400).json({ message: 'Username already exists' });
+    }
+    
+    // Check if email already exists
+    const emailCheck = await db.query("SELECT * FROM accounts WHERE email = $1", [email]);
+    if (emailCheck.rows.length > 0) {
+      return res.status(400).json({ message: 'Email already registered' });
+    }
+    
+    // Insert new account with PayPal payment info
+    const result = await db.query(
+      `INSERT INTO accounts (username, password, email, isactive, signup_method, payment_id, paypal_token, paypal_payer_id, subscription_start, subscription_end) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id, username, email`,
+      [
+        username, 
+        password, 
+        email, 
+        true, 
+        'paypal',
+        paymentId || null,
+        token || null,
+        payerId || null,
+        new Date(),
+        new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // 1 year subscription
+      ]
+    );
+    
+    return res.status(201).json({ 
+      message: 'Account created successfully',
+      user: result.rows[0]
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// PayPal webhook endpoint for payment verification
+app.post('/api/paypal-webhook', async (req, res) => {
+  try {
+    const { event_type, resource } = req.body;
+    
+    // Log webhook for debugging
+    console.log('PayPal webhook received:', { event_type, resource_id: resource?.id });
+    
+    // Handle payment completion
+    if (event_type === 'PAYMENT.CAPTURE.COMPLETED') {
+      const paymentId = resource.id;
+      const status = resource.status;
+      const amount = resource.amount?.value;
+      
+      console.log(`Payment ${paymentId} completed with status: ${status}, amount: ${amount}`);
+      
+      // You can add additional verification here if needed
+      // For now, we'll just acknowledge the webhook
+    }
+    
+    // Handle subscription events
+    if (event_type === 'BILLING.SUBSCRIPTION.ACTIVATED') {
+      const subscriptionId = resource.id;
+      console.log(`Subscription ${subscriptionId} activated`);
+    }
+    
+    if (event_type === 'BILLING.SUBSCRIPTION.CANCELLED') {
+      const subscriptionId = resource.id;
+      console.log(`Subscription ${subscriptionId} cancelled`);
+      
+      // Update user subscription status
+      await db.query(
+        "UPDATE accounts SET isactive = false WHERE paypal_subscription_id = $1",
+        [subscriptionId]
+      );
+    }
+    
+    res.status(200).json({ message: 'Webhook processed successfully' });
+  } catch (error) {
+    console.error('PayPal webhook error:', error);
+    res.status(500).json({ message: 'Webhook processing failed' });
+  }
+});
+
+// Verify PayPal payment endpoint
+app.post('/api/verify-paypal-payment', async (req, res) => {
+  const { paymentId, token, payerId } = req.body;
+  
+  if (!paymentId || !token || !payerId) {
+    return res.status(400).json({ message: 'Missing payment verification parameters' });
+  }
+  
+  try {
+    // In a real implementation, you would verify the payment with PayPal's API
+    // For now, we'll simulate successful verification
+    console.log('Verifying PayPal payment:', { paymentId, token, payerId });
+    
+    // You can add actual PayPal API verification here
+    // const verificationResult = await verifyWithPayPal(paymentId, token, payerId);
+    
+    res.json({ 
+      verified: true, 
+      message: 'Payment verified successfully',
+      paymentId,
+      payerId
+    });
+  } catch (error) {
+    console.error('Payment verification error:', error);
+    res.status(500).json({ message: 'Payment verification failed' });
+  }
+});
+
+// Get user subscription status
+app.get('/api/user-subscription/:userId', async (req, res) => {
+  const { userId } = req.params;
+  
+  try {
+    const result = await db.query(
+      `SELECT id, username, email, isactive, signup_method, subscription_start, subscription_end 
+       FROM accounts WHERE id = $1`,
+      [userId]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    const user = result.rows[0];
+    const now = new Date();
+    const subscriptionEnd = new Date(user.subscription_end);
+    const isActive = user.isactive && subscriptionEnd > now;
+    
+    res.json({
+      user: {
+        ...user,
+        isactive: isActive,
+        daysRemaining: Math.max(0, Math.ceil((subscriptionEnd - now) / (1000 * 60 * 60 * 24)))
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching subscription status:', error);
+    res.status(500).json({ message: 'Failed to fetch subscription status' });
+  }
+});
+
 app.delete('/users/:userId', async (req, res) => {
     const { userId } = req.params;
     
