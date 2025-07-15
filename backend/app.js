@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { Pool } from 'pg';
 import https from "https";
+import crypto from 'crypto';
 
 dotenv.config();
 const agent = new https.Agent({ keepAlive: true });
@@ -149,23 +150,64 @@ app.get('/get_all_users', async (req, res) => {
     }
 });
 
+// Helper: 30 minutes in ms
+const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
+
 app.post('/login', async (req, res) => {
     console.log("Login request received:", req.body);
     const { username, password } = req.body;
+    const client = await db.connect();
     try {
-        const user = await db.query("SELECT * FROM accounts WHERE username = $1", [username]);
-        const userRow = user.rows[0];
+        await client.query('BEGIN');
+        // Lock the user row for update
+        const userResult = await client.query("SELECT * FROM accounts WHERE username = $1 FOR UPDATE", [username]);
+        const userRow = userResult.rows[0];
+        console.log(`[LOGIN] User row after SELECT FOR UPDATE:`, userRow);
 
         if (!userRow) {
+            await client.query('ROLLBACK');
+            client.release();
+            console.log(`[LOGIN] No user found for username: ${username}`);
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
         if (password !== userRow.password) {
+            await client.query('ROLLBACK');
+            client.release();
+            console.log(`[LOGIN] Invalid password for username: ${username}`);
             return res.status(401).json({ message: 'Invalid credentials' });
+        }
+
+        // Session timeout logic
+        let now = new Date();
+        let allowLogin = true;
+        if (userRow.logged) {
+            const lastLogin = new Date(userRow.logged_date);
+            console.log(`[LOGIN] User is already logged in. Last login: ${lastLogin}, Now: ${now}`);
+            if (now - lastLogin < SESSION_TIMEOUT_MS) {
+                allowLogin = false;
+                console.log(`[LOGIN] Session still active. Blocking login.`);
+            } else {
+                // Session expired, unlock
+                await client.query("UPDATE accounts SET logged = $1 WHERE id = $2", [false, userRow.id]);
+                console.log(`[LOGIN] Session expired. Resetting logged flag.`);
+            }
+        }
+        if (!allowLogin) {
+            await client.query('ROLLBACK');
+            client.release();
+            console.log(`[LOGIN] Login blocked for username: ${username}`);
+            return res.status(403).json({
+                message: 'Account already logged in elsewhere.',
+                alreadyLogged: true
+            });
         }
 
         // Check if already active or not
         if (!userRow.isactive) {
+            await client.query('ROLLBACK');
+            client.release();
+            console.log(`[LOGIN] Subscription expired for username: ${username}`);
             return res.status(403).json({
                 message: 'Subscription expired',
                 expired: true,
@@ -173,46 +215,73 @@ app.post('/login', async (req, res) => {
             });
         }
 
-        let firstLogin = false;
-        let now = new Date();
+        // Generate a session token
+        const sessionToken = crypto.randomBytes(24).toString('hex');
 
-        // Simplified login logic - only update if needed
-        if (!userRow.logged_date) {
-            // First login
-            await db.query("UPDATE accounts SET logged = $1, logged_date = $2 WHERE id = $3", [true, now, userRow.id]);
-            firstLogin = true;
-        } else {
-            // Check if last login was more than 1 year ago (simplified calculation)
-            const lastLoginDate = new Date(userRow.logged_date);
-            const oneYearAgo = new Date();
-            oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-            
-            if (lastLoginDate < oneYearAgo) {
-                await db.query("UPDATE accounts SET logged = $1, isactive = $2 WHERE id = $3", [true, false, userRow.id]);
-                return res.status(403).json({
-                    message: 'Subscription expired',
-                    expired: true,
-                    user: userRow
-                });
-            }
+        // Update login state and store session token
+        await client.query("UPDATE accounts SET logged = $1, logged_date = $2, session_token = $3 WHERE id = $4", [true, now, sessionToken, userRow.id]);
+        console.log(`[LOGIN] Set logged=true and session_token for username: ${username}`);
+        await client.query('COMMIT');
+        client.release();
+        console.log(`[LOGIN] Transaction committed for username: ${username}`);
 
-            // Update current login date
-            await db.query("UPDATE accounts SET logged = $1, logged_date = $2 WHERE id = $3", [true, now, userRow.id]);
-        }
-
-        // Return updated user data without additional query
         const updatedUser = {
             ...userRow,
             logged: true,
-            logged_date: now
+            logged_date: now,
+            sessionToken,
+            terms_accepted: userRow.terms_accepted
         };
 
         return res.status(200).json({
             message: 'Login successful',
             expired: false,
-            user: updatedUser
+            user: updatedUser,
+            sessionToken,
+            showTerms: !userRow.terms_accepted
         });
 
+    } catch (error) {
+        await client.query('ROLLBACK');
+        client.release();
+        console.error('[LOGIN] Error during login transaction:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+// Validate session endpoint
+app.post('/session-validate', async (req, res) => {
+    const { username } = req.body;
+    try {
+        const user = await db.query("SELECT * FROM accounts WHERE username = $1", [username]);
+        const userRow = user.rows[0];
+        if (!userRow) {
+            return res.status(401).json({ valid: false, message: 'User not found' });
+        }
+        let now = new Date();
+        const lastLogin = new Date(userRow.logged_date);
+        if (userRow.logged && (now - lastLogin < SESSION_TIMEOUT_MS)) {
+            return res.status(200).json({ valid: true, user: userRow });
+        } else {
+            // Session expired, unlock
+            await db.query("UPDATE accounts SET logged = $1 WHERE id = $2", [false, userRow.id]);
+            return res.status(200).json({ valid: false, message: 'Session expired' });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ valid: false, message: 'Internal server error' });
+    }
+});
+
+// Add logout endpoint
+app.post('/logout', async (req, res) => {
+    const { username } = req.body;
+    if (!username) {
+        return res.status(400).json({ message: 'Username is required' });
+    }
+    try {
+        await db.query("UPDATE accounts SET logged = $1 WHERE username = $2", [false, username]);
+        res.status(200).json({ message: 'Logout successful' });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Internal server error' });
@@ -220,7 +289,7 @@ app.post('/login', async (req, res) => {
 });
 
 
-app.get('/user-analysis/:userId', async (req, res) => {
+app.get('/user-analysis/:userId', requireSession, async (req, res) => {
     const { userId } = req.params;
     try {
         // Get overall stats, latest quiz, and last active
@@ -350,7 +419,7 @@ app.get('/user-analysis/:userId', async (req, res) => {
 });
 
 
-app.get('/topic-analysis/user/:userId', async (req, res) => {
+app.get('/topic-analysis/user/:userId', requireSession, async (req, res) => {
     const { userId } = req.params;
     try {
         const result = await db.query("SELECT * FROM user_topic_analysis WHERE user_id = $1", [userId]);
@@ -360,7 +429,7 @@ app.get('/topic-analysis/user/:userId', async (req, res) => {
     }
 });
 
-app.get('/question-attempts/user/:userId', async (req, res) => {
+app.get('/question-attempts/user/:userId', requireSession, async (req, res) => {
     const { userId } = req.params;
     try {
         const result = await db.query(
@@ -373,7 +442,7 @@ app.get('/question-attempts/user/:userId', async (req, res) => {
     }
 });
 
-app.get('/question-attempts/session/:sessionId', async (req, res) => {
+app.get('/question-attempts/session/:sessionId', requireSession, async (req, res) => {
     const { sessionId } = req.params;
     try {
         const result = await db.query(
@@ -408,7 +477,7 @@ app.get('/api/all-questions', async (req, res) => {
 });
 
 
-app.get('/user-streaks/:user_id', async (req, res) => {
+app.get('/user-streaks/:user_id', requireSession, async (req, res) => {
     try {
         const { user_id } = req.params;
 
@@ -574,7 +643,7 @@ app.post('/user-streaks', async (req, res) => {
     }
 });
 
-app.post('/topic-analysis', async (req, res) => {
+app.post('/topic-analysis', requireSession, async (req, res) => {
 
     const { user_id, question_type, total_answered, total_correct, accuracy, avg_time } = req.body;
     if (!user_id || !question_type || typeof accuracy !== 'number') {
@@ -607,7 +676,7 @@ app.post('/topic-analysis', async (req, res) => {
     }
 });
 
-app.post('/question-attempts', async (req, res) => {
+app.post('/question-attempts', requireSession, async (req, res) => {
     const { user_id, question_id, selected_option, is_correct, time_taken, quiz_session_id } = req.body;
     if (!user_id || !question_id || selected_option === undefined || is_correct === undefined || time_taken === undefined || quiz_session_id === undefined) {
         return res.status(400).json({ message: "Missing required attempt data" });
@@ -627,7 +696,7 @@ app.post('/question-attempts', async (req, res) => {
 
 });
 
-app.post('/user-analysis', async (req, res) => {
+app.post('/user-analysis', requireSession, async (req, res) => {
     const { user_id } = req.body;
     if (!user_id) {
         return res.status(400).json({ message: "User ID is required" });
@@ -701,7 +770,7 @@ app.post('/user-analysis', async (req, res) => {
 });
 
 
-app.post('/quiz-sessions', async (req, res) => {
+app.post('/quiz-sessions', requireSession, async (req, res) => {
     const {
         user_id,
         total_questions,
@@ -1304,5 +1373,50 @@ app.delete('/users/:userId', async (req, res) => {
     } catch (err) {
         console.error('Error deleting user:', err);
         res.status(500).json({ message: 'Failed to delete user and associated data' });
+    }
+});
+
+// Helper to extract session credentials from query or body
+function getSessionCredentials(req) {
+    if (req.method === 'GET') {
+        return {
+            username: req.query.username,
+            sessionToken: req.query.sessionToken
+        };
+    } else {
+        return {
+            username: req.body.username,
+            sessionToken: req.body.sessionToken
+        };
+    }
+}
+
+function requireSession(req, res, next) {
+    const { username, sessionToken } = getSessionCredentials(req);
+    if (!username || !sessionToken) {
+        return res.status(401).json({ message: 'Missing session credentials' });
+    }
+    db.query('SELECT session_token FROM accounts WHERE username = $1', [username])
+        .then(result => {
+            if (!result.rows.length || result.rows[0].session_token !== sessionToken) {
+                return res.status(401).json({ message: 'Session invalid or expired' });
+            }
+            next();
+        })
+        .catch(err => {
+            console.error('[SESSION] Error checking session:', err);
+            res.status(500).json({ message: 'Internal server error' });
+        });
+}
+
+// Endpoint to accept terms
+app.post('/accept-terms', async (req, res) => {
+    const { username } = req.body;
+    if (!username) return res.status(400).json({ message: 'Username required' });
+    try {
+        await db.query('UPDATE accounts SET terms_accepted = true WHERE username = $1', [username]);
+        res.status(200).json({ message: 'Terms accepted' });
+    } catch (err) {
+        res.status(500).json({ message: 'Failed to update terms acceptance' });
     }
 });

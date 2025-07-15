@@ -44,4 +44,15 @@ SELECT
     indexdef
 FROM pg_indexes 
 WHERE tablename IN ('user_question_attempts', 'user_quiz_sessions', 'user_topic_analysis', 'questions')
-ORDER BY tablename, indexname; 
+ORDER BY tablename, indexname;
+
+-- Add device_ids column for device tracking (run this in your DB)
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name='accounts' AND column_name='device_ids'
+    ) THEN
+        ALTER TABLE accounts ADD COLUMN device_ids JSONB DEFAULT '[]';
+    END IF;
+END$$; 
