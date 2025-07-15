@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import axios from 'axios';
 import './Login.css';
 import { useNavigate } from 'react-router-dom';
-import Globals from '../../global';
+import Globals from '../../global.js';
 import SEO from '../common/SEO';
+import Navbar from '../common/Navbar.jsx';
+import { UserContext } from '../../UserContext';
 
 const Login = () => {
+  const { setUser, user, sessionToken } = useContext(UserContext);
   const [form, setForm] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
   const [showPopup, setShowPopup] = useState(false);
@@ -13,10 +16,25 @@ const Login = () => {
   const [termsChecked, setTermsChecked] = useState(false);
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [sessionExpired, setSessionExpired] = useState(false);
 
   const navigate = useNavigate();
 
-  // SEO structured data for login page
+  // Auto-login if session is valid
+  useEffect(() => {
+    if (window.location.search.includes('session=expired')) {
+      setSessionExpired(true);
+    }
+    if (user && sessionToken) {
+      axios.post(`${Globals.URL}/session-validate`, { username: user.username })
+        .then(res => {
+          if (res.data.valid) {
+            navigate('/quizs', { state: { id: user.id } });
+          }
+        });
+    }
+  }, [user, sessionToken, navigate]);
+
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "WebPage",
@@ -62,6 +80,7 @@ const Login = () => {
       .post(`${Globals.URL}/login`, {
         username: cleanedUsername,
         password: password,
+        deviceId: 'placeholder-device-id', // TODO: Replace with real device ID
       })
       .then((response) => {
         const username = cleanedUsername;
@@ -73,35 +92,44 @@ const Login = () => {
           return;
         }
 
-        // Check localStorage for previous login
-        const hasLoggedInBefore = localStorage.getItem(`hasLoggedIn_${username}`);
-
-        if (!hasLoggedInBefore) {
-          // First login → show Terms of Use
-          localStorage.setItem(`hasLoggedIn_${username}`, 'true');
+        if (response.data.showTerms) {
           setShowTermsPopup(true);
           setLoading(false);
-        } else {
-          // Already logged in before → go to quizs
-          setLoading(false);
-          navigate('/quizs', { state: response.data });
+          setUser(response.data.user || { username }, response.data.sessionToken);
+          return;
         }
+
+        setLoading(false);
+        setUser(response.data.user || { username }, response.data.sessionToken);
+        navigate('/quizs', { state: response.data });
       })
       .catch((err) => {
         const newAttempts = failedAttempts + 1;
         setFailedAttempts(newAttempts);
-        if (newAttempts >= 10) {
-          setShowPopup(true);
+        if (err.response && err.response.data && err.response.data.alreadyLogged) {
+          setError('This account is already in use on another device or browser. Please wait 30 minutes or ask the other user to log out.');
+        } else {
+          if (newAttempts >= 10) {
+            setShowPopup(true);
+          }
+          setError('Your username or password is wrong! Try again.');
         }
-        setError('Your username or password is wrong! Try again.');
         setLoading(false);
       });
   };
 
-  const handleAcceptTerms = () => {
+  const handleAcceptTerms = async () => {
     if (!termsChecked) return;
     setShowTermsPopup(false);
-    navigate('/quizs');
+    setLoading(true);
+    try {
+      await axios.post(`${Globals.URL}/accept-terms`, { username: form.username.trim().toLowerCase() });
+      setLoading(false);
+      navigate('/quizs');
+    } catch (err) {
+      setLoading(false);
+      setError('Failed to accept terms. Please try again.');
+    }
   };
 
   const handleContactClick = (e) => {
@@ -116,6 +144,7 @@ const Login = () => {
 
   return (
     <>
+      <Navbar />
       <SEO 
         title="Login - Access Your SMLE Prep Account"
         description="Login to your SQB account to access over 5,000 SMLE practice questions, detailed analytics, and comprehensive exam preparation tools. Secure login for medical students."
@@ -132,7 +161,11 @@ const Login = () => {
 
           <div className="login-box">
             <h2 className="login-title">Login</h2>
-
+            {sessionExpired && (
+              <div className="login-error" style={{ marginBottom: 10 }}>
+                Your session has expired or another user has logged in with this account. Please log in again.
+              </div>
+            )}
             <form onSubmit={handleSubmit}>
               <input
                 type="text"

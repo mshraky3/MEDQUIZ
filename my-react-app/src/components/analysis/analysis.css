@@ -532,3 +532,18 @@
         text-align: center;
     }
 }
+
+@media (max-width: 600px) {
+  .summary-section {
+    text-align: center;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .summary-table {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .summary-table th, .summary-table td {
+    text-align: center;
+  }
+}

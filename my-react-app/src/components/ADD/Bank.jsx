@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./Bank.css";
-import Globals from "../../global";
+import Globals from '../../global.js';
 
 const Bank = () => {
   const [questions, setQuestions] = useState([]);

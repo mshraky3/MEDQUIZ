@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import './PayPalSuccess.css';
-import Globals from '../../global';
+import Globals from '../../global.js';
 
 const PayPalSuccess = () => {
   const [searchParams] = useSearchParams();

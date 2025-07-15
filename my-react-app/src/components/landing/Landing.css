@@ -429,18 +429,21 @@
 }
 
 .popup-content {
-  background: #fff;
-  padding: 40px 36px 32px 36px;
-  border-radius: 32px;
-  max-width: 1100px;
-  width: 100%;
-  text-align: center;
-  animation: fadeInPopup 0.3s ease;
-  box-sizing: border-box;
-  box-shadow: 0 12px 48px rgba(2, 150, 201, 0.18), 0 2px 8px rgba(0,0,0,0.08);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  background: #fff; /* Background color */
+  padding: 40px 36px 32px 36px; /* Top: 40px, Right/Left: 36px, Bottom: 32px */
+  border-radius: 32px; /* Rounded corners */
+  max-width: 1100px; /* Maximum width to prevent overflow on large screens */
+  width: 100%; /* Full width within its container */
+  text-align: center; /* Center-align content */
+  animation: fadeInPopup 0.3s ease; /* Animation for smooth appearance */
+  box-sizing: border-box; /* Include padding and borders in the element's total width and height */
+  box-shadow: 
+    0 12px 48px rgba(2, 150, 201, 0.18), /* Primary shadow with blue tint */
+    0 2px 8px rgba(0, 0, 0, 0.08); /* Secondary shadow for depth */
+  display: flex; /* Flexbox layout for flexible positioning */
+  flex-direction: column; /* Stack items vertically */
+  align-items: center; /* Center items horizontally */
+  justify-content: center; /* Center items vertically */
 }
 
 @keyframes fadeInPopup {

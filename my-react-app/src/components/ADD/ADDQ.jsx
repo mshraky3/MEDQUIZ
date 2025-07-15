@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import './addq.css';
-import Globals from '../../global';
+import Globals from '../../global.js';
 
 const ADDQ = () => {
     const [questionText, setQuestionText] = useState('');

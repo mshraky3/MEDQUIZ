@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './analysis.css';
-import Globals from '../../global';
+import Globals from '../../global.js';
 
 const StreakInfo = ({ streakData, userId, isTrial }) => {
     const [trialStreakData, setTrialStreakData] = useState(null);

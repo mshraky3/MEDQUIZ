@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import './Landing.css';
 import SEO from '../common/SEO';
 import axios from 'axios';
-import Globals from '../../global';
+import Globals from '../../global.js';
 
 const PAYPAL_BUTTON_ID = "7JKAEKKCAGGW6";
 const WHATSAPP_LINK = 'https://wa.link/pzhg6j';
@@ -19,7 +19,7 @@ const Landing = () => {
   const [successMsg, setSuccessMsg] = useState('');
   const paypalRef = useRef(null);
 
-  // Free Trial
+
   const handleFreeTrial = async () => {
     setLoading(true);
     setFormError('');
@@ -268,7 +268,7 @@ const Landing = () => {
         {/* Modal for registration and PayPal */}
         {showModal && (
           <div className="popup-overlay" style={{ zIndex: 1000 }}>
-            <div className={`popup-content${modalStep === 'paypal' ? ' paypal-active' : ''}`}> 
+            <div className={`popup-content${modalStep === 'paypal' ? ' paypal-active' : ''}`}>
               {modalStep === 'options' && (
                 <>
                   <h3>Choose how to get started:</h3>

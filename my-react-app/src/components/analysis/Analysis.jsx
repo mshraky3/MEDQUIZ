@@ -2,13 +2,16 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import './analysis.css';
-import Globals from '../../global';
+import Globals from '../../global.js';
 import SEO from '../common/SEO';
 import OverallStats from './OverallStats';
 import StreakInfo from './StreakInfo';
 import TopicAnalysisTable from './TopicAnalysisTable';
 import QuestionAttemptsTable from './QuestionAttemptsTable';
 import LastQuizSummary from './LastQuizSummary';
+import Navbar from '../common/Navbar.jsx';
+import { useContext } from 'react';
+import { UserContext } from '../../UserContext';
 
 const BestWorstTopic = ({ best, worst }) => (
   <section className="streak-section">
@@ -47,8 +50,9 @@ const BestWorstTopic = ({ best, worst }) => (
 );
 
 const Analysis = () => {
+  const { user, setUser, sessionToken } = useContext(UserContext);
   const location = useLocation();
-  const id = location.state?.id;
+  const id = user?.id || location.state?.id;
   const navigate = useNavigate();
 
   const [data, setData] = useState({
@@ -130,55 +134,72 @@ const Analysis = () => {
     };
   }, []);
 
+  // Helper to handle protected GET requests
+  const protectedGet = async (url, config = {}) => {
+    if (!user || !sessionToken) throw new Error('Not authenticated');
+    const urlWithCreds = url + (url.includes('?') ? '&' : '?') + `username=${encodeURIComponent(user.username)}&sessionToken=${encodeURIComponent(sessionToken)}`;
+    try {
+      return await axios.get(urlWithCreds, config);
+    } catch (err) {
+      if (err.response && err.response.status === 401) {
+        setUser(null, null);
+        localStorage.clear();
+        window.location.href = '/login?session=expired';
+        return;
+      }
+      throw err;
+    }
+  };
+
   // Optimized fetch functions with better error handling
   const fetchUserAnalysis = useCallback(async () => {
     setLoading(prev => ({ ...prev, userAnalysis: true }));
     setErrors(prev => ({ ...prev, userAnalysis: null }));
     try {
       const timestamp = Date.now();
-      const res = await axios.get(`${Globals.URL}/user-analysis/${id}?_=${timestamp}`);
+      const res = await protectedGet(`${Globals.URL}/user-analysis/${id}?_=${timestamp}`);
       setData(prev => ({ ...prev, userAnalysis: res.data }));
     } catch (err) {
       setErrors(prev => ({ ...prev, userAnalysis: 'Failed to load user analysis.' }));
     } finally {
       setLoading(prev => ({ ...prev, userAnalysis: false }));
     }
-  }, [id]);
+  }, [id, user, sessionToken, setUser]);
 
   const fetchStreakData = useCallback(async () => {
     setLoading(prev => ({ ...prev, streakData: true }));
     setErrors(prev => ({ ...prev, streakData: null }));
     try {
       const timestamp = Date.now();
-      const res = await axios.get(`${Globals.URL}/user-streaks/${id}?_=${timestamp}`);
+      const res = await protectedGet(`${Globals.URL}/user-streaks/${id}?_=${timestamp}`);
       setData(prev => ({ ...prev, streakData: res.data }));
     } catch (err) {
       setErrors(prev => ({ ...prev, streakData: 'Failed to load streak data.' }));
     } finally {
       setLoading(prev => ({ ...prev, streakData: false }));
     }
-  }, [id]);
+  }, [id, user, sessionToken, setUser]);
 
   const fetchTopicAnalysis = useCallback(async () => {
     setLoading(prev => ({ ...prev, topicAnalysis: true }));
     setErrors(prev => ({ ...prev, topicAnalysis: null }));
     try {
       const timestamp = Date.now();
-      const res = await axios.get(`${Globals.URL}/topic-analysis/user/${id}?_=${timestamp}`);
+      const res = await protectedGet(`${Globals.URL}/topic-analysis/user/${id}?_=${timestamp}`);
       setData(prev => ({ ...prev, topicAnalysis: res.data || [] }));
     } catch (err) {
       setErrors(prev => ({ ...prev, topicAnalysis: 'Failed to load topic analysis.' }));
     } finally {
       setLoading(prev => ({ ...prev, topicAnalysis: false }));
     }
-  }, [id]);
+  }, [id, user, sessionToken, setUser]);
 
   const fetchQuestionAttempts = useCallback(async () => {
     setLoading(prev => ({ ...prev, questionAttempts: true }));
     setErrors(prev => ({ ...prev, questionAttempts: null }));
     try {
       const timestamp = Date.now();
-      const res = await axios.get(`${Globals.URL}/question-attempts/user/${id}?_=${timestamp}`, {
+      const res = await protectedGet(`${Globals.URL}/question-attempts/user/${id}?_=${timestamp}`, {
         timeout: 10000 // 10 second timeout
       });
       setData(prev => ({ ...prev, questionAttempts: res.data || [] }));
@@ -193,7 +214,7 @@ const Analysis = () => {
     } finally {
       setLoading(prev => ({ ...prev, questionAttempts: false }));
     }
-  }, [id]);
+  }, [id, user, sessionToken, setUser]);
 
   const fetchQuestions = useCallback(async () => {
     setLoading(prev => ({ ...prev, questions: true }));
@@ -219,14 +240,14 @@ const Analysis = () => {
     setLoading(prev => ({ ...prev, lastQuizAttempts: true }));
     setErrors(prev => ({ ...prev, lastQuizAttempts: null }));
     try {
-      const res = await axios.get(`${Globals.URL}/question-attempts/session/${latestQuizId}`);
+      const res = await protectedGet(`${Globals.URL}/question-attempts/session/${latestQuizId}`);
       setData(prev => ({ ...prev, lastQuizAttempts: res.data || [] }));
     } catch (err) {
       setErrors(prev => ({ ...prev, lastQuizAttempts: 'Failed to load last quiz attempts.' }));
     } finally {
       setLoading(prev => ({ ...prev, lastQuizAttempts: false }));
     }
-  }, []);
+  }, [user, sessionToken, setUser]);
 
   // Sequential loading for better performance
   const fetchAll = useCallback(async () => {
@@ -247,7 +268,7 @@ const Analysis = () => {
       ]);
       
       // Get the current userAnalysis data to check for latest quiz
-      const currentData = await axios.get(`${Globals.URL}/user-analysis/${id}?_=${Date.now()}`);
+      const currentData = await protectedGet(`${Globals.URL}/user-analysis/${id}?_=${Date.now()}`);
       const userAnalysisData = currentData.data;
       
       // Update the data state with fresh userAnalysis
@@ -266,22 +287,13 @@ const Analysis = () => {
     } finally {
       setRefreshing(false);
     }
-  }, [fetchUserAnalysis, fetchStreakData, fetchTopicAnalysis, fetchQuestionAttempts, fetchQuestions, fetchLastQuizAttempts, id, refreshing]);
+  }, [fetchUserAnalysis, fetchStreakData, fetchTopicAnalysis, fetchQuestionAttempts, fetchQuestions, fetchLastQuizAttempts, id, refreshing, user, sessionToken, setUser]);
 
   // Initial fetch and polling
   useEffect(() => {
     if (!id) {
-      let attempts = 0;
-      const interval = setInterval(() => {
-        attempts++;
-        if (window.location.state?.id) {
-          clearInterval(interval);
-        } else if (attempts >= 3) {
-          clearInterval(interval);
-          navigate('/');
-        }
-      }, 1000);
-      return () => clearInterval(interval);
+      navigate('/');
+      return;
     }
     
     if (!isInitializedRef.current) {
@@ -304,7 +316,7 @@ const Analysis = () => {
         clearInterval(pollingRef.current);
       }
     };
-  }, [id, navigate]); // Remove fetchAll from dependencies to prevent re-runs
+  }, [id, navigate, fetchAll, refreshing]); // Add fetchAll and refreshing to dependencies
 
   // Manual refresh
   const handleRefresh = useCallback(() => {
@@ -351,6 +363,7 @@ const Analysis = () => {
 
   return (
     <>
+      <Navbar />
       <SEO 
         title="Performance Analysis - Track Your SMLE Progress"
         description="Comprehensive SMLE performance analysis with detailed statistics, topic-wise breakdown, and progress tracking. Monitor your strengths and weaknesses to improve your exam preparation."

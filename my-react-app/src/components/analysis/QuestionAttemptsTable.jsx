@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import axios from 'axios';
-import Global from '../../global.js';
+import Globals from '../../global.js';
 import './analysis.css';
 
 const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz, isTrial }) => {
@@ -50,7 +50,7 @@ const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz, isTria
         }
 
         try {
-            const response = await axios.post(`${Global.URL}/ai-analysis`, {
+            const response = await axios.post(`${Globals.URL}/ai-analysis`, {
                 question: questionText,
                 selected_answer: selectedAnswer,
                 correct_option: correctAnswer,

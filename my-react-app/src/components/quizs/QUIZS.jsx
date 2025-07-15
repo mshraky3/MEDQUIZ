@@ -1,14 +1,17 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useContext } from 'react';
 import axios from 'axios';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './QUIZS.css';
-import Globals from '../../global';
+import Globals from '../../global.js';
 import SEO from '../common/SEO';
+import Navbar from '../common/Navbar.jsx';
+import { UserContext } from '../../UserContext';
 
 const QUIZS = () => {
+    const { user, setUser, sessionToken } = useContext(UserContext);
     const navigate = useNavigate();
     const location = useLocation();
-    const id = location.state?.id || location.state?.user?.id;
+    const id = user?.id || location.state?.id || location.state?.user?.id;
     const isTrial = location.state?.isTrial || false;
     const [currentStreak, setCurrentStreak] = useState(0);
     const [showTypeSelector, setShowTypeSelector] = useState(false);
@@ -117,21 +120,39 @@ const QUIZS = () => {
         }
     }, [showTypeSelector, selectedTypes]);
 
+    // Helper for protected GET
+    const protectedGet = async (url, config = {}) => {
+      if (!user || !sessionToken) throw new Error('Not authenticated');
+      const urlWithCreds = url + (url.includes('?') ? '&' : '?') + `username=${encodeURIComponent(user.username)}&sessionToken=${encodeURIComponent(sessionToken)}`;
+      try {
+        return await axios.get(urlWithCreds, config);
+      } catch (err) {
+        if (err.response && err.response.status === 401) {
+          setUser(null, null);
+          localStorage.clear();
+          window.location.href = '/login?session=expired';
+          return;
+        }
+        throw err;
+      }
+    };
+
     useEffect(() => {
         const fetchStreaks = async () => {
             if (!id || isTrial) return; // Don't fetch streaks for trial users
             try {
-                const response = await axios.get(`${Globals.URL}/user-streaks/${id}`);
+                const response = await protectedGet(`${Globals.URL}/user-streaks/${id}`);
                 setCurrentStreak(response.data.current_streak || 0);
             } catch (error) {
                 console.error("Error fetching streak", error);
             }
         };
         fetchStreaks();
-    }, [id, isTrial]);
+    }, [id, isTrial, user, sessionToken, setUser]);
 
     return (
         <>
+            <Navbar />
             <SEO 
                 title="Quiz Selection - Choose Your SMLE Practice Questions"
                 description="Select from 10 to 200 SMLE practice questions. Choose specific medical topics (pediatrics, OB/GYN, medicine, surgery) or mix all types. Start your SMLE preparation with targeted practice sessions."

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useContext } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import './QUIZ.css';
@@ -6,7 +6,8 @@ import Loading from './Loading';
 import ErrorScreen from './ErrorScreen';
 import Result from './Result';
 import Question from './Question';
-import Globals from '../../global';
+import Globals from '../../global.js';
+import { UserContext } from '../../UserContext';
 
 const QUIZ = () => {
   const { numQuestions } = useParams();
@@ -24,13 +25,46 @@ const QUIZ = () => {
   const [dataSent, setDataSent] = useState(false);
   const quizStartTimeRef = useRef(Date.now());
   const types = location.state?.types || 'mix';
+  const { user, setUser, sessionToken } = useContext(UserContext);
   
+  const protectedGet = async (url, config = {}) => {
+    if (!user || !sessionToken) throw new Error('Not authenticated');
+    const urlWithCreds = url + (url.includes('?') ? '&' : '?') + `username=${encodeURIComponent(user.username)}&sessionToken=${encodeURIComponent(sessionToken)}`;
+    try {
+      return await axios.get(urlWithCreds, config);
+    } catch (err) {
+      if (err.response && err.response.status === 401) {
+        setUser(null, null);
+        localStorage.clear();
+        window.location.href = '/login?session=expired';
+        return;
+      }
+      throw err;
+    }
+  };
+  // Helper for protected POST
+  const protectedPost = async (url, data, config = {}) => {
+    if (!user || !sessionToken) throw new Error('Not authenticated');
+    const body = { ...data, username: user.username, sessionToken };
+    try {
+      return await axios.post(url, body, config);
+    } catch (err) {
+      if (err.response && err.response.status === 401) {
+        setUser(null, null);
+        localStorage.clear();
+        window.location.href = '/login?session=expired';
+        return;
+      }
+      throw err;
+    }
+  };
+
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
         // Use different endpoint for trial users
         const endpoint = isTrial ? '/free-trial/questions' : '/api/questions';
-        const response = await axios.get(`${Globals.URL}${endpoint}`, {
+        const response = await protectedGet(`${Globals.URL}${endpoint}`, {
           params: { limit: numQuestions, types: types }
         });
 
@@ -118,7 +152,7 @@ const QUIZ = () => {
               topics_covered: topicsCovered
             };
 
-        const sessionRes = await axios.post(`${Globals.URL}${endpoint}`, sessionData);
+        const sessionRes = await protectedPost(`${Globals.URL}${endpoint}`, sessionData);
         const quiz_session_id = sessionRes.data.id;
 
         // Send individual question attempts
@@ -143,7 +177,7 @@ const QUIZ = () => {
               };
 
           const attemptEndpoint = isTrial ? '/free-trial/question-attempts' : '/question-attempts';
-          return axios.post(`${Globals.URL}${attemptEndpoint}`, attemptData);
+          return protectedPost(`${Globals.URL}${attemptEndpoint}`, attemptData);
         });
 
         await Promise.all(attemptPromises);
@@ -156,7 +190,7 @@ const QUIZ = () => {
             const topicCorrect = topicAnswers.filter(a => a.isCorrect).length;
             const topicAccuracy = topicQuestions.length > 0 ? (topicCorrect / topicQuestions.length) * 100 : 0;
 
-            return axios.post(`${Globals.URL}/topic-analysis`, {
+            return protectedPost(`${Globals.URL}/topic-analysis`, {
               user_id: id,
               question_type: topic,
               total_answered: topicQuestions.length,
