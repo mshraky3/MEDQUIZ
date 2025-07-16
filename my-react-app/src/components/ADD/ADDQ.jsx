@@ -61,9 +61,8 @@ const ADDQ = () => {
             setOption4('');
             setCorrectAnswer('');
             setQuestionType('pediatric');
-        } catch (err) {
+        } catch {
             setError("Failed to add question. Please try again.");
-            setMessage('');
         }
     };
 
@@ -180,4 +179,5 @@ const ADDQ = () => {
         </div>
     );
 };
+
 export default ADDQ;

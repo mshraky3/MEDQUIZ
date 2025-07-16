@@ -36,9 +36,9 @@ const ADD = (props) => {
             if (showUsers) {
                 handleShowUsers();
             }
-        } catch (err) {
+        } catch {
             const errorMessage =
-                err.response?.data?.message || "Failed to add account. Please try again.";
+                "Failed to add account. Please try again.";
             setError(errorMessage);
             setMessage("");
         }

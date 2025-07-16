@@ -4,20 +4,23 @@ import './Landing.css';
 import SEO from '../common/SEO';
 import axios from 'axios';
 import Globals from '../../global.js';
+import useLang from '../../hooks/useLang';
 
-const PAYPAL_BUTTON_ID = "7JKAEKKCAGGW6";
+
 const WHATSAPP_LINK = 'https://wa.link/pzhg6j';
 
 const Landing = () => {
+  const lang = useLang();
+  const isArabic = lang === 'ar';
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
-  const [modalStep, setModalStep] = useState('options'); // options | paypal
+  
   const [form, setForm] = useState({ username: '', email: '', password: '', confirmPassword: '' });
   const [formError, setFormError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [paypalReady, setPaypalReady] = useState(false);
+  
   const [successMsg, setSuccessMsg] = useState('');
-  const paypalRef = useRef(null);
+  
 
 
   const handleFreeTrial = async () => {
@@ -46,14 +49,10 @@ const Landing = () => {
     window.open(WHATSAPP_LINK, '_blank');
   };
 
-  // PayPal Registration Flow
-  const handlePayPalStart = () => {
-    setModalStep('paypal');
-    setForm({ username: '', email: '', password: '', confirmPassword: '' });
-    setFormError('');
-    setSuccessMsg('');
-    setPaypalReady(false);
-  };
+  useEffect(() => {
+    document.documentElement.lang = lang;
+    document.documentElement.dir = isArabic ? 'rtl' : 'ltr';
+  }, [lang, isArabic]);
 
   const handleFormChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -76,62 +75,12 @@ const Landing = () => {
     return '';
   };
 
-  const handleFormSubmit = (e) => {
-    e.preventDefault();
-    const err = validateForm();
-    if (err) {
-      setFormError(err);
-      return;
-    }
-    setPaypalReady(true);
-  };
+  
 
-  // Render PayPal button after form is valid and paypalReady
-  useEffect(() => {
-    if (modalStep === 'paypal' && paypalReady && window.paypal && paypalRef.current) {
-      paypalRef.current.innerHTML = '';
-      window.paypal.HostedButtons({
-        hostedButtonId: PAYPAL_BUTTON_ID,
-        createOrder: (data, actions) => {
-          return actions.order.create({});
-        },
-        onApprove: async (data, actions) => {
-          setLoading(true);
-          setFormError('');
-          try {
-            const res = await axios.post(`${Globals.URL}/api/paypal-create-account`, {
-              username: form.username,
-              password: form.password,
-              email: form.email,
-              paymentId: data.orderID,
-              payerId: data.payerID,
-              token: data.facilitatorAccessToken || ''
-            });
-            setSuccessMsg('Account created successfully! Redirecting to login...');
-            setTimeout(() => {
-              setShowModal(false);
-              navigate('/login');
-            }, 2000);
-          } catch (err) {
-            setFormError(err.response?.data?.message || 'Account creation failed.');
-          } finally {
-            setLoading(false);
-          }
-        },
-        onError: (err) => {
-          setFormError('PayPal payment failed. Please try again.');
-        }
-      }).render('#paypal-container-7JKAEKKCAGGW6');
-    }
-  }, [modalStep, paypalReady, form, navigate]);
+  
 
   const handleGetStarted = () => {
     setShowModal(true);
-    setModalStep('options');
-    setFormError('');
-    setSuccessMsg('');
-    setPaypalReady(false);
-    setLoading(false);
   };
 
   const handleLogin = () => {
@@ -141,14 +90,17 @@ const Landing = () => {
   return (
     <>
       <SEO 
-        title="Ultimate SMLE Prep Platform"
-        description="Master the Saudi Medical Licensing Examination (SMLE) with MEDQIZE. Access over 5,000 carefully curated questions with detailed analytics, targeted practice, and comprehensive performance tracking. Start your free trial today!"
-        keywords="SMLE, Saudi Medical Licensing Examination, medical questions, medical quiz, medical exam preparation, Saudi medical license, medical board exam, medical practice test, medical study guide, Saudi medical students, free trial"
+        title={isArabic ? "منصة برومترك (SMLE) الشاملة" : "Ultimate SMLE (Prometric) Prep Platform"}
+        description={isArabic
+          ? "استعد لاختبار البرومترك السعودي (SMLE) مع مجموعتنا الشاملة التي تضم أكثر من 5000 سؤال دقيق وتحليلات مفصلة وتجربة مجانية."
+          : "Master the Saudi Medical Licensing Examination (SMLE) and Prometric with MEDQIZE. Access over 5,000 carefully curated questions with detailed analytics, targeted practice, and comprehensive performance tracking. Start your free trial today!"}
+        keywords="SMLE, Prometric, Saudi Medical Licensing Examination, medical questions, medical quiz, medical exam preparation, Saudi medical license, medical board exam, medical practice test, medical study guide, Saudi medical students, free trial, Prometric questions, Prometric Saudi, برومترك, اسئلة برومترك, اسئلة اختبار البرومترك, اسئلة الهيئة السعودية للتخصصات الصحية, بنك اسئلة برومترك, بنك اسئلة SMLE, تجميعات برومترك, تجميعات SMLE, اختبار البرومترك, اختبار الهيئة السعودية, اسئلة طبية, بنك اسئلة طبية, تدريب برومترك, تدريب SMLE, اسئلة امتحان برومترك, اسئلة امتحان SMLE, اسئلة طبية سعودية, اسئلة طبية برومترك, Saudi Prometric, Prometric exam, Prometric practice, Prometric medicine, Prometric Saudi Arabia, Saudi Prometric questions, Saudi Prometric bank, Saudi Prometric practice, Saudi Prometric free, Saudi Prometric trial, Saudi Prometric preparation, Saudi Prometric online, Saudi Prometric MCQ, Saudi Prometric test, Saudi Prometric review, Saudi Prometric study, Saudi Prometric guide, Saudi Prometric analytics, Saudi Prometric performance, Saudi Prometric topics, Saudi Prometric mobile, Saudi Prometric affordable, Saudi Prometric subscription, Saudi Prometric unlimited, Saudi Prometric 2024, Saudi Prometric 2025"
         url="https://www.smle-question-bank.com"
+        lang={lang}
       />
-      <div className="landing-body">
+      <div className="landing-body" dir={isArabic ? "rtl" : "ltr"}>
         {/* Decorative SVG Wave at the Top */}
-        <div className="landing-top-wave">
+        <div className="landing-top-wave" dir="ltr">
           <svg viewBox="0 0 2880 180" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
             <g className="wave-anim-group">
               <path d="M0,80 C360,180 1080,0 1440,100 L1440,0 L0,0 Z" fill="#00b6e0" fillOpacity="0.10" />
@@ -160,227 +112,213 @@ const Landing = () => {
         <div className="landing-bg-icon">?</div>
         <div className="landing-wrapper landing-main-container">
           {/* Badge Above Main Title */}
-          <div className="landing-badge">#1 Affordable SMLE Prep</div>
+          <div className="landing-badge">
+            {isArabic ? "الأفضل سعراً لاختبار البرومترك (SMLE)" : "#1 Affordable SMLE (Prometric) Prep"}
+          </div>
           {/* Header Section */}
           <div className="landing-header">
-            <h1 className="landing-main-title landing-title-shadow">SQB</h1>
-            <h2 className="landing-subtitle">Your Ultimate SMLE Question Bank</h2>
+            <h1 className="landing-main-title landing-title-shadow">
+              SQB{isArabic && <><br/><span style={{fontWeight:'normal',fontSize:'22px'}}>بنك الأسئلة السعودي</span></>}
+            </h1>
+            <h2 className="landing-subtitle">
+              {isArabic ? "بنك أسئلة برومترك (SMLE) الشامل الخاص بك" : "Your Ultimate SMLE (Prometric) Question Bank"}
+            </h2>
             <p className="landing-description">
-              Master the Saudi Medical Licensing Examination with our comprehensive collection of over 5,000 carefully curated questions
+              {isArabic
+                ? "استعد لاختبار البرومترك السعودي (SMLE) مع مجموعتنا الشاملة التي تضم أكثر من 5000 سؤال دقيق"
+                : "Master the Saudi Medical Licensing Examination (SMLE) and Prometric with our comprehensive collection of over 5,000 carefully curated questions"}
             </p>
           </div>
           <div className="landing-cta">
             <div className="landing-buttons">
               <button className="landing-btn primary" onClick={handleGetStarted}>
-                Get Started Now
+                {isArabic ? "ابدأ الآن" : "Get Started Now"}
               </button>
               <button className="landing-btn secondary" onClick={handleLogin}>
-                Login
+                {isArabic ? "تسجيل الدخول" : "Login"}
               </button>
             </div>
           </div>
           {/* Pricing Section */}
           <div className="landing-pricing">
             <div className="pricing-badge">
-              <span className="pricing-label">Best Value</span>
+              <span className="pricing-label">{isArabic ? "أفضل قيمة" : "Best Value"}</span>
             </div>
             <div className="pricing-card">
               <div className="pricing-header">
-                <h3>Annual Subscription</h3>
+                <h3>{isArabic ? "اشتراك سنوي" : "Annual Subscription"}</h3>
                 <div className="price">
                   <span className="currency">SAR</span>
                   <span className="amount">50</span>
-                  <span className="period">/year</span>
+                  <span className="period">{isArabic ? "سنة" : "/year"}</span>
                 </div>
-                <p className="pricing-subtitle">The most affordable SMLE preparation service</p>
+                <p className="pricing-subtitle">{isArabic ? "أرخص خدمة تحضير لاختبار البرومترك (SMLE)" : "The most affordable SMLE (Prometric) preparation service"}</p>
               </div>
               <div className="pricing-features">
                 <div className="pricing-feature">
                   <span className="feature-check">✓</span>
-                  <span>Access to all 5,000+ questions</span>
+                  <span>{isArabic ? "الوصول إلى جميع الأسئلة (5000+)" : "Access to all 5,000+ questions"}</span>
                 </div>
                 <div className="pricing-feature">
                   <span className="feature-check">✓</span>
-                  <span>Detailed performance analytics</span>
+                  <span>{isArabic ? "تحليلات أداء مفصلة" : "Detailed performance analytics"}</span>
                 </div>
                 <div className="pricing-feature">
                   <span className="feature-check">✓</span>
-                  <span>Topic-wise practice sessions</span>
+                  <span>{isArabic ? "تدريب حسب الموضوع" : "Topic-wise practice sessions"}</span>
                 </div>
                 <div className="pricing-feature">
                   <span className="feature-check">✓</span>
-                  <span>24/7 unlimited access</span>
+                  <span>{isArabic ? "دخول غير محدود 24/7" : "24/7 unlimited access"}</span>
                 </div>
                 <div className="pricing-feature">
                   <span className="feature-check">✓</span>
-                  <span>Mobile-friendly platform</span>
+                  <span>{isArabic ? "منصة متوافقة مع الجوال" : "Mobile-friendly platform"}</span>
                 </div>
               </div>
               <div className="pricing-comparison">
-                <p>Save up to <strong>80%</strong> compared to other SMLE services</p>
+                <p>{isArabic ? "وفر حتى ٨٠٪ مقارنة بالخدمات الأخرى" : "Save up to 80% compared to other SMLE (Prometric) services"}</p>
               </div>
-              <button className="landing-btn primary" style={{marginTop: 24, width: '100%'}} onClick={() => { setShowModal(true); setModalStep('paypal'); setFormError(''); setSuccessMsg(''); setPaypalReady(false); setLoading(false); setForm({ username: '', email: '', password: '', confirmPassword: '' }); }}>
-                Subscribe / Buy Now
+              <button className="landing-btn primary" style={{marginTop: 24, width: '100%'}} onClick={handleWhatsApp}  >
+                {isArabic ? "اشترك الآن" : "Subscribe / Buy Now"}
               </button>
             </div>
           </div>
+          {/* How to Add to Home Screen Section (moved up, more prominent) */}
+          <div className="add-to-home-section important-section">
+            <h2>{isArabic ? "كيفية إضافة الموقع إلى الشاشة الرئيسية" : "How to Add This Website to Your Home Screen"}</h2>
+            <div className="add-to-home-content">
+              <div className="add-to-home-instructions">
+                <div className="add-to-home-platform">
+                  <h3><span role="img" aria-label="Android">🤖</span> {isArabic ? "على أجهزة Android:" : "On Android:"}</h3>
+                  <ol>
+                    {isArabic ? (
+                      <>
+                        <li><span className="step-icon" role="img" aria-label="browser">🌐</span> افتح الموقع في متصفح <b>Chrome</b>.</li>
+                        <li><span className="step-icon" role="img" aria-label="menu">⋮</span> اضغط على النقاط الثلاث في أعلى يمين الشاشة.</li>
+                        <li><span className="step-icon" role="img" aria-label="add">➕</span> اختر "إضافة إلى الشاشة الرئيسية".</li>
+                        <li><span className="step-icon" role="img" aria-label="home">🏠</span> اضغط "إضافة" وسيظهر الموقع على شاشتك الرئيسية.</li>
+                      </>
+                    ) : (
+                      <>
+                        <li><span className="step-icon" role="img" aria-label="browser">🌐</span> Open the website in <b>Chrome</b> browser.</li>
+                        <li><span className="step-icon" role="img" aria-label="menu">⋮</span> Tap the three dots menu at the top right.</li>
+                        <li><span className="step-icon" role="img" aria-label="add">➕</span> Select "Add to Home screen".</li>
+                        <li><span className="step-icon" role="img" aria-label="home">🏠</span> Tap "Add" and the site will appear on your home screen.</li>
+                      </>
+                    )}
+                  </ol>
+                  <div className="add-to-home-video">
+                    {/* Replace src with your Android video URL when available */}
+                    <div className="video-placeholder">
+                      {isArabic ? "فيديو شرح للأندرويد قريباً" : "Android video tutorial coming soon"}
+                    </div>
+                  </div>
+                </div>
+                <div className="add-to-home-platform">
+                  <h3 style={{marginTop: 32}}><span role="img" aria-label="iOS">🍏</span> {isArabic ? "على أجهزة iPhone/iOS:" : "On iPhone/iOS:"}</h3>
+                  <ol>
+                    {isArabic ? (
+                      <>
+                        <li><span className="step-icon" role="img" aria-label="browser">🌐</span> افتح الموقع في متصفح <b>Safari</b>.</li>
+                        <li><span className="step-icon" role="img" aria-label="share">🔗</span> اضغط على زر المشاركة (المربع والسهم في الأسفل).</li>
+                        <li><span className="step-icon" role="img" aria-label="add">➕</span> اختر "إضافة إلى الشاشة الرئيسية".</li>
+                        <li><span className="step-icon" role="img" aria-label="home">🏠</span> اضغط "إضافة" وسيظهر الموقع على شاشتك الرئيسية.</li>
+                      </>
+                    ) : (
+                      <>
+                        <li><span className="step-icon" role="img" aria-label="browser">🌐</span> Open the website in <b>Safari</b> browser.</li>
+                        <li><span className="step-icon" role="img" aria-label="share">🔗</span> Tap the Share button (the square with an arrow at the bottom).</li>
+                        <li><span className="step-icon" role="img" aria-label="add">➕</span> Select "Add to Home Screen".</li>
+                        <li><span className="step-icon" role="img" aria-label="home">🏠</span> Tap "Add" and the site will appear on your home screen.</li>
+                      </>
+                    )}
+                  </ol>
+                  <div className="add-to-home-video">
+                    {/* Replace src with your iOS video URL when available */}
+                    <div className="video-placeholder">
+                      {isArabic ? "فيديو شرح للآيفون قريباً" : "iPhone/iOS video tutorial coming soon"}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Features Section */}
           <div className="landing-features">
             <div className="feature-card">
               <div className="feature-icon">📚</div>
-              <h3>5,000+ Questions</h3>
-              <p>Extensive question bank covering all SMLE topics with detailed explanations</p>
+              <h3>{isArabic ? "أكثر من 5000 سؤال" : "5,000+ Questions"}</h3>
+              <p>{isArabic ? "بنك أسئلة شامل يغطي جميع مواضيع البرومترك (SMLE) مع شروحات مفصلة" : "Extensive question bank covering all SMLE (Prometric) topics with detailed explanations"}</p>
             </div>
             <div className="feature-card">
               <div className="feature-icon">📊</div>
-              <h3>Detailed Analytics</h3>
-              <p>Track your progress with comprehensive performance analysis and topic-wise breakdown</p>
+              <h3>{isArabic ? "تحليلات مفصلة" : "Detailed Analytics"}</h3>
+              <p>{isArabic ? "تابع تقدمك مع تحليلات شاملة وتقسيم حسب الموضوع" : "Track your progress with comprehensive performance analysis and topic-wise breakdown"}</p>
             </div>
             <div className="feature-card">
               <div className="feature-icon">🎯</div>
-              <h3>Targeted Practice</h3>
-              <p>Focus on specific topics or take mixed quizzes to test your overall knowledge</p>
+              <h3>{isArabic ? "تدريب موجه" : "Targeted Practice"}</h3>
+              <p>{isArabic ? "ركز على مواضيع محددة أو اختبر معلوماتك بشكل عام" : "Focus on specific topics or take mixed quizzes to test your overall knowledge"}</p>
             </div>
             <div className="feature-card">
               <div className="feature-icon">📱</div>
-              <h3>Mobile Friendly</h3>
-              <p>Study anywhere, anytime with our responsive design that works on all devices</p>
+              <h3>{isArabic ? "متوافق مع الجوال" : "Mobile Friendly"}</h3>
+              <p>{isArabic ? "ادرس في أي مكان وزمان مع تصميم متجاوب لجميع الأجهزة" : "Study anywhere, anytime with our responsive design that works on all devices"}</p>
             </div>
           </div>
           {/* Stats Section */}
           <div className="landing-stats">
             <div className="stat-item">
               <div className="stat-number">5,000+</div>
-              <div className="stat-label">Questions</div>
+              <div className="stat-label">{isArabic ? "سؤال" : "Questions"}</div>
             </div>
             <div className="stat-item">
               <div className="stat-number">SAR 50</div>
-              <div className="stat-label">Per Year</div>
+              <div className="stat-label">{isArabic ? "سنوياً" : "Per Year"}</div>
             </div>
             <div className="stat-item">
               <div className="stat-number">24/7</div>
-              <div className="stat-label">Available</div>
+              <div className="stat-label">{isArabic ? "متاح دائماً" : "Available"}</div>
             </div>
           </div>
           {/* Footer */}
           <div className="landing-footer" />
         </div>
-        {/* Modal for registration and PayPal */}
+        {/* Modal for registration and WhatsApp */}
         {showModal && (
-          <div className="popup-overlay" style={{ zIndex: 1000 }}>
-            <div className={`popup-content${modalStep === 'paypal' ? ' paypal-active' : ''}`}>
-              {modalStep === 'options' && (
-                <>
-                  <h3>Choose how to get started:</h3>
+          <div className="landing-modal-overlay" style={{ zIndex: 1000 }}>
+            <div className="landing-modal-content">
+                  <h3>{isArabic ? "اختر طريقة البدء" : "Choose how to get started:"}</h3>
                   <div className="trial-options">
                     <div className="trial-option">
-                      <h4>🎯 Free Trial</h4>
-                      <p>Try our platform with 40 carefully selected questions from all 4 topics. No registration required!</p>
+                      <h4>{isArabic ? "إنشاء حساب عبر واتساب" : "Create Account via WhatsApp"}</h4>
+                      <p>{isArabic ? "تواصل مع فريق الدعم عبر واتساب لإنشاء حسابك والحصول على وصول كامل" : "Contact our support team on WhatsApp to create your account and get full access."}</p>
                       <ul>
-                        <li>✓ 40 sample questions</li>
-                        <li>✓ All 4 question types</li>
-                        <li>✓ Instant access</li>
-                        <li>✓ No login needed</li>
+                        <li>{isArabic ? "دعم شخصي" : "Personal support"}</li>
+                        <li>{isArabic ? "جميع الميزات متاحة" : "All features unlocked"}</li>
+                        <li>{isArabic ? "استجابة سريعة" : "Fast response"}</li>
                       </ul>
-                      <button className="popup-btn primary" onClick={handleFreeTrial} disabled={loading} style={{ marginTop: 12 }}>
-                        {loading ? 'Starting...' : 'Start Free Trial'}
+                      <button className="popup-btn primary" onClick={handleWhatsApp} style={{ marginTop: 12 }}>
+                        {isArabic ? "تواصل عبر واتساب" : "Contact on WhatsApp"}
                       </button>
                     </div>
                     <div className="trial-option">
-                      <h4>💳 Full Access (PayPal)</h4>
-                      <p>Get complete access to all 5,000+ questions and features instantly by paying with PayPal.</p>
+                      <h4>{isArabic ? "تجربة مجانية" : "Free Trial"}</h4>
+                      <p>{isArabic ? "جرب منصتنا مع 40 سؤالاً مختاراً من جميع المواضيع. لا حاجة للتسجيل!" : "Try our platform with 40 carefully selected questions from all 4 topics. No registration required!"}</p>
                       <ul>
-                        <li>✓ All 5,000+ questions</li>
-                        <li>✓ Detailed analytics</li>
-                        <li>✓ Progress tracking</li>
-                        <li>✓ 1-year full access</li>
+                        <li>{isArabic ? "٤٠ سؤال تجريبي" : "40 sample questions"}</li>
+                        <li>{isArabic ? "جميع أنواع الأسئلة الأربعة" : "All 4 question types"}</li>
+                        <li>{isArabic ? "دخول فوري" : "Instant access"}</li>
+                        <li>{isArabic ? "بدون تسجيل دخول" : "No login needed"}</li>
                       </ul>
-                      <button className="popup-btn primary" onClick={handlePayPalStart} style={{ marginTop: 12 }}>
-                        Continue with PayPal
-                      </button>
-                    </div>
-                    <div className="trial-option">
-                      <h4>📱 Create Account via WhatsApp</h4>
-                      <p>Contact our support team on WhatsApp to create your account and get full access.</p>
-                      <ul>
-                        <li>✓ Personal support</li>
-                        <li>✓ All features unlocked</li>
-                        <li>✓ Fast response</li>
-                      </ul>
-                      <button className="popup-btn secondary" onClick={handleWhatsApp} style={{ marginTop: 12 }}>
-                        Contact on WhatsApp
+                      <button  onClick={handleFreeTrial} className="popup-btn secondary" disabled={loading} style={{ marginTop: 12 }}>
+                        {loading ? (isArabic ? '...يتم البدء' : 'Starting...') : (isArabic ? 'ابدأ التجربة المجانية' : 'Start Free Trial')}
                       </button>
                     </div>
                   </div>
-                  {formError && <div className="paypal-error" style={{ marginTop: 10 }}>{formError}</div>}
-                  <button className="popup-btn no-thanks" onClick={() => setShowModal(false)} style={{ marginTop: 20 }}>Cancel</button>
-                </>
-              )}
-              {modalStep === 'paypal' && (
-                <>
-                  {successMsg ? (
-                    <div className="paypal-success">{successMsg}</div>
-                  ) : !paypalReady ? (
-                    <>
-                      <h3>Create Your Account</h3>
-                      <form onSubmit={handleFormSubmit}>
-                        <input
-                          type="text"
-                          name="username"
-                          placeholder="Username"
-                          value={form.username}
-                          onChange={handleFormChange}
-                          className="popup-input"
-                          autoComplete="username"
-                          required
-                        />
-                        <input
-                          type="email"
-                          name="email"
-                          placeholder="Email"
-                          value={form.email}
-                          onChange={handleFormChange}
-                          className="popup-input"
-                          autoComplete="email"
-                          required
-                        />
-                        <input
-                          type="password"
-                          name="password"
-                          placeholder="Password"
-                          value={form.password}
-                          onChange={handleFormChange}
-                          className="popup-input"
-                          autoComplete="new-password"
-                          required
-                        />
-                        <input
-                          type="password"
-                          name="confirmPassword"
-                          placeholder="Confirm Password"
-                          value={form.confirmPassword}
-                          onChange={handleFormChange}
-                          className="popup-input"
-                          autoComplete="new-password"
-                          required
-                        />
-                        {formError && <div className="paypal-error" style={{ marginBottom: 8 }}>{formError}</div>}
-                        <button className="popup-btn primary" type="submit" disabled={loading} style={{ marginTop: 10 }}>
-                          {loading ? 'Please wait...' : 'Continue to Payment'}
-                        </button>
-                      </form>
-                      <button className="popup-btn no-thanks" onClick={() => setShowModal(false)} style={{ marginTop: 10 }}>Cancel</button>
-                    </>
-                  ) : (
-                    <>
-                      <h3>Pay with PayPal</h3>
-                      <div ref={paypalRef} className="paypal-modal-container" id="paypal-container-7JKAEKKCAGGW6" style={{ margin: '20px 0' }} />
-                      {formError && <div className="paypal-error" style={{ marginBottom: 8 }}>{formError}</div>}
-                      <button className="popup-btn no-thanks" onClick={() => setShowModal(false)} style={{ marginTop: 10 }}>Cancel</button>
-                    </>
-                  )}
-                </>
-              )}
+                  <button className="popup-btn no-thanks" onClick={() => setShowModal(false)} style={{ marginTop: 20 }}>{isArabic ? "إلغاء" : "Cancel"}</button>
             </div>
           </div>
         )}

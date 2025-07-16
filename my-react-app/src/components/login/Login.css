@@ -1,3 +1,4 @@
+
 .login-icon {
   position: fixed;
   top: 0;
@@ -385,4 +386,113 @@ a {
 
 .popup-content h3 {
   margin-top: 0;
+}
+
+.terms-section {
+  text-align: left;
+  margin-bottom: 15px;
+}
+
+.terms-section h4 {
+  font-size: 16px;
+  margin-bottom: 5px;
+}
+
+.terms-section p {
+  font-size: 14px;
+  line-height: 1.4;
+  margin-bottom: 10px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  margin-top: 15px;
+}
+
+.checkbox-label input {
+  margin-right: 10px;
+}
+
+.popup-buttons {
+  margin-top: 20px;
+}
+
+.popup-btn {
+  padding: 10px 20px;
+}
+
+.popup-btn[disabled] {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.popup-content {
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+/* Custom scrollbar for popup */
+.popup-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.popup-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.popup-content::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.popup-content::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Responsive adjustments for the popup */
+@media (max-width: 600px) {
+  .popup-content.large-popup {
+    padding: 15px;
+  }
+
+  .terms-section h4 {
+    font-size: 15px;
+  }
+
+  .terms-section p {
+    font-size: 13px;
+  }
+
+  .checkbox-label {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 400px) {
+  .popup-content.large-popup {
+    padding: 10px;
+  }
+
+  .terms-section h4 {
+    font-size: 14px;
+  }
+
+  .terms-section p {
+    font-size: 12px;
+  }
+
+  .checkbox-label {
+    font-size: 12px;
+  }
+
+  .popup-buttons {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .popup-btn {
+    width: 100%;
+  }
 }

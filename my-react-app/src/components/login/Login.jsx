@@ -35,6 +35,16 @@ const Login = () => {
     }
   }, [user, sessionToken, navigate]);
 
+  // Autofill username (and password if available) from context if user is known
+  useEffect(() => {
+    if (user && user.username) {
+      setForm(prev => ({
+        username: prev.username || user.username || '',
+        password: prev.password || user.password || '' // Only autofill if available
+      }));
+    }
+  }, [user]);
+
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "WebPage",
