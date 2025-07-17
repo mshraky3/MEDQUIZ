@@ -1677,12 +1677,32 @@ body, .landing-body {
   margin-bottom: 7px;
 }
 .add-to-home-video {
-  flex: 1 1 220px;
+  flex: 1 1 320px;
   display: flex;
   align-items: center;
   justify-content: center;
   min-width: 180px;
-  max-width: 320px;
+  width: 100%;
+  height: 100%;
+  min-height: 700px;
+}
+.add-to-home-video video {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 9/16;
+  max-width: 500px;
+  max-height: 1000px;
+  min-height: 600px;
+  border-radius: 16px;
+  background: #000;
+  object-fit: cover;
+  display: block;
+}
+@media (max-width: 767px) {
+  .add-to-home-video {
+    max-width: 100vw;
+    aspect-ratio: 9/16;
+  }
 }
 .video-placeholder {
   width: 100%;
@@ -1753,7 +1773,6 @@ body, .landing-body {
 }
 .add-to-home-platform {
   flex: 1 1 320px;
-  min-width: 260px;
   max-width: 420px;
   background: #fff;
   border-radius: 18px;
@@ -1763,6 +1782,9 @@ body, .landing-body {
   margin-top: 0;
   text-align: left;
   border: 1.5px solid #b2e0f7;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
 }
 .add-to-home-platform h3 {
   color: #0296c9;
@@ -2017,6 +2039,66 @@ body, .landing-body {
   .landing-stats {
     padding: 10px 2px;
     border-radius: 12px;
+  }
+} 
+
+.responsive-video-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  aspect-ratio: 9/16;
+  background: #000;
+  border-radius: 16px;
+  overflow: hidden;
+}
+.responsive-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 16px;
+  background: #000;
+  display: block;
+}
+@media (max-width: 767px) {
+  .responsive-video-wrapper {
+    max-width: 100vw;
+    width: 100vw;
+    min-width: 0;
+    border-radius: 10px;
+    margin: 0 auto;
+    padding: 0;
+  }
+} 
+
+@media (max-width: 767px) {
+  .add-to-home-section,
+  .add-to-home-section.important-section,
+  .add-to-home-content,
+  .add-to-home-platform,
+  .add-to-home-instructions,
+  .responsive-video-wrapper {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  .add-to-home-section h2 {
+    font-size: 7vw !important;
+    word-break: break-word !important;
+    line-height: 1.1 !important;
+  }
+  .add-to-home-platform h3 {
+    font-size: 5vw !important;
+    word-break: break-word !important;
+    line-height: 1.1 !important;
   }
 } 
 

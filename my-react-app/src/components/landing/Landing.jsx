@@ -5,6 +5,8 @@ import SEO from '../common/SEO';
 import axios from 'axios';
 import Globals from '../../global.js';
 import useLang from '../../hooks/useLang';
+import andriodVideo from './videos/andriod.mp4';
+import iosVideo from './videos/ios.mp4';
 
 
 const WHATSAPP_LINK = 'https://wa.link/pzhg6j';
@@ -209,9 +211,17 @@ const Landing = () => {
                     )}
                   </ol>
                   <div className="add-to-home-video">
-                    {/* Replace src with your Android video URL when available */}
-                    <div className="video-placeholder">
-                      {isArabic ? "فيديو شرح للأندرويد قريباً" : "Android video tutorial coming soon"}
+                    {/* Android video tutorial */}
+                    <div className="responsive-video-wrapper">
+                      <video
+                        src={andriodVideo}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        controls={false}
+                        className="responsive-video"
+                      />
                     </div>
                   </div>
                 </div>
@@ -235,9 +245,17 @@ const Landing = () => {
                     )}
                   </ol>
                   <div className="add-to-home-video">
-                    {/* Replace src with your iOS video URL when available */}
-                    <div className="video-placeholder">
-                      {isArabic ? "فيديو شرح للآيفون قريباً" : "iPhone/iOS video tutorial coming soon"}
+                    {/* iOS video tutorial */}
+                    <div className="responsive-video-wrapper">
+                      <video
+                        src={iosVideo}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        controls={false}
+                        className="responsive-video"
+                      />
                     </div>
                   </div>
                 </div>
