@@ -104,6 +104,8 @@ const STATIC_QUESTIONS = [
   }
 ];
 
+import GoogleAd from '../common/GoogleAd';
+
 const TempQUIZ = () => {
   const { numQuestions } = useParams();
   const navigate = useNavigate();
@@ -189,6 +191,7 @@ const Question = ({ currentQuestion, currentIndex, totalQuestions, selectedAnswe
         {currentIndex + 1 < totalQuestions ? "Next Question" : "Finish Quiz"}
       </button>
     </div>
+    <GoogleAd />
   </div>
 );
 

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 // Import necessary components from the analysis folder
+import GoogleAd from '../common/GoogleAd';
 import OverallStats from '../analysis/OverallStats';
 import StreakInfo from '../analysis/StreakInfo';
 import TopicAnalysisTable from '../analysis/TopicAnalysisTable';
@@ -114,6 +115,7 @@ const AnalysisTemp = () => {
           Get an Account
         </button>
       </div>
+      <GoogleAd />
     </div>
   );
 };
