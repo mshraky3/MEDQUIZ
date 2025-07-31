@@ -11,7 +11,7 @@ Disallow: /Bank
 Allow: /login
 Allow: /quizs
 Allow: /analysis
-Allow: /trial-analysis
+Allow: /analysis-temp
 
 # Crawl delay to be respectful to the server
 Crawl-delay: 1

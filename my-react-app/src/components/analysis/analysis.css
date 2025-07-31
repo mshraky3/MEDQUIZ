@@ -15,40 +15,7 @@
     font-family: var(--font-family-primary);
 }
 
-/* Trial-specific styles */
-.trial-analysis-notice {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: var(--space-4) var(--space-6);
-    border-radius: var(--radius-lg);
-    margin-bottom: var(--space-6);
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    box-shadow: var(--shadow-md);
-    animation: fadeIn 0.7s ease both;
-}
 
-.trial-emoji {
-    font-size: var(--text-xl);
-}
-
-.trial-text {
-    font-size: var(--text-base);
-    font-weight: 600;
-}
-
-.trial-streak-notice {
-    background: var(--bg-light);
-    border: 2px solid var(--secondary-color);
-    color: var(--text-dark);
-    padding: var(--space-4) var(--space-6);
-    border-radius: var(--radius-md);
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    font-style: italic;
-}
 
 .loading {
     text-align: center;

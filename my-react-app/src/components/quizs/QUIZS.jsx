@@ -61,7 +61,10 @@ const QUIZS = () => {
         if (selectedTypes.length === 0) return;
         const typesStr = selectedTypes.join(',');
         setShowTypeSelector(false);
-        navigate(`/quiz/${numQuestions}`, {
+        
+        // Use different routes for trial vs regular users
+        const quizRoute = isTrial ? `/temp-quiz/${numQuestions}` : `/quiz/${numQuestions}`;
+        navigate(quizRoute, {
             state: { 
                 id: id, 
                 types: typesStr,
@@ -72,7 +75,10 @@ const QUIZS = () => {
 
     const handleMixAll = () => {
         setShowTypeSelector(false);
-        navigate(`/quiz/${numQuestions}`, {
+        
+        // Use different routes for trial vs regular users
+        const quizRoute = isTrial ? `/temp-quiz/${numQuestions}` : `/quiz/${numQuestions}`;
+        navigate(quizRoute, {
             state: { 
                 id: id, 
                 types: 'mix',

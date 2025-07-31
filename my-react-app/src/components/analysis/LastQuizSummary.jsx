@@ -34,6 +34,18 @@ const LastQuizSummary = ({ latest_quiz }) => {
                                     }%
                                 </td>
                             </tr>
+                            <tr>
+                                <td>Duration</td>
+                                <td>
+                                    {latest_quiz.duration ? Math.floor(latest_quiz.duration / 60) : 0}m {latest_quiz.duration ? latest_quiz.duration % 60 : 0}s
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Avg. Time per Question</td>
+                                <td>
+                                    {latest_quiz.avg_time_per_question ? parseFloat(latest_quiz.avg_time_per_question).toFixed(1) : 0}s
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>

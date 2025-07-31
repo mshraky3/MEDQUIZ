@@ -11,7 +11,9 @@ import ADDQ from './components/ADD/ADDQ.jsx';
 import Analysis from './components/analysis/Analysis.jsx'
 import Admin from './components/ADD/Admin.jsx';
 import Bank from './components/ADD/Bank.jsx';
-import TrialAnalysis from './components/analysis/TrialAnalysis.jsx';
+import AnalysisTemp from './components/login/AnalysisTemp.jsx';
+import TempQUIZ from './components/login/TempQUIZ.jsx';
+import ErrorBoundary from './components/common/ErrorBoundary.jsx';
 
 import Globals from './global.js';
 import { UserProvider } from './UserContext.jsx';
@@ -22,43 +24,62 @@ const router = createBrowserRouter([
   {
     path: "/",
     element: <App />,
+    errorElement: <ErrorBoundary />,
   },
   {
     path: "/login",
     element: <Login />,
+    errorElement: <ErrorBoundary />,
   },
   
   {
     path: "/ADD_ACCOUNT",
     element: <ADD host={getHostUrl} />,
+    errorElement: <ErrorBoundary />,
   },
   {
     path: "/quizs",
     element: <QUIZS />,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/temp-quiz/:numQuestions",
+    element: <TempQUIZ />,
+    errorElement: <ErrorBoundary />,
   },
   {
     path: "/quiz/:numQuestions",
     element: <QUIZ />,
+    errorElement: <ErrorBoundary />,
   },
   {
     path: "/ADDQ",
     element: <ADDQ host={Globals.URL} />,
+    errorElement: <ErrorBoundary />,
   },
   {
     path: "/analysis",
     element: <Analysis />,
+    errorElement: <ErrorBoundary />,
   },
   {
-    path: "/trial-analysis",
-    element: <TrialAnalysis />,
+    path: "/analysis-temp",
+    element: <AnalysisTemp />,
+    errorElement: <ErrorBoundary />,
   },
   {
     path: "/admin",
     element: <Admin/>,
+    errorElement: <ErrorBoundary />,
   },
   {
     path: "/Bank",
     element: <Bank />,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "*",
+    element: <ErrorBoundary />,
   },
 ]);
 

@@ -25,7 +25,7 @@ const Result = ({
       }
       
       // For trial users, navigate to separate trial analysis page
-      navigate('/trial-analysis', { state: { id: userId } });
+              navigate('/analysis-temp', { state: { id: userId } });
     } else {
       // For regular users, navigate to analysis with user ID
       navigate('/analysis', { state: { id: userId } });

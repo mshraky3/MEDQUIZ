@@ -20,6 +20,25 @@ const Login = () => {
 
   const navigate = useNavigate();
 
+  // Add Google AdSense script (only in production)
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'production') {
+      const script = document.createElement('script');
+      script.async = true;
+      script.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9286976335875618";
+      script.crossOrigin = "anonymous";
+      document.head.appendChild(script);
+      
+      return () => {
+        // Cleanup script when component unmounts
+        const existingScript = document.querySelector(`script[src="${script.src}"]`);
+        if (existingScript) {
+          document.head.removeChild(existingScript);
+        }
+      };
+    }
+  }, []);
+
   // Auto-login if session is valid
   useEffect(() => {
     if (window.location.search.includes('session=expired')) {

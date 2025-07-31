@@ -9,7 +9,7 @@ function App() {
     const showNavbar = location.pathname !== '/';
     return (
         <div style={{ minHeight: '100vh', background: '#f8fafc', margin: 0, padding: 0 }}>
-            <Analytics />
+            {process.env.NODE_ENV === 'production' && <Analytics />}
             {showNavbar && <Navbar />}
             <Landing />
         </div>

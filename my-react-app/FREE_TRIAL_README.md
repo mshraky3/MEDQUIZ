@@ -21,7 +21,7 @@ The free trial feature allows users to experience the MEDQIZE platform with a li
 3. **Quiz Selection**: User selects number of questions and types
 4. **Quiz Taking**: User takes quiz with trial questions
 5. **Results**: User sees results with "Contact Us" and "View Free Analysis" buttons
-6. **Trial Analysis**: User navigates to separate `/trial-analysis` page
+6. **Trial Analysis**: User navigates to separate `/analysis-temp` page
 7. **Cleanup**: Trial data is automatically removed after 1 hour
 
 ## Technical Implementation
@@ -83,7 +83,7 @@ const isTrial = id && id.startsWith("trial_");
 #### Routing
 
 - **Normal Analysis**: `/analysis` - Unchanged, works exactly as before
-- **Trial Analysis**: `/trial-analysis` - New route for trial users only
+- **Trial Analysis**: `/analysis-temp` - New route for trial users only
 
 ## UI/UX Features
 

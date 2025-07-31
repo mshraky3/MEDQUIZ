@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import GoogleAd from '../common/GoogleAd';
 
 const STATIC_QUESTIONS = [
   {
@@ -104,13 +105,11 @@ const STATIC_QUESTIONS = [
   }
 ];
 
-import GoogleAd from '../common/GoogleAd';
-
 const TempQUIZ = () => {
   const { numQuestions } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const id = location.state?.id;
+  const id = location.state?.id || 'trial_user';
 
   const [questions] = useState(STATIC_QUESTIONS.slice(0, parseInt(numQuestions) || 10));
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -118,6 +117,26 @@ const TempQUIZ = () => {
   const [answers, setAnswers] = useState([]);
   const [quizFinished, setQuizFinished] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [quizStartTime] = useState(Date.now());
+
+  // Add Google AdSense script (only in production)
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'production') {
+      const script = document.createElement('script');
+      script.async = true;
+      script.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9286976335875618";
+      script.crossOrigin = "anonymous";
+      document.head.appendChild(script);
+      
+      return () => {
+        // Cleanup script when component unmounts
+        const existingScript = document.querySelector(`script[src="${script.src}"]`);
+        if (existingScript) {
+          document.head.removeChild(existingScript);
+        }
+      };
+    }
+  }, []);
 
   // Simulate loading delay
   useEffect(() => {
@@ -150,7 +169,7 @@ const TempQUIZ = () => {
   };
 
   if (loading) return <Loading />;
-  if (quizFinished) return <Result answers={answers} navigate={navigate} id={id} />;
+  if (quizFinished) return <Result answers={answers} navigate={navigate} id={id} quizStartTime={quizStartTime} />;
 
   return (
     <Question
@@ -203,9 +222,10 @@ const Loading = () => (
 );
 
 // Result Component
-const Result = ({ answers, navigate, id }) => {
+const Result = ({ answers, navigate, id, quizStartTime }) => {
   const totalQuestions = answers.length;
   const correctCount = answers.filter(a => a.isCorrect).length;
+  const duration = Math.floor((Date.now() - quizStartTime) / 1000); // Duration in seconds
 
   const handleGetAccountClick = () => {
     window.open("https://wa.link/pzhg6j ", "_blank", "noopener,noreferrer");
@@ -215,10 +235,11 @@ const Result = ({ answers, navigate, id }) => {
     <div className="quiz-result">
       <h2>Quiz Completed!</h2>
       <p>You got <strong>{correctCount}</strong> out of <strong>{totalQuestions}</strong> correct.</p>
+      <p>Time taken: <strong>{Math.floor(duration / 60)}m {duration % 60}s</strong></p>
 
       <button onClick={handleGetAccountClick} className="restart-button">Get an Account</button>
 
-      <button className="restart-button"  onClick={() => navigate("/analysis-temp", { state: { id, answers, questions: STATIC_QUESTIONS } })}>
+      <button className="restart-button"  onClick={() => navigate("/analysis-temp", { state: { id, answers, questions: STATIC_QUESTIONS, duration } })}>
         View Analysis
       </button>    </div>
   );
