@@ -1,16 +1,14 @@
 import React from 'react';
 import './analysis.css';
 
-
-
 const LastQuizSummary = ({ latest_quiz }) => {
     return (
-        <section className="summary-section">
+        <section className="streak-section">
             <h3 className="section-header">Last Quiz Summary</h3>
             {latest_quiz?.id ? (
                 <div className="table-wrapper">
-                    <table className="summary-table">
-                        <thead>
+                    <table className="analysis-tableQ">
+                        <thead >
                             <tr>
                                 <th>Metric</th>
                                 <th>Value</th>
@@ -50,7 +48,7 @@ const LastQuizSummary = ({ latest_quiz }) => {
                     </table>
                 </div>
             ) : (
-                <p className="no-data">No previous quiz found.</p>
+                <p className="no-streak">No previous quiz found.</p>
             )}
         </section>
     );

@@ -106,7 +106,7 @@ const AnalysisTemp = () => {
   });
 
   const handleGetAccountClick = () => {
-    window.open("https://wa.link/pzhg6j ", "_blank", "noopener,noreferrer");
+    navigate('/payment');
   };
 
   return (
@@ -139,7 +139,7 @@ const AnalysisTemp = () => {
           onClick={handleGetAccountClick}
           className="primary-button"
         >
-          Get an Account
+          Subscribe Now
         </button>
       </div>
       <GoogleAd />

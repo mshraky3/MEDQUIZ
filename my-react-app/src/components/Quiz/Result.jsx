@@ -63,10 +63,10 @@ const Result = ({
         {isTrial && (
           <>
             <button 
-              onClick={() => window.open('https://wa.link/pzhg6j', '_blank')} 
+              onClick={() => navigate('/payment')} 
               className="upgrade-button"
             >
-              Contact Us
+              Subscribe Now
             </button>
             <button 
               onClick={handleViewAnalysis} 
@@ -83,6 +83,24 @@ const Result = ({
         <div className="trial-completion-message">
           <p>🎉 Great job! You've completed your free trial.</p>
           <p>Ready for the full experience? Get access to all 5,000+ questions and detailed analytics!</p>
+          <button 
+            onClick={() => navigate('/payment')} 
+            className="subscribe-trial-button"
+            style={{
+              background: 'linear-gradient(45deg, #667eea, #764ba2)',
+              color: 'white',
+              border: 'none',
+              padding: '12px 24px',
+              borderRadius: '25px',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              marginTop: '10px',
+              transition: 'all 0.3s ease'
+            }}
+          >
+            Subscribe Now
+          </button>
         </div>
       )}
     </div>

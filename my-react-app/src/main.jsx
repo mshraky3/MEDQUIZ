@@ -13,6 +13,7 @@ import Admin from './components/ADD/Admin.jsx';
 import Bank from './components/ADD/Bank.jsx';
 import AnalysisTemp from './components/login/AnalysisTemp.jsx';
 import TempQUIZ from './components/login/TempQUIZ.jsx';
+import Payment from './components/payment/Payment.jsx';
 import ErrorBoundary from './components/common/ErrorBoundary.jsx';
 
 import Globals from './global.js';
@@ -75,6 +76,11 @@ const router = createBrowserRouter([
   {
     path: "/Bank",
     element: <Bank />,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/payment",
+    element: <Payment />,
     errorElement: <ErrorBoundary />,
   },
   {

@@ -9,7 +9,7 @@ import andriodVideo from './videos/andriod.mp4';
 import iosVideo from './videos/ios.mp4';
 
 
-const WHATSAPP_LINK = 'https://wa.link/pzhg6j';
+
 
 const Landing = () => {
   const lang = useLang();
@@ -46,10 +46,7 @@ const Landing = () => {
     }
   };
 
-  // WhatsApp
-  const handleWhatsApp = () => {
-    window.open(WHATSAPP_LINK, '_blank');
-  };
+
 
   useEffect(() => {
     document.documentElement.lang = lang;
@@ -181,7 +178,7 @@ const Landing = () => {
               <div className="pricing-comparison">
                 <p>{isArabic ? "وفر حتى ٨٠٪ مقارنة بالخدمات الأخرى" : "Save up to 80% compared to other SMLE (Prometric) services"}</p>
               </div>
-              <button className="landing-btn primary" style={{marginTop: 24, width: '100%'}} onClick={handleWhatsApp}  >
+              <button className="landing-btn primary" style={{marginTop: 24, width: '100%'}} onClick={() => navigate('/payment')}  >
                 {isArabic ? "اشترك الآن" : "Subscribe / Buy Now"}
               </button>
             </div>
@@ -311,15 +308,15 @@ const Landing = () => {
                   <h3>{isArabic ? "اختر طريقة البدء" : "Choose how to get started:"}</h3>
                   <div className="trial-options">
                     <div className="trial-option">
-                      <h4>{isArabic ? "إنشاء حساب عبر واتساب" : "Create Account via WhatsApp"}</h4>
-                      <p>{isArabic ? "تواصل مع فريق الدعم عبر واتساب لإنشاء حسابك والحصول على وصول كامل" : "Contact our support team on WhatsApp to create your account and get full access."}</p>
+                      <h4 >{isArabic ? "إنشاء حساب" : "Create Account"} </h4>
+                      <p>{isArabic ? "قم بإنشاء حساب للوصول الكامل إلى جميع ميزاتنا." : "Create an account for full access to all our features."}</p>
                       <ul>
-                        <li>{isArabic ? "دعم شخصي" : "Personal support"}</li>
-                        <li>{isArabic ? "جميع الميزات متاحة" : "All features unlocked"}</li>
-                        <li>{isArabic ? "استجابة سريعة" : "Fast response"}</li>
+                        <li>{isArabic ? "وصول كامل" : "Full access"}</li>
+                        <li>{isArabic ? "حفظ التقدم" : "Progress saving"}</li>
+                        <li>{isArabic ? "تحليلات مخصصة" : "Personalized analytics"}</li>
                       </ul>
-                      <button className="popup-btn primary" onClick={handleWhatsApp} style={{ marginTop: 12 }}>
-                        {isArabic ? "تواصل عبر واتساب" : "Contact on WhatsApp"}
+                      <button className="landing-btn primary" onClick={handleGetStarted} style={{ marginTop: 12 }}>
+                        {isArabic ? "إنشاء حساب" : "Create Account"}
                       </button>
                     </div>
                     <div className="trial-option">
@@ -331,7 +328,7 @@ const Landing = () => {
                         <li>{isArabic ? "دخول فوري" : "Instant access"}</li>
                         <li>{isArabic ? "بدون تسجيل دخول" : "No login needed"}</li>
                       </ul>
-                      <button  onClick={handleFreeTrial} className="popup-btn secondary" disabled={loading} style={{ marginTop: 12 }}>
+                      <button  onClick={handleFreeTrial} className="popup-btn" disabled={loading} style={{ marginTop: 12 }}>
                         {loading ? (isArabic ? '...يتم البدء' : 'Starting...') : (isArabic ? 'ابدأ التجربة المجانية' : 'Start Free Trial')}
                       </button>
                     </div>

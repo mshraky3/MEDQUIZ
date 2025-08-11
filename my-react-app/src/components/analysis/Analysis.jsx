@@ -422,7 +422,6 @@ const Analysis = () => {
           <LastQuizSummary latest_quiz={data.userAnalysis?.latest_quiz} />
         )}
 
-        {/* Question Attempts Table */}
         {loading.lastQuizAttempts || loading.questions ? (
           <SectionLoader message="Loading last quiz questions..." />
         ) : errors.lastQuizAttempts || errors.questions ? (

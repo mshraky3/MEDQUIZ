@@ -209,10 +209,10 @@ const QUIZS = () => {
 
                 <footer>
                     <button
-                        onClick={() => window.open("https://wa.link/wh0xrv ", "_blank", "noopener,noreferrer")}
+                        onClick={() => navigate('/payment')}
                         className="contact-me-btn"
                     >
-                        Contact us for any issues or suggestions
+                        Subscribe for Full Access
                     </button>
                 </footer>
 

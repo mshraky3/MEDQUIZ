@@ -13,7 +13,7 @@ const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz, isTria
     // Memoize expensive filtering and sorting operations
     const lastQuizAttempts = useMemo(() => {
         if (!latestQuiz || !latestQuiz.id) return [];
-        
+
         return questionAttempts
             .filter(a => a.quiz_session_id === latestQuiz.id)
             .sort((a, b) => new Date(a.attempted_at) - new Date(b.attempted_at));
@@ -42,12 +42,6 @@ const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz, isTria
         setCurrentQuestion(questionText);
         setAiAnalysis('');
         setLoadingButtons((prev) => ({ ...prev, [attemptId]: true }));
-
-        // Get button position for mobile
-        if (window.innerWidth <= 768) {
-            const buttonTop = event.target.getBoundingClientRect().top + window.scrollY;
-            document.documentElement.style.setProperty('--modal-top', `${buttonTop + 40}px`);
-        }
 
         try {
             const response = await axios.post(`${Globals.URL}/ai-analysis`, {
@@ -81,9 +75,9 @@ const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz, isTria
             {lastQuizAttempts.length > 0 ? (
                 <>
                     <div className="table-wrapper">
-                        <table className="analysis-tableQ">
+                        <table className="analysis-tableQ" >
                             <thead>
-                                <tr>
+                                <tr id='last-quiz-summary'>
                                     <th>Question</th>
                                     <th>Your Answer</th>
                                     <th>Correct Answer</th>

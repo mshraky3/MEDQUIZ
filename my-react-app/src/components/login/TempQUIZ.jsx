@@ -226,7 +226,7 @@ const Result = ({ answers, navigate, id, quizStartTime }) => {
   const duration = Math.floor((Date.now() - quizStartTime) / 1000); // Duration in seconds
 
   const handleGetAccountClick = () => {
-    window.open("https://wa.link/pzhg6j ", "_blank", "noopener,noreferrer");
+    navigate('/payment');
   };
 
   return (
@@ -235,7 +235,7 @@ const Result = ({ answers, navigate, id, quizStartTime }) => {
       <p>You got <strong>{correctCount}</strong> out of <strong>{totalQuestions}</strong> correct.</p>
       <p>Time taken: <strong>{Math.floor(duration / 60)}m {duration % 60}s</strong></p>
 
-      <button onClick={handleGetAccountClick} className="restart-button">Get an Account</button>
+      <button onClick={handleGetAccountClick} className="restart-button">Subscribe Now</button>
 
       <button className="restart-button"  onClick={() => navigate("/analysis-temp", { state: { id, answers, questions: STATIC_QUESTIONS, duration } })}>
         View Analysis

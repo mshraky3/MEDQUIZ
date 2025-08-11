@@ -163,8 +163,7 @@ const Login = () => {
 
   const handleContactClick = (e) => {
     e.preventDefault();
-    window.open('https://wa.link/pzhg6j', '_blank');
-    setShowPopup(true);
+    navigate('/payment');
   };
 
   const handleClosePopup = () => {
@@ -216,7 +215,7 @@ const Login = () => {
                 {loading ? 'Logging in...' : 'Log in'}
               </button>
               <a href="#contact" onClick={handleContactClick} className='login-small' rel="noopener noreferrer">
-                click to create an account or get  free trial
+                click to subscribe or get free trial
               </a>
               {error && <p className="login-error">{error}</p>}
             </form>
@@ -302,9 +301,9 @@ const Login = () => {
                 <button onClick={handleClosePopup} className="popup-btn no-thanks">
                   Close
                 </button>
-                <a href="#contact" className="popup-btn Contact-Us" onClick={handleContactClick} rel="noopener noreferrer">
-                  Contact Us
-                </a>
+                <button className="popup-btn Contact-Us" onClick={() => navigate('/payment')}>
+                  Subscribe Now
+                </button>
               </div>
             </div>
           </div>

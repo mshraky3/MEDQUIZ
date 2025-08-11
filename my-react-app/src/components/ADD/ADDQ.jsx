@@ -18,7 +18,8 @@ const ADDQ = () => {
         'pediatric',
         'obstetrics and gynecology',
         'medicine',
-        'surgery'
+        'surgery',
+        "ethics"
     ];
 
     const options = [
