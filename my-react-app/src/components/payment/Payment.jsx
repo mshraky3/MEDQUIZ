@@ -7,55 +7,27 @@ const Payment = () => {
   const lang = useLang();
   const isArabic = lang === 'ar';
   const navigate = useNavigate();
-  const [selectedPlan, setSelectedPlan] = useState('annual');
+  const [selectedPlan, setSelectedPlan] = useState('special');
   const [isProcessing, setIsProcessing] = useState(false);
 
   const plans = [
     {
-      id: 'monthly',
-      name: isArabic ? 'اشتراك شهري' : 'Monthly Plan',
+      id: 'special',
+      name: isArabic ? 'اشتراك سنوي - خطة خاصة' : 'ANNUAL Subscription - Special Offer',
       price: isArabic ? '٥٠ ريال' : '50 SAR',
-      originalPrice: isArabic ? '١٠٠ ريال' : '100 SAR',
-      period: isArabic ? 'شهرياً' : 'per month',
-      features: [
-        isArabic ? 'الوصول إلى جميع الأسئلة' : 'Access to all questions',
-        isArabic ? 'تحليلات مفصلة' : 'Detailed analytics',
-        isArabic ? 'تتبع التقدم' : 'Progress tracking',
-        isArabic ? 'دعم فني' : 'Technical support'
-      ],
-      popular: false
-    },
-    {
-      id: 'annual',
-      name: isArabic ? 'اشتراك سنوي' : 'Annual Plan',
-      price: isArabic ? '٢٥٠ ريال' : '250 SAR',
-      originalPrice: isArabic ? '٦٠٠ ريال' : '600 SAR',
-      period: isArabic ? 'سنوياً' : 'per year',
+      originalPrice: isArabic ? '٢٥٠ ريال' : '250 SAR',
+      period: isArabic ? 'لمدة سنة كاملة' : 'FOR 1 FULL YEAR',
       features: [
         isArabic ? 'الوصول إلى جميع الأسئلة' : 'Access to all questions',
         isArabic ? 'تحليلات مفصلة' : 'Detailed analytics',
         isArabic ? 'تتبع التقدم' : 'Progress tracking',
         isArabic ? 'دعم فني' : 'Technical support',
-        isArabic ? 'توفير ٥٨٪' : 'Save 58%',
-        isArabic ? 'الأكثر شعبية' : 'Most Popular'
+        isArabic ? 'توفير ٨٠٪' : 'Save 80%',
+        isArabic ? 'عرض محدود' : 'Limited Time Offer',
+        isArabic ? 'اشتراك لمدة سنة كاملة' : 'FULL YEAR ACCESS',
+        isArabic ? 'ليس شهرياً - سنة كاملة' : 'NOT MONTHLY - FULL YEAR'
       ],
       popular: true
-    },
-    {
-      id: 'lifetime',
-      name: isArabic ? 'اشتراك مدى الحياة' : 'Lifetime Access',
-      price: isArabic ? '٥٠٠ ريال' : '500 SAR',
-      originalPrice: isArabic ? '١٢٠٠ ريال' : '1200 SAR',
-      period: isArabic ? 'مدى الحياة' : 'Lifetime',
-      features: [
-        isArabic ? 'الوصول إلى جميع الأسئلة' : 'Access to all questions',
-        isArabic ? 'تحليلات مفصلة' : 'Detailed analytics',
-        isArabic ? 'تتبع التقدم' : 'Progress tracking',
-        isArabic ? 'دعم فني' : 'Technical support',
-        isArabic ? 'تحديثات مجانية' : 'Free updates',
-        isArabic ? 'أفضل قيمة' : 'Best Value'
-      ],
-      popular: false
     }
   ];
 
@@ -89,10 +61,14 @@ const Payment = () => {
           {isArabic ? '← العودة' : '← Back'}
         </button>
         <h1>{isArabic ? 'اختر خطة الاشتراك' : 'Choose Your Subscription Plan'}</h1>
+        <div className="yearly-notice">
+          <h2>{isArabic ? '🔥 اشتراك سنوي - سنة كاملة 🔥' : '🔥 ANNUAL SUBSCRIPTION - FULL YEAR 🔥'}</h2>
+          <p>{isArabic ? 'ليس شهرياً - اشتراك لمدة سنة كاملة' : 'NOT MONTHLY - SUBSCRIPTION FOR 1 FULL YEAR'}</p>
+        </div>
         <p className="payment-subtitle">
           {isArabic 
-            ? 'احصل على الوصول الكامل إلى أكثر من 5000 سؤال مع تحليلات مفصلة' 
-            : 'Get full access to 5000+ questions with detailed analytics'
+            ? 'احصل على الوصول الكامل إلى أكثر من 8000 سؤال مع تحليلات مفصلة' 
+            : 'Get full access to 8000+ questions with detailed analytics'
           }
         </p>
       </div>
@@ -129,16 +105,9 @@ const Payment = () => {
             </div>
 
             <div className="plan-savings">
-              {plan.id === 'annual' && (
-                <div className="savings-badge">
-                  {isArabic ? 'توفير ٥٨٪' : 'Save 58%'}
-                </div>
-              )}
-              {plan.id === 'lifetime' && (
-                <div className="savings-badge">
-                  {isArabic ? 'توفير ٥٨٪' : 'Save 58%'}
-                </div>
-              )}
+              <div className="savings-badge">
+                {isArabic ? 'توفير ٨٠٪' : 'Save 80%'}
+              </div>
             </div>
           </div>
         ))}
@@ -166,7 +135,7 @@ const Payment = () => {
         <div className="features-grid">
           <div className="feature-card">
             <div className="feature-icon">📚</div>
-            <h4>{isArabic ? '5000+ سؤال' : '5000+ Questions'}</h4>
+            <h4>{isArabic ? '8000+ سؤال' : '8000+ Questions'}</h4>
             <p>{isArabic ? 'بنك أسئلة شامل لاختبار البرومترك' : 'Comprehensive question bank for Prometric exam'}</p>
           </div>
           <div className="feature-card">

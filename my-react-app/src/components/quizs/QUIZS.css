@@ -264,6 +264,7 @@ footer {
   border: none;
   border-radius: 12px;
   cursor: pointer;
+  padding-top: 2%;
 }
 
 /* Custom Modal */

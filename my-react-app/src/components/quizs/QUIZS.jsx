@@ -222,14 +222,6 @@ const QUIZS = () => {
                     </button>
                 )}
 
-                <footer>
-                    <button
-                        onClick={() => navigate('/payment')}
-                        className="contact-me-btn"
-                    >
-                        Subscribe for Full Access
-                    </button>
-                </footer>
 
                 {/* Source Selector Modal */}
                 {showSourceSelector && (

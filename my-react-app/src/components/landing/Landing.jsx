@@ -22,6 +22,7 @@ const Landing = () => {
   const [loading, setLoading] = useState(false);
   
   const [successMsg, setSuccessMsg] = useState('');
+  const [showAddToHome, setShowAddToHome] = useState(false);
   
 
 
@@ -91,8 +92,8 @@ const Landing = () => {
       <SEO 
         title={isArabic ? "منصة برومترك (SMLE) الشاملة" : "Ultimate SMLE (Prometric) Prep Platform"}
         description={isArabic
-          ? "استعد لاختبار البرومترك السعودي (SMLE) مع مجموعتنا الشاملة التي تضم أكثر من 5000 سؤال دقيق وتحليلات مفصلة وتجربة مجانية."
-          : "Master the Saudi Medical Licensing Examination (SMLE) and Prometric with MEDQIZE. Access over 5,000 carefully curated questions with detailed analytics, targeted practice, and comprehensive performance tracking. Start your free trial today!"}
+          ? "استعد لاختبار البرومترك السعودي (SMLE) مع مجموعتنا الشاملة التي تضم أكثر من 8000 سؤال دقيق وتحليلات مفصلة وتجربة مجانية."
+          : "Master the Saudi Medical Licensing Examination (SMLE) and Prometric with MEDQIZE. Access over 8,000 carefully curated questions with detailed analytics, targeted practice, and comprehensive performance tracking. Start your free trial today!"}
         keywords="SMLE, Prometric, Saudi Medical Licensing Examination, medical questions, medical quiz, medical exam preparation, Saudi medical license, medical board exam, medical practice test, medical study guide, Saudi medical students, free trial, Prometric questions, Prometric Saudi, برومترك, اسئلة برومترك, اسئلة اختبار البرومترك, اسئلة الهيئة السعودية للتخصصات الصحية, بنك اسئلة برومترك, بنك اسئلة SMLE, تجميعات برومترك, تجميعات SMLE, اختبار البرومترك, اختبار الهيئة السعودية, اسئلة طبية, بنك اسئلة طبية, تدريب برومترك, تدريب SMLE, اسئلة امتحان برومترك, اسئلة امتحان SMLE, اسئلة طبية سعودية, اسئلة طبية برومترك, Saudi Prometric, Prometric exam, Prometric practice, Prometric medicine, Prometric Saudi Arabia, Saudi Prometric questions, Saudi Prometric bank, Saudi Prometric practice, Saudi Prometric free, Saudi Prometric trial, Saudi Prometric preparation, Saudi Prometric online, Saudi Prometric MCQ, Saudi Prometric test, Saudi Prometric review, Saudi Prometric study, Saudi Prometric guide, Saudi Prometric analytics, Saudi Prometric performance, Saudi Prometric topics, Saudi Prometric mobile, Saudi Prometric affordable, Saudi Prometric subscription, Saudi Prometric unlimited, Saudi Prometric 2024, Saudi Prometric 2025"
         url="https://www.smle-question-bank.com"
         lang={lang}
@@ -124,10 +125,11 @@ const Landing = () => {
             </h2>
             <p className="landing-description">
               {isArabic
-                ? "استعد لاختبار البرومترك السعودي (SMLE) مع مجموعتنا الشاملة التي تضم أكثر من 5000 سؤال دقيق"
-                : "Master the Saudi Medical Licensing Examination (SMLE) and Prometric with our comprehensive collection of over 5,000 carefully curated questions"}
+                ? "استعد لاختبار البرومترك السعودي (SMLE) مع مجموعتنا الشاملة التي تضم أكثر من 8000 سؤال دقيق"
+                : "Master the Saudi Medical Licensing Examination (SMLE) and Prometric with our comprehensive collection of over 8,000 carefully curated questions"}
             </p>
           </div>
+          
           <div className="landing-cta">
             <div className="landing-buttons">
               <button className="landing-btn primary" onClick={handleGetStarted}>
@@ -138,6 +140,7 @@ const Landing = () => {
               </button>
             </div>
           </div>
+          <hr className="section-divider thick" />
           {/* Pricing Section */}
           <div className="landing-pricing">
             <div className="pricing-badge">
@@ -145,18 +148,18 @@ const Landing = () => {
             </div>
             <div className="pricing-card">
               <div className="pricing-header">
-                <h3>{isArabic ? "اشتراك سنوي" : "Annual Subscription"}</h3>
+                <h3>{isArabic ? "🔥 اشتراك سنوي - سنة كاملة " : " ANNUAL SUBSCRIPTION - FULL YEAR "}</h3>
                 <div className="price">
                   <span className="currency">SAR</span>
                   <span className="amount">50</span>
-                  <span className="period">{isArabic ? "سنة" : "/year"}</span>
+                  <span className="period">{isArabic ? "لمدة سنة كاملة" : "FOR 1 FULL YEAR"}</span>
                 </div>
-                <p className="pricing-subtitle">{isArabic ? "أرخص خدمة تحضير لاختبار البرومترك (SMLE)" : "The most affordable SMLE (Prometric) preparation service"}</p>
+                <p className="pricing-subtitle">{isArabic ? "ليس شهرياً - اشتراك لمدة سنة كاملة" : "NOT MONTHLY - SUBSCRIPTION FOR 1 FULL YEAR"}</p>
               </div>
               <div className="pricing-features">
                 <div className="pricing-feature">
                   <span className="feature-check">✓</span>
-                  <span>{isArabic ? "الوصول إلى جميع الأسئلة (5000+)" : "Access to all 5,000+ questions"}</span>
+                  <span>{isArabic ? "الوصول إلى جميع الأسئلة (8000+)" : "Access to all 8,000+ questions"}</span>
                 </div>
                 <div className="pricing-feature">
                   <span className="feature-check">✓</span>
@@ -183,88 +186,51 @@ const Landing = () => {
               </button>
             </div>
           </div>
-          {/* How to Add to Home Screen Section (moved up, more prominent) */}
-          <div className="add-to-home-section important-section">
-            <h2>{isArabic ? "كيفية إضافة الموقع إلى الشاشة الرئيسية" : "How to Add This Website to Your Home Screen"}</h2>
-            <div className="add-to-home-content">
-              <div className="add-to-home-instructions">
-                <div className="add-to-home-platform">
-                  <h3><span role="img" aria-label="Android">🤖</span> {isArabic ? "على أجهزة Android:" : "On Android:"}</h3>
-                  <ol>
-                    {isArabic ? (
-                      <>
-                        <li><span className="step-icon" role="img" aria-label="browser">🌐</span> افتح الموقع في متصفح <b>Chrome</b>.</li>
-                        <li><span className="step-icon" role="img" aria-label="menu">⋮</span> اضغط على النقاط الثلاث في أعلى يمين الشاشة.</li>
-                        <li><span className="step-icon" role="img" aria-label="add">➕</span> اختر "إضافة إلى الشاشة الرئيسية".</li>
-                        <li><span className="step-icon" role="img" aria-label="home">🏠</span> اضغط "إضافة" وسيظهر الموقع على شاشتك الرئيسية.</li>
-                      </>
-                    ) : (
-                      <>
-                        <li><span className="step-icon" role="img" aria-label="browser">🌐</span> Open the website in <b>Chrome</b> browser.</li>
-                        <li><span className="step-icon" role="img" aria-label="menu">⋮</span> Tap the three dots menu at the top right.</li>
-                        <li><span className="step-icon" role="img" aria-label="add">➕</span> Select "Add to Home screen".</li>
-                        <li><span className="step-icon" role="img" aria-label="home">🏠</span> Tap "Add" and the site will appear on your home screen.</li>
-                      </>
-                    )}
-                  </ol>
-                  <div className="add-to-home-video">
-                    {/* Android video tutorial */}
-                    <div className="responsive-video-wrapper">
-                      <video
-                        src={andriodVideo}
-                        autoPlay
-                        loop
-                        muted
-                        playsInline
-                        controls={false}
-                        className="responsive-video"
-                      />
-                    </div>
+
+          {/* Section Divider */}
+          <hr className="section-divider" />
+
+          {/* About Us Section */}
+          <div className="landing-about">
+            <h2>{isArabic ? "من نحن" : "About Us"}</h2>
+            <div className="about-content">
+              <div className="about-text">
+                <p>
+                  {isArabic 
+                    ? "نحن فريق من المتخصصين في المجال الطبي والتقني، ملتزمون بتقديم أفضل منصة تحضير لاختبار البرومترك السعودي (SMLE). هدفنا هو مساعدة الطلاب والأطباء على النجاح في اختباراتهم من خلال بنك أسئلة شامل وتحليلات مفصلة."
+                    : "We are a team of medical and technical specialists, committed to providing the best preparation platform for the Saudi Prometric (SMLE) exam. Our goal is to help students and doctors succeed in their exams through a comprehensive question bank and detailed analytics."
+                  }
+                </p>
+                <div className="about-features">
+                  <div className="about-feature">
+                    <span className="feature-icon">🎯</span>
+                    <span>{isArabic ? "دقة عالية في الأسئلة" : "High Accuracy Questions"}</span>
                   </div>
-                </div>
-                <div className="add-to-home-platform">
-                  <h3 style={{marginTop: 32}}><span role="img" aria-label="iOS">🍏</span> {isArabic ? "على أجهزة iPhone/iOS:" : "On iPhone/iOS:"}</h3>
-                  <ol>
-                    {isArabic ? (
-                      <>
-                        <li><span className="step-icon" role="img" aria-label="browser">🌐</span> افتح الموقع في متصفح <b>Safari</b>.</li>
-                        <li><span className="step-icon" role="img" aria-label="share">🔗</span> اضغط على زر المشاركة (المربع والسهم في الأسفل).</li>
-                        <li><span className="step-icon" role="img" aria-label="add">➕</span> اختر "إضافة إلى الشاشة الرئيسية".</li>
-                        <li><span className="step-icon" role="img" aria-label="home">🏠</span> اضغط "إضافة" وسيظهر الموقع على شاشتك الرئيسية.</li>
-                      </>
-                    ) : (
-                      <>
-                        <li><span className="step-icon" role="img" aria-label="browser">🌐</span> Open the website in <b>Safari</b> browser.</li>
-                        <li><span className="step-icon" role="img" aria-label="share">🔗</span> Tap the Share button (the square with an arrow at the bottom).</li>
-                        <li><span className="step-icon" role="img" aria-label="add">➕</span> Select "Add to Home Screen".</li>
-                        <li><span className="step-icon" role="img" aria-label="home">🏠</span> Tap "Add" and the site will appear on your home screen.</li>
-                      </>
-                    )}
-                  </ol>
-                  <div className="add-to-home-video">
-                    {/* iOS video tutorial */}
-                    <div className="responsive-video-wrapper">
-                      <video
-                        src={iosVideo}
-                        autoPlay
-                        loop
-                        muted
-                        playsInline
-                        controls={false}
-                        className="responsive-video"
-                      />
-                    </div>
+                  <div className="about-feature">
+                    <span className="feature-icon">📊</span>
+                    <span>{isArabic ? "تحليلات متقدمة" : "Advanced Analytics"}</span>
+                  </div>
+                  <div className="about-feature">
+                    <span className="feature-icon">💡</span>
+                    <span>{isArabic ? "شروحات مفصلة" : "Detailed Explanations"}</span>
+                  </div>
+                  <div className="about-feature">
+                    <span className="feature-icon">🚀</span>
+                    <span>{isArabic ? "تحديثات مستمرة" : "Continuous Updates"}</span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
+          {/* Section Divider */}
+          <hr className="section-divider" />
+
           {/* Features Section */}
           <div className="landing-features">
             <div className="feature-card">
               <div className="feature-icon">📚</div>
-              <h3>{isArabic ? "أكثر من 5000 سؤال" : "5,000+ Questions"}</h3>
+              <h3>{isArabic ? "أكثر من 8000 سؤال" : "8,000+ Questions"}</h3>
               <p>{isArabic ? "بنك أسئلة شامل يغطي جميع مواضيع البرومترك (SMLE) مع شروحات مفصلة" : "Extensive question bank covering all SMLE (Prometric) topics with detailed explanations"}</p>
             </div>
             <div className="feature-card">
@@ -283,21 +249,118 @@ const Landing = () => {
               <p>{isArabic ? "ادرس في أي مكان وزمان مع تصميم متجاوب لجميع الأجهزة" : "Study anywhere, anytime with our responsive design that works on all devices"}</p>
             </div>
           </div>
-          {/* Stats Section */}
+
+          {/* Section Divider */}
+          
+
+          {/* Add to Home Screen Button */}
+          <div className="add-to-home-trigger">
+            <button 
+              className="landing-btn secondary" 
+              onClick={() => setShowAddToHome(!showAddToHome)}
+            >
+              {isArabic ? "📱 كيفية إضافة الموقع للشاشة الرئيسية" : "📱 How to Add to Home Screen"}
+            </button>
+          </div>
+
+          {/* How to Add to Home Screen Section (hidden by default) */}
+          {showAddToHome && (
+            <div className="add-to-home-section important-section">
+              <h2>{isArabic ? "كيفية إضافة الموقع إلى الشاشة الرئيسية" : "How to Add This Website to Your Home Screen"}</h2>
+              <div className="add-to-home-content">
+                <div className="add-to-home-instructions">
+                  <div className="add-to-home-platform">
+                    <h3><span role="img" aria-label="Android">🤖</span> {isArabic ? "على أجهزة Android:" : "On Android:"}</h3>
+                    <ol>
+                      {isArabic ? (
+                        <>
+                          <li><span className="step-icon" role="img" aria-label="browser">🌐</span> افتح الموقع في متصفح <b>Chrome</b>.</li>
+                          <li><span className="step-icon" role="img" aria-label="menu">⋮</span> اضغط على النقاط الثلاث في أعلى يمين الشاشة.</li>
+                          <li><span className="step-icon" role="img" aria-label="add">➕</span> اختر "إضافة إلى الشاشة الرئيسية".</li>
+                          <li><span className="step-icon" role="img" aria-label="home">🏠</span> اضغط "إضافة" وسيظهر الموقع على شاشتك الرئيسية.</li>
+                        </>
+                      ) : (
+                        <>
+                          <li><span className="step-icon" role="img" aria-label="browser">🌐</span> Open the website in <b>Chrome</b> browser.</li>
+                          <li><span className="step-icon" role="img" aria-label="menu">⋮</span> Tap the three dots menu at the top right.</li>
+                          <li><span className="step-icon" role="img" aria-label="add">➕</span> Select "Add to Home screen".</li>
+                          <li><span className="step-icon" role="img" aria-label="home">🏠</span> Tap "Add" and the site will appear on your home screen.</li>
+                        </>
+                      )}
+                    </ol>
+                    <div className="add-to-home-video">
+                      {/* Android video tutorial */}
+                      <div className="responsive-video-wrapper">
+                        <video
+                          src={andriodVideo}
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
+                          controls={false}
+                          className="responsive-video"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="add-to-home-platform">
+                    <h3 style={{marginTop: 32}}><span role="img" aria-label="iOS">🍏</span> {isArabic ? "على أجهزة iPhone/iOS:" : "On iPhone/iOS:"}</h3>
+                    <ol>
+                      {isArabic ? (
+                        <>
+                          <li><span className="step-icon" role="img" aria-label="browser">🌐</span> افتح الموقع في متصفح <b>Safari</b>.</li>
+                          <li><span className="step-icon" role="img" aria-label="share">🔗</span> اضغط على زر المشاركة (المربع والسهم في الأسفل).</li>
+                          <li><span className="step-icon" role="img" aria-label="add">➕</span> اختر "إضافة إلى الشاشة الرئيسية".</li>
+                          <li><span className="step-icon" role="img" aria-label="home">🏠</span> اضغط "إضافة" وسيظهر الموقع على شاشتك الرئيسية.</li>
+                        </>
+                      ) : (
+                        <>
+                          <li><span className="step-icon" role="img" aria-label="browser">🌐</span> Open the website in <b>Safari</b> browser.</li>
+                          <li><span className="step-icon" role="img" aria-label="share">🔗</span> Tap the Share button (the square with an arrow at the bottom).</li>
+                          <li><span className="step-icon" role="img" aria-label="add">➕</span> Select "Add to Home Screen".</li>
+                          <li><span className="step-icon" role="img" aria-label="home">🏠</span> Tap "Add" and the site will appear on your home screen.</li>
+                        </>
+                      )}
+                    </ol>
+                    <div className="add-to-home-video">
+                      {/* iOS video tutorial */}
+                      <div className="responsive-video-wrapper">
+                        <video
+                          src={iosVideo}
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
+                          controls={false}
+                          className="responsive-video"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Section Divider */}
+          <hr className="section-divider" />
+
+          {/* Stats Section - Last Section */}
           <div className="landing-stats">
             <div className="stat-item">
-              <div className="stat-number">5,000+</div>
+              <div className="stat-number">8,000+</div>
               <div className="stat-label">{isArabic ? "سؤال" : "Questions"}</div>
             </div>
             <div className="stat-item">
               <div className="stat-number">SAR 50</div>
-              <div className="stat-label">{isArabic ? "سنوياً" : "Per Year"}</div>
+              <div className="stat-label">{isArabic ? "سنة كاملة" : "Full Year"}</div>
             </div>
             <div className="stat-item">
               <div className="stat-number">24/7</div>
               <div className="stat-label">{isArabic ? "متاح دائماً" : "Available"}</div>
             </div>
           </div>
+
           {/* Footer */}
           <div className="landing-footer" />
         </div>

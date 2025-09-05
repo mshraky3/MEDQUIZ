@@ -71,10 +71,13 @@ const AnalysisTemp = () => {
     longest_streak: 3,
   };
 
+  // Get the selected topic from the quiz data
+  const selectedTopic = location.state?.types || 'surgery'; // Default to surgery if not specified
+  
   const topicMap = {};
   answers.forEach((ans, index) => {
     const question = questions[index];
-    const topic = question?.question_type || 'Other';
+    const topic = question?.question_type || selectedTopic;
 
     if (!topicMap[topic]) {
       topicMap[topic] = { total: 0, correct: 0 };
@@ -85,13 +88,16 @@ const AnalysisTemp = () => {
     }
   });
 
-  const topicAnalysis = Object.keys(topicMap).map(topic => ({
-    question_type: topic,
-    total_answered: topicMap[topic].total,
-    total_correct: topicMap[topic].correct,
-    accuracy: ((topicMap[topic].correct / topicMap[topic].total) * 100).toFixed(2),
-    avg_time: avgTimePerQuestion
-  }));
+  // Only show the topic that was actually selected for the quiz
+  const topicAnalysis = Object.keys(topicMap)
+    .filter(topic => topic === selectedTopic) // Only show the selected topic
+    .map(topic => ({
+      question_type: topic,
+      total_answered: topicMap[topic].total,
+      total_correct: topicMap[topic].correct,
+      accuracy: ((topicMap[topic].correct / topicMap[topic].total) * 100).toFixed(2),
+      avg_time: avgTimePerQuestion
+    }));
 
   const questionAttempts = answers.map((answer, index) => {
     const q = questions[index];
