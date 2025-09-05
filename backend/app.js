@@ -417,7 +417,8 @@ app.get('/user-analysis/:userId', requireSession, async (req, res) => {
                 correct_answers: latestQuiz.correct_answers || 0,
                 quiz_accuracy: latestQuiz.quiz_accuracy || 0,
                 start_time: latestQuiz.start_time,
-                source: latestQuiz.source || 'general'
+                source: latestQuiz.source || 'general',
+                topics_covered: latestQuiz.topics_covered || []
             },
             best_topic,
             worst_topic,
