@@ -62,6 +62,8 @@ const AnalysisTemp = () => {
       quiz_accuracy: accuracy,
       duration: actualDuration,
       avg_time_per_question: avgTimePerQuestion,
+      source: 'general',
+      topics_covered: [selectedTopic]
     }
   };
 

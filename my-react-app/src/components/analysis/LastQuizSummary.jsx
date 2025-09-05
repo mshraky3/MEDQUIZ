@@ -56,6 +56,16 @@ const LastQuizSummary = ({ latest_quiz }) => {
                                     </span>
                                 </td>
                             </tr>
+                            <tr>
+                                <td>Topics Covered</td>
+                                <td>
+                                    <span className="topic-badge">
+                                        📖 {latest_quiz.topics_covered && latest_quiz.topics_covered.length > 0 
+                                            ? latest_quiz.topics_covered.join(', ') 
+                                            : 'mix'}
+                                    </span>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
