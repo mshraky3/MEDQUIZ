@@ -267,7 +267,8 @@ footer {
 }
 
 /* Custom Modal */
-.custom-type-selector-modal {
+.custom-type-selector-modal,
+.custom-source-selector-modal {
   position: fixed;
   top: 0;
   left: 0;
@@ -342,6 +343,45 @@ footer {
   border: solid white;
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
+}
+
+/* Source Selection Styles */
+.custom-source-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.custom-source-btn {
+  padding: 15px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  color: white;
+  background: linear-gradient(135deg, #00b6e0 0%, #0191c0 100%);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 8px rgba(0, 182, 224, 0.2);
+  text-transform: capitalize;
+}
+
+.custom-source-btn:hover {
+  background: linear-gradient(135deg, #0191c0 0%, #007a9c 100%);
+  transform: scale(1.03);
+  box-shadow: 0 6px 12px rgba(0, 182, 224, 0.3);
+}
+
+.source-info {
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 10px 15px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  font-size: 14px;
+  border-left: 4px solid #00b6e0;
+  text-align: center;
 }
 
 /* Modal Buttons */
@@ -432,6 +472,16 @@ footer {
     font-size: 15px;
   }
 
+  .custom-source-btn {
+    font-size: 15px;
+    padding: 12px 18px;
+  }
+
+  .source-info {
+    font-size: 13px;
+    padding: 8px 12px;
+  }
+
   .custom-start-btn,
   .custom-mix-btn,
   .custom-cancel-btn {
@@ -447,6 +497,16 @@ footer {
 
   .custom-checkbox-group label {
     font-size: 14px;
+  }
+
+  .custom-source-btn {
+    font-size: 14px;
+    padding: 10px 16px;
+  }
+
+  .source-info {
+    font-size: 12px;
+    padding: 6px 10px;
   }
 
   .custom-start-btn,

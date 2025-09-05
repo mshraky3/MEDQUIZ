@@ -11,7 +11,8 @@ const STATIC_QUESTIONS = [
     option3: "Lower limb",
     option4: "Upper limb",
     question_type: "surgery",
-    correct_option: "Face"
+    correct_option: "Face",
+    source: "general"
   },
   {
     id: 1993,
@@ -21,7 +22,8 @@ const STATIC_QUESTIONS = [
     option3: "Amlodipine",
     option4: "Hydrochlorothiazide",
     question_type: "medicine",
-    correct_option: "Lisinopril"
+    correct_option: "Lisinopril",
+    source: "general"
   },
   {
     id: 1802,
@@ -31,7 +33,8 @@ const STATIC_QUESTIONS = [
     option3: "Chemotherapy",
     option4: "Radiotherapy",
     question_type: "medicine",
-    correct_option: "H. pylori eradication therapy"
+    correct_option: "H. pylori eradication therapy",
+    source: "general"
   },
   {
     id: 581,
@@ -41,7 +44,8 @@ const STATIC_QUESTIONS = [
     option3: "Idiopathic thrombocytopenic purpura",
     option4: "Disseminated intravascular coagulation",
     question_type: "surgery",
-    correct_option: "Disseminated intravascular coagulation"
+    correct_option: "Disseminated intravascular coagulation",
+    source: "general"
   },
   {
     id: 1349,
@@ -51,7 +55,8 @@ const STATIC_QUESTIONS = [
     option3: "Full history",
     option4: "Clinical examination",
     question_type: "obstetrics and gynecology",
-    correct_option: "Pregnancy test"
+    correct_option: "Pregnancy test",
+    source: "general"
   },
   {
     id: 2670,
@@ -61,7 +66,8 @@ const STATIC_QUESTIONS = [
     option3: "166–180 cm",
     option4: "181–195 cm",
     question_type: "pediatric",
-    correct_option: "166–180 cm"
+    correct_option: "166–180 cm",
+    source: "general"
   },
   {
     id: 1435,
@@ -71,7 +77,8 @@ const STATIC_QUESTIONS = [
     option3: "Airborne",
     option4: "Standard",
     question_type: "medicine",
-    correct_option: "Airborne"
+    correct_option: "Airborne",
+    source: "general"
   },
   {
     id: 2800,
@@ -81,7 +88,8 @@ const STATIC_QUESTIONS = [
     option3: "Exchange transfusion",
     option4: "Phenobarbital",
     question_type: "pediatric",
-    correct_option: "Observation"
+    correct_option: "Observation",
+    source: "general"
   },
   {
     id: 2513,
@@ -91,7 +99,8 @@ const STATIC_QUESTIONS = [
     option3: "Apnea of prematurity",
     option4: "Gram-negative sepsis",
     question_type: "pediatric",
-    correct_option: "Hyperoxemia"
+    correct_option: "Hyperoxemia",
+    source: "general"
   },
   {
     id: 134,
@@ -101,7 +110,8 @@ const STATIC_QUESTIONS = [
     option3: "Biloma",
     option4: "Cholangitis",
     question_type: "surgery",
-    correct_option: "Retained stone"
+    correct_option: "Retained stone",
+    source: "general"
   }
 ];
 

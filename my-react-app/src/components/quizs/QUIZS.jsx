@@ -14,11 +14,18 @@ const QUIZS = () => {
     const id = user?.id || location.state?.id || location.state?.user?.id;
     const isTrial = location.state?.isTrial || false;
     const [currentStreak, setCurrentStreak] = useState(0);
+    const [showSourceSelector, setShowSourceSelector] = useState(false);
     const [showTypeSelector, setShowTypeSelector] = useState(false);
+    const [selectedSource, setSelectedSource] = useState('');
     const [selectedTypes, setSelectedTypes] = useState([]);
     const [numQuestions, setNumQuestions] = useState(10);
 
     const quizOptions = [10, 30, 50, 100, 200];
+    const availableSources = [
+        'general',
+        'Midgard',
+        'GameBoy'
+    ];
     const availableTypes = [
         'pediatric',
         'obstetrics and gynecology',
@@ -46,6 +53,12 @@ const QUIZS = () => {
 
     const handleOptionClick = (num) => {
         setNumQuestions(num);
+        setShowSourceSelector(true);
+    };
+
+    const handleSourceSelect = (source) => {
+        setSelectedSource(source);
+        setShowSourceSelector(false);
         setShowTypeSelector(true);
     };
 
@@ -68,6 +81,7 @@ const QUIZS = () => {
             state: { 
                 id: id, 
                 types: typesStr,
+                source: selectedSource,
                 isTrial: isTrial 
             }
         });
@@ -82,6 +96,7 @@ const QUIZS = () => {
             state: { 
                 id: id, 
                 types: 'mix',
+                source: selectedSource,
                 isTrial: isTrial 
             }
         });
@@ -216,11 +231,44 @@ const QUIZS = () => {
                     </button>
                 </footer>
 
+                {/* Source Selector Modal */}
+                {showSourceSelector && (
+                    <div className="custom-source-selector-modal">
+                        <div className="custom-modal-content">
+                            <h2>Select Question Source</h2>
+                            {isTrial && (
+                                <p className="trial-modal-notice">
+                                    🎯 Free trial includes questions from all sources
+                                </p>
+                            )}
+                            <div className="custom-source-buttons">
+                                {availableSources.map((source) => (
+                                    <button
+                                        key={source}
+                                        onClick={() => handleSourceSelect(source)}
+                                        className="custom-source-btn"
+                                    >
+                                        {source}
+                                    </button>
+                                ))}
+                            </div>
+                            <div className="custom-modal-buttons">
+                                <button onClick={() => setShowSourceSelector(false)} className="custom-cancel-btn">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Type Selector Modal */}
                 {showTypeSelector && (
                     <div className="custom-type-selector-modal">
                         <div className="custom-modal-content">
                             <h2>Select Question Types</h2>
+                            <p className="source-info">
+                                📚 Source: <strong>{selectedSource}</strong>
+                            </p>
                             {isTrial && (
                                 <p className="trial-modal-notice">
                                     🎯 Free trial includes questions from all selected types
@@ -250,7 +298,7 @@ const QUIZS = () => {
                                     Mix All Types
                                 </button>
                                 <button onClick={() => setShowTypeSelector(false)} className="custom-cancel-btn">
-                                    Cancel
+                                    Back to Source
                                 </button>
                             </div>
                         </div>

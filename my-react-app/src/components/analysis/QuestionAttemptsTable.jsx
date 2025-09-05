@@ -82,6 +82,7 @@ const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz, isTria
                                     <th>Your Answer</th>
                                     <th>Correct Answer</th>
                                     <th>Result</th>
+                                    <th>Source</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -90,6 +91,7 @@ const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz, isTria
                                     const questionRow = questionsMap.get(attempt.question_id);
                                     const questionText = questionRow?.question_text || 'Unknown question';
                                     const correctAnswer = questionRow?.correct_option || 'N/A';
+                                    const questionSource = questionRow?.source || 'general';
                                     const isCorrect = attempt.is_correct;
                                     return (
                                         <tr key={attempt.id || index}>
@@ -97,6 +99,11 @@ const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz, isTria
                                             <td className={isCorrect ? 'user-answer right' : 'user-answer wrong'}>{attempt.selected_option}</td>
                                             <td className="correct-answer right">{correctAnswer}</td>
                                             <td>{isCorrect ? '✔️' : '❌'}</td>
+                                            <td>
+                                                <span className="source-badge">
+                                                    📚 {questionSource}
+                                                </span>
+                                            </td>
                                             <td>
                                                 <button
                                                     onClick={(e) =>

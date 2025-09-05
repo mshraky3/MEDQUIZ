@@ -504,6 +504,103 @@
         text-align: center;
         margin-bottom: 0.25rem;
     }
+    
+    .analysis-tableQ td:nth-of-type(5):before { content: "Source: "; }
+    .analysis-tableQ td:nth-of-type(6):before { content: "Action: "; }
+}
+
+/* Source Breakdown Styles */
+.source-breakdown {
+    margin-top: var(--space-6);
+    padding: var(--space-4);
+    background: var(--bg-white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.source-breakdown-title {
+    font-size: var(--text-lg);
+    color: var(--primary-color);
+    margin-bottom: var(--space-4);
+    font-weight: 600;
+    text-align: center;
+}
+
+.source-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-4);
+}
+
+.source-card {
+    background: var(--bg-light);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    border: 1px solid var(--border-color);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.source-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.source-name {
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--primary-color);
+    text-align: center;
+    margin-bottom: var(--space-3);
+    text-transform: capitalize;
+}
+
+.source-stats {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.source-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-1) 0;
+}
+
+.source-stat-label {
+    font-size: var(--text-sm);
+    color: var(--text-light);
+    font-weight: 500;
+}
+
+.source-stat-value {
+    font-size: var(--text-sm);
+    color: var(--text-dark);
+    font-weight: 600;
+}
+
+/* Source Badge Styles */
+.source-badge {
+    display: inline-block;
+    background: var(--primary-color);
+    color: white;
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-full);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+/* No Source Data Message */
+.no-source-data {
+    text-align: center;
+    color: var(--text-light);
+    font-style: italic;
+    margin: var(--space-4) 0;
+    padding: var(--space-4);
+    background: var(--bg-light);
+    border-radius: var(--radius-md);
+    border: 1px dashed var(--border-color);
 }
 
 @media (max-width: 600px) {
@@ -518,5 +615,13 @@
   }
   .summary-table th, .summary-table td {
     text-align: center;
+  }
+  
+  .source-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .source-card {
+    padding: var(--space-3);
   }
 }

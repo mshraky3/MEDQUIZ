@@ -25,6 +25,7 @@ const QUIZ = () => {
   const [dataSent, setDataSent] = useState(false);
   const quizStartTimeRef = useRef(Date.now());
   const types = location.state?.types || 'mix';
+  const source = location.state?.source || 'mix';
   const { user, setUser, sessionToken } = useContext(UserContext);
   
   const protectedGet = async (url, config = {}) => {
@@ -65,7 +66,7 @@ const QUIZ = () => {
         // Use different endpoint for trial users
         const endpoint = isTrial ? '/free-trial/questions' : '/api/questions';
         const response = await protectedGet(`${Globals.URL}${endpoint}`, {
-          params: { limit: numQuestions, types: types }
+          params: { limit: numQuestions, types: types, source: source }
         });
 
         if (response.data.questions?.length > 0) {
@@ -83,7 +84,7 @@ const QUIZ = () => {
     };
 
     fetchQuestions();
-  }, [numQuestions, navigate, isTrial, types]);
+  }, [numQuestions, navigate, isTrial, types, source]);
 
   const handleSelectOption = (option) => {
     setSelectedAnswer(option);
@@ -132,6 +133,7 @@ const QUIZ = () => {
       try {
         // Use different endpoint for trial users
         const endpoint = isTrial ? '/free-trial/quiz-sessions' : '/quiz-sessions';
+        const questionIds = questions.map(q => q.id);
         const sessionData = isTrial 
           ? {
               trialId: id,
@@ -140,7 +142,9 @@ const QUIZ = () => {
               quiz_accuracy: parseFloat(accuracy),
               duration,
               avg_time_per_question: parseFloat((duration / totalQuestions).toFixed(2)),
-              topics_covered: topicsCovered
+              topics_covered: topicsCovered,
+              source: source === 'mix' ? 'general' : source,
+              question_ids: questionIds
             }
           : {
               user_id: id,
@@ -149,7 +153,9 @@ const QUIZ = () => {
               quiz_accuracy: parseFloat(accuracy),
               duration,
               avg_time_per_question: parseFloat((duration / totalQuestions).toFixed(2)),
-              topics_covered: topicsCovered
+              topics_covered: topicsCovered,
+              source: source === 'mix' ? 'general' : source,
+              question_ids: questionIds
             };
 
         const sessionRes = await protectedPost(`${Globals.URL}${endpoint}`, sessionData);

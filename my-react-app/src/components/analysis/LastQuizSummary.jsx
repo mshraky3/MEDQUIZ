@@ -2,6 +2,10 @@ import React from 'react';
 import './analysis.css';
 
 const LastQuizSummary = ({ latest_quiz }) => {
+    // Debug logging
+    console.log("LastQuizSummary - latest_quiz:", latest_quiz);
+    console.log("LastQuizSummary - latest_quiz.source:", latest_quiz?.source);
+    
     return (
         <section className="streak-section">
             <h3 className="section-header">Last Quiz Summary</h3>
@@ -42,6 +46,14 @@ const LastQuizSummary = ({ latest_quiz }) => {
                                 <td>Avg. Time per Question</td>
                                 <td>
                                     {latest_quiz.avg_time_per_question ? parseFloat(latest_quiz.avg_time_per_question).toFixed(1) : 0}s
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Question Source</td>
+                                <td>
+                                    <span className="source-badge">
+                                        📚 {latest_quiz.source || 'general'}
+                                    </span>
                                 </td>
                             </tr>
                         </tbody>
