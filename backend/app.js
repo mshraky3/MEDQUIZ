@@ -180,27 +180,16 @@ app.post('/login', async (req, res) => {
 
         // Session timeout logic
         let now = new Date();
-        let allowLogin = true;
         if (userRow.logged) {
             const lastLogin = new Date(userRow.logged_date);
             console.log(`[LOGIN] User is already logged in. Last login: ${lastLogin}, Now: ${now}`);
             if (now - lastLogin < SESSION_TIMEOUT_MS) {
-                allowLogin = false;
-                console.log(`[LOGIN] Session still active. Blocking login.`);
+                console.log(`[LOGIN] Session still active. Overwriting session.`);
             } else {
                 // Session expired, unlock
                 await client.query("UPDATE accounts SET logged = $1 WHERE id = $2", [false, userRow.id]);
                 console.log(`[LOGIN] Session expired. Resetting logged flag.`);
             }
-        }
-        if (!allowLogin) {
-            await client.query('ROLLBACK');
-            client.release();
-            console.log(`[LOGIN] Login blocked for username: ${username}`);
-            return res.status(403).json({
-                message: 'Account already logged in elsewhere.',
-                alreadyLogged: true
-            });
         }
 
         // Check if already active or not
@@ -292,8 +281,18 @@ app.post('/logout', async (req, res) => {
 app.get('/user-analysis/:userId', requireSession, async (req, res) => {
     const { userId } = req.params;
     try {
+        // First, ensure the source column exists in user_quiz_sessions table
+        try {
+            await db.query(`
+                ALTER TABLE user_quiz_sessions 
+                ADD COLUMN IF NOT EXISTS source VARCHAR(50) DEFAULT 'general'
+            `);
+        } catch (err) {
+            // Column might already exist, ignore error
+        }
+
         // Get overall stats, latest quiz, and last active
-        const [statsRes, latestQuizRes, analysisRes, topicRes, durationRes] = await Promise.all([
+        const [statsRes, latestQuizRes, analysisRes, topicRes, durationRes, sourceRes] = await Promise.all([
             db.query(`
                 SELECT 
                     COUNT(*) AS total_quizzes,
@@ -303,7 +302,8 @@ app.get('/user-analysis/:userId', requireSession, async (req, res) => {
                 WHERE user_id = $1;
             `, [userId]),
             db.query(`
-                SELECT * FROM user_quiz_sessions
+                SELECT id, total_questions, correct_answers, quiz_accuracy, start_time, COALESCE(source, 'general') as source
+                FROM user_quiz_sessions
                 WHERE user_id = $1
                 ORDER BY start_time DESC
                 LIMIT 1;
@@ -312,7 +312,19 @@ app.get('/user-analysis/:userId', requireSession, async (req, res) => {
             db.query(`SELECT question_type, total_answered, total_correct, accuracy
                       FROM user_topic_analysis WHERE user_id = $1`, [userId]),
             db.query(`SELECT SUM(duration) AS total_duration, AVG(duration) AS avg_duration
-                      FROM user_quiz_sessions WHERE user_id = $1`, [userId])
+                      FROM user_quiz_sessions WHERE user_id = $1`, [userId]),
+            db.query(`
+                SELECT 
+                    COALESCE(source, 'general') as source,
+                    COUNT(*) AS quiz_count,
+                    SUM(total_questions) AS total_questions,
+                    SUM(correct_answers) AS total_correct,
+                    ROUND(AVG(quiz_accuracy), 2) AS avg_accuracy
+                FROM user_quiz_sessions
+                WHERE user_id = $1
+                GROUP BY COALESCE(source, 'general')
+                ORDER BY quiz_count DESC;
+            `, [userId])
         ]);
 
         const stats = statsRes.rows[0];
@@ -320,6 +332,7 @@ app.get('/user-analysis/:userId', requireSession, async (req, res) => {
         const lastActive = analysisRes.rows[0]?.last_active;
         const topics = topicRes.rows;
         const durationStats = durationRes.rows[0];
+        const sourceBreakdown = sourceRes.rows;
 
         const totalQuizzes = parseInt(stats.total_quizzes) || 0;
         const totalQuestionsAnswered = parseInt(stats.total_questions_answered) || 0;
@@ -403,13 +416,21 @@ app.get('/user-analysis/:userId', requireSession, async (req, res) => {
                 total_questions: latestQuiz.total_questions || 0,
                 correct_answers: latestQuiz.correct_answers || 0,
                 quiz_accuracy: latestQuiz.quiz_accuracy || 0,
-                start_time: latestQuiz.start_time
+                start_time: latestQuiz.start_time,
+                source: latestQuiz.source || 'general'
             },
             best_topic,
             worst_topic,
             total_duration,
-            avg_duration
+            avg_duration,
+            source_breakdown: sourceBreakdown
         };
+
+        // Debug logging
+        console.log("User analysis for user:", userId);
+        console.log("Source breakdown:", sourceBreakdown);
+        console.log("Latest quiz source:", latestQuiz.source);
+
 
         res.json(result);
     } catch (err) {
@@ -463,8 +484,22 @@ app.get('/api/all-questions', async (req, res) => {
             return res.json({ questions: questionsCache.data });
         }
 
+        // Ensure source column exists in questions table
+        try {
+            await db.query(`
+                ALTER TABLE questions 
+                ADD COLUMN IF NOT EXISTS source VARCHAR(50) DEFAULT 'general'
+            `);
+            // Update any NULL sources to 'general'
+            await db.query(`
+                UPDATE questions SET source = 'general' WHERE source IS NULL
+            `);
+        } catch (err) {
+            // Column might already exist, ignore error
+        }
+
         // Only fetch necessary fields for analysis page
-        const result = await db.query("SELECT id, question_text, correct_option FROM questions");
+        const result = await db.query("SELECT id, question_text, correct_option, source FROM questions");
         
         // Update cache
         questionsCache.data = result.rows;
@@ -551,15 +586,25 @@ app.get('/api/questions', async (req, res) => {
 
     const limit = parseInt(req.query.limit) || 10;
     const typesParam = req.query.types; // e.g., 'mix' or 'medicine,surgery'
+    const sourceParam = req.query.source; // e.g., 'general', 'Midgard', 'GameBoy'
     let query = 'SELECT * FROM questions';
     let values = [];
     let conditions = [];
+    
+    // Handle question type filtering
     if (!typesParam || typesParam === 'mix') {
         // No filter – return all
     } else {
         const selectedTypes = typesParam.split(',');
         conditions.push(`question_type = ANY($1::text[])`);
         values.push(selectedTypes);
+    }
+    
+    // Handle source filtering
+    if (sourceParam && sourceParam !== 'mix') {
+        const paramIndex = values.length + 1;
+        conditions.push(`source = $${paramIndex}`);
+        values.push(sourceParam);
     }
 
     if (conditions.length > 0) {
@@ -778,7 +823,9 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
         quiz_accuracy,
         duration,
         avg_time_per_question,
-        topics_covered
+        topics_covered,
+        source,
+        question_ids
     } = req.body;
 
     if (!user_id || !total_questions || typeof quiz_accuracy !== 'number') {
@@ -786,13 +833,53 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
     }
 
     try {
-        console.log("Inserting quiz session for user:", [
-            correct_answers,
-        ]);
+        // First, ensure the source column exists in the table
+        try {
+            await db.query(`
+                ALTER TABLE user_quiz_sessions 
+                ADD COLUMN IF NOT EXISTS source VARCHAR(50) DEFAULT 'general'
+            `);
+            // Also add a check constraint for valid sources
+            await db.query(`
+                ALTER TABLE user_quiz_sessions 
+                ADD CONSTRAINT IF NOT EXISTS check_valid_quiz_source 
+                CHECK (source IN ('general', 'Midgard', 'GameBoy'))
+            `);
+        } catch (err) {
+            // Column might already exist, ignore error
+        }
+
+        // Determine the actual source based on the questions that were answered
+        let actualSource = source || 'general';
+        
+        // If we have question IDs, determine the source from the actual questions
+        if (question_ids && question_ids.length > 0) {
+            try {
+                const sourceQuery = await db.query(`
+                    SELECT source, COUNT(*) as count 
+                    FROM questions 
+                    WHERE id = ANY($1) 
+                    GROUP BY source 
+                    ORDER BY count DESC 
+                    LIMIT 1
+                `, [question_ids]);
+                
+                if (sourceQuery.rows.length > 0) {
+                    actualSource = sourceQuery.rows[0].source;
+                }
+            } catch (err) {
+                console.log('Error determining source from questions:', err.message);
+                // Fall back to the provided source
+            }
+        }
+
+        console.log("Creating quiz session for user:", user_id, "with source:", actualSource);
+        console.log("Question IDs:", question_ids);
+
         const result = await db.query(
             `INSERT INTO user_quiz_sessions 
-            (user_id, total_questions, correct_answers, quiz_accuracy, duration, avg_time_per_question, topics_covered) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+            (user_id, total_questions, correct_answers, quiz_accuracy, duration, avg_time_per_question, topics_covered, source) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
             [
                 user_id,
                 total_questions,
@@ -800,7 +887,8 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
                 quiz_accuracy,
                 duration,
                 avg_time_per_question,
-                JSON.stringify(topics_covered)
+                JSON.stringify(topics_covered),
+                actualSource
             ]
         );
 
@@ -821,13 +909,14 @@ app.post('/api/questions', async (req, res) => {
         option3,
         option4,
         question_type,
-        correct_option
+        correct_option,
+        source = 'general'
     } = req.body;
     try {
         const result = await db.query(
-            `INSERT INTO questions (question_text, option1, option2, option3, option4, question_type, correct_option)
-             VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-            [question_text, option1, option2, option3, option4, question_type, correct_option]
+            `INSERT INTO questions (question_text, option1, option2, option3, option4, question_type, correct_option, source)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+            [question_text, option1, option2, option3, option4, question_type, correct_option, source]
         );
         
         // Invalidate cache when new question is added
@@ -905,6 +994,48 @@ app.get('/questions', async (req, res) => {
     }
 });
 
+// Debug endpoint to check database schema
+app.get('/debug/schema', async (req, res) => {
+    try {
+        const tables = ['user_quiz_sessions', 'questions'];
+        const schema = {};
+        
+        for (const table of tables) {
+            const result = await db.query(`
+                SELECT column_name, data_type, column_default, is_nullable
+                FROM information_schema.columns 
+                WHERE table_name = $1
+                ORDER BY ordinal_position
+            `, [table]);
+            schema[table] = result.rows;
+        }
+        
+        res.json(schema);
+    } catch (err) {
+        console.error("Error fetching schema:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+// Debug endpoint to check quiz sessions data
+app.get('/debug/quiz-sessions/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const result = await db.query(`
+            SELECT id, user_id, total_questions, correct_answers, COALESCE(source, 'general') as source, start_time
+            FROM user_quiz_sessions 
+            WHERE user_id = $1 
+            ORDER BY start_time DESC 
+            LIMIT 10
+        `, [userId]);
+        
+        res.json({ quiz_sessions: result.rows });
+    } catch (err) {
+        console.error("Error fetching quiz sessions:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
 app.get('/questions/:id', async (req, res) => {
     const { id } = req.params;
 
@@ -966,7 +1097,8 @@ app.put('/questions/:id', async (req, res) => {
         option3,
         option4,
         question_type,
-        correct_option
+        correct_option,
+        source
     } = req.body;
 
     // Input validation
@@ -987,11 +1119,12 @@ app.put('/questions/:id', async (req, res) => {
                  option3 = $4,
                  option4 = $5,
                  question_type = $6,
-                 correct_option = $7
-             WHERE id = $8
+                 correct_option = $7,
+                 source = $8
+             WHERE id = $9
              RETURNING *`,
             [question_text, option1, option2, option3, option4,
-                question_type, correct_option, id]
+                question_type, correct_option, source, id]
         );
 
         if (result.rows.length === 0) {
@@ -1045,7 +1178,7 @@ app.post('/free-trial/start', async (req, res) => {
 });
 
 app.get('/free-trial/questions', async (req, res) => {
-    const { limit = 10, types } = req.query;
+    const { limit = 10, types, source } = req.query;
     const numQuestions = parseInt(limit);
     
     try {
@@ -1055,6 +1188,16 @@ app.get('/free-trial/questions', async (req, res) => {
         if (types && types !== 'mix') {
             const selectedTypes = types.split(',');
             questions = questions.filter(q => selectedTypes.includes(q.question_type));
+        }
+        
+        // Filter by source if specified (for free trial, we'll use 'general' as default source)
+        if (source && source !== 'mix') {
+            // For free trial, we'll treat all questions as 'general' source
+            // This ensures free trial users get questions regardless of source selection
+            questions = questions.map(q => ({ ...q, source: 'general' }));
+        } else {
+            // Add source field to all questions
+            questions = questions.map(q => ({ ...q, source: 'general' }));
         }
         
         // Shuffle and limit
@@ -1076,7 +1219,8 @@ app.post('/free-trial/quiz-sessions', async (req, res) => {
         quiz_accuracy,
         duration,
         avg_time_per_question,
-        topics_covered
+        topics_covered,
+        source
     } = req.body;
 
     if (!trialId || !total_questions || typeof quiz_accuracy !== 'number') {
