@@ -302,7 +302,7 @@ app.get('/user-analysis/:userId', requireSession, async (req, res) => {
                 WHERE user_id = $1;
             `, [userId]),
             db.query(`
-                SELECT id, total_questions, correct_answers, quiz_accuracy, start_time, COALESCE(source, 'general') as source
+                SELECT id, total_questions, correct_answers, quiz_accuracy, start_time, COALESCE(source, 'general') as source, topics_covered
                 FROM user_quiz_sessions
                 WHERE user_id = $1
                 ORDER BY start_time DESC
@@ -418,7 +418,11 @@ app.get('/user-analysis/:userId', requireSession, async (req, res) => {
                 quiz_accuracy: latestQuiz.quiz_accuracy || 0,
                 start_time: latestQuiz.start_time,
                 source: latestQuiz.source || 'general',
-                topics_covered: latestQuiz.topics_covered || []
+                topics_covered: latestQuiz.topics_covered ? 
+                    (typeof latestQuiz.topics_covered === 'string' ? 
+                        JSON.parse(latestQuiz.topics_covered) : 
+                        latestQuiz.topics_covered) : 
+                    []
             },
             best_topic,
             worst_topic,
@@ -431,6 +435,8 @@ app.get('/user-analysis/:userId', requireSession, async (req, res) => {
         console.log("User analysis for user:", userId);
         console.log("Source breakdown:", sourceBreakdown);
         console.log("Latest quiz source:", latestQuiz.source);
+        console.log("Latest quiz topics_covered (raw):", latestQuiz.topics_covered);
+        console.log("Latest quiz topics_covered (type):", typeof latestQuiz.topics_covered);
 
 
         res.json(result);
@@ -876,6 +882,8 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
 
         console.log("Creating quiz session for user:", user_id, "with source:", actualSource);
         console.log("Question IDs:", question_ids);
+        console.log("Topics covered received:", topics_covered);
+        console.log("Topics covered type:", typeof topics_covered);
 
         const result = await db.query(
             `INSERT INTO user_quiz_sessions 
