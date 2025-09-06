@@ -12,6 +12,7 @@
   "dependencies": {
     "@fingerprintjs/fingerprintjs": "^4.6.2",
     "@vercel/analytics": "^1.5.0",
+    "@vercel/speed-insights": "^1.2.0",
     "axios": "^1.9.0",
     "caniuse-lite": "^1.0.30001727",
     "lodash": "^4.17.21",
