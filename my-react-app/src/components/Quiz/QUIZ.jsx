@@ -129,6 +129,8 @@ const QUIZ = () => {
       const correctCount = answers.filter(a => a.isCorrect).length;
       const accuracy = ((correctCount / totalQuestions) * 100).toFixed(2);
       const topicsCovered = [...new Set(questions.map(q => q.question_type))];
+      console.log("QUIZ - topicsCovered:", topicsCovered);
+      console.log("QUIZ - questions types:", questions.map(q => q.question_type));
 
       try {
         // Use different endpoint for trial users

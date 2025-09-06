@@ -5,6 +5,8 @@ const LastQuizSummary = ({ latest_quiz }) => {
     // Debug logging
     console.log("LastQuizSummary - latest_quiz:", latest_quiz);
     console.log("LastQuizSummary - latest_quiz.source:", latest_quiz?.source);
+    console.log("LastQuizSummary - latest_quiz.topics_covered:", latest_quiz?.topics_covered);
+    console.log("LastQuizSummary - topics_covered type:", typeof latest_quiz?.topics_covered);
     
     return (
         <section className="streak-section">

@@ -23,6 +23,8 @@ const Landing = () => {
   
   const [successMsg, setSuccessMsg] = useState('');
   const [showAddToHome, setShowAddToHome] = useState(false);
+  const [showIOSInstructions, setShowIOSInstructions] = useState(false);
+  const [showAndroidInstructions, setShowAndroidInstructions] = useState(false);
   
 
 
@@ -253,58 +255,63 @@ const Landing = () => {
           {/* Section Divider */}
           
 
-          {/* Add to Home Screen Button */}
+          {/* Add to Home Screen Buttons */}
           <div className="add-to-home-trigger">
-            <button 
-              className="landing-btn secondary" 
-              onClick={() => setShowAddToHome(!showAddToHome)}
-            >
-              {isArabic ? "📱 كيفية إضافة الموقع للشاشة الرئيسية" : "📱 How to Add to Home Screen"}
-            </button>
+            <div className="add-to-home-buttons">
+              <button 
+                className="landing-btn ios-btn" 
+                onClick={() => {
+                  setShowIOSInstructions(!showIOSInstructions);
+                  setShowAndroidInstructions(false);
+                }}
+              >
+                <img 
+                  src="https://img.icons8.com/?size=100&id=30659&format=png&color=000000" 
+                  alt="iOS" 
+                  className="btn-icon"
+                />
+                {isArabic ? "تعليمات iOS" : "add to home screen - iOS"}
+              </button>
+              <button 
+                className="landing-btn android-btn" 
+                onClick={() => {
+                  setShowAndroidInstructions(!showAndroidInstructions);
+                  setShowIOSInstructions(false);
+                }}
+              >
+                <img 
+                  src="https://img.icons8.com/?size=100&id=2586&format=png&color=000000" 
+                  alt="Android" 
+                  className="btn-icon"
+                />
+                {isArabic ? "تعليمات Android" : "add to home screen - Android"}
+              </button>
+            </div>
           </div>
 
-          {/* How to Add to Home Screen Section (hidden by default) */}
-          {showAddToHome && (
+          {/* iOS Instructions Section */}
+          {showIOSInstructions && (
             <div className="add-to-home-section important-section">
-              <h2>{isArabic ? "كيفية إضافة الموقع إلى الشاشة الرئيسية" : "How to Add This Website to Your Home Screen"}</h2>
+              <h2>
+                <img 
+                  src="https://img.icons8.com/?size=100&id=30659&format=png&color=000000" 
+                  alt="iOS" 
+                  className="platform-icon"
+                />
+                {isArabic ? "كيفية إضافة الموقع إلى الشاشة الرئيسية - iOS" : "How to Add to Home Screen - iOS"}
+              </h2>
               <div className="add-to-home-content">
                 <div className="add-to-home-instructions">
-                  <div className="add-to-home-platform">
-                    <h3><span role="img" aria-label="Android">🤖</span> {isArabic ? "على أجهزة Android:" : "On Android:"}</h3>
-                    <ol>
-                      {isArabic ? (
-                        <>
-                          <li><span className="step-icon" role="img" aria-label="browser">🌐</span> افتح الموقع في متصفح <b>Chrome</b>.</li>
-                          <li><span className="step-icon" role="img" aria-label="menu">⋮</span> اضغط على النقاط الثلاث في أعلى يمين الشاشة.</li>
-                          <li><span className="step-icon" role="img" aria-label="add">➕</span> اختر "إضافة إلى الشاشة الرئيسية".</li>
-                          <li><span className="step-icon" role="img" aria-label="home">🏠</span> اضغط "إضافة" وسيظهر الموقع على شاشتك الرئيسية.</li>
-                        </>
-                      ) : (
-                        <>
-                          <li><span className="step-icon" role="img" aria-label="browser">🌐</span> Open the website in <b>Chrome</b> browser.</li>
-                          <li><span className="step-icon" role="img" aria-label="menu">⋮</span> Tap the three dots menu at the top right.</li>
-                          <li><span className="step-icon" role="img" aria-label="add">➕</span> Select "Add to Home screen".</li>
-                          <li><span className="step-icon" role="img" aria-label="home">🏠</span> Tap "Add" and the site will appear on your home screen.</li>
-                        </>
-                      )}
-                    </ol>
-                    <div className="add-to-home-video">
-                      {/* Android video tutorial */}
-                      <div className="responsive-video-wrapper">
-                        <video
-                          src={andriodVideo}
-                          autoPlay
-                          loop
-                          muted
-                          playsInline
-                          controls={false}
-                          className="responsive-video"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="add-to-home-platform">
-                    <h3 style={{marginTop: 32}}><span role="img" aria-label="iOS">🍏</span> {isArabic ? "على أجهزة iPhone/iOS:" : "On iPhone/iOS:"}</h3>
+                  <div className="add-to-home-platform ios-platform">
+                    <h3>
+                      <img 
+                        src="https://img.icons8.com/?size=100&id=30659&format=png&color=000000" 
+                        alt="iOS" 
+                        className="step-icon"
+                        style={{width: '20px', height: '20px', marginRight: '8px', verticalAlign: 'middle'}}
+                      />
+                      {isArabic ? "على أجهزة iPhone/iOS:" : "On iPhone/iOS:"}
+                    </h3>
                     <ol>
                       {isArabic ? (
                         <>
@@ -327,6 +334,66 @@ const Landing = () => {
                       <div className="responsive-video-wrapper">
                         <video
                           src={iosVideo}
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
+                          controls={false}
+                          className="responsive-video"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Android Instructions Section */}
+          {showAndroidInstructions && (
+            <div className="add-to-home-section important-section">
+              <h2>
+                <img 
+                  src="https://img.icons8.com/?size=100&id=2586&format=png&color=000000" 
+                  alt="Android" 
+                  className="platform-icon"
+                />
+                {isArabic ? "كيفية إضافة الموقع إلى الشاشة الرئيسية - Android" : "How to Add to Home Screen - Android"}
+              </h2>
+              <div className="add-to-home-content">
+                <div className="add-to-home-instructions">
+                  <div className="add-to-home-platform android-platform">
+                    <h3>
+                      <img 
+                        src="https://img.icons8.com/?size=100&id=2586&format=png&color=000000" 
+                        alt="Android" 
+                        className="step-icon"
+                        style={{width: '20px', height: '20px', marginRight: '8px', verticalAlign: 'middle'}}
+                      />
+                      {isArabic ? "على أجهزة Android:" : "On Android:"}
+                    </h3>
+                    <ol>
+                      {isArabic ? (
+                        <>
+                          <li><span className="step-icon" role="img" aria-label="browser">🌐</span> افتح الموقع في متصفح <b>Chrome</b>.</li>
+                          <li><span className="step-icon" role="img" aria-label="menu">⋮</span> اضغط على النقاط الثلاث في أعلى يمين الشاشة.</li>
+                          <li><span className="step-icon" role="img" aria-label="add">➕</span> اختر "إضافة إلى الشاشة الرئيسية".</li>
+                          <li><span className="step-icon" role="img" aria-label="home">🏠</span> اضغط "إضافة" وسيظهر الموقع على شاشتك الرئيسية.</li>
+                        </>
+                      ) : (
+                        <>
+                          <li><span className="step-icon" role="img" aria-label="browser">🌐</span> Open the website in <b>Chrome</b> browser.</li>
+                          <li><span className="step-icon" role="img" aria-label="menu">⋮</span> Tap the three dots menu at the top right.</li>
+                          <li><span className="step-icon" role="img" aria-label="add">➕</span> Select "Add to Home screen".</li>
+                          <li><span className="step-icon" role="img" aria-label="home">🏠</span> Tap "Add" and the site will appear on your home screen.</li>
+                        </>
+                      )}
+                    </ol>
+                    <div className="add-to-home-video">
+                      {/* Android video tutorial */}
+                      <div className="responsive-video-wrapper">
+                        <video
+                          src={andriodVideo}
                           autoPlay
                           loop
                           muted
