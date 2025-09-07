@@ -7,11 +7,12 @@ Disallow: /ADD_ACCOUNT
 Disallow: /ADDQ
 Disallow: /Bank
 
-# Allow important pages
+# Allow important pages for Arabic SEO
 Allow: /login
 Allow: /quizs
 Allow: /analysis
 Allow: /analysis-temp
+Allow: /quiz/
 
 # Crawl delay to be respectful to the server
 Crawl-delay: 1
@@ -20,4 +21,7 @@ Crawl-delay: 1
 Sitemap: https://medquiz.vercel.app/sitemap.xml
 
 # Additional sitemaps for different content types
-Sitemap: https://medquiz.vercel.app/sitemap-questions.xml 
+Sitemap: https://medquiz.vercel.app/sitemap-questions.xml
+
+# Host directive for Arabic content
+Host: https://medquiz.vercel.app 

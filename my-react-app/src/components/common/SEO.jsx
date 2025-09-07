@@ -13,7 +13,7 @@ const SEO = ({
   const fullTitle = title ? `${title} | ${siteName}` : siteName;
   const defaultImage = 'https://medquiz.vercel.app/login-icon.png';
   const defaultUrl = 'https://medquiz.vercel.app/';
-  const defaultKeywords = `SMLE, Prometric, Saudi Medical Licensing Examination, medical questions, medical quiz, medical exam preparation, Saudi medical license, medical board exam, medical practice test, medical study guide, Saudi medical students, free trial, Prometric questions, Prometric Saudi, برومترك, اسئلة برومترك, اسئلة اختبار البرومترك, اسئلة الهيئة السعودية للتخصصات الصحية, بنك اسئلة برومترك, بنك اسئلة SMLE, تجميعات برومترك, تجميعات SMLE, اختبار البرومترك, اختبار الهيئة السعودية, اسئلة طبية, بنك اسئلة طبية, تدريب برومترك, تدريب SMLE, اسئلة امتحان برومترك, اسئلة امتحان SMLE, اسئلة طبية سعودية, اسئلة طبية برومترك, Saudi Prometric, Prometric exam, Prometric practice, Prometric medicine, Prometric Saudi Arabia, Saudi Prometric questions, Saudi Prometric bank, Saudi Prometric practice, Saudi Prometric free, Saudi Prometric trial, Saudi Prometric preparation, Saudi Prometric online, Saudi Prometric MCQ, Saudi Prometric test, Saudi Prometric review, Saudi Prometric study, Saudi Prometric guide, Saudi Prometric analytics, Saudi Prometric performance, Saudi Prometric topics, Saudi Prometric mobile, Saudi Prometric affordable, Saudi Prometric subscription, Saudi Prometric unlimited, Saudi Prometric 2024, Saudi Prometric 2025`;
+  const defaultKeywords = `اختبارات الهيئة السعودية للتخصصات الصحية, تدريب على اختبار الهيأة, اختبار البرومترك, كويزات برومترك, اسئلة الهيئة السعودية للتخصصات الصحية, بنك اسئلة برومترك, تجميعات برومترك, اسئلة اختبار البرومترك, تدريب برومترك, اسئلة طبية سعودية, اختبارات طبية, اختبار الرخصة الطبية السعودية, SMLE, Prometric, Saudi Medical Licensing Examination, medical questions, medical quiz, medical exam preparation, Saudi medical license, medical board exam, medical practice test, medical study guide, Saudi medical students, free trial, Prometric questions, Prometric Saudi, برومترك, اسئلة برومترك, اسئلة اختبار البرومترك, اسئلة الهيئة السعودية للتخصصات الصحية, بنك اسئلة برومترك, بنك اسئلة SMLE, تجميعات برومترك, تجميعات SMLE, اختبار البرومترك, اختبار الهيئة السعودية, اسئلة طبية, بنك اسئلة طبية, تدريب برومترك, تدريب SMLE, اسئلة امتحان برومترك, اسئلة امتحان SMLE, اسئلة طبية سعودية, اسئلة طبية برومترك, Saudi Prometric, Prometric exam, Prometric practice, Prometric medicine, Prometric Saudi Arabia, Saudi Prometric questions, Saudi Prometric bank, Saudi Prometric practice, Saudi Prometric free, Saudi Prometric trial, Saudi Prometric preparation, Saudi Prometric online, Saudi Prometric MCQ, Saudi Prometric test, Saudi Prometric review, Saudi Prometric study, Saudi Prometric guide, Saudi Prometric analytics, Saudi Prometric performance, Saudi Prometric topics, Saudi Prometric mobile, Saudi Prometric affordable, Saudi Prometric subscription, Saudi Prometric unlimited, Saudi Prometric 2024, Saudi Prometric 2025`;
 
   useEffect(() => {
     document.title = fullTitle;
@@ -61,7 +61,7 @@ const SEO = ({
     updatePropertyTag('og:image', image || defaultImage);
     updatePropertyTag('og:url', url || defaultUrl);
     updatePropertyTag('og:site_name', siteName);
-    updatePropertyTag('og:locale', 'en_US');
+    updatePropertyTag('og:locale', 'ar_SA');
 
     // Update Twitter tags
     updatePropertyTag('twitter:card', 'summary_large_image');
