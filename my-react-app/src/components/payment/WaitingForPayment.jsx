@@ -28,12 +28,13 @@ const WaitingForPayment = () => {
                     });
                     
                     // Go to signup
-                    navigate('/signup', { 
-                        state: { 
-                            userId: userId,
-                            paymentConfirmed: true
-                        } 
-                    });
+                                navigate('/signup', { 
+                                    state: { 
+                                        userId: userId,
+                                        paymentConfirmed: true,
+                                        fromKoFi: true
+                                    } 
+                                });
                 }
             } catch (error) {
                 console.error('Error:', error);

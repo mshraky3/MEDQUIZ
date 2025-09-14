@@ -7,7 +7,6 @@ import './Signup.css';
 const Signup = () => {
     const [form, setForm] = useState({
         username: '',
-        email: '',
         password: '',
         confirmPassword: ''
     });
@@ -47,7 +46,7 @@ const Signup = () => {
     };
 
     const validateForm = () => {
-        if (!form.username || !form.email || !form.password || !form.confirmPassword) {
+        if (!form.username || !form.password || !form.confirmPassword) {
             setError('All fields are required');
             return false;
         }
@@ -59,12 +58,6 @@ const Signup = () => {
 
         if (form.password.length < 6) {
             setError('Password must be at least 6 characters long');
-            return false;
-        }
-
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(form.email)) {
-            setError('Please enter a valid email address');
             return false;
         }
 
@@ -92,7 +85,6 @@ const Signup = () => {
             const response = await axios.post(`${Globals.URL}/api/payment/create-account`, {
                 userId: paidUserId,
                 username: form.username,
-                email: form.email,
                 password: form.password
             });
 
@@ -153,18 +145,6 @@ const Signup = () => {
                         />
                     </div>
 
-                    <div className="form-group">
-                        <label htmlFor="email">Email</label>
-                        <input
-                            type="email"
-                            id="email"
-                            name="email"
-                            value={form.email}
-                            onChange={handleInputChange}
-                            placeholder="Enter your email"
-                            required
-                        />
-                    </div>
 
                     <div className="form-group">
                         <label htmlFor="password">Password</label>
