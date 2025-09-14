@@ -1464,8 +1464,8 @@ app.post('/api/payment/create-user', async (req, res) => {
             // Create a new user with pending payment status
             console.log('📝 [Backend] Inserting new user with pending payment status...');
             const result = await client.query(
-                'INSERT INTO accounts (payment_status, isactive, logged) VALUES ($1, $2, $3) RETURNING id',
-                ['pending', false, false]
+                'INSERT INTO accounts (username, password, isactive, logged) VALUES ($1, $2, $3, $4) RETURNING id',
+                ['pending_user_' + Date.now(), 'pending', false, false]
             );
             
             const userId = result.rows[0].id;
@@ -1513,7 +1513,7 @@ app.post('/api/payment/confirm', async (req, res) => {
             // Check if user exists
             console.log('📊 [Backend] Checking if user exists in database...');
             const userCheck = await client.query(
-                'SELECT payment_status FROM accounts WHERE id = $1',
+                'SELECT username, password FROM accounts WHERE id = $1',
                 [userId]
             );
             
@@ -1525,13 +1525,13 @@ app.post('/api/payment/confirm', async (req, res) => {
                 });
             }
             
-            const currentStatus = userCheck.rows[0].payment_status;
-            console.log('📋 [Backend] Current payment status:', currentStatus);
+            const currentUser = userCheck.rows[0];
+            console.log('📋 [Backend] Current user:', currentUser.username);
             
-            // Update payment status to paid
-            console.log('💳 [Backend] Updating payment status to paid...');
+            // Update user to mark as paid (change password to 'paid' to indicate payment status)
+            console.log('💳 [Backend] Updating user to mark as paid...');
             await client.query(
-                'UPDATE accounts SET payment_status = $1, isactive = $2 WHERE id = $3',
+                'UPDATE accounts SET password = $1, isactive = $2 WHERE id = $3',
                 ['paid', true, userId]
             );
             
@@ -1555,9 +1555,9 @@ app.post('/api/payment/confirm', async (req, res) => {
 // Create account for paid user
 app.post('/api/payment/create-account', async (req, res) => {
     try {
-        const { userId, username, email, password } = req.body;
+        const { userId, username, password } = req.body;
         
-        if (!userId || !username || !email || !password) {
+        if (!userId || !username || !password) {
             return res.status(400).json({ 
                 success: false, 
                 message: 'All fields are required' 
@@ -1568,7 +1568,7 @@ app.post('/api/payment/create-account', async (req, res) => {
         try {
             // Check if user exists and payment is confirmed
             const userCheck = await client.query(
-                'SELECT payment_status FROM accounts WHERE id = $1',
+                'SELECT username, password FROM accounts WHERE id = $1',
                 [userId]
             );
             
@@ -1579,23 +1579,23 @@ app.post('/api/payment/create-account', async (req, res) => {
                 });
             }
             
-            if (userCheck.rows[0].payment_status !== 'paid') {
+            if (userCheck.rows[0].password !== 'paid') {
                 return res.status(400).json({ 
                     success: false, 
                     message: 'Payment not confirmed' 
                 });
             }
 
-            // Check if username or email already exists
+            // Check if username already exists
             const existingUser = await client.query(
-                'SELECT id FROM accounts WHERE username = $1 OR email = $2',
-                [username, email]
+                'SELECT id FROM accounts WHERE username = $1',
+                [username]
             );
             
             if (existingUser.rows.length > 0) {
                 return res.status(400).json({ 
                     success: false, 
-                    message: 'Username or email already exists' 
+                    message: 'Username already exists' 
                 });
             }
 
@@ -1604,8 +1604,8 @@ app.post('/api/payment/create-account', async (req, res) => {
 
             // Update user with account details
             await client.query(
-                'UPDATE accounts SET username = $1, email = $2, password = $3 WHERE id = $4',
-                [username, email, password, userId]
+                'UPDATE accounts SET username = $1, password = $2 WHERE id = $3',
+                [username, password, userId]
             );
             
             res.status(200).json({ 
