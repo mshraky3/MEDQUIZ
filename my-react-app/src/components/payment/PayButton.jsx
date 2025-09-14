@@ -54,8 +54,12 @@ const PayButton = ({ amount = 14, description = "Premium Access" }) => {
                     </div>
                 ) : (
                     <>
-                        <span className="pay-icon">💳</span>
-                        Pay ${amount} - {description}
+                        
+                        <span className="pay-text">
+                            Pay {amount} SAR
+                            <br />
+                            <small>{description}</small>
+                        </span>
                     </>
                 )}
             </button>

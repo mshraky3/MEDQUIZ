@@ -3,6 +3,9 @@
     flex-direction: column;
     align-items: center;
     gap: 12px;
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
 }
 
 .pay-button {
@@ -21,6 +24,8 @@
     gap: 8px;
     min-width: 200px;
     justify-content: center;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin-bottom: 5%;
 }
 
 .pay-button:hover:not(:disabled) {
@@ -40,6 +45,20 @@
 
 .pay-icon {
     font-size: 20px;
+}
+
+.pay-text {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1.2;
+}
+
+.pay-text small {
+    font-size: 0.7em;
+    opacity: 0.9;
+    font-weight: 500;
+    margin-top: 2px;
 }
 
 .loading-spinner {

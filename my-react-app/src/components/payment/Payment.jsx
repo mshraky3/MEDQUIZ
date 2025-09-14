@@ -55,11 +55,7 @@ const Payment = () => {
         <button onClick={handleBackToHome} className="back-button">
           {isArabic ? '← العودة' : '← Back'}
         </button>
-        <h1>{isArabic ? 'اختر خطة الاشتراك' : 'Choose Your Subscription Plan'}</h1>
-        <div className="yearly-notice">
-          <h2>{isArabic ? '🔥 اشتراك سنوي - سنة كاملة 🔥' : '🔥 ANNUAL SUBSCRIPTION - FULL YEAR 🔥'}</h2>
-          <p>{isArabic ? 'ليس شهرياً - اشتراك لمدة سنة كاملة' : 'NOT MONTHLY - SUBSCRIPTION FOR 1 FULL YEAR'}</p>
-        </div>
+        <h1>{isArabic ? 'اشتراك سنوي - سنة كاملة' : 'Annual Subscription - Full Year'}</h1>
         <p className="payment-subtitle">
           {isArabic 
             ? 'احصل على الوصول الكامل إلى أكثر من 8000 سؤال مع تحليلات مفصلة' 
@@ -68,55 +64,55 @@ const Payment = () => {
         </p>
       </div>
 
-      <div className="payment-plans">
-        {plans.map((plan) => (
-          <div 
-            key={plan.id}
-            className={`plan-card ${selectedPlan === plan.id ? 'selected' : ''} ${plan.popular ? 'popular' : ''}`}
-            onClick={() => handlePlanSelect(plan.id)}
-          >
-            {plan.popular && (
-              <div className="popular-badge">
-                {isArabic ? 'الأكثر شعبية' : 'Most Popular'}
-              </div>
-            )}
-            
-            <div className="plan-header">
-              <h3>{plan.name}</h3>
-              <div className="plan-price">
-                <span className="current-price">{plan.price}</span>
-                <span className="original-price">{plan.originalPrice}</span>
-                <span className="period">{plan.period}</span>
-              </div>
+      <div className="single-plan-container">
+        <div className="plan-highlight">
+          <div className="popular-badge">
+            {isArabic ? '🔥 عرض محدود 🔥' : '🔥 Limited Time Offer 🔥'}
+          </div>
+          
+          <div className="plan-pricing">
+            <div className="price-display">
+              <span className="current-price">50 SAR</span>
+              <span className="original-price">250 SAR</span>
             </div>
-
-            <div className="plan-features">
-              {plan.features.map((feature, index) => (
-                <div key={index} className="feature-item">
-                  <span className="feature-icon">✓</span>
-                  <span>{feature}</span>
-                </div>
-              ))}
+            <div className="savings-badge">
+              {isArabic ? 'توفير 80%' : 'Save 80%'}
             </div>
-
-            <div className="plan-savings">
-              <div className="savings-badge">
-                {isArabic ? 'توفير ٨٠٪' : 'Save 80%'}
-              </div>
+            <div className="period-text">
+              {isArabic ? 'لمدة سنة كاملة' : 'FOR 1 FULL YEAR'}
             </div>
           </div>
-        ))}
-      </div>
 
-      <div className="payment-actions">
-        <PayButton 
-          amount={14} 
-          description={isArabic ? 'اشتراك سنوي - سنة كاملة' : 'Annual Subscription - Full Year'}
-        />
-        
-        <button onClick={handleContactUs} className="contact-button">
-          {isArabic ? 'تواصل معنا' : 'Contact Us'}
-        </button>
+          <div className="plan-features">
+            <div className="feature-item">
+              <span className="feature-icon">✓</span>
+              <span>{isArabic ? 'الوصول إلى جميع الأسئلة' : 'Access to all questions'}</span>
+            </div>
+            <div className="feature-item">
+              <span className="feature-icon">✓</span>
+              <span>{isArabic ? 'تحليلات مفصلة' : 'Detailed analytics'}</span>
+            </div>
+            <div className="feature-item">
+              <span className="feature-icon">✓</span>
+              <span>{isArabic ? 'تتبع التقدم' : 'Progress tracking'}</span>
+            </div>
+            <div className="feature-item">
+              <span className="feature-icon">✓</span>
+              <span>{isArabic ? 'دعم فني' : 'Technical support'}</span>
+            </div>
+          </div>
+
+          <div className="payment-actions">
+            <PayButton 
+              amount={50} 
+              description={isArabic ? 'اشتراك سنوي - سنة كاملة' : 'Full Year'}
+            />
+            
+            <button onClick={handleContactUs} className="contact-button">
+              {isArabic ? 'تواصل معنا' : 'Contact Us'}
+            </button>
+          </div>
+        </div>
       </div>
 
       <div className="payment-features">
