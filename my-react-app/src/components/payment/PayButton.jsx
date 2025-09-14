@@ -8,9 +8,13 @@ const PayButton = ({ amount = 14, description = "Premium Access" }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const navigate = useNavigate();
+    
+    // Test mode - set to true to skip real payment and go directly to waiting page
+    const TEST_MODE = process.env.NODE_ENV === 'development' && false; // Set to true for testing
 
     const handlePayment = async () => {
         console.log('🚀 [PayButton] Payment initiation started');
+        console.log('🧪 [PayButton] Test mode:', TEST_MODE);
         setLoading(true);
         setError('');
 
@@ -30,6 +34,12 @@ const PayButton = ({ amount = 14, description = "Premium Access" }) => {
             // Step 2: Save user ID to localStorage
             localStorage.setItem('pendingUserId', userId);
             console.log('💾 [PayButton] User ID saved to localStorage:', userId);
+            
+            if (TEST_MODE) {
+                console.log('🧪 [PayButton] TEST MODE: Skipping Ko-fi payment, going directly to waiting page');
+                navigate('/waiting-for-payment');
+                return;
+            }
             
             // Step 3: Construct Ko-fi payment URL with user ID in metadata
             const metadata = { user_id: userId };
