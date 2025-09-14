@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useLang from '../../hooks/useLang';
+import PayButton from './PayButton';
 import './payment.css';
 
 const Payment = () => {
@@ -36,14 +37,8 @@ const Payment = () => {
   };
 
   const handlePayment = async () => {
-    setIsProcessing(true);
-    
-    // Simulate payment processing
-    setTimeout(() => {
-      setIsProcessing(false);
-      // Here you would integrate with Stripe
-      alert(isArabic ? 'سيتم إضافة Stripe قريباً' : 'Stripe integration coming soon');
-    }, 2000);
+    // Redirect to waiting page after payment initiation
+    navigate('/waiting-for-payment');
   };
 
   const handleContactUs = () => {
@@ -114,16 +109,10 @@ const Payment = () => {
       </div>
 
       <div className="payment-actions">
-        <button 
-          onClick={handlePayment}
-          className={`payment-button ${isProcessing ? 'processing' : ''}`}
-          disabled={isProcessing}
-        >
-          {isProcessing 
-            ? (isArabic ? 'جاري المعالجة...' : 'Processing...') 
-            : (isArabic ? 'اشترك الآن' : 'Subscribe Now')
-          }
-        </button>
+        <PayButton 
+          amount={14} 
+          description={isArabic ? 'اشتراك سنوي - سنة كاملة' : 'Annual Subscription - Full Year'}
+        />
         
         <button onClick={handleContactUs} className="contact-button">
           {isArabic ? 'تواصل معنا' : 'Contact Us'}

@@ -304,6 +304,12 @@ const Login = () => {
                 <button className="popup-btn Contact-Us" onClick={() => navigate('/payment')}>
                   Subscribe Now
                 </button>
+                <button 
+                  className="popup-btn contact-support" 
+                  onClick={() => window.open('https://wa.link/pzhg6j', '_blank')}
+                >
+                  Contact Support
+                </button>
               </div>
             </div>
           </div>

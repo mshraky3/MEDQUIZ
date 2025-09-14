@@ -17,8 +17,6 @@ const Landing = () => {
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   
-  const [form, setForm] = useState({ username: '', email: '', password: '', confirmPassword: '' });
-  const [formError, setFormError] = useState('');
   const [loading, setLoading] = useState(false);
   
   const [successMsg, setSuccessMsg] = useState('');
@@ -56,26 +54,6 @@ const Landing = () => {
     document.documentElement.dir = isArabic ? 'rtl' : 'ltr';
   }, [lang, isArabic]);
 
-  const handleFormChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-    setFormError('');
-  };
-
-  const validateForm = () => {
-    if (!form.username || !form.email || !form.password || !form.confirmPassword) {
-      return 'All fields are required.';
-    }
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.email)) {
-      return 'Invalid email address.';
-    }
-    if (form.password.length < 6) {
-      return 'Password must be at least 6 characters.';
-    }
-    if (form.password !== form.confirmPassword) {
-      return 'Passwords do not match.';
-    }
-    return '';
-  };
 
   
 
@@ -438,15 +416,15 @@ const Landing = () => {
                   <h3>{isArabic ? "اختر طريقة البدء" : "Choose how to get started:"}</h3>
                   <div className="trial-options">
                     <div className="trial-option">
-                      <h4 >{isArabic ? "إنشاء حساب" : "Create Account"} </h4>
-                      <p>{isArabic ? "قم بإنشاء حساب للوصول الكامل إلى جميع ميزاتنا." : "Create an account for full access to all our features."}</p>
+                      <h4 >{isArabic ? "اشتراك كامل" : "Full Subscription"} </h4>
+                      <p>{isArabic ? "احصل على الوصول الكامل إلى جميع الأسئلة والتحليلات." : "Get full access to all questions and analytics."}</p>
                       <ul>
                         <li>{isArabic ? "وصول كامل" : "Full access"}</li>
                         <li>{isArabic ? "حفظ التقدم" : "Progress saving"}</li>
                         <li>{isArabic ? "تحليلات مخصصة" : "Personalized analytics"}</li>
                       </ul>
-                      <button className="landing-btn primary" onClick={handleGetStarted} style={{ marginTop: 12 }}>
-                        {isArabic ? "إنشاء حساب" : "Create Account"}
+                      <button className="landing-btn primary" onClick={() => { setShowModal(false); navigate('/payment'); }} style={{ marginTop: 12 }}>
+                        {isArabic ? "اشترك الآن" : "Subscribe Now"}
                       </button>
                     </div>
                     <div className="trial-option">
