@@ -1493,11 +1493,11 @@ app.get('/api/payment/status/:userId', async (req, res) => {
     console.log('🔍 [Backend] Checking payment status for user ID:', userId);
     
     try {
-        if (!userId) {
-            console.log('❌ [Backend] No user ID provided');
+        if (!userId || userId === 'null' || userId === 'undefined') {
+            console.log('❌ [Backend] Invalid user ID provided:', userId);
             return res.status(400).json({ 
                 success: false, 
-                message: 'User ID is required' 
+                message: 'Valid user ID is required' 
             });
         }
 
