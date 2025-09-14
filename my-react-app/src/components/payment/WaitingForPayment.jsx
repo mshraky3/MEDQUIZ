@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Globals from '../../global.js';
 
-// Add CSS animation for spinner
+// Add CSS animation for spinner - faster for quick redirect
 const spinnerStyle = `
 @keyframes spin {
     0% { transform: rotate(0deg); }
@@ -27,14 +27,14 @@ const WaitingForPayment = () => {
                         userId: userId
                     });
                     
-                    // Go to signup
-                                navigate('/signup', { 
-                                    state: { 
-                                        userId: userId,
-                                        paymentConfirmed: true,
-                                        fromKoFi: true
-                                    } 
-                                });
+                    // Quick redirect to signup - no delay
+                    navigate('/signup', { 
+                        state: { 
+                            userId: userId,
+                            paymentConfirmed: true,
+                            fromKoFi: true
+                        } 
+                    });
                 }
             } catch (error) {
                 console.error('Error:', error);
@@ -42,6 +42,7 @@ const WaitingForPayment = () => {
             }
         };
 
+        // Start immediately - no delay
         handleKoFiRedirect();
     }, [navigate]);
 
@@ -62,11 +63,11 @@ const WaitingForPayment = () => {
                         border: '4px solid #f3f3f3',
                         borderTop: '4px solid #667eea',
                         borderRadius: '50%',
-                        animation: 'spin 1s linear infinite',
+                        animation: 'spin 0.5s linear infinite',
                         margin: '0 auto 20px'
                     }}></div>
-                    <h2>Processing Payment...</h2>
-                    <p>Please wait while we set up your account.</p>
+                    <h2>Setting up your account...</h2>
+                    <p>Redirecting to signup...</p>
                 </div>
             </div>
         </>

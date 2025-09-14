@@ -5,7 +5,7 @@ const PayButton = ({ amount = 14, description = "Premium Access" }) => {
 
     const handlePayment = () => {
         // Just redirect to Ko-fi - that's it!
-        const kofiUrl = `https://ko-fi.com/s/70aa809f3e?amount=${amount}`;
+        const kofiUrl = `https://ko-fi.com/s/70aa809f3e`;
         window.location.href = kofiUrl;
     };
 
