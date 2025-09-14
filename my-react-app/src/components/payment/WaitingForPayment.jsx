@@ -20,6 +20,8 @@ const WaitingForPayment = () => {
             
             const userId = localStorage.getItem('pendingUserId');
             console.log('🔍 [WaitingForPayment] User ID from localStorage:', userId);
+            console.log('🔍 [WaitingForPayment] User ID type:', typeof userId);
+            console.log('🔍 [WaitingForPayment] All localStorage keys:', Object.keys(localStorage));
             
             // Check all possible URL parameters that Ko-fi might send
             const urlParams = new URLSearchParams(window.location.search);
@@ -88,6 +90,15 @@ const WaitingForPayment = () => {
                     const currentUserId = localStorage.getItem('pendingUserId');
                     console.log(`🔍 [WaitingForPayment] Polling attempt ${pollCount + 1} for user ID:`, currentUserId);
                     
+                    // Don't poll if we don't have a valid user ID
+                    if (!currentUserId || currentUserId === 'null') {
+                        console.log('❌ [WaitingForPayment] No valid user ID for polling, stopping');
+                        setError('No valid payment session found. Please start the payment process again.');
+                        setStatus('error');
+                        setShowManualConfirm(true);
+                        return;
+                    }
+                    
                     const response = await axios.get(`${Globals.URL}/api/payment/status/${currentUserId}`);
                     console.log('📊 [WaitingForPayment] Payment status response:', response.data);
                     
@@ -141,17 +152,26 @@ const WaitingForPayment = () => {
                 }
             };
 
-            // Poll immediately, then every 6 seconds
-            console.log('🔄 [WaitingForPayment] Starting payment status polling...');
-            pollPaymentStatus();
-            const interval = setInterval(pollPaymentStatus, 6000);
-            console.log('⏰ [WaitingForPayment] Polling interval set to 6 seconds');
+            // Only start polling if we have a valid user ID
+            const finalUserId = localStorage.getItem('pendingUserId');
+            if (finalUserId && finalUserId !== 'null' && finalUserId !== 'undefined') {
+                // Poll immediately, then every 6 seconds
+                console.log('🔄 [WaitingForPayment] Starting payment status polling...');
+                pollPaymentStatus();
+                const interval = setInterval(pollPaymentStatus, 6000);
+                console.log('⏰ [WaitingForPayment] Polling interval set to 6 seconds');
 
-            // Cleanup interval on unmount
-            return () => {
-                console.log('🧹 [WaitingForPayment] Component unmounting, clearing polling interval');
-                clearInterval(interval);
-            };
+                // Cleanup interval on unmount
+                return () => {
+                    console.log('🧹 [WaitingForPayment] Component unmounting, clearing polling interval');
+                    clearInterval(interval);
+                };
+            } else {
+                console.log('❌ [WaitingForPayment] No valid user ID found, cannot start polling');
+                setError('No valid payment session found. Please start the payment process again.');
+                setStatus('error');
+                setShowManualConfirm(true);
+            }
         };
 
         // Call the async function
