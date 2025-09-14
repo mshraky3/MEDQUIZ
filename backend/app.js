@@ -1464,8 +1464,8 @@ app.post('/api/payment/create-user', async (req, res) => {
             // Create a new user with pending payment status
             console.log('📝 [Backend] Inserting new user with pending payment status...');
             const result = await client.query(
-                'INSERT INTO users (payment_status) VALUES ($1) RETURNING id',
-                ['pending']
+                'INSERT INTO accounts (payment_status, isactive, logged) VALUES ($1, $2, $3) RETURNING id',
+                ['pending', false, false]
             );
             
             const userId = result.rows[0].id;
@@ -1505,7 +1505,7 @@ app.get('/api/payment/status/:userId', async (req, res) => {
         try {
             console.log('📊 [Backend] Querying payment status from database...');
             const result = await client.query(
-                'SELECT payment_status, created_at FROM users WHERE id = $1',
+                'SELECT payment_status, created_at FROM accounts WHERE id = $1',
                 [userId]
             );
             
@@ -1583,8 +1583,8 @@ app.post('/api/payment/kofi-webhook', express.raw({ type: 'application/json' }),
             try {
                 // Update user payment status to paid
                 await client.query(
-                    'UPDATE users SET payment_status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
-                    ['paid', userId]
+                    'UPDATE accounts SET payment_status = $1, isactive = $2 WHERE id = $3',
+                    ['paid', true, userId]
                 );
                 
                 console.log(`🎉 [Backend] Payment confirmed and updated for user: ${userId}`);
@@ -1604,6 +1604,62 @@ app.post('/api/payment/kofi-webhook', express.raw({ type: 'application/json' }),
     } catch (error) {
         console.error('❌ [Backend] Error processing Ko-fi webhook:', error);
         res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+// Find user by transaction ID (for Ko-fi redirects)
+app.get('/api/payment/find-by-txid/:txid', async (req, res) => {
+    const { txid } = req.params;
+    console.log('🔍 [Backend] Looking for user by transaction ID:', txid);
+    
+    try {
+        if (!txid) {
+            console.log('❌ [Backend] No transaction ID provided');
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Transaction ID is required' 
+            });
+        }
+
+        const client = await db.connect();
+        try {
+            // Look for recent pending users (within last hour) that might match this transaction
+            console.log('📊 [Backend] Searching for recent pending users...');
+            const result = await client.query(
+                'SELECT id, payment_status, created_at FROM accounts WHERE payment_status = $1 AND created_at > NOW() - INTERVAL \'1 hour\' ORDER BY created_at DESC LIMIT 1',
+                ['pending']
+            );
+            
+            if (result.rows.length === 0) {
+                console.log('❌ [Backend] No recent pending users found');
+                return res.status(404).json({ 
+                    success: false, 
+                    message: 'No recent pending payment found' 
+                });
+            }
+            
+            const user = result.rows[0];
+            console.log('✅ [Backend] Found recent pending user:', {
+                userId: user.id,
+                status: user.payment_status,
+                createdAt: user.created_at
+            });
+            
+            res.status(200).json({ 
+                success: true, 
+                userId: user.id,
+                paymentStatus: user.payment_status,
+                createdAt: user.created_at
+            });
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error('❌ [Backend] Error finding user by transaction ID:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to find user' 
+        });
     }
 });
 
@@ -1627,7 +1683,7 @@ app.post('/api/payment/confirm', async (req, res) => {
             // Check if user exists
             console.log('📊 [Backend] Checking if user exists in database...');
             const userCheck = await client.query(
-                'SELECT payment_status FROM users WHERE id = $1',
+                'SELECT payment_status FROM accounts WHERE id = $1',
                 [userId]
             );
             
@@ -1645,8 +1701,8 @@ app.post('/api/payment/confirm', async (req, res) => {
             // Update payment status to paid
             console.log('💳 [Backend] Updating payment status to paid...');
             await client.query(
-                'UPDATE users SET payment_status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
-                ['paid', userId]
+                'UPDATE accounts SET payment_status = $1, isactive = $2 WHERE id = $3',
+                ['paid', true, userId]
             );
             
             console.log(`✅ [Backend] Manual payment confirmation successful for user: ${userId}`);
@@ -1682,7 +1738,7 @@ app.post('/api/payment/create-account', async (req, res) => {
         try {
             // Check if user exists and payment is confirmed
             const userCheck = await client.query(
-                'SELECT payment_status FROM users WHERE id = $1',
+                'SELECT payment_status FROM accounts WHERE id = $1',
                 [userId]
             );
             
@@ -1702,7 +1758,7 @@ app.post('/api/payment/create-account', async (req, res) => {
 
             // Check if username or email already exists
             const existingUser = await client.query(
-                'SELECT id FROM users WHERE username = $1 OR email = $2',
+                'SELECT id FROM accounts WHERE username = $1 OR email = $2',
                 [username, email]
             );
             
@@ -1718,7 +1774,7 @@ app.post('/api/payment/create-account', async (req, res) => {
 
             // Update user with account details
             await client.query(
-                'UPDATE users SET username = $1, email = $2, password_hash = $3, updated_at = CURRENT_TIMESTAMP WHERE id = $4',
+                'UPDATE accounts SET username = $1, email = $2, password = $3 WHERE id = $4',
                 [username, email, password, userId]
             );
             
