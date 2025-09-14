@@ -19,7 +19,7 @@ const Signup = () => {
 
     useEffect(() => {
         // Check if user came from payment confirmation
-        const { userId, paymentConfirmed } = location.state || {};
+        const { userId, paymentConfirmed, fromKoFi } = location.state || {};
         
         if (!paymentConfirmed || !userId) {
             // If not from payment flow, redirect to payment page
@@ -29,6 +29,13 @@ const Signup = () => {
 
         // Store the paid user ID for account creation
         localStorage.setItem('paidUserId', userId);
+        
+        // Log the source for debugging
+        if (fromKoFi) {
+            console.log('🎉 [Signup] User came from Ko-fi redirect - payment assumed completed');
+        } else {
+            console.log('✅ [Signup] User came from payment confirmation');
+        }
     }, [location.state, navigate]);
 
     const handleInputChange = (e) => {
@@ -130,7 +137,7 @@ const Signup = () => {
         <div className="signup-container">
             <div className="signup-card">
                 <h2>Create Your Account</h2>
-                <p className="signup-subtitle">Complete your account setup after payment confirmation</p>
+                <p className="signup-subtitle">Complete your account setup after payment</p>
                 
                 <form onSubmit={handleSubmit} className="signup-form">
                     <div className="form-group">
