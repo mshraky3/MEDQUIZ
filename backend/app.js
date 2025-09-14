@@ -1452,3 +1452,219 @@ app.post('/accept-terms', async (req, res) => {
         res.status(500).json({ message: 'Failed to update terms acceptance' });
     }
 });
+
+// ===== PAYMENT WORKFLOW ENDPOINTS =====
+
+// Create pending user for payment workflow
+app.post('/api/payment/create-user', async (req, res) => {
+    try {
+        const client = await db.connect();
+        try {
+            // Create a new user with pending payment status
+            const result = await client.query(
+                'INSERT INTO users (payment_status) VALUES ($1) RETURNING id',
+                ['pending']
+            );
+            
+            const userId = result.rows[0].id;
+            res.status(201).json({ 
+                success: true, 
+                userId: userId,
+                message: 'User created successfully' 
+            });
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error('Error creating user:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to create user' 
+        });
+    }
+});
+
+// Check payment status for polling
+app.get('/api/payment/status/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        
+        if (!userId) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'User ID is required' 
+            });
+        }
+
+        const client = await db.connect();
+        try {
+            const result = await client.query(
+                'SELECT payment_status, created_at FROM users WHERE id = $1',
+                [userId]
+            );
+            
+            if (result.rows.length === 0) {
+                return res.status(404).json({ 
+                    success: false, 
+                    message: 'User not found' 
+                });
+            }
+            
+            const user = result.rows[0];
+            res.status(200).json({ 
+                success: true, 
+                paymentStatus: user.payment_status,
+                createdAt: user.created_at
+            });
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error('Error checking payment status:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to check payment status' 
+        });
+    }
+});
+
+// Ko-fi webhook endpoint
+app.post('/api/payment/kofi-webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+    try {
+        const signature = req.headers['x-kofi-signature'];
+        const payload = req.body;
+        
+        // Verify webhook signature
+        if (!verifyKofiSignature(payload, signature)) {
+            console.error('Invalid Ko-fi webhook signature');
+            return res.status(401).json({ message: 'Invalid signature' });
+        }
+        
+        const webhookData = JSON.parse(payload.toString());
+        console.log('Ko-fi webhook received:', webhookData);
+        
+        // Extract user ID from metadata
+        const userId = webhookData.data?.metadata?.user_id;
+        
+        if (!userId) {
+            console.error('No user ID found in webhook metadata');
+            return res.status(400).json({ message: 'No user ID in metadata' });
+        }
+        
+        // Check if payment is successful
+        if (webhookData.type === 'Donation' && webhookData.data?.is_public) {
+            const client = await db.connect();
+            try {
+                // Update user payment status to paid
+                await client.query(
+                    'UPDATE users SET payment_status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+                    ['paid', userId]
+                );
+                
+                console.log(`Payment confirmed for user: ${userId}`);
+                res.status(200).json({ message: 'Payment processed successfully' });
+            } finally {
+                client.release();
+            }
+        } else {
+            console.log('Payment not confirmed or not public:', webhookData);
+            res.status(200).json({ message: 'Webhook received but payment not confirmed' });
+        }
+        
+    } catch (error) {
+        console.error('Error processing Ko-fi webhook:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+// Create account for paid user
+app.post('/api/payment/create-account', async (req, res) => {
+    try {
+        const { userId, username, email, password } = req.body;
+        
+        if (!userId || !username || !email || !password) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'All fields are required' 
+            });
+        }
+
+        const client = await db.connect();
+        try {
+            // Check if user exists and payment is confirmed
+            const userCheck = await client.query(
+                'SELECT payment_status FROM users WHERE id = $1',
+                [userId]
+            );
+            
+            if (userCheck.rows.length === 0) {
+                return res.status(404).json({ 
+                    success: false, 
+                    message: 'User not found' 
+                });
+            }
+            
+            if (userCheck.rows[0].payment_status !== 'paid') {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: 'Payment not confirmed' 
+                });
+            }
+
+            // Check if username or email already exists
+            const existingUser = await client.query(
+                'SELECT id FROM users WHERE username = $1 OR email = $2',
+                [username, email]
+            );
+            
+            if (existingUser.rows.length > 0) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: 'Username or email already exists' 
+                });
+            }
+
+            // Store password as plain text for now (we'll add encryption later)
+            // TODO: Add password hashing/encryption here
+
+            // Update user with account details
+            await client.query(
+                'UPDATE users SET username = $1, email = $2, password_hash = $3, updated_at = CURRENT_TIMESTAMP WHERE id = $4',
+                [username, email, password, userId]
+            );
+            
+            res.status(200).json({ 
+                success: true, 
+                message: 'Account created successfully' 
+            });
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error('Error creating account:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to create account' 
+        });
+    }
+});
+
+// Helper function to verify Ko-fi webhook signature
+function verifyKofiSignature(payload, signature) {
+    if (!signature || !process.env.KOFI_WEBHOOK_SECRET) {
+        console.error('Missing signature or webhook secret');
+        return false;
+    }
+    
+    const expectedSignature = crypto
+        .createHmac('sha256', process.env.KOFI_WEBHOOK_SECRET)
+        .update(payload)
+        .digest('hex');
+    
+    const providedSignature = signature.replace('sha256=', '');
+    
+    return crypto.timingSafeEqual(
+        Buffer.from(expectedSignature, 'hex'),
+        Buffer.from(providedSignature, 'hex')
+    );
+}
