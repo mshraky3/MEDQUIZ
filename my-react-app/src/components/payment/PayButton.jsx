@@ -10,33 +10,53 @@ const PayButton = ({ amount = 14, description = "Premium Access" }) => {
     const navigate = useNavigate();
 
     const handlePayment = async () => {
+        console.log('🚀 [PayButton] Payment initiation started');
         setLoading(true);
         setError('');
 
         try {
             // Step 1: Create pending user in backend
+            console.log('📝 [PayButton] Step 1: Creating pending user in backend...');
             const response = await axios.post(`${Globals.URL}/api/payment/create-user`);
+            console.log('📝 [PayButton] Backend response:', response.data);
             
             if (!response.data.success) {
                 throw new Error(response.data.message || 'Failed to create user');
             }
 
             const userId = response.data.userId;
+            console.log('✅ [PayButton] User created successfully with ID:', userId);
             
             // Step 2: Save user ID to localStorage
             localStorage.setItem('pendingUserId', userId);
+            console.log('💾 [PayButton] User ID saved to localStorage:', userId);
             
             // Step 3: Construct Ko-fi payment URL with user ID in metadata
-            const kofiUrl = `https://ko-fi.com/s/70aa809f3e?amount=${amount}&metadata=${encodeURIComponent(JSON.stringify({ user_id: userId }))}`;
+            const metadata = { user_id: userId };
+            const kofiUrl = `https://ko-fi.com/s/70aa809f3e?amount=${amount}&metadata=${encodeURIComponent(JSON.stringify(metadata))}`;
+            console.log('🔗 [PayButton] Ko-fi URL constructed:', kofiUrl);
+            console.log('📦 [PayButton] Metadata being sent:', metadata);
             
-            // Step 4: Redirect directly to Ko-fi (Ko-fi will redirect back to waiting page)
-            window.location.href = kofiUrl;
+            console.log('🧭 [PayButton] Navigating to waiting page...');
+            navigate('/waiting-for-payment');
+            
+            // Small delay to ensure navigation completes, then redirect to Ko-fi
+            setTimeout(() => {
+                console.log('🌐 [PayButton] Redirecting to Ko-fi payment page...');
+                window.location.href = kofiUrl;
+            }, 100);
             
         } catch (error) {
-            console.error('Payment initiation error:', error);
+            console.error('❌ [PayButton] Payment initiation error:', error);
+            console.error('❌ [PayButton] Error details:', {
+                message: error.message,
+                response: error.response?.data,
+                status: error.response?.status
+            });
             setError(error.response?.data?.message || error.message || 'Failed to initiate payment');
         } finally {
             setLoading(false);
+            console.log('🏁 [PayButton] Payment initiation process completed');
         }
     };
 
