@@ -67,7 +67,7 @@ const Payment = () => {
       <div className="single-plan-container">
         <div className="plan-highlight">
           <div className="popular-badge">
-            {isArabic ? '🔥 عرض محدود 🔥' : '🔥 Limited Time Offer 🔥'}
+            {isArabic ? ' عرض محدود ' : ' Limited Offer '}
           </div>
           
           <div className="plan-pricing">
