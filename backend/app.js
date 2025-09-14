@@ -1457,16 +1457,19 @@ app.post('/accept-terms', async (req, res) => {
 
 // Create pending user for payment workflow
 app.post('/api/payment/create-user', async (req, res) => {
+    console.log('🚀 [Backend] Creating pending user for payment workflow...');
     try {
         const client = await db.connect();
         try {
             // Create a new user with pending payment status
+            console.log('📝 [Backend] Inserting new user with pending payment status...');
             const result = await client.query(
                 'INSERT INTO users (payment_status) VALUES ($1) RETURNING id',
                 ['pending']
             );
             
             const userId = result.rows[0].id;
+            console.log('✅ [Backend] User created successfully with ID:', userId);
             res.status(201).json({ 
                 success: true, 
                 userId: userId,
@@ -1476,7 +1479,7 @@ app.post('/api/payment/create-user', async (req, res) => {
             client.release();
         }
     } catch (error) {
-        console.error('Error creating user:', error);
+        console.error('❌ [Backend] Error creating user:', error);
         res.status(500).json({ 
             success: false, 
             message: 'Failed to create user' 
@@ -1486,10 +1489,12 @@ app.post('/api/payment/create-user', async (req, res) => {
 
 // Check payment status for polling
 app.get('/api/payment/status/:userId', async (req, res) => {
+    const { userId } = req.params;
+    console.log('🔍 [Backend] Checking payment status for user ID:', userId);
+    
     try {
-        const { userId } = req.params;
-        
         if (!userId) {
+            console.log('❌ [Backend] No user ID provided');
             return res.status(400).json({ 
                 success: false, 
                 message: 'User ID is required' 
@@ -1498,12 +1503,14 @@ app.get('/api/payment/status/:userId', async (req, res) => {
 
         const client = await db.connect();
         try {
+            console.log('📊 [Backend] Querying payment status from database...');
             const result = await client.query(
                 'SELECT payment_status, created_at FROM users WHERE id = $1',
                 [userId]
             );
             
             if (result.rows.length === 0) {
+                console.log('❌ [Backend] User not found in database:', userId);
                 return res.status(404).json({ 
                     success: false, 
                     message: 'User not found' 
@@ -1511,6 +1518,12 @@ app.get('/api/payment/status/:userId', async (req, res) => {
             }
             
             const user = result.rows[0];
+            console.log('📋 [Backend] Payment status found:', {
+                userId: userId,
+                paymentStatus: user.payment_status,
+                createdAt: user.created_at
+            });
+            
             res.status(200).json({ 
                 success: true, 
                 paymentStatus: user.payment_status,
@@ -1520,7 +1533,7 @@ app.get('/api/payment/status/:userId', async (req, res) => {
             client.release();
         }
     } catch (error) {
-        console.error('Error checking payment status:', error);
+        console.error('❌ [Backend] Error checking payment status:', error);
         res.status(500).json({ 
             success: false, 
             message: 'Failed to check payment status' 
@@ -1530,29 +1543,42 @@ app.get('/api/payment/status/:userId', async (req, res) => {
 
 // Ko-fi webhook endpoint
 app.post('/api/payment/kofi-webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+    console.log('🎣 [Backend] Ko-fi webhook received!');
     try {
         const signature = req.headers['x-kofi-signature'];
         const payload = req.body;
         
+        console.log('🔐 [Backend] Webhook signature:', signature ? 'Present' : 'Missing');
+        console.log('📦 [Backend] Webhook payload length:', payload.length);
+        
         // Verify webhook signature
         if (!verifyKofiSignature(payload, signature)) {
-            console.error('Invalid Ko-fi webhook signature');
+            console.error('❌ [Backend] Invalid Ko-fi webhook signature');
             return res.status(401).json({ message: 'Invalid signature' });
         }
         
         const webhookData = JSON.parse(payload.toString());
-        console.log('Ko-fi webhook received:', webhookData);
+        console.log('📥 [Backend] Ko-fi webhook data:', JSON.stringify(webhookData, null, 2));
         
         // Extract user ID from metadata
         const userId = webhookData.data?.metadata?.user_id;
+        console.log('🔍 [Backend] Extracted user ID from metadata:', userId);
         
         if (!userId) {
-            console.error('No user ID found in webhook metadata');
+            console.error('❌ [Backend] No user ID found in webhook metadata');
+            console.log('📋 [Backend] Available metadata:', webhookData.data?.metadata);
             return res.status(400).json({ message: 'No user ID in metadata' });
         }
         
         // Check if payment is successful
+        console.log('💰 [Backend] Checking payment details:', {
+            type: webhookData.type,
+            is_public: webhookData.data?.is_public,
+            amount: webhookData.data?.amount
+        });
+        
         if (webhookData.type === 'Donation' && webhookData.data?.is_public) {
+            console.log('✅ [Backend] Payment confirmed! Updating user status...');
             const client = await db.connect();
             try {
                 // Update user payment status to paid
@@ -1561,19 +1587,82 @@ app.post('/api/payment/kofi-webhook', express.raw({ type: 'application/json' }),
                     ['paid', userId]
                 );
                 
-                console.log(`Payment confirmed for user: ${userId}`);
+                console.log(`🎉 [Backend] Payment confirmed and updated for user: ${userId}`);
                 res.status(200).json({ message: 'Payment processed successfully' });
             } finally {
                 client.release();
             }
         } else {
-            console.log('Payment not confirmed or not public:', webhookData);
+            console.log('⚠️ [Backend] Payment not confirmed or not public:', {
+                type: webhookData.type,
+                is_public: webhookData.data?.is_public,
+                reason: webhookData.type !== 'Donation' ? 'Not a donation' : 'Not public'
+            });
             res.status(200).json({ message: 'Webhook received but payment not confirmed' });
         }
         
     } catch (error) {
-        console.error('Error processing Ko-fi webhook:', error);
+        console.error('❌ [Backend] Error processing Ko-fi webhook:', error);
         res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+// Manual payment confirmation endpoint (for when webhook fails)
+app.post('/api/payment/confirm', async (req, res) => {
+    console.log('🔧 [Backend] Manual payment confirmation request received');
+    try {
+        const { userId } = req.body;
+        console.log('🔍 [Backend] User ID for manual confirmation:', userId);
+        
+        if (!userId) {
+            console.log('❌ [Backend] No user ID provided for manual confirmation');
+            return res.status(400).json({ 
+                success: false, 
+                message: 'User ID is required' 
+            });
+        }
+
+        const client = await db.connect();
+        try {
+            // Check if user exists
+            console.log('📊 [Backend] Checking if user exists in database...');
+            const userCheck = await client.query(
+                'SELECT payment_status FROM users WHERE id = $1',
+                [userId]
+            );
+            
+            if (userCheck.rows.length === 0) {
+                console.log('❌ [Backend] User not found for manual confirmation:', userId);
+                return res.status(404).json({ 
+                    success: false, 
+                    message: 'User not found' 
+                });
+            }
+            
+            const currentStatus = userCheck.rows[0].payment_status;
+            console.log('📋 [Backend] Current payment status:', currentStatus);
+            
+            // Update payment status to paid
+            console.log('💳 [Backend] Updating payment status to paid...');
+            await client.query(
+                'UPDATE users SET payment_status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+                ['paid', userId]
+            );
+            
+            console.log(`✅ [Backend] Manual payment confirmation successful for user: ${userId}`);
+            res.status(200).json({ 
+                success: true, 
+                message: 'Payment confirmed successfully' 
+            });
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error('❌ [Backend] Error during manual payment confirmation:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to confirm payment' 
+        });
     }
 });
 
