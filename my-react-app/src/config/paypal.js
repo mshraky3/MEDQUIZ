@@ -19,7 +19,7 @@ export const PAYPAL_CONFIG = {
     INTEGRATION_SOURCE: "integrationbuilder_ac",
     
     // Fixed USD pricing - no conversion needed
-    USD_PRICE: 15, // $15 USD for premium access
+    USD_PRICE: 1, // $1 USD for premium access
     
     // Environment - LIVE for production
     ENVIRONMENT: "live"
