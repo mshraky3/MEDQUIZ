@@ -18,7 +18,7 @@ const Signup = () => {
 
     useEffect(() => {
         // Check if user came from payment confirmation
-        const { userId, paymentConfirmed, fromKoFi } = location.state || {};
+        const { userId, paymentConfirmed, fromKoFi, isTest } = location.state || {};
         
         if (!paymentConfirmed || !userId) {
             // If not from payment flow, redirect to payment page
@@ -32,6 +32,8 @@ const Signup = () => {
         // Log the source for debugging
         if (fromKoFi) {
             console.log('🎉 [Signup] User came from Ko-fi redirect - payment assumed completed');
+        } else if (isTest) {
+            console.log('🧪 [Signup] User came from payment test - test mode');
         } else {
             console.log('✅ [Signup] User came from payment confirmation');
         }

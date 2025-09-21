@@ -92,7 +92,8 @@
     max-width: 300px;
 }
 
-/* Responsive design */
+/* Direct PayPal Link Button Styling */
+
 @media (max-width: 768px) {
     .pay-button {
         padding: 14px 24px;

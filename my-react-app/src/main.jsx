@@ -16,6 +16,8 @@ import TempQUIZ from './components/login/TempQUIZ.jsx';
 import Payment from './components/payment/Payment.jsx';
 import PayButton from './components/payment/PayButton.jsx';
 import WaitingForPayment from './components/payment/WaitingForPayment.jsx';
+import PaymentTest from './components/payment/PaymentTest.jsx';
+import PaymentFlowTest from './components/payment/PaymentFlowTest.jsx';
 import Signup from './components/signup/Signup.jsx';
 import ErrorBoundary from './components/common/ErrorBoundary.jsx';
 
@@ -89,6 +91,16 @@ const router = createBrowserRouter([
   {
     path: "/waiting-for-payment",
     element: <WaitingForPayment />,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/payment-test",
+    element: <PaymentTest />,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/payment-flow-test",
+    element: <PaymentFlowTest />,
     errorElement: <ErrorBoundary />,
   },
   {

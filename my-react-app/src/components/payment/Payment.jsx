@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useLang from '../../hooks/useLang';
-import PayButton from './PayButton';
+import CreditCardForm from './CreditCardForm';
 import './payment.css';
 
 const Payment = () => {
@@ -15,8 +15,8 @@ const Payment = () => {
     {
       id: 'special',
       name: isArabic ? 'اشتراك سنوي - خطة خاصة' : 'ANNUAL Subscription - Special Offer',
-      price: isArabic ? '٥٠ ريال' : '50 SAR',
-      originalPrice: isArabic ? '٢٥٠ ريال' : '250 SAR',
+      price: isArabic ? '١٥ دولار' : '$15 USD',
+      originalPrice: isArabic ? '٧٥ دولار' : '$75 USD',
       period: isArabic ? 'لمدة سنة كاملة' : 'FOR 1 FULL YEAR',
       features: [
         isArabic ? 'الوصول إلى جميع الأسئلة' : 'Access to all questions',
@@ -103,9 +103,29 @@ const Payment = () => {
           </div>
 
           <div className="payment-actions">
-            <PayButton 
-              amount={50} 
+            <CreditCardForm 
+              amount={15} 
               description={isArabic ? 'اشتراك سنوي - سنة كاملة' : 'Full Year'}
+              onSuccess={(details) => {
+                console.log('Payment successful:', details);
+                // Generate a unique user ID for the paid user
+                const userId = `paid_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                
+                // Redirect to signup page with payment confirmation
+                navigate('/signup', { 
+                  state: { 
+                    paymentConfirmed: true,
+                    userId: userId,
+                    paymentDetails: details,
+                    amount: 15,
+                    currency: 'USD'
+                  } 
+                });
+              }}
+              onError={(error) => {
+                console.error('Payment error:', error);
+                // Handle error (show message, etc.)
+              }}
             />
             
             <button onClick={handleContactUs} className="contact-button">

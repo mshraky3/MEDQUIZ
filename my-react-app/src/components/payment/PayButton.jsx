@@ -4,9 +4,9 @@ import './PayButton.css';
 const PayButton = ({ amount = 14, description = "Premium Access" }) => {
 
     const handlePayment = () => {
-        // Just redirect to Ko-fi - that's it!
-        const kofiUrl = `https://ko-fi.com/s/70aa809f3e`;
-        window.location.href = kofiUrl;
+        // Direct PayPal link - this may allow guest checkout
+        const paypalUrl = `https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=VDRXK89HZQKXS`;
+        window.open(paypalUrl, '_blank');
     };
 
     return (
@@ -26,3 +26,5 @@ const PayButton = ({ amount = 14, description = "Premium Access" }) => {
 };
 
 export default PayButton;
+
+
