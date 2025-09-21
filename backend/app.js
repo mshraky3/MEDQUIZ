@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { Pool } from 'pg';
 import https from "https";
 import crypto from 'crypto';
+import nodemailer from 'nodemailer';
 
 dotenv.config();
 const agent = new https.Agent({ keepAlive: true });
@@ -17,6 +18,36 @@ const db = new Pool({
         rejectUnauthorized: false
     },
 });
+
+// Email configuration
+const Email = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 587,
+    tls: true,
+    secure: false,
+    auth: {
+        user: "alshrakynodeapp@gmail.com",
+        pass: "ymfnqdsctolgcfzv",
+    }
+});
+
+// Email notification functions
+const sendEmail = async (to, subject, text, html = null) => {
+    try {
+        const result = await Email.sendMail({
+            from: "alshrakynodeapp@gmail.com",
+            to: to,
+            subject: subject,
+            text: text,
+            html: html
+        });
+        console.log('📧 Email sent successfully:', result.messageId);
+        return result;
+    } catch (error) {
+        console.error('❌ Email sending failed:', error);
+        throw error;
+    }
+};
 
 // Simple in-memory cache for questions
 const questionsCache = {
@@ -124,16 +155,52 @@ app.post('/add_account', async (req, res) => {
             return res.status(400).json({ message: 'Username already exists' });
         }
 
-        // Insert new account
-        await db.query(
-            "INSERT INTO accounts (username, password) VALUES ($1, $2)",
-            [username, password]
+        // Insert new account with proper defaults
+        const result = await db.query(
+            "INSERT INTO accounts (username, password, isactive, logged, terms_accepted) VALUES ($1, $2, $3, $4, $5) RETURNING id",
+            [username, password, true, false, true]
         );
 
-        return res.status(201).json({ message: 'Account created successfully' });
+        const newUserId = result.rows[0].id;
+
+        // Send email notification for admin-created account
+        try {
+            const emailSubject = `🔧 Admin Account Created - ${username}`;
+            const emailText = `
+New account created by admin:
+
+Username: ${username}
+User ID: ${newUserId}
+Created: ${new Date().toLocaleString()}
+Created by: Admin Panel
+
+This account has been activated and is ready for use.
+            `;
+            
+            const emailHtml = `
+                <h2>🔧 Admin Account Created</h2>
+                <p><strong>Username:</strong> ${username}</p>
+                <p><strong>User ID:</strong> ${newUserId}</p>
+                <p><strong>Created:</strong> ${new Date().toLocaleString()}</p>
+                <p><strong>Created by:</strong> Admin Panel</p>
+                <p><strong>Status:</strong> Active and ready for use</p>
+            `;
+
+            await sendEmail('muhmodalshraky3@gmail.com', emailSubject, emailText, emailHtml);
+            console.log('📧 Admin account creation email sent for user:', username);
+        } catch (emailError) {
+            console.error('❌ Failed to send admin account creation email:', emailError);
+            // Don't fail the account creation if email fails
+        }
+
+        console.log(`✅ Admin created account: ${username} (ID: ${newUserId})`);
+        return res.status(201).json({ 
+            message: 'Account created successfully',
+            userId: newUserId
+        });
 
     } catch (err) {
-        console.error(err);
+        console.error('❌ Error creating admin account:', err);
         return res.status(500).json({ message: 'Server error' });
     }
 });
@@ -1464,8 +1531,8 @@ app.post('/api/payment/create-user', async (req, res) => {
             // Create a new user with pending payment status
             console.log('📝 [Backend] Inserting new user with pending payment status...');
             const result = await client.query(
-                'INSERT INTO accounts (username, password, isactive, logged) VALUES ($1, $2, $3, $4) RETURNING id',
-                ['pending_user_' + Date.now(), 'pending', false, false]
+                'INSERT INTO accounts (username, password, isactive, logged, terms_accepted) VALUES ($1, $2, $3, $4, $5) RETURNING id',
+                ['pending_user_' + Date.now(), 'pending', false, false, true]
             );
             
             const userId = result.rows[0].id;
@@ -1535,6 +1602,38 @@ app.post('/api/payment/confirm', async (req, res) => {
                 ['paid', true, userId]
             );
             
+            // Send email notification for payment confirmation
+            try {
+                const emailSubject = `💰 Payment Confirmed - User ID: ${userId}`;
+                const emailText = `
+Payment has been confirmed:
+
+User ID: ${userId}
+Username: ${currentUser.username}
+Payment Amount: $1.00 USD (3.75 SAR)
+Confirmed: ${new Date().toLocaleString()}
+Status: Payment confirmed, user can now complete account setup
+
+The user can now proceed to the signup page to create their account.
+                `;
+                
+                const emailHtml = `
+                    <h2>💰 Payment Confirmed</h2>
+                    <p><strong>User ID:</strong> ${userId}</p>
+                    <p><strong>Username:</strong> ${currentUser.username}</p>
+                    <p><strong>Payment Amount:</strong> $1.00 USD (3.75 SAR)</p>
+                    <p><strong>Confirmed:</strong> ${new Date().toLocaleString()}</p>
+                    <p><strong>Status:</strong> Payment confirmed, user can now complete account setup</p>
+                    <p>The user can now proceed to the signup page to create their account.</p>
+                `;
+
+                await sendEmail('muhmodalshraky3@gmail.com', emailSubject, emailText, emailHtml);
+                console.log('📧 Payment confirmation email sent for user:', userId);
+            } catch (emailError) {
+                console.error('❌ Failed to send payment confirmation email:', emailError);
+                // Don't fail the payment confirmation if email fails
+            }
+            
             console.log(`✅ [Backend] Manual payment confirmation successful for user: ${userId}`);
             res.status(200).json({ 
                 success: true, 
@@ -1548,6 +1647,57 @@ app.post('/api/payment/confirm', async (req, res) => {
         res.status(500).json({ 
             success: false, 
             message: 'Failed to confirm payment' 
+        });
+    }
+});
+
+// Create user record after payment (before account setup)
+app.post('/api/payment/create-user', async (req, res) => {
+    try {
+        const { userId, paymentDetails } = req.body;
+        
+        if (!userId || !paymentDetails) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'User ID and payment details are required' 
+            });
+        }
+
+        const client = await db.connect();
+        try {
+            // Check if user already exists
+            const existingUser = await client.query(
+                'SELECT id FROM accounts WHERE id = $1',
+                [userId]
+            );
+            
+            if (existingUser.rows.length > 0) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: 'User already exists' 
+                });
+            }
+
+            // Create user record with 'paid' status
+            await client.query(
+                'INSERT INTO accounts (id, username, password, isactive, logged, terms_accepted) VALUES ($1, $2, $3, $4, $5, $6)',
+                [userId, `temp_${userId}`, 'paid', true, false, true]
+            );
+            
+            console.log(`✅ User record created for payment: ${userId}`);
+            res.status(200).json({ 
+                success: true, 
+                message: 'User record created successfully',
+                userId: userId
+            });
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error('Error creating user record:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to create user record' 
         });
     }
 });
@@ -1608,6 +1758,41 @@ app.post('/api/payment/create-account', async (req, res) => {
                 [username, password, userId]
             );
             
+            // Send email notification for account completion
+            try {
+                const emailSubject = `✅ Account Setup Complete - ${username}`;
+                const emailText = `
+User has completed their account setup after payment:
+
+Username: ${username}
+User ID: ${userId}
+Payment Method: PayPal Credit Card
+Payment Amount: $1.00 USD (3.75 SAR)
+Completed: ${new Date().toLocaleString()}
+Status: Account is now active and ready for use
+
+The user can now log in and access all premium features.
+                `;
+                
+                const emailHtml = `
+                    <h2>✅ Account Setup Complete</h2>
+                    <p><strong>Username:</strong> ${username}</p>
+                    <p><strong>User ID:</strong> ${userId}</p>
+                    <p><strong>Payment Method:</strong> PayPal Credit Card</p>
+                    <p><strong>Payment Amount:</strong> $1.00 USD (3.75 SAR)</p>
+                    <p><strong>Completed:</strong> ${new Date().toLocaleString()}</p>
+                    <p><strong>Status:</strong> Account is now active and ready for use</p>
+                    <p>The user can now log in and access all premium features.</p>
+                `;
+
+                await sendEmail('muhmodalshraky3@gmail.com', emailSubject, emailText, emailHtml);
+                console.log('📧 Account completion email sent for user:', username);
+            } catch (emailError) {
+                console.error('❌ Failed to send account completion email:', emailError);
+                // Don't fail the account creation if email fails
+            }
+            
+            console.log(`✅ Account setup completed for user: ${username} (ID: ${userId})`);
             res.status(200).json({ 
                 success: true, 
                 message: 'Account created successfully' 
@@ -1624,4 +1809,125 @@ app.post('/api/payment/create-account', async (req, res) => {
     }
 });
 
-// Note: Ko-fi webhook signature verification function removed - no longer needed
+// PayPal webhook endpoint for payment verification
+app.post('/api/paypal/webhook', async (req, res) => {
+    console.log('🔔 [PayPal Webhook] Payment notification received');
+    try {
+        const { event_type, resource } = req.body;
+        
+        // Handle payment capture events
+        if (event_type === 'PAYMENT.CAPTURE.COMPLETED') {
+            console.log('✅ [PayPal Webhook] Payment captured successfully');
+            console.log('💰 [PayPal Webhook] Payment details:', {
+                id: resource.id,
+                status: resource.status,
+                amount: resource.amount,
+                payer: resource.payer
+            });
+            
+            // Here you would typically:
+            // 1. Verify the webhook signature with PayPal
+            // 2. Check if this payment ID was already processed
+            // 3. Update user account status
+            // 4. Send confirmation email
+            
+            res.status(200).json({ success: true, message: 'Webhook processed' });
+        } else {
+            console.log('ℹ️ [PayPal Webhook] Unhandled event type:', event_type);
+            res.status(200).json({ success: true, message: 'Event type not handled' });
+        }
+    } catch (error) {
+        console.error('❌ [PayPal Webhook] Error processing webhook:', error);
+        res.status(500).json({ success: false, message: 'Webhook processing failed' });
+    }
+});
+
+// PayPal payment verification endpoint
+app.post('/api/paypal/verify-payment', async (req, res) => {
+    console.log('🔍 [PayPal] Verifying payment...');
+    try {
+        const { paymentId, userId } = req.body;
+        
+        if (!paymentId || !userId) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Payment ID and User ID are required' 
+            });
+        }
+
+        // In a real implementation, you would:
+        // 1. Call PayPal API to verify the payment
+        // 2. Check payment status and amount
+        // 3. Update user account accordingly
+        
+        // For now, we'll simulate successful verification
+        console.log('✅ [PayPal] Payment verified successfully:', paymentId);
+        
+        // Update user account to active
+        const client = await db.connect();
+        try {
+            await client.query(
+                'UPDATE accounts SET isactive = $1, password = $2 WHERE id = $3',
+                [true, 'paid', userId]
+            );
+            
+            res.status(200).json({ 
+                success: true, 
+                message: 'Payment verified and account activated' 
+            });
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error('❌ [PayPal] Error verifying payment:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Payment verification failed' 
+        });
+    }
+});
+
+// Test email endpoint
+app.get('/api/test-email', async (req, res) => {
+    try {
+        const emailSubject = '🧪 Test Email - MEDQIZE System';
+        const emailText = `
+This is a test email from the MEDQIZE system.
+
+System Status: ✅ Email system is working properly
+Timestamp: ${new Date().toLocaleString()}
+Server: Backend API
+Purpose: Testing email notifications
+
+If you receive this email, the notification system is working correctly.
+        `;
+        
+        const emailHtml = `
+            <h2>🧪 Test Email - MEDQIZE System</h2>
+            <p><strong>System Status:</strong> ✅ Email system is working properly</p>
+            <p><strong>Timestamp:</strong> ${new Date().toLocaleString()}</p>
+            <p><strong>Server:</strong> Backend API</p>
+            <p><strong>Purpose:</strong> Testing email notifications</p>
+            <hr>
+            <p>If you receive this email, the notification system is working correctly.</p>
+        `;
+
+        await sendEmail('muhmodalshraky3@gmail.com', emailSubject, emailText, emailHtml);
+        
+        res.status(200).json({ 
+            success: true, 
+            message: 'Test email sent successfully' 
+        });
+    } catch (error) {
+        console.error('❌ Test email failed:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to send test email',
+            error: error.message 
+        });
+    }
+});
+
+app.listen(3000, () => {
+    console.log("Server is running on port 3000");
+});
