@@ -35,7 +35,10 @@ export const getPayPalOptions = () => ({
     "disable-funding": "credit,sepa,sofort,giropay,ideal,bancontact,eps,mybank,p24",
     "data-sdk-integration-source": "integrationbuilder_ac",
     "vault": false,
-    "commit": true
+    "commit": true,
+    // Fix Arabic locale issue by using English locale
+    "locale": "en_US",
+    "buyer-country": "SA"
 });
 
 // Get USD price directly

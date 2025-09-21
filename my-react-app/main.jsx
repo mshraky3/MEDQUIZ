@@ -12,6 +12,8 @@ import Admin from './components/ADD/Admin.jsx';
 import Bank from './components/ADD/Bank.jsx';
 import TempQUIZ from './components/login/TempQUIZ.jsx';
 import AnalysisTemp from './components/login/AnalysisTemp.jsx';
+import Payment from './components/payment/Payment.jsx';
+import Signup from './components/signup/Signup.jsx';
 import Globals from "./global.js"
 
 
@@ -57,6 +59,14 @@ const router = createBrowserRouter([
   {
     path: "/analysis-temp",
     element: <AnalysisTemp/>,
+  },
+  {
+    path: "/payment",
+    element: <Payment />,
+  },
+  {
+    path: "/signup",
+    element: <Signup />,
   }
 
 ]);

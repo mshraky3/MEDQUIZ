@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useLang from '../../hooks/useLang';
 import CreditCardForm from './CreditCardForm';
+import Globals from '../../global.js';
 import './payment.css';
 
 const Payment = () => {
@@ -106,21 +107,56 @@ const Payment = () => {
             <CreditCardForm 
               amount={1} 
               description={isArabic ? 'اشتراك سنوي - سنة كاملة' : 'Full Year'}
-              onSuccess={(details) => {
+              onSuccess={async (details) => {
                 console.log('Payment successful:', details);
                 // Generate a unique user ID for the paid user
                 const userId = `paid_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
                 
-                // Redirect to signup page with payment confirmation
-                navigate('/signup', { 
-                  state: { 
-                    paymentConfirmed: true,
-                    userId: userId,
-                    paymentDetails: details,
-                    amount: 1,
-                    currency: 'USD'
-                  } 
-                });
+                try {
+                  // Create user record in database with 'paid' status
+                  const response = await fetch(`${Globals.URL}/api/payment/create-user`, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      userId: userId,
+                      paymentDetails: details
+                    })
+                  });
+
+                  if (response.ok) {
+                    // Store userId in localStorage for signup page
+                    localStorage.setItem('paidUserId', userId);
+                    
+                    // Redirect to signup page with payment confirmation
+                    navigate('/signup', { 
+                      state: { 
+                        paymentConfirmed: true,
+                        userId: userId,
+                        paymentDetails: details,
+                        amount: 1,
+                        currency: 'USD'
+                      } 
+                    });
+                  } else {
+                    throw new Error('Failed to create user record');
+                  }
+                } catch (error) {
+                  console.error('Error creating user record:', error);
+                  // Still redirect to signup but show error
+                  localStorage.setItem('paidUserId', userId);
+                  navigate('/signup', { 
+                    state: { 
+                      paymentConfirmed: true,
+                      userId: userId,
+                      paymentDetails: details,
+                      amount: 1,
+                      currency: 'USD',
+                      error: 'Payment successful but account setup failed. Please contact support.'
+                    } 
+                  });
+                }
               }}
               onError={(error) => {
                 console.error('Payment error:', error);
