@@ -17,6 +17,11 @@ const db = new Pool({
     ssl: {
         rejectUnauthorized: false
     },
+    // Connection pooling optimizations
+    max: 20, // Maximum number of clients in the pool
+    idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
+    connectionTimeoutMillis: 2000, // Return an error after 2 seconds if connection could not be established
+    maxUses: 7500, // Close (and replace) a connection after it has been used 7500 times
 });
 
 // Email configuration
@@ -156,9 +161,12 @@ app.post('/add_account', async (req, res) => {
         }
 
         // Insert new account with proper defaults
+        // isactive: true (admin creates active accounts)
+        // logged: false (not logged in yet)
+        // terms_accepted: false (must accept terms on first login)
         const result = await db.query(
             "INSERT INTO accounts (username, password, isactive, logged, terms_accepted) VALUES ($1, $2, $3, $4, $5) RETURNING id",
-            [username, password, true, false, true]
+            [username, password, true, false, false]
         );
 
         const newUserId = result.rows[0].id;
@@ -207,12 +215,48 @@ This account has been activated and is ready for use.
 
 app.get('/get_all_users', async (req, res) => {
     try {
-        const result = await db.query(
-            "SELECT id, username, password, logged, logged_date, isactive FROM accounts"
+        // First, ensure accounts table has all necessary columns
+        try {
+            // Add missing columns if they don't exist
+            await db.query(`
+                ALTER TABLE accounts 
+                ADD COLUMN IF NOT EXISTS email VARCHAR(255),
+                ADD COLUMN IF NOT EXISTS payment_status VARCHAR(50) DEFAULT 'pending',
+                ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            `);
+            console.log('✅ Ensured all necessary columns exist in accounts table');
+        } catch (alterErr) {
+            console.log('Note: Some columns might already exist:', alterErr.message);
+        }
+        
+        // Check what columns actually exist in the accounts table
+        const columnCheck = await db.query(`
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = 'accounts' AND table_schema = 'public'
+            ORDER BY ordinal_position
+        `);
+        
+        const existingColumns = columnCheck.rows.map(row => row.column_name);
+        console.log('Available columns in accounts table:', existingColumns);
+        
+        // Build the SELECT query with only necessary columns for admin interface
+        const availableColumns = existingColumns.filter(col => 
+            ['id', 'username', 'password', 'logged_date', 'isactive', 'terms_accepted', 'email', 'payment_status', 'created_at'].includes(col)
         );
+        
+        if (availableColumns.length === 0) {
+            return res.status(500).json({ message: "No valid columns found in accounts table" });
+        }
+        
+        const selectQuery = `SELECT ${availableColumns.join(', ')} FROM accounts`;
+        console.log('Executing query:', selectQuery);
+        
+        const result = await db.query(selectQuery);
         res.json({ users: result.rows });
     } catch (err) {
-        console.error(err);
+        console.error('Error fetching users:', err);
         res.status(500).json({ message: "Server error while fetching users" });
     }
 });
@@ -552,11 +596,11 @@ app.get('/question-attempts/session/:sessionId', requireSession, async (req, res
 
 app.get('/api/all-questions', async (req, res) => {
     try {
-        // Check cache first
+        // Check cache first (disabled for now to ensure fresh data)
         const now = Date.now();
-        if (questionsCache.data && questionsCache.timestamp && (now - questionsCache.timestamp) < questionsCache.ttl) {
-            return res.json({ questions: questionsCache.data });
-        }
+        // if (questionsCache.data && questionsCache.timestamp && (now - questionsCache.timestamp) < questionsCache.ttl) {
+        //     return res.json({ questions: questionsCache.data });
+        // }
 
         // Ensure source column exists in questions table
         try {
@@ -572,8 +616,8 @@ app.get('/api/all-questions', async (req, res) => {
             // Column might already exist, ignore error
         }
 
-        // Only fetch necessary fields for analysis page
-        const result = await db.query("SELECT id, question_text, correct_option, source FROM questions");
+        // Fetch all necessary fields for question library
+        const result = await db.query("SELECT id, question_text, option1, option2, option3, option4, question_type, correct_option, source FROM questions");
         
         // Update cache
         questionsCache.data = result.rows;
@@ -661,6 +705,7 @@ app.get('/api/questions', async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const typesParam = req.query.types; // e.g., 'mix' or 'medicine,surgery'
     const sourceParam = req.query.source; // e.g., 'general', 'Midgard', 'GameBoy'
+    const userId = req.query.userId; // User ID to filter completed questions
     let query = 'SELECT * FROM questions';
     let values = [];
     let conditions = [];
@@ -681,6 +726,17 @@ app.get('/api/questions', async (req, res) => {
         values.push(sourceParam);
     }
 
+    // Handle user progress filtering - exclude completed questions
+    if (userId) {
+        const paramIndex = values.length + 1;
+        conditions.push(`id NOT IN (
+            SELECT DISTINCT question_id 
+            FROM user_question_progress 
+            WHERE user_id = $${paramIndex}
+        )`);
+        values.push(userId);
+    }
+
     if (conditions.length > 0) {
         query += ' WHERE ' + conditions.join(' AND ');
     }
@@ -688,10 +744,19 @@ app.get('/api/questions', async (req, res) => {
     query += ' ORDER BY RANDOM() LIMIT $' + (values.length + 1);
 
     try {
+        // Log query for debugging
+        console.log('Executing questions query:', query);
+        console.log('Query params:', [...values, limit]);
+        
+        const startTime = Date.now();
         const result = await db.query(query, [...values, limit]);
+        const endTime = Date.now();
+        
+        console.log(`Questions query executed in ${endTime - startTime}ms, returned ${result.rows.length} questions`);
+        
         res.json({ questions: result.rows });
     } catch (err) {
-        console.error(err);
+        console.error('Error fetching questions:', err);
         res.status(500).json({ message: 'Server error' });
     }
 });
@@ -968,6 +1033,23 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
             ]
         );
 
+        // Record question progress for each answered question
+        if (question_ids && question_ids.length > 0) {
+            const questionDetails = await db.query(`
+                SELECT id, question_type, source 
+                FROM questions 
+                WHERE id = ANY($1)
+            `, [question_ids]);
+
+            for (const question of questionDetails.rows) {
+                await db.query(`
+                    INSERT INTO user_question_progress (user_id, question_id, question_type, source)
+                    VALUES ($1, $2, $3, $4)
+                    ON CONFLICT (user_id, question_id) DO NOTHING
+                `, [user_id, question.id, question.question_type, question.source || 'general']);
+            }
+        }
+
         res.status(201).json({ id: result.rows[0].id });
     } catch (err) {
         console.error("Failed to record quiz session", err.message, err.stack);
@@ -1067,6 +1149,138 @@ app.get('/questions', async (req, res) => {
     } catch (err) {
         console.error("Error fetching questions:", err);
         res.status(500).json({ message: "Server error" });
+    }
+});
+
+// Check if user has completed all questions in a cardinality (type + source combination)
+app.get('/api/check-completion/:userId', requireSession, async (req, res) => {
+    const { userId } = req.params;
+    const { type, source } = req.query;
+    
+    try {
+        // Get total questions for this cardinality
+        const totalQuery = await db.query(`
+            SELECT COUNT(*) as total
+            FROM questions 
+            WHERE question_type = $1 AND source = $2
+        `, [type, source]);
+        
+        // Get completed questions for this cardinality
+        const completedQuery = await db.query(`
+            SELECT COUNT(*) as completed
+            FROM user_question_progress 
+            WHERE user_id = $1 AND question_type = $2 AND source = $3
+        `, [userId, type, source]);
+        
+        const total = parseInt(totalQuery.rows[0].total);
+        const completed = parseInt(completedQuery.rows[0].completed);
+        const isCompleted = total > 0 && completed >= total;
+        
+        res.json({
+            total,
+            completed,
+            isCompleted,
+            percentage: total > 0 ? Math.round((completed / total) * 100) : 0
+        });
+    } catch (err) {
+        console.error('Error checking completion:', err);
+        res.status(500).json({ message: 'Failed to check completion' });
+    }
+});
+
+// Award achievement when user completes a cardinality
+app.post('/api/award-achievement', requireSession, async (req, res) => {
+    const { userId, achievementType, achievementKey, achievementName, achievementDescription } = req.body;
+    
+    try {
+        const result = await db.query(`
+            INSERT INTO user_achievements (user_id, achievement_type, achievement_key, achievement_name, achievement_description)
+            VALUES ($1, $2, $3, $4, $5)
+            ON CONFLICT (user_id, achievement_type, achievement_key) DO NOTHING
+            RETURNING *
+        `, [userId, achievementType, achievementKey, achievementName, achievementDescription]);
+        
+        res.json({ success: true, achievement: result.rows[0] });
+    } catch (err) {
+        console.error('Error awarding achievement:', err);
+        res.status(500).json({ message: 'Failed to award achievement' });
+    }
+});
+
+// Get user achievements
+app.get('/api/user-achievements/:userId', requireSession, async (req, res) => {
+    const { userId } = req.params;
+    
+    try {
+        const result = await db.query(`
+            SELECT * FROM user_achievements 
+            WHERE user_id = $1 
+            ORDER BY earned_at DESC
+        `, [userId]);
+        
+        res.json({ achievements: result.rows });
+    } catch (err) {
+        console.error('Error fetching achievements:', err);
+        res.status(500).json({ message: 'Failed to fetch achievements' });
+    }
+});
+
+// Reset user progress for a specific cardinality
+app.post('/api/reset-progress', requireSession, async (req, res) => {
+    const { userId, type, source } = req.body;
+    
+    try {
+        await db.query(`
+            DELETE FROM user_question_progress 
+            WHERE user_id = $1 AND question_type = $2 AND source = $3
+        `, [userId, type, source]);
+        
+        res.json({ success: true, message: 'Progress reset successfully' });
+    } catch (err) {
+        console.error('Error resetting progress:', err);
+        res.status(500).json({ message: 'Failed to reset progress' });
+    }
+});
+
+// Create user progress tracking tables
+app.post('/init-progress-tables', async (req, res) => {
+    try {
+        // Create user_question_progress table to track completed questions by cardinality
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS user_question_progress (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+                question_id INTEGER NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+                question_type VARCHAR(50),
+                source VARCHAR(50),
+                completed_at TIMESTAMP DEFAULT NOW(),
+                UNIQUE(user_id, question_id)
+            )
+        `);
+
+        // Create user_achievements table to track completed cardinalities
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS user_achievements (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+                achievement_type VARCHAR(50) NOT NULL,
+                achievement_key VARCHAR(100) NOT NULL,
+                achievement_name VARCHAR(200) NOT NULL,
+                achievement_description TEXT,
+                earned_at TIMESTAMP DEFAULT NOW(),
+                UNIQUE(user_id, achievement_type, achievement_key)
+            )
+        `);
+
+        // Create indexes for better performance
+        await db.query(`CREATE INDEX IF NOT EXISTS idx_user_question_progress_user_id ON user_question_progress(user_id)`);
+        await db.query(`CREATE INDEX IF NOT EXISTS idx_user_question_progress_cardinality ON user_question_progress(user_id, question_type, source)`);
+        await db.query(`CREATE INDEX IF NOT EXISTS idx_user_achievements_user_id ON user_achievements(user_id)`);
+
+        res.json({ message: 'Progress tracking tables initialized successfully' });
+    } catch (err) {
+        console.error('Error initializing progress tables:', err);
+        res.status(500).json({ message: 'Failed to initialize progress tables' });
     }
 });
 
@@ -1401,7 +1615,7 @@ app.get('/api/user-subscription/:userId', async (req, res) => {
 app.delete('/users/:userId', async (req, res) => {
     const { userId } = req.params;
     
-    if (!userId || isNaN(userId)) {
+    if (!userId) {
         return res.status(400).json({ message: 'Invalid user ID' });
     }
 
@@ -1445,7 +1659,7 @@ app.delete('/users/:userId', async (req, res) => {
                 [userId]
             );
             
-            // 6. Finally, delete the user account
+            // 6. Finally, delete the user account from accounts table
             const result = await client.query(
                 'DELETE FROM accounts WHERE id = $1 RETURNING username',
                 [userId]
@@ -1520,39 +1734,11 @@ app.post('/accept-terms', async (req, res) => {
     }
 });
 
+// Note: Migration endpoint removed - using accounts table only
+
 // ===== PAYMENT WORKFLOW ENDPOINTS =====
 
-// Create pending user for payment workflow
-app.post('/api/payment/create-user', async (req, res) => {
-    console.log('🚀 [Backend] Creating pending user for payment workflow...');
-    try {
-        const client = await db.connect();
-        try {
-            // Create a new user with pending payment status
-            console.log('📝 [Backend] Inserting new user with pending payment status...');
-            const result = await client.query(
-                'INSERT INTO accounts (username, password, isactive, logged, terms_accepted) VALUES ($1, $2, $3, $4, $5) RETURNING id',
-                ['pending_user_' + Date.now(), 'pending', false, false, true]
-            );
-            
-            const userId = result.rows[0].id;
-            console.log('✅ [Backend] User created successfully with ID:', userId);
-            res.status(201).json({ 
-                success: true, 
-                userId: userId,
-                message: 'User created successfully' 
-            });
-        } finally {
-            client.release();
-        }
-    } catch (error) {
-        console.error('❌ [Backend] Error creating user:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to create user' 
-        });
-    }
-});
+// REMOVED: Duplicate endpoint - using the one below with proper payment details handling
 
 // Note: Payment status checking endpoint removed - no longer needed with simplified flow
 
@@ -1679,9 +1865,12 @@ app.post('/api/payment/create-user', async (req, res) => {
             }
 
             // Create user record with 'paid' status
+            // isactive: true (paid users get active accounts)
+            // logged: false (not logged in yet)
+            // terms_accepted: false (must accept terms on first login)
             await client.query(
                 'INSERT INTO accounts (id, username, password, isactive, logged, terms_accepted) VALUES ($1, $2, $3, $4, $5, $6)',
-                [userId, `temp_${userId}`, 'paid', true, false, true]
+                [userId, `temp_${userId}`, 'paid', true, false, false]
             );
             
             console.log(`✅ User record created for payment: ${userId}`);
