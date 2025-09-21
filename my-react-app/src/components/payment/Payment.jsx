@@ -15,8 +15,8 @@ const Payment = () => {
     {
       id: 'special',
       name: isArabic ? 'اشتراك سنوي - خطة خاصة' : 'ANNUAL Subscription - Special Offer',
-      price: isArabic ? '١٥ دولار' : '$15 USD',
-      originalPrice: isArabic ? '٧٥ دولار' : '$75 USD',
+      price: isArabic ? '٣.٧٥ ريال' : '3.75 SAR',
+      originalPrice: isArabic ? '٢٥٠ ريال' : '250 SAR',
       period: isArabic ? 'لمدة سنة كاملة' : 'FOR 1 FULL YEAR',
       features: [
         isArabic ? 'الوصول إلى جميع الأسئلة' : 'Access to all questions',
@@ -72,7 +72,7 @@ const Payment = () => {
           
           <div className="plan-pricing">
             <div className="price-display">
-              <span className="current-price">50 SAR</span>
+              <span className="current-price">3.75 SAR</span>
               <span className="original-price">250 SAR</span>
             </div>
             <div className="savings-badge">
@@ -104,7 +104,7 @@ const Payment = () => {
 
           <div className="payment-actions">
             <CreditCardForm 
-              amount={15} 
+              amount={1} 
               description={isArabic ? 'اشتراك سنوي - سنة كاملة' : 'Full Year'}
               onSuccess={(details) => {
                 console.log('Payment successful:', details);
@@ -117,7 +117,7 @@ const Payment = () => {
                     paymentConfirmed: true,
                     userId: userId,
                     paymentDetails: details,
-                    amount: 15,
+                    amount: 1,
                     currency: 'USD'
                   } 
                 });

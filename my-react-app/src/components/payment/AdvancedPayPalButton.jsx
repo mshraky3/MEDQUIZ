@@ -3,7 +3,7 @@ import { PayPalScriptProvider, PayPalButtons, PayPalHostedFieldsProvider, PayPal
 import { getPayPalOptions, formatUSDAmount } from '../../config/paypal';
 import './PayPalButton.css';
 
-const AdvancedPayPalButton = ({ amount = 15, description = "Premium Access", onSuccess, onError }) => {
+const AdvancedPayPalButton = ({ amount = 1, description = "Premium Access", onSuccess, onError }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
     const [paymentMethod, setPaymentMethod] = useState('paypal'); // 'paypal' or 'card'

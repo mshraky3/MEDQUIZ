@@ -3,7 +3,7 @@ import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
 import { getPayPalOptions, formatUSDAmount } from '../../config/paypal';
 import './PayPalButton.css';
 
-const PayPalButton = ({ amount = 15, description = "Premium Access", onSuccess, onError: onErrorCallback }) => {
+const PayPalButton = ({ amount = 1, description = "Premium Access", onSuccess, onError: onErrorCallback }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
 

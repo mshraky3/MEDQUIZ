@@ -272,3 +272,161 @@
     background-position: right 12px center;
     background-size: 24px;
 }
+
+/* Hide PayPal account buttons - CSS tricks to hide PayPal account buttons only */
+/* Target PayPal account button specifically */
+button[aria-label*="Pay with PayPal account"],
+button[title*="Pay with PayPal account"],
+button:has-text("Pay with PayPal account"),
+button:has-text("Continue with PayPal account") {
+    display: none !important;
+}
+
+/* Hide PayPal account button containers */
+div:has(button[aria-label*="Pay with PayPal account"]),
+div:has(button[title*="Pay with PayPal account"]) {
+    display: none !important;
+}
+
+/* Hide PayPal branding elements but keep credit card functionality */
+.paypal-button-logo,
+.paypal-button-text {
+    display: none !important;
+}
+
+/* Keep credit card buttons visible - ensure they're not hidden */
+button[aria-label*="credit card"],
+button[aria-label*="Credit card"],
+button[aria-label*="Debit card"],
+button[title*="credit card"],
+button[title*="Credit card"],
+button[title*="Debit card"] {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Style credit card buttons to make them prominent */
+button[aria-label*="credit card"],
+button[aria-label*="Credit card"],
+button[aria-label*="Debit card"],
+button[title*="credit card"],
+button[title*="Credit card"],
+button[title*="Debit card"] {
+    background: linear-gradient(135deg, #0070ba 0%, #005ea6 100%) !important;
+    color: white !important;
+    border: none !important;
+    padding: 16px 24px !important;
+    border-radius: 8px !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 4px 15px rgba(0, 112, 186, 0.3) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    margin: 10px 0 !important;
+    width: 100% !important;
+}
+
+button[aria-label*="credit card"]:hover,
+button[aria-label*="Credit card"]:hover,
+button[aria-label*="Debit card"]:hover,
+button[title*="credit card"]:hover,
+button[title*="Credit card"]:hover,
+button[title*="Debit card"]:hover {
+    background: linear-gradient(135deg, #005ea6 0%, #004c8a 100%) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(0, 112, 186, 0.4) !important;
+}
+
+/* Make credit card options more prominent */
+.credit-card-form-container {
+    border: 2px solid #0070ba !important;
+    box-shadow: 0 6px 25px rgba(0, 112, 186, 0.2) !important;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%) !important;
+}
+
+.payment-info h3 {
+    color: #0070ba !important;
+    font-weight: 700 !important;
+    text-shadow: 0 1px 2px rgba(0, 112, 186, 0.1) !important;
+}
+
+.payment-info p {
+    color: #0070ba !important;
+    font-weight: 500 !important;
+}
+
+/* Enhanced credit card styling */
+.form-group input {
+    border-color: #0070ba !important;
+    background: #ffffff !important;
+    box-shadow: 0 2px 8px rgba(0, 112, 186, 0.1) !important;
+}
+
+.form-group input:focus {
+    border-color: #005ea6 !important;
+    box-shadow: 0 0 0 3px rgba(0, 112, 186, 0.2) !important;
+    background: #ffffff !important;
+}
+
+.pay-button {
+    background: linear-gradient(135deg, #0070ba 0%, #005ea6 100%) !important;
+    box-shadow: 0 4px 15px rgba(0, 112, 186, 0.3) !important;
+    border: none !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+}
+
+.pay-button:hover:not(:disabled) {
+    background: linear-gradient(135deg, #005ea6 0%, #004c8a 100%) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(0, 112, 186, 0.4) !important;
+}
+
+/* Add a subtle animation to draw attention to credit card form */
+.credit-card-form-container {
+    animation: subtlePulse 2s ease-in-out infinite alternate !important;
+    position: relative !important;
+}
+
+/* Add a "Recommended" badge */
+.credit-card-form-container::before {
+    content: "💳 RECOMMENDED" !important;
+    position: absolute !important;
+    top: -10px !important;
+    right: -10px !important;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+    color: white !important;
+    padding: 8px 16px !important;
+    border-radius: 20px !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3) !important;
+    z-index: 10 !important;
+    animation: badgePulse 1.5s ease-in-out infinite alternate !important;
+}
+
+@keyframes subtlePulse {
+    0% {
+        box-shadow: 0 6px 25px rgba(0, 112, 186, 0.2);
+    }
+    100% {
+        box-shadow: 0 8px 30px rgba(0, 112, 186, 0.3);
+    }
+}
+
+@keyframes badgePulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+    }
+    100% {
+        transform: scale(1.05);
+        box-shadow: 0 6px 20px rgba(40, 167, 69, 0.5);
+    }
+}

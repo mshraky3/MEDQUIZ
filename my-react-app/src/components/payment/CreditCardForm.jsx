@@ -3,11 +3,70 @@ import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
 import { getPayPalOptions, getUSDPrice } from '../../config/paypal';
 import './CreditCardForm.css';
 
-const CreditCardForm = ({ amount = 15, description = "Premium Access", onSuccess, onError: onErrorCallback }) => {
+const CreditCardForm = ({ amount = 1, description = "Premium Access", onSuccess, onError: onErrorCallback }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
 
     const paypalOptions = getPayPalOptions();
+
+    // Function to hide only PayPal account buttons using JavaScript as backup
+    const hidePayPalButtons = () => {
+        // Hide only PayPal account buttons, not credit card buttons
+        const buttons = document.querySelectorAll('button');
+        buttons.forEach(button => {
+            const text = button.textContent || button.innerText || '';
+            const ariaLabel = button.getAttribute('aria-label') || '';
+            const title = button.getAttribute('title') || '';
+            
+            // Only hide buttons that specifically mention PayPal account
+            if (text.includes('Pay with PayPal account') || 
+                text.includes('Continue with PayPal account') ||
+                ariaLabel.includes('Pay with PayPal account') ||
+                title.includes('Pay with PayPal account')) {
+                button.style.display = 'none';
+                button.style.visibility = 'hidden';
+                button.style.opacity = '0';
+            }
+            
+            // Ensure credit card buttons remain visible
+            if (text.includes('credit card') || 
+                text.includes('Credit card') ||
+                text.includes('Debit card') ||
+                ariaLabel.includes('credit card') ||
+                ariaLabel.includes('Credit card') ||
+                title.includes('credit card')) {
+                button.style.display = 'block';
+                button.style.visibility = 'visible';
+                button.style.opacity = '1';
+            }
+        });
+    };
+
+    // Run hiding function on component mount and periodically
+    useEffect(() => {
+        hidePayPalButtons();
+        
+        // Set up interval to catch dynamically loaded PayPal buttons
+        const interval = setInterval(hidePayPalButtons, 500);
+        
+        // Also run when PayPal SDK loads
+        const observer = new MutationObserver(() => {
+            hidePayPalButtons();
+        });
+        
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['class', 'id', 'data-testid']
+        });
+        
+        // Cleanup interval and observer on unmount
+        return () => {
+            clearInterval(interval);
+            observer.disconnect();
+        };
+    }, []);
 
     // Timeout mechanism to prevent infinite loading
     useEffect(() => {
@@ -96,12 +155,12 @@ const CreditCardForm = ({ amount = 15, description = "Premium Access", onSuccess
             )}
             
             <div className="payment-info">
-                <h3>Pay ${amount} USD ({description})</h3>
+                <h3>Pay 3.75 SAR ({description})</h3>
                 <p>💳 Quick & Easy Payment Options</p>
                 <p><small>Visa, Mastercard, American Express accepted</small></p>
                 <p><small>💳 Guest checkout - No PayPal account needed</small></p>
                 <p><small>⚡ Automatic payment methods enabled - Faster checkout</small></p>
-                <p><small>Amount: ${amount} USD</small></p>
+                <p><small>Amount: 3.75 SAR</small></p>
                 <div className="security-notice">
                     <p><small>🔒 Secure payment processing - All transactions are encrypted</small></p>
                 </div>

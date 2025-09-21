@@ -6,6 +6,34 @@
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+/* Global PayPal Button Hiding - Applied across entire payment flow */
+/* Hide only PayPal account buttons, not credit card options */
+
+/* Hide PayPal account button specifically */
+button[aria-label*="Pay with PayPal"],
+button[title*="Pay with PayPal"],
+button:has-text("Pay with PayPal account"),
+button:has-text("Continue with PayPal account") {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  height: 0 !important;
+  width: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Hide PayPal account button containers */
+div:has(button[aria-label*="Pay with PayPal"]),
+div:has(button[title*="Pay with PayPal"]) {
+  display: none !important;
+}
+
+/* Hide PayPal branding elements but keep credit card functionality */
+.paypal-button-logo,
+.paypal-button-text {
+  display: none !important;
+}
+
 .payment-header {
   text-align: center;
   margin-bottom: 25px;
