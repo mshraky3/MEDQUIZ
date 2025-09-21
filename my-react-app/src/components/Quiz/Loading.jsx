@@ -1,8 +1,20 @@
 import React from 'react';
+import './Loading.css';
 
 const Loading = () => (
   <div className="quiz-container">
-    <h2>Loading questions...</h2>
+    <div className="loading-content">
+      <div className="loading-spinner">
+        <div className="spinner"></div>
+      </div>
+      <h2>Loading Questions</h2>
+      <p>Preparing your quiz...</p>
+      <div className="loading-dots">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
   </div>
 );
 

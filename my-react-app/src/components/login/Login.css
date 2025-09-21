@@ -139,6 +139,17 @@
   font-size: var(--text-sm);
   margin-top: var(--space-2);
 }
+
+.login-success {
+  color: #28a745;
+  font-size: var(--text-sm);
+  margin-top: var(--space-2);
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+  border-radius: 4px;
+  padding: 8px 12px;
+  text-align: center;
+}
 .login-footer {
   background: linear-gradient(270deg, #01b3d9, #c7e941, #01b3d9);
   background-size: 600% 600%;

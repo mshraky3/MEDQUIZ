@@ -15,7 +15,8 @@ const Bank = () => {
     option3: "",
     option4: "",
     question_type: "",
-    correct_option: ""
+    correct_option: "",
+    source: ""
   });
   const [loading, setLoading] = useState(true);
   const [successMessage, setSuccessMessage] = useState("");
@@ -73,7 +74,8 @@ const Bank = () => {
       option3: question.option3,
       option4: question.option4,
       question_type: question.question_type || "",
-      correct_option: question.correct_option
+      correct_option: question.correct_option,
+      source: question.source || ""
     });
   };
 
@@ -86,7 +88,8 @@ const Bank = () => {
       option3: "",
       option4: "",
       question_type: "",
-      correct_option: ""
+      correct_option: "",
+      source: ""
     });
   };
 
@@ -219,6 +222,16 @@ const Bank = () => {
                           ))}
                         </select>
                       </div>
+                      <div className="form-group">
+                        <label>Source:</label>
+                        <input
+                          type="text"
+                          name="source"
+                          value={formData.source}
+                          onChange={handleInputChange}
+                          placeholder="e.g., NBME, UWorld, Kaplan..."
+                        />
+                      </div>
                       <div className="button-group">
                         <button className="quiz-button" onClick={saveQuestion}>
                           Save
@@ -245,6 +258,9 @@ const Bank = () => {
                       </p>
                       <p className="question-type">
                         <strong>Type:</strong> {currentQuestion.question_type || "N/A"}
+                      </p>
+                      <p className="question-source">
+                        <strong>Source:</strong> {currentQuestion.source || "N/A"}
                       </p>
                       <button
                         className="quiz-button"

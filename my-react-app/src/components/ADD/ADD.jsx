@@ -1,8 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./add.css";
+import AdminNavbar from "./AdminNavbar.jsx";
 
 const ADD = (props) => {
+    const navigate = useNavigate();
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
@@ -10,6 +13,18 @@ const ADD = (props) => {
     const [users, setUsers] = useState([]);
     const [showUsers, setShowUsers] = useState(false);
     const [deletingUser, setDeletingUser] = useState(null);
+    const [loading, setLoading] = useState(false);
+
+    // Refresh user data periodically to update logged-in status
+    useEffect(() => {
+        const refreshInterval = setInterval(() => {
+            if (showUsers) {
+                handleShowUsers();
+            }
+        }, 30000); // Refresh every 30 seconds
+        
+        return () => clearInterval(refreshInterval);
+    }, [showUsers]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -22,6 +37,7 @@ const ADD = (props) => {
 
         setError("");
         setMessage("");
+        setLoading(true);
 
         try {
             const response = await axios.post(`${props.host}/add_account`, {
@@ -29,18 +45,19 @@ const ADD = (props) => {
                 password,
             });
 
-            setMessage(response.data.message);
+            setMessage(`✅ ${response.data.message}`);
             setUsername(""); // Clear input after success
             setPassword("");
             // Refresh user list if it's currently shown
             if (showUsers) {
                 handleShowUsers();
             }
-        } catch {
-            const errorMessage =
-                "Failed to add account. Please try again.";
-            setError(errorMessage);
+        } catch (err) {
+            const errorMessage = err.response?.data?.message || "Failed to add account. Please try again.";
+            setError(`❌ ${errorMessage}`);
             setMessage("");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -52,11 +69,15 @@ const ADD = (props) => {
         }
         
         try {
+            setLoading(true);
             const response = await axios.get(`${props.host}/get_all_users`);
             setUsers(response.data.users);
             setShowUsers(true);
+            setError("");
         } catch (err) {
-            setError("Failed to fetch users.");
+            setError("❌ Failed to fetch users. Please try again.");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -71,21 +92,24 @@ const ADD = (props) => {
 
         try {
             const response = await axios.delete(`${props.host}/users/${userId}`);
-            setMessage(response.data.message);
+            setMessage(`✅ ${response.data.message}`);
             // Remove the deleted user from the local state
             setUsers(users.filter(user => user.id !== userId));
         } catch (err) {
             const errorMessage = err.response?.data?.message || "Failed to delete user. Please try again.";
-            setError(errorMessage);
+            setError(`❌ ${errorMessage}`);
         } finally {
             setDeletingUser(null);
         }
     };
 
     return (
-        <div className="container">
+        <div className="admin-page-wrapper">
+            <AdminNavbar />
+            <div className="container">
+            
             <form onSubmit={handleSubmit} className="form">
-                <h2>Add Account</h2>
+                <h2>➕ Add New Account</h2>
                 {error && <div className="error">{error}</div>}
                 {message && <div className="success">{message}</div>}
 
@@ -104,22 +128,34 @@ const ADD = (props) => {
                     className="input"
                 />
 
-                <button type="submit" className="button">
-                    Add Account
+                <button type="submit" className="button" disabled={loading}>
+                    {loading ? "⏳ Creating Account..." : "➕ Add Account"}
                 </button>
 
-                <button
-                    type="button"
-                    onClick={handleShowUsers}
-                    className="toggle-button"
-                >
-                    {showUsers ? "Hide Users" : "Show All Users"}
-                </button>
+                        <button
+                            type="button"
+                            onClick={handleShowUsers}
+                            className="toggle-button"
+                            disabled={loading}
+                        >
+                            {loading ? "⏳ Loading..." : (showUsers ? "👁️ Hide Users" : "👥 Show All Users")}
+                        </button>
+                        {showUsers && (
+                            <button
+                                type="button"
+                                onClick={handleShowUsers}
+                                className="refresh-button"
+                                disabled={loading}
+                                title="Refresh user data"
+                            >
+                                🔄 Refresh
+                            </button>
+                        )}
 
                 {/* Show User List */}
                 {showUsers && (
                     <div className="user-list">
-                        <h3>All Users ({users.length}):</h3>
+                        <h3>👥 All Users ({users.length} total)</h3>
                         <ul>
                             {users.length > 0 ? (
                                 users.map((user, index) => {
@@ -127,42 +163,72 @@ const ADD = (props) => {
                                     return (
                                         <li key={user.id || index} className="user-item">
                                             <div className="user-info">
-                                                <strong>ID:</strong> {user.id}<br />
-                                                <strong>Username:</strong> {user.username}<br />
-                                                <strong>Password:</strong> {user.password}<br />
-                                                <strong>Logged In:</strong> {user.logged ? "Yes" : "No"}<br />
-                                                <strong>Last Login Date:</strong> {user.logged_date ? new Date(user.logged_date).toLocaleDateString() : 'Never'}<br />
-                                                <strong>Status:</strong> {user.isactive ? "Active" : "Inactive"}
+                                                <div className="user-field">
+                                                    <strong>🆔 ID:</strong> {user.id}
+                                                </div>
+                                                <div className="user-field">
+                                                    <strong>👤 Username:</strong> {user.username}
+                                                </div>
+                                                <div className="user-field">
+                                                    <strong>🔑 Password:</strong> {user.password}
+                                                </div>
+                                                <div className="user-field">
+                                                    <strong>📅 Last Login:</strong> {user.logged_date ? new Date(user.logged_date).toLocaleDateString() : 'Never'}
+                                                </div>
+                                                <div className="user-field">
+                                                    <strong>📊 Status:</strong> 
+                                                    <span className={`status ${user.isactive ? 'active' : 'inactive'}`}>
+                                                        {user.isactive ? "✅ Active" : "❌ Inactive"}
+                                                    </span>
+                                                </div>
+                                                {user.email && (
+                                                    <div className="user-field">
+                                                        <strong>📧 Email:</strong> {user.email || "N/A"}
+                                                    </div>
+                                                )}
+                                                {user.payment_status && (
+                                                    <div className="user-field">
+                                                        <strong>💳 Payment Status:</strong> 
+                                                        <span className={`status ${user.payment_status === 'paid' ? 'active' : 'inactive'}`}>
+                                                            {user.payment_status === 'paid' ? "✅ Paid" : "❌ Pending"}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {user.created_at && (
+                                                    <div className="user-field">
+                                                        <strong>📅 Created:</strong> {user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
+                                                    </div>
+                                                )}
+                                                <div className="user-field">
+                                                    <strong>📋 Terms Accepted:</strong> 
+                                                    <span className={`status ${user.terms_accepted ? 'active' : 'inactive'}`}>
+                                                        {user.terms_accepted ? "✅ Yes" : "❌ No"}
+                                                    </span>
+                                                </div>
                                             </div>
-                                            <button
-                                                type="button"
-                                                onClick={() => handleDeleteUser(user.id, user.username)}
-                                                disabled={deletingUser === user.id}
-                                                className="delete-button"
-                                                style={{
-                                                    backgroundColor: '#dc3545',
-                                                    color: 'white',
-                                                    border: 'none',
-                                                    padding: '10px 20px',
-                                                    borderRadius: '6px',
-                                                    cursor: 'pointer',
-                                                    fontSize: '14px',
-                                                    fontWeight: 'bold',
-                                                    minWidth: '120px'
-                                                }}
-                                            >
-                                                {deletingUser === user.id ? "Deleting..." : "🗑️ Delete User"}
-                                            </button>
+                                            <div className="user-actions">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleDeleteUser(user.id, user.username)}
+                                                    disabled={deletingUser === user.id}
+                                                    className="delete-button"
+                                                >
+                                                    {deletingUser === user.id ? "⏳ Deleting..." : "🗑️ Delete User"}
+                                                </button>
+                                            </div>
                                         </li>
                                     );
                                 })
                             ) : (
-                                <p>No users found.</p>
+                                <div className="no-users">
+                                    <p>📭 No users found.</p>
+                                </div>
                             )}
                         </ul>
                     </div>
                 )}
             </form>
+            </div>
         </div>
     );
 };

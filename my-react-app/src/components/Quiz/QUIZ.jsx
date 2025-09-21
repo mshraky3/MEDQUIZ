@@ -4,6 +4,8 @@ import axios from 'axios';
 import './QUIZ.css';
 import Loading from './Loading';
 import ErrorScreen from './ErrorScreen';
+import './Loading.css';
+import './ErrorScreen.css';
 import Result from './Result';
 import Question from './Question';
 import Globals from '../../global.js';
@@ -23,6 +25,7 @@ const QUIZ = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [dataSent, setDataSent] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const quizStartTimeRef = useRef(Date.now());
   const types = location.state?.types || 'mix';
   const source = location.state?.source || 'mix';
@@ -63,10 +66,25 @@ const QUIZ = () => {
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
+        setLoading(true);
+        setError(null);
+        
+        // Add userId to params for non-trial users to filter completed questions
+        const params = { 
+          limit: numQuestions, 
+          types: types, 
+          source: source 
+        };
+        
+        // Add userId for progress filtering (non-trial users only)
+        if (!isTrial && id) {
+          params.userId = id;
+        }
+        
         // Use different endpoint for trial users
         const endpoint = isTrial ? '/free-trial/questions' : '/api/questions';
         const response = await protectedGet(`${Globals.URL}${endpoint}`, {
-          params: { limit: numQuestions, types: types, source: source }
+          params: params
         });
 
         if (response.data.questions?.length > 0) {
@@ -75,16 +93,21 @@ const QUIZ = () => {
           setError("No questions were returned.");
         }
       } catch (err) {
+        console.error('Error fetching questions:', err);
         setError("Failed to load questions.");
-        alert("Could not load quiz. Redirecting...");
-        navigate("/quizs");
+        // Don't auto-redirect, let user retry
       } finally {
         setLoading(false);
       }
     };
 
     fetchQuestions();
-  }, [numQuestions, navigate, isTrial, types, source]);
+  }, [numQuestions, navigate, isTrial, types, source, id, retryCount]);
+
+  const handleRetry = () => {
+    setError(null);
+    setRetryCount(prev => prev + 1);
+  };
 
   const handleSelectOption = (option) => {
     setSelectedAnswer(option);
@@ -224,7 +247,14 @@ const QUIZ = () => {
   }
 
   if (error) {
-    return <ErrorScreen error={error} onRetry={() => window.location.reload()} />;
+    return (
+      <ErrorScreen 
+        message={error} 
+        navigate={navigate} 
+        id={id} 
+        onRetry={handleRetry}
+      />
+    );
   }
 
   if (quizFinished) {

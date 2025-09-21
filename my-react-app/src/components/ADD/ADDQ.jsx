@@ -11,6 +11,7 @@ const ADDQ = () => {
     const [option4, setOption4] = useState('');
     const [correctAnswer, setCorrectAnswer] = useState('');
     const [questionType, setQuestionType] = useState('pediatric');
+    const [source, setSource] = useState('');
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
 
@@ -49,7 +50,8 @@ const ADDQ = () => {
             option3,
             option4,
             question_type: questionType,
-            correct_option: correctAnswer
+            correct_option: correctAnswer,
+            source
         };
         try {
             const response = await axios.post(`${Globals.URL}/api/questions`, newQuestion);
@@ -62,6 +64,7 @@ const ADDQ = () => {
             setOption4('');
             setCorrectAnswer('');
             setQuestionType('pediatric');
+            setSource('');
         } catch {
             setError("Failed to add question. Please try again.");
         }
@@ -173,6 +176,20 @@ const ADDQ = () => {
                             </option>
                         ))}
                     </select>
+                </label>
+
+                <label>
+                    Source:
+                    <input
+                        type="text"
+                        value={source}
+                        onChange={(e) => setSource(e.target.value)}
+                        placeholder="e.g., NBME, UWorld, Kaplan..."
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck="false"
+                        autoComplete="off"
+                    />
                 </label>
 
                 <button type="submit" className="submit-button">Add Question</button>

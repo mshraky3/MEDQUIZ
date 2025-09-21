@@ -1,17 +1,13 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { UserContext } from '../../UserContext';
 
-const Navbar = () => {
-  const { user } = useContext(UserContext);
+const AdminNavbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
   const handleGoBack = () => {
     if (location.pathname === '/quizs') {
       navigate('/login');
-    } else if (user && user.id) {
-      navigate('/quizs', { state: { id: user.id } });
     } else {
       navigate('/');
     }
@@ -51,32 +47,33 @@ const Navbar = () => {
           &#8592; Go Back
         </button>
       </div>
-      {user && user.username && (
-        <div style={{
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        marginLeft: 32,
+      }}>
+        <span style={{
           display: 'flex',
           alignItems: 'center',
-          marginLeft: 32,
+          background: 'linear-gradient(90deg, #e0e7ef 0%, #f8fafc 100%)',
+          borderRadius: '999px',
+          padding: '7px 22px 7px 14px',
+          fontWeight: 600,
+          color: '#2563eb',
+          fontSize: '16px',
+          letterSpacing: '0.01em',
+          boxShadow: '0 1px 3px rgba(37,99,235,0.04)',
+          border: '1.5px solid #dbeafe',
         }}>
-          <span style={{
-            display: 'flex',
-            alignItems: 'center',
-            background: 'linear-gradient(90deg, #e0e7ef 0%, #f8fafc 100%)',
-            borderRadius: '999px',
-            padding: '7px 22px 7px 14px',
-            fontWeight: 600,
-            color: '#2563eb',
-            fontSize: '16px',
-            letterSpacing: '0.01em',
-            boxShadow: '0 1px 3px rgba(37,99,235,0.04)',
-            border: '1.5px solid #dbeafe',
-          }}>
-            <svg style={{ marginRight: 10 }} width="22" height="22" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="#2563eb" opacity="0.18"/><circle cx="12" cy="8" r="2.5" fill="#2563eb"/><ellipse cx="12" cy="17" rx="6.5" ry="4.5" fill="#2563eb" opacity="0.18"/></svg>
-            {user.username}
-          </span>
-        </div>
-      )}
+          <svg style={{ marginRight: 10 }} width="22" height="22" fill="none" viewBox="0 0 24 24">
+            <path stroke="#2563eb" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+            <path stroke="#2563eb" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+          Admin Dashboard
+        </span>
+      </div>
     </nav>
   );
 };
 
-export default Navbar; 
+export default AdminNavbar;

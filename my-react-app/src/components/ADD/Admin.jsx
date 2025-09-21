@@ -1,16 +1,15 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Admin.css';
+import AdminNavbar from './AdminNavbar.jsx';
 
 const Admin = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="admin-container">
-      <div className="admin-header">
-        <h1>Admin Dashboard</h1>
-        <p>Manage your SMLE Question Bank platform</p>
-      </div>
+    <div className="admin-page-wrapper">
+      <AdminNavbar />
+      <div className="admin-container">
       
       <div className="admin-grid">
         <div className="admin-card">
@@ -57,6 +56,7 @@ const Admin = () => {
           <p>• Add new medical questions</p>
           <p>• Monitor platform performance</p>
         </div>
+      </div>
       </div>
     </div>
   );

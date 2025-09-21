@@ -1,7 +1,7 @@
 import React, { useState, useContext, useEffect } from 'react';
 import axios from 'axios';
 import './Login.css';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Globals from '../../global.js';
 import SEO from '../common/SEO';
 import Navbar from '../common/Navbar.jsx';
@@ -17,8 +17,26 @@ const Login = () => {
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [loading, setLoading] = useState(false);
   const [sessionExpired, setSessionExpired] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Handle success message from signup redirect
+  useEffect(() => {
+    if (location.state?.message) {
+      setSuccessMessage(location.state.message);
+      // Auto-fill username if provided
+      if (location.state.username) {
+        setForm(prev => ({
+          ...prev,
+          username: location.state.username
+        }));
+      }
+      // Clear the state to prevent message from showing again on refresh
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location.state, navigate, location.pathname]);
 
   // Add Google AdSense script (only in production)
   useEffect(() => {
@@ -217,6 +235,7 @@ const Login = () => {
               <a href="#contact" onClick={handleContactClick} className='login-small' rel="noopener noreferrer">
                 click to subscribe or get free trial
               </a>
+              {successMessage && <p className="login-success">{successMessage}</p>}
               {error && <p className="login-error">{error}</p>}
             </form>
           </div>

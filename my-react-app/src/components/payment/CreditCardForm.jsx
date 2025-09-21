@@ -14,30 +14,40 @@ const CreditCardForm = ({ amount = 1, description = "Premium Access", onSuccess,
         // Hide only PayPal account buttons, not credit card buttons
         const buttons = document.querySelectorAll('button');
         buttons.forEach(button => {
-            const text = button.textContent || button.innerText || '';
-            const ariaLabel = button.getAttribute('aria-label') || '';
-            const title = button.getAttribute('title') || '';
+            const text = (button.textContent || button.innerText || '').toLowerCase();
+            const ariaLabel = (button.getAttribute('aria-label') || '').toLowerCase();
+            const title = (button.getAttribute('title') || '').toLowerCase();
             
-            // Only hide buttons that specifically mention PayPal account
-            if (text.includes('Pay with PayPal account') || 
-                text.includes('Continue with PayPal account') ||
-                ariaLabel.includes('Pay with PayPal account') ||
-                title.includes('Pay with PayPal account')) {
+            // Only hide buttons that specifically mention PayPal account (not just PayPal)
+            if (text.includes('pay with paypal account') || 
+                text.includes('continue with paypal account') ||
+                ariaLabel.includes('pay with paypal account') ||
+                title.includes('pay with paypal account')) {
                 button.style.display = 'none';
                 button.style.visibility = 'hidden';
                 button.style.opacity = '0';
             }
             
-            // Ensure credit card buttons remain visible
-            if (text.includes('credit card') || 
-                text.includes('Credit card') ||
-                text.includes('Debit card') ||
-                ariaLabel.includes('credit card') ||
-                ariaLabel.includes('Credit card') ||
-                title.includes('credit card')) {
+            // Ensure credit card buttons remain visible and prominent
+            if (text.includes('credit card') || text.includes('debit card') || text.includes('card') ||
+                ariaLabel.includes('credit card') || ariaLabel.includes('debit card') ||
+                title.includes('credit card') || title.includes('debit card')) {
                 button.style.display = 'block';
                 button.style.visibility = 'visible';
                 button.style.opacity = '1';
+                button.style.background = 'linear-gradient(135deg, #0070ba 0%, #005ea6 100%)';
+                button.style.color = 'white';
+                button.style.border = 'none';
+                button.style.padding = '16px 24px';
+                button.style.borderRadius = '8px';
+                button.style.fontSize = '16px';
+                button.style.fontWeight = '600';
+                button.style.cursor = 'pointer';
+                button.style.boxShadow = '0 4px 15px rgba(0, 112, 186, 0.3)';
+                button.style.textTransform = 'uppercase';
+                button.style.letterSpacing = '0.5px';
+                button.style.margin = '10px 0';
+                button.style.width = '100%';
             }
         });
     };

@@ -25,20 +25,11 @@ export const PAYPAL_CONFIG = {
     ENVIRONMENT: "live"
 };
 
-// PayPal SDK Options - Guest checkout with automatic payment methods
+// PayPal SDK Options - Ultra minimal configuration
 export const getPayPalOptions = () => ({
     "client-id": PAYPAL_CONFIG.CLIENT_ID,
     currency: PAYPAL_CONFIG.CURRENCY,
-    intent: PAYPAL_CONFIG.INTENT,
-    components: "buttons",
-    "enable-funding": "card,paypal,venmo,paylater",
-    "disable-funding": "credit,sepa,sofort,giropay,ideal,bancontact,eps,mybank,p24",
-    "data-sdk-integration-source": "integrationbuilder_ac",
-    "vault": false,
-    "commit": true,
-    // Fix Arabic locale issue by using English locale
-    "locale": "en_US",
-    "buyer-country": "SA"
+    intent: PAYPAL_CONFIG.INTENT
 });
 
 // Get USD price directly

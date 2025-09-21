@@ -174,6 +174,13 @@ const Signup = () => {
                         />
                     </div>
 
+                    {success && (
+                        <div className="success-message">
+                            <h3>✅ Account Created Successfully!</h3>
+                            <p>Your account has been created. Redirecting to login page...</p>
+                        </div>
+                    )}
+
                     {error && (
                         <div className="error-message">
                             {error}

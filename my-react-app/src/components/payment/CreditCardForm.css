@@ -273,25 +273,41 @@
     background-size: 24px;
 }
 
-/* Hide PayPal account buttons - CSS tricks to hide PayPal account buttons only */
-/* Target PayPal account button specifically */
+/* Hide only PayPal account buttons - more specific targeting */
 button[aria-label*="Pay with PayPal account"],
-button[title*="Pay with PayPal account"],
-button:has-text("Pay with PayPal account"),
-button:has-text("Continue with PayPal account") {
+button[title*="Pay with PayPal account"] {
     display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    width: 0 !important;
+    overflow: hidden !important;
 }
 
-/* Hide PayPal account button containers */
-div:has(button[aria-label*="Pay with PayPal account"]),
-div:has(button[title*="Pay with PayPal account"]) {
-    display: none !important;
-}
-
-/* Hide PayPal branding elements but keep credit card functionality */
-.paypal-button-logo,
-.paypal-button-text {
-    display: none !important;
+/* Ensure credit card buttons are visible and styled */
+button[aria-label*="credit card"], 
+button[aria-label*="Credit card"], 
+button[aria-label*="Debit card"],
+button[title*="credit card"], 
+button[title*="Credit card"], 
+button[title*="Debit card"] {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    background: linear-gradient(135deg, #0070ba 0%, #005ea6 100%) !important;
+    color: white !important;
+    border: none !important;
+    padding: 16px 24px !important;
+    border-radius: 8px !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 4px 15px rgba(0, 112, 186, 0.3) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    margin: 10px 0 !important;
+    width: 100% !important;
 }
 
 /* Keep credit card buttons visible - ensure they're not hidden */

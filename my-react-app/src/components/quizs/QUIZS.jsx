@@ -5,6 +5,8 @@ import './QUIZS.css';
 import Globals from '../../global.js';
 import SEO from '../common/SEO';
 import Navbar from '../common/Navbar.jsx';
+import AchievementBadges from '../common/AchievementBadges.jsx';
+import CongratulationsPopup from '../common/CongratulationsPopup.jsx';
 import { UserContext } from '../../UserContext';
 
 const QUIZS = () => {
@@ -19,6 +21,8 @@ const QUIZS = () => {
     const [selectedSource, setSelectedSource] = useState('');
     const [selectedTypes, setSelectedTypes] = useState([]);
     const [numQuestions, setNumQuestions] = useState(10);
+    const [showCongratulations, setShowCongratulations] = useState(false);
+    const [congratulationsData, setCongratulationsData] = useState(null);
 
     const quizOptions = [10, 30, 50, 100, 200];
     const availableSources = [
@@ -56,10 +60,15 @@ const QUIZS = () => {
         setShowSourceSelector(true);
     };
 
-    const handleSourceSelect = (source) => {
+    const handleSourceSelect = async (source) => {
         setSelectedSource(source);
         setShowSourceSelector(false);
         setShowTypeSelector(true);
+        
+        // Check if user has completed this source for any type
+        if (!isTrial && id) {
+            await checkCompletionForSource(source);
+        }
     };
 
     const handleCheckboxChange = (type) => {
@@ -103,6 +112,89 @@ const QUIZS = () => {
     };
 
     const checkboxRef = useRef(null);
+
+    // Check completion for a specific source and type combination
+    const checkCompletion = async (type, source) => {
+        try {
+            const response = await protectedGet(`${Globals.URL}/api/check-completion/${id}?type=${encodeURIComponent(type)}&source=${encodeURIComponent(source)}`);
+            const { isCompleted, total, completed } = response.data;
+            
+            if (isCompleted && total > 0) {
+                // Award achievement if not already awarded
+                await awardAchievement(type, source);
+                
+                // Show congratulations popup
+                setCongratulationsData({
+                    type,
+                    source,
+                    total,
+                    completed
+                });
+                setShowCongratulations(true);
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('Error checking completion:', error);
+            return false;
+        }
+    };
+
+    // Check completion for all types in a source
+    const checkCompletionForSource = async (source) => {
+        for (const type of availableTypes) {
+            const isCompleted = await checkCompletion(type, source);
+            if (isCompleted) {
+                break; // Only show one popup at a time
+            }
+        }
+    };
+
+    // Award achievement for completing a cardinality
+    const awardAchievement = async (type, source) => {
+        try {
+            const achievementKey = `${type}_${source}`;
+            const achievementName = `Master of ${type} from ${source}`;
+            const achievementDescription = `Completed all ${type} questions from ${source} source`;
+            
+            await protectedPost(`${Globals.URL}/api/award-achievement`, {
+                userId: id,
+                achievementType: 'cardinality_completion',
+                achievementKey,
+                achievementName,
+                achievementDescription
+            });
+        } catch (error) {
+            console.error('Error awarding achievement:', error);
+        }
+    };
+
+    // Handle restart and reset progress
+    const handleRestart = async () => {
+        if (!congratulationsData) return;
+        
+        try {
+            await protectedPost(`${Globals.URL}/api/reset-progress`, {
+                userId: id,
+                type: congratulationsData.type,
+                source: congratulationsData.source
+            });
+            
+            setShowCongratulations(false);
+            setCongratulationsData(null);
+            
+            // Refresh the page or component to show updated state
+            window.location.reload();
+        } catch (error) {
+            console.error('Error resetting progress:', error);
+        }
+    };
+
+    // Handle close congratulations popup
+    const handleCloseCongratulations = () => {
+        setShowCongratulations(false);
+        setCongratulationsData(null);
+    };
 
     useEffect(() => {
         const applyCustomCheckboxes = () => {
@@ -158,6 +250,23 @@ const QUIZS = () => {
       }
     };
 
+    // Helper for protected POST
+    const protectedPost = async (url, data, config = {}) => {
+      if (!user || !sessionToken) throw new Error('Not authenticated');
+      const urlWithCreds = url + (url.includes('?') ? '&' : '?') + `username=${encodeURIComponent(user.username)}&sessionToken=${encodeURIComponent(sessionToken)}`;
+      try {
+        return await axios.post(urlWithCreds, data, config);
+      } catch (err) {
+        if (err.response && err.response.status === 401) {
+          setUser(null, null);
+          localStorage.clear();
+          window.location.href = '/login?session=expired';
+          return;
+        }
+        throw err;
+      }
+    };
+
     useEffect(() => {
         const fetchStreaks = async () => {
             if (!id || isTrial) return; // Don't fetch streaks for trial users
@@ -189,6 +298,9 @@ const QUIZS = () => {
                         <span className="streak-count">{currentStreak}</span>
                     </div>
                 )}
+
+                {/* Achievement Badges - Only show for non-trial users */}
+                {!isTrial && <AchievementBadges userId={id} />}
 
                 {/* Trial User Notice */}
                 {isTrial && (
@@ -298,6 +410,17 @@ const QUIZS = () => {
                 )}
 
                 <div className="quiz-footer" />
+
+                {/* Congratulations Popup */}
+                <CongratulationsPopup
+                    isOpen={showCongratulations}
+                    onClose={handleCloseCongratulations}
+                    onRestart={handleRestart}
+                    achievementName={congratulationsData ? `Master of ${congratulationsData.type} from ${congratulationsData.source}` : ''}
+                    achievementDescription={congratulationsData ? `You've completed all ${congratulationsData.type} questions from ${congratulationsData.source} source!` : ''}
+                    type={congratulationsData?.type || ''}
+                    source={congratulationsData?.source || ''}
+                />
             </div>
         </>
     );
