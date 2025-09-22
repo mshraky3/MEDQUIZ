@@ -594,6 +594,47 @@ app.get('/question-attempts/session/:sessionId', requireSession, async (req, res
     }
 });
 
+app.get('/wrong-questions/user/:userId', requireSession, async (req, res) => {
+    const { userId } = req.params;
+    const { limit = 50, offset = 0 } = req.query;
+    
+    try {
+        // Get wrong question attempts with question details
+        const result = await db.query(`
+            SELECT 
+                uqa.*,
+                q.question_text,
+                q.correct_option,
+                q.question_type,
+                q.source
+            FROM user_question_attempts uqa
+            JOIN questions q ON uqa.question_id = q.id
+            WHERE uqa.user_id = $1 
+            AND uqa.is_correct = false
+            ORDER BY uqa.attempted_at DESC
+            LIMIT $2 OFFSET $3
+        `, [userId, parseInt(limit), parseInt(offset)]);
+        
+        // Get total count for pagination
+        const countResult = await db.query(`
+            SELECT COUNT(*) as total
+            FROM user_question_attempts uqa
+            WHERE uqa.user_id = $1 
+            AND uqa.is_correct = false
+        `, [userId]);
+        
+        res.json({
+            wrongQuestions: result.rows,
+            total: parseInt(countResult.rows[0].total),
+            limit: parseInt(limit),
+            offset: parseInt(offset)
+        });
+    } catch (err) {
+        console.error('Error fetching wrong questions:', err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 app.get('/api/all-questions', async (req, res) => {
     try {
         // Check cache first (disabled for now to ensure fresh data)
