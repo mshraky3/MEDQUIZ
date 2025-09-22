@@ -1,7 +1,7 @@
 // PayPal Configuration
 export const PAYPAL_CONFIG = {
-    // Your PayPal Live Client ID (Public Key) - PRODUCTION
-    CLIENT_ID: "BAAdvgbPBZdxM0-yidbc3OgdPJS92H4klQ5UqbnMhNCr-JO3zOU3NHDQNfFgHeJr-oQCQ1KJ4_am0ivFrA",
+    // PayPal Sandbox Client ID (Public Key) - TESTING
+    CLIENT_ID: "test",
     
     // Currency settings - Using USD directly for simplicity
     CURRENCY: "USD",
@@ -21,8 +21,8 @@ export const PAYPAL_CONFIG = {
     // Fixed USD pricing - no conversion needed
     USD_PRICE: 1, // $1 USD for premium access
     
-    // Environment - LIVE for production
-    ENVIRONMENT: "live"
+    // Environment - SANDBOX for testing, LIVE for production
+    ENVIRONMENT: "sandbox"
 };
 
 // PayPal SDK Options - Ultra minimal configuration
