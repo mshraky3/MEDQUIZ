@@ -163,6 +163,13 @@
 }
 
 @media (max-width: 480px) {
+  .streak-badge {
+    top: 65px; /* Adjust for smaller mobile navbar */
+    right: 10px;
+    padding: 5px 8px 4px 8px;
+    font-size: 12px;
+  }
+  
   .quiz-selection {
     padding: 1rem;
   }
@@ -214,7 +221,7 @@
 
 .streak-badge {
   position: absolute;
-  top: 20px;
+  top: 80px; /* Move below navbar (64px + 16px margin) */
   right: 20px;
   background-color: #fff;
   border: 1px solid #ddd;
@@ -229,6 +236,7 @@
   font-size: 14px;
   transition: transform 0.2s ease;
   cursor: default;
+  z-index: 100;
 }
 
 .streak-badge:hover {
@@ -503,6 +511,13 @@ footer {
 }
 
 @media (max-width: 768px) {
+  .streak-badge {
+    top: 70px; /* Adjust for mobile navbar (56px + 14px margin) */
+    right: 15px;
+    padding: 6px 10px 5px 10px;
+    font-size: 13px;
+  }
+  
   .custom-modal-content {
     padding: 1.2rem;
     max-width: 95vw;
@@ -577,6 +592,13 @@ footer {
 }
 
 @media (max-width: 360px) {
+  .streak-badge {
+    top: 60px; /* Adjust for smallest mobile navbar */
+    right: 8px;
+    padding: 4px 6px 3px 6px;
+    font-size: 11px;
+  }
+  
   .custom-modal-content {
     padding: 0.8rem;
     max-width: 100vw;
