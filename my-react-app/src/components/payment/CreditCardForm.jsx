@@ -3,7 +3,7 @@ import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
 import { getPayPalOptions, getUSDPrice } from '../../config/paypal';
 import './CreditCardForm.css';
 
-const CreditCardForm = ({ amount = 1, description = "Premium Access", onSuccess, onError: onErrorCallback }) => {
+const CreditCardForm = ({ amount = 19.1, description = "Premium Access", onSuccess, onError: onErrorCallback }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
 
@@ -83,7 +83,6 @@ const CreditCardForm = ({ amount = 1, description = "Premium Access", onSuccess,
         let timeoutId;
         if (isLoading) {
             timeoutId = setTimeout(() => {
-                console.log('⏰ Payment timeout - resetting loading state');
                 setIsLoading(false);
                 setError('Payment is taking too long. Please try again.');
             }, 30000); // 30 second timeout
@@ -96,7 +95,6 @@ const CreditCardForm = ({ amount = 1, description = "Premium Access", onSuccess,
     }, [isLoading]);
 
     const createOrder = (data, actions) => {
-        console.log('🔄 Creating PayPal order for amount:', amount, 'USD');
         setIsLoading(true);
         setError(null);
         
@@ -114,11 +112,9 @@ const CreditCardForm = ({ amount = 1, description = "Premium Access", onSuccess,
                 landing_page: "NO_PREFERENCE"
             }
         }).then((order) => {
-            console.log('✅ PayPal order created successfully:', order);
             setIsLoading(false); // Reset loading after order creation
             return order;
         }).catch((error) => {
-            console.error('❌ PayPal order creation failed:', error);
             setError('Failed to create payment order. Please try again.');
             setIsLoading(false);
             throw error;
@@ -126,24 +122,20 @@ const CreditCardForm = ({ amount = 1, description = "Premium Access", onSuccess,
     };
 
     const onApprove = (data, actions) => {
-        console.log('🔄 Approving PayPal payment...', data);
         setIsLoading(true); // Set loading for payment processing
         
         return actions.order.capture().then((details) => {
-            console.log('✅ Payment completed successfully:', details);
             setIsLoading(false);
             if (onSuccess) {
                 onSuccess(details);
             }
         }).catch((err) => {
-            console.error('❌ Payment capture failed:', err);
             setError('Payment failed. Please try again.');
             setIsLoading(false);
         });
     };
 
     const onError = (err) => {
-        console.error('PayPal error:', err);
         setError('Payment error occurred. Please try again.');
         setIsLoading(false);
         if (onErrorCallback) {
@@ -152,7 +144,6 @@ const CreditCardForm = ({ amount = 1, description = "Premium Access", onSuccess,
     };
 
     const onCancel = (data) => {
-        console.log('Payment cancelled:', data);
         setIsLoading(false);
     };
 
@@ -180,10 +171,7 @@ const CreditCardForm = ({ amount = 1, description = "Premium Access", onSuccess,
 
             <PayPalScriptProvider 
                 options={paypalOptions}
-                onLoadStart={() => console.log('🔄 PayPal SDK loading...')}
-                onLoadSuccess={() => console.log('✅ PayPal SDK loaded successfully')}
                 onLoadError={(err) => {
-                    console.error('❌ PayPal SDK load error:', err);
                     setError('Payment system is temporarily unavailable. Please try again later.');
                 }}
             >
@@ -210,7 +198,6 @@ const CreditCardForm = ({ amount = 1, description = "Premium Access", onSuccess,
                     <p>Processing payment...</p>
                     <button 
                         onClick={() => {
-                            console.log('🛑 User cancelled payment');
                             setIsLoading(false);
                             setError('Payment cancelled by user.');
                         }}

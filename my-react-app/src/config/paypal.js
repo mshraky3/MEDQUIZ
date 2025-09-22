@@ -1,7 +1,7 @@
 // PayPal Configuration
 export const PAYPAL_CONFIG = {
-    // PayPal Sandbox Client ID (Public Key) - TESTING
-    CLIENT_ID: "test",
+    // PayPal Live Client ID (Public Key) - PRODUCTION
+    CLIENT_ID: "BAAdvgbPBZdxM0-yidbc3OgdPJS92H4klQ5UqbnMhNCr-JO3zOU3NHDQNfFgHeJr-oQCQ1KJ4_am0ivFrA",
     
     // Currency settings - Using USD directly for simplicity
     CURRENCY: "USD",
@@ -19,17 +19,19 @@ export const PAYPAL_CONFIG = {
     INTEGRATION_SOURCE: "integrationbuilder_ac",
     
     // Fixed USD pricing - no conversion needed
-    USD_PRICE: 1, // $1 USD for premium access
+    USD_PRICE: 19.1, // $19.1 USD for production
     
-    // Environment - SANDBOX for testing, LIVE for production
-    ENVIRONMENT: "sandbox"
+    // Environment - LIVE for production
+    ENVIRONMENT: "live"
 };
 
-// PayPal SDK Options - Ultra minimal configuration
+// PayPal SDK Options - Working configuration
 export const getPayPalOptions = () => ({
     "client-id": PAYPAL_CONFIG.CLIENT_ID,
     currency: PAYPAL_CONFIG.CURRENCY,
-    intent: PAYPAL_CONFIG.INTENT
+    intent: PAYPAL_CONFIG.INTENT,
+    "disable-funding": "paylater,venmo", // Only disable optional funding methods
+    "enable-funding": "card,paypal" // Enable both credit card and PayPal payments
 });
 
 // Get USD price directly
