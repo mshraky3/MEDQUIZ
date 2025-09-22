@@ -3,6 +3,9 @@ export const PAYPAL_CONFIG = {
     // PayPal Live Client ID (Public Key) - PRODUCTION
     CLIENT_ID: "BAAdvgbPBZdxM0-yidbc3OgdPJS92H4klQ5UqbnMhNCr-JO3zOU3NHDQNfFgHeJr-oQCQ1KJ4_am0ivFrA",
     
+    // PayPal Live Secret Key - PRODUCTION (Keep this secure!)
+    SECRET_KEY: "ECG8nI8bltJmdDQMXfmdnbuarw-KDbp5I2CN0zXu99KJUvW5ls_KIvMq4ZXPnDG85m0bO5zEGeHad_FN",
+    
     // Currency settings - Using USD directly for simplicity
     CURRENCY: "USD",
 
