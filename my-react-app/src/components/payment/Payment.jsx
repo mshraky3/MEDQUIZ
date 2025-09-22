@@ -245,7 +245,7 @@ const Payment = () => {
                     <div className="step-content">
                       <span>اضغط على الزر الأسود "بطاقة ائتمان" وليس بايبال</span>
                       <div className="step-image">
-                        <img src="/src/components/payment/imgs/blackButton.png" alt="الزر الأسود للبطاقة الائتمانية" className="instruction-img" />
+                        <img src="/imgs/blackButton.png" alt="الزر الأسود للبطاقة الائتمانية" className="instruction-img" />
                       </div>
                     </div>
                   </div>
@@ -255,7 +255,7 @@ const Payment = () => {
                     <div className="step-content">
                       <span>اختر "السعودية" من قائمة الدولة</span>
                       <div className="step-image">
-                        <img src="/src/components/payment/imgs/changeToKSA.png" alt="تغيير الدولة إلى السعودية" className="instruction-img" />
+                        <img src="/imgs/changeToKSA.png" alt="تغيير الدولة إلى السعودية" className="instruction-img" />
                       </div>
                     </div>
                   </div>

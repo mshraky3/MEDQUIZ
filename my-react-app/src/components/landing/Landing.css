@@ -259,6 +259,11 @@
   font-weight: bold;
   z-index: 2;
   box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+  max-width: 90%;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pricing-card {
@@ -845,6 +850,8 @@
   .pricing-badge {
     font-size: 12px;
     padding: 6px 16px;
+    max-width: 85%;
+    top: -12px;
   }
 
   .pricing-card {
@@ -1016,6 +1023,8 @@
   .pricing-badge {
     font-size: 11px;
     padding: 5px 14px;
+    max-width: 80%;
+    top: -10px;
   }
 
   .pricing-card {

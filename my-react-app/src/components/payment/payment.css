@@ -132,6 +132,12 @@ button[title*="Debit card"] {
   font-size: 12px;
   font-weight: bold;
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  z-index: 10;
+  max-width: 90%;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .plan-pricing {
@@ -512,6 +518,14 @@ button[title*="Debit card"] {
   
   .plan-highlight {
     padding: 20px;
+    margin-top: 20px; /* Add space for badge */
+  }
+  
+  .popular-badge {
+    padding: 4px 15px;
+    font-size: 11px;
+    top: -10px;
+    max-width: 85%;
   }
   
   .current-price {
@@ -764,6 +778,17 @@ button[title*="Debit card"] {
     padding: 20px;
   }
   
+  .plan-highlight {
+    margin-top: 25px; /* More space for badge */
+  }
+  
+  .popular-badge {
+    padding: 3px 12px;
+    font-size: 10px;
+    top: -8px;
+    max-width: 80%;
+  }
+  
   .current-price {
     font-size: 1.8rem;
   }
@@ -797,13 +822,15 @@ button[title*="Debit card"] {
   
   .payment-header h1 {
     font-size: 1.8rem;
-    padding-left: 80px;
+    padding-left: 10px;
     padding-right: 10px;
+    text-align: center;
   }
   
   [dir="rtl"] .payment-header h1 {
     padding-left: 10px;
-    padding-right: 80px;
+    padding-right: 10px;
+    text-align: center;
   }
 }
 
