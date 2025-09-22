@@ -9,6 +9,7 @@ import QUIZS from './components/quizs/QUIZS.jsx';
 import QUIZ from './components/Quiz/QUIZ.jsx';
 import ADDQ from './components/ADD/ADDQ.jsx';
 import Analysis from './components/analysis/Analysis.jsx'
+import WrongQuestions from './components/analysis/WrongQuestions.jsx';
 import Admin from './components/ADD/Admin.jsx';
 import Bank from './components/ADD/Bank.jsx';
 import AnalysisTemp from './components/login/AnalysisTemp.jsx';
@@ -20,6 +21,7 @@ import PaymentTest from './components/payment/PaymentTest.jsx';
 import PaymentFlowTest from './components/payment/PaymentFlowTest.jsx';
 import Signup from './components/signup/Signup.jsx';
 import ErrorBoundary from './components/common/ErrorBoundary.jsx';
+import Layout from './components/common/Layout.jsx';
 
 import Globals from './global.js';
 import { UserProvider } from './UserContext.jsx';
@@ -34,7 +36,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/login",
-    element: <Login />,
+    element: <Layout><Login /></Layout>,
     errorElement: <ErrorBoundary />,
   },
   
@@ -45,17 +47,17 @@ const router = createBrowserRouter([
   },
   {
     path: "/quizs",
-    element: <QUIZS />,
+    element: <Layout><QUIZS /></Layout>,
     errorElement: <ErrorBoundary />,
   },
   {
     path: "/temp-quiz/:numQuestions",
-    element: <TempQUIZ />,
+    element: <Layout><TempQUIZ /></Layout>,
     errorElement: <ErrorBoundary />,
   },
   {
     path: "/quiz/:numQuestions",
-    element: <QUIZ />,
+    element: <Layout><QUIZ /></Layout>,
     errorElement: <ErrorBoundary />,
   },
   {
@@ -65,12 +67,17 @@ const router = createBrowserRouter([
   },
   {
     path: "/analysis",
-    element: <Analysis />,
+    element: <Layout><Analysis /></Layout>,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/wrong-questions",
+    element: <Layout><WrongQuestions /></Layout>,
     errorElement: <ErrorBoundary />,
   },
   {
     path: "/analysis-temp",
-    element: <AnalysisTemp />,
+    element: <Layout><AnalysisTemp /></Layout>,
     errorElement: <ErrorBoundary />,
   },
   {
@@ -85,27 +92,27 @@ const router = createBrowserRouter([
   },
   {
     path: "/payment",
-    element: <Payment />,
+    element: <Layout><Payment /></Layout>,
     errorElement: <ErrorBoundary />,
   },
   {
     path: "/waiting-for-payment",
-    element: <WaitingForPayment />,
+    element: <Layout><WaitingForPayment /></Layout>,
     errorElement: <ErrorBoundary />,
   },
   {
     path: "/payment-test",
-    element: <PaymentTest />,
+    element: <Layout><PaymentTest /></Layout>,
     errorElement: <ErrorBoundary />,
   },
   {
     path: "/payment-flow-test",
-    element: <PaymentFlowTest />,
+    element: <Layout><PaymentFlowTest /></Layout>,
     errorElement: <ErrorBoundary />,
   },
   {
     path: "/signup",
-    element: <Signup />,
+    element: <Layout><Signup /></Layout>,
     errorElement: <ErrorBoundary />,
   },
   {
