@@ -13,7 +13,7 @@ const AnalysisTemp = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { id, answers, questions, duration } = location.state || {};
+  const { id, answers, questions, duration, types, source } = location.state || {};
 
   // Add Google AdSense script
   useEffect(() => {
@@ -62,8 +62,8 @@ const AnalysisTemp = () => {
       quiz_accuracy: accuracy,
       duration: actualDuration,
       avg_time_per_question: avgTimePerQuestion,
-      source: 'general',
-      topics_covered: [selectedTopic]
+      source: source || 'general',
+      topics_covered: types ? types.split(',') : [selectedTopic]
     }
   };
 
@@ -74,7 +74,7 @@ const AnalysisTemp = () => {
   };
 
   // Get the selected topic from the quiz data
-  const selectedTopic = location.state?.types || 'surgery'; // Default to surgery if not specified
+  const selectedTopic = types || 'surgery'; // Default to surgery if not specified
   
   const topicMap = {};
   answers.forEach((ans, index) => {
@@ -117,9 +117,35 @@ const AnalysisTemp = () => {
     navigate('/payment');
   };
 
+  const handleContactUs = () => {
+    // Open email client or contact form
+    window.location.href = 'mailto:support@medquiz.com?subject=Free Trial Analysis Inquiry&body=Hi, I completed the free trial and viewed the analysis. I would like to know more about the full version features.';
+  };
+
   return (
     <div className="analysis-wrapper fade-in">
-      <h2 className="screen-title">Quiz Health Report</h2>
+      <div className="trial-analysis-header">
+        <h2 className="screen-title">🎯 Free Trial Analysis</h2>
+        <div className="trial-analysis-subtitle">
+          <p>You've completed a sample quiz with {totalQuestions} questions!</p>
+          <p>Here's your performance breakdown from the trial experience.</p>
+        </div>
+      </div>
+
+      {/* Trial Notice */}
+      <div className="trial-notice-analysis">
+        <div className="trial-notice-content">
+          <span className="trial-emoji">🎯</span>
+          <div className="trial-text-content">
+            <h4>Free Trial Experience</h4>
+            <p>
+              You've just experienced a sample of our comprehensive SMLE question bank. 
+              With a full subscription, you'll get access to 8,000+ questions, detailed analytics, 
+              and personalized study recommendations.
+            </p>
+          </div>
+        </div>
+      </div>
 
       {/* === OverallStats Component === */}
       <OverallStats userAnalysis={userAnalysis} />
@@ -141,14 +167,36 @@ const AnalysisTemp = () => {
         isTrial={true}
       />
 
+      {/* Trial Benefits */}
+      <div className="trial-benefits">
+        <h4>🚀 What You Get With Full Access:</h4>
+        <ul>
+          <li>✅ Access to 8,000+ SMLE questions</li>
+          <li>✅ Detailed performance analytics</li>
+          <li>✅ Topic-wise practice sessions</li>
+          <li>✅ Wrong questions review system</li>
+          <li>✅ Progress tracking and streaks</li>
+          <li>✅ Personalized study recommendations</li>
+        </ul>
+      </div>
+
       {/* Action Buttons */}
-      <div className="button-bar">
-        <button
-          onClick={handleGetAccountClick}
-          className="primary-button"
-        >
-          Subscribe Now
-        </button>
+      <div className="trial-actions-section">
+        <div className="trial-actions-grid">
+          <button
+            onClick={handleGetAccountClick}
+            className="trial-action-btn subscribe"
+          >
+            🚀 Subscribe Now - Full Access
+          </button>
+          
+          <button
+            onClick={handleContactUs}
+            className="trial-action-btn contact"
+          >
+            📧 Contact Us
+          </button>
+        </div>
       </div>
       <GoogleAd />
     </div>

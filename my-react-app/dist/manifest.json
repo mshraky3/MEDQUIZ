@@ -1,0 +1,62 @@
+{
+  "name": "SQB - Ultimate SMLE Prep Platform",
+  "short_name": "SQB",
+  "description": "Master the Saudi Medical Licensing Examination (SMLE) with over 5,000 carefully curated questions, detailed analytics, and targeted practice sessions.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#007bff",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en",
+  "categories": ["education", "medical", "health"],
+  "icons": [
+    {
+      "src": "/src/tab_logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/src/tab_logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/src/tab_logo.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "SQB SMLE Prep Platform"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Start Quiz",
+      "short_name": "Quiz",
+      "description": "Start a new SMLE practice quiz",
+      "url": "/quizs",
+      "icons": [
+        {
+          "src": "/src/tab_logo.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "View Analysis",
+      "short_name": "Analysis",
+      "description": "View your performance analysis",
+      "url": "/analysis",
+      "icons": [
+        {
+          "src": "/src/tab_logo.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ]
+} 

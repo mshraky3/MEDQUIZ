@@ -1,127 +1,41 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import GoogleAd from '../common/GoogleAd';
-
-const STATIC_QUESTIONS = [
-  {
-    id: 479,
-    question_text: "Where is basal cell carcinoma most commonly located?",
-    option1: "Face",
-    option2: "Breast",
-    option3: "Lower limb",
-    option4: "Upper limb",
-    question_type: "surgery",
-    correct_option: "Face",
-    source: "general"
-  },
-  {
-    id: 1993,
-    question_text: "A 60-year-old man with new HTN and DM. HbA1c = 6.9%, proteinuria present. Best antihypertensive?",
-    option1: "Lisinopril",
-    option2: "Atenolol",
-    option3: "Amlodipine",
-    option4: "Hydrochlorothiazide",
-    question_type: "medicine",
-    correct_option: "Lisinopril",
-    source: "general"
-  },
-  {
-    id: 1802,
-    question_text: "A 56-year-old man with epigastric pain, bloating, weight loss. Gastroscopy shows antral mass; biopsy confirms MALToma. H. pylori positive. Next step?",
-    option1: "H. pylori eradication therapy",
-    option2: "Referral for gastrectomy",
-    option3: "Chemotherapy",
-    option4: "Radiotherapy",
-    question_type: "medicine",
-    correct_option: "H. pylori eradication therapy",
-    source: "general"
-  },
-  {
-    id: 581,
-    question_text: "A 15-year-old girl, 7 days post appendectomy, remains febrile and develops respiratory distress requiring ventilation. CT followed by contrast shows bleeding from multiple sites including mouth and IV punctures. Most likely diagnosis?",
-    option1: "Haemophilia",
-    option2: "Anaphylactic contrast reaction",
-    option3: "Idiopathic thrombocytopenic purpura",
-    option4: "Disseminated intravascular coagulation",
-    question_type: "surgery",
-    correct_option: "Disseminated intravascular coagulation",
-    source: "general"
-  },
-  {
-    id: 1349,
-    question_text: "A 35-year-old P2002 presents with secondary amenorrhea for 8 months. Most appropriate first diagnostic step?",
-    option1: "Pregnancy test",
-    option2: "Pelvic ultrasound",
-    option3: "Full history",
-    option4: "Clinical examination",
-    question_type: "obstetrics and gynecology",
-    correct_option: "Pregnancy test",
-    source: "general"
-  },
-  {
-    id: 2670,
-    question_text: "A 12-year-old boy brought to clinic; mother concerned he is the shortest in class. Bone age 10 years, mother 155 cm, father 178 cm, boy 145 cm (5th–10th percentile). What is his target height range?",
-    option1: "135–150 cm",
-    option2: "151–165 cm",
-    option3: "166–180 cm",
-    option4: "181–195 cm",
-    question_type: "pediatric",
-    correct_option: "166–180 cm",
-    source: "general"
-  },
-  {
-    id: 1435,
-    question_text: "A 56-year-old diabetic presents with cough, fever, cavitary lesion in left upper lobe. Best isolation precaution?",
-    option1: "Droplet",
-    option2: "Contact",
-    option3: "Airborne",
-    option4: "Standard",
-    question_type: "medicine",
-    correct_option: "Airborne",
-    source: "general"
-  },
-  {
-    id: 2800,
-    question_text: "A 2-week-old full-term infant with mild jaundice for 6 days, normal ultrasound. Labs: indirect bilirubin = 20 µmol/L. Best initial management?",
-    option1: "Observation",
-    option2: "Phototherapy",
-    option3: "Exchange transfusion",
-    option4: "Phenobarbital",
-    question_type: "pediatric",
-    correct_option: "Observation",
-    source: "general"
-  },
-  {
-    id: 2513,
-    question_text: "Which is the most causative factor for retinopathy of prematurity?",
-    option1: "Acidosis",
-    option2: "Hyperoxemia",
-    option3: "Apnea of prematurity",
-    option4: "Gram-negative sepsis",
-    question_type: "pediatric",
-    correct_option: "Hyperoxemia",
-    source: "general"
-  },
-  {
-    id: 134,
-    question_text: "A 35-year-old man severe RUQ pain, cholecystectomy 7 days prior. CBD 9mm. Most likely diagnosis?",
-    option1: "Retained stone",
-    option2: "CBD injury",
-    option3: "Biloma",
-    option4: "Cholangitis",
-    question_type: "surgery",
-    correct_option: "Retained stone",
-    source: "general"
-  }
-];
+import trialQuestions from '../ADD/datafortrile.js';
 
 const TempQUIZ = () => {
   const { numQuestions } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const id = location.state?.id || 'trial_user';
+  const selectedTypes = location.state?.types;
+  const selectedSource = location.state?.source;
 
-  const [questions] = useState(STATIC_QUESTIONS.slice(0, parseInt(numQuestions) || 10));
+  // Filter questions based on selected types and source
+  const getFilteredQuestions = () => {
+    let filtered = trialQuestions;
+    
+    // Filter by types if specified
+    if (selectedTypes && selectedTypes !== 'mix') {
+      const typesArray = selectedTypes.split(',');
+      filtered = filtered.filter(q => typesArray.includes(q.question_type));
+    }
+    
+    // Filter by source if specified
+    if (selectedSource) {
+      filtered = filtered.filter(q => q.source === selectedSource);
+    }
+    
+    return filtered;
+  };
+
+  const [questions] = useState(() => {
+    const filtered = getFilteredQuestions();
+    const requestedCount = parseInt(numQuestions) || 10;
+    // If we have fewer questions than requested, use all available
+    const count = Math.min(filtered.length, requestedCount);
+    return filtered.slice(0, count);
+  });
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [answers, setAnswers] = useState([]);
@@ -177,7 +91,7 @@ const TempQUIZ = () => {
   };
 
   if (loading) return <Loading />;
-  if (quizFinished) return <Result answers={answers} navigate={navigate} id={id} quizStartTime={quizStartTime} />;
+  if (quizFinished) return <Result answers={answers} navigate={navigate} id={id} quizStartTime={quizStartTime} questions={questions} selectedTypes={selectedTypes} selectedSource={selectedSource} />;
 
   return (
     <Question
@@ -230,7 +144,7 @@ const Loading = () => (
 );
 
 // Result Component
-const Result = ({ answers, navigate, id, quizStartTime }) => {
+const Result = ({ answers, navigate, id, quizStartTime, questions, selectedTypes, selectedSource }) => {
   const totalQuestions = answers.length;
   const correctCount = answers.filter(a => a.isCorrect).length;
   const duration = Math.floor((Date.now() - quizStartTime) / 1000); // Duration in seconds
@@ -239,17 +153,52 @@ const Result = ({ answers, navigate, id, quizStartTime }) => {
     navigate('/payment');
   };
 
+  const handleContactUs = () => {
+    // Open email client or contact form
+    window.location.href = 'mailto:support@medquiz.com?subject=Free Trial Inquiry&body=Hi, I completed the free trial and would like to know more about the full version.';
+  };
+
   return (
     <div className="quiz-result">
       <h2>Quiz Completed!</h2>
       <p>You got <strong>{correctCount}</strong> out of <strong>{totalQuestions}</strong> correct.</p>
+      <p>Accuracy: <strong>{((correctCount / totalQuestions) * 100).toFixed(1)}%</strong></p>
       <p>Time taken: <strong>{Math.floor(duration / 60)}m {duration % 60}s</strong></p>
+      
+      <div className="trial-result-info">
+        <p>🎯 <strong>Free Trial Complete!</strong></p>
+        <p>You've experienced {totalQuestions} sample questions from our collection.</p>
+        {selectedTypes && selectedTypes !== 'mix' && (
+          <p>Topics covered: <strong>{selectedTypes.replace(/,/g, ', ')}</strong></p>
+        )}
+        {selectedSource && (
+          <p>Source: <strong>{selectedSource}</strong></p>
+        )}
+      </div>
 
-      <button onClick={handleGetAccountClick} className="restart-button">Subscribe Now</button>
+      <div className="result-buttons">
+        <button onClick={handleGetAccountClick} className="subscribe-button">
+          🚀 Subscribe Now - Full Access
+        </button>
+        
+        <button className="contact-button" onClick={handleContactUs}>
+          📧 Contact Us
+        </button>
 
-      <button className="restart-button"  onClick={() => navigate("/analysis-temp", { state: { id, answers, questions: STATIC_QUESTIONS, duration } })}>
-        View Analysis
-      </button>    </div>
+        <button className="analysis-button" onClick={() => navigate("/analysis-temp", { 
+          state: { 
+            id, 
+            answers, 
+            questions, 
+            duration,
+            types: selectedTypes,
+            source: selectedSource
+          } 
+        })}>
+          📊 View Analysis
+        </button>
+      </div>
+    </div>
   );
 };
 

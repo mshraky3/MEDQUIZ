@@ -18,6 +18,7 @@ const Landing = () => {
   const [showModal, setShowModal] = useState(false);
   
   const [loading, setLoading] = useState(false);
+  const [formError, setFormError] = useState('');
   
   const [successMsg, setSuccessMsg] = useState('');
   const [showAddToHome, setShowAddToHome] = useState(false);
@@ -50,8 +51,15 @@ const Landing = () => {
 
 
   useEffect(() => {
-    document.documentElement.lang = lang;
+    // Only set document direction when on landing page
+    // Store original direction to restore later
+    const originalDir = document.documentElement.dir;
     document.documentElement.dir = isArabic ? 'rtl' : 'ltr';
+    
+    // Cleanup function to restore original direction when component unmounts
+    return () => {
+      document.documentElement.dir = originalDir || 'ltr';
+    };
   }, [lang, isArabic]);
 
 
@@ -124,17 +132,17 @@ const Landing = () => {
           {/* Pricing Section */}
           <div className="landing-pricing">
             <div className="pricing-badge">
-              <span className="pricing-label">{isArabic ? "أفضل قيمة" : "Best Value"}</span>
+              <span className="pricing-label">{isArabic ? "🎉 عرض اليوم الوطني 🎉" : "🎉 National Day Special 🎉"}</span>
             </div>
             <div className="pricing-card">
               <div className="pricing-header">
-                <h3>{isArabic ? "🔥 اشتراك سنوي - سنة كاملة " : " ANNUAL SUBSCRIPTION - FULL YEAR "}</h3>
+                <h3>{isArabic ? "🔥 اشتراك سنوي - عرض اليوم الوطني " : " ANNUAL SUBSCRIPTION - NATIONAL DAY SPECIAL "}</h3>
                 <div className="price">
                   <span className="currency">SAR</span>
-                  <span className="amount">50</span>
+                  <span className="amount">75</span>
                   <span className="period">{isArabic ? "لمدة سنة كاملة" : "FOR 1 FULL YEAR"}</span>
                 </div>
-                <p className="pricing-subtitle">{isArabic ? "ليس شهرياً - اشتراك لمدة سنة كاملة" : "NOT MONTHLY - SUBSCRIPTION FOR 1 FULL YEAR"}</p>
+                <p className="pricing-subtitle">{isArabic ? "عرض خاص للعيد الوطني السعودي - اشتراك لمدة سنة كاملة" : "SPECIAL NATIONAL DAY OFFER - SUBSCRIPTION FOR 1 FULL YEAR"}</p>
               </div>
               <div className="pricing-features">
                 <div className="pricing-feature">
@@ -159,7 +167,7 @@ const Landing = () => {
                 </div>
               </div>
               <div className="pricing-comparison">
-                <p>{isArabic ? "وفر حتى ٨٠٪ مقارنة بالخدمات الأخرى" : "Save up to 80% compared to other SMLE (Prometric) services"}</p>
+                <p>{isArabic ? "وفر ٧٠٪ - عرض خاص لليوم الوطني السعودي" : "Save 70% - Special National Day Offer"}</p>
               </div>
               <button className="landing-btn primary" style={{marginTop: 24, width: '100%'}} onClick={() => navigate('/payment')}  >
                 {isArabic ? "اشترك الآن" : "Subscribe / Buy Now"}

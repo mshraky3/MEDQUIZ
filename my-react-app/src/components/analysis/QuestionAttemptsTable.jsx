@@ -74,59 +74,71 @@ const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz, isTria
 
             {lastQuizAttempts.length > 0 ? (
                 <>
-                    <div className="table-wrapper">
-                        <table className="analysis-tableQ" >
-                            <thead>
-                                <tr id='last-quiz-summary'>
-                                    <th>Question</th>
-                                    <th>Your Answer</th>
-                                    <th>Correct Answer</th>
-                                    <th>Result</th>
-                                    <th>Source</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {displayedAttempts.map((attempt, index) => {
-                                    const questionRow = questionsMap.get(attempt.question_id);
-                                    const questionText = questionRow?.question_text || 'Unknown question';
-                                    const correctAnswer = questionRow?.correct_option || 'N/A';
-                                    const questionSource = questionRow?.source || 'general';
-                                    const isCorrect = attempt.is_correct;
-                                    return (
-                                        <tr key={attempt.id || index}>
-                                            <td>{questionText}</td>
-                                            <td className={isCorrect ? 'user-answer right' : 'user-answer wrong'}>{attempt.selected_option}</td>
-                                            <td className="correct-answer right">{correctAnswer}</td>
-                                            <td>{isCorrect ? '✔️' : '❌'}</td>
-                                            <td>
-                                                <span className="source-badge">
-                                                    📚 {questionSource}
+                    <div className="questions-grid">
+                        {displayedAttempts.map((attempt, index) => {
+                            const questionRow = questionsMap.get(attempt.question_id);
+                            const questionText = questionRow?.question_text || 'Unknown question';
+                            const correctAnswer = questionRow?.correct_option || 'N/A';
+                            const questionSource = questionRow?.source || 'general';
+                            const questionType = questionRow?.question_type || 'General';
+                            const isCorrect = attempt.is_correct;
+                            return (
+                                <div key={attempt.id || index} className="question-card">
+                                    <div className="question-header">
+                                        <div className="question-meta">
+                                            <span className="type-badge">
+                                                📖 {questionType}
+                                            </span>
+                                            <span className="source-badge">
+                                                📚 {questionSource}
+                                            </span>
+                                            <span className={`result-badge ${isCorrect ? 'correct' : 'wrong'}`}>
+                                                {isCorrect ? '✅ Correct' : '❌ Wrong'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="question-content">
+                                        <div className="question-text">
+                                            {questionText}
+                                        </div>
+                                        
+                                        <div className="answers-section">
+                                            <div className="answer-row">
+                                                <span className="answer-label wrong">Your Answer:</span>
+                                                <span className={`answer-text ${isCorrect ? 'correct' : 'wrong'}`}>
+                                                    {attempt.selected_option}
                                                 </span>
-                                            </td>
-                                            <td>
-                                                <button
-                                                    onClick={(e) =>
-                                                        handleSeeMore(
-                                                            attempt.id,
-                                                            questionText,
-                                                            attempt.selected_option,
-                                                            correctAnswer,
-                                                            e
-                                                        )
-                                                    }
-                                                    className="see-more-button"
-                                                    disabled={loadingButtons[attempt.id]}
-                                                >
-                                                    {loadingButtons[attempt.id] ? 'Loading...' : 'See More'}
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
+                                            </div>
+                                            <div className="answer-row">
+                                                <span className="answer-label correct">Correct Answer:</span>
+                                                <span className="answer-text correct">{correctAnswer}</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="question-actions">
+                                            <button
+                                                onClick={(e) =>
+                                                    handleSeeMore(
+                                                        attempt.id,
+                                                        questionText,
+                                                        attempt.selected_option,
+                                                        correctAnswer,
+                                                        e
+                                                    )
+                                                }
+                                                className="see-more-button"
+                                                disabled={loadingButtons[attempt.id]}
+                                            >
+                                                {loadingButtons[attempt.id] ? 'Loading...' : '🔍 See More'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
+                    
                     {lastQuizAttempts.length > 5 && (
                         <div className="see-all-container">
                             <button

@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <!-- Homepage -->
+  <url>
+    <loc>https://medquiz.vercel.app/</loc>
+    <lastmod>2025-01-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://medquiz.vercel.app/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://medquiz.vercel.app/" />
+  </url>
+
+  <!-- Login Page -->
+  <url>
+    <loc>https://medquiz.vercel.app/login</loc>
+    <lastmod>2025-01-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://medquiz.vercel.app/login" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://medquiz.vercel.app/login" />
+  </url>
+
+  <!-- Quiz Selection Page -->
+  <url>
+    <loc>https://medquiz.vercel.app/quizs</loc>
+    <lastmod>2025-01-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://medquiz.vercel.app/quizs" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://medquiz.vercel.app/quizs" />
+  </url>
+
+  <!-- Analysis Page -->
+  <url>
+    <loc>https://medquiz.vercel.app/analysis</loc>
+    <lastmod>2025-01-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://medquiz.vercel.app/analysis" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://medquiz.vercel.app/analysis" />
+  </url>
+
+  <!-- Trial Analysis Page -->
+  <url>
+    <loc>https://medquiz.vercel.app/analysis-temp</loc>
+    <lastmod>2025-01-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://medquiz.vercel.app/analysis-temp" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://medquiz.vercel.app/analysis-temp" />
+  </url>
+
+  <!-- Quiz Pages (Dynamic) -->
+  <url>
+    <loc>https://medquiz.vercel.app/quiz/10</loc>
+    <lastmod>2025-01-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://medquiz.vercel.app/quiz/10" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://medquiz.vercel.app/quiz/10" />
+  </url>
+
+  <url>
+    <loc>https://medquiz.vercel.app/quiz/20</loc>
+    <lastmod>2025-01-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://medquiz.vercel.app/quiz/20" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://medquiz.vercel.app/quiz/20" />
+  </url>
+
+  <url>
+    <loc>https://medquiz.vercel.app/quiz/50</loc>
+    <lastmod>2025-01-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://medquiz.vercel.app/quiz/50" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://medquiz.vercel.app/quiz/50" />
+  </url>
+
+  <url>
+    <loc>https://medquiz.vercel.app/quiz/100</loc>
+    <lastmod>2025-01-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://medquiz.vercel.app/quiz/100" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://medquiz.vercel.app/quiz/100" />
+  </url>
+</urlset>

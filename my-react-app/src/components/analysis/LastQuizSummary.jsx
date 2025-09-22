@@ -12,64 +12,83 @@ const LastQuizSummary = ({ latest_quiz }) => {
         <section className="streak-section">
             <h3 className="section-header">Last Quiz Summary</h3>
             {latest_quiz?.id ? (
-                <div className="table-wrapper">
-                    <table className="analysis-tableQ">
-                        <thead >
-                            <tr>
-                                <th>Metric</th>
-                                <th>Value</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Total Questions</td>
-                                <td>{latest_quiz.total_questions ?? 0}</td>
-                            </tr>
-                            <tr>
-                                <td>Correct Answers</td>
-                                <td>{latest_quiz.correct_answers ?? 0}</td>
-                            </tr>
-                            <tr>
-                                <td>Accuracy</td>
-                                <td>
-                                    {latest_quiz.total_questions > 0
-                                        ? ((latest_quiz.correct_answers / latest_quiz.total_questions) * 100).toFixed(2)
-                                        : "0.00"
-                                    }%
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Duration</td>
-                                <td>
-                                    {latest_quiz.duration ? Math.floor(latest_quiz.duration / 60) : 0}m {latest_quiz.duration ? latest_quiz.duration % 60 : 0}s
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Avg. Time per Question</td>
-                                <td>
-                                    {latest_quiz.avg_time_per_question ? parseFloat(latest_quiz.avg_time_per_question).toFixed(1) : 0}s
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Question Source</td>
-                                <td>
-                                    <span className="source-badge">
-                                        📚 {latest_quiz.source || 'general'}
+                <div className="questions-grid">
+                    <div className="question-card">
+                        <div className="question-header">
+                            <div className="question-meta">
+                                <span className="type-badge">
+                                    📊 Quiz Summary
+                                </span>
+                                <span className="source-badge">
+                                    📚 {latest_quiz.source || 'general'}
+                                </span>
+                                <span className="date-badge">
+                                    📅 Latest Quiz
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div className="question-content">
+                            <div className="quiz-summary-text">
+                                <h4>Your Last Quiz Performance</h4>
+                                <p>Here's a detailed breakdown of your most recent quiz attempt:</p>
+                            </div>
+                            
+                            <div className="answers-section">
+                                <div className="answer-row">
+                                    <span className="answer-label primary">Total Questions:</span>
+                                    <span className="answer-text primary">{latest_quiz.total_questions ?? 0}</span>
+                                </div>
+                                
+                                <div className="answer-row">
+                                    <span className="answer-label correct">Correct Answers:</span>
+                                    <span className="answer-text correct">{latest_quiz.correct_answers ?? 0}</span>
+                                </div>
+                                
+                                <div className="answer-row">
+                                    <span className="answer-label accuracy">Accuracy:</span>
+                                    <span className="answer-text accuracy">
+                                        {latest_quiz.total_questions > 0
+                                            ? ((latest_quiz.correct_answers / latest_quiz.total_questions) * 100).toFixed(2)
+                                            : "0.00"
+                                        }%
                                     </span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Topics Covered</td>
-                                <td>
-                                    <span className="topic-badge">
-                                        📖 {latest_quiz.topics_covered && latest_quiz.topics_covered.length > 0 
+                                </div>
+                                
+                                <div className="answer-row">
+                                    <span className="answer-label time">Duration:</span>
+                                    <span className="answer-text time">
+                                        {latest_quiz.duration ? Math.floor(latest_quiz.duration / 60) : 0}m {latest_quiz.duration ? latest_quiz.duration % 60 : 0}s
+                                    </span>
+                                </div>
+                                
+                                <div className="answer-row">
+                                    <span className="answer-label time">Avg. Time per Question:</span>
+                                    <span className="answer-text time">
+                                        {latest_quiz.avg_time_per_question ? parseFloat(latest_quiz.avg_time_per_question).toFixed(1) : 0}s
+                                    </span>
+                                </div>
+                                
+                                <div className="answer-row">
+                                    <span className="answer-label topics">Topics Covered:</span>
+                                    <span className="answer-text topics">
+                                        {latest_quiz.topics_covered && latest_quiz.topics_covered.length > 0 
                                             ? latest_quiz.topics_covered.join(', ') 
                                             : 'mix'}
                                     </span>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                                </div>
+                            </div>
+                            
+                            <div className="question-actions">
+                                <button
+                                    onClick={() => window.location.reload()}
+                                    className="see-more-button"
+                                >
+                                    🔄 Refresh Data
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             ) : (
                 <p className="no-streak">No previous quiz found.</p>

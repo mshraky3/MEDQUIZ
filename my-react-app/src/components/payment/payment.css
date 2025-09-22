@@ -40,7 +40,7 @@ button[title*="Debit card"] {
 
 .back-button {
   position: absolute;
-  left: 20px;
+  right: 20px;
   top: 50%;
   transform: translateY(-50%);
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -235,6 +235,125 @@ button[title*="Debit card"] {
   min-width: 20px;
 }
 
+
+/* Instructions Button */
+.instructions-button-container {
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+.instructions-button {
+  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 15px 25px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3);
+  transition: all 0.3s ease;
+}
+
+.instructions-button:hover {
+  background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(243, 156, 18, 0.4);
+}
+
+.instructions-button .instructions-icon {
+  font-size: 1.2rem;
+}
+
+.instructions-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.instructions-icon {
+  font-size: 1.5rem;
+  color: #f39c12;
+}
+
+.instructions-header h4 {
+  color: #d68910;
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.instructions-content p {
+  color: #8b4513;
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 15px 0;
+  line-height: 1.5;
+}
+
+.instruction-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.step-number {
+  background: #f39c12;
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  font-weight: bold;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.step-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.step span:last-child,
+.step-content span:first-child {
+  color: #8b4513;
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.step-image {
+  margin-top: 5px;
+}
+
+.instruction-img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 2px solid #f39c12;
+  transition: transform 0.2s ease;
+}
+
+.instruction-img:hover {
+  transform: scale(1.02);
+}
 
 /* Payment Actions */
 .payment-actions {
@@ -432,6 +551,208 @@ button[title*="Debit card"] {
     position: relative;
     margin-bottom: 20px;
   }
+  
+  /* Mobile billing instructions */
+  .billing-instructions {
+    padding: 15px;
+    margin-bottom: 20px;
+  }
+  
+  .instructions-header h4 {
+    font-size: 1.1rem;
+  }
+  
+  .instructions-content p {
+    font-size: 0.95rem;
+  }
+  
+  .step span:last-child,
+  .step-content span:first-child {
+    font-size: 0.9rem;
+  }
+  
+  .instruction-img {
+    max-width: 90%;
+    margin: 0 auto;
+  }
+  
+  .step-content {
+    gap: 8px;
+  }
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 25px;
+  border-bottom: 1px solid #eee;
+  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+  color: white;
+  border-radius: 16px 16px 0 0;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 2rem;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.modal-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.modal-body {
+  padding: 25px;
+}
+
+.modal-warning {
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  border: 2px solid #f39c12;
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 20px;
+  font-weight: 600;
+  color: #8b4513;
+  text-align: center;
+  font-size: 1rem;
+}
+
+.modal-footer {
+  padding: 20px 25px;
+  border-top: 1px solid #eee;
+  text-align: center;
+}
+
+.modal-ok-button {
+  background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 30px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+}
+
+.modal-ok-button:hover {
+  background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+}
+
+/* Mobile Modal Styles */
+@media (max-width: 768px) {
+  .modal-overlay {
+    padding: 10px;
+  }
+  
+  .modal-content {
+    max-height: 95vh;
+    border-radius: 12px;
+  }
+  
+  .modal-header {
+    padding: 15px 20px;
+    border-radius: 12px 12px 0 0;
+  }
+  
+  .modal-header h3 {
+    font-size: 1.2rem;
+  }
+  
+  .modal-body {
+    padding: 20px;
+  }
+  
+  .modal-warning {
+    padding: 12px;
+    font-size: 0.95rem;
+  }
+  
+  .modal-footer {
+    padding: 15px 20px;
+  }
+  
+  .modal-ok-button {
+    padding: 10px 25px;
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-header h3 {
+    font-size: 1.1rem;
+  }
+  
+  .modal-body {
+    padding: 15px;
+  }
+  
+  .modal-warning {
+    font-size: 0.9rem;
+  }
 }
 
 @media (max-width: 480px) {
@@ -458,20 +779,20 @@ button[title*="Debit card"] {
 
 /* RTL Support for Arabic */
 [dir="rtl"] .back-button {
-  left: auto;
-  right: 20px;
+  right: auto;
+  left: 20px;
 }
 
 /* Mobile responsiveness for back button */
 @media (max-width: 768px) {
   .back-button {
-    left: 10px;
+    right: 10px;
     padding: 10px 16px;
     font-size: 13px;
   }
   
   [dir="rtl"] .back-button {
-    right: 10px;
+    left: 10px;
   }
   
   .payment-header h1 {

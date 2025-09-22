@@ -50,25 +50,151 @@ const StreakInfo = ({ streakData, userId, isTrial }) => {
         <section className="streak-section">
             <h3 className="section-header">Your Streaks</h3>
             {isTrial ? (
-                <div className="trial-streak-notice">
-                    <span className="trial-emoji">⭐</span>
-                    <span className="trial-text">Streak tracking available with full access</span>
+                <div className="questions-grid">
+                    <div className="question-card">
+                        <div className="question-header">
+                            <div className="question-meta">
+                                <span className="type-badge" style={{
+                                    background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                                    color: 'white'
+                                }}>
+                                    ⭐ Trial Mode
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div className="question-content">
+                            <div className="topic-performance-text">
+                                <h4>Streak Tracking Available</h4>
+                                <p>Track your daily learning streaks with full access!</p>
+                            </div>
+                            
+                            <div className="answers-section">
+                                <div className="answer-row">
+                                    <span className="answer-label accuracy">Feature:</span>
+                                    <span className="answer-text accuracy">Daily Streak Tracking</span>
+                                </div>
+                                
+                                <div className="answer-row">
+                                    <span className="answer-label primary">Status:</span>
+                                    <span className="answer-text primary">Available with Full Access</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             ) : data ? (
-                <div className="streak-cards">
-                    <div className={`streak-card ${data.current_streak > 0 ? 'active' : ''}`}>
-                        <div className="streak-label">Current Streak</div>
-                        <div className="streak-value">{data.current_streak ?? 0}</div>
-                        <div className="streak-unit">days</div>
+                <div className="questions-grid">
+                    <div className="question-card">
+                        <div className="question-header">
+                            <div className="question-meta">
+                                <span className="type-badge" style={{
+                                    background: data.current_streak > 0 ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)',
+                                    color: 'white'
+                                }}>
+                                    🔥 Current Streak
+                                </span>
+                                <span className="accuracy-badge" style={{
+                                    background: data.current_streak > 0 ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' : 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)',
+                                    color: 'white'
+                                }}>
+                                    ⏱️ {data.current_streak ?? 0} days
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div className="question-content">
+                            <div className="topic-performance-text">
+                                <h4>Keep Going!</h4>
+                                <p>{data.current_streak > 0 ? 'You\'re on fire! Keep up the momentum!' : 'Start a new streak today!'}</p>
+                            </div>
+                            
+                            <div className="answers-section">
+                                <div className="answer-row">
+                                    <span className="answer-label correct">Current Streak:</span>
+                                    <span className="answer-text correct">{data.current_streak ?? 0} days</span>
+                                </div>
+                                
+                                <div className="answer-row">
+                                    <span className="answer-label accuracy">Status:</span>
+                                    <span className="answer-text accuracy">{data.current_streak > 0 ? 'Active' : 'No active streak'}</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div className="streak-card">
-                        <div className="streak-label">Longest Streak</div>
-                        <div className="streak-value">{data.longest_streak ?? 0}</div>
-                        <div className="streak-unit">days</div>
+
+                    <div className="question-card">
+                        <div className="question-header">
+                            <div className="question-meta">
+                                <span className="type-badge" style={{
+                                    background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                                    color: 'white'
+                                }}>
+                                    🏆 Longest Streak
+                                </span>
+                                <span className="accuracy-badge" style={{
+                                    background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                                    color: 'white'
+                                }}>
+                                    📈 {data.longest_streak ?? 0} days
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div className="question-content">
+                            <div className="topic-performance-text">
+                                <h4>Personal Best</h4>
+                                <p>Your longest learning streak so far!</p>
+                            </div>
+                            
+                            <div className="answers-section">
+                                <div className="answer-row">
+                                    <span className="answer-label primary">Longest Streak:</span>
+                                    <span className="answer-text primary">{data.longest_streak ?? 0} days</span>
+                                </div>
+                                
+                                <div className="answer-row">
+                                    <span className="answer-label accuracy">Achievement:</span>
+                                    <span className="answer-text accuracy">{data.longest_streak > 0 ? 'Great consistency!' : 'Start your first streak'}</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             ) : (
-                <p className="no-streak">No streak data available. Complete your first quiz to start a streak!</p>
+                <div className="questions-grid">
+                    <div className="question-card">
+                        <div className="question-header">
+                            <div className="question-meta">
+                                <span className="type-badge" style={{
+                                    background: 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)',
+                                    color: 'white'
+                                }}>
+                                    📊 No Streak Data
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div className="question-content">
+                            <div className="topic-performance-text">
+                                <h4>Start Your Streak Today!</h4>
+                                <p>Complete your first quiz to begin tracking your learning streak!</p>
+                            </div>
+                            
+                            <div className="answers-section">
+                                <div className="answer-row">
+                                    <span className="answer-label wrong">Current Status:</span>
+                                    <span className="answer-text wrong">No streak started</span>
+                                </div>
+                                
+                                <div className="answer-row">
+                                    <span className="answer-label primary">Next Step:</span>
+                                    <span className="answer-text primary">Take a quiz to begin!</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             )}
         </section>
     );

@@ -11,7 +11,7 @@ const Question = ({ question, questionNumber, totalQuestions, selectedAnswer, on
     )}
     
     <div className="progress">Question <strong>{questionNumber}</strong> of <strong>{totalQuestions}</strong></div>
-    <h2 className="question-text">{question.question_text}</h2>
+    <div className="question-text" style={{textAlign: 'center', fontSize: '1.5rem', fontWeight: '600', marginBottom: '2rem', color: '#333', lineHeight: '1.5'}}>{question.question_text}</div>
 
     <div className="options">
       {['option1', 'option2', 'option3', 'option4'].map((optKey, index) => (

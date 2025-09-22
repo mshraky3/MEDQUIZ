@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useLang from '../../hooks/useLang';
 import CreditCardForm from './CreditCardForm';
@@ -11,23 +11,38 @@ const Payment = () => {
   const navigate = useNavigate();
   const [selectedPlan, setSelectedPlan] = useState('special');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showInstructionsModal, setShowInstructionsModal] = useState(false);
+
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  // Auto-show instructions modal after 5 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowInstructionsModal(true);
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const plans = [
     {
       id: 'special',
-      name: isArabic ? 'اشتراك سنوي - خطة خاصة' : 'ANNUAL Subscription - Special Offer',
-      price: isArabic ? '٣.٧٥ ريال' : '3.75 SAR',
-      originalPrice: isArabic ? '٢٥٠ ريال' : '250 SAR',
-      period: isArabic ? 'لمدة سنة كاملة' : 'FOR 1 FULL YEAR',
+      name: 'اشتراك سنوي - خطة خاصة',
+      price: '٧٥ ريال',
+      originalPrice: '٢٥٠ ريال',
+      period: 'لمدة سنة كاملة - عرض خاص لليوم الوطني',
       features: [
-        isArabic ? 'الوصول إلى جميع الأسئلة' : 'Access to all questions',
-        isArabic ? 'تحليلات مفصلة' : 'Detailed analytics',
-        isArabic ? 'تتبع التقدم' : 'Progress tracking',
-        isArabic ? 'دعم فني' : 'Technical support',
-        isArabic ? 'توفير ٨٠٪' : 'Save 80%',
-        isArabic ? 'عرض محدود' : 'Limited Time Offer',
-        isArabic ? 'اشتراك لمدة سنة كاملة' : 'FULL YEAR ACCESS',
-        isArabic ? 'ليس شهرياً - سنة كاملة' : 'NOT MONTHLY - FULL YEAR'
+        'الوصول إلى جميع الأسئلة',
+        'تحليلات مفصلة',
+        'تتبع التقدم',
+        'دعم فني',
+        'توفير ٧٠٪ - اليوم الوطني',
+        'عرض محدود',
+        'اشتراك لمدة سنة كاملة',
+        'ليس شهرياً - سنة كاملة'
       ],
       popular: true
     }
@@ -50,63 +65,73 @@ const Payment = () => {
     navigate('/');
   };
 
+  const closeInstructionsModal = () => {
+    setShowInstructionsModal(false);
+  };
+
   return (
     <div className="payment-page">
       <div className="payment-header">
-        <button onClick={handleBackToHome} className="back-button">
-          {isArabic ? '← العودة' : '← Back'}
-        </button>
-        <h1>{isArabic ? 'اشتراك سنوي - سنة كاملة' : 'Annual Subscription - Full Year'}</h1>
+
+        <h1>اشتراك سنوي - سنة كاملة</h1>
         <p className="payment-subtitle">
-          {isArabic 
-            ? 'احصل على الوصول الكامل إلى أكثر من 8000 سؤال مع تحليلات مفصلة' 
-            : 'Get full access to 8000+ questions with detailed analytics'
-          }
+          احصل على الوصول الكامل إلى أكثر من 8000 سؤال مع تحليلات مفصلة
         </p>
       </div>
 
       <div className="single-plan-container">
         <div className="plan-highlight">
           <div className="popular-badge">
-            {isArabic ? ' عرض محدود ' : ' Limited Offer '}
+            🎉 عرض اليوم الوطني 🎉
           </div>
           
           <div className="plan-pricing">
             <div className="price-display">
-              <span className="current-price">3.75 SAR</span>
-              <span className="original-price">250 SAR</span>
+              <span className="current-price">٧٥ ريال</span>
+              <span className="original-price">٢٥٠ ريال</span>
             </div>
             <div className="savings-badge">
-              {isArabic ? 'توفير 80%' : 'Save 80%'}
+              توفير ٧٠٪ - اليوم الوطني
             </div>
             <div className="period-text">
-              {isArabic ? 'لمدة سنة كاملة' : 'FOR 1 FULL YEAR'}
+              لمدة سنة كاملة - عرض خاص لليوم الوطني
             </div>
           </div>
 
           <div className="plan-features">
             <div className="feature-item">
               <span className="feature-icon">✓</span>
-              <span>{isArabic ? 'الوصول إلى جميع الأسئلة' : 'Access to all questions'}</span>
+              <span>الوصول إلى جميع الأسئلة</span>
             </div>
             <div className="feature-item">
               <span className="feature-icon">✓</span>
-              <span>{isArabic ? 'تحليلات مفصلة' : 'Detailed analytics'}</span>
+              <span>تحليلات مفصلة</span>
             </div>
             <div className="feature-item">
               <span className="feature-icon">✓</span>
-              <span>{isArabic ? 'تتبع التقدم' : 'Progress tracking'}</span>
+              <span>تتبع التقدم</span>
             </div>
             <div className="feature-item">
               <span className="feature-icon">✓</span>
-              <span>{isArabic ? 'دعم فني' : 'Technical support'}</span>
+              <span>دعم فني</span>
             </div>
+          </div>
+
+          {/* Instructions Button */}
+          <div className="instructions-button-container">
+            <button 
+              onClick={() => setShowInstructionsModal(true)} 
+              className="instructions-button"
+            >
+              <span className="instructions-icon">📍</span>
+              تعليمات مهمة للدفع
+            </button>
           </div>
 
           <div className="payment-actions">
             <CreditCardForm 
-              amount={1} 
-              description={isArabic ? 'اشتراك سنوي - سنة كاملة' : 'Full Year'}
+              amount={19.1} 
+              description="اشتراك سنوي - سنة كاملة"
               onSuccess={async (details) => {
                 console.log('Payment successful:', details);
                 // Generate a unique user ID for the paid user
@@ -135,7 +160,7 @@ const Payment = () => {
                         paymentConfirmed: true,
                         userId: userId,
                         paymentDetails: details,
-                        amount: 1,
+                        amount: 19.1,
                         currency: 'USD'
                       } 
                     });
@@ -151,8 +176,8 @@ const Payment = () => {
                       paymentConfirmed: true,
                       userId: userId,
                       paymentDetails: details,
-                      amount: 1,
-                      currency: 'USD',
+                        amount: 19.1,
+                        currency: 'USD',
                       error: 'Payment successful but account setup failed. Please contact support.'
                     } 
                   });
@@ -165,47 +190,108 @@ const Payment = () => {
             />
             
             <button onClick={handleContactUs} className="contact-button">
-              {isArabic ? 'تواصل معنا' : 'Contact Us'}
+              تواصل معنا
             </button>
           </div>
         </div>
       </div>
 
       <div className="payment-features">
-        <h3>{isArabic ? 'ماذا تحصل عليه:' : 'What You Get:'}</h3>
+        <h3>ماذا نقدم لك ؟ </h3>
         <div className="features-grid">
           <div className="feature-card">
             <div className="feature-icon">📚</div>
-            <h4>{isArabic ? '8000+ سؤال' : '8000+ Questions'}</h4>
-            <p>{isArabic ? 'بنك أسئلة شامل لاختبار البرومترك' : 'Comprehensive question bank for Prometric exam'}</p>
+            <h4>٨٠٠٠+ سؤال</h4>
+            <p>بنك أسئلة شامل لاختبار البرومترك</p>
           </div>
           <div className="feature-card">
             <div className="feature-icon">📊</div>
-            <h4>{isArabic ? 'تحليلات مفصلة' : 'Detailed Analytics'}</h4>
-            <p>{isArabic ? 'تتبع أدائك وتحديد نقاط الضعف' : 'Track your performance and identify weak areas'}</p>
+            <h4>تحليلات مفصلة</h4>
+            <p>تتبع أدائك وتحديد نقاط الضعف</p>
           </div>
           <div className="feature-card">
             <div className="feature-icon">🎯</div>
-            <h4>{isArabic ? 'تدريب مستهدف' : 'Targeted Practice'}</h4>
-            <p>{isArabic ? 'ركز على المواضيع التي تحتاج تحسين' : 'Focus on topics that need improvement'}</p>
+            <h4>تدريب مستهدف</h4>
+            <p>ركز على المواضيع التي تحتاج تحسين</p>
           </div>
           <div className="feature-card">
             <div className="feature-icon">📱</div>
-            <h4>{isArabic ? 'متوفر على جميع الأجهزة' : 'Available on All Devices'}</h4>
-            <p>{isArabic ? 'ادرس من أي مكان وفي أي وقت' : 'Study anywhere, anytime'}</p>
+            <h4>متوفر على جميع الأجهزة</h4>
+            <p>ادرس من أي مكان وفي أي وقت</p>
           </div>
         </div>
       </div>
 
-      <div className="payment-guarantee">
-        <div className="guarantee-content">
-          <div className="guarantee-icon">🛡️</div>
-          <div className="guarantee-text">
-            <h4>{isArabic ? 'ضمان استرداد الأموال' : 'Money-Back Guarantee'}</h4>
-            <p>{isArabic ? 'إذا لم تكن راضياً، سنعيد لك أموالك خلال 30 يوماً' : 'If you\'re not satisfied, we\'ll refund your money within 30 days'}</p>
+      {/* Instructions Modal */}
+      {showInstructionsModal && (
+        <div className="modal-overlay" onClick={closeInstructionsModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>تعليمات مهمة للدفع</h3>
+              <button className="modal-close" onClick={closeInstructionsModal}>
+                ×
+              </button>
+            </div>
+            
+            <div className="modal-body">
+              <div className="instructions-content">
+                <p className="modal-warning">
+                  ⚠️ يرجى تغيير الدولة في نموذج الفواتير إلى "السعودية" قبل إتمام الدفع
+                </p>
+                
+                <div className="instruction-steps">
+                  <div className="step">
+                    <span className="step-number">1</span>
+                    <div className="step-content">
+                      <span>اضغط على الزر الأسود "بطاقة ائتمان" وليس بايبال</span>
+                      <div className="step-image">
+                        <img src="/src/components/payment/imgs/blackButton.png" alt="الزر الأسود للبطاقة الائتمانية" className="instruction-img" />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="step">
+                    <span className="step-number">2</span>
+                    <div className="step-content">
+                      <span>اختر "السعودية" من قائمة الدولة</span>
+                      <div className="step-image">
+                        <img src="/src/components/payment/imgs/changeToKSA.png" alt="تغيير الدولة إلى السعودية" className="instruction-img" />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="step">
+                    <span className="step-number">3</span>
+                    <span>أدخل باقي البيانات </span>
+                  </div>
+                  
+                  <div className="step">
+                    <span className="step-number">4</span>
+                    <span>أكمل عملية الدفع</span>
+                  </div>
+                  
+                  <div className="step">
+                    <span className="step-number">5</span>
+                    <span>تواصل مع الدعم الفني إذا احتجت مساعدة</span>
+                  </div>
+                  
+                  <div className="step">
+                    <span className="step-number">6</span>
+                    <span>نرحب بك ونتمنى لك تجربة ممتعة</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="modal-footer">
+              <button onClick={closeInstructionsModal} className="modal-ok-button">
+                فهمت، شكراً
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
+
     </div>
   );
 };

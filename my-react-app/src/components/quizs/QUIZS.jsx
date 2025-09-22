@@ -306,7 +306,7 @@ const QUIZS = () => {
                 {isTrial && (
                     <div className="trial-notice">
                         <span className="trial-emoji">🎯</span>
-                        <span className="trial-text">Free Trial Mode - 40 Sample Questions</span>
+                        <span className="trial-text">Free Trial Mode - 40+ Sample Questions Available</span>
                     </div>
                 )}
 

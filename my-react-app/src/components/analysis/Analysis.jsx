@@ -16,34 +16,91 @@ import { UserContext } from '../../UserContext';
 const BestWorstTopic = ({ best, worst }) => (
   <section className="streak-section">
     <h3 className="section-header">Your Best & Worst Topics</h3>
-    <div className="stats-grid">
-      <div className="stat-card" style={{ background: 'var(--bg-light)' }}>
-        <div className="stat-label">Best Topic</div>
-        {best ? (
-          <>
-            <div className="stat-value">{best.question_type}</div>
-            <div style={{ color: 'var(--accent-color)', fontWeight: 600 }}>
-              {Number(best.accuracy).toFixed(1)}% accuracy
+    <div className="questions-grid">
+      <div className="question-card">
+        <div className="question-header">
+          <div className="question-meta">
+            <span className="type-badge" style={{
+              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              color: 'white'
+            }}>
+              🏆 Best Topic
+            </span>
+            <span className="accuracy-badge" style={{
+              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              color: 'white'
+            }}>
+              📊 {best ? `${Number(best.accuracy).toFixed(1)}%` : 'N/A'}
+            </span>
+          </div>
+        </div>
+        
+        <div className="question-content">
+          <div className="topic-performance-text">
+            <h4>Your Strongest Subject</h4>
+            <p>Keep up the great work in this area!</p>
+          </div>
+          
+          <div className="answers-section">
+            <div className="answer-row">
+              <span className="answer-label correct">Topic:</span>
+              <span className="answer-text correct">{best?.question_type || 'No data yet'}</span>
             </div>
-            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-light)' }}>
-              {best.total_answered} questions
+            
+            <div className="answer-row">
+              <span className="answer-label accuracy">Accuracy:</span>
+              <span className="answer-text accuracy">{best ? `${Number(best.accuracy).toFixed(1)}%` : 'N/A'}</span>
             </div>
-          </>
-        ) : <div className="stat-value">N/A</div>}
+            
+            <div className="answer-row">
+              <span className="answer-label primary">Questions:</span>
+              <span className="answer-text primary">{best?.total_answered || 0}</span>
+            </div>
+          </div>
+        </div>
       </div>
-      <div className="stat-card" style={{ background: 'var(--bg-light)' }}>
-        <div className="stat-label">Weakest Topic</div>
-        {worst ? (
-          <>
-            <div className="stat-value">{worst.question_type}</div>
-            <div style={{ color: 'var(--error-color)', fontWeight: 600 }}>
-              {Number(worst.accuracy).toFixed(1)}% accuracy
+
+      <div className="question-card">
+        <div className="question-header">
+          <div className="question-meta">
+            <span className="type-badge" style={{
+              background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+              color: 'white'
+            }}>
+              📉 Needs Improvement
+            </span>
+            <span className="accuracy-badge" style={{
+              background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+              color: 'white'
+            }}>
+              📊 {worst ? `${Number(worst.accuracy).toFixed(1)}%` : 'N/A'}
+            </span>
+          </div>
+        </div>
+        
+        <div className="question-content">
+          <div className="topic-performance-text">
+            <h4>Focus Area</h4>
+            <p>Spend more time practicing this topic!</p>
+          </div>
+          
+          <div className="answers-section">
+            <div className="answer-row">
+              <span className="answer-label wrong">Topic:</span>
+              <span className="answer-text wrong">{worst?.question_type || 'No data yet'}</span>
             </div>
-            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-light)' }}>
-              {worst.total_answered} questions
+            
+            <div className="answer-row">
+              <span className="answer-label accuracy">Accuracy:</span>
+              <span className="answer-text accuracy">{worst ? `${Number(worst.accuracy).toFixed(1)}%` : 'N/A'}</span>
             </div>
-          </>
-        ) : <div className="stat-value">N/A</div>}
+            
+            <div className="answer-row">
+              <span className="answer-label primary">Questions:</span>
+              <span className="answer-text primary">{worst?.total_answered || 0}</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -83,8 +140,6 @@ const Analysis = () => {
   });
 
   const [refreshing, setRefreshing] = useState(false);
-  const pollingRef = useRef();
-  const isInitializedRef = useRef(false);
 
   // SEO structured data for analysis page
   const structuredData = {
@@ -164,7 +219,7 @@ const Analysis = () => {
     } finally {
       setLoading(prev => ({ ...prev, userAnalysis: false }));
     }
-  }, [id, user, sessionToken, setUser]);
+  }, [id, protectedGet]);
 
   const fetchStreakData = useCallback(async () => {
     setLoading(prev => ({ ...prev, streakData: true }));
@@ -178,7 +233,7 @@ const Analysis = () => {
     } finally {
       setLoading(prev => ({ ...prev, streakData: false }));
     }
-  }, [id, user, sessionToken, setUser]);
+  }, [id, protectedGet]);
 
   const fetchTopicAnalysis = useCallback(async () => {
     setLoading(prev => ({ ...prev, topicAnalysis: true }));
@@ -192,7 +247,7 @@ const Analysis = () => {
     } finally {
       setLoading(prev => ({ ...prev, topicAnalysis: false }));
     }
-  }, [id, user, sessionToken, setUser]);
+  }, [id, protectedGet]);
 
   const fetchQuestionAttempts = useCallback(async () => {
     setLoading(prev => ({ ...prev, questionAttempts: true }));
@@ -214,7 +269,7 @@ const Analysis = () => {
     } finally {
       setLoading(prev => ({ ...prev, questionAttempts: false }));
     }
-  }, [id, user, sessionToken, setUser]);
+  }, [id, protectedGet]);
 
   const fetchQuestions = useCallback(async () => {
     setLoading(prev => ({ ...prev, questions: true }));
@@ -247,7 +302,7 @@ const Analysis = () => {
     } finally {
       setLoading(prev => ({ ...prev, lastQuizAttempts: false }));
     }
-  }, [user, sessionToken, setUser]);
+  }, [protectedGet]);
 
   // Sequential loading for better performance
   const fetchAll = useCallback(async () => {
@@ -287,36 +342,22 @@ const Analysis = () => {
     } finally {
       setRefreshing(false);
     }
-  }, [fetchUserAnalysis, fetchStreakData, fetchTopicAnalysis, fetchQuestionAttempts, fetchQuestions, fetchLastQuizAttempts, id, refreshing, user, sessionToken, setUser]);
+  }, [fetchUserAnalysis, fetchStreakData, fetchTopicAnalysis, fetchQuestionAttempts, fetchQuestions, fetchLastQuizAttempts, id, refreshing, protectedGet]);
 
-  // Initial fetch and polling
+  // Initial fetch only - no more annoying auto-refresh
   useEffect(() => {
     if (!id) {
       navigate('/');
       return;
     }
     
-    if (!isInitializedRef.current) {
-      isInitializedRef.current = true;
-      // Small delay to ensure backend has processed quiz data
-      setTimeout(() => {
-        fetchAll();
-      }, 500);
-    }
+    // Only refresh data when component first mounts
+    // Small delay to ensure backend has processed quiz data
+    setTimeout(() => {
+      fetchAll();
+    }, 500);
     
-    // Set up polling - but with longer interval to prevent excessive calls
-    pollingRef.current = setInterval(() => {
-      if (!refreshing) {
-        fetchAll();
-      }
-    }, 600000); // 10 minutes instead of 5
-    
-    return () => {
-      if (pollingRef.current) {
-        clearInterval(pollingRef.current);
-      }
-    };
-  }, [id, navigate, fetchAll, refreshing]); // Add fetchAll and refreshing to dependencies
+  }, [id, navigate]); // Remove fetchAll and refreshing from dependencies to prevent re-runs
 
   // Manual refresh
   const handleRefresh = useCallback(() => {
@@ -450,6 +491,19 @@ const Analysis = () => {
         )}
 
         <div className="button-bar">
+          <button
+            onClick={() => navigate("/wrong-questions")}
+            className="secondary-button"
+          >
+            📚 Review Wrong Questions
+          </button>
+          <button
+            onClick={handleRefresh}
+            className="secondary-button"
+            disabled={refreshing}
+          >
+            {refreshing ? '🔄 Refreshing...' : '🔄 Refresh Data'}
+          </button>
           <button
             onClick={() => navigate("/quizs", { state: { id } })}
             className="primary-button"
