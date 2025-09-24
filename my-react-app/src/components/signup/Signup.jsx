@@ -206,7 +206,7 @@ const Signup = () => {
                         <p>Having trouble creating your account?</p>
                         <button 
                             className="contact-button"
-                            onClick={() => window.open('https://wa.link/pzhg6j', '_blank')}
+                            onClick={() => window.location.href = 'mailto:alshraky3@gmail.com?subject=Account Support&body=Hi, I need help creating my account.'}
                         >
                             Contact Support
                         </button>

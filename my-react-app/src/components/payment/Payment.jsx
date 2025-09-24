@@ -58,7 +58,7 @@ const Payment = () => {
   };
 
   const handleContactUs = () => {
-    window.open('https://wa.link/pzhg6j', '_blank');
+    window.location.href = 'mailto:alshraky3@gmail.com?subject=Payment Support&body=Hi, I need help with my payment.';
   };
 
   const handleBackToHome = () => {

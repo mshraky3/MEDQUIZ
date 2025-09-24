@@ -325,7 +325,7 @@ const Login = () => {
                 </button>
                 <button 
                   className="popup-btn contact-support" 
-                  onClick={() => window.open('https://wa.link/pzhg6j', '_blank')}
+                  onClick={() => window.location.href = 'mailto:alshraky3@gmail.com?subject=Login Support&body=Hi, I need help with my account login.'}
                 >
                   Contact Support
                 </button>

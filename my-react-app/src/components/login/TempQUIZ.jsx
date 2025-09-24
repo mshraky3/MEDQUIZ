@@ -155,7 +155,7 @@ const Result = ({ answers, navigate, id, quizStartTime, questions, selectedTypes
 
   const handleContactUs = () => {
     // Open email client or contact form
-    window.location.href = 'mailto:support@medquiz.com?subject=Free Trial Inquiry&body=Hi, I completed the free trial and would like to know more about the full version.';
+    window.location.href = 'mailto:alshraky3@gmail.com?subject=Free Trial Inquiry&body=Hi, I completed the free trial and would like to know more about the full version.';
   };
 
   return (

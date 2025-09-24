@@ -152,28 +152,36 @@ const ADD = (props) => {
                             </button>
                         )}
 
-                {/* Show User List */}
-                {showUsers && (
+            </form>
+
+            {/* Show User List - Outside form for better layout */}
+            {showUsers && (
+                <div className="user-list-container">
                     <div className="user-list">
                         <h3>👥 All Users ({users.length} total)</h3>
-                        <ul>
-                            {users.length > 0 ? (
-                                users.map((user, index) => {
+                        {loading ? (
+                            <div className="user-list-loading">
+                                Loading users...
+                            </div>
+                        ) : (
+                            <ul>
+                                {users.length > 0 ? (
+                                    users.map((user, index) => {
                                     console.log('Rendering user:', user); // Debug log
                                     return (
                                         <li key={user.id || index} className="user-item">
                                             <div className="user-info">
                                                 <div className="user-field">
-                                                    <strong>🆔 ID:</strong> {user.id}
+                                                    <strong>🆔 ID:</strong> <span>{user.id}</span>
                                                 </div>
                                                 <div className="user-field">
-                                                    <strong>👤 Username:</strong> {user.username}
+                                                    <strong>👤 Username:</strong> <span>{user.username}</span>
                                                 </div>
                                                 <div className="user-field">
-                                                    <strong>🔑 Password:</strong> {user.password}
+                                                    <strong>🔑 Password:</strong> <span>{user.password}</span>
                                                 </div>
                                                 <div className="user-field">
-                                                    <strong>📅 Last Login:</strong> {user.logged_date ? new Date(user.logged_date).toLocaleDateString() : 'Never'}
+                                                    <strong>📅 Last Login:</strong> <span>{user.logged_date ? new Date(user.logged_date).toLocaleDateString() : 'Never'}</span>
                                                 </div>
                                                 <div className="user-field">
                                                     <strong>📊 Status:</strong> 
@@ -183,7 +191,7 @@ const ADD = (props) => {
                                                 </div>
                                                 {user.email && (
                                                     <div className="user-field">
-                                                        <strong>📧 Email:</strong> {user.email || "N/A"}
+                                                        <strong>📧 Email:</strong> <span>{user.email || "N/A"}</span>
                                                     </div>
                                                 )}
                                                 {user.payment_status && (
@@ -196,7 +204,7 @@ const ADD = (props) => {
                                                 )}
                                                 {user.created_at && (
                                                     <div className="user-field">
-                                                        <strong>📅 Created:</strong> {user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
+                                                        <strong>📅 Created:</strong> <span>{user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}</span>
                                                     </div>
                                                 )}
                                                 <div className="user-field">
@@ -225,9 +233,10 @@ const ADD = (props) => {
                                 </div>
                             )}
                         </ul>
+                        )}
                     </div>
-                )}
-            </form>
+                </div>
+            )}
             </div>
         </div>
     );
