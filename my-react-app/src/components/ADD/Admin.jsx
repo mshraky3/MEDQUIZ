@@ -47,6 +47,18 @@ const Admin = () => {
             View All Questions
           </button>
         </div>
+
+        <div className="admin-card">
+          <div className="admin-card-icon">🔗</div>
+          <h3>Temporary Signup Links</h3>
+          <p>Create and manage temporary signup links for free accounts</p>
+          <button
+            className="admin-button"
+            onClick={() => navigate('/TEMP_LINKS')}
+          >
+            Manage Links
+          </button>
+        </div>
       </div>
 
       <div className="admin-stats">
