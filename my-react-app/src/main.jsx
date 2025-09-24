@@ -20,6 +20,7 @@ import WaitingForPayment from './components/payment/WaitingForPayment.jsx';
 import PaymentTest from './components/payment/PaymentTest.jsx';
 import PaymentFlowTest from './components/payment/PaymentFlowTest.jsx';
 import Signup from './components/signup/Signup.jsx';
+import TempLinks from './components/ADD/TempLinks.jsx';
 import ErrorBoundary from './components/common/ErrorBoundary.jsx';
 import Layout from './components/common/Layout.jsx';
 
@@ -113,6 +114,16 @@ const router = createBrowserRouter([
   {
     path: "/signup",
     element: <Layout><Signup /></Layout>,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/signup/:token",
+    element: <Layout><Signup /></Layout>,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/TEMP_LINKS",
+    element: <TempLinks host={getHostUrl} />,
     errorElement: <ErrorBoundary />,
   },
   {
