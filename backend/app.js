@@ -2158,6 +2158,339 @@ If you receive this email, the notification system is working correctly.
     }
 });
 
+// ===== TEMPORARY SIGNUP LINKS FEATURE =====
+
+// Create temporary signup links table
+app.post('/api/admin/init-temp-links-tables', async (req, res) => {
+    try {
+        // Create temporary_signup_links table
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS temporary_signup_links (
+                id SERIAL PRIMARY KEY,
+                token VARCHAR(255) UNIQUE NOT NULL,
+                max_uses INTEGER NOT NULL DEFAULT 1,
+                current_uses INTEGER NOT NULL DEFAULT 0,
+                is_active BOOLEAN NOT NULL DEFAULT true,
+                created_by VARCHAR(100) NOT NULL,
+                created_at TIMESTAMP DEFAULT NOW(),
+                expires_at TIMESTAMP,
+                last_used_at TIMESTAMP
+            )
+        `);
+
+        // Create temp_link_accounts table to track accounts created from links
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS temp_link_accounts (
+                id SERIAL PRIMARY KEY,
+                link_id INTEGER NOT NULL REFERENCES temporary_signup_links(id) ON DELETE CASCADE,
+                user_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+                username VARCHAR(100) NOT NULL,
+                created_at TIMESTAMP DEFAULT NOW(),
+                UNIQUE(link_id, user_id)
+            )
+        `);
+
+        // Create indexes for better performance
+        await db.query(`CREATE INDEX IF NOT EXISTS idx_temp_links_token ON temporary_signup_links(token)`);
+        await db.query(`CREATE INDEX IF NOT EXISTS idx_temp_links_active ON temporary_signup_links(is_active)`);
+        await db.query(`CREATE INDEX IF NOT EXISTS idx_temp_link_accounts_link_id ON temp_link_accounts(link_id)`);
+        await db.query(`CREATE INDEX IF NOT EXISTS idx_temp_link_accounts_user_id ON temp_link_accounts(user_id)`);
+
+        res.json({ message: 'Temporary signup links tables initialized successfully' });
+    } catch (err) {
+        console.error('Error initializing temp links tables:', err);
+        res.status(500).json({ message: 'Failed to initialize temp links tables' });
+    }
+});
+
+// Generate temporary signup link
+app.post('/api/admin/generate-temp-link', async (req, res) => {
+    try {
+        const { maxUses, createdBy } = req.body;
+        
+        if (!maxUses || maxUses < 1) {
+            return res.status(400).json({ message: 'Max uses must be at least 1' });
+        }
+
+        // Generate a unique token (similar to your preferred format)
+        const token = Math.random().toString(36).substring(2, 8);
+        
+        // Insert the new link
+        const result = await db.query(
+            `INSERT INTO temporary_signup_links (token, max_uses, created_by) 
+             VALUES ($1, $2, $3) RETURNING *`,
+            [token, maxUses, createdBy || 'admin']
+        );
+
+        const link = result.rows[0];
+        // Use frontend URL instead of backend URL for the signup link
+        const frontendUrl = 'https://www.smle-question-bank.com';
+        const fullUrl = `${frontendUrl}/signup/${link.token}`;
+
+        res.status(201).json({
+            success: true,
+            link: {
+                id: link.id,
+                token: link.token,
+                url: fullUrl,
+                maxUses: link.max_uses,
+                currentUses: link.current_uses,
+                isActive: link.is_active,
+                createdAt: link.created_at
+            }
+        });
+    } catch (err) {
+        console.error('Error generating temp link:', err);
+        res.status(500).json({ message: 'Failed to generate temporary link' });
+    }
+});
+
+// Get all temporary links with statistics
+app.get('/api/admin/temp-links', async (req, res) => {
+    try {
+        const result = await db.query(`
+            SELECT 
+                tsl.*,
+                COUNT(tla.id) as accounts_created,
+                ARRAY_AGG(
+                    CASE 
+                        WHEN tla.id IS NOT NULL 
+                        THEN json_build_object(
+                            'username', tla.username,
+                            'created_at', tla.created_at
+                        )
+                        ELSE NULL 
+                    END
+                ) FILTER (WHERE tla.id IS NOT NULL) as created_accounts
+            FROM temporary_signup_links tsl
+            LEFT JOIN temp_link_accounts tla ON tsl.id = tla.link_id
+            GROUP BY tsl.id
+            ORDER BY tsl.created_at DESC
+        `);
+
+        // Use frontend URL instead of backend URL for the signup links
+        const frontendUrl = 'https://www.smle-question-bank.com';
+        
+        const links = result.rows.map(link => ({
+            id: link.id,
+            token: link.token,
+            url: `${frontendUrl}/signup/${link.token}`,
+            maxUses: link.max_uses,
+            currentUses: link.current_uses,
+            isActive: link.is_active,
+            createdBy: link.created_by,
+            createdAt: link.created_at,
+            lastUsedAt: link.last_used_at,
+            accountsCreated: parseInt(link.accounts_created),
+            createdAccounts: link.created_accounts || []
+        }));
+
+        res.json({ links });
+    } catch (err) {
+        console.error('Error fetching temp links:', err);
+        res.status(500).json({ message: 'Failed to fetch temporary links' });
+    }
+});
+
+// Validate temporary signup link
+app.get('/api/validate-temp-link/:token', async (req, res) => {
+    try {
+        const { token } = req.params;
+        
+        const result = await db.query(
+            `SELECT * FROM temporary_signup_links WHERE token = $1 AND is_active = true`,
+            [token]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ 
+                valid: false, 
+                message: 'Invalid or expired link' 
+            });
+        }
+
+        const link = result.rows[0];
+        
+        if (link.current_uses >= link.max_uses) {
+            // Auto-deactivate link when limit is reached
+            await db.query(
+                `UPDATE temporary_signup_links SET is_active = false WHERE id = $1`,
+                [link.id]
+            );
+            
+            return res.status(400).json({ 
+                valid: false, 
+                message: 'This link has reached its usage limit' 
+            });
+        }
+
+        res.json({ 
+            valid: true, 
+            link: {
+                id: link.id,
+                token: link.token,
+                maxUses: link.max_uses,
+                currentUses: link.current_uses,
+                remainingUses: link.max_uses - link.current_uses
+            }
+        });
+    } catch (err) {
+        console.error('Error validating temp link:', err);
+        res.status(500).json({ message: 'Failed to validate link' });
+    }
+});
+
+// Create account from temporary link
+app.post('/api/signup/temp-link', async (req, res) => {
+    try {
+        const { token, username, password } = req.body;
+        
+        if (!token || !username || !password) {
+            return res.status(400).json({ message: 'Token, username, and password are required' });
+        }
+
+        const client = await db.connect();
+        try {
+            await client.query('BEGIN');
+
+            // Validate the link
+            const linkResult = await client.query(
+                `SELECT * FROM temporary_signup_links WHERE token = $1 AND is_active = true FOR UPDATE`,
+                [token]
+            );
+
+            if (linkResult.rows.length === 0) {
+                await client.query('ROLLBACK');
+                return res.status(404).json({ message: 'Invalid or expired link' });
+            }
+
+            const link = linkResult.rows[0];
+
+            if (link.current_uses >= link.max_uses) {
+                // Auto-deactivate link
+                await client.query(
+                    `UPDATE temporary_signup_links SET is_active = false WHERE id = $1`,
+                    [link.id]
+                );
+                await client.query('ROLLBACK');
+                return res.status(400).json({ message: 'This link has reached its usage limit' });
+            }
+
+            // Check if username already exists
+            const existingUser = await client.query(
+                'SELECT id FROM accounts WHERE username = $1',
+                [username]
+            );
+
+            if (existingUser.rows.length > 0) {
+                await client.query('ROLLBACK');
+                return res.status(400).json({ message: 'Username already exists' });
+            }
+
+            // Create the account
+            const accountResult = await client.query(
+                `INSERT INTO accounts (username, password, isactive, logged, terms_accepted) 
+                 VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+                [username, password, true, false, false]
+            );
+
+            const newUserId = accountResult.rows[0].id;
+
+            // Record the account creation in temp_link_accounts
+            await client.query(
+                `INSERT INTO temp_link_accounts (link_id, user_id, username) 
+                 VALUES ($1, $2, $3)`,
+                [link.id, newUserId, username]
+            );
+
+            // Update link usage
+            await client.query(
+                `UPDATE temporary_signup_links 
+                 SET current_uses = current_uses + 1, 
+                     last_used_at = NOW(),
+                     is_active = CASE 
+                         WHEN current_uses + 1 >= max_uses THEN false 
+                         ELSE true 
+                     END
+                 WHERE id = $1`,
+                [link.id]
+            );
+
+            await client.query('COMMIT');
+
+            // Send email notification
+            try {
+                const emailSubject = `🔗 Account Created via Temp Link - ${username}`;
+                const emailText = `
+New account created via temporary signup link:
+
+Username: ${username}
+User ID: ${newUserId}
+Link Token: ${token}
+Created: ${new Date().toLocaleString()}
+Link Usage: ${link.current_uses + 1}/${link.max_uses}
+
+This account was created using a temporary signup link and is ready for use.
+                `;
+                
+                const emailHtml = `
+                    <h2>🔗 Account Created via Temp Link</h2>
+                    <p><strong>Username:</strong> ${username}</p>
+                    <p><strong>User ID:</strong> ${newUserId}</p>
+                    <p><strong>Link Token:</strong> ${token}</p>
+                    <p><strong>Created:</strong> ${new Date().toLocaleString()}</p>
+                    <p><strong>Link Usage:</strong> ${link.current_uses + 1}/${link.max_uses}</p>
+                    <p>This account was created using a temporary signup link and is ready for use.</p>
+                `;
+
+                await sendEmail('muhmodalshraky3@gmail.com', emailSubject, emailText, emailHtml);
+            } catch (emailError) {
+                console.error('Failed to send temp link account creation email:', emailError);
+            }
+
+            res.status(201).json({
+                success: true,
+                message: 'Account created successfully',
+                userId: newUserId
+            });
+
+        } catch (error) {
+            await client.query('ROLLBACK');
+            throw error;
+        } finally {
+            client.release();
+        }
+
+    } catch (err) {
+        console.error('Error creating account from temp link:', err);
+        res.status(500).json({ message: 'Failed to create account' });
+    }
+});
+
+// Deactivate temporary link manually
+app.post('/api/admin/deactivate-temp-link/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const result = await db.query(
+            `UPDATE temporary_signup_links SET is_active = false WHERE id = $1 RETURNING *`,
+            [id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Link not found' });
+        }
+
+        res.json({ 
+            success: true, 
+            message: 'Link deactivated successfully' 
+        });
+    } catch (err) {
+        console.error('Error deactivating temp link:', err);
+        res.status(500).json({ message: 'Failed to deactivate link' });
+    }
+});
+
 app.listen(3000, () => {
     console.log("Server is running on port 3000");
 });
