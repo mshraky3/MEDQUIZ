@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./add.css";
+import "./Admin.css";
 import AdminNavbar from "./AdminNavbar.jsx";
 
 const ADD = (props) => {
@@ -152,91 +153,90 @@ const ADD = (props) => {
                             </button>
                         )}
 
-            </form>
-
-            {/* Show User List - Outside form for better layout */}
-            {showUsers && (
-                <div className="user-list-container">
-                    <div className="user-list">
-                        <h3>👥 All Users ({users.length} total)</h3>
-                        {loading ? (
-                            <div className="user-list-loading">
-                                Loading users...
-                            </div>
-                        ) : (
+                {/* Show User List */}
+                {showUsers && (
+                    <div className="admin-user-list-container">
+                        <div className="admin-user-list">
+                            <h3>👥 All Users ({users.length} total)</h3>
                             <ul>
                                 {users.length > 0 ? (
                                     users.map((user, index) => {
-                                    console.log('Rendering user:', user); // Debug log
-                                    return (
-                                        <li key={user.id || index} className="user-item">
-                                            <div className="user-info">
-                                                <div className="user-field">
-                                                    <strong>🆔 ID:</strong> <span>{user.id}</span>
-                                                </div>
-                                                <div className="user-field">
-                                                    <strong>👤 Username:</strong> <span>{user.username}</span>
-                                                </div>
-                                                <div className="user-field">
-                                                    <strong>🔑 Password:</strong> <span>{user.password}</span>
-                                                </div>
-                                                <div className="user-field">
-                                                    <strong>📅 Last Login:</strong> <span>{user.logged_date ? new Date(user.logged_date).toLocaleDateString() : 'Never'}</span>
-                                                </div>
-                                                <div className="user-field">
-                                                    <strong>📊 Status:</strong> 
-                                                    <span className={`status ${user.isactive ? 'active' : 'inactive'}`}>
-                                                        {user.isactive ? "✅ Active" : "❌ Inactive"}
-                                                    </span>
-                                                </div>
-                                                {user.email && (
-                                                    <div className="user-field">
-                                                        <strong>📧 Email:</strong> <span>{user.email || "N/A"}</span>
+                                        console.log('Rendering user:', user); // Debug log
+                                        return (
+                                            <li key={user.id || index} className="admin-user-item">
+                                                <div className="admin-user-info">
+                                                    <div className="admin-user-field">
+                                                        <strong>🆔 ID:</strong> 
+                                                        <span>{user.id}</span>
                                                     </div>
-                                                )}
-                                                {user.payment_status && (
-                                                    <div className="user-field">
-                                                        <strong>💳 Payment Status:</strong> 
-                                                        <span className={`status ${user.payment_status === 'paid' ? 'active' : 'inactive'}`}>
-                                                            {user.payment_status === 'paid' ? "✅ Paid" : "❌ Pending"}
+                                                    <div className="admin-user-field">
+                                                        <strong>👤 Username:</strong> 
+                                                        <span>{user.username}</span>
+                                                    </div>
+                                                    <div className="admin-user-field">
+                                                        <strong>🔑 Password:</strong> 
+                                                        <span>{user.password}</span>
+                                                    </div>
+                                                    <div className="admin-user-field">
+                                                        <strong>📅 Last Login:</strong> 
+                                                        <span>{user.logged_date ? new Date(user.logged_date).toLocaleDateString() : 'Never'}</span>
+                                                    </div>
+                                                    <div className="admin-user-field">
+                                                        <strong>📊 Status:</strong> 
+                                                        <span className={`admin-status ${user.isactive ? 'active' : 'inactive'}`}>
+                                                            {user.isactive ? "✅ Active" : "❌ Inactive"}
                                                         </span>
                                                     </div>
-                                                )}
-                                                {user.created_at && (
-                                                    <div className="user-field">
-                                                        <strong>📅 Created:</strong> <span>{user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}</span>
+                                                    {user.email && (
+                                                        <div className="admin-user-field">
+                                                            <strong>📧 Email:</strong> 
+                                                            <span>{user.email || "N/A"}</span>
+                                                        </div>
+                                                    )}
+                                                    {user.payment_status && (
+                                                        <div className="admin-user-field">
+                                                            <strong>💳 Payment Status:</strong> 
+                                                            <span className={`admin-status ${user.payment_status === 'paid' ? 'active' : 'inactive'}`}>
+                                                                {user.payment_status === 'paid' ? "✅ Paid" : "❌ Pending"}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                    {user.created_at && (
+                                                        <div className="admin-user-field">
+                                                            <strong>📅 Created:</strong> 
+                                                            <span>{user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}</span>
+                                                        </div>
+                                                    )}
+                                                    <div className="admin-user-field">
+                                                        <strong>📋 Terms Accepted:</strong> 
+                                                        <span className={`admin-status ${user.terms_accepted ? 'active' : 'inactive'}`}>
+                                                            {user.terms_accepted ? "✅ Yes" : "❌ No"}
+                                                        </span>
                                                     </div>
-                                                )}
-                                                <div className="user-field">
-                                                    <strong>📋 Terms Accepted:</strong> 
-                                                    <span className={`status ${user.terms_accepted ? 'active' : 'inactive'}`}>
-                                                        {user.terms_accepted ? "✅ Yes" : "❌ No"}
-                                                    </span>
                                                 </div>
-                                            </div>
-                                            <div className="user-actions">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleDeleteUser(user.id, user.username)}
-                                                    disabled={deletingUser === user.id}
-                                                    className="delete-button"
-                                                >
-                                                    {deletingUser === user.id ? "⏳ Deleting..." : "🗑️ Delete User"}
-                                                </button>
-                                            </div>
-                                        </li>
-                                    );
-                                })
-                            ) : (
-                                <div className="no-users">
-                                    <p>📭 No users found.</p>
-                                </div>
-                            )}
-                        </ul>
-                        )}
+                                                <div className="admin-user-actions">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleDeleteUser(user.id, user.username)}
+                                                        disabled={deletingUser === user.id}
+                                                        className="admin-delete-button"
+                                                    >
+                                                        {deletingUser === user.id ? "⏳ Deleting..." : "🗑️ Delete User"}
+                                                    </button>
+                                                </div>
+                                            </li>
+                                        );
+                                    })
+                                ) : (
+                                    <div className="admin-no-users">
+                                        <p>📭 No users found.</p>
+                                    </div>
+                                )}
+                            </ul>
+                        </div>
                     </div>
-                </div>
-            )}
+                )}
+            </form>
             </div>
         </div>
     );

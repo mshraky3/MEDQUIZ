@@ -97,6 +97,154 @@
   opacity: 0.9;
 }
 
+/* Admin User List Specific Styles */
+.admin-user-list-container {
+  margin-top: 20px;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.admin-user-list {
+  max-height: 500px;
+  overflow-y: auto;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 20px;
+  background-color: #ffffff;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  margin: 0;
+}
+
+.admin-user-list h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #2c3e50;
+  border-bottom: 2px solid #667eea;
+  padding-bottom: 10px;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.admin-user-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+
+.admin-user-item {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 15px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all 0.3s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.admin-user-item:hover {
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.admin-user-info {
+  flex: 1;
+  margin-bottom: 0;
+  line-height: 1.6;
+  width: 100%;
+  overflow: hidden;
+}
+
+.admin-user-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 15px;
+  width: 100%;
+}
+
+.admin-user-field {
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.admin-user-field strong {
+  min-width: 140px;
+  color: #495057;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.admin-user-field span {
+  word-break: break-word;
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-status {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.admin-status.active {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.admin-status.inactive {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.admin-no-users {
+  text-align: center;
+  padding: 40px 20px;
+  color: #6c757d;
+  font-style: italic;
+  font-size: 1.1rem;
+}
+
+.admin-delete-button {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  min-width: 140px;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+}
+
+.admin-delete-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+}
+
+.admin-delete-button:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .admin-container {
@@ -114,5 +262,63 @@
   
   .admin-card {
     padding: 1.5rem;
+  }
+
+  /* Mobile User List Styles */
+  .admin-user-list {
+    max-height: 400px;
+    padding: 15px;
+    margin: 0;
+  }
+  
+  .admin-user-item {
+    padding: 15px;
+    gap: 10px;
+  }
+  
+  .admin-user-actions {
+    justify-content: center;
+    margin-top: 15px;
+  }
+  
+  .admin-delete-button {
+    width: 100%;
+    min-width: auto;
+    padding: 14px 20px;
+  }
+  
+  .admin-user-field {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .admin-user-field strong {
+    min-width: auto;
+    font-size: 14px;
+  }
+
+  .admin-user-field span {
+    font-size: 14px;
+    word-break: break-all;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-user-list {
+    padding: 10px;
+    max-height: 350px;
+  }
+  
+  .admin-user-item {
+    padding: 12px;
+  }
+  
+  .admin-user-field strong {
+    font-size: 13px;
+  }
+
+  .admin-user-field span {
+    font-size: 13px;
   }
 }
