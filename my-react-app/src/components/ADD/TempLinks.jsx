@@ -127,19 +127,80 @@ const TempLinks = (props) => {
                         <form onSubmit={handleGenerateLink} className="form">
                             <div className="form-group">
                                 <label htmlFor="maxUses">Maximum Uses:</label>
-                                <input
-                                    type="number"
-                                    id="maxUses"
-                                    min="1"
-                                    max="100"
-                                    value={generateForm.maxUses}
-                                    onChange={(e) => setGenerateForm(prev => ({
-                                        ...prev,
-                                        maxUses: parseInt(e.target.value) || 1
-                                    }))}
-                                    className="input large-counter"
-                                    required
-                                />
+                                <div className="counter-container">
+                                    <button
+                                        type="button"
+                                        className="counter-btn minus"
+                                        onClick={() => setGenerateForm(prev => ({
+                                            ...prev,
+                                            maxUses: Math.max(1, prev.maxUses - 1)
+                                        }))}
+                                        disabled={generateForm.maxUses <= 1}
+                                    >
+                                        −
+                                    </button>
+                                    <input
+                                        type="number"
+                                        id="maxUses"
+                                        min="1"
+                                        max="100"
+                                        value={generateForm.maxUses}
+                                        onChange={(e) => setGenerateForm(prev => ({
+                                            ...prev,
+                                            maxUses: Math.max(1, Math.min(100, parseInt(e.target.value) || 1))
+                                        }))}
+                                        className="input counter-input"
+                                        required
+                                    />
+                                    <button
+                                        type="button"
+                                        className="counter-btn plus"
+                                        onClick={() => setGenerateForm(prev => ({
+                                            ...prev,
+                                            maxUses: Math.min(100, prev.maxUses + 1)
+                                        }))}
+                                        disabled={generateForm.maxUses >= 100}
+                                    >
+                                        +
+                                    </button>
+                                </div>
+                                <div className="quick-select-buttons">
+                                    <button
+                                        type="button"
+                                        className="quick-btn"
+                                        onClick={() => setGenerateForm(prev => ({ ...prev, maxUses: 1 }))}
+                                    >
+                                        1
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="quick-btn"
+                                        onClick={() => setGenerateForm(prev => ({ ...prev, maxUses: 5 }))}
+                                    >
+                                        5
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="quick-btn"
+                                        onClick={() => setGenerateForm(prev => ({ ...prev, maxUses: 10 }))}
+                                    >
+                                        10
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="quick-btn"
+                                        onClick={() => setGenerateForm(prev => ({ ...prev, maxUses: 25 }))}
+                                    >
+                                        25
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="quick-btn"
+                                        onClick={() => setGenerateForm(prev => ({ ...prev, maxUses: 50 }))}
+                                    >
+                                        50
+                                    </button>
+                                </div>
                                 <small>How many accounts can be created with this link?</small>
                             </div>
 
