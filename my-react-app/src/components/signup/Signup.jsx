@@ -77,7 +77,7 @@ const Signup = () => {
         const { name, value } = e.target;
         setForm(prev => ({
             ...prev,
-            [name]: value
+            [name]: value.toLowerCase()
         }));
     };
 
