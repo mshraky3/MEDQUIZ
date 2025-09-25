@@ -2185,24 +2185,42 @@ app.post('/api/contact', async (req, res) => {
             });
         }
 
-        // Send email notification to admin
-        const emailContent = `
-New Contact Form Submission from MEDQIZE
+        // Send email notification for contact form
+        try {
+            const emailSubject = `📞 Contact Form - ${subject || 'General Inquiry'}`;
+            const emailText = `
+New contact form submission from MEDQIZE:
 
 Name: ${name}
 Mobile: ${mobile}
 Subject: ${subject || 'General Inquiry'}
+Submitted: ${new Date().toLocaleString()}
 
 Message:
 ${message}
 
----
-Sent from MEDQIZE Contact Form
-        `;
+Please respond to the user as soon as possible.
+            `;
+            
+            const emailHtml = `
+                <h2>📞 Contact Form Submission</h2>
+                <p><strong>Name:</strong> ${name}</p>
+                <p><strong>Mobile:</strong> ${mobile}</p>
+                <p><strong>Subject:</strong> ${subject || 'General Inquiry'}</p>
+                <p><strong>Submitted:</strong> ${new Date().toLocaleString()}</p>
+                <hr>
+                <p><strong>Message:</strong></p>
+                <p>${message.replace(/\n/g, '<br>')}</p>
+                <hr>
+                <p>Please respond to the user as soon as possible.</p>
+            `;
 
-        // You can add your email sending logic here
-        // For now, we'll just log it and return success
-        console.log('Contact form submission:', { name, mobile, subject, message });
+            await sendEmail('muhmodalshraky3@gmail.com', emailSubject, emailText, emailHtml);
+            console.log('📧 Contact form email sent for:', name);
+        } catch (emailError) {
+            console.error('❌ Failed to send contact form email:', emailError);
+            // Don't fail the contact form if email fails
+        }
 
         res.status(200).json({
             success: true,
