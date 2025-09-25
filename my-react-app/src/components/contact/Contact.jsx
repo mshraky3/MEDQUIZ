@@ -19,36 +19,53 @@ const Contact = () => {
         }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
 
-        // Create WhatsApp message
-        const message = encodeURIComponent(`
-*Contact from MEDQIZE*
+        try {
+            // Send email notification to admin
+            const response = await fetch('https://medquiz.vercel.app/api/contact', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: form.name,
+                    mobile: form.mobile,
+                    subject: form.subject || 'Contact from MEDQIZE',
+                    message: form.message
+                })
+            });
 
+            if (response.ok) {
+                setSuccess(true);
+                setForm({ name: '', mobile: '', subject: '', message: '' });
+            } else {
+                throw new Error('Failed to send message');
+            }
+        } catch (error) {
+            console.error('Error sending message:', error);
+            // Fallback to email client
+            const subject = encodeURIComponent(form.subject || 'Contact from MEDQIZE');
+            const body = encodeURIComponent(`
 Name: ${form.name}
 Mobile: ${form.mobile}
-Subject: ${form.subject || 'General Inquiry'}
 
 Message:
 ${form.message}
 
 ---
 Sent from MEDQIZE Contact Form
-        `);
+            `);
 
-        const whatsappLink = `https://wa.me/966501234567?text=${message}`;
-        
-        // Open WhatsApp
-        window.open(whatsappLink, '_blank');
-        
-        // Show success message
-        setTimeout(() => {
+            const mailtoLink = `mailto:alshraky3@gmail.com?subject=${subject}&body=${body}`;
+            window.location.href = mailtoLink;
             setSuccess(true);
-            setLoading(false);
             setForm({ name: '', mobile: '', subject: '', message: '' });
-        }, 1000);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const contactInfo = [
@@ -72,8 +89,9 @@ Sent from MEDQIZE Contact Form
                 <div className="contact-card success">
                     <div className="success-icon">✅</div>
                     <h2>Message Sent!</h2>
-                    <p>WhatsApp should have opened. If not, you can contact us directly:</p>
+                    <p>Thank you for contacting us! We'll get back to you as soon as possible.</p>
                     <div className="contact-fallback">
+                        <p>You can also reach us directly:</p>
                         <a href="https://wa.me/966501234567" className="whatsapp-link">
                             📱 WhatsApp: +966 50 123 4567
                         </a>
@@ -177,10 +195,10 @@ Sent from MEDQIZE Contact Form
                                 {loading ? (
                                     <div className="loading-spinner">
                                         <div className="spinner"></div>
-                                        Opening WhatsApp...
+                                        Sending Message...
                                     </div>
                                 ) : (
-                                    'Send '
+                                    '📧 Send Message'
                                 )}
                             </button>
                         </form>
