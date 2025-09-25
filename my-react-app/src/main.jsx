@@ -21,6 +21,7 @@ import PaymentTest from './components/payment/PaymentTest.jsx';
 import PaymentFlowTest from './components/payment/PaymentFlowTest.jsx';
 import Signup from './components/signup/Signup.jsx';
 import TempLinks from './components/ADD/TempLinks.jsx';
+import Contact from './components/contact/Contact.jsx';
 import ErrorBoundary from './components/common/ErrorBoundary.jsx';
 import Layout from './components/common/Layout.jsx';
 
@@ -93,7 +94,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/payment",
-    element: <Layout><Payment /></Layout>,
+    element: <Layout><Contact /></Layout>,
     errorElement: <ErrorBoundary />,
   },
   {
@@ -124,6 +125,11 @@ const router = createBrowserRouter([
   {
     path: "/TEMP_LINKS",
     element: <TempLinks host={getHostUrl} />,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/contact",
+    element: <Layout><Contact /></Layout>,
     errorElement: <ErrorBoundary />,
   },
   {
