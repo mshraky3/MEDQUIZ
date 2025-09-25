@@ -153,9 +153,13 @@ app.post('/add_account', async (req, res) => {
         return res.status(400).json({ message: 'Missing username or password' });
     }
 
+    // Convert to lowercase
+    const lowercaseUsername = username.toLowerCase();
+    const lowercasePassword = password.toLowerCase();
+
     try {
         // Check if username already exists
-        const check = await db.query("SELECT * FROM accounts WHERE username = $1", [username]);
+        const check = await db.query("SELECT * FROM accounts WHERE username = $1", [lowercaseUsername]);
         if (check.rows.length > 0) {
             return res.status(400).json({ message: 'Username already exists' });
         }
@@ -166,7 +170,7 @@ app.post('/add_account', async (req, res) => {
         // terms_accepted: false (must accept terms on first login)
         const result = await db.query(
             "INSERT INTO accounts (username, password, isactive, logged, terms_accepted) VALUES ($1, $2, $3, $4, $5) RETURNING id",
-            [username, password, true, false, false]
+            [lowercaseUsername, lowercasePassword, true, false, false]
         );
 
         const newUserId = result.rows[0].id;
@@ -201,7 +205,7 @@ This account has been activated and is ready for use.
             // Don't fail the account creation if email fails
         }
 
-        console.log(`✅ Admin created account: ${username} (ID: ${newUserId})`);
+        console.log(`✅ Admin created account: ${lowercaseUsername} (ID: ${newUserId})`);
         return res.status(201).json({ 
             message: 'Account created successfully',
             userId: newUserId
@@ -267,25 +271,30 @@ const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
 app.post('/login', async (req, res) => {
     console.log("Login request received:", req.body);
     const { username, password } = req.body;
+    
+    // Convert to lowercase
+    const lowercaseUsername = username.toLowerCase();
+    const lowercasePassword = password.toLowerCase();
+    
     const client = await db.connect();
     try {
         await client.query('BEGIN');
         // Lock the user row for update
-        const userResult = await client.query("SELECT * FROM accounts WHERE username = $1 FOR UPDATE", [username]);
+        const userResult = await client.query("SELECT * FROM accounts WHERE username = $1 FOR UPDATE", [lowercaseUsername]);
         const userRow = userResult.rows[0];
         console.log(`[LOGIN] User row after SELECT FOR UPDATE:`, userRow);
 
         if (!userRow) {
             await client.query('ROLLBACK');
             client.release();
-            console.log(`[LOGIN] No user found for username: ${username}`);
+            console.log(`[LOGIN] No user found for username: ${lowercaseUsername}`);
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
-        if (password !== userRow.password) {
+        if (lowercasePassword !== userRow.password) {
             await client.query('ROLLBACK');
             client.release();
-            console.log(`[LOGIN] Invalid password for username: ${username}`);
+            console.log(`[LOGIN] Invalid password for username: ${lowercaseUsername}`);
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
@@ -307,7 +316,7 @@ app.post('/login', async (req, res) => {
         if (!userRow.isactive) {
             await client.query('ROLLBACK');
             client.release();
-            console.log(`[LOGIN] Subscription expired for username: ${username}`);
+            console.log(`[LOGIN] Subscription expired for username: ${lowercaseUsername}`);
             return res.status(403).json({
                 message: 'Subscription expired',
                 expired: true,
@@ -320,10 +329,10 @@ app.post('/login', async (req, res) => {
 
         // Update login state and store session token
         await client.query("UPDATE accounts SET logged = $1, logged_date = $2, session_token = $3 WHERE id = $4", [true, now, sessionToken, userRow.id]);
-        console.log(`[LOGIN] Set logged=true and session_token for username: ${username}`);
+        console.log(`[LOGIN] Set logged=true and session_token for username: ${lowercaseUsername}`);
         await client.query('COMMIT');
         client.release();
-        console.log(`[LOGIN] Transaction committed for username: ${username}`);
+        console.log(`[LOGIN] Transaction committed for username: ${lowercaseUsername}`);
 
         const updatedUser = {
             ...userRow,
@@ -1944,6 +1953,10 @@ app.post('/api/payment/create-account', async (req, res) => {
             });
         }
 
+        // Convert to lowercase
+        const lowercaseUsername = username.toLowerCase();
+        const lowercasePassword = password.toLowerCase();
+
         const client = await db.connect();
         try {
             // Check if user exists and payment is confirmed
@@ -1969,7 +1982,7 @@ app.post('/api/payment/create-account', async (req, res) => {
             // Check if username already exists
             const existingUser = await client.query(
                 'SELECT id FROM accounts WHERE username = $1',
-                [username]
+                [lowercaseUsername]
             );
             
             if (existingUser.rows.length > 0) {
@@ -1985,16 +1998,16 @@ app.post('/api/payment/create-account', async (req, res) => {
             // Update user with account details
             await client.query(
                 'UPDATE accounts SET username = $1, password = $2 WHERE id = $3',
-                [username, password, userId]
+                [lowercaseUsername, lowercasePassword, userId]
             );
             
             // Send email notification for account completion
             try {
-                const emailSubject = `✅ Account Setup Complete - ${username}`;
+                const emailSubject = `✅ Account Setup Complete - ${lowercaseUsername}`;
                 const emailText = `
 User has completed their account setup after payment:
 
-Username: ${username}
+Username: ${lowercaseUsername}
 User ID: ${userId}
 Payment Method: PayPal Credit Card
 Payment Amount: $1.00 USD (3.75 SAR)
@@ -2006,7 +2019,7 @@ The user can now log in and access all premium features.
                 
                 const emailHtml = `
                     <h2>✅ Account Setup Complete</h2>
-                    <p><strong>Username:</strong> ${username}</p>
+                    <p><strong>Username:</strong> ${lowercaseUsername}</p>
                     <p><strong>User ID:</strong> ${userId}</p>
                     <p><strong>Payment Method:</strong> PayPal Credit Card</p>
                     <p><strong>Payment Amount:</strong> $1.00 USD (3.75 SAR)</p>
@@ -2016,13 +2029,13 @@ The user can now log in and access all premium features.
                 `;
 
                 await sendEmail('muhmodalshraky3@gmail.com', emailSubject, emailText, emailHtml);
-                console.log('📧 Account completion email sent for user:', username);
+                console.log('📧 Account completion email sent for user:', lowercaseUsername);
             } catch (emailError) {
                 console.error('❌ Failed to send account completion email:', emailError);
                 // Don't fail the account creation if email fails
             }
             
-            console.log(`✅ Account setup completed for user: ${username} (ID: ${userId})`);
+            console.log(`✅ Account setup completed for user: ${lowercaseUsername} (ID: ${userId})`);
             res.status(200).json({ 
                 success: true, 
                 message: 'Account created successfully' 
@@ -2349,6 +2362,10 @@ app.post('/api/signup/temp-link', async (req, res) => {
             return res.status(400).json({ message: 'Token, username, and password are required' });
         }
 
+        // Convert to lowercase
+        const lowercaseUsername = username.toLowerCase();
+        const lowercasePassword = password.toLowerCase();
+
         const client = await db.connect();
         try {
             await client.query('BEGIN');
@@ -2379,7 +2396,7 @@ app.post('/api/signup/temp-link', async (req, res) => {
             // Check if username already exists
             const existingUser = await client.query(
                 'SELECT id FROM accounts WHERE username = $1',
-                [username]
+                [lowercaseUsername]
             );
 
             if (existingUser.rows.length > 0) {
@@ -2391,7 +2408,7 @@ app.post('/api/signup/temp-link', async (req, res) => {
             const accountResult = await client.query(
                 `INSERT INTO accounts (username, password, isactive, logged, terms_accepted) 
                  VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-                [username, password, true, false, false]
+                [lowercaseUsername, lowercasePassword, true, false, false]
             );
 
             const newUserId = accountResult.rows[0].id;
@@ -2400,7 +2417,7 @@ app.post('/api/signup/temp-link', async (req, res) => {
             await client.query(
                 `INSERT INTO temp_link_accounts (link_id, user_id, username) 
                  VALUES ($1, $2, $3)`,
-                [link.id, newUserId, username]
+                [link.id, newUserId, lowercaseUsername]
             );
 
             // Update link usage
@@ -2420,11 +2437,11 @@ app.post('/api/signup/temp-link', async (req, res) => {
 
             // Send email notification
             try {
-                const emailSubject = `🔗 Account Created via Temp Link - ${username}`;
+                const emailSubject = `🔗 Account Created via Temp Link - ${lowercaseUsername}`;
                 const emailText = `
 New account created via temporary signup link:
 
-Username: ${username}
+Username: ${lowercaseUsername}
 User ID: ${newUserId}
 Link Token: ${token}
 Created: ${new Date().toLocaleString()}
@@ -2435,7 +2452,7 @@ This account was created using a temporary signup link and is ready for use.
                 
                 const emailHtml = `
                     <h2>🔗 Account Created via Temp Link</h2>
-                    <p><strong>Username:</strong> ${username}</p>
+                    <p><strong>Username:</strong> ${lowercaseUsername}</p>
                     <p><strong>User ID:</strong> ${newUserId}</p>
                     <p><strong>Link Token:</strong> ${token}</p>
                     <p><strong>Created:</strong> ${new Date().toLocaleString()}</p>
