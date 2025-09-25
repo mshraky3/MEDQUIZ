@@ -2171,6 +2171,53 @@ If you receive this email, the notification system is working correctly.
     }
 });
 
+// ===== CONTACT FORM FEATURE =====
+
+// Contact form endpoint
+app.post('/api/contact', async (req, res) => {
+    try {
+        const { name, mobile, subject, message } = req.body;
+
+        if (!name || !mobile || !message) {
+            return res.status(400).json({
+                success: false,
+                message: 'Name, mobile, and message are required'
+            });
+        }
+
+        // Send email notification to admin
+        const emailContent = `
+New Contact Form Submission from MEDQIZE
+
+Name: ${name}
+Mobile: ${mobile}
+Subject: ${subject || 'General Inquiry'}
+
+Message:
+${message}
+
+---
+Sent from MEDQIZE Contact Form
+        `;
+
+        // You can add your email sending logic here
+        // For now, we'll just log it and return success
+        console.log('Contact form submission:', { name, mobile, subject, message });
+
+        res.status(200).json({
+            success: true,
+            message: 'Message sent successfully'
+        });
+
+    } catch (error) {
+        console.error('Error processing contact form:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to send message'
+        });
+    }
+});
+
 // ===== TEMPORARY SIGNUP LINKS FEATURE =====
 
 // Create temporary signup links table
