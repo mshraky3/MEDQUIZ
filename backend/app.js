@@ -1150,18 +1150,26 @@ app.post("/ai-analysis", async (req, res) => {
     }
 
     try {
+        // Check if API key is available
+        if (!process.env.APIKEY) {
+            console.error("APIKEY environment variable is not set");
+            return res.status(500).json({ error: "AI service configuration error." });
+        }
+
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${process.env.APIKEY}`,
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "HTTP-Referer": "https://medquiz.vercel.app",
+                "X-Title": "MEDQIZE"
             },
             body: JSON.stringify({
-                model: "deepseek/deepseek-r1-0528:free",
+                model: "deepseek/deepseek-chat-v3.1:free",
                 messages: [
                     {
                         role: "user",
-                        content: `Here’s a multiple-choice question:\n\nQuestion: ${question}\nUser's Answer: ${selected_answer}\nCorrect Answer: ${correct_option}\n\nWhich one is more accurate and why? in no longer than 40 words. if the words are less than 40 . dont say the number of words . and ne style needed just text `
+                        content: `Here's a multiple-choice question:\n\nQuestion: ${question}\nUser's Answer: ${selected_answer}\nCorrect Answer: ${correct_option}\n\nWhich one is more accurate and why? in no longer than 40 words. if the words are less than 40 . dont say the number of words . and ne style needed just text `
                     }
                 ]
             })
@@ -1170,7 +1178,7 @@ app.post("/ai-analysis", async (req, res) => {
         if (!response.ok) {
             const errorText = await response.text();
             console.error("OpenRouter API Error:", response.status, errorText);
-            return res.status(500).json({ error: "AI service failed." });
+            return res.status(500).json({ error: "AI service failed. Please try again later." });
         }
 
         const data = await response.json();
@@ -1185,7 +1193,7 @@ app.post("/ai-analysis", async (req, res) => {
 
     } catch (error) {
         console.error("AI analysis error:", error);
-        res.status(500).json({ error: "Failed to fetch AI analysis." });
+        res.status(500).json({ error: "Failed to fetch AI analysis. Please try again later." });
     }
 });
 
