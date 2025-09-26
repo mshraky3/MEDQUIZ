@@ -71,9 +71,15 @@ Sent from MEDQIZE Contact Form
     const contactInfo = [
         {
             icon: '📱',
-            title: 'WhatsApp',
-            value: '+966 50 123 4567',
-            link: 'https://wa.me/966501234567'
+            title: 'WhatsApp Support',
+            value: '0582619119',
+            link: 'https://wa.link/gqafib'
+        },
+        {
+            icon: '📱',
+            title: 'WhatsApp Support',
+            value: '050 999 5980',
+            link: 'https://wa.link/soreie'
         },
         {
             icon: '📧',
@@ -92,9 +98,14 @@ Sent from MEDQIZE Contact Form
                     <p>Thank you for contacting us! We'll get back to you as soon as possible.</p>
                     <div className="contact-fallback">
                         <p>You can also reach us directly:</p>
-                        <a href="https://wa.me/966501234567" className="whatsapp-link">
-                            📱 WhatsApp: +966 50 123 4567
-                        </a>
+                        <div className="whatsapp-links">
+                            <a href="https://wa.link/gqafib" className="whatsapp-link">
+                                📱 WhatsApp: 0582619119
+                            </a>
+                            <a href="https://wa.link/soreie" className="whatsapp-link">
+                                📱 WhatsApp: 050 999 5980
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>

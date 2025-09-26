@@ -235,6 +235,13 @@
     border: 1px solid #e9ecef;
 }
 
+.whatsapp-links {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 15px;
+}
+
 .whatsapp-link {
     color: #25D366;
     text-decoration: none;
@@ -245,11 +252,17 @@
     justify-content: center;
     gap: 8px;
     transition: color 0.3s ease;
+    padding: 10px;
+    border: 2px solid #25D366;
+    border-radius: 10px;
+    background: rgba(37, 211, 102, 0.1);
 }
 
 .whatsapp-link:hover {
     color: #128C7E;
-    text-decoration: underline;
+    background: rgba(18, 140, 126, 0.1);
+    border-color: #128C7E;
+    text-decoration: none;
 }
 
 /* Responsive Design */
