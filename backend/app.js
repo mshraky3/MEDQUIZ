@@ -59,7 +59,7 @@ const sendEmail = async (to, subject, text, html = null) => {
 const questionsCache = {
     data: null,
     timestamp: null,
-    ttl: 5 * 60 * 1000 // 5 minutes
+    ttl: 5 * 60 * 1000 
 };
 
 // Free trial questions - fixed list of 40 questions (10 from each type)
