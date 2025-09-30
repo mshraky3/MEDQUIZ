@@ -5,10 +5,9 @@ import './analysis.css';
 
 const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz, isTrial }) => {
     const [showAll, setShowAll] = useState(false);
-    const [modalOpen, setModalOpen] = useState(false);
-    const [aiAnalysis, setAiAnalysis] = useState('');
+    const [aiAnalysis, setAiAnalysis] = useState({});
     const [loadingButtons, setLoadingButtons] = useState({});
-    const [currentQuestion, setCurrentQuestion] = useState('');
+    const [flippedCards, setFlippedCards] = useState({});
 
     // Memoize expensive filtering and sorting operations
     const lastQuizAttempts = useMemo(() => {
@@ -31,17 +30,25 @@ const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz, isTria
     }, [questions]);
 
     const handleSeeMore = useCallback(async (attemptId, questionText, selectedAnswer, correctAnswer, event) => {
-        if (isTrial) {
-            // For trial users, show a message about AI analysis being available with full access
-            setCurrentQuestion(questionText);
-            setAiAnalysis('AI-powered question analysis is available with full access. Get in touch to unlock this feature!');
-            setModalOpen(true);
+        // Flip the card immediately
+        setFlippedCards((prev) => ({ ...prev, [attemptId]: true }));
+        setLoadingButtons((prev) => ({ ...prev, [attemptId]: true }));
+
+        // If analysis already exists for this question, don't fetch again
+        if (aiAnalysis[attemptId]) {
+            setLoadingButtons((prev) => ({ ...prev, [attemptId]: false }));
             return;
         }
 
-        setCurrentQuestion(questionText);
-        setAiAnalysis('');
-        setLoadingButtons((prev) => ({ ...prev, [attemptId]: true }));
+        if (isTrial) {
+            // For trial users, show a message about AI analysis being available with full access
+            setAiAnalysis((prev) => ({ 
+                ...prev, 
+                [attemptId]: 'AI-powered question analysis is available with full access. Get in touch to unlock this feature!' 
+            }));
+            setLoadingButtons((prev) => ({ ...prev, [attemptId]: false }));
+            return;
+        }
 
         try {
             const response = await axios.post(`${Globals.URL}/ai-analysis`, {
@@ -49,19 +56,22 @@ const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz, isTria
                 selected_answer: selectedAnswer,
                 correct_option: correctAnswer,
             });
-            setAiAnalysis(response.data.answer || 'No explanation received.');
+            setAiAnalysis((prev) => ({ 
+                ...prev, 
+                [attemptId]: response.data.answer || 'No explanation received.' 
+            }));
         } catch (error) {
-            setAiAnalysis('Failed to get AI analysis.');
+            setAiAnalysis((prev) => ({ 
+                ...prev, 
+                [attemptId]: 'Failed to get AI analysis.' 
+            }));
         } finally {
             setLoadingButtons((prev) => ({ ...prev, [attemptId]: false }));
-            setModalOpen(true);
         }
-    }, [isTrial]);
+    }, [isTrial, aiAnalysis]);
 
-    const handleCloseModal = useCallback(() => {
-        setModalOpen(false);
-        setAiAnalysis('');
-        setCurrentQuestion('');
+    const handleFlipBack = useCallback((attemptId) => {
+        setFlippedCards((prev) => ({ ...prev, [attemptId]: false }));
     }, []);
 
     const toggleShowAll = useCallback(() => {
@@ -83,55 +93,92 @@ const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz, isTria
                             const questionType = questionRow?.question_type || 'General';
                             const isCorrect = attempt.is_correct;
                             return (
-                                <div key={attempt.id || index} className="question-card">
-                                    <div className="question-header">
-                                        <div className="question-meta">
-                                            <span className="type-badge">
-                                                📖 {questionType}
-                                            </span>
-                                            <span className="source-badge">
-                                                📚 {questionSource}
-                                            </span>
-                                            <span className={`result-badge ${isCorrect ? 'correct' : 'wrong'}`}>
-                                                {isCorrect ? '✅ Correct' : '❌ Wrong'}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="question-content">
-                                        <div className="question-text">
-                                            {questionText}
-                                        </div>
-                                        
-                                        <div className="answers-section">
-                                            <div className="answer-row">
-                                                <span className="answer-label wrong">Your Answer:</span>
-                                                <span className={`answer-text ${isCorrect ? 'correct' : 'wrong'}`}>
-                                                    {attempt.selected_option}
-                                                </span>
+                                <div 
+                                    key={attempt.id || index} 
+                                    className={`question-card ${flippedCards[attempt.id] ? 'flipped' : ''}`}
+                                >
+                                    <div className="question-card-inner">
+                                        {/* Front of Card */}
+                                        <div className="question-card-front">
+                                            <div className="question-header">
+                                                <div className="question-meta">
+                                                    <span className="type-badge">
+                                                        📖 {questionType}
+                                                    </span>
+                                                    <span className="source-badge">
+                                                        📚 {questionSource}
+                                                    </span>
+                                                    <span className={`result-badge ${isCorrect ? 'correct' : 'wrong'}`}>
+                                                        {isCorrect ? '✅ Correct' : '❌ Wrong'}
+                                                    </span>
+                                                </div>
                                             </div>
-                                            <div className="answer-row">
-                                                <span className="answer-label correct">Correct Answer:</span>
-                                                <span className="answer-text correct">{correctAnswer}</span>
+                                            
+                                            <div className="question-content">
+                                                <div className="question-text">
+                                                    {questionText}
+                                                </div>
+                                                
+                                                <div className="answers-section">
+                                                    <div className="answer-row">
+                                                        <span className="answer-label wrong">Your Answer:</span>
+                                                        <span className={`answer-text ${isCorrect ? 'correct' : 'wrong'}`}>
+                                                            {attempt.selected_option}
+                                                        </span>
+                                                    </div>
+                                                    <div className="answer-row">
+                                                        <span className="answer-label correct">Correct Answer:</span>
+                                                        <span className="answer-text correct">{correctAnswer}</span>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div className="question-actions">
+                                                    <button
+                                                        onClick={(e) =>
+                                                            handleSeeMore(
+                                                                attempt.id,
+                                                                questionText,
+                                                                attempt.selected_option,
+                                                                correctAnswer,
+                                                                e
+                                                            )
+                                                        }
+                                                        className="see-more-button"
+                                                        disabled={loadingButtons[attempt.id]}
+                                                    >
+                                                        {loadingButtons[attempt.id] ? 'Loading...' : '🔍 See More'}
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
-                                        
-                                        <div className="question-actions">
-                                            <button
-                                                onClick={(e) =>
-                                                    handleSeeMore(
-                                                        attempt.id,
-                                                        questionText,
-                                                        attempt.selected_option,
-                                                        correctAnswer,
-                                                        e
-                                                    )
-                                                }
-                                                className="see-more-button"
-                                                disabled={loadingButtons[attempt.id]}
-                                            >
-                                                {loadingButtons[attempt.id] ? 'Loading...' : '🔍 See More'}
-                                            </button>
+
+                                        {/* Back of Card */}
+                                        <div className="question-card-back">
+                                            <div className="ai-analysis-back">
+                                                <div className="ai-analysis-header">
+                                                    <h3>🧠 AI Analysis</h3>
+                                                </div>
+                                                
+                                                {loadingButtons[attempt.id] ? (
+                                                    <div className="ai-analysis-loading">
+                                                        <p>Analyzing question...</p>
+                                                        <div className="spinner"></div>
+                                                        <p className="loading-subtext">Please wait...</p>
+                                                    </div>
+                                                ) : (
+                                                    <div className="ai-analysis-content">
+                                                        <p>{aiAnalysis[attempt.id] || 'No analysis available.'}</p>
+                                                    </div>
+                                                )}
+                                                
+                                                <button 
+                                                    className="back-to-question-btn"
+                                                    onClick={() => handleFlipBack(attempt.id)}
+                                                    disabled={loadingButtons[attempt.id]}
+                                                >
+                                                    ← Back to Question
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -154,30 +201,6 @@ const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz, isTria
                 <p className="no-streak">No questions found for your last quiz.</p>
             )}
 
-            {modalOpen && (
-                <div className="modal-overlay" onClick={handleCloseModal}>
-                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                        <h3 className="section-header">🧠 AI Analysis</h3>
-                        {aiAnalysis === '' && currentQuestion !== '' ? (
-                            <div className="loading-state">
-                                <p>Analyzing:</p>
-                                <p><strong>"{currentQuestion}"</strong></p>
-                                <div className="spinner"></div>
-                                <p className="loading-subtext">Please wait...</p>
-                            </div>
-                        ) : (
-                            <div className="analysis-result">
-                                <p>{aiAnalysis}</p>
-                            </div>
-                        )}
-                        {aiAnalysis !== '' && (
-                            <button className="close-button" onClick={handleCloseModal}>
-                                Close
-                            </button>
-                        )}
-                    </div>
-                </div>
-            )}
         </section>
     );
 };
