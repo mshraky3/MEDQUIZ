@@ -5,7 +5,6 @@ import { Pool } from 'pg';
 import https from "https";
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
-import { telegramWebhook } from './telegram-bot.js';
 
 dotenv.config();
 const agent = new https.Agent({ keepAlive: true });
@@ -146,9 +145,6 @@ app.get('/', async (req, res) => {
         res.status(500).send("Server error");
     }
 });
-
-// Telegram Bot Webhook
-app.post('/telegram-webhook', telegramWebhook);
 
 app.post('/add_account', async (req, res) => {
     const { username, password } = req.body;
