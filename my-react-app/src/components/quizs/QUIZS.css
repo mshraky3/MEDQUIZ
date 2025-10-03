@@ -722,3 +722,136 @@ footer {
     padding: 6px 10px;
   }
 }
+
+/* Timer Selector Modal Styles */
+.custom-timer-selector-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.timer-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.timer-option-btn {
+  padding: 1rem;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  background-color: white;
+  color: #333;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.timer-option-btn:hover {
+  border-color: #00b6e0;
+  background-color: #f0f8fb;
+  transform: scale(1.02);
+}
+
+.timer-option-btn.selected {
+  border-color: #00b6e0;
+  background-color: #00b6e0;
+  color: white;
+  transform: scale(1.05);
+}
+
+.timer-info {
+  font-size: 1rem;
+  color: #666;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.custom-timer-input {
+  margin: 1.5rem 0;
+  text-align: center;
+}
+
+.custom-timer-input label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.custom-timer-number-input {
+  width: 100px;
+  padding: 0.5rem;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.custom-timer-number-input:focus {
+  outline: none;
+  border-color: #00b6e0;
+  box-shadow: 0 0 0 3px rgba(0, 182, 224, 0.1);
+}
+
+/* Timer selector responsive styles */
+@media (max-width: 600px) {
+  .timer-options {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.8rem;
+  }
+
+  .timer-option-btn {
+    padding: 0.8rem;
+    font-size: 0.9rem;
+  }
+
+  .timer-info {
+    font-size: 0.9rem;
+  }
+
+  .custom-timer-input label {
+    font-size: 0.9rem;
+  }
+
+  .custom-timer-number-input {
+    width: 80px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .timer-options {
+    grid-template-columns: 1fr;
+    gap: 0.6rem;
+  }
+
+  .timer-option-btn {
+    padding: 0.7rem;
+    font-size: 0.8rem;
+  }
+
+  .timer-info {
+    font-size: 0.8rem;
+  }
+
+  .custom-timer-input label {
+    font-size: 0.8rem;
+  }
+
+  .custom-timer-number-input {
+    width: 70px;
+    font-size: 0.8rem;
+  }
+}

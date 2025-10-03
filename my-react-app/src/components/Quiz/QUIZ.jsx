@@ -29,7 +29,14 @@ const QUIZ = () => {
   const quizStartTimeRef = useRef(Date.now());
   const types = location.state?.types || 'mix';
   const source = location.state?.source || 'mix';
+  const timerMinutes = location.state?.timer || null;
   const { user, setUser, sessionToken } = useContext(UserContext);
+  const [timeRemaining, setTimeRemaining] = useState(timerMinutes ? timerMinutes * 60 : null);
+  const [timerExpired, setTimerExpired] = useState(false);
+  const [questionAnswers, setQuestionAnswers] = useState({});
+  const [showUnansweredPopup, setShowUnansweredPopup] = useState(false);
+  const [unansweredCount, setUnansweredCount] = useState(0);
+  const [countdown, setCountdown] = useState(2);
   
   const protectedGet = async (url, config = {}) => {
     if (!user || !sessionToken) throw new Error('Not authenticated');
@@ -62,6 +69,24 @@ const QUIZ = () => {
       throw err;
     }
   };
+
+  // Timer effect
+  useEffect(() => {
+    if (!timerMinutes || timerExpired) return;
+
+    const timer = setInterval(() => {
+      setTimeRemaining(prev => {
+        if (prev <= 1) {
+          setTimerExpired(true);
+          setQuizFinished(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timerMinutes, timerExpired]);
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -111,45 +136,112 @@ const QUIZ = () => {
 
   const handleSelectOption = (option) => {
     setSelectedAnswer(option);
+    // Save answer for current question
+    setQuestionAnswers(prev => ({
+      ...prev,
+      [currentQuestionIndex]: option
+    }));
   };
 
-  const handleSubmitAnswer = () => {
-    const currentQuestion = questions[currentQuestionIndex];
-    const isCorrect = selectedAnswer === currentQuestion.correct_option;
-
-    setAnswers(prev => [...prev, {
-      question: currentQuestion.question_text,
-      selected: selectedAnswer,
-      correct: currentQuestion.correct_option,
-      isCorrect,
-      topic: currentQuestion.question_type
-    }]);
-
-    setSelectedAnswer(null);
-
+  const handleNextQuestion = () => {
     if (currentQuestionIndex + 1 < questions.length) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
-      setQuizFinished(true);
+      // Check if all questions are answered before finishing
+      handleFinishQuiz();
     }
   };
 
+  const handlePreviousQuestion = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(currentQuestionIndex - 1);
+    }
+  };
+
+  const handleFinishQuiz = () => {
+    // Check if all questions are answered before finishing
+    const unansweredQuestions = [];
+    questions.forEach((_, index) => {
+      if (!questionAnswers[index]) {
+        unansweredQuestions.push(index);
+      }
+    });
+    
+    if (unansweredQuestions.length > 0) {
+      // Show popup with count of unanswered questions and auto-redirect
+      setUnansweredCount(unansweredQuestions.length);
+      setCountdown(2);
+      setShowUnansweredPopup(true);
+      
+      // Start countdown
+      const countdownInterval = setInterval(() => {
+        setCountdown(prev => {
+          if (prev <= 1) {
+            clearInterval(countdownInterval);
+            // Redirect to first unanswered question
+            const firstUnansweredIndex = questions.findIndex((_, index) => !questionAnswers[index]);
+            if (firstUnansweredIndex !== -1) {
+              setCurrentQuestionIndex(firstUnansweredIndex);
+              setShowUnansweredPopup(false);
+            }
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      
+      return;
+    }
+    setQuizFinished(true);
+  };
+
+
+  // Sync selected answer when question changes
+  useEffect(() => {
+    setSelectedAnswer(questionAnswers[currentQuestionIndex] || null);
+  }, [currentQuestionIndex, questionAnswers]);
+
   useEffect(() => {
     // Save trial answers for analysis
-    if (isTrial && quizFinished && answers.length === questions.length) {
-      window.sessionStorage.setItem('trialAnswers', JSON.stringify(answers));
+    if (isTrial && quizFinished && Object.keys(questionAnswers).length === questions.length) {
+      const trialAnswers = questions.map((question, index) => {
+        const selectedAnswer = questionAnswers[index];
+        const isCorrect = selectedAnswer === question.correct_option;
+        return {
+          question: question.question_text,
+          selected: selectedAnswer,
+          correct: question.correct_option,
+          isCorrect,
+          topic: question.question_type
+        };
+      });
+      window.sessionStorage.setItem('trialAnswers', JSON.stringify(trialAnswers));
     }
-  }, [isTrial, quizFinished, answers, questions]);
+  }, [isTrial, quizFinished, questionAnswers, questions]);
 
   useEffect(() => {
     const sendQuizData = async () => {
       if (!id || dataSent || !quizFinished) return;
-      if (answers.length !== questions.length) return;
+      
+      // Build answers array from questionAnswers
+      const finalAnswers = questions.map((question, index) => {
+        const selectedAnswer = questionAnswers[index];
+        const isCorrect = selectedAnswer === question.correct_option;
+        return {
+          question: question.question_text,
+          selected: selectedAnswer,
+          correct: question.correct_option,
+          isCorrect,
+          topic: question.question_type
+        };
+      });
+      
+      if (finalAnswers.length !== questions.length) return;
 
       setDataSent(true);
       const duration = Math.floor((Date.now() - quizStartTimeRef.current) / 1000);
-      const totalQuestions = answers.length;
-      const correctCount = answers.filter(a => a.isCorrect).length;
+      const totalQuestions = finalAnswers.length;
+      const correctCount = finalAnswers.filter(a => a.isCorrect).length;
       const accuracy = ((correctCount / totalQuestions) * 100).toFixed(2);
       const topicsCovered = [...new Set(questions.map(q => q.question_type))];
       console.log("QUIZ - topicsCovered:", topicsCovered);
@@ -187,7 +279,7 @@ const QUIZ = () => {
         const quiz_session_id = sessionRes.data.id;
 
         // Send individual question attempts
-        const attemptPromises = answers.map((answer, index) => {
+        const attemptPromises = finalAnswers.map((answer, index) => {
           const question = questions[index];
           const attemptData = isTrial
             ? {
@@ -217,7 +309,7 @@ const QUIZ = () => {
         if (!isTrial) {
           const topicAnalysisPromises = topicsCovered.map(topic => {
             const topicQuestions = questions.filter(q => q.question_type === topic);
-            const topicAnswers = answers.filter((_, index) => questions[index].question_type === topic);
+            const topicAnswers = finalAnswers.filter((_, index) => questions[index].question_type === topic);
             const topicCorrect = topicAnswers.filter(a => a.isCorrect).length;
             const topicAccuracy = topicQuestions.length > 0 ? (topicCorrect / topicQuestions.length) * 100 : 0;
 
@@ -240,7 +332,7 @@ const QUIZ = () => {
     };
 
     sendQuizData();
-  }, [quizFinished, answers, questions, id, dataSent, isTrial]);
+  }, [quizFinished, questionAnswers, questions, id, dataSent, isTrial]);
 
   if (loading) {
     return <Loading />;
@@ -258,8 +350,20 @@ const QUIZ = () => {
   }
 
   if (quizFinished) {
-    const correctCount = answers.filter(a => a.isCorrect).length;
-    const totalQuestions = answers.length;
+    const finalAnswers = questions.map((question, index) => {
+      const selectedAnswer = questionAnswers[index];
+      const isCorrect = selectedAnswer === question.correct_option;
+      return {
+        question: question.question_text,
+        selected: selectedAnswer,
+        correct: question.correct_option,
+        isCorrect,
+        topic: question.question_type
+      };
+    });
+    
+    const correctCount = finalAnswers.filter(a => a.isCorrect).length;
+    const totalQuestions = finalAnswers.length;
     const accuracy = ((correctCount / totalQuestions) * 100).toFixed(2);
     const duration = Math.floor((Date.now() - quizStartTimeRef.current) / 1000);
 
@@ -269,15 +373,17 @@ const QUIZ = () => {
         totalQuestions={totalQuestions}
         accuracy={accuracy}
         duration={duration}
-        answers={answers}
+        answers={finalAnswers}
         isTrial={isTrial}
         userId={id}
         onRetry={() => {
           setCurrentQuestionIndex(0);
           setSelectedAnswer(null);
-          setAnswers([]);
+          setQuestionAnswers({});
           setQuizFinished(false);
           setDataSent(false);
+          setTimeRemaining(timerMinutes ? timerMinutes * 60 : null);
+          setTimerExpired(false);
           quizStartTimeRef.current = Date.now();
         }}
         onBackToQuizs={() => navigate('/quizs', { 
@@ -293,15 +399,33 @@ const QUIZ = () => {
   const currentQuestion = questions[currentQuestionIndex];
 
   return (
-    <Question
-      question={currentQuestion}
-      questionNumber={currentQuestionIndex + 1}
-      totalQuestions={questions.length}
-      selectedAnswer={selectedAnswer}
-      onSelectOption={handleSelectOption}
-      onSubmitAnswer={handleSubmitAnswer}
-      isTrial={isTrial}
-    />
+    <>
+      <Question
+        question={currentQuestion}
+        questionNumber={currentQuestionIndex + 1}
+        totalQuestions={questions.length}
+        selectedAnswer={selectedAnswer}
+        onSelectOption={handleSelectOption}
+        onNextQuestion={handleNextQuestion}
+        onPreviousQuestion={handlePreviousQuestion}
+        onFinishQuiz={handleFinishQuiz}
+        isTrial={isTrial}
+        timeRemaining={timeRemaining}
+        timerMinutes={timerMinutes}
+      />
+      
+      {/* Unanswered Questions Popup */}
+      {showUnansweredPopup && (
+        <div className="unanswered-popup-overlay">
+          <div className="unanswered-popup">
+            <h3>⚠️ {unansweredCount} Unanswered Questions</h3>
+            <p className="redirect-message">
+              Going to first unanswered question in <span className="countdown">{countdown}</span>...
+            </p>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

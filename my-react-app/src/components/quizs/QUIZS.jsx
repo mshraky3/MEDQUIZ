@@ -23,6 +23,9 @@ const QUIZS = () => {
     const [numQuestions, setNumQuestions] = useState(10);
     const [showCongratulations, setShowCongratulations] = useState(false);
     const [congratulationsData, setCongratulationsData] = useState(null);
+    const [showTimerSelector, setShowTimerSelector] = useState(false);
+    const [selectedTimer, setSelectedTimer] = useState(null);
+    const [customTimerMinutes, setCustomTimerMinutes] = useState(15);
 
     const quizOptions = [10, 30, 50, 100, 200];
     const availableSources = [
@@ -35,6 +38,13 @@ const QUIZS = () => {
         'obstetrics and gynecology',
         'medicine',
         'surgery'
+    ];
+    const timerOptions = [
+        { label: '5 minutes', value: 5 },
+        { label: '10 minutes', value: 10 },
+        { label: '30 minutes', value: 30 },
+        { label: '1 hour', value: 60 },
+        { label: 'Custom', value: 'custom' }
     ];
 
     // SEO structured data for quiz selection page
@@ -81,34 +91,51 @@ const QUIZS = () => {
 
     const handleStartQuiz = () => {
         if (selectedTypes.length === 0) return;
-        const typesStr = selectedTypes.join(',');
         setShowTypeSelector(false);
+        setShowTimerSelector(true);
+    };
+
+    const handleTimerSelect = (timer) => {
+        setSelectedTimer(timer);
+    };
+
+    const handleTimerConfirm = () => {
+        console.log('Timer confirm clicked, selectedTimer:', selectedTimer);
+        console.log('selectedTypes:', selectedTypes);
+        console.log('numQuestions:', numQuestions);
+        
+        if (selectedTimer === undefined) {
+            console.log('No timer selected, returning');
+            return;
+        }
+        
+        // Handle the case where user came from "Mix All Types"
+        const typesStr = selectedTypes.length > 0 ? selectedTypes.join(',') : 'mix';
+        let timerMinutes = selectedTimer === 'custom' ? customTimerMinutes : selectedTimer;
+        
+        console.log('Types string:', typesStr);
+        console.log('Timer minutes:', timerMinutes);
+        
+        setShowTimerSelector(false);
         
         // Use different routes for trial vs regular users
         const quizRoute = isTrial ? `/temp-quiz/${numQuestions}` : `/quiz/${numQuestions}`;
+        console.log('Navigating to:', quizRoute);
+        
         navigate(quizRoute, {
             state: { 
                 id: id, 
                 types: typesStr,
                 source: selectedSource,
-                isTrial: isTrial 
+                isTrial: isTrial,
+                timer: timerMinutes
             }
         });
     };
 
     const handleMixAll = () => {
         setShowTypeSelector(false);
-        
-        // Use different routes for trial vs regular users
-        const quizRoute = isTrial ? `/temp-quiz/${numQuestions}` : `/quiz/${numQuestions}`;
-        navigate(quizRoute, {
-            state: { 
-                id: id, 
-                types: 'mix',
-                source: selectedSource,
-                isTrial: isTrial 
-            }
-        });
+        setShowTimerSelector(true);
     };
 
     const checkboxRef = useRef(null);
@@ -403,6 +430,60 @@ const QUIZS = () => {
                                 </button>
                                 <button onClick={() => setShowTypeSelector(false)} className="custom-cancel-btn">
                                     Back to Source
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Timer Selector Modal */}
+                {showTimerSelector && (
+                    <div className="custom-timer-selector-modal">
+                        <div className="custom-modal-content">
+                            <h2>Set Quiz Timer</h2>
+                            <p className="timer-info">
+                                ⏰ Choose a timer duration or select "No Timer" for unlimited time
+                            </p>
+                            <div className="timer-options">
+                                <button
+                                    className={`timer-option-btn ${selectedTimer === null ? 'selected' : ''}`}
+                                    onClick={() => handleTimerSelect(null)}
+                                >
+                                    No Timer
+                                </button>
+                                {timerOptions.map((timer) => (
+                                    <button
+                                        key={timer.value}
+                                        className={`timer-option-btn ${selectedTimer === timer.value ? 'selected' : ''}`}
+                                        onClick={() => handleTimerSelect(timer.value)}
+                                    >
+                                        {timer.label}
+                                    </button>
+                                ))}
+                            </div>
+                            {selectedTimer === 'custom' && (
+                                <div className="custom-timer-input">
+                                    <label htmlFor="customMinutes">Custom Duration (minutes):</label>
+                                    <input
+                                        id="customMinutes"
+                                        type="number"
+                                        min="1"
+                                        max="180"
+                                        value={customTimerMinutes}
+                                        onChange={(e) => setCustomTimerMinutes(parseInt(e.target.value) || 15)}
+                                        className="custom-timer-number-input"
+                                    />
+                                </div>
+                            )}
+                            <div className="custom-modal-buttons">
+                                <button
+                                    onClick={handleTimerConfirm}
+                                    className="custom-start-btn"
+                                >
+                                    Start Quiz
+                                </button>
+                                <button onClick={() => setShowTimerSelector(false)} className="custom-cancel-btn">
+                                    Back to Types
                                 </button>
                             </div>
                         </div>
