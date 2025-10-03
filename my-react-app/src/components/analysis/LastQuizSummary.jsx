@@ -7,6 +7,8 @@ const LastQuizSummary = ({ latest_quiz }) => {
     console.log("LastQuizSummary - latest_quiz.source:", latest_quiz?.source);
     console.log("LastQuizSummary - latest_quiz.topics_covered:", latest_quiz?.topics_covered);
     console.log("LastQuizSummary - topics_covered type:", typeof latest_quiz?.topics_covered);
+    console.log("LastQuizSummary - duration:", latest_quiz?.duration);
+    console.log("LastQuizSummary - avg_time_per_question:", latest_quiz?.avg_time_per_question);
     
     return (
         <section className="streak-section">
@@ -58,14 +60,18 @@ const LastQuizSummary = ({ latest_quiz }) => {
                                 <div className="answer-row">
                                     <span className="answer-label time">Duration:</span>
                                     <span className="answer-text time">
-                                        {latest_quiz.duration ? Math.floor(latest_quiz.duration / 60) : 0}m {latest_quiz.duration ? latest_quiz.duration % 60 : 0}s
+                                        {latest_quiz.duration && latest_quiz.duration > 0 
+                                            ? `${Math.floor(latest_quiz.duration / 60)}m ${latest_quiz.duration % 60}s`
+                                            : 'Not recorded'}
                                     </span>
                                 </div>
                                 
                                 <div className="answer-row">
                                     <span className="answer-label time">Avg. Time per Question:</span>
                                     <span className="answer-text time">
-                                        {latest_quiz.avg_time_per_question ? parseFloat(latest_quiz.avg_time_per_question).toFixed(1) : 0}s
+                                        {latest_quiz.avg_time_per_question && latest_quiz.avg_time_per_question > 0 
+                                            ? `${parseFloat(latest_quiz.avg_time_per_question).toFixed(1)}s`
+                                            : 'Not recorded'}
                                     </span>
                                 </div>
                                 
