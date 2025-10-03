@@ -1087,6 +1087,8 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
         console.log("Question IDs:", question_ids);
         console.log("Topics covered received:", topics_covered);
         console.log("Topics covered type:", typeof topics_covered);
+        console.log("Duration received:", duration, "Type:", typeof duration);
+        console.log("Avg time per question received:", avg_time_per_question, "Type:", typeof avg_time_per_question);
 
         const result = await db.query(
             `INSERT INTO user_quiz_sessions 
@@ -1103,6 +1105,8 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
                 actualSource
             ]
         );
+        
+        console.log("Quiz session created with ID:", result.rows[0].id);
 
         // Record question progress for each answered question
         if (question_ids && question_ids.length > 0) {
@@ -1390,18 +1394,32 @@ app.get('/debug/schema', async (req, res) => {
 app.get('/debug/quiz-sessions/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
+        
+        // First, check what columns exist
+        const columnsCheck = await db.query(`
+            SELECT column_name, data_type 
+            FROM information_schema.columns 
+            WHERE table_name = 'user_quiz_sessions'
+            ORDER BY ordinal_position;
+        `);
+        
+        console.log('Available columns in user_quiz_sessions:', columnsCheck.rows);
+        
         const result = await db.query(`
-            SELECT id, user_id, total_questions, correct_answers, COALESCE(source, 'general') as source, start_time
+            SELECT id, user_id, total_questions, correct_answers, COALESCE(source, 'general') as source, start_time, duration, avg_time_per_question
             FROM user_quiz_sessions 
             WHERE user_id = $1 
             ORDER BY start_time DESC 
             LIMIT 10
         `, [userId]);
         
-        res.json({ quiz_sessions: result.rows });
+        res.json({ 
+            columns: columnsCheck.rows,
+            quiz_sessions: result.rows 
+        });
     } catch (err) {
         console.error("Error fetching quiz sessions:", err);
-        res.status(500).json({ message: "Server error" });
+        res.status(500).json({ message: "Server error", error: err.message });
     }
 });
 
