@@ -422,7 +422,7 @@ app.get('/user-analysis/:userId', requireSession, async (req, res) => {
                 WHERE user_id = $1;
             `, [userId]),
             db.query(`
-                SELECT id, total_questions, correct_answers, quiz_accuracy, start_time, COALESCE(source, 'general') as source, topics_covered
+                SELECT id, total_questions, correct_answers, quiz_accuracy, start_time, COALESCE(source, 'general') as source, topics_covered, duration, avg_time_per_question
                 FROM user_quiz_sessions
                 WHERE user_id = $1
                 ORDER BY start_time DESC
