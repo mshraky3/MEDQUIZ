@@ -253,6 +253,8 @@ const QUIZ = () => {
       const topicsCovered = [...new Set(questions.map(q => q.question_type))];
       console.log("QUIZ - topicsCovered:", topicsCovered);
       console.log("QUIZ - questions types:", questions.map(q => q.question_type));
+      console.log("QUIZ - Duration being sent:", duration, "seconds");
+      console.log("QUIZ - Avg time per question:", (duration / totalQuestions).toFixed(2), "seconds");
 
       try {
         // Use different endpoint for trial users
