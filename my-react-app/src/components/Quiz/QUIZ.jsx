@@ -37,6 +37,7 @@ const QUIZ = () => {
   const [showUnansweredPopup, setShowUnansweredPopup] = useState(false);
   const [unansweredCount, setUnansweredCount] = useState(0);
   const [countdown, setCountdown] = useState(2);
+  const [finalDuration, setFinalDuration] = useState(null);
   
   const protectedGet = async (url, config = {}) => {
     if (!user || !sessionToken) throw new Error('Not authenticated');
@@ -72,12 +73,15 @@ const QUIZ = () => {
 
   // Timer effect
   useEffect(() => {
-    if (!timerMinutes || timerExpired) return;
+    if (!timerMinutes || timerExpired || quizFinished) return;
 
     const timer = setInterval(() => {
       setTimeRemaining(prev => {
         if (prev <= 1) {
           setTimerExpired(true);
+          // Store the final duration when timer expires
+          const duration = Math.floor((Date.now() - quizStartTimeRef.current) / 1000);
+          setFinalDuration(duration);
           setQuizFinished(true);
           return 0;
         }
@@ -86,7 +90,7 @@ const QUIZ = () => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timerMinutes, timerExpired]);
+  }, [timerMinutes, timerExpired, quizFinished]);
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -192,6 +196,9 @@ const QUIZ = () => {
       
       return;
     }
+    // Store the final duration when quiz is finished
+    const duration = Math.floor((Date.now() - quizStartTimeRef.current) / 1000);
+    setFinalDuration(duration);
     setQuizFinished(true);
   };
 
@@ -221,7 +228,7 @@ const QUIZ = () => {
 
   useEffect(() => {
     const sendQuizData = async () => {
-      if (!id || dataSent || !quizFinished) return;
+      if (!id || dataSent || !quizFinished || finalDuration === null) return;
       
       // Build answers array from questionAnswers
       const finalAnswers = questions.map((question, index) => {
@@ -239,7 +246,7 @@ const QUIZ = () => {
       if (finalAnswers.length !== questions.length) return;
 
       setDataSent(true);
-      const duration = Math.floor((Date.now() - quizStartTimeRef.current) / 1000);
+      const duration = finalDuration;
       const totalQuestions = finalAnswers.length;
       const correctCount = finalAnswers.filter(a => a.isCorrect).length;
       const accuracy = ((correctCount / totalQuestions) * 100).toFixed(2);
@@ -332,7 +339,7 @@ const QUIZ = () => {
     };
 
     sendQuizData();
-  }, [quizFinished, questionAnswers, questions, id, dataSent, isTrial]);
+  }, [quizFinished, questionAnswers, questions, id, dataSent, isTrial, finalDuration]);
 
   if (loading) {
     return <Loading />;
@@ -365,7 +372,8 @@ const QUIZ = () => {
     const correctCount = finalAnswers.filter(a => a.isCorrect).length;
     const totalQuestions = finalAnswers.length;
     const accuracy = ((correctCount / totalQuestions) * 100).toFixed(2);
-    const duration = Math.floor((Date.now() - quizStartTimeRef.current) / 1000);
+    // Use the stored final duration instead of recalculating
+    const duration = finalDuration !== null ? finalDuration : Math.floor((Date.now() - quizStartTimeRef.current) / 1000);
 
     return (
       <Result
@@ -382,6 +390,7 @@ const QUIZ = () => {
           setQuestionAnswers({});
           setQuizFinished(false);
           setDataSent(false);
+          setFinalDuration(null);
           setTimeRemaining(timerMinutes ? timerMinutes * 60 : null);
           setTimerExpired(false);
           quizStartTimeRef.current = Date.now();
