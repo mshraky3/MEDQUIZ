@@ -401,14 +401,23 @@ app.post('/logout', async (req, res) => {
 app.get('/user-analysis/:userId', requireSession, async (req, res) => {
     const { userId } = req.params;
     try {
-        // First, ensure the source column exists in user_quiz_sessions table
+        // First, ensure all required columns exist in user_quiz_sessions table
         try {
             await db.query(`
                 ALTER TABLE user_quiz_sessions 
                 ADD COLUMN IF NOT EXISTS source VARCHAR(50) DEFAULT 'general'
             `);
+            await db.query(`
+                ALTER TABLE user_quiz_sessions 
+                ADD COLUMN IF NOT EXISTS duration INTEGER DEFAULT 0
+            `);
+            await db.query(`
+                ALTER TABLE user_quiz_sessions 
+                ADD COLUMN IF NOT EXISTS avg_time_per_question DECIMAL(10, 2) DEFAULT 0
+            `);
         } catch (err) {
-            // Column might already exist, ignore error
+            // Columns might already exist, ignore error
+            console.log('Column creation warning:', err.message);
         }
 
         // Get overall stats, latest quiz, and last active
@@ -427,7 +436,10 @@ app.get('/user-analysis/:userId', requireSession, async (req, res) => {
                 WHERE user_id = $1
                 ORDER BY start_time DESC
                 LIMIT 1;
-            `, [userId]),
+            `, [userId]).then(result => {
+                console.log('Latest Quiz Query Result:', result.rows[0]);
+                return result;
+            }),
             db.query(`SELECT last_active FROM user_analysis WHERE user_id = $1`, [userId]),
             db.query(`SELECT question_type, total_answered, total_correct, accuracy
                       FROM user_topic_analysis WHERE user_id = $1`, [userId]),
@@ -1022,11 +1034,19 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
     }
 
     try {
-        // First, ensure the source column exists in the table
+        // First, ensure all required columns exist in the table
         try {
             await db.query(`
                 ALTER TABLE user_quiz_sessions 
                 ADD COLUMN IF NOT EXISTS source VARCHAR(50) DEFAULT 'general'
+            `);
+            await db.query(`
+                ALTER TABLE user_quiz_sessions 
+                ADD COLUMN IF NOT EXISTS duration INTEGER DEFAULT 0
+            `);
+            await db.query(`
+                ALTER TABLE user_quiz_sessions 
+                ADD COLUMN IF NOT EXISTS avg_time_per_question DECIMAL(10, 2) DEFAULT 0
             `);
             // Also add a check constraint for valid sources
             await db.query(`
@@ -1036,6 +1056,7 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
             `);
         } catch (err) {
             // Column might already exist, ignore error
+            console.log('Column creation warning:', err.message);
         }
 
         // Determine the actual source based on the questions that were answered
