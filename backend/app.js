@@ -7,6 +7,31 @@ import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 
 dotenv.config();
+
+// Logging configuration
+const LOG_LEVEL = process.env.LOG_LEVEL || 'INFO'; // DEBUG, INFO, WARN, ERROR
+const isProduction = process.env.NODE_ENV === 'production';
+
+const logger = {
+    debug: (message, data = null) => {
+        if (LOG_LEVEL === 'DEBUG' && !isProduction) {
+            console.log(`🔍 [DEBUG] ${message}`, data ? JSON.stringify(data, null, 2) : '');
+        }
+    },
+    info: (message, data = null) => {
+        if (['DEBUG', 'INFO'].includes(LOG_LEVEL)) {
+            console.log(`ℹ️  [INFO] ${message}`, data ? JSON.stringify(data, null, 2) : '');
+        }
+    },
+    warn: (message, data = null) => {
+        if (['DEBUG', 'INFO', 'WARN'].includes(LOG_LEVEL)) {
+            console.warn(`⚠️  [WARN] ${message}`, data ? JSON.stringify(data, null, 2) : '');
+        }
+    },
+    error: (message, error = null) => {
+        console.error(`❌ [ERROR] ${message}`, error ? error.stack || error : '');
+    }
+};
 const agent = new https.Agent({ keepAlive: true });
 const db = new Pool({
     user: process.env.DBUSER,
@@ -46,10 +71,10 @@ const sendEmail = async (to, subject, text, html = null) => {
             text: text,
             html: html
         });
-        console.log('📧 Email sent successfully:', result.messageId);
+        logger.info('Email sent successfully', { messageId: result.messageId });
         return result;
     } catch (error) {
-        console.error('❌ Email sending failed:', error);
+        logger.error('Email sending failed', error);
         throw error;
     }
 };
@@ -122,7 +147,10 @@ app.use((req, res, next) => {
     const start = Date.now();
     res.on('finish', () => {
         const duration = Date.now() - start;
-        console.log(`${req.method} ${req.path} - ${res.statusCode} - ${duration}ms`);
+        // Only log slow requests or errors
+        if (duration > 1000 || res.statusCode >= 400) {
+            logger.warn(`Slow request: ${req.method} ${req.path} - ${res.statusCode} - ${duration}ms`);
+        }
     });
     next();
 });
@@ -269,7 +297,7 @@ app.get('/get_all_users', async (req, res) => {
 const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
 
 app.post('/login', async (req, res) => {
-    console.log("Login request received:", req.body);
+    logger.info("Login request received", { username: req.body.username });
     const { username, password } = req.body;
     
     // Convert to lowercase
@@ -282,19 +310,19 @@ app.post('/login', async (req, res) => {
         // Lock the user row for update
         const userResult = await client.query("SELECT * FROM accounts WHERE username = $1 FOR UPDATE", [lowercaseUsername]);
         const userRow = userResult.rows[0];
-        console.log(`[LOGIN] User row after SELECT FOR UPDATE:`, userRow);
+        logger.debug("User row after SELECT FOR UPDATE", userRow);
 
         if (!userRow) {
             await client.query('ROLLBACK');
             client.release();
-            console.log(`[LOGIN] No user found for username: ${lowercaseUsername}`);
+            logger.warn(`No user found for username: ${lowercaseUsername}`);
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
         if (lowercasePassword !== userRow.password) {
             await client.query('ROLLBACK');
             client.release();
-            console.log(`[LOGIN] Invalid password for username: ${lowercaseUsername}`);
+            logger.warn(`Invalid password for username: ${lowercaseUsername}`);
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
@@ -302,13 +330,13 @@ app.post('/login', async (req, res) => {
         let now = new Date();
         if (userRow.logged) {
             const lastLogin = new Date(userRow.logged_date);
-            console.log(`[LOGIN] User is already logged in. Last login: ${lastLogin}, Now: ${now}`);
+            logger.debug(`User is already logged in. Last login: ${lastLogin}, Now: ${now}`);
             if (now - lastLogin < SESSION_TIMEOUT_MS) {
-                console.log(`[LOGIN] Session still active. Overwriting session.`);
+                logger.debug(`Session still active. Overwriting session.`);
             } else {
                 // Session expired, unlock
                 await client.query("UPDATE accounts SET logged = $1 WHERE id = $2", [false, userRow.id]);
-                console.log(`[LOGIN] Session expired. Resetting logged flag.`);
+                logger.debug(`Session expired. Resetting logged flag.`);
             }
         }
 
@@ -316,7 +344,7 @@ app.post('/login', async (req, res) => {
         if (!userRow.isactive) {
             await client.query('ROLLBACK');
             client.release();
-            console.log(`[LOGIN] Subscription expired for username: ${lowercaseUsername}`);
+            logger.warn(`Subscription expired for username: ${lowercaseUsername}`);
             return res.status(403).json({
                 message: 'Subscription expired',
                 expired: true,
@@ -329,10 +357,10 @@ app.post('/login', async (req, res) => {
 
         // Update login state and store session token
         await client.query("UPDATE accounts SET logged = $1, logged_date = $2, session_token = $3 WHERE id = $4", [true, now, sessionToken, userRow.id]);
-        console.log(`[LOGIN] Set logged=true and session_token for username: ${lowercaseUsername}`);
+        logger.debug(`Set logged=true and session_token for username: ${lowercaseUsername}`);
         await client.query('COMMIT');
         client.release();
-        console.log(`[LOGIN] Transaction committed for username: ${lowercaseUsername}`);
+        logger.debug(`Transaction committed for username: ${lowercaseUsername}`);
 
         const updatedUser = {
             ...userRow,
@@ -353,7 +381,7 @@ app.post('/login', async (req, res) => {
     } catch (error) {
         await client.query('ROLLBACK');
         client.release();
-        console.error('[LOGIN] Error during login transaction:', error);
+        logger.error('Error during login transaction', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 });
@@ -550,11 +578,28 @@ app.get('/user-analysis/:userId', requireSession, async (req, res) => {
                 quiz_accuracy: latestQuiz.quiz_accuracy || 0,
                 start_time: latestQuiz.start_time,
                 source: latestQuiz.source || 'general',
-                topics_covered: latestQuiz.topics_covered ? 
-                    (typeof latestQuiz.topics_covered === 'string' ? 
-                        JSON.parse(latestQuiz.topics_covered) : 
-                        latestQuiz.topics_covered) : 
-                    []
+                duration: latestQuiz.duration || 0,
+                avg_time_per_question: latestQuiz.avg_time_per_question || 0,
+                topics_covered: (() => {
+                    if (!latestQuiz.topics_covered) return [];
+                    
+                    try {
+                        if (typeof latestQuiz.topics_covered === 'string') {
+                            const parsed = JSON.parse(latestQuiz.topics_covered);
+                            return Array.isArray(parsed) ? parsed : [];
+                        } else if (Array.isArray(latestQuiz.topics_covered)) {
+                            return latestQuiz.topics_covered;
+                        } else {
+                            return [];
+                        }
+                    } catch (e) {
+                        logger.warn("Failed to parse topics_covered", { 
+                            topics_covered: latestQuiz.topics_covered, 
+                            error: e.message 
+                        });
+                        return [];
+                    }
+                })()
             },
             best_topic,
             worst_topic,
@@ -564,16 +609,20 @@ app.get('/user-analysis/:userId', requireSession, async (req, res) => {
         };
 
         // Debug logging
-        console.log("User analysis for user:", userId);
-        console.log("Source breakdown:", sourceBreakdown);
-        console.log("Latest quiz source:", latestQuiz.source);
-        console.log("Latest quiz topics_covered (raw):", latestQuiz.topics_covered);
-        console.log("Latest quiz topics_covered (type):", typeof latestQuiz.topics_covered);
+        logger.debug("User analysis", {
+            userId,
+            sourceBreakdown,
+            latestQuizSource: latestQuiz.source,
+            topicsCoveredType: typeof latestQuiz.topics_covered,
+            topicsCoveredValue: latestQuiz.topics_covered,
+            duration: latestQuiz.duration,
+            avgTimePerQuestion: latestQuiz.avg_time_per_question
+        });
 
 
         res.json(result);
     } catch (err) {
-        console.error("Error fetching user analysis:", err);
+        logger.error("Error fetching user analysis", err);
         res.status(500).json({ message: 'Server error' });
     }
 });
@@ -807,18 +856,21 @@ app.get('/api/questions', async (req, res) => {
 
     try {
         // Log query for debugging
-        console.log('Executing questions query:', query);
-        console.log('Query params:', [...values, limit]);
+        logger.debug('Executing questions query', { 
+            query: query.substring(0, 100) + '...', 
+            paramCount: values.length + 1,
+            limit 
+        });
         
         const startTime = Date.now();
         const result = await db.query(query, [...values, limit]);
         const endTime = Date.now();
         
-        console.log(`Questions query executed in ${endTime - startTime}ms, returned ${result.rows.length} questions`);
+        logger.debug(`Questions query executed in ${endTime - startTime}ms, returned ${result.rows.length} questions`);
         
         res.json({ questions: result.rows });
     } catch (err) {
-        console.error('Error fetching questions:', err);
+        logger.error('Error fetching questions', err);
         res.status(500).json({ message: 'Server error' });
     }
 });
@@ -936,7 +988,7 @@ app.post('/question-attempts', requireSession, async (req, res) => {
         );
         res.status(201).json(result.rows[0]);
     } catch (err) {
-        console.error("Error inserting question attempt:", err);
+        logger.error("Error inserting question attempt", err);
         res.status(500).json({ message: 'Failed to record question attempt' });
     }
 
@@ -1026,7 +1078,14 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
         avg_time_per_question,
         topics_covered,
         source,
-        question_ids
+        question_ids,
+        question_attempts = [], // Array of question attempts with details
+        quiz_type = 'practice',
+        difficulty_level = 'mixed',
+        device_type = 'desktop',
+        fastest_question_time = 0,
+        slowest_question_time = 0,
+        session_metadata = {}
     } = req.body;
 
     if (!user_id || !total_questions || typeof quiz_accuracy !== 'number') {
@@ -1047,6 +1106,38 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
             await db.query(`
                 ALTER TABLE user_quiz_sessions 
                 ADD COLUMN IF NOT EXISTS avg_time_per_question DECIMAL(10, 2) DEFAULT 0
+            `);
+            await db.query(`
+                ALTER TABLE user_quiz_sessions 
+                ADD COLUMN IF NOT EXISTS session_id UUID DEFAULT gen_random_uuid()
+            `);
+            await db.query(`
+                ALTER TABLE user_quiz_sessions 
+                ADD COLUMN IF NOT EXISTS end_time TIMESTAMP DEFAULT NOW()
+            `);
+            await db.query(`
+                ALTER TABLE user_quiz_sessions 
+                ADD COLUMN IF NOT EXISTS quiz_type VARCHAR(50) DEFAULT 'practice'
+            `);
+            await db.query(`
+                ALTER TABLE user_quiz_sessions 
+                ADD COLUMN IF NOT EXISTS difficulty_level VARCHAR(20) DEFAULT 'mixed'
+            `);
+            await db.query(`
+                ALTER TABLE user_quiz_sessions 
+                ADD COLUMN IF NOT EXISTS device_type VARCHAR(20) DEFAULT 'desktop'
+            `);
+            await db.query(`
+                ALTER TABLE user_quiz_sessions 
+                ADD COLUMN IF NOT EXISTS fastest_question_time INTEGER DEFAULT 0
+            `);
+            await db.query(`
+                ALTER TABLE user_quiz_sessions 
+                ADD COLUMN IF NOT EXISTS slowest_question_time INTEGER DEFAULT 0
+            `);
+            await db.query(`
+                ALTER TABLE user_quiz_sessions 
+                ADD COLUMN IF NOT EXISTS session_metadata JSONB DEFAULT '{}'
             `);
             // Also add a check constraint for valid sources
             await db.query(`
@@ -1083,17 +1174,22 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
             }
         }
 
-        console.log("Creating quiz session for user:", user_id, "with source:", actualSource);
-        console.log("Question IDs:", question_ids);
-        console.log("Topics covered received:", topics_covered);
-        console.log("Topics covered type:", typeof topics_covered);
-        console.log("Duration received:", duration, "Type:", typeof duration);
-        console.log("Avg time per question received:", avg_time_per_question, "Type:", typeof avg_time_per_question);
+        logger.debug("Creating quiz session", {
+            user_id,
+            source: actualSource,
+            question_count: question_ids.length,
+            topics_covered: typeof topics_covered,
+            duration: typeof duration,
+            avg_time_per_question: typeof avg_time_per_question
+        });
+
+        // Calculate end time based on start time and duration
+        const endTime = new Date(Date.now() + (duration * 1000));
 
         const result = await db.query(
             `INSERT INTO user_quiz_sessions 
-            (user_id, total_questions, correct_answers, quiz_accuracy, duration, avg_time_per_question, topics_covered, source) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
+            (user_id, total_questions, correct_answers, quiz_accuracy, duration, avg_time_per_question, topics_covered, source, quiz_type, difficulty_level, device_type, fastest_question_time, slowest_question_time, session_metadata, end_time) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING id, session_id`,
             [
                 user_id,
                 total_questions,
@@ -1102,11 +1198,21 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
                 duration,
                 avg_time_per_question,
                 JSON.stringify(topics_covered),
-                actualSource
+                actualSource,
+                quiz_type,
+                difficulty_level,
+                device_type,
+                fastest_question_time,
+                slowest_question_time,
+                JSON.stringify(session_metadata),
+                endTime
             ]
         );
         
-        console.log("Quiz session created with ID:", result.rows[0].id);
+        logger.info("Quiz session created", { 
+            id: result.rows[0].id, 
+            session_id: result.rows[0].session_id 
+        });
 
         // Record question progress for each answered question
         if (question_ids && question_ids.length > 0) {
@@ -1125,10 +1231,358 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
             }
         }
 
-        res.status(201).json({ id: result.rows[0].id });
+        // Record detailed question attempts if provided
+        if (question_attempts && question_attempts.length > 0) {
+            logger.debug("Recording question attempts", { 
+                attemptCount: question_attempts.length,
+                sessionId: result.rows[0].id 
+            });
+
+            for (const attempt of question_attempts) {
+                try {
+                    await db.query(`
+                        INSERT INTO user_question_attempts 
+                        (user_id, question_id, selected_option, is_correct, time_taken, quiz_session_id)
+                        VALUES ($1, $2, $3, $4, $5, $6)
+                    `, [
+                        user_id,
+                        attempt.question_id,
+                        attempt.selected_option,
+                        attempt.is_correct,
+                        attempt.time_taken,
+                        result.rows[0].id
+                    ]);
+                } catch (attemptError) {
+                    logger.warn("Failed to record question attempt", { 
+                        error: attemptError.message,
+                        attempt: attempt 
+                    });
+                    // Continue with other attempts even if one fails
+                }
+            }
+        }
+
+        res.status(201).json({ 
+            id: result.rows[0].id,
+            session_id: result.rows[0].session_id,
+            message: 'Quiz session created successfully'
+        });
     } catch (err) {
-        console.error("Failed to record quiz session", err.message, err.stack);
+        logger.error("Failed to record quiz session", err);
         res.status(500).json({ message: 'Failed to record quiz session' });
+    }
+});
+
+// Get quiz session history for a user
+app.get('/quiz-sessions/history/:userId', requireSession, async (req, res) => {
+    const { userId } = req.params;
+    const { page = 1, limit = 10, source, quiz_type, start_date, end_date } = req.query;
+    
+    try {
+        const offset = (page - 1) * limit;
+        let whereConditions = ['user_id = $1'];
+        let queryParams = [userId];
+        let paramCount = 1;
+
+        // Add filters
+        if (source && source !== 'all') {
+            paramCount++;
+            whereConditions.push(`source = $${paramCount}`);
+            queryParams.push(source);
+        }
+
+        if (quiz_type && quiz_type !== 'all') {
+            paramCount++;
+            whereConditions.push(`quiz_type = $${paramCount}`);
+            queryParams.push(quiz_type);
+        }
+
+        if (start_date) {
+            paramCount++;
+            whereConditions.push(`start_time >= $${paramCount}`);
+            queryParams.push(start_date);
+        }
+
+        if (end_date) {
+            paramCount++;
+            whereConditions.push(`start_time <= $${paramCount}`);
+            queryParams.push(end_date);
+        }
+
+        const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
+
+        // Get total count
+        const countQuery = `
+            SELECT COUNT(*) as total 
+            FROM user_quiz_sessions 
+            ${whereClause}
+        `;
+        const countResult = await db.query(countQuery, queryParams);
+        const totalSessions = parseInt(countResult.rows[0].total);
+
+        // Get paginated results
+        const sessionsQuery = `
+            SELECT 
+                id,
+                session_id,
+                total_questions,
+                correct_answers,
+                quiz_accuracy,
+                duration,
+                avg_time_per_question,
+                topics_covered,
+                source,
+                quiz_type,
+                difficulty_level,
+                device_type,
+                fastest_question_time,
+                slowest_question_time,
+                session_metadata,
+                start_time,
+                end_time
+            FROM user_quiz_sessions 
+            ${whereClause}
+            ORDER BY start_time DESC 
+            LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}
+        `;
+        
+        const sessionsResult = await db.query(sessionsQuery, [...queryParams, limit, offset]);
+        
+        // Convert numeric fields from strings to numbers
+        const sessions = sessionsResult.rows.map(session => ({
+            ...session,
+            total_questions: parseInt(session.total_questions) || 0,
+            correct_answers: parseInt(session.correct_answers) || 0,
+            quiz_accuracy: parseFloat(session.quiz_accuracy) || 0,
+            duration: parseFloat(session.duration) || 0,
+            avg_time_per_question: parseFloat(session.avg_time_per_question) || 0,
+            fastest_question_time: parseInt(session.fastest_question_time) || 0,
+            slowest_question_time: parseInt(session.slowest_question_time) || 0
+        }));
+        
+        res.json({
+            sessions: sessions,
+            pagination: {
+                current_page: parseInt(page),
+                total_pages: Math.ceil(totalSessions / limit),
+                total_sessions: totalSessions,
+                limit: parseInt(limit)
+            }
+        });
+    } catch (err) {
+        console.error('Error fetching quiz session history:', err);
+        res.status(500).json({ message: 'Failed to fetch quiz session history' });
+    }
+});
+
+// Get detailed quiz session by ID
+app.get('/quiz-sessions/:sessionId', requireSession, async (req, res) => {
+    const { sessionId } = req.params;
+    
+    logger.debug('Fetching quiz session details', { sessionId });
+    
+    try {
+        // Check if sessionId is a number or UUID
+        const isNumeric = !isNaN(sessionId) && !isNaN(parseFloat(sessionId));
+        let whereClause, queryParams;
+        
+        if (isNumeric) {
+            // Search by integer ID
+            whereClause = 'WHERE id = $1';
+            queryParams = [parseInt(sessionId)];
+        } else {
+            // Search by UUID session_id
+            whereClause = 'WHERE session_id = $1';
+            queryParams = [sessionId];
+        }
+        
+        const sessionResult = await db.query(`
+            SELECT 
+                id,
+                session_id,
+                user_id,
+                total_questions,
+                correct_answers,
+                quiz_accuracy,
+                duration,
+                avg_time_per_question,
+                topics_covered,
+                source,
+                quiz_type,
+                difficulty_level,
+                device_type,
+                fastest_question_time,
+                slowest_question_time,
+                session_metadata,
+                start_time,
+                end_time
+            FROM user_quiz_sessions 
+            ${whereClause}
+        `, queryParams);
+
+        logger.debug('Session query result', { 
+            rowCount: sessionResult.rows.length, 
+            sessionId,
+            foundSession: sessionResult.rows[0] 
+        });
+
+        if (sessionResult.rows.length === 0) {
+            logger.warn('Quiz session not found', { sessionId });
+            return res.status(404).json({ message: 'Quiz session not found' });
+        }
+
+        // Get question attempts for this session
+        const sessionIdForAttempts = sessionResult.rows[0].id;
+        logger.debug('Fetching question attempts', { sessionIdForAttempts });
+        
+        let attemptsResult;
+        try {
+            attemptsResult = await db.query(`
+                SELECT 
+                    qa.id,
+                    qa.question_id,
+                    qa.selected_option,
+                    qa.is_correct,
+                    qa.time_taken,
+                    qa.created_at,
+                    q.question_text,
+                    q.question_type,
+                    q.source,
+                    q.correct_option,
+                    q.option1,
+                    q.option2,
+                    q.option3,
+                    q.option4
+                FROM user_question_attempts qa
+                JOIN questions q ON qa.question_id = q.id
+                WHERE qa.quiz_session_id = $1
+                ORDER BY qa.created_at ASC
+            `, [sessionIdForAttempts]);
+            
+            logger.debug('Question attempts query result', { 
+                attemptCount: attemptsResult.rows.length,
+                sessionIdForAttempts 
+            });
+        } catch (attemptsError) {
+            logger.warn('Error fetching question attempts, continuing without them', { 
+                error: attemptsError.message,
+                sessionIdForAttempts 
+            });
+            // Continue without question attempts
+            attemptsResult = { rows: [] };
+        }
+
+        // Convert numeric fields from strings to numbers
+        const session = sessionResult.rows[0];
+        const convertedSession = {
+            ...session,
+            total_questions: parseInt(session.total_questions) || 0,
+            correct_answers: parseInt(session.correct_answers) || 0,
+            quiz_accuracy: parseFloat(session.quiz_accuracy) || 0,
+            duration: parseFloat(session.duration) || 0,
+            avg_time_per_question: parseFloat(session.avg_time_per_question) || 0,
+            fastest_question_time: parseInt(session.fastest_question_time) || 0,
+            slowest_question_time: parseInt(session.slowest_question_time) || 0
+        };
+
+        // Convert question attempts numeric fields
+        const convertedAttempts = attemptsResult.rows.map(attempt => ({
+            ...attempt,
+            time_taken: parseFloat(attempt.time_taken) || 0
+        }));
+
+        // Check if this is an old session (no question attempts)
+        const isOldSession = convertedAttempts.length === 0;
+        
+        res.json({
+            session: convertedSession,
+            question_attempts: convertedAttempts,
+            is_old_session: isOldSession,
+            message: isOldSession ? 'This is an older session. Detailed question attempts are not available for sessions created before the enhanced tracking system.' : null
+        });
+    } catch (err) {
+        logger.error('Error fetching quiz session details', err);
+        logger.error('Error details', { 
+            message: err.message, 
+            stack: err.stack, 
+            code: err.code,
+            sessionId 
+        });
+        res.status(500).json({ 
+            message: 'Failed to fetch quiz session details',
+            error: err.message 
+        });
+    }
+});
+
+// Get quiz session statistics for a user
+app.get('/quiz-sessions/stats/:userId', requireSession, async (req, res) => {
+    const { userId } = req.params;
+    const { period = 'all' } = req.query; // all, week, month, year
+    
+    try {
+        let dateFilter = '';
+        if (period === 'week') {
+            dateFilter = "AND start_time >= NOW() - INTERVAL '7 days'";
+        } else if (period === 'month') {
+            dateFilter = "AND start_time >= NOW() - INTERVAL '30 days'";
+        } else if (period === 'year') {
+            dateFilter = "AND start_time >= NOW() - INTERVAL '365 days'";
+        }
+
+        const statsResult = await db.query(`
+            SELECT 
+                COUNT(*) as total_sessions,
+                SUM(total_questions) as total_questions_answered,
+                SUM(correct_answers) as total_correct_answers,
+                AVG(quiz_accuracy) as average_accuracy,
+                AVG(duration) as average_duration,
+                AVG(avg_time_per_question) as average_time_per_question,
+                MIN(quiz_accuracy) as lowest_accuracy,
+                MAX(quiz_accuracy) as highest_accuracy,
+                MIN(duration) as shortest_session,
+                MAX(duration) as longest_session,
+                COUNT(DISTINCT source) as unique_sources,
+                COUNT(DISTINCT quiz_type) as unique_quiz_types
+            FROM user_quiz_sessions 
+            WHERE user_id = $1 ${dateFilter}
+        `, [userId]);
+
+        // Get accuracy trends over time
+        const trendsResult = await db.query(`
+            SELECT 
+                DATE(start_time) as date,
+                COUNT(*) as sessions_count,
+                AVG(quiz_accuracy) as avg_accuracy,
+                AVG(duration) as avg_duration
+            FROM user_quiz_sessions 
+            WHERE user_id = $1 ${dateFilter}
+            GROUP BY DATE(start_time)
+            ORDER BY date DESC
+            LIMIT 30
+        `, [userId]);
+
+        // Get source breakdown
+        const sourceBreakdownResult = await db.query(`
+            SELECT 
+                source,
+                COUNT(*) as session_count,
+                AVG(quiz_accuracy) as avg_accuracy,
+                SUM(total_questions) as total_questions
+            FROM user_quiz_sessions 
+            WHERE user_id = $1 ${dateFilter}
+            GROUP BY source
+            ORDER BY session_count DESC
+        `, [userId]);
+
+        res.json({
+            overall_stats: statsResult.rows[0],
+            accuracy_trends: trendsResult.rows,
+            source_breakdown: sourceBreakdownResult.rows
+        });
+    } catch (err) {
+        console.error('Error fetching quiz session statistics:', err);
+        res.status(500).json({ message: 'Failed to fetch quiz session statistics' });
     }
 });
 
@@ -1670,6 +2124,95 @@ setInterval(() => {
     }
 }, 60 * 60 * 1000); // Run every hour
 
+// Get user progress data
+app.get('/quiz-sessions/progress/:userId', requireSession, async (req, res) => {
+    const { userId } = req.params;
+    
+    try {
+        logger.debug('Fetching progress data', { userId });
+        
+        // Get total questions count
+        const totalQuestionsResult = await db.query(`
+            SELECT COUNT(*) as total_questions
+            FROM questions
+        `);
+        
+        // Get answered questions count
+        const answeredQuestionsResult = await db.query(`
+            SELECT COUNT(DISTINCT question_id) as answered_questions
+            FROM user_question_attempts
+            WHERE user_id = $1
+        `, [userId]);
+        
+        const totalQuestions = parseInt(totalQuestionsResult.rows[0].total_questions);
+        const answeredQuestions = parseInt(answeredQuestionsResult.rows[0].answered_questions);
+        const percentageCompleted = totalQuestions > 0 ? (answeredQuestions / totalQuestions) * 100 : 0;
+        const remainingQuestions = totalQuestions - answeredQuestions;
+        
+        // Get source breakdown
+        const sourceBreakdownResult = await db.query(`
+            SELECT 
+                COALESCE(q.source, 'general') as source,
+                COUNT(DISTINCT q.id) as total_questions,
+                COUNT(DISTINCT uqa.question_id) as answered_questions
+            FROM questions q
+            LEFT JOIN user_question_attempts uqa ON q.id = uqa.question_id AND uqa.user_id = $1
+            GROUP BY COALESCE(q.source, 'general')
+        `, [userId]);
+        
+        const sourceBreakdown = {};
+        sourceBreakdownResult.rows.forEach(row => {
+            sourceBreakdown[row.source] = {
+                total: parseInt(row.total_questions),
+                answered: parseInt(row.answered_questions)
+            };
+        });
+        
+        // Get question type breakdown
+        const typeBreakdownResult = await db.query(`
+            SELECT 
+                q.question_type,
+                COUNT(DISTINCT q.id) as total_questions,
+                COUNT(DISTINCT uqa.question_id) as answered_questions
+            FROM questions q
+            LEFT JOIN user_question_attempts uqa ON q.id = uqa.question_id AND uqa.user_id = $1
+            GROUP BY q.question_type
+        `, [userId]);
+        
+        const typeBreakdown = {};
+        typeBreakdownResult.rows.forEach(row => {
+            typeBreakdown[row.question_type] = {
+                total: parseInt(row.total_questions),
+                answered: parseInt(row.answered_questions)
+            };
+        });
+        
+        const progressData = {
+            totalQuestions,
+            answeredQuestions,
+            percentageCompleted,
+            remainingQuestions,
+            sourceBreakdown,
+            typeBreakdown
+        };
+        
+        logger.info('Progress data fetched successfully', { 
+            userId, 
+            totalQuestions, 
+            answeredQuestions, 
+            percentageCompleted 
+        });
+        
+        res.json(progressData);
+        
+    } catch (err) {
+        logger.error('Error fetching progress data', { 
+            error: err.message, 
+            userId 
+        });
+        res.status(500).json({ message: 'Failed to fetch progress data' });
+    }
+});
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => {
@@ -1803,18 +2346,35 @@ function getSessionCredentials(req) {
 
 function requireSession(req, res, next) {
     const { username, sessionToken } = getSessionCredentials(req);
+    
+    logger.debug('requireSession middleware', {
+        method: req.method,
+        url: req.url,
+        username: username,
+        sessionToken: sessionToken ? 'present' : 'missing',
+        query: req.query,
+        body: req.body
+    });
+    
     if (!username || !sessionToken) {
+        logger.warn('Missing session credentials', { username, sessionToken: sessionToken ? 'present' : 'missing' });
         return res.status(401).json({ message: 'Missing session credentials' });
     }
     db.query('SELECT session_token FROM accounts WHERE username = $1', [username])
         .then(result => {
             if (!result.rows.length || result.rows[0].session_token !== sessionToken) {
+                logger.warn('Session invalid or expired', { 
+                    username, 
+                    hasSessionInDB: result.rows.length > 0,
+                    sessionMatches: result.rows.length > 0 ? result.rows[0].session_token === sessionToken : false
+                });
                 return res.status(401).json({ message: 'Session invalid or expired' });
             }
+            logger.debug('Session validated successfully', { username });
             next();
         })
         .catch(err => {
-            console.error('[SESSION] Error checking session:', err);
+            logger.error('[SESSION] Error checking session:', err);
             res.status(500).json({ message: 'Internal server error' });
         });
 }
@@ -2617,6 +3177,450 @@ app.post('/api/admin/deactivate-temp-link/:id', async (req, res) => {
     } catch (err) {
         console.error('Error deactivating temp link:', err);
         res.status(500).json({ message: 'Failed to deactivate link' });
+    }
+});
+
+// ==================== FINAL QUIZ ENDPOINTS ====================
+
+// Get questions count by type and source for final quiz
+app.get('/final-quiz/questions-count', requireSession, async (req, res) => {
+    const { questionType, source } = req.query;
+    
+    try {
+        logger.debug('Fetching questions count for final quiz', { questionType, source });
+        
+        const result = await db.query(`
+            SELECT COUNT(*) as total_questions
+            FROM questions 
+            WHERE question_type = $1 AND source = $2
+        `, [questionType, source]);
+        
+        const totalQuestions = parseInt(result.rows[0].total_questions);
+        
+        logger.info('Questions count fetched successfully', { 
+            questionType, 
+            source, 
+            totalQuestions 
+        });
+        
+        res.json({ totalQuestions });
+        
+    } catch (err) {
+        logger.error('Error fetching questions count for final quiz', { 
+            error: err.message, 
+            questionType, 
+            source 
+        });
+        res.status(500).json({ message: 'Failed to fetch questions count' });
+    }
+});
+
+// Get all questions for final quiz (including previously answered ones)
+app.get('/final-quiz/questions', requireSession, async (req, res) => {
+    const { questionType, source } = req.query;
+    
+    try {
+        logger.debug('Fetching all questions for final quiz', { 
+            questionType, 
+            source,
+            username: req.query.username,
+            sessionToken: req.query.sessionToken ? 'present' : 'missing'
+        });
+        
+        const result = await db.query(`
+            SELECT 
+                id,
+                question_text,
+                option1,
+                option2,
+                option3,
+                option4,
+                correct_option,
+                question_type,
+                source
+            FROM questions 
+            WHERE question_type = $1 AND source = $2
+            ORDER BY RANDOM()
+        `, [questionType, source]);
+        
+        const questions = result.rows;
+        
+        logger.info('Questions fetched successfully for final quiz', { 
+            questionType, 
+            source, 
+            count: questions.length 
+        });
+        
+        res.json({ questions });
+        
+    } catch (err) {
+        logger.error('Error fetching questions for final quiz', { 
+            error: err.message, 
+            questionType, 
+            source 
+        });
+        res.status(500).json({ message: 'Failed to fetch questions' });
+    }
+});
+
+// Submit final quiz session
+app.post('/final-quiz/submit', requireSession, async (req, res) => {
+    const { 
+        userId, 
+        questionType, 
+        source, 
+        totalQuestions, 
+        correctAnswers, 
+        timeTaken, 
+        timeLimit,
+        sessionMetadata,
+        questionIds = [], // Array of question IDs used in the quiz
+        questionAttempts = [] // Array of question attempts with user answers
+    } = req.body;
+    
+    try {
+        logger.info('Final quiz submission request received', { 
+            userId, 
+            questionType, 
+            source, 
+            totalQuestions, 
+            correctAnswers,
+            timeTaken,
+            timeLimit,
+            sessionMetadata,
+            requestBody: req.body
+        });
+        
+        const score = totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
+        
+        logger.info('Inserting final quiz session into database', {
+            userId,
+            questionType,
+            source,
+            totalQuestions,
+            correctAnswers,
+            score,
+            timeTaken,
+            timeLimit
+        });
+
+        const result = await db.query(`
+            INSERT INTO final_review_sessions (
+                user_id, 
+                question_type, 
+                source, 
+                total_questions, 
+                correct_answers, 
+                score, 
+                time_taken, 
+                time_limit, 
+                end_time, 
+                session_metadata,
+                question_ids
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP, $9, $10)
+            RETURNING id, session_id
+        `, [
+            userId, 
+            questionType, 
+            source, 
+            totalQuestions, 
+            correctAnswers, 
+            score, 
+            timeTaken, 
+            timeLimit, 
+            JSON.stringify(sessionMetadata || {}),
+            questionIds
+        ]);
+        
+        const sessionId = result.rows[0].id;
+        const sessionUuid = result.rows[0].session_id;
+        
+        logger.info('Final quiz session inserted successfully', {
+            sessionId,
+            sessionUuid,
+            userId,
+            score
+        });
+        
+        // Insert question attempts if provided
+        if (questionAttempts && questionAttempts.length > 0) {
+            logger.info('Inserting question attempts', { 
+                sessionId, 
+                attemptsCount: questionAttempts.length 
+            });
+            
+            for (const attempt of questionAttempts) {
+                await db.query(`
+                    INSERT INTO final_quiz_attempts (
+                        session_id,
+                        question_id,
+                        user_answer,
+                        correct_answer,
+                        is_correct,
+                        time_taken
+                    ) VALUES ($1, $2, $3, $4, $5, $6)
+                `, [
+                    sessionId,
+                    attempt.questionId,
+                    attempt.userAnswer,
+                    attempt.correctAnswer,
+                    attempt.isCorrect,
+                    attempt.timeTaken || 0
+                ]);
+            }
+            
+            logger.info('Question attempts inserted successfully', { 
+                sessionId, 
+                attemptsCount: questionAttempts.length 
+            });
+        }
+        
+        logger.info('Final quiz session submitted successfully', { 
+            userId, 
+            sessionId, 
+            sessionUuid, 
+            score: score.toFixed(2) 
+        });
+        
+        res.json({ 
+            success: true, 
+            sessionId, 
+            sessionUuid,
+            score: parseFloat(score.toFixed(2))
+        });
+        
+    } catch (err) {
+        logger.error('Error submitting final quiz session', { 
+            error: err.message, 
+            userId, 
+            questionType, 
+            source 
+        });
+        res.status(500).json({ message: 'Failed to submit final quiz session' });
+    }
+});
+
+// Get final quiz sessions history
+app.get('/final-quiz/sessions/:userId', requireSession, async (req, res) => {
+    const { userId } = req.params;
+    const { page = 1, limit = 10 } = req.query;
+    
+    try {
+        logger.info('Fetching final quiz sessions history', { userId, page, limit });
+        
+        const offset = (parseInt(page) - 1) * parseInt(limit);
+        
+        // Get total count
+        const countResult = await db.query(`
+            SELECT COUNT(*) as total 
+            FROM final_review_sessions 
+            WHERE user_id = $1
+        `, [userId]);
+        
+        const totalSessions = parseInt(countResult.rows[0].total);
+        
+        // Get paginated results
+        const sessionsResult = await db.query(`
+            SELECT 
+                id,
+                session_id,
+                question_type,
+                source,
+                total_questions,
+                correct_answers,
+                score,
+                time_taken,
+                time_limit,
+                start_time,
+                end_time,
+                session_metadata
+            FROM final_review_sessions 
+            WHERE user_id = $1
+            ORDER BY start_time DESC 
+            LIMIT $2 OFFSET $3
+        `, [userId, parseInt(limit), offset]);
+        
+        // Convert numeric fields
+        const sessions = sessionsResult.rows.map(session => ({
+            ...session,
+            total_questions: parseInt(session.total_questions) || 0,
+            correct_answers: parseInt(session.correct_answers) || 0,
+            score: parseFloat(session.score) || 0,
+            time_taken: parseInt(session.time_taken) || 0,
+            time_limit: parseInt(session.time_limit) || 0
+        }));
+        
+        logger.info('Final quiz sessions history fetched successfully', { 
+            userId, 
+            totalSessions, 
+            returnedSessions: sessions.length 
+        });
+        
+        res.json({
+            sessions: sessions,
+            pagination: {
+                current_page: parseInt(page),
+                total_pages: Math.ceil(totalSessions / parseInt(limit)),
+                total_sessions: totalSessions,
+                limit: parseInt(limit)
+            }
+        });
+        
+    } catch (err) {
+        logger.error('Error fetching final quiz sessions history', { 
+            error: err.message, 
+            userId 
+        });
+        res.status(500).json({ message: 'Failed to fetch final quiz sessions history' });
+    }
+});
+
+// Get detailed final quiz session
+app.get('/final-quiz/session/:sessionId', requireSession, async (req, res) => {
+    const { sessionId } = req.params;
+    
+    try {
+        logger.info('Fetching detailed final quiz session', { sessionId });
+        
+        // Check if sessionId is numeric (for id) or UUID (for session_id)
+        const isNumeric = !isNaN(sessionId) && !isNaN(parseFloat(sessionId));
+        let whereClause, queryParams;
+        
+        if (isNumeric) {
+            whereClause = 'WHERE id = $1';
+            queryParams = [parseInt(sessionId)];
+        } else {
+            whereClause = 'WHERE session_id = $1';
+            queryParams = [sessionId];
+        }
+        
+        const result = await db.query(`
+            SELECT 
+                id,
+                session_id,
+                question_type,
+                source,
+                total_questions,
+                correct_answers,
+                score,
+                time_taken,
+                time_limit,
+                start_time,
+                end_time,
+                session_metadata
+            FROM final_review_sessions 
+            ${whereClause}
+        `, queryParams);
+        
+        logger.info('Session query result:', { 
+            sessionId, 
+            rowCount: result.rows.length,
+            rows: result.rows 
+        });
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Final quiz session not found' });
+        }
+        
+        const session = result.rows[0];
+        
+        // Convert numeric fields
+        const sessionData = {
+            ...session,
+            total_questions: parseInt(session.total_questions) || 0,
+            correct_answers: parseInt(session.correct_answers) || 0,
+            score: parseFloat(session.score) || 0,
+            time_taken: parseInt(session.time_taken) || 0,
+            time_limit: parseInt(session.time_limit) || 0
+        };
+        
+        logger.info('Final quiz session details fetched successfully', { 
+            sessionId, 
+            questionType: session.question_type,
+            source: session.source 
+        });
+        
+        res.json(sessionData);
+        
+    } catch (err) {
+        logger.error('Error fetching final quiz session details', { 
+            error: err.message, 
+            sessionId 
+        });
+        res.status(500).json({ message: 'Failed to fetch final quiz session details' });
+    }
+});
+
+// Get questions for a specific final quiz session
+app.get('/final-quiz/session/:sessionId/questions', requireSession, async (req, res) => {
+    const { sessionId } = req.params;
+    
+    try {
+        logger.info('Fetching questions for final quiz session', { sessionId });
+        
+        // Check if sessionId is numeric (for id) or UUID (for session_id)
+        const isNumeric = !isNaN(sessionId) && !isNaN(parseFloat(sessionId));
+        let whereClause, queryParams;
+        
+        if (isNumeric) {
+            whereClause = 'WHERE id = $1';
+            queryParams = [parseInt(sessionId)];
+        } else {
+            whereClause = 'WHERE session_id = $1';
+            queryParams = [sessionId];
+        }
+        
+        // First get the question_ids from the session
+        const sessionResult = await db.query(`
+            SELECT question_ids 
+            FROM final_review_sessions 
+            ${whereClause}
+        `, queryParams);
+        
+        if (sessionResult.rows.length === 0) {
+            return res.status(404).json({ message: 'Final quiz session not found' });
+        }
+        
+        const questionIds = sessionResult.rows[0].question_ids;
+        
+        if (!questionIds || questionIds.length === 0) {
+            return res.json({ questions: [] });
+        }
+        
+        // Get the questions with user answers using JOIN
+        const questionsResult = await db.query(`
+            SELECT 
+                q.id,
+                q.question_text,
+                q.option1,
+                q.option2,
+                q.option3,
+                q.option4,
+                q.correct_option,
+                q.question_type,
+                q.source,
+                fqa.user_answer,
+                fqa.is_correct,
+                fqa.time_taken
+            FROM questions q
+            LEFT JOIN final_quiz_attempts fqa ON q.id = fqa.question_id AND fqa.session_id = $2
+            WHERE q.id = ANY($1)
+            ORDER BY array_position($1, q.id)
+        `, [questionIds, sessionId]);
+        
+        logger.info('Questions with user answers fetched successfully for final quiz session', { 
+            sessionId, 
+            questionCount: questionsResult.rows.length 
+        });
+        
+        res.json({ questions: questionsResult.rows });
+        
+    } catch (err) {
+        logger.error('Error fetching questions for final quiz session', { 
+            error: err.message, 
+            sessionId 
+        });
+        res.status(500).json({ message: 'Failed to fetch questions for final quiz session' });
     }
 });
 
