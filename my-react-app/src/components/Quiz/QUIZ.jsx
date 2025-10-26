@@ -30,6 +30,7 @@ const QUIZ = () => {
   const types = location.state?.types || 'mix';
   const source = location.state?.source || 'mix';
   const timerMinutes = location.state?.timer || null;
+  const isFinalQuiz = location.state?.isFinalQuiz || false;
   const { user, setUser, sessionToken } = useContext(UserContext);
   const [timeRemaining, setTimeRemaining] = useState(timerMinutes ? timerMinutes * 60 : null);
   const [timerExpired, setTimerExpired] = useState(false);
@@ -110,11 +111,40 @@ const QUIZ = () => {
           params.userId = id;
         }
         
-        // Use different endpoint for trial users
-        const endpoint = isTrial ? '/free-trial/questions' : '/api/questions';
-        const response = await protectedGet(`${Globals.URL}${endpoint}`, {
-          params: params
-        });
+        // Use different endpoint based on quiz type
+        let endpoint, response;
+        
+        if (isFinalQuiz) {
+          // Final quiz is only for authenticated users, not trial users
+          if (isTrial || !user || !sessionToken) {
+            setError("Final Quiz is only available for authenticated users.");
+            setLoading(false);
+            return;
+          }
+          
+          // Debug: Log the credentials being used
+          console.log('Final Quiz - Using credentials:', {
+            username: user.username,
+            sessionToken: sessionToken ? 'present' : 'missing',
+            questionType: types,
+            source: source
+          });
+          
+          // Final quiz endpoint - get all questions including previously answered ones
+          endpoint = '/final-quiz/questions';
+          response = await protectedGet(`${Globals.URL}${endpoint}`, {
+            params: {
+              questionType: types,
+              source: source
+            }
+          });
+        } else {
+          // Regular quiz endpoint
+          endpoint = isTrial ? '/free-trial/questions' : '/api/questions';
+          response = await protectedGet(`${Globals.URL}${endpoint}`, {
+            params: params
+          });
+        }
 
         if (response.data.questions?.length > 0) {
           setQuestions(response.data.questions);
@@ -257,65 +287,107 @@ const QUIZ = () => {
       console.log("QUIZ - Avg time per question:", (duration / totalQuestions).toFixed(2), "seconds");
 
       try {
-        // Use different endpoint for trial users
-        const endpoint = isTrial ? '/free-trial/quiz-sessions' : '/quiz-sessions';
+        // Use different endpoint based on quiz type
+        let endpoint;
+        if (isFinalQuiz) {
+          endpoint = '/final-quiz/submit';
+        } else {
+          endpoint = isTrial ? '/free-trial/quiz-sessions' : '/quiz-sessions';
+        }
         const questionIds = questions.map(q => q.id);
-        const sessionData = isTrial 
-          ? {
-              trialId: id,
-              total_questions: totalQuestions,
-              correct_answers: correctCount,
-              quiz_accuracy: parseFloat(accuracy),
-              duration,
-              avg_time_per_question: parseFloat((duration / totalQuestions).toFixed(2)),
-              topics_covered: topicsCovered,
-              source: source === 'mix' ? 'general' : source,
-              question_ids: questionIds
-            }
-          : {
-              user_id: id,
-              total_questions: totalQuestions,
-              correct_answers: correctCount,
-              quiz_accuracy: parseFloat(accuracy),
-              duration,
-              avg_time_per_question: parseFloat((duration / totalQuestions).toFixed(2)),
-              topics_covered: topicsCovered,
-              source: source === 'mix' ? 'general' : source,
-              question_ids: questionIds
+        let sessionData;
+        
+        if (isFinalQuiz) {
+          // Build question attempts for final quiz
+          const questionAttempts = finalAnswers.map((answer, index) => {
+            const question = questions[index];
+            return {
+              questionId: question.id,
+              userAnswer: answer.selected,
+              correctAnswer: answer.correct,
+              isCorrect: answer.isCorrect,
+              timeTaken: Math.floor(duration / totalQuestions)
             };
+          });
+          
+          sessionData = {
+            username: user.username,
+            sessionToken: sessionToken,
+            userId: id,
+            questionType: types,
+            source: source,
+            totalQuestions: totalQuestions,
+            correctAnswers: correctCount,
+            timeTaken: duration,
+            timeLimit: timerMinutes ? timerMinutes * 60 : null,
+            questionIds: questions.map(q => q.id), // Include question IDs
+            questionAttempts: questionAttempts, // Include question attempts
+            sessionMetadata: {
+              device: 'web',
+              browser: navigator.userAgent,
+              timestamp: new Date().toISOString()
+            }
+          };
+        } else if (isTrial) {
+          sessionData = {
+            trialId: id,
+            total_questions: totalQuestions,
+            correct_answers: correctCount,
+            quiz_accuracy: parseFloat(accuracy),
+            duration,
+            avg_time_per_question: parseFloat((duration / totalQuestions).toFixed(2)),
+            topics_covered: topicsCovered,
+            source: source === 'mix' ? 'general' : source,
+            question_ids: questionIds
+          };
+        } else {
+          sessionData = {
+            user_id: id,
+            total_questions: totalQuestions,
+            correct_answers: correctCount,
+            quiz_accuracy: parseFloat(accuracy),
+            duration,
+            avg_time_per_question: parseFloat((duration / totalQuestions).toFixed(2)),
+            topics_covered: topicsCovered,
+            source: source === 'mix' ? 'general' : source,
+            question_ids: questionIds
+          };
+        }
 
         const sessionRes = await protectedPost(`${Globals.URL}${endpoint}`, sessionData);
         const quiz_session_id = sessionRes.data.id;
 
-        // Send individual question attempts
-        const attemptPromises = finalAnswers.map((answer, index) => {
-          const question = questions[index];
-          const attemptData = isTrial
-            ? {
-                trialId: id,
-                question_id: question.id,
-                selected_option: answer.selected,
-                is_correct: answer.isCorrect,
-                time_taken: Math.floor(duration / totalQuestions),
-                quiz_session_id: quiz_session_id
-              }
-            : {
-                user_id: id,
-                question_id: question.id,
-                selected_option: answer.selected,
-                is_correct: answer.isCorrect,
-                time_taken: Math.floor(duration / totalQuestions),
-                quiz_session_id: quiz_session_id
-              };
+        // Send individual question attempts (skip for final quiz)
+        if (!isFinalQuiz) {
+          const attemptPromises = finalAnswers.map((answer, index) => {
+            const question = questions[index];
+            const attemptData = isTrial
+              ? {
+                  trialId: id,
+                  question_id: question.id,
+                  selected_option: answer.selected,
+                  is_correct: answer.isCorrect,
+                  time_taken: Math.floor(duration / totalQuestions),
+                  quiz_session_id: quiz_session_id
+                }
+              : {
+                  user_id: id,
+                  question_id: question.id,
+                  selected_option: answer.selected,
+                  is_correct: answer.isCorrect,
+                  time_taken: Math.floor(duration / totalQuestions),
+                  quiz_session_id: quiz_session_id
+                };
 
-          const attemptEndpoint = isTrial ? '/free-trial/question-attempts' : '/question-attempts';
-          return protectedPost(`${Globals.URL}${attemptEndpoint}`, attemptData);
-        });
+            const attemptEndpoint = isTrial ? '/free-trial/question-attempts' : '/question-attempts';
+            return protectedPost(`${Globals.URL}${attemptEndpoint}`, attemptData);
+          });
 
-        await Promise.all(attemptPromises);
+          await Promise.all(attemptPromises);
+        }
 
-        // Update topic analysis for non-trial users
-        if (!isTrial) {
+        // Update topic analysis for non-trial users (skip for final quiz)
+        if (!isTrial && !isFinalQuiz) {
           const topicAnalysisPromises = topicsCovered.map(topic => {
             const topicQuestions = questions.filter(q => q.question_type === topic);
             const topicAnswers = finalAnswers.filter((_, index) => questions[index].question_type === topic);
@@ -385,6 +457,7 @@ const QUIZ = () => {
         duration={duration}
         answers={finalAnswers}
         isTrial={isTrial}
+        isFinalQuiz={isFinalQuiz}
         userId={id}
         onRetry={() => {
           setCurrentQuestionIndex(0);

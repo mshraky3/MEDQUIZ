@@ -26,8 +26,17 @@ const QUIZS = () => {
     const [showTimerSelector, setShowTimerSelector] = useState(false);
     const [selectedTimer, setSelectedTimer] = useState(null);
     const [customTimerMinutes, setCustomTimerMinutes] = useState(15);
+    const [showCustomQuestions, setShowCustomQuestions] = useState(false);
+    const [customQuestionsCount, setCustomQuestionsCount] = useState(25);
+    const [showFinalQuizType, setShowFinalQuizType] = useState(false);
+    const [showFinalQuizSource, setShowFinalQuizSource] = useState(false);
+    const [showFinalQuizTime, setShowFinalQuizTime] = useState(false);
+    const [selectedFinalType, setSelectedFinalType] = useState('');
+    const [selectedFinalSource, setSelectedFinalSource] = useState('');
+    const [finalQuizQuestionsCount, setFinalQuizQuestionsCount] = useState(0);
+    const [finalQuizTimeLimit, setFinalQuizTimeLimit] = useState(30);
 
-    const quizOptions = [10, 30, 50, 100, 200];
+    const quizOptions = [10, 50, 'custom'];
     const availableSources = [
         'general',
         'Midgard',
@@ -53,7 +62,7 @@ const QUIZS = () => {
         "@type": "WebPage",
         "name": "SMLE Quiz Selection - Choose Your Practice Questions",
         "description": "Select from 10 to 200 SMLE practice questions. Choose specific medical topics or mix all types. Start your SMLE preparation with targeted practice sessions.",
-        "url": "https://medquiz.vercel.app/quizs",
+        "url": `${Globals.URL}/quizs`,
         "mainEntity": {
             "@type": "EducationalService",
             "name": "SMLE Quiz Selection",
@@ -66,8 +75,12 @@ const QUIZS = () => {
     };
 
     const handleOptionClick = (num) => {
-        setNumQuestions(num);
-        setShowSourceSelector(true);
+        if (num === 'custom') {
+            setShowCustomQuestions(true);
+        } else {
+            setNumQuestions(num);
+            setShowSourceSelector(true);
+        }
     };
 
     const handleSourceSelect = async (source) => {
@@ -138,10 +151,101 @@ const QUIZS = () => {
         setShowTimerSelector(true);
     };
 
+    const handleCustomQuestionsConfirm = () => {
+        if (customQuestionsCount < 1 || customQuestionsCount > 500) {
+            alert('Please enter a number between 1 and 500');
+            return;
+        }
+        setNumQuestions(customQuestionsCount);
+        setShowCustomQuestions(false);
+        setShowSourceSelector(true);
+    };
+
+    // Final Quiz handlers
+    const handleFinalQuizClick = () => {
+        setShowFinalQuizType(true);
+    };
+
+    const handleFinalTypeSelect = (type) => {
+        setSelectedFinalType(type);
+        setShowFinalQuizType(false);
+        setShowFinalQuizSource(true);
+    };
+
+    const handleFinalSourceSelect = async (source) => {
+        setSelectedFinalSource(source);
+        
+        // Check authentication before making API call
+        if (!user || !sessionToken) {
+            console.error('Not authenticated for final source select');
+            setFinalQuizQuestionsCount(0);
+            setShowFinalQuizSource(false);
+            return;
+        }
+        
+        // Fetch questions count for the selected criteria
+        try {
+            const response = await protectedGet(
+                `${Globals.URL}/final-quiz/questions-count?questionType=${encodeURIComponent(selectedFinalType)}&source=${encodeURIComponent(source)}`
+            );
+            setFinalQuizQuestionsCount(response.data.totalQuestions);
+        } catch (error) {
+            console.error('Error fetching questions count:', error);
+            setFinalQuizQuestionsCount(0);
+        }
+        
+        setShowFinalQuizSource(false);
+        setShowFinalQuizTime(true);
+    };
+
+    const handleFinalTimeSelect = (timeLimit) => {
+        setFinalQuizTimeLimit(timeLimit);
+        setShowFinalQuizTime(false);
+        
+        // Navigate to regular quiz with final quiz parameters
+        navigate(`/quiz/${finalQuizQuestionsCount}`, {
+            state: { 
+                id: id,
+                types: selectedFinalType,
+                source: selectedFinalSource,
+                timer: timeLimit,
+                isTrial: isTrial,
+                isFinalQuiz: true
+            }
+        });
+    };
+
+    const handleFinalTimeConfirm = () => {
+        if (finalQuizTimeLimit < 30) {
+            alert('Time limit must be at least 30 minutes');
+            return;
+        }
+        
+        setShowFinalQuizTime(false);
+        
+        // Navigate to regular quiz with final quiz parameters
+        navigate(`/quiz/${finalQuizQuestionsCount}`, {
+            state: { 
+                id: id,
+                types: selectedFinalType,
+                source: selectedFinalSource,
+                timer: finalQuizTimeLimit,
+                isTrial: isTrial,
+                isFinalQuiz: true
+            }
+        });
+    };
+
     const checkboxRef = useRef(null);
 
     // Check completion for a specific source and type combination
     const checkCompletion = async (type, source) => {
+        // Check authentication before making API call
+        if (!user || !sessionToken) {
+            console.error('Not authenticated for check completion');
+            return;
+        }
+        
         try {
             const response = await protectedGet(`${Globals.URL}/api/check-completion/${id}?type=${encodeURIComponent(type)}&source=${encodeURIComponent(source)}`);
             const { isCompleted, total, completed } = response.data;
@@ -179,6 +283,12 @@ const QUIZS = () => {
 
     // Award achievement for completing a cardinality
     const awardAchievement = async (type, source) => {
+        // Check authentication before making API call
+        if (!user || !sessionToken) {
+            console.error('Not authenticated for award achievement');
+            return;
+        }
+        
         try {
             const achievementKey = `${type}_${source}`;
             const achievementName = `Master of ${type} from ${source}`;
@@ -199,6 +309,12 @@ const QUIZS = () => {
     // Handle restart and reset progress
     const handleRestart = async () => {
         if (!congratulationsData) return;
+        
+        // Check authentication before making API call
+        if (!user || !sessionToken) {
+            console.error('Not authenticated for reset progress');
+            return;
+        }
         
         try {
             await protectedPost(`${Globals.URL}/api/reset-progress`, {
@@ -297,6 +413,7 @@ const QUIZS = () => {
     useEffect(() => {
         const fetchStreaks = async () => {
             if (!id || isTrial) return; // Don't fetch streaks for trial users
+            if (!user || !sessionToken) return; // Don't fetch if not authenticated
             try {
                 const response = await protectedGet(`${Globals.URL}/user-streaks/${id}`);
                 setCurrentStreak(response.data.current_streak || 0);
@@ -314,10 +431,10 @@ const QUIZS = () => {
                 title="Quiz Selection - Choose Your SMLE Practice Questions"
                 description="Select from 10 to 200 SMLE practice questions. Choose specific medical topics (pediatrics, OB/GYN, medicine, surgery) or mix all types. Start your SMLE preparation with targeted practice sessions."
                 keywords="SMLE quiz selection, medical practice questions, SMLE practice test, medical exam questions, Saudi medical license quiz, medical topic selection"
-                url="https://medquiz.vercel.app/quizs"
+                url={`${Globals.URL}/quizs`}
                 structuredData={structuredData}
             />
-            <div className="quiz-selection">
+                <div className="quiz-selection">
                 {/* Streak Badge - Only show for non-trial users */}
                 {!isTrial && (
                     <div className="streak-badge">
@@ -346,9 +463,17 @@ const QUIZS = () => {
                             className="quiz-option-btn"
                             onClick={() => handleOptionClick(num)}
                         >
-                            {num} Questions
+                            {num === 'custom' ? 'Custom Number' : `${num} Questions`}
                         </button>
                     ))}
+                    {!isTrial && user && sessionToken && (
+                        <button
+                            className="quiz-option-btn final-quiz-btn"
+                            onClick={handleFinalQuizClick}
+                        >
+                            🎯 Final Quiz
+                        </button>
+                    )}
                 </div>
 
                 {/* Analysis button - Only show for non-trial users */}
@@ -490,7 +615,257 @@ const QUIZS = () => {
                     </div>
                 )}
 
+                {/* Custom Questions Modal */}
+                {showCustomQuestions && (
+                    <div className="custom-questions-modal">
+                        <div className="custom-modal-content">
+                            <h2>Custom Number of Questions</h2>
+                            <p className="questions-info">
+                                📝 Enter the number of questions you want (1-500)
+                            </p>
+                            
+                            {/* Mobile-friendly input with preset buttons */}
+                            <div className="custom-questions-input">
+                                <label htmlFor="customQuestions">Number of Questions:</label>
+                                
+                                {/* Quick preset buttons for mobile */}
+                                <div className="quick-preset-buttons">
+                                    <button 
+                                        type="button"
+                                        className="preset-btn"
+                                        onClick={() => setCustomQuestionsCount(15)}
+                                    >
+                                        15
+                                    </button>
+                                    <button 
+                                        type="button"
+                                        className="preset-btn"
+                                        onClick={() => setCustomQuestionsCount(25)}
+                                    >
+                                        25
+                                    </button>
+                                    <button 
+                                        type="button"
+                                        className="preset-btn"
+                                        onClick={() => setCustomQuestionsCount(50)}
+                                    >
+                                        50
+                                    </button>
+                                    <button 
+                                        type="button"
+                                        className="preset-btn"
+                                        onClick={() => setCustomQuestionsCount(75)}
+                                    >
+                                        75
+                                    </button>
+                                </div>
+                                
+                                <div className="input-container">
+                                    <input
+                                        id="customQuestions"
+                                        type="number"
+                                        min="1"
+                                        max="500"
+                                        value={customQuestionsCount}
+                                        onChange={(e) => setCustomQuestionsCount(parseInt(e.target.value) || 25)}
+                                        className="custom-questions-number-input"
+                                        placeholder="Enter number"
+                                        inputMode="numeric"
+                                        pattern="[0-9]*"
+                                    />
+                                    <div className="input-controls">
+                                        <button 
+                                            type="button"
+                                            className="control-btn minus"
+                                            onClick={() => setCustomQuestionsCount(Math.max(1, customQuestionsCount - 1))}
+                                        >
+                                            −
+                                        </button>
+                                        <button 
+                                            type="button"
+                                            className="control-btn plus"
+                                            onClick={() => setCustomQuestionsCount(Math.min(500, customQuestionsCount + 1))}
+                                        >
+                                            +
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                {/* Range slider for mobile */}
+                                <div className="range-slider-container">
+                                    <label htmlFor="questionsRange">Or use slider:</label>
+                                    <input
+                                        id="questionsRange"
+                                        type="range"
+                                        min="1"
+                                        max="500"
+                                        value={customQuestionsCount}
+                                        onChange={(e) => setCustomQuestionsCount(parseInt(e.target.value))}
+                                        className="questions-range-slider"
+                                    />
+                                    <div className="range-labels">
+                                        <span>1</span>
+                                        <span>250</span>
+                                        <span>500</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div className="custom-modal-buttons">
+                                <button
+                                    onClick={handleCustomQuestionsConfirm}
+                                    className="custom-start-btn"
+                                >
+                                    Continue
+                                </button>
+                                <button 
+                                    onClick={() => setShowCustomQuestions(false)} 
+                                    className="custom-cancel-btn"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 <div className="quiz-footer" />
+
+                {/* Final Quiz Type Selection Modal */}
+                {showFinalQuizType && (
+                    <div className="custom-source-selector-modal">
+                        <div className="custom-modal-content">
+                            <h2>🎯 Final Quiz - Select Question Type</h2>
+                            <p className="final-quiz-description">
+                                Comprehensive review with all questions from selected criteria
+                            </p>
+                            <div className="custom-source-buttons">
+                                {availableTypes.map((type) => (
+                                    <button
+                                        key={type}
+                                        onClick={() => handleFinalTypeSelect(type)}
+                                        className="custom-source-btn"
+                                    >
+                                        {type}
+                                    </button>
+                                ))}
+                            </div>
+                            <div className="custom-modal-buttons">
+                                <button
+                                    onClick={() => setShowFinalQuizType(false)}
+                                    className="custom-cancel-btn"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Final Quiz Source Selection Modal */}
+                {showFinalQuizSource && (
+                    <div className="custom-source-selector-modal">
+                        <div className="custom-modal-content">
+                            <h2>🎯 Final Quiz - Select Source</h2>
+                            <p className="final-quiz-description">
+                                Choose the source for {selectedFinalType} questions
+                            </p>
+                            <div className="custom-source-buttons">
+                                {availableSources.map((source) => (
+                                    <button
+                                        key={source}
+                                        onClick={() => handleFinalSourceSelect(source)}
+                                        className="custom-source-btn"
+                                    >
+                                        {source}
+                                    </button>
+                                ))}
+                            </div>
+                            <div className="custom-modal-buttons">
+                                <button
+                                    onClick={() => setShowFinalQuizSource(false)}
+                                    className="custom-cancel-btn"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Final Quiz Time Selection Modal */}
+                {showFinalQuizTime && (
+                    <div className="custom-timer-selector-modal">
+                        <div className="custom-modal-content">
+                            <h2>🎯 Final Quiz - Set Time Limit</h2>
+                            <p className="final-quiz-description">
+                                {finalQuizQuestionsCount} questions available from {selectedFinalType} - {selectedFinalSource}
+                            </p>
+                            <p className="final-quiz-note">
+                                This will include ALL questions, even those you've answered before.
+                            </p>
+                            
+                            <div className="timer-options">
+                                <button
+                                    onClick={() => handleFinalTimeSelect(30)}
+                                    className="timer-option-btn"
+                                >
+                                    30 minutes
+                                </button>
+                                <button
+                                    onClick={() => handleFinalTimeSelect(60)}
+                                    className="timer-option-btn"
+                                >
+                                    1 hour
+                                </button>
+                                <button
+                                    onClick={() => handleFinalTimeSelect(90)}
+                                    className="timer-option-btn"
+                                >
+                                    1.5 hours
+                                </button>
+                                <button
+                                    onClick={() => handleFinalTimeSelect(120)}
+                                    className="timer-option-btn"
+                                >
+                                    2 hours
+                                </button>
+                            </div>
+
+                            <div className="custom-timer-input">
+                                <label htmlFor="finalQuizTime">Or set custom time (minimum 30 minutes):</label>
+                                <div className="timer-input-container">
+                                    <input
+                                        id="finalQuizTime"
+                                        type="number"
+                                        min="30"
+                                        max="300"
+                                        value={finalQuizTimeLimit}
+                                        onChange={(e) => setFinalQuizTimeLimit(parseInt(e.target.value) || 30)}
+                                        className="custom-timer-number-input"
+                                        placeholder="Enter minutes"
+                                    />
+                                    <span className="time-unit">minutes</span>
+                                </div>
+                            </div>
+
+                            <div className="custom-modal-buttons">
+                                <button
+                                    onClick={handleFinalTimeConfirm}
+                                    className="custom-start-btn"
+                                >
+                                    Start Final Quiz
+                                </button>
+                                <button
+                                    onClick={() => setShowFinalQuizTime(false)}
+                                    className="custom-cancel-btn"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Congratulations Popup */}
                 <CongratulationsPopup

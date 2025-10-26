@@ -9,6 +9,9 @@ import StreakInfo from './StreakInfo';
 import TopicAnalysisTable from './TopicAnalysisTable';
 import QuestionAttemptsTable from './QuestionAttemptsTable';
 import LastQuizSummary from './LastQuizSummary';
+import QuizHistory from './QuizHistory';
+import Progress from './Progress';
+import FinalExams from './FinalExams';
 import Navbar from '../common/Navbar.jsx';
 import { useContext } from 'react';
 import { UserContext } from '../../UserContext';
@@ -140,6 +143,7 @@ const Analysis = () => {
   });
 
   const [refreshing, setRefreshing] = useState(false);
+  const [activeTab, setActiveTab] = useState(location.state?.activeTab || 'overview');
 
   // SEO structured data for analysis page
   const structuredData = {
@@ -147,7 +151,7 @@ const Analysis = () => {
     "@type": "WebPage",
     "name": "SMLE Performance Analysis - Track Your Progress",
     "description": "Comprehensive SMLE performance analysis with detailed statistics, topic-wise breakdown, and progress tracking. Monitor your strengths and weaknesses.",
-    "url": "https://medquiz.vercel.app/analysis",
+        "url": `${Globals.URL}/analysis`,
     "mainEntity": {
       "@type": "EducationalService",
       "name": "SMLE Performance Analytics",
@@ -402,6 +406,154 @@ const Analysis = () => {
   // Calculate best and worst topics from the same data source
   const { best, worst } = calculateBestWorstTopics(data.topicAnalysis);
 
+  // Tab configuration
+  const tabs = [
+    { id: 'overview', label: ' Overview', icon: 'chart-bar' },
+    { id: 'topics', label: ' Topics', icon: 'book-open' },
+    { id: 'recent', label: ' Recent Quiz', icon: 'clock' },
+    { id: 'history', label: ' History', icon: 'chart-line' },
+    { id: 'progress', label: ' Progress', icon: 'target' },
+    { id: 'final-exams', label: ' Final Exams', icon: 'graduation-cap' },
+    { id: 'streaks', label: ' Streaks', icon: 'fire' }
+  ];
+
+  // Render tab content
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'overview':
+        return (
+          <>
+            {loading.userAnalysis ? (
+              <SectionLoader message="Loading overall stats..." />
+            ) : errors.userAnalysis ? (
+              <ErrorWithRetry 
+                error={errors.userAnalysis} 
+                onRetry={() => setErrors(prev => ({ ...prev, userAnalysis: null }))}
+                retryFunction={fetchUserAnalysis}
+              />
+            ) : (
+              <>
+                <OverallStats userAnalysis={data.userAnalysis} />
+                <BestWorstTopic best={best} worst={worst} />
+              </>
+            )}
+          </>
+        );
+      
+      case 'topics':
+        return (
+          <>
+            {loading.topicAnalysis ? (
+              <SectionLoader message="Loading topic analysis..." />
+            ) : errors.topicAnalysis ? (
+              <ErrorWithRetry 
+                error={errors.topicAnalysis} 
+                onRetry={() => setErrors(prev => ({ ...prev, topicAnalysis: null }))}
+                retryFunction={fetchTopicAnalysis}
+              />
+            ) : (
+              <TopicAnalysisTable topicAnalysis={data.topicAnalysis} />
+            )}
+          </>
+        );
+      
+      case 'recent':
+        return (
+          <>
+            {loading.userAnalysis ? (
+              <SectionLoader message="Loading last quiz summary..." />
+            ) : errors.userAnalysis ? null : (
+              <LastQuizSummary latest_quiz={data.userAnalysis?.latest_quiz} />
+            )}
+
+            {loading.lastQuizAttempts || loading.questions ? (
+              <SectionLoader message="Loading last quiz questions..." />
+            ) : errors.lastQuizAttempts || errors.questions ? (
+              <ErrorWithRetry 
+                error={errors.lastQuizAttempts || errors.questions} 
+                onRetry={() => {
+                  setErrors(prev => ({ 
+                    ...prev, 
+                    lastQuizAttempts: null,
+                    questions: null 
+                  }));
+                }}
+                retryFunction={() => {
+                  fetchQuestions();
+                  if (data.userAnalysis?.latest_quiz?.id) {
+                    fetchLastQuizAttempts(data.userAnalysis.latest_quiz.id);
+                  }
+                }}
+              />
+            ) : (
+              <QuestionAttemptsTable 
+                questionAttempts={data.lastQuizAttempts} 
+                questions={data.questions} 
+                latestQuiz={data.userAnalysis?.latest_quiz} 
+              />
+            )}
+          </>
+        );
+      
+      case 'history':
+        return (
+          <QuizHistory 
+            userId={id} 
+            username={user?.username}
+            sessionToken={sessionToken}
+          />
+        );
+      
+      case 'progress':
+        return (
+          <Progress 
+            userId={id} 
+            username={user?.username}
+            sessionToken={sessionToken}
+          />
+        );
+      
+      case 'final-exams':
+        if (!user?.username || !sessionToken) {
+          return (
+            <div className="analysis-container">
+              <div className="loading-spinner">
+                <div className="spinner"></div>
+                <p>Loading user data...</p>
+              </div>
+            </div>
+          );
+        }
+        return (
+          <FinalExams 
+            userId={id} 
+            username={user.username}
+            sessionToken={sessionToken}
+          />
+        );
+      
+      case 'streaks':
+        return (
+          <>
+            {loading.streakData ? (
+              <SectionLoader message="Loading streak info..." />
+            ) : errors.streakData ? (
+              <ErrorWithRetry 
+                error={errors.streakData} 
+                onRetry={() => setErrors(prev => ({ ...prev, streakData: null }))}
+                retryFunction={fetchStreakData}
+              />
+            ) : (
+              <StreakInfo streakData={data.streakData} />
+            )}
+          </>
+        );
+      
+      default:
+        return null;
+    }
+  };
+
   return (
     <>
       <Navbar />
@@ -409,87 +561,32 @@ const Analysis = () => {
         title="Performance Analysis - Track Your SMLE Progress"
         description="Comprehensive SMLE performance analysis with detailed statistics, topic-wise breakdown, and progress tracking. Monitor your strengths and weaknesses to improve your exam preparation."
         keywords="SMLE analysis, medical exam performance, SMLE progress tracking, medical quiz analytics, Saudi medical license analysis, performance statistics"
-        url="https://medquiz.vercel.app/analysis"
+        url={`${Globals.URL}/analysis`}
         structuredData={structuredData}
       />
       <div className="analysis-wrapper fade-in">
         <h2 className="screen-title">Quiz Health Report</h2>
         
-        {loading.userAnalysis ? (
-          <SectionLoader message="Loading overall stats..." />
-        ) : errors.userAnalysis ? (
-          <ErrorWithRetry 
-            error={errors.userAnalysis} 
-            onRetry={() => setErrors(prev => ({ ...prev, userAnalysis: null }))}
-            retryFunction={fetchUserAnalysis}
-          />
-        ) : (
-          <>
-            <OverallStats userAnalysis={data.userAnalysis} />
-            <BestWorstTopic best={best} worst={worst} />
-          </>
-        )}
+        {/* Tab Navigation */}
+        <div className="tab-navigation">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              className={`tab-button ${activeTab === tab.id ? 'active' : ''}`}
+              onClick={() => setActiveTab(tab.id)}
+            >
+              <span className={`tab-icon icon-${tab.icon}`}></span>
+              <span className="tab-label">{tab.label}</span>
+            </button>
+          ))}
+        </div>
 
-        {/* Streak Info */}
-        {loading.streakData ? (
-          <SectionLoader message="Loading streak info..." />
-        ) : errors.streakData ? (
-          <ErrorWithRetry 
-            error={errors.streakData} 
-            onRetry={() => setErrors(prev => ({ ...prev, streakData: null }))}
-            retryFunction={fetchStreakData}
-          />
-        ) : (
-          <StreakInfo streakData={data.streakData} />
-        )}
+        {/* Tab Content */}
+        <div className="tab-content">
+          {renderTabContent()}
+        </div>
 
-        {/* Topic Analysis */}
-        {loading.topicAnalysis ? (
-          <SectionLoader message="Loading topic analysis..." />
-        ) : errors.topicAnalysis ? (
-          <ErrorWithRetry 
-            error={errors.topicAnalysis} 
-            onRetry={() => setErrors(prev => ({ ...prev, topicAnalysis: null }))}
-            retryFunction={fetchTopicAnalysis}
-          />
-        ) : (
-          <TopicAnalysisTable topicAnalysis={data.topicAnalysis} />
-        )}
-        
-        {/* Last Quiz Summary (from userAnalysis) */}
-        {loading.userAnalysis ? (
-          <SectionLoader message="Loading last quiz summary..." />
-        ) : errors.userAnalysis ? null : (
-          <LastQuizSummary latest_quiz={data.userAnalysis?.latest_quiz} />
-        )}
-
-        {loading.lastQuizAttempts || loading.questions ? (
-          <SectionLoader message="Loading last quiz questions..." />
-        ) : errors.lastQuizAttempts || errors.questions ? (
-          <ErrorWithRetry 
-            error={errors.lastQuizAttempts || errors.questions} 
-            onRetry={() => {
-              setErrors(prev => ({ 
-                ...prev, 
-                lastQuizAttempts: null,
-                questions: null 
-              }));
-            }}
-            retryFunction={() => {
-              fetchQuestions();
-              if (data.userAnalysis?.latest_quiz?.id) {
-                fetchLastQuizAttempts(data.userAnalysis.latest_quiz.id);
-              }
-            }}
-          />
-        ) : (
-          <QuestionAttemptsTable 
-            questionAttempts={data.lastQuizAttempts} 
-            questions={data.questions} 
-            latestQuiz={data.userAnalysis?.latest_quiz} 
-          />
-        )}
-
+        {/* Action Buttons */}
         <div className="button-bar">
           <button
             onClick={() => navigate("/wrong-questions")}

@@ -118,7 +118,7 @@ const WrongQuestions = () => {
         "@type": "WebPage",
         "name": "Wrong Questions Review - SMLE Study Tool",
         "description": "Review and analyze all the questions you answered incorrectly to improve your SMLE performance.",
-        "url": "https://medquiz.vercel.app/wrong-questions"
+        "url": `${Globals.URL}/wrong-questions`
     };
 
     return (
@@ -128,7 +128,7 @@ const WrongQuestions = () => {
                 title="Wrong Questions Review - Improve Your SMLE Performance"
                 description="Review all questions you answered incorrectly with AI-powered explanations to improve your SMLE exam preparation and performance."
                 keywords="SMLE wrong questions, medical exam mistakes, SMLE improvement, medical quiz review, wrong answers analysis, SMLE study help"
-                url="https://medquiz.vercel.app/wrong-questions"
+                url={`${Globals.URL}/wrong-questions`}
                 structuredData={structuredData}
             />
             <div className="analysis-wrapper fade-in">

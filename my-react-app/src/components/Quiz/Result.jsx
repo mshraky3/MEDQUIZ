@@ -8,6 +8,7 @@ const Result = ({
   duration, 
   answers, 
   isTrial, 
+  isFinalQuiz,
   onRetry, 
   onBackToQuizs,
   userId 
@@ -15,7 +16,10 @@ const Result = ({
   const navigate = useNavigate();
 
   const handleViewAnalysis = () => {
-    if (isTrial) {
+    if (isFinalQuiz) {
+      // For final quiz, navigate to analysis with Final Exams tab
+      navigate('/analysis', { state: { id: userId, activeTab: 'final-exams' } });
+    } else if (isTrial) {
       // Verify trial data is saved before navigating
       const trialAnswers = window.sessionStorage.getItem('trialAnswers');
       if (!trialAnswers) {
@@ -25,7 +29,7 @@ const Result = ({
       }
       
       // For trial users, navigate to separate trial analysis page
-              navigate('/analysis-temp', { state: { id: userId } });
+      navigate('/analysis-temp', { state: { id: userId } });
     } else {
       // For regular users, navigate to analysis with user ID
       navigate('/analysis', { state: { id: userId } });
