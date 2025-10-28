@@ -115,6 +115,53 @@
   box-shadow: 0 0 0 3px rgba(1, 179, 217, 0.1);
 }
 
+.password-input-container {
+  position: relative;
+  width: 100%;
+  margin: var(--space-2) 0;
+}
+
+.password-input-container .login-input {
+  padding-right: 50px; /* Make space for the toggle button */
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color var(--transition-fast);
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.password-toggle-icon {
+  width: 20px;
+  height: 20px;
+  opacity: 0.7;
+  transition: opacity var(--transition-fast);
+}
+
+.password-toggle-btn:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.password-toggle-btn:hover .password-toggle-icon {
+  opacity: 1;
+}
+
+.password-toggle-btn:focus {
+  outline: 2px solid rgba(1, 179, 217, 0.3);
+  outline-offset: 2px;
+}
+
 .login-btn {
   padding: var(--space-4);
   background-color: var(--primary-light);

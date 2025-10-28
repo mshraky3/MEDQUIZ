@@ -18,6 +18,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [sessionExpired, setSessionExpired] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -72,12 +73,12 @@ const Login = () => {
     }
   }, [user, sessionToken, navigate]);
 
-  // Autofill username (and password if available) from context if user is known
+  // Autofill username from context if user is known (never autofill password for security)
   useEffect(() => {
     if (user && user.username) {
       setForm(prev => ({
         username: prev.username || user.username || '',
-        password: prev.password || user.password || '' // Only autofill if available
+        password: prev.password || '' // Never autofill password for security reasons
       }));
     }
   }, [user]);
@@ -221,14 +222,28 @@ const Login = () => {
                 onChange={handleChange}
                 className="login-input"
               />
-              <input
-                type="password"
-                name="password"
-                placeholder="PASSWORD"
-                value={form.password}
-                onChange={handleChange}
-                className="login-input"
-              />
+              <div className="password-input-container">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  placeholder="PASSWORD"
+                  value={form.password}
+                  onChange={handleChange}
+                  className="login-input"
+                />
+                <button
+                  type="button"
+                  className="password-toggle-btn"
+                  onClick={() => setShowPassword(!showPassword)}
+                  tabIndex="-1"
+                >
+                  <img 
+                    src="https://img.icons8.com/?size=100&id=988&format=png&color=000000" 
+                    alt={showPassword ? "Hide password" : "Show password"}
+                    className="password-toggle-icon"
+                  />
+                </button>
+              </div>
               <button type="submit" className="login-btn" disabled={loading}>
                 {loading ? 'Logging in...' : 'Log in'}
               </button>
