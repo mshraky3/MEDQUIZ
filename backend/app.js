@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { Pool } from 'pg';
 import https from "https";
+import OpenAI from 'openai';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 
@@ -1629,39 +1630,34 @@ app.post("/ai-analysis", async (req, res) => {
     }
 
     try {
-        // Check if API key is available
-        if (!process.env.APIKEY) {
+        // Use API key strictly from environment
+        const apiKey = process.env.APIKEY;
+        if (!apiKey) {
             console.error("APIKEY environment variable is not set");
             return res.status(500).json({ error: "AI service configuration error." });
         }
 
-        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${process.env.APIKEY}`,
-                "Content-Type": "application/json",
-                "HTTP-Referer": "https://medquiz.vercel.app",
-                "X-Title": "MEDQIZE"
-            },
-            body: JSON.stringify({
-                model: "deepseek/deepseek-chat-v3.1:free",
-                messages: [
-                    {
-                        role: "user",
-                        content: `Here's a multiple-choice question:\n\nQuestion: ${question}\nUser's Answer: ${selected_answer}\nCorrect Answer: ${correct_option}\n\nWhich one is more accurate and why? in no longer than 40 words. if the words are less than 40 . dont say the number of words . and ne style needed just text `
-                    }
-                ]
-            })
+        const isProd = process.env.NODE_ENV === 'production';
+        const referer = isProd ? "https://medquiz.vercel.app" : (process.env.DEV_REFERER || "http://localhost:5173");
+
+        const openai = new OpenAI({
+            apiKey,
+            baseURL: "https://openrouter.ai/api/v1",
         });
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error("OpenRouter API Error:", response.status, errorText);
-            return res.status(500).json({ error: "AI service failed. Please try again later." });
-        }
+        const model = process.env.OPENROUTER_MODEL || "alibaba/tongyi-deepresearch-30b-a3b:free";
 
-        const data = await response.json();
-        const aiAnswer = data.choices?.[0]?.message?.content;
+        const completion = await openai.chat.completions.create({
+            model,
+            messages: [
+                {
+                    role: "user",
+                    content: `Here's a multiple-choice question:\n\nQuestion: ${question}\nUser's Answer: ${selected_answer}\nCorrect Answer: ${correct_option}\n\nWhich one is more accurate and why? in no longer than 40 words. if the words are less than 40 . dont say the number of words . and ne style needed just text `
+                }
+            ]
+        });
+
+        const aiAnswer = completion.choices?.[0]?.message?.content;
 
         if (!aiAnswer) {
             console.error("OpenRouter API responded with no choices.", data);
