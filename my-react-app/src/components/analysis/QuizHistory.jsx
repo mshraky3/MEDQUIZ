@@ -106,24 +106,23 @@ const QuizHistory = ({ userId, username, sessionToken }) => {
     setLoadingButtons(prev => ({ ...prev, [attemptId]: true }));
 
     try {
-      // Call AI analysis API
+      // Call AI analysis API (aligned with backend contract)
       const response = await axios.post(`${Globals.URL}/ai-analysis`, {
         question: questionText,
-        userAnswer: selectedAnswer,
-        correctAnswer: correctAnswer,
-        username: username,
-        sessionToken: sessionToken
+        selected_answer: selectedAnswer,
+        correct_option: correctAnswer
       });
 
       setAiAnalysis(prev => ({
         ...prev,
-        [attemptId]: response.data.analysis
+        [attemptId]: response.data.answer || 'No explanation received.'
       }));
     } catch (error) {
-      console.error('Error fetching AI analysis:', error);
+      const backendMsg = error?.response?.data?.answer || error?.response?.data?.error || error?.response?.data?.details;
+      console.error('Error fetching AI analysis:', error?.response?.data || error);
       setAiAnalysis(prev => ({
         ...prev,
-        [attemptId]: 'Unable to generate analysis at this time.'
+        [attemptId]: backendMsg || 'Unable to generate analysis at this time.'
       }));
     } finally {
       setLoadingButtons(prev => ({ ...prev, [attemptId]: false }));

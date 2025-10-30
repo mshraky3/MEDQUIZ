@@ -129,24 +129,23 @@ const FinalExams = ({ userId, username, sessionToken }) => {
     setLoadingButtons(prev => ({ ...prev, [questionId]: true }));
 
     try {
-      // Call AI analysis API
+      // Call AI analysis API (aligned with backend contract)
       const response = await axios.post(`${Globals.URL}/ai-analysis`, {
         question: questionText,
-        userAnswer: userAnswer,
-        correctAnswer: correctAnswer,
-        username: username,
-        sessionToken: sessionToken
+        selected_answer: userAnswer,
+        correct_option: correctAnswer
       });
 
       setAiAnalysis(prev => ({
         ...prev,
-        [questionId]: response.data.analysis
+        [questionId]: response.data.answer || 'No analysis available.'
       }));
     } catch (error) {
-      console.error('Error fetching AI analysis:', error);
+      const backendMsg = error?.response?.data?.answer || error?.response?.data?.error || error?.response?.data?.details;
+      console.error('Error fetching AI analysis:', error?.response?.data || error);
       setAiAnalysis(prev => ({
         ...prev,
-        [questionId]: 'Unable to generate analysis at this time.'
+        [questionId]: backendMsg || 'Unable to generate analysis at this time.'
       }));
     } finally {
       setLoadingButtons(prev => ({ ...prev, [questionId]: false }));
