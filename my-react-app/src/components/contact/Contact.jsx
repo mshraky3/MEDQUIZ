@@ -76,12 +76,6 @@ Sent from MEDQIZE Contact Form
             link: 'https://wa.link/gqafib'
         },
         {
-            icon: '📱',
-            title: 'WhatsApp Support',
-            value: '050 999 5980',
-            link: 'https://wa.link/soreie'
-        },
-        {
             icon: '📧',
             title: 'Email',
             value: 'alshraky3@gmail.com',
@@ -101,9 +95,6 @@ Sent from MEDQIZE Contact Form
                         <div className="whatsapp-links">
                             <a href="https://wa.link/gqafib" className="whatsapp-link">
                                 📱 WhatsApp: 0582619119
-                            </a>
-                            <a href="https://wa.link/soreie" className="whatsapp-link">
-                                📱 WhatsApp: 050 999 5980
                             </a>
                         </div>
                     </div>

@@ -130,7 +130,7 @@ const Landing = () => {
           </div>
           <hr className="section-divider thick" />
           {/* Pricing Section */}
-          <div className="landing-pricing">
+          {/* <div className="landing-pricing">
             <div className="pricing-badge">
               <span className="pricing-label">{isArabic ? "🎉 عرض اليوم الوطني 🎉" : "🎉 National Day Special 🎉"}</span>
             </div>
@@ -176,7 +176,7 @@ const Landing = () => {
           </div>
 
           {/* Section Divider */}
-          <hr className="section-divider" />
+          {/* <hr className="section-divider" /> */}
 
           {/* About Us Section */}
           <div className="landing-about">
@@ -431,9 +431,9 @@ const Landing = () => {
                         <li>{isArabic ? "حفظ التقدم" : "Progress saving"}</li>
                         <li>{isArabic ? "تحليلات مخصصة" : "Personalized analytics"}</li>
                       </ul>
-                      <button className="landing-btn primary" onClick={() => { setShowModal(false); navigate('/payment'); }} style={{ marginTop: 12 }}>
+                      {/* <button className="landing-btn primary" onClick={() => { setShowModal(false); navigate('/payment'); }} style={{ marginTop: 12 }}>
                         {isArabic ? "اشترك الآن" : "Subscribe Now"}
-                      </button>
+                      </button> */}
                     </div>
                     <div className="trial-option">
                       <h4>{isArabic ? "تجربة مجانية" : "Free Trial"}</h4>
