@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Landing.css';
 import SEO from '../common/SEO';
@@ -15,13 +15,7 @@ const Landing = () => {
   const [lang, setLang] = useLang();
   const isArabic = lang === 'ar';
   const navigate = useNavigate();
-  const [showModal, setShowModal] = useState(false);
-  
   const [loading, setLoading] = useState(false);
-  const [formError, setFormError] = useState('');
-  
-  const [successMsg, setSuccessMsg] = useState('');
-  const [showAddToHome, setShowAddToHome] = useState(false);
   const [showIOSInstructions, setShowIOSInstructions] = useState(false);
   const [showAndroidInstructions, setShowAndroidInstructions] = useState(false);
   
@@ -29,11 +23,9 @@ const Landing = () => {
 
   const handleFreeTrial = async () => {
     setLoading(true);
-    setFormError('');
     try {
       const response = await axios.post(`${Globals.URL}/free-trial/start`);
       const { trialId, user } = response.data;
-      setShowModal(false);
       navigate('/quizs', { 
         state: { 
           id: trialId, 
@@ -42,7 +34,7 @@ const Landing = () => {
         } 
       });
     } catch (error) {
-      setFormError('Failed to start free trial. Please try again.');
+      // Error handling - could add user notification here if needed
     } finally {
       setLoading(false);
     }
@@ -62,14 +54,35 @@ const Landing = () => {
     };
   }, [lang, isArabic]);
 
+  // Scroll-triggered animations
+  useEffect(() => {
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('fade-in-visible');
+        }
+      });
+    }, observerOptions);
+
+    // Observe all sections
+    const sections = document.querySelectorAll('.fade-in-section');
+    sections.forEach((section) => observer.observe(section));
+
+    return () => {
+      sections.forEach((section) => observer.unobserve(section));
+    };
+  }, []);
+
 
   
 
   
 
-  const handleGetStarted = () => {
-    setShowModal(true);
-  };
 
   const handleLogin = () => {
     navigate('/login');
@@ -119,8 +132,11 @@ const Landing = () => {
             {isArabic ? "الأفضل سعراً لاختبار البرومترك (SMLE)" : "#1 Affordable SMLE (Prometric) Prep"}
           </div>
           {/* Header Section */}
-          <div className="landing-header">
-            <h1 className="landing-main-title landing-title-shadow">
+          <div className="landing-header fade-in-section">
+            <div className="landing-logo-container">
+              <img src="/tab_logo.png" alt="SQB Logo" className="landing-logo" />
+            </div>
+            <h1 className="landing-main-title">
               SQB{isArabic && <><br/><span style={{fontWeight:'normal',fontSize:'22px'}}>منصة SQB التعليمية المتخصصة</span></>}
             </h1>
             <h2 className="landing-subtitle">
@@ -131,27 +147,42 @@ const Landing = () => {
                 ? "استعد لاختبار البرومترك السعودي (SMLE) مع منصتنا التعليمية الشاملة التي تضم أكثر من 8000 سؤال دقيق"
                 : "Master the Saudi Medical Licensing Examination (SMLE) with our comprehensive educational platform featuring over 8,000 carefully curated questions"}
             </p>
-          </div>
-          
-          <div className="landing-cta">
-            <div className="landing-buttons">
-              <button className="landing-btn primary" onClick={handleGetStarted}>
-                {isArabic ? "ابدأ الآن" : "Get Started Now"}
-              </button>
-              <button className="landing-btn secondary" onClick={handleLogin}>
-                {isArabic ? "تسجيل الدخول" : "Login"}
-              </button>
+            <div className="landing-cta-section">
+              <div className="landing-cta-primary">
+                <button className="landing-btn primary cta-main" onClick={() => navigate('/contact')}>
+                  <img src="https://img.icons8.com/?size=100&id=45870&format=png&color=FFFFFF" alt="Rocket" className="cta-icon" />
+                  <span>{isArabic ? "تواصل للاشتراك" : "Contact to Subscribe"}</span>
+                </button>
+                <p className="cta-subtext">
+                  {isArabic ? "ابدأ رحلتك نحو النجاح في اختبار البرومترك" : "Start your journey to SMLE success"}
+                </p>
+              </div>
+              <div className="landing-cta-secondary">
+                <button className="landing-btn secondary" onClick={handleFreeTrial} disabled={loading}>
+                  {loading ? (isArabic ? '...يتم البدء' : 'Starting...') : (isArabic ? "ابدأ التجربة المجانية" : "Start Free Trial")}
+                </button>
+                <button className="landing-btn secondary" onClick={handleLogin}>
+                  {isArabic ? "تسجيل الدخول" : "Login"}
+                </button>
+              </div>
             </div>
           </div>
           <hr className="section-divider thick" />
           {/* Pricing Section */}
-          <div className="landing-pricing">
+          <div className="landing-pricing fade-in-section">
             <div className="pricing-badge">
-              <span className="pricing-label">{isArabic ? "💡 عرض تمهيدي محدود 💡" : "💡 Limited-Time Intro Rate 💡"}</span>
+              <span className="pricing-label">
+                <img src="https://img.icons8.com/?size=100&id=45870&format=png&color=000000" alt="Offer" className="pricing-badge-icon" />
+                {isArabic ? "عرض تمهيدي محدود" : "Limited-Time Intro Rate"}
+                <img src="https://img.icons8.com/?size=100&id=45870&format=png&color=000000" alt="Offer" className="pricing-badge-icon" />
+              </span>
             </div>
             <div className="pricing-card">
               <div className="pricing-header">
-                <h3>{isArabic ? "🔥 اشتراك سنوي - سعر تمهيدي ٧٥ ريال" : "🔥 Annual Subscription – Introductory 75 SAR"}</h3>
+                <h3>
+                  <img src="https://img.icons8.com/?size=100&id=45870&format=png&color=000000" alt="Offer" className="pricing-header-icon" />
+                  {isArabic ? "اشتراك سنوي - سعر تمهيدي ٧٥ ريال" : "Annual Subscription – Introductory 75 SAR"}
+                </h3>
                 <div className="price">
                   <span className="currency">SAR</span>
                   <span className="amount">75</span>
@@ -192,8 +223,9 @@ const Landing = () => {
                     : "Lock in 75 SAR now before the full launch price moves to 125 SAR."}
                 </p>
               </div>
-              <button className="landing-btn primary" style={{marginTop: 24, width: '100%'}} onClick={() => navigate('/contact')}  >
-                {isArabic ? "تواصل للاشتراك" : "Contact Us "}
+              <button className="landing-btn primary pricing-cta" onClick={() => navigate('/contact')}>
+                <span>{isArabic ? "تواصل للاشتراك" : "Contact Us"}</span>
+                <span className="cta-arrow">{isArabic ? "←" : "→"}</span>
               </button>
             </div>
           </div>
@@ -202,7 +234,7 @@ const Landing = () => {
           <hr className="section-divider" />
 
           {/* About Us Section */}
-          <div className="landing-about">
+          <div className="landing-about fade-in-section">
             <h2>{isArabic ? "من نحن" : "About Us"}</h2>
             <div className="about-content">
               <div className="about-text">
@@ -212,91 +244,40 @@ const Landing = () => {
                     : "We are a team of medical and technical specialists, committed to providing the leading educational platform for the Saudi Prometric (SMLE) exam. Our goal is to help students and doctors succeed through immersive learning content and detailed analytics."
                   }
                 </p>
-                <div className="about-features">
-                  <div className="about-feature">
-                    <span className="feature-icon">🎯</span>
-                    <span>{isArabic ? "دقة عالية في الأسئلة" : "High Accuracy Questions"}</span>
-                  </div>
-                  <div className="about-feature">
-                    <span className="feature-icon">📊</span>
-                    <span>{isArabic ? "تحليلات متقدمة" : "Advanced Analytics"}</span>
-                  </div>
-                  <div className="about-feature">
-                    <span className="feature-icon">💡</span>
-                    <span>{isArabic ? "شروحات مفصلة" : "Detailed Explanations"}</span>
-                  </div>
-                  <div className="about-feature">
-                    <span className="feature-icon">🚀</span>
-                    <span>{isArabic ? "تحديثات مستمرة" : "Continuous Updates"}</span>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
 
-          {/* Section Divider */}
-          <hr className="section-divider" />
+
 
           {/* Features Section */}
-          <div className="landing-features">
+          <div className="landing-features fade-in-section">
             <div className="feature-card">
-              <div className="feature-icon">📚</div>
+              <div className="feature-icon">
+                <img src="https://img.icons8.com/?size=100&id=18693&format=png&color=000000" alt="Questions" />
+              </div>
               <h3>{isArabic ? "منصة تضم أكثر من 8000 سؤال" : "Learning Platform with 8,000+ Questions"}</h3>
               <p>{isArabic ? "منصة تعليمية شاملة تغطي جميع مواضيع البرومترك (SMLE) مع شروحات مفصلة" : "Comprehensive learning experience covering every SMLE topic with deep explanations"}</p>
             </div>
             <div className="feature-card">
-              <div className="feature-icon">📊</div>
+              <div className="feature-icon">
+                <img src="https://img.icons8.com/?size=100&id=rqxQtUue6iQU&format=png&color=000000" alt="Analytics" />
+              </div>
               <h3>{isArabic ? "تحليلات مفصلة" : "Detailed Analytics"}</h3>
               <p>{isArabic ? "تابع تقدمك مع تحليلات شاملة وتقسيم حسب الموضوع" : "Track your progress with comprehensive performance analysis and topic-wise breakdown"}</p>
             </div>
             <div className="feature-card">
-              <div className="feature-icon">🎯</div>
+              <div className="feature-icon">
+                <img src="https://img.icons8.com/?size=100&id=rFihLhz2eItx&format=png&color=000000" alt="Training" />
+              </div>
               <h3>{isArabic ? "تدريب موجه" : "Targeted Practice"}</h3>
               <p>{isArabic ? "ركز على مواضيع محددة أو اختبر معلوماتك بشكل عام" : "Focus on specific topics or take mixed quizzes to test your overall knowledge"}</p>
             </div>
-            <div className="feature-card">
-              <div className="feature-icon">📱</div>
-              <h3>{isArabic ? "متوافق مع الجوال" : "Mobile Friendly"}</h3>
-              <p>{isArabic ? "ادرس في أي مكان وزمان مع تصميم متجاوب لجميع الأجهزة" : "Study anywhere, anytime with our responsive design that works on all devices"}</p>
-            </div>
+
           </div>
 
           {/* Section Divider */}
           
-
-          {/* Add to Home Screen Buttons */}
-          <div className="add-to-home-trigger">
-            <div className="add-to-home-buttons">
-              <button 
-                className="landing-btn ios-btn" 
-                onClick={() => {
-                  setShowIOSInstructions(!showIOSInstructions);
-                  setShowAndroidInstructions(false);
-                }}
-              >
-                <img 
-                  src="https://img.icons8.com/?size=100&id=30659&format=png&color=000000" 
-                  alt="iOS" 
-                  className="btn-icon"
-                />
-                {isArabic ? "تعليمات iOS" : "add to home screen - iOS"}
-              </button>
-              <button 
-                className="landing-btn android-btn" 
-                onClick={() => {
-                  setShowAndroidInstructions(!showAndroidInstructions);
-                  setShowIOSInstructions(false);
-                }}
-              >
-                <img 
-                  src="https://img.icons8.com/?size=100&id=2586&format=png&color=000000" 
-                  alt="Android" 
-                  className="btn-icon"
-                />
-                {isArabic ? "تعليمات Android" : "add to home screen - Android"}
-              </button>
-            </div>
-          </div>
 
           {/* iOS Instructions Section */}
           {showIOSInstructions && (
@@ -421,61 +402,33 @@ const Landing = () => {
           {/* Section Divider */}
           <hr className="section-divider" />
 
-          {/* Stats Section - Last Section */}
-          <div className="landing-stats">
-            <div className="stat-item">
-              <div className="stat-number">8,000+</div>
-              <div className="stat-label">{isArabic ? "سؤال" : "Questions"}</div>
-            </div>
-            <div className="stat-item">
-              <div className="stat-number">SAR 75</div>
-              <div className="stat-label">{isArabic ? "سنة كاملة" : "Full Year"}</div>
-            </div>
-            <div className="stat-item">
-              <div className="stat-number">24/7</div>
-              <div className="stat-label">{isArabic ? "متاح دائماً" : "Available"}</div>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="landing-footer" />
         </div>
-        {/* Modal for registration and WhatsApp */}
-        {showModal && (
-          <div className="landing-modal-overlay" style={{ zIndex: 1000 }}>
-            <div className="landing-modal-content">
-                  <h3>{isArabic ? "اختر طريقة البدء" : "Choose how to get started:"}</h3>
-                  <div className="trial-options">
-                    <div className="trial-option">
-                      <h4 >{isArabic ? "اشتراك كامل" : "Full Subscription"} </h4>
-                      <p>{isArabic ? "احصل على الوصول الكامل إلى جميع الأسئلة والتحليلات." : "Get full access to all questions and analytics."}</p>
-                      <ul>
-                        <li>{isArabic ? "وصول كامل" : "Full access"}</li>
-                        <li>{isArabic ? "حفظ التقدم" : "Progress saving"}</li>
-                        <li>{isArabic ? "تحليلات مخصصة" : "Personalized analytics"}</li>
-                      </ul>
-                      <button className="landing-btn primary" onClick={() => { setShowModal(false); navigate('/contact'); }} style={{ marginTop: 12 }}>
-                        {isArabic ? "تواصل للاشتراك" : "Contact us"}
-                      </button>
-                    </div>
-                    <div className="trial-option">
-                      <h4>{isArabic ? "تجربة مجانية" : "Free Trial"}</h4>
-                      <p>{isArabic ? "جرب منصتنا مع 40 سؤالاً مختاراً من جميع المواضيع. لا حاجة للتسجيل!" : "Try our platform with 40 carefully selected questions from all 4 topics. No registration required!"}</p>
-                      <ul>
-                        <li>{isArabic ? "٤٠ سؤال تجريبي" : "40 sample questions"}</li>
-                        <li>{isArabic ? "جميع أنواع الأسئلة الأربعة" : "All 4 question types"}</li>
-                        <li>{isArabic ? "دخول فوري" : "Instant access"}</li>
-                        <li>{isArabic ? "بدون تسجيل دخول" : "No login needed"}</li>
-                      </ul>
-                      <button  onClick={handleFreeTrial} className="popup-btn" disabled={loading} style={{ marginTop: 12 }}>
-                        {loading ? (isArabic ? '...يتم البدء' : 'Starting...') : (isArabic ? 'ابدأ التجربة المجانية' : 'Start Free Trial')}
-                      </button>
-                    </div>
-                  </div>
-                  <button className="popup-btn no-thanks" onClick={() => setShowModal(false)} style={{ marginTop: 20 }}>{isArabic ? "إلغاء" : "Cancel"}</button>
+        {/* Stats + Footer Section */}
+        <div className="landing-stats fade-in-section">
+            <div className="stats-section">
+              <div className="stat-item">
+                <div className="stat-number">8,000+</div>
+                <div className="stat-label">{isArabic ? "سؤال" : "Questions"}</div>
+              </div>
+              <div className="stat-item">
+                <div className="stat-number">SAR 75</div>
+                <div className="stat-label">{isArabic ? "سنة كاملة" : "Full Year"}</div>
+              </div>
+              <div className="stat-item">
+                <div className="stat-number">24/7</div>
+                <div className="stat-label">{isArabic ? "متاح دائماً" : "Available"}</div>
+              </div>
+            </div>
+            <div className="footer-section">
+              <div className="footer-content">
+                <p className="footer-text">
+                  {isArabic 
+                    ? <>© {new Date().getFullYear()} <strong>SQB</strong>. جميع الحقوق محفوظة.</>
+                    : <>© {new Date().getFullYear()} <strong>SQB</strong>. All rights reserved.</>}
+                </p>
+              </div>
             </div>
           </div>
-        )}
       </div>
     </>
   );
