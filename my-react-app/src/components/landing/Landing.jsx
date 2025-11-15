@@ -129,7 +129,7 @@ const Landing = () => {
         <div className="landing-wrapper landing-main-container">
           {/* Badge Above Main Title */}
           <div className="landing-badge">
-            {isArabic ? "الأفضل سعراً لاختبار البرومترك (SMLE)" : "#1 Affordable SMLE (Prometric) Prep"}
+            {isArabic ? "الأفضل  لاختبار البرومترك" : "#1 Affordable SMLE (Prometric) Prep"}
           </div>
           {/* Header Section */}
           <div className="landing-header fade-in-section">
@@ -180,8 +180,7 @@ const Landing = () => {
             <div className="pricing-card">
               <div className="pricing-header">
                 <h3>
-                  <img src="https://img.icons8.com/?size=100&id=45870&format=png&color=000000" alt="Offer" className="pricing-header-icon" />
-                  {isArabic ? "اشتراك سنوي - سعر تمهيدي ٧٥ ريال" : "Annual Subscription – Introductory 75 SAR"}
+                  {isArabic ? "اشتراك سنوي" : "Annual Subscription – Introductory 75 SAR"}
                 </h3>
                 <div className="price">
                   <span className="currency">SAR</span>
