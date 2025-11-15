@@ -67,10 +67,10 @@ const Result = ({
         {isTrial && (
           <>
             <button 
-              onClick={() => navigate('/payment')} 
+              onClick={() => navigate('/contact')} 
               className="upgrade-button"
             >
-              Subscribe Now
+              Contact Us to Subscribe
             </button>
             <button 
               onClick={handleViewAnalysis} 
@@ -88,7 +88,7 @@ const Result = ({
           <p>🎉 Great job! You've completed your free trial.</p>
           <p>Ready for the full experience? Get access to all 5,000+ questions and detailed analytics!</p>
           <button 
-            onClick={() => navigate('/payment')} 
+            onClick={() => navigate('/contact')} 
             className="subscribe-trial-button"
             style={{
               background: 'linear-gradient(45deg, #667eea, #764ba2)',
@@ -103,7 +103,7 @@ const Result = ({
               transition: 'all 0.3s ease'
             }}
           >
-            Subscribe Now
+            Contact Us to Subscribe
           </button>
         </div>
       )}

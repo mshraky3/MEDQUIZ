@@ -30,8 +30,8 @@ const Signup = () => {
         const { userId, paymentConfirmed, fromKoFi, isTest } = location.state || {};
         
         if (!paymentConfirmed || !userId) {
-            // If not from payment flow, redirect to payment page
-            navigate('/payment');
+            // If not from payment flow, redirect to contact page
+            navigate('/contact');
             return;
         }
 
@@ -60,13 +60,13 @@ const Signup = () => {
             } else {
                 setError('❌ Invalid or expired temporary link');
                 setTimeout(() => {
-                    navigate('/payment');
+                    navigate('/contact');
                 }, 3000);
             }
         } catch (err) {
             setError('❌ Invalid or expired temporary link');
             setTimeout(() => {
-                navigate('/payment');
+                navigate('/contact');
             }, 3000);
         } finally {
             setLoading(false);
@@ -139,7 +139,7 @@ const Signup = () => {
                 const paidUserId = localStorage.getItem('paidUserId');
                 
                 if (!paidUserId) {
-                    throw new Error('Payment verification not found. Please complete payment first.');
+                    throw new Error('Subscription verification not found. Please contact support.');
                 }
 
                 // Create account with the paid user ID
@@ -205,7 +205,7 @@ const Signup = () => {
             <div className="signup-card">
                 <h2>Create Your Account</h2>
                 <p className="signup-subtitle">
-                    {isTempLink ? "Create your free account" : "Complete your account setup after payment"}
+                    {isTempLink ? "Create your free account" : "Complete your account setup after contacting support"}
                 </p>
                 
                 <form onSubmit={handleSubmit} className="signup-form">

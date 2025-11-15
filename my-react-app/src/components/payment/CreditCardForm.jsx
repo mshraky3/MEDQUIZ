@@ -156,14 +156,14 @@ const CreditCardForm = ({ amount = 19.1, description = "Premium Access", onSucce
             )}
             
             <div className="payment-info">
-                <h3>🎉 National Day Special - Pay 75 SAR</h3>
-                <p>🇸🇦 Special Saudi National Day Offer - Save 70%</p>
+                <h3>💡 Introductory Launch Rate - Pay 75 SAR</h3>
+                <p>🇸🇦 Limited price while we finalize the app. Launch price becomes 125 SAR.</p>
                 <p><small>💳 Quick & Easy Payment Options</small></p>
                 <p><small>Visa, Mastercard, American Express accepted</small></p>
                 <p><small>💳 Guest checkout - No PayPal account needed</small></p>
                 <p><small>⚡ Automatic payment methods enabled - Faster checkout</small></p>
                 <p><small>💰 Amount: 75 SAR (Original: 250 SAR)</small></p>
-                <p><small>⏰ Limited Time National Day Offer</small></p>
+                <p><small>⏰ Limited-time intro rate before the official launch</small></p>
                 <div className="security-notice">
                     <p><small>🔒 Secure payment processing - All transactions are encrypted</small></p>
                 </div>

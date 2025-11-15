@@ -114,7 +114,7 @@ const AnalysisTemp = () => {
   });
 
   const handleGetAccountClick = () => {
-    navigate('/payment');
+    navigate('/contact');
   };
 
   const handleContactUs = () => {
@@ -187,7 +187,7 @@ const AnalysisTemp = () => {
             onClick={handleGetAccountClick}
             className="trial-action-btn subscribe"
           >
-            🚀 Subscribe Now - Full Access
+            🚀 Contact Us for Full Access
           </button>
           
           <button

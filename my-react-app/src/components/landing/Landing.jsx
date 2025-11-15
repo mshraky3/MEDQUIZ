@@ -12,7 +12,7 @@ import iosVideo from './videos/ios.mp4';
 
 
 const Landing = () => {
-  const lang = useLang();
+  const [lang, setLang] = useLang();
   const isArabic = lang === 'ar';
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
@@ -75,18 +75,33 @@ const Landing = () => {
     navigate('/login');
   };
 
+  const toggleLanguage = () => {
+    setLang((prev) => (prev === 'ar' ? 'en' : 'ar'));
+  };
+
   return (
     <>
       <SEO 
         title={isArabic ? "منصة برومترك (SMLE) الشاملة" : "Ultimate SMLE (Prometric) Prep Platform"}
         description={isArabic
           ? "استعد لاختبار البرومترك السعودي (SMLE) مع مجموعتنا الشاملة التي تضم أكثر من 8000 سؤال دقيق وتحليلات مفصلة وتجربة مجانية."
-          : "Master the Saudi Medical Licensing Examination (SMLE) and Prometric with MEDQIZE. Access over 8,000 carefully curated questions with detailed analytics, targeted practice, and comprehensive performance tracking. Start your free trial today!"}
+          : "Master the Saudi Medical Licensing Examination (SMLE) and Prometric with SQB. Access over 8,000 carefully curated questions with detailed analytics, targeted practice, and comprehensive performance tracking. Start your free trial today!"}
         keywords="SMLE, Prometric, Saudi Medical Licensing Examination, medical questions, medical quiz, medical exam preparation, Saudi medical license, medical board exam, medical practice test, medical study guide, Saudi medical students, free trial, Prometric questions, Prometric Saudi, برومترك, اسئلة برومترك, اسئلة اختبار البرومترك, اسئلة الهيئة السعودية للتخصصات الصحية, بنك اسئلة برومترك, بنك اسئلة SMLE, تجميعات برومترك, تجميعات SMLE, اختبار البرومترك, اختبار الهيئة السعودية, اسئلة طبية, بنك اسئلة طبية, تدريب برومترك, تدريب SMLE, اسئلة امتحان برومترك, اسئلة امتحان SMLE, اسئلة طبية سعودية, اسئلة طبية برومترك, Saudi Prometric, Prometric exam, Prometric practice, Prometric medicine, Prometric Saudi Arabia, Saudi Prometric questions, Saudi Prometric bank, Saudi Prometric practice, Saudi Prometric free, Saudi Prometric trial, Saudi Prometric preparation, Saudi Prometric online, Saudi Prometric MCQ, Saudi Prometric test, Saudi Prometric review, Saudi Prometric study, Saudi Prometric guide, Saudi Prometric analytics, Saudi Prometric performance, Saudi Prometric topics, Saudi Prometric mobile, Saudi Prometric affordable, Saudi Prometric subscription, Saudi Prometric unlimited, Saudi Prometric 2024, Saudi Prometric 2025"
         url="https://www.smle-question-bank.com"
         lang={lang}
       />
       <div className="landing-body" dir={isArabic ? "rtl" : "ltr"}>
+        <div className="landing-lang-toggle">
+          <button 
+            type="button" 
+            className="lang-toggle-btn" 
+            onClick={toggleLanguage}
+            aria-label={isArabic ? "Switch to English" : "التبديل إلى العربية"}
+          >
+            <span className="lang-toggle-icon" role="img" aria-hidden="true">🌐</span>
+            <span className="lang-toggle-text">{isArabic ? 'EN' : 'ع'}</span>
+          </button>
+        </div>
         {/* Decorative SVG Wave at the Top */}
         <div className="landing-top-wave" dir="ltr">
           <svg viewBox="0 0 2880 180" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
@@ -106,15 +121,15 @@ const Landing = () => {
           {/* Header Section */}
           <div className="landing-header">
             <h1 className="landing-main-title landing-title-shadow">
-              SQB{isArabic && <><br/><span style={{fontWeight:'normal',fontSize:'22px'}}>بنك الأسئلة السعودي</span></>}
+              SQB{isArabic && <><br/><span style={{fontWeight:'normal',fontSize:'22px'}}>منصة SQB التعليمية المتخصصة</span></>}
             </h1>
             <h2 className="landing-subtitle">
-              {isArabic ? "بنك أسئلة برومترك (SMLE) الشامل الخاص بك" : "Your Ultimate SMLE (Prometric) Question Bank"}
+              {isArabic ? "منصتك التعليمية الشاملة لاختبار البرومترك (SMLE)" : "Your Ultimate SMLE (Prometric) Learning Platform"}
             </h2>
             <p className="landing-description">
               {isArabic
-                ? "استعد لاختبار البرومترك السعودي (SMLE) مع مجموعتنا الشاملة التي تضم أكثر من 8000 سؤال دقيق"
-                : "Master the Saudi Medical Licensing Examination (SMLE) and Prometric with our comprehensive collection of over 8,000 carefully curated questions"}
+                ? "استعد لاختبار البرومترك السعودي (SMLE) مع منصتنا التعليمية الشاملة التي تضم أكثر من 8000 سؤال دقيق"
+                : "Master the Saudi Medical Licensing Examination (SMLE) with our comprehensive educational platform featuring over 8,000 carefully curated questions"}
             </p>
           </div>
           
@@ -130,19 +145,23 @@ const Landing = () => {
           </div>
           <hr className="section-divider thick" />
           {/* Pricing Section */}
-          {/* <div className="landing-pricing">
+          <div className="landing-pricing">
             <div className="pricing-badge">
-              <span className="pricing-label">{isArabic ? "🎉 عرض اليوم الوطني 🎉" : "🎉 National Day Special 🎉"}</span>
+              <span className="pricing-label">{isArabic ? "💡 عرض تمهيدي محدود 💡" : "💡 Limited-Time Intro Rate 💡"}</span>
             </div>
             <div className="pricing-card">
               <div className="pricing-header">
-                <h3>{isArabic ? "🔥 اشتراك سنوي - عرض اليوم الوطني " : " ANNUAL SUBSCRIPTION - NATIONAL DAY SPECIAL "}</h3>
+                <h3>{isArabic ? "🔥 اشتراك سنوي - سعر تمهيدي ٧٥ ريال" : "🔥 Annual Subscription – Introductory 75 SAR"}</h3>
                 <div className="price">
                   <span className="currency">SAR</span>
                   <span className="amount">75</span>
                   <span className="period">{isArabic ? "لمدة سنة كاملة" : "FOR 1 FULL YEAR"}</span>
                 </div>
-                <p className="pricing-subtitle">{isArabic ? "عرض خاص للعيد الوطني السعودي - اشتراك لمدة سنة كاملة" : "SPECIAL NATIONAL DAY OFFER - SUBSCRIPTION FOR 1 FULL YEAR"}</p>
+                <p className="pricing-subtitle">
+                  {isArabic 
+                    ? "سعر تمهيدي متاح حتى ننهي التجربة بالكامل. سيصبح السعر ١٢٥ ريال بعد الإطلاق الرسمي."
+                    : "Introductory pricing while we finalize the app. Price increases to 125 SAR once the full launch goes live."}
+                </p>
               </div>
               <div className="pricing-features">
                 <div className="pricing-feature">
@@ -167,16 +186,20 @@ const Landing = () => {
                 </div>
               </div>
               <div className="pricing-comparison">
-                <p>{isArabic ? "وفر ٧٠٪ - عرض خاص لليوم الوطني السعودي" : "Save 70% - Special National Day Offer"}</p>
+                <p>
+                  {isArabic 
+                    ? "استفد من السعر الحالي ٧٥ ريال قبل أن يرتفع إلى ١٢٥ ريال عند الإطلاق الكامل."
+                    : "Lock in 75 SAR now before the full launch price moves to 125 SAR."}
+                </p>
               </div>
-              <button className="landing-btn primary" style={{marginTop: 24, width: '100%'}} onClick={() => navigate('/payment')}  >
-                {isArabic ? "اشترك الآن" : "Subscribe / Buy Now"}
+              <button className="landing-btn primary" style={{marginTop: 24, width: '100%'}} onClick={() => navigate('/contact')}  >
+                {isArabic ? "تواصل للاشتراك" : "Contact Us "}
               </button>
             </div>
           </div>
 
           {/* Section Divider */}
-          {/* <hr className="section-divider" /> */}
+          <hr className="section-divider" />
 
           {/* About Us Section */}
           <div className="landing-about">
@@ -185,8 +208,8 @@ const Landing = () => {
               <div className="about-text">
                 <p>
                   {isArabic 
-                    ? "نحن فريق من المتخصصين في المجال الطبي والتقني، ملتزمون بتقديم أفضل منصة تحضير لاختبار البرومترك السعودي (SMLE). هدفنا هو مساعدة الطلاب والأطباء على النجاح في اختباراتهم من خلال بنك أسئلة شامل وتحليلات مفصلة."
-                    : "We are a team of medical and technical specialists, committed to providing the best preparation platform for the Saudi Prometric (SMLE) exam. Our goal is to help students and doctors succeed in their exams through a comprehensive question bank and detailed analytics."
+                    ? "نحن فريق من المتخصصين في المجال الطبي والتقني، ملتزمون بتقديم منصة تعليمية حديثة للتحضير لاختبار البرومترك السعودي (SMLE). هدفنا هو مساعدة الطلاب والأطباء على النجاح في اختباراتهم من خلال محتوى تعليمي شامل وتحليلات مفصلة."
+                    : "We are a team of medical and technical specialists, committed to providing the leading educational platform for the Saudi Prometric (SMLE) exam. Our goal is to help students and doctors succeed through immersive learning content and detailed analytics."
                   }
                 </p>
                 <div className="about-features">
@@ -218,8 +241,8 @@ const Landing = () => {
           <div className="landing-features">
             <div className="feature-card">
               <div className="feature-icon">📚</div>
-              <h3>{isArabic ? "أكثر من 8000 سؤال" : "8,000+ Questions"}</h3>
-              <p>{isArabic ? "بنك أسئلة شامل يغطي جميع مواضيع البرومترك (SMLE) مع شروحات مفصلة" : "Extensive question bank covering all SMLE (Prometric) topics with detailed explanations"}</p>
+              <h3>{isArabic ? "منصة تضم أكثر من 8000 سؤال" : "Learning Platform with 8,000+ Questions"}</h3>
+              <p>{isArabic ? "منصة تعليمية شاملة تغطي جميع مواضيع البرومترك (SMLE) مع شروحات مفصلة" : "Comprehensive learning experience covering every SMLE topic with deep explanations"}</p>
             </div>
             <div className="feature-card">
               <div className="feature-icon">📊</div>
@@ -405,7 +428,7 @@ const Landing = () => {
               <div className="stat-label">{isArabic ? "سؤال" : "Questions"}</div>
             </div>
             <div className="stat-item">
-              <div className="stat-number">SAR 50</div>
+              <div className="stat-number">SAR 75</div>
               <div className="stat-label">{isArabic ? "سنة كاملة" : "Full Year"}</div>
             </div>
             <div className="stat-item">
@@ -431,9 +454,9 @@ const Landing = () => {
                         <li>{isArabic ? "حفظ التقدم" : "Progress saving"}</li>
                         <li>{isArabic ? "تحليلات مخصصة" : "Personalized analytics"}</li>
                       </ul>
-                      {/* <button className="landing-btn primary" onClick={() => { setShowModal(false); navigate('/payment'); }} style={{ marginTop: 12 }}>
-                        {isArabic ? "اشترك الآن" : "Subscribe Now"}
-                      </button> */}
+                      <button className="landing-btn primary" onClick={() => { setShowModal(false); navigate('/contact'); }} style={{ marginTop: 12 }}>
+                        {isArabic ? "تواصل للاشتراك" : "Contact us"}
+                      </button>
                     </div>
                     <div className="trial-option">
                       <h4>{isArabic ? "تجربة مجانية" : "Free Trial"}</h4>

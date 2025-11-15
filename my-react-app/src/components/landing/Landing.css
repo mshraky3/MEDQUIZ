@@ -7,6 +7,43 @@
   overflow-x: hidden;
 }
 
+.landing-lang-toggle {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 1100;
+}
+
+.lang-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  font-weight: 600;
+  color: #0296c9;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.lang-toggle-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+}
+
+.lang-toggle-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.lang-toggle-text {
+  font-size: 13px;
+  letter-spacing: 0.5px;
+}
+
 .landing-icon {
   position: fixed;
   top: 0;

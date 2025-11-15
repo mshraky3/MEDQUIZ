@@ -150,7 +150,7 @@ const Result = ({ answers, navigate, id, quizStartTime, questions, selectedTypes
   const duration = Math.floor((Date.now() - quizStartTime) / 1000); // Duration in seconds
 
   const handleGetAccountClick = () => {
-    navigate('/payment');
+    navigate('/contact');
   };
 
   const handleContactUs = () => {
@@ -178,7 +178,7 @@ const Result = ({ answers, navigate, id, quizStartTime, questions, selectedTypes
 
       <div className="result-buttons">
         <button onClick={handleGetAccountClick} className="subscribe-button">
-          🚀 Subscribe Now - Full Access
+          🚀 Contact Us for Full Access
         </button>
         
         <button className="contact-button" onClick={handleContactUs}>

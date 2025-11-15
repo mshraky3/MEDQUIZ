@@ -33,7 +33,7 @@ const Contact = () => {
                 body: JSON.stringify({
                     name: form.name,
                     mobile: form.mobile,
-                    subject: form.subject || 'Contact from MEDQIZE',
+                    subject: form.subject || 'Contact from SQB',
                     message: form.message
                 })
             });
@@ -47,7 +47,7 @@ const Contact = () => {
         } catch (error) {
             console.error('Error sending message:', error);
             // Fallback to email client
-            const subject = encodeURIComponent(form.subject || 'Contact from MEDQIZE');
+            const subject = encodeURIComponent(form.subject || 'Contact from SQB');
             const body = encodeURIComponent(`
 Name: ${form.name}
 Mobile: ${form.mobile}
@@ -56,7 +56,7 @@ Message:
 ${form.message}
 
 ---
-Sent from MEDQIZE Contact Form
+Sent from SQB Contact Form
             `);
 
             const mailtoLink = `mailto:alshraky3@gmail.com?subject=${subject}&body=${body}`;

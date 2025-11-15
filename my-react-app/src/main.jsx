@@ -14,9 +14,6 @@ import Admin from './components/ADD/Admin.jsx';
 import Bank from './components/ADD/Bank.jsx';
 import AnalysisTemp from './components/login/AnalysisTemp.jsx';
 import TempQUIZ from './components/login/TempQUIZ.jsx';
-import Payment from './components/payment/Payment.jsx';
-import PayButton from './components/payment/PayButton.jsx';
-import WaitingForPayment from './components/payment/WaitingForPayment.jsx';
 import Signup from './components/signup/Signup.jsx';
 import TempLinks from './components/ADD/TempLinks.jsx';
 import Contact from './components/contact/Contact.jsx';
@@ -88,16 +85,6 @@ const router = createBrowserRouter([
   {
     path: "/Bank",
     element: <Bank />,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/payment",
-    element: <Layout><Contact /></Layout>,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/waiting-for-payment",
-    element: <Layout><WaitingForPayment /></Layout>,
     errorElement: <ErrorBoundary />,
   },
   {

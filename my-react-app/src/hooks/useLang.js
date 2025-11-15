@@ -1,11 +1,26 @@
 import { useEffect, useState } from 'react';
 
+const getInitialLang = () => {
+  if (typeof window === 'undefined') {
+    return 'ar';
+  }
+
+  const storedPreference = window.localStorage.getItem('langPreference');
+  if (storedPreference === 'ar' || storedPreference === 'en') {
+    return storedPreference;
+  }
+
+  return 'ar';
+};
+
 export default function useLang() {
-  const [lang, setLang] = useState('en');
+  const [lang, setLang] = useState(getInitialLang);
+
   useEffect(() => {
-    const browserLang = navigator.language || navigator.userLanguage;
-    if (browserLang && browserLang.startsWith('ar')) setLang('ar');
-    else setLang('en');
-  }, []);
-  return lang;
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem('langPreference', lang);
+    document.documentElement.lang = lang;
+  }, [lang]);
+
+  return [lang, setLang];
 }
