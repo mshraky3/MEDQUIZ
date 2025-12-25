@@ -87,7 +87,8 @@ const questionsCache = {
     ttl: 5 * 60 * 1000 
 };
 
-// Free trial questions - fixed list of 40 questions (10 from each type)
+// Free trial endpoints removed - accounts are now free
+/*
 const FREE_TRIAL_QUESTIONS = [
     // Surgery questions (10)
     { id: 1, question_text: "A patient received a severe blow on the inferolateral side of the left knee joint while playing football. Radiographic examination confirmed a fracture of the head and neck of the fibula. Which of the following nerves is most vulnerable for damage?", option1: "Tibial", option2: "Deep peroneal", option3: "Common peroneal", option4: "Superficial peroneal", question_type: "surgery", correct_option: "Common peroneal" },
@@ -137,9 +138,11 @@ const FREE_TRIAL_QUESTIONS = [
     { id: 39, question_text: "A 45-year-old woman with hot flashes and mood changes. Most appropriate treatment?", option1: "HRT", option2: "SSRIs", option3: "Clonidine", option4: "Lifestyle changes", question_type: "obstetrics and gynecology", correct_option: "HRT" },
     { id: 40, question_text: "A 32-year-old woman with recurrent miscarriages. Most common cause?", option1: "Chromosomal abnormalities", option2: "Uterine anomalies", option3: "Antiphospholipid syndrome", option4: "Endocrine disorders", question_type: "obstetrics and gynecology", correct_option: "Chromosomal abnormalities" }
 ];
+*/
 
 // In-memory storage for free trial sessions (in production, use Redis or database)
-const freeTrialSessions = new Map();
+// REMOVED: Free trial sessions - accounts are now free
+// const freeTrialSessions = new Map();
 
 const app = express();
 
@@ -1982,143 +1985,7 @@ app.put('/questions/:id', async (req, res) => {
     }
 });
 
-// Free trial endpoints
-app.post('/free-trial/start', async (req, res) => {
-    try {
-        // Generate a unique trial session ID
-        const trialId = 'trial_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-        
-        // Create trial session data
-        const trialSession = {
-            id: trialId,
-            createdAt: new Date(),
-            lastActivity: new Date(),
-            isActive: true
-        };
-        
-        // Store in memory (in production, use database)
-        freeTrialSessions.set(trialId, trialSession);
-        
-        res.status(201).json({
-            message: 'Free trial started successfully',
-            trialId: trialId,
-            user: {
-                id: trialId,
-                username: 'Free Trial User',
-                isTrial: true
-            }
-        });
-    } catch (error) {
-        console.error('Error starting free trial:', error);
-        res.status(500).json({ message: 'Failed to start free trial' });
-    }
-});
-
-app.get('/free-trial/questions', async (req, res) => {
-    const { limit = 10, types, source } = req.query;
-    const numQuestions = parseInt(limit);
-    
-    try {
-        let questions = [...FREE_TRIAL_QUESTIONS];
-        
-        // Filter by types if specified
-        if (types && types !== 'mix') {
-            const selectedTypes = types.split(',');
-            questions = questions.filter(q => selectedTypes.includes(q.question_type));
-        }
-        
-        // Filter by source if specified (for free trial, we'll use 'general' as default source)
-        if (source && source !== 'mix') {
-            // For free trial, we'll treat all questions as 'general' source
-            // This ensures free trial users get questions regardless of source selection
-            questions = questions.map(q => ({ ...q, source: 'general' }));
-        } else {
-            // Add source field to all questions
-            questions = questions.map(q => ({ ...q, source: 'general' }));
-        }
-        
-        // Shuffle and limit
-        const shuffled = questions.sort(() => 0.5 - Math.random());
-        const selectedQuestions = shuffled.slice(0, Math.min(numQuestions, questions.length));
-        
-        res.json({ questions: selectedQuestions });
-    } catch (error) {
-        console.error('Error fetching free trial questions:', error);
-        res.status(500).json({ message: 'Failed to fetch questions' });
-    }
-});
-
-app.post('/free-trial/quiz-sessions', async (req, res) => {
-    const {
-        trialId,
-        total_questions,
-        correct_answers,
-        quiz_accuracy,
-        duration,
-        avg_time_per_question,
-        topics_covered,
-        source
-    } = req.body;
-
-    if (!trialId || !total_questions || typeof quiz_accuracy !== 'number') {
-        return res.status(400).json({ message: "Missing required fields" });
-    }
-
-    try {
-        // Update trial session activity
-        const trialSession = freeTrialSessions.get(trialId);
-        if (trialSession) {
-            trialSession.lastActivity = new Date();
-        }
-        
-        // In free trial, we don't store data permanently, just return success
-        res.status(201).json({ 
-            id: 'trial_session_' + Date.now(),
-            message: 'Quiz session recorded for trial'
-        });
-    } catch (err) {
-        console.error("Failed to record trial quiz session", err.message, err.stack);
-        res.status(500).json({ message: 'Failed to record quiz session' });
-    }
-});
-
-app.post('/free-trial/question-attempts', async (req, res) => {
-    const { trialId, question_id, selected_option, is_correct, time_taken, quiz_session_id } = req.body;
-    
-    if (!trialId || !question_id || selected_option === undefined || is_correct === undefined || time_taken === undefined || quiz_session_id === undefined) {
-        return res.status(400).json({ message: "Missing required attempt data" });
-    }
-    
-    try {
-        // Update trial session activity
-        const trialSession = freeTrialSessions.get(trialId);
-        if (trialSession) {
-            trialSession.lastActivity = new Date();
-        }
-        
-        // In free trial, we don't store data permanently, just return success
-        res.status(201).json({ 
-            id: 'trial_attempt_' + Date.now(),
-            message: 'Question attempt recorded for trial'
-        });
-    } catch (err) {
-        console.error("Error recording trial question attempt:", err);
-        res.status(500).json({ message: 'Failed to record question attempt' });
-    }
-});
-
-// Cleanup inactive trial sessions (run every hour)
-setInterval(() => {
-    const now = new Date();
-    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
-    
-    for (const [trialId, session] of freeTrialSessions.entries()) {
-        if (session.lastActivity < oneHourAgo) {
-            freeTrialSessions.delete(trialId);
-            console.log(`Cleaned up inactive trial session: ${trialId}`);
-        }
-    }
-}, 60 * 60 * 1000); // Run every hour
+// Free trial endpoints removed - accounts are now free
 
 // Get user progress data
 app.get('/quiz-sessions/progress/:userId', requireSession, async (req, res) => {
@@ -2390,16 +2257,10 @@ app.post('/accept-terms', async (req, res) => {
 // Note: Migration endpoint removed - using accounts table only
 
 // ===== PAYMENT WORKFLOW ENDPOINTS =====
+// Payment endpoints removed - accounts are now free
 
-// REMOVED: Duplicate endpoint - using the one below with proper payment details handling
-
-// Note: Payment status checking endpoint removed - no longer needed with simplified flow
-
-// Note: Ko-fi webhook endpoint removed - no longer needed with simplified flow
-
-// Note: Find by transaction ID endpoint removed - no longer needed with simplified flow
-
-// Manual payment confirmation endpoint (for when webhook fails)
+// Payment endpoints removed - accounts are now free
+/*
 app.post('/api/payment/confirm', async (req, res) => {
     console.log('🔧 [Backend] Manual payment confirmation request received');
     try {
@@ -2490,6 +2351,8 @@ The user can now proceed to the signup page to create their account.
     }
 });
 
+// Payment endpoints removed - accounts are now free
+/*
 // Create user record after payment (before account setup)
 app.post('/api/payment/create-user', async (req, res) => {
     try {
@@ -2688,50 +2551,9 @@ app.post('/api/paypal/webhook', async (req, res) => {
     }
 });
 
-// PayPal payment verification endpoint
-app.post('/api/paypal/verify-payment', async (req, res) => {
-    console.log('🔍 [PayPal] Verifying payment...');
-    try {
-        const { paymentId, userId } = req.body;
-        
-        if (!paymentId || !userId) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Payment ID and User ID are required' 
-            });
-        }
-
-        // In a real implementation, you would:
-        // 1. Call PayPal API to verify the payment
-        // 2. Check payment status and amount
-        // 3. Update user account accordingly
-        
-        // For now, we'll simulate successful verification
-        console.log('✅ [PayPal] Payment verified successfully:', paymentId);
-        
-        // Update user account to active
-        const client = await db.connect();
-        try {
-            await client.query(
-                'UPDATE accounts SET isactive = $1, password = $2 WHERE id = $3',
-                [true, 'paid', userId]
-            );
-            
-            res.status(200).json({ 
-                success: true, 
-                message: 'Payment verified and account activated' 
-            });
-        } finally {
-            client.release();
-        }
-    } catch (error) {
-        console.error('❌ [PayPal] Error verifying payment:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Payment verification failed' 
-        });
-    }
-});
+// PayPal payment verification endpoint - REMOVED
+// Payment endpoints removed - accounts are now free
+*/
 
 // Test email endpoint
 app.get('/api/test-email', async (req, res) => {
@@ -3018,6 +2840,91 @@ app.get('/api/validate-temp-link/:token', async (req, res) => {
     } catch (err) {
         console.error('Error validating temp link:', err);
         res.status(500).json({ message: 'Failed to validate link' });
+    }
+});
+
+// Create free account
+app.post('/api/signup/free', async (req, res) => {
+    try {
+        const { username, password } = req.body;
+        
+        if (!username || !password) {
+            return res.status(400).json({ 
+                success: false,
+                message: 'Username and password are required' 
+            });
+        }
+
+        // Convert to lowercase
+        const lowercaseUsername = username.toLowerCase();
+        const lowercasePassword = password.toLowerCase();
+
+        const client = await db.connect();
+        try {
+            // Check if username already exists
+            const existingUser = await client.query(
+                'SELECT id FROM accounts WHERE username = $1',
+                [lowercaseUsername]
+            );
+
+            if (existingUser.rows.length > 0) {
+                return res.status(400).json({ 
+                    success: false,
+                    message: 'Username already exists' 
+                });
+            }
+
+            // Create the account
+            const accountResult = await client.query(
+                `INSERT INTO accounts (username, password, isactive, logged, terms_accepted) 
+                 VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+                [lowercaseUsername, lowercasePassword, true, false, false]
+            );
+
+            const newUserId = accountResult.rows[0].id;
+
+            // Send email notification
+            try {
+                const emailSubject = `✅ Free Account Created - ${lowercaseUsername}`;
+                const emailText = `
+New free account created:
+
+Username: ${lowercaseUsername}
+User ID: ${newUserId}
+Created: ${new Date().toLocaleString()}
+
+This is a free account with full access to all features.
+                `;
+                
+                const emailHtml = `
+                    <h2>✅ Free Account Created</h2>
+                    <p><strong>Username:</strong> ${lowercaseUsername}</p>
+                    <p><strong>User ID:</strong> ${newUserId}</p>
+                    <p><strong>Created:</strong> ${new Date().toLocaleString()}</p>
+                    <p>This is a free account with full access to all features.</p>
+                `;
+
+                await sendEmail('muhmodalshraky3@gmail.com', emailSubject, emailText, emailHtml);
+            } catch (emailError) {
+                console.error('Failed to send free account creation email:', emailError);
+            }
+
+            res.status(201).json({
+                success: true,
+                message: 'Account created successfully',
+                userId: newUserId
+            });
+
+        } finally {
+            client.release();
+        }
+
+    } catch (err) {
+        console.error('Error creating free account:', err);
+        res.status(500).json({ 
+            success: false,
+            message: 'Failed to create account' 
+        });
     }
 });
 
