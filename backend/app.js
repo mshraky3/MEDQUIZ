@@ -257,7 +257,6 @@ app.get('/get_all_users', async (req, res) => {
             await db.query(`
                 ALTER TABLE accounts 
                 ADD COLUMN IF NOT EXISTS email VARCHAR(255),
-                ADD COLUMN IF NOT EXISTS payment_status VARCHAR(50) DEFAULT 'pending',
                 ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             `);
@@ -279,7 +278,7 @@ app.get('/get_all_users', async (req, res) => {
         
         // Build the SELECT query with only necessary columns for admin interface
         const availableColumns = existingColumns.filter(col => 
-            ['id', 'username', 'password', 'logged_date', 'isactive', 'terms_accepted', 'email', 'payment_status', 'created_at'].includes(col)
+            ['id', 'username', 'password', 'logged_date', 'isactive', 'terms_accepted', 'email', 'created_at'].includes(col)
         );
         
         if (availableColumns.length === 0) {
@@ -344,14 +343,14 @@ app.post('/login', async (req, res) => {
             }
         }
 
-        // Check if already active or not
+        // Check if account is active
         if (!userRow.isactive) {
             await client.query('ROLLBACK');
             client.release();
-            logger.warn(`Subscription expired for username: ${lowercaseUsername}`);
+            logger.warn(`Account inactive for username: ${lowercaseUsername}`);
             return res.status(403).json({
-                message: 'Subscription expired',
-                expired: true,
+                message: 'Account is inactive. Please contact support.',
+                expired: false,
                 user: userRow
             });
         }
@@ -1218,7 +1217,7 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
             session_id: result.rows[0].session_id 
         });
 
-        // Record question progress for each answered question
+        // Record question progress for each answered question (parallelized)
         if (question_ids && question_ids.length > 0) {
             const questionDetails = await db.query(`
                 SELECT id, question_type, source 
@@ -1226,44 +1225,59 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
                 WHERE id = ANY($1)
             `, [question_ids]);
 
-            for (const question of questionDetails.rows) {
-                await db.query(`
+            // Parallelize question progress inserts for better performance
+            const progressPromises = questionDetails.rows.map(question => 
+                db.query(`
                     INSERT INTO user_question_progress (user_id, question_id, question_type, source)
                     VALUES ($1, $2, $3, $4)
                     ON CONFLICT (user_id, question_id) DO NOTHING
-                `, [user_id, question.id, question.question_type, question.source || 'general']);
-            }
+                `, [user_id, question.id, question.question_type, question.source || 'general'])
+            );
+            
+            await Promise.all(progressPromises);
         }
 
-        // Record detailed question attempts if provided
+        // Record detailed question attempts if provided (parallelized)
         if (question_attempts && question_attempts.length > 0) {
             logger.debug("Recording question attempts", { 
                 attemptCount: question_attempts.length,
                 sessionId: result.rows[0].id 
             });
 
-            for (const attempt of question_attempts) {
-                try {
-                    await db.query(`
-                        INSERT INTO user_question_attempts 
-                        (user_id, question_id, selected_option, is_correct, time_taken, quiz_session_id)
-                        VALUES ($1, $2, $3, $4, $5, $6)
-                    `, [
-                        user_id,
-                        attempt.question_id,
-                        attempt.selected_option,
-                        attempt.is_correct,
-                        attempt.time_taken,
-                        result.rows[0].id
-                    ]);
-                } catch (attemptError) {
+            // Parallelize question attempt inserts for better performance
+            const attemptPromises = question_attempts.map(attempt =>
+                db.query(`
+                    INSERT INTO user_question_attempts 
+                    (user_id, question_id, selected_option, is_correct, time_taken, quiz_session_id)
+                    VALUES ($1, $2, $3, $4, $5, $6)
+                `, [
+                    user_id,
+                    attempt.question_id,
+                    attempt.selected_option,
+                    attempt.is_correct,
+                    attempt.time_taken,
+                    result.rows[0].id
+                ]).catch(attemptError => {
                     logger.warn("Failed to record question attempt", { 
                         error: attemptError.message,
                         attempt: attempt 
                     });
-                    // Continue with other attempts even if one fails
+                    // Return null for failed attempts so Promise.allSettled continues
+                    return null;
+                })
+            );
+            
+            // Use allSettled to continue even if some attempts fail
+            const results = await Promise.allSettled(attemptPromises);
+            // Log any failures for debugging
+            results.forEach((result, index) => {
+                if (result.status === 'rejected') {
+                    logger.warn("Question attempt insert failed", { 
+                        attemptIndex: index,
+                        error: result.reason?.message 
+                    });
                 }
-            }
+            });
         }
 
         res.status(201).json({ 
@@ -2082,13 +2096,13 @@ app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
 
-// Get user subscription status
+// Get user account status (accounts are now free, no subscription needed)
 app.get('/api/user-subscription/:userId', async (req, res) => {
   const { userId } = req.params;
   
   try {
     const result = await db.query(
-      `SELECT id, username, email, isactive, signup_method, subscription_start, subscription_end 
+      `SELECT id, username, email, isactive, signup_method 
        FROM accounts WHERE id = $1`,
       [userId]
     );
@@ -2098,20 +2112,18 @@ app.get('/api/user-subscription/:userId', async (req, res) => {
     }
     
     const user = result.rows[0];
-    const now = new Date();
-    const subscriptionEnd = new Date(user.subscription_end);
-    const isActive = user.isactive && subscriptionEnd > now;
     
+    // Accounts are free - no subscription expiration
     res.json({
       user: {
         ...user,
-        isactive: isActive,
-        daysRemaining: Math.max(0, Math.ceil((subscriptionEnd - now) / (1000 * 60 * 60 * 24)))
+        isactive: user.isactive,
+        daysRemaining: null // Free accounts don't expire
       }
     });
   } catch (error) {
-    console.error('Error fetching subscription status:', error);
-    res.status(500).json({ message: 'Failed to fetch subscription status' });
+    console.error('Error fetching user status:', error);
+    res.status(500).json({ message: 'Failed to fetch user status' });
   }
 });
 
@@ -2518,38 +2530,7 @@ The user can now log in and access all premium features.
     }
 });
 
-// PayPal webhook endpoint for payment verification
-app.post('/api/paypal/webhook', async (req, res) => {
-    console.log('🔔 [PayPal Webhook] Payment notification received');
-    try {
-        const { event_type, resource } = req.body;
-        
-        // Handle payment capture events
-        if (event_type === 'PAYMENT.CAPTURE.COMPLETED') {
-            console.log('✅ [PayPal Webhook] Payment captured successfully');
-            console.log('💰 [PayPal Webhook] Payment details:', {
-                id: resource.id,
-                status: resource.status,
-                amount: resource.amount,
-                payer: resource.payer
-            });
-            
-            // Here you would typically:
-            // 1. Verify the webhook signature with PayPal
-            // 2. Check if this payment ID was already processed
-            // 3. Update user account status
-            // 4. Send confirmation email
-            
-            res.status(200).json({ success: true, message: 'Webhook processed' });
-        } else {
-            console.log('ℹ️ [PayPal Webhook] Unhandled event type:', event_type);
-            res.status(200).json({ success: true, message: 'Event type not handled' });
-        }
-    } catch (error) {
-        console.error('❌ [PayPal Webhook] Error processing webhook:', error);
-        res.status(500).json({ success: false, message: 'Webhook processing failed' });
-    }
-});
+// PayPal webhook endpoint removed - accounts are now free
 
 // PayPal payment verification endpoint - REMOVED
 // Payment endpoints removed - accounts are now free
