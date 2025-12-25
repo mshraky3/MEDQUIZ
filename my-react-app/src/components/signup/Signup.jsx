@@ -26,26 +26,8 @@ const Signup = () => {
             return;
         }
 
-        // Check if user came from payment confirmation
-        const { userId, paymentConfirmed, fromKoFi, isTest } = location.state || {};
-        
-        if (!paymentConfirmed || !userId) {
-            // If not from payment flow, redirect to contact page
-            navigate('/contact');
-            return;
-        }
-
-        // Store the paid user ID for account creation
-        localStorage.setItem('paidUserId', userId);
-        
-        // Log the source for debugging
-        if (fromKoFi) {
-            console.log('🎉 [Signup] User came from Ko-fi redirect - payment assumed completed');
-        } else if (isTest) {
-            console.log('🧪 [Signup] User came from payment test - test mode');
-        } else {
-            console.log('✅ [Signup] User came from payment confirmation');
-        }
+        // For free accounts, no payment flow needed
+        // User can sign up directly
     }, [location.state, navigate, token]);
 
     const validateTempLink = async () => {
@@ -135,23 +117,14 @@ const Signup = () => {
                     throw new Error(response.data.message || 'Failed to create account');
                 }
             } else {
-                // Regular payment flow
-                const paidUserId = localStorage.getItem('paidUserId');
-                
-                if (!paidUserId) {
-                    throw new Error('Subscription verification not found. Please contact support.');
-                }
-
-                // Create account with the paid user ID
-                const response = await axios.post(`${Globals.URL}/api/payment/create-account`, {
-                    userId: paidUserId,
+                // Free account creation
+                const response = await axios.post(`${Globals.URL}/api/signup/free`, {
                     username: form.username,
                     password: form.password
                 });
 
                 if (response.data.success) {
                     setSuccess(true);
-                    localStorage.removeItem('paidUserId');
                     
                     // Redirect to login after 2 seconds
                     setTimeout(() => {
@@ -205,7 +178,7 @@ const Signup = () => {
             <div className="signup-card">
                 <h2>Create Your Account</h2>
                 <p className="signup-subtitle">
-                    {isTempLink ? "Create your free account" : "Complete your account setup after contacting support"}
+                    {isTempLink ? "Create your free account" : "Create your free account"}
                 </p>
                 
                 <form onSubmit={handleSubmit} className="signup-form">

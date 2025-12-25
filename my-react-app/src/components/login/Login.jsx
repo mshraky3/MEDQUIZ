@@ -120,7 +120,7 @@ const Login = () => {
     passwordPlaceholder: isArabic ? "كلمة المرور" : "PASSWORD",
     loginButton: isArabic ? "تسجيل الدخول" : "Log in",
     loggingIn: isArabic ? "جاري تسجيل الدخول..." : "Logging in...",
-    contactLink: isArabic ? "اضغط للاشتراك أو طلب تجربة مجانية" : "Click to subscribe or get free trial",
+    contactLink: isArabic ? "إنشاء حساب مجاني" : "Create free account",
     termsTitle: isArabic ? "شروط الاستخدام" : "Terms of Use",
     termsAccept: isArabic ? "أوافق على شروط الاستخدام" : "I accept the Terms of Use",
     continue: isArabic ? "متابعة" : "Continue",
@@ -296,7 +296,7 @@ const Login = () => {
               <button type="submit" className="login-btn" disabled={loading}>
                 {loading ? copy.loggingIn : copy.loginButton}
               </button>
-              <a href="#contact" onClick={handleContactClick} className='login-small' rel="noopener noreferrer">
+              <a href="/signup" className='login-small' rel="noopener noreferrer">
                 {copy.contactLink}
               </a>
               {successMessage && <p className="login-success">{successMessage}</p>}

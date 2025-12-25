@@ -9,7 +9,6 @@ const Question = ({
   onNextQuestion, 
   onPreviousQuestion, 
   onFinishQuiz, 
-  isTrial,
   timeRemaining,
   timerMinutes
 }) => {
@@ -28,14 +27,6 @@ const Question = ({
 
   return (
     <div className="quiz-container-card">
-      {/* Trial User Notice */}
-      {isTrial && (
-        <div className="trial-quiz-notice">
-          <span className="trial-emoji">🎯</span>
-          <span className="trial-text">Free Trial Mode</span>
-        </div>
-      )}
-      
       {/* Timer Display */}
       {timerMinutes && (
         <div className="timer-display" style={{ color: getTimerColor() }}>

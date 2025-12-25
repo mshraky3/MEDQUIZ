@@ -12,8 +12,6 @@ import Analysis from './components/analysis/Analysis.jsx'
 import WrongQuestions from './components/analysis/WrongQuestions.jsx';
 import Admin from './components/ADD/Admin.jsx';
 import Bank from './components/ADD/Bank.jsx';
-import AnalysisTemp from './components/login/AnalysisTemp.jsx';
-import TempQUIZ from './components/login/TempQUIZ.jsx';
 import Signup from './components/signup/Signup.jsx';
 import TempLinks from './components/ADD/TempLinks.jsx';
 import Contact from './components/contact/Contact.jsx';
@@ -48,11 +46,6 @@ const router = createBrowserRouter([
     errorElement: <ErrorBoundary />,
   },
   {
-    path: "/temp-quiz/:numQuestions",
-    element: <Layout><TempQUIZ /></Layout>,
-    errorElement: <ErrorBoundary />,
-  },
-  {
     path: "/quiz/:numQuestions",
     element: <Layout><QUIZ /></Layout>,
     errorElement: <ErrorBoundary />,
@@ -70,11 +63,6 @@ const router = createBrowserRouter([
   {
     path: "/wrong-questions",
     element: <Layout><WrongQuestions /></Layout>,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/analysis-temp",
-    element: <Layout><AnalysisTemp /></Layout>,
     errorElement: <ErrorBoundary />,
   },
   {

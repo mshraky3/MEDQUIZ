@@ -16,7 +16,6 @@ const QUIZ = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const id = location.state?.id;
-  const isTrial = location.state?.isTrial || false;
   const [questions, setQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
@@ -106,8 +105,8 @@ const QUIZ = () => {
           source: source 
         };
         
-        // Add userId for progress filtering (non-trial users only)
-        if (!isTrial && id) {
+        // Add userId for progress filtering
+        if (id) {
           params.userId = id;
         }
         
@@ -115,8 +114,8 @@ const QUIZ = () => {
         let endpoint, response;
         
         if (isFinalQuiz) {
-          // Final quiz is only for authenticated users, not trial users
-          if (isTrial || !user || !sessionToken) {
+          // Final quiz is only for authenticated users
+          if (!user || !sessionToken) {
             setError("Final Quiz is only available for authenticated users.");
             setLoading(false);
             return;
@@ -140,7 +139,7 @@ const QUIZ = () => {
           });
         } else {
           // Regular quiz endpoint
-          endpoint = isTrial ? '/free-trial/questions' : '/api/questions';
+          endpoint = '/api/questions';
           response = await protectedGet(`${Globals.URL}${endpoint}`, {
             params: params
           });
@@ -161,7 +160,7 @@ const QUIZ = () => {
     };
 
     fetchQuestions();
-  }, [numQuestions, navigate, isTrial, types, source, id, retryCount]);
+  }, [numQuestions, navigate, types, source, id, retryCount]);
 
   const handleRetry = () => {
     setError(null);
@@ -238,23 +237,6 @@ const QUIZ = () => {
     setSelectedAnswer(questionAnswers[currentQuestionIndex] || null);
   }, [currentQuestionIndex, questionAnswers]);
 
-  useEffect(() => {
-    // Save trial answers for analysis
-    if (isTrial && quizFinished && Object.keys(questionAnswers).length === questions.length) {
-      const trialAnswers = questions.map((question, index) => {
-        const selectedAnswer = questionAnswers[index];
-        const isCorrect = selectedAnswer === question.correct_option;
-        return {
-          question: question.question_text,
-          selected: selectedAnswer,
-          correct: question.correct_option,
-          isCorrect,
-          topic: question.question_type
-        };
-      });
-      window.sessionStorage.setItem('trialAnswers', JSON.stringify(trialAnswers));
-    }
-  }, [isTrial, quizFinished, questionAnswers, questions]);
 
   useEffect(() => {
     const sendQuizData = async () => {
@@ -292,7 +274,7 @@ const QUIZ = () => {
         if (isFinalQuiz) {
           endpoint = '/final-quiz/submit';
         } else {
-          endpoint = isTrial ? '/free-trial/quiz-sessions' : '/quiz-sessions';
+          endpoint = '/quiz-sessions';
         }
         const questionIds = questions.map(q => q.id);
         let sessionData;
@@ -328,18 +310,6 @@ const QUIZ = () => {
               timestamp: new Date().toISOString()
             }
           };
-        } else if (isTrial) {
-          sessionData = {
-            trialId: id,
-            total_questions: totalQuestions,
-            correct_answers: correctCount,
-            quiz_accuracy: parseFloat(accuracy),
-            duration,
-            avg_time_per_question: parseFloat((duration / totalQuestions).toFixed(2)),
-            topics_covered: topicsCovered,
-            source: source === 'mix' ? 'general' : source,
-            question_ids: questionIds
-          };
         } else {
           sessionData = {
             user_id: id,
@@ -361,33 +331,23 @@ const QUIZ = () => {
         if (!isFinalQuiz) {
           const attemptPromises = finalAnswers.map((answer, index) => {
             const question = questions[index];
-            const attemptData = isTrial
-              ? {
-                  trialId: id,
-                  question_id: question.id,
-                  selected_option: answer.selected,
-                  is_correct: answer.isCorrect,
-                  time_taken: Math.floor(duration / totalQuestions),
-                  quiz_session_id: quiz_session_id
-                }
-              : {
-                  user_id: id,
-                  question_id: question.id,
-                  selected_option: answer.selected,
-                  is_correct: answer.isCorrect,
-                  time_taken: Math.floor(duration / totalQuestions),
-                  quiz_session_id: quiz_session_id
-                };
+            const attemptData = {
+              user_id: id,
+              question_id: question.id,
+              selected_option: answer.selected,
+              is_correct: answer.isCorrect,
+              time_taken: Math.floor(duration / totalQuestions),
+              quiz_session_id: quiz_session_id
+            };
 
-            const attemptEndpoint = isTrial ? '/free-trial/question-attempts' : '/question-attempts';
-            return protectedPost(`${Globals.URL}${attemptEndpoint}`, attemptData);
+            return protectedPost(`${Globals.URL}/question-attempts`, attemptData);
           });
 
           await Promise.all(attemptPromises);
         }
 
-        // Update topic analysis for non-trial users (skip for final quiz)
-        if (!isTrial && !isFinalQuiz) {
+        // Update topic analysis (skip for final quiz)
+        if (!isFinalQuiz) {
           const topicAnalysisPromises = topicsCovered.map(topic => {
             const topicQuestions = questions.filter(q => q.question_type === topic);
             const topicAnswers = finalAnswers.filter((_, index) => questions[index].question_type === topic);
@@ -413,7 +373,7 @@ const QUIZ = () => {
     };
 
     sendQuizData();
-  }, [quizFinished, questionAnswers, questions, id, dataSent, isTrial, finalDuration]);
+  }, [quizFinished, questionAnswers, questions, id, dataSent, finalDuration]);
 
   if (loading) {
     return <Loading />;
@@ -456,7 +416,6 @@ const QUIZ = () => {
         accuracy={accuracy}
         duration={duration}
         answers={finalAnswers}
-        isTrial={isTrial}
         isFinalQuiz={isFinalQuiz}
         userId={id}
         onRetry={() => {
@@ -472,8 +431,7 @@ const QUIZ = () => {
         }}
         onBackToQuizs={() => navigate('/quizs', { 
           state: { 
-            id: id, 
-            isTrial: isTrial 
+            id: id
           } 
         })}
       />
@@ -493,7 +451,6 @@ const QUIZ = () => {
         onNextQuestion={handleNextQuestion}
         onPreviousQuestion={handlePreviousQuestion}
         onFinishQuiz={handleFinishQuiz}
-        isTrial={isTrial}
         timeRemaining={timeRemaining}
         timerMinutes={timerMinutes}
       />

@@ -14,7 +14,6 @@ const QUIZS = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const id = user?.id || location.state?.id || location.state?.user?.id;
-    const isTrial = location.state?.isTrial || false;
     const [currentStreak, setCurrentStreak] = useState(0);
     const [showSourceSelector, setShowSourceSelector] = useState(false);
     const [showTypeSelector, setShowTypeSelector] = useState(false);
@@ -89,7 +88,7 @@ const QUIZS = () => {
         setShowTypeSelector(true);
         
         // Check if user has completed this source for any type
-        if (!isTrial && id) {
+        if (id) {
             await checkCompletionForSource(source);
         }
     };
@@ -131,8 +130,7 @@ const QUIZS = () => {
         
         setShowTimerSelector(false);
         
-        // Use different routes for trial vs regular users
-        const quizRoute = isTrial ? `/temp-quiz/${numQuestions}` : `/quiz/${numQuestions}`;
+        const quizRoute = `/quiz/${numQuestions}`;
         console.log('Navigating to:', quizRoute);
         
         navigate(quizRoute, {
@@ -140,7 +138,6 @@ const QUIZS = () => {
                 id: id, 
                 types: typesStr,
                 source: selectedSource,
-                isTrial: isTrial,
                 timer: timerMinutes
             }
         });
@@ -209,7 +206,6 @@ const QUIZS = () => {
                 types: selectedFinalType,
                 source: selectedFinalSource,
                 timer: timeLimit,
-                isTrial: isTrial,
                 isFinalQuiz: true
             }
         });
@@ -230,7 +226,6 @@ const QUIZS = () => {
                 types: selectedFinalType,
                 source: selectedFinalSource,
                 timer: finalQuizTimeLimit,
-                isTrial: isTrial,
                 isFinalQuiz: true
             }
         });
@@ -412,7 +407,7 @@ const QUIZS = () => {
 
     useEffect(() => {
         const fetchStreaks = async () => {
-            if (!id || isTrial) return; // Don't fetch streaks for trial users
+            if (!id) return;
             if (!user || !sessionToken) return; // Don't fetch if not authenticated
             try {
                 const response = await protectedGet(`${Globals.URL}/user-streaks/${id}`);
@@ -422,7 +417,7 @@ const QUIZS = () => {
             }
         };
         fetchStreaks();
-    }, [id, isTrial, user, sessionToken, setUser]);
+    }, [id, user, sessionToken, setUser]);
 
     return (
         <>
@@ -435,24 +430,16 @@ const QUIZS = () => {
                 structuredData={structuredData}
             />
                 <div className="quiz-selection">
-                {/* Streak Badge - Only show for non-trial users */}
-                {!isTrial && (
+                {/* Streak Badge */}
+                {id && (
                     <div className="streak-badge">
                         <span className="streak-emoji">🔥</span>
                         <span className="streak-count">{currentStreak}</span>
                     </div>
                 )}
 
-                {/* Achievement Badges - Only show for non-trial users */}
-                {!isTrial && <AchievementBadges userId={id} />}
-
-                {/* Trial User Notice */}
-                {isTrial && (
-                    <div className="trial-notice">
-                        <span className="trial-emoji">🎯</span>
-                        <span className="trial-text">Free Trial Mode - 40+ Sample Questions Available</span>
-                    </div>
-                )}
+                {/* Achievement Badges */}
+                {id && <AchievementBadges userId={id} />}
 
                 <h1>Choose Your Quiz</h1>
 
@@ -466,7 +453,7 @@ const QUIZS = () => {
                             {num === 'custom' ? 'Custom Number' : `${num} Questions`}
                         </button>
                     ))}
-                    {!isTrial && user && sessionToken && (
+                    {user && sessionToken && (
                         <button
                             className="quiz-option-btn final-quiz-btn"
                             onClick={handleFinalQuizClick}
@@ -476,8 +463,8 @@ const QUIZS = () => {
                     )}
                 </div>
 
-                {/* Analysis button - Only show for non-trial users */}
-                {!isTrial && (
+                {/* Analysis button */}
+                {id && (
                     <button
                         className="analysis-btn"
                         onClick={() => navigate('/analysis', { state: { id: id } })}
@@ -492,11 +479,6 @@ const QUIZS = () => {
                     <div className="custom-source-selector-modal">
                         <div className="custom-modal-content">
                             <h2>Select Question Source</h2>
-                            {isTrial && (
-                                <p className="trial-modal-notice">
-                                    🎯 Free trial includes questions from all sources
-                                </p>
-                            )}
                             <div className="custom-source-buttons">
                                 {availableSources.map((source) => (
                                     <button
@@ -525,11 +507,6 @@ const QUIZS = () => {
                             <p className="source-info">
                                 📚 Source: <strong>{selectedSource}</strong>
                             </p>
-                            {isTrial && (
-                                <p className="trial-modal-notice">
-                                    🎯 Free trial includes questions from all selected types
-                                </p>
-                            )}
                             <div className="custom-checkbox-group">
                                 {availableTypes.map((type) => (
                                     <label key={type}>
