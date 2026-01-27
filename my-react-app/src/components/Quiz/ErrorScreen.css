@@ -7,23 +7,31 @@
   min-height: 400px;
   text-align: center;
   padding: 2rem;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .error-icon {
   font-size: 4rem;
   margin-bottom: 1rem;
-  opacity: 0.8;
+  opacity: 0.9;
 }
 
 .error-content h2 {
-  color: #e74c3c;
+  color: #f87171;
   font-size: 1.8rem;
   margin-bottom: 0.5rem;
   font-weight: 600;
 }
 
 .error-content p {
-  color: #666;
+  color: #94a3b8;
   font-size: 1rem;
   margin-bottom: 2rem;
   max-width: 400px;
@@ -37,10 +45,11 @@
   justify-content: center;
 }
 
-.retry-button, .back-button {
+.retry-button,
+.back-button {
   padding: 12px 24px;
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
@@ -49,27 +58,29 @@
 }
 
 .retry-button {
-  background: linear-gradient(135deg, #00b6e0 0%, #007bff 100%);
-  color: white;
-  box-shadow: 0 4px 15px rgba(0, 182, 224, 0.3);
+  background: linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%);
+  color: #0f172a;
+  box-shadow: 0 4px 15px rgba(34, 211, 238, 0.3);
 }
 
 .retry-button:hover {
-  background: linear-gradient(135deg, #009acb 0%, #0069d9 100%);
+  background: linear-gradient(135deg, #67e8f9 0%, #22d3ee 100%);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 182, 224, 0.4);
+  box-shadow: 0 6px 20px rgba(34, 211, 238, 0.4);
 }
 
 .back-button {
-  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
-  color: white;
-  box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+  background: rgba(255, 255, 255, 0.05);
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 .back-button:hover {
-  background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
+  background: rgba(255, 255, 255, 0.1);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  border-color: rgba(255, 255, 255, 0.25);
 }
 
 /* Responsive Design */
@@ -78,25 +89,26 @@
     min-height: 300px;
     padding: 1rem;
   }
-  
+
   .error-icon {
     font-size: 3rem;
   }
-  
+
   .error-content h2 {
     font-size: 1.5rem;
   }
-  
+
   .error-content p {
     font-size: 0.9rem;
   }
-  
+
   .error-actions {
     flex-direction: column;
     gap: 0.8rem;
   }
-  
-  .retry-button, .back-button {
+
+  .retry-button,
+  .back-button {
     width: 100%;
     padding: 14px 24px;
   }

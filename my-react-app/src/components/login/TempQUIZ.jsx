@@ -14,18 +14,18 @@ const TempQUIZ = () => {
   // Filter questions based on selected types and source
   const getFilteredQuestions = () => {
     let filtered = trialQuestions;
-    
+
     // Filter by types if specified
     if (selectedTypes && selectedTypes !== 'mix') {
       const typesArray = selectedTypes.split(',');
       filtered = filtered.filter(q => typesArray.includes(q.question_type));
     }
-    
+
     // Filter by source if specified
     if (selectedSource) {
       filtered = filtered.filter(q => q.source === selectedSource);
     }
-    
+
     return filtered;
   };
 
@@ -50,7 +50,7 @@ const TempQUIZ = () => {
     script.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9286976335875618";
     script.crossOrigin = "anonymous";
     document.head.appendChild(script);
-    
+
     return () => {
       // Cleanup script when component unmounts
       const existingScript = document.querySelector(`script[src="${script.src}"]`);
@@ -105,7 +105,7 @@ const TempQUIZ = () => {
   );
 };
 
-// Question Component
+// Question Component - Has substantial content, can show ads
 const Question = ({ currentQuestion, currentIndex, totalQuestions, selectedAnswer, onSelectOption, onSubmitAnswer }) => (
   <div className="quiz-container">
     <div className="progress">Question <strong>{currentIndex + 1}</strong> of <strong>{totalQuestions}</strong></div>
@@ -132,14 +132,19 @@ const Question = ({ currentQuestion, currentIndex, totalQuestions, selectedAnswe
         {currentIndex + 1 < totalQuestions ? "Next Question" : "Finish Quiz"}
       </button>
     </div>
+    {/* Ad only shows when there's substantial question content visible */}
     <GoogleAd />
   </div>
 );
 
-// Loading Component
+// Loading Component - NO ADS (AdSense policy: no ads on loading screens)
 const Loading = () => (
   <div className="quiz-container">
-    <h2>Loading questions...</h2>
+    <div className="loading-content">
+      <h2>Loading questions...</h2>
+      <p>Preparing your quiz experience...</p>
+    </div>
+    {/* NO GoogleAd here - loading screens must not have ads per AdSense policy */}
   </div>
 );
 
@@ -164,7 +169,7 @@ const Result = ({ answers, navigate, id, quizStartTime, questions, selectedTypes
       <p>You got <strong>{correctCount}</strong> out of <strong>{totalQuestions}</strong> correct.</p>
       <p>Accuracy: <strong>{((correctCount / totalQuestions) * 100).toFixed(1)}%</strong></p>
       <p>Time taken: <strong>{Math.floor(duration / 60)}m {duration % 60}s</strong></p>
-      
+
       <div className="trial-result-info">
         <p>🎯 <strong>Free Trial Complete!</strong></p>
         <p>You've experienced {totalQuestions} sample questions from our collection.</p>
@@ -180,20 +185,20 @@ const Result = ({ answers, navigate, id, quizStartTime, questions, selectedTypes
         <button onClick={handleGetAccountClick} className="subscribe-button">
           🚀 Contact Us for Full Access
         </button>
-        
+
         <button className="contact-button" onClick={handleContactUs}>
           📧 Contact Us
         </button>
 
-        <button className="analysis-button" onClick={() => navigate("/analysis-temp", { 
-          state: { 
-            id, 
-            answers, 
-            questions, 
+        <button className="analysis-button" onClick={() => navigate("/analysis-temp", {
+          state: {
+            id,
+            answers,
+            questions,
             duration,
             types: selectedTypes,
             source: selectedSource
-          } 
+          }
         })}>
           📊 View Analysis
         </button>

@@ -1,403 +1,315 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Landing.css';
 import SEO from '../common/SEO';
 import useLang from '../../hooks/useLang';
-import andriodVideo from './videos/andriod.mp4';
-import iosVideo from './videos/ios.mp4';
 
+const stats = [
+  { labelEn: 'Questions', labelAr: 'سؤال', value: '8,000+' },
+  { labelEn: 'Always Free', labelAr: 'مجاني للأبد', value: 'FREE' },
+  { labelEn: 'Daily Practice', labelAr: 'تدريب يومي', value: '24/7' },
+  { labelEn: 'Topics Covered', labelAr: 'مواضيع مغطاة', value: '40+' }
+];
 
+const features = [
+  {
+    icon: '📚',
+    titleEn: 'Full SMLE coverage',
+    titleAr: 'تغطية كاملة لاختبار SMLE',
+    descEn: 'Curated bank mapped to the latest Prometric blueprint with clinical context.',
+    descAr: 'بنك أسئلة منسق وفق أحدث مخطط برومترك مع سياق سريري واضح.'
+  },
+  {
+    icon: '📈',
+    titleEn: 'Analytics that guide',
+    titleAr: 'تحليلات موجهة',
+    descEn: 'Track weak topics, pace, and accuracy with clean dashboards.',
+    descAr: 'تتبع نقاط الضعف والسرعة والدقة عبر لوحات واضحة.'
+  },
+  {
+    icon: '🎯',
+    titleEn: 'Adaptive practice',
+    titleAr: 'تدريب متكيف',
+    descEn: 'Targeted drills, timed mocks, and smart review sessions.',
+    descAr: 'تمارين موجهة، محاكاة زمنية، ومراجعة ذكية.'
+  },
+  {
+    icon: '🧠',
+    titleEn: 'Clinical reasoning',
+    titleAr: 'تفكير سريري',
+    descEn: 'Case-based stems that teach decision making, not memorization.',
+    descAr: 'سيناريوهات سريرية تركز على اتخاذ القرار لا الحفظ.'
+  }
+];
 
+const steps = [
+  {
+    labelEn: 'Create your free workspace',
+    labelAr: 'أنشئ حسابك المجاني',
+    hintEn: 'Sign up in seconds and keep everything synced.',
+    hintAr: 'سجّل خلال ثوانٍ وكل شيء يبقى متزامناً.'
+  },
+  {
+    labelEn: 'Practice with precision',
+    labelAr: 'تمرن بدقة',
+    hintEn: 'Pick topics, set timers, and focus on the exact competencies you need.',
+    hintAr: 'اختر المواضيع، اضبط الوقت، وركّز على المهارات المطلوبة.'
+  },
+  {
+    labelEn: 'Review and improve',
+    labelAr: 'راجع وتحسّن',
+    hintEn: 'Instant analytics, streaks, and personalized recommendations.',
+    hintAr: 'تحليلات فورية، سلاسل إنجاز، وتوصيات مخصصة.'
+  }
+];
 
 const Landing = () => {
   const [lang, setLang] = useLang();
   const isArabic = lang === 'ar';
   const navigate = useNavigate();
-  const [showIOSInstructions, setShowIOSInstructions] = useState(false);
-  const [showAndroidInstructions, setShowAndroidInstructions] = useState(false);
-  
-  const handleSignup = () => {
-    navigate('/signup');
-  };
 
-
+  const handleSignup = () => navigate('/signup');
+  const handleLogin = () => navigate('/login');
+  const toggleLanguage = () => setLang((prev) => (prev === 'ar' ? 'en' : 'ar'));
 
   useEffect(() => {
-    // Only set document direction when on landing page
-    // Store original direction to restore later
     const originalDir = document.documentElement.dir;
     document.documentElement.dir = isArabic ? 'rtl' : 'ltr';
-    
-    // Cleanup function to restore original direction when component unmounts
     return () => {
       document.documentElement.dir = originalDir || 'ltr';
     };
-  }, [lang, isArabic]);
-
-  // Scroll-triggered animations
-  useEffect(() => {
-    const observerOptions = {
-      threshold: 0.1,
-      rootMargin: '0px 0px -50px 0px'
-    };
-
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('fade-in-visible');
-        }
-      });
-    }, observerOptions);
-
-    // Observe all sections
-    const sections = document.querySelectorAll('.fade-in-section');
-    sections.forEach((section) => observer.observe(section));
-
-    return () => {
-      sections.forEach((section) => observer.unobserve(section));
-    };
-  }, []);
-
-
-  
-
-  
-
-
-  const handleLogin = () => {
-    navigate('/login');
-  };
-
-  const toggleLanguage = () => {
-    setLang((prev) => (prev === 'ar' ? 'en' : 'ar'));
-  };
+  }, [isArabic]);
 
   return (
     <>
-      <SEO 
-        title={isArabic ? "منصة برومترك (SMLE) الشاملة" : "Ultimate SMLE (Prometric) Prep Platform"}
-        description={isArabic
-          ? "استعد لاختبار البرومترك السعودي (SMLE) مع مجموعتنا الشاملة التي تضم أكثر من 8000 سؤال دقيق وتحليلات مفصلة. حساب مجاني بالكامل."
-          : "Master the Saudi Medical Licensing Examination (SMLE) and Prometric with SQB. Access over 8,000 carefully curated questions with detailed analytics. Completely free account."}
-        keywords="SMLE, Prometric, Saudi Medical Licensing Examination, medical questions, medical quiz, medical exam preparation, Saudi medical license, medical board exam, medical practice test, medical study guide, Saudi medical students, free, Prometric questions, Prometric Saudi, برومترك, اسئلة برومترك, اسئلة اختبار البرومترك, اسئلة الهيئة السعودية للتخصصات الصحية, بنك اسئلة برومترك, بنك اسئلة SMLE, تجميعات برومترك, تجميعات SMLE, اختبار البرومترك, اختبار الهيئة السعودية, اسئلة طبية, بنك اسئلة طبية, تدريب برومترك, تدريب SMLE, اسئلة امتحان برومترك, اسئلة امتحان SMLE, اسئلة طبية سعودية, اسئلة طبية برومترك, Saudi Prometric, Prometric exam, Prometric practice, Prometric medicine, Prometric Saudi Arabia, Saudi Prometric questions, Saudi Prometric bank, Saudi Prometric practice, Saudi Prometric free, Saudi Prometric preparation, Saudi Prometric online, Saudi Prometric MCQ, Saudi Prometric test, Saudi Prometric review, Saudi Prometric study, Saudi Prometric guide, Saudi Prometric analytics, Saudi Prometric performance, Saudi Prometric topics, Saudi Prometric mobile, Saudi Prometric 2024, Saudi Prometric 2025"
+      <SEO
+        title={isArabic ? 'منصة برومترك (SMLE) الشاملة' : 'Ultimate SMLE (Prometric) Prep Platform'}
+        description={
+          isArabic
+            ? 'استعد لاختبار البرومترك السعودي (SMLE) مع مجموعتنا الشاملة التي تضم أكثر من 8000 سؤال دقيق وتحليلات مفصلة. حساب مجاني بالكامل.'
+            : 'Master the Saudi Medical Licensing Examination (SMLE) with SQB. Access over 8,000 questions and modern analytics for free.'
+        }
+        keywords="SMLE, Prometric, Saudi Medical Licensing Examination, medical questions, medical quiz, medical exam preparation, Saudi medical license, medical board exam, medical practice test, medical study guide, Saudi medical students, free"
         url="https://www.smle-question-bank.com"
         lang={lang}
       />
-      <div className="landing-body" dir={isArabic ? "rtl" : "ltr"}>
+      <div className="landing-body" dir={isArabic ? 'rtl' : 'ltr'}>
         <div className="landing-lang-toggle">
-          <button 
-            type="button" 
-            className="lang-toggle-btn" 
+          <button
+            type="button"
+            className="lang-toggle-btn"
             onClick={toggleLanguage}
-            aria-label={isArabic ? "Switch to English" : "التبديل إلى العربية"}
+            aria-label={isArabic ? 'Switch to English' : 'التبديل إلى العربية'}
           >
             <span className="lang-toggle-icon" role="img" aria-hidden="true">🌐</span>
             <span className="lang-toggle-text">{isArabic ? 'EN' : 'ع'}</span>
           </button>
         </div>
-        {/* Decorative SVG Wave at the Top */}
-        <div className="landing-top-wave" dir="ltr">
-          <svg viewBox="0 0 2880 180" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-            <g className="wave-anim-group">
-              <path d="M0,80 C360,180 1080,0 1440,100 L1440,0 L0,0 Z" fill="#00b6e0" fillOpacity="0.10" />
-              <path d="M0,80 C360,180 1080,0 1440,100 L1440,0 L0,0 Z" fill="#00b6e0" fillOpacity="0.10" transform="scale(-1,1) translate(-2880,0)" />
-            </g>
-          </svg>
-        </div>
-        {/* Faint Background Icon */}
-        <div className="landing-bg-icon">?</div>
-        <div className="landing-wrapper landing-main-container">
-          {/* Badge Above Main Title */}
-          <div className="landing-badge">
-            {isArabic ? "الأفضل  لاختبار البرومترك" : "#1 Free SMLE (Prometric) Prep"}
-          </div>
-          {/* Header Section */}
-          <div className="landing-header fade-in-section">
-            <div className="landing-logo-container">
-              <img src="/tab_logo.png" alt="SQB Logo" className="landing-logo" />
-            </div>
-            <h1 className="landing-main-title">
-              SQB{isArabic && <><br/><span style={{fontWeight:'normal',fontSize:'22px'}}>منصة SQB التعليمية المتخصصة</span></>}
-            </h1>
-            <h2 className="landing-subtitle">
-              {isArabic ? "منصتك التعليمية الشاملة لاختبار البرومترك (SMLE)" : "Your Ultimate SMLE (Prometric) Learning Platform"}
-            </h2>
-            <p className="landing-description">
-              {isArabic
-                ? "استعد لاختبار البرومترك السعودي (SMLE) مع منصتنا التعليمية الشاملة التي تضم أكثر من 8000 سؤال دقيق"
-                : "Master the Saudi Medical Licensing Examination (SMLE) with our comprehensive educational platform featuring over 8,000 carefully curated questions"}
-            </p>
-            <div className="landing-cta-section">
-              <div className="landing-cta-primary">
-                <button className="landing-btn primary cta-main" onClick={handleSignup}>
-                  <img src="https://img.icons8.com/?size=100&id=45870&format=png&color=FFFFFF" alt="Rocket" className="cta-icon" />
-                  <span>{isArabic ? "إنشاء حساب مجاني" : "Create Free Account"}</span>
-                </button>
-                <p className="cta-subtext">
-                  {isArabic ? "ابدأ رحلتك نحو النجاح في اختبار البرومترك" : "Start your journey to SMLE success"}
-                </p>
-              </div>
-              <div className="landing-cta-secondary">
-                <button className="landing-btn secondary" onClick={handleLogin}>
-                  {isArabic ? "تسجيل الدخول" : "Login"}
-                </button>
-              </div>
-            </div>
-          </div>
-          <hr className="section-divider thick" />
-          {/* Features Section - No Pricing */}
-          <div className="landing-pricing fade-in-section">
-            <div className="pricing-badge">
-              <span className="pricing-label">
-                <img src="https://img.icons8.com/?size=100&id=45870&format=png&color=000000" alt="Free" className="pricing-badge-icon" />
-                {isArabic ? "مجاني بالكامل" : "Completely Free"}
-                <img src="https://img.icons8.com/?size=100&id=45870&format=png&color=000000" alt="Free" className="pricing-badge-icon" />
+
+        <div className="landing-shell">
+          <section className="hero">
+            <div className="hero-copy">
+              <span className="pill">
+                {isArabic ? 'منصة SMLE' : 'SMLE platform'}
               </span>
+              <h1>
+                {isArabic
+                  ? 'تجربة تدريب على برومترك حديثة، منظمة، ومجانية'
+                  : 'A modern, organized, and free Prometric prep experience'}
+              </h1>
+              <p>
+                {isArabic
+                  ? 'تعلم بوضوح: أسئلة دقيقة، تحليلات فورية، ومسارات تدريب منظمة تضعك في وضع الاختبار منذ اليوم الأول.'
+                  : 'Learn with clarity: precise questions, instant analytics, and organized training tracks that put you in exam mode from day one.'}
+              </p>
+              <div className="cta-row">
+                <button className="btn primary" onClick={handleSignup}>
+                  {isArabic ? 'ابدأ مجاناً الآن' : 'Start free now'}
+                </button>
+                <button className="btn ghost" onClick={handleLogin}>
+                  {isArabic ? 'تسجيل الدخول' : 'Login'}
+                </button>
+              </div>
+              <div className="trust-bar">
+                <span>{isArabic ? 'مهيأة للجوال • تدعم العربية بالكامل' : 'Mobile-ready • Fully supports Arabic'}</span>
+                <span>•</span>
+                <span>{isArabic ? 'لا قيود على المحتوى' : 'No content paywalls'}</span>
+              </div>
             </div>
-            <div className="pricing-card">
-              <div className="pricing-header">
-                <h3>
-                  {isArabic ? "حساب مجاني" : "Free Account"}
-                </h3>
-                <div className="price">
-                  <span className="currency">{isArabic ? "مجاني" : "FREE"}</span>
-                  <span className="amount"></span>
-                  <span className="period">{isArabic ? "للأبد" : "FOREVER"}</span>
+
+            <div className="hero-panel">
+              <div className="panel-chip">{isArabic ? 'لوحة أداء مباشرة' : 'Live performance panel'}</div>
+              <div className="panel-card">
+                <div className="panel-metric">
+                  <div className="metric-label">{isArabic ? 'الدقة' : 'Accuracy'}</div>
+                  <div className="metric-value">86%</div>
+                  <div className="metric-delta positive">+6%</div>
                 </div>
-                <p className="pricing-subtitle">
-                  {isArabic 
-                    ? "منصة مجانية بالكامل للوصول إلى جميع الأسئلة والتحليلات."
-                    : "Completely free platform with access to all questions and analytics."}
-                </p>
-              </div>
-              <div className="pricing-features">
-                <div className="pricing-feature">
-                  <span className="feature-check">✓</span>
-                  <span>{isArabic ? "الوصول إلى جميع الأسئلة (8000+)" : "Access to all 8,000+ questions"}</span>
+                <div className="panel-metric">
+                  <div className="metric-label">{isArabic ? 'وقت السؤال' : 'Per question'}</div>
+                  <div className="metric-value">41s</div>
+                  <div className="metric-delta neutral">=</div>
                 </div>
-                <div className="pricing-feature">
-                  <span className="feature-check">✓</span>
-                  <span>{isArabic ? "تحليلات أداء مفصلة" : "Detailed performance analytics"}</span>
-                </div>
-                <div className="pricing-feature">
-                  <span className="feature-check">✓</span>
-                  <span>{isArabic ? "تدريب حسب الموضوع" : "Topic-wise practice sessions"}</span>
-                </div>
-                <div className="pricing-feature">
-                  <span className="feature-check">✓</span>
-                  <span>{isArabic ? "دخول غير محدود 24/7" : "24/7 unlimited access"}</span>
-                </div>
-                <div className="pricing-feature">
-                  <span className="feature-check">✓</span>
-                  <span>{isArabic ? "منصة متوافقة مع الجوال" : "Mobile-friendly platform"}</span>
+                <div className="panel-track">
+                  <div className="track-head">
+                    <span>{isArabic ? 'تقدم المواضيع' : 'Topic momentum'}</span>
+                    <span className="track-pill">{isArabic ? 'تحديث فوري' : 'Real-time'}</span>
+                  </div>
+                  <div className="track-bars">
+                    <div className="track-bar" style={{ width: '78%' }}>
+                      <span>{isArabic ? 'باطنية' : 'Internal Medicine'}</span>
+                      <strong>78%</strong>
+                    </div>
+                    <div className="track-bar" style={{ width: '64%' }}>
+                      <span>{isArabic ? 'أطفال' : 'Pediatrics'}</span>
+                      <strong>64%</strong>
+                    </div>
+                    <div className="track-bar" style={{ width: '52%' }}>
+                      <span>{isArabic ? 'جراحة' : 'Surgery'}</span>
+                      <strong>52%</strong>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <button className="landing-btn primary pricing-cta" onClick={handleSignup}>
-                <span>{isArabic ? "إنشاء حساب مجاني" : "Create Free Account"}</span>
-                <span className="cta-arrow">{isArabic ? "←" : "→"}</span>
+            </div>
+          </section>
+
+          <section className="feature-section">
+            <div className="section-head">
+              <p className="pill subtle">{isArabic ? 'منظم - حديث - واضح' : 'Organized · Modern · Clear'}</p>
+              <h2>{isArabic ? 'كل ما تحتاجه في صفحة واحدة أنيقة' : 'Everything you need, in one clean view'}</h2>
+              <p>
+                {isArabic
+                  ? 'صممنا الواجهة لتبقى بسيطاً في التنقل وغنياً في المحتوى — خطوات أقل، تركيز أعلى.'
+                  : 'We designed the experience to stay minimal in clicks and rich in clarity—fewer steps, sharper focus.'}
+              </p>
+            </div>
+            <div className="feature-grid">
+              {features.map((feature) => (
+                <div key={feature.titleEn} className="feature-card">
+                  <span className="feature-icon" aria-hidden="true">{feature.icon}</span>
+                  <h3>{isArabic ? feature.titleAr : feature.titleEn}</h3>
+                  <p>{isArabic ? feature.descAr : feature.descEn}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="mid-cta">
+            <div className="mid-cta-copy">
+              <h3>{isArabic ? 'ابدأ جلسة تدريب الآن' : 'Launch a practice session now'}</h3>
+              <p>
+                {isArabic
+                  ? 'انقر للانضمام فوراً، أو سجّل الدخول لاستكمال تقدمك على أي جهاز.'
+                  : 'Join instantly or log in to keep your progress synced across devices.'}
+              </p>
+            </div>
+            <div className="mid-cta-actions">
+              <button className="btn primary" onClick={handleSignup}>
+                {isArabic ? 'إنشاء حساب مجاني' : 'Create free account'}
+              </button>
+              <button className="btn ghost" onClick={handleLogin}>
+                {isArabic ? 'تسجيل الدخول' : 'Login'}
               </button>
             </div>
-          </div>
+          </section>
 
-          {/* Section Divider */}
-          <hr className="section-divider" />
-
-          {/* About Us Section */}
-          <div className="landing-about fade-in-section">
-            <h2>{isArabic ? "من نحن" : "About Us"}</h2>
-            <div className="about-content">
-              <div className="about-text">
+          <section className="flow-section">
+            <div className="flow-card">
+              <div className="flow-head">
+                <p className="pill subtle">{isArabic ? 'تدفق واضح' : 'Clear flow'}</p>
+                <h2>{isArabic ? 'ابدأ وتدرّب وراجع خلال دقائق' : 'Start, practice, and review in minutes'}</h2>
                 <p>
-                  {isArabic 
-                    ? "نحن فريق من المتخصصين في المجال الطبي والتقني، ملتزمون بتقديم منصة تعليمية حديثة للتحضير لاختبار البرومترك السعودي (SMLE). هدفنا هو مساعدة الطلاب والأطباء على النجاح في اختباراتهم من خلال محتوى تعليمي شامل وتحليلات مفصلة."
-                    : "We are a team of medical and technical specialists, committed to providing the leading educational platform for the Saudi Prometric (SMLE) exam. Our goal is to help students and doctors succeed through immersive learning content and detailed analytics."
-                  }
+                  {isArabic
+                    ? 'مسار بسيط يقودك من إنشاء الحساب إلى جلسات المراجعة الذكية دون تشتيت.'
+                    : 'A straightforward path that guides you from sign-up to smart review sessions without friction.'}
+                </p>
+              </div>
+              <div className="steps">
+                {steps.map((step, index) => (
+                  <div key={step.labelEn} className="step">
+                    <div className="step-index">0{index + 1}</div>
+                    <div>
+                      <h4>{isArabic ? step.labelAr : step.labelEn}</h4>
+                      <p>{isArabic ? step.hintAr : step.hintEn}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="flow-side">
+              <div className="side-card">
+                <h3>{isArabic ? 'تصميم يركز على الإجراءات' : 'Action-first design'}</h3>
+                <ul>
+                  <li>{isArabic ? 'CTA واضح في الأعلى والأسفل لبدء سريع.' : 'Primary CTAs at the top and bottom for fast start.'}</li>
+                  <li>{isArabic ? 'ألوان تباين عالية وخط واضح للحفاظ على التركيز.' : 'High-contrast palette and clean type to keep focus.'}</li>
+                  <li>{isArabic ? 'تخطيط شبكي منظم لعرض الميزات دون ازدحام.' : 'Structured grid layout that surfaces features without clutter.'}</li>
+                </ul>
+              </div>
+              <div className="side-card muted">
+                <h3>{isArabic ? 'دعم الهاتف والتطبيق' : 'Phone-first and app-friendly'}</h3>
+                <p>
+                  {isArabic
+                    ? 'واجهة مرنة، تعمل بسلاسة على المتصفح والجوال، مع دعم إضافة المنصة كشاشة رئيسية.'
+                    : 'Responsive layout that feels natural on web and mobile, ready to live on your home screen.'}
                 </p>
               </div>
             </div>
-          </div>
+          </section>
 
-
-
-          {/* Features Section */}
-          <div className="landing-features fade-in-section">
-            <div className="feature-card">
-              <div className="feature-icon">
-                <img src="https://img.icons8.com/?size=100&id=18693&format=png&color=000000" alt="Questions" />
+          <section className="cta-band">
+            <div className="cta-band-content">
+              <div>
+                <p className="pill subtle">{isArabic ? 'جاهز للبدء؟' : 'Ready to start?'}</p>
+                <h2>{isArabic ? 'ادخل وضع الاختبار اليوم' : 'Step into exam mode today'}</h2>
+                <p>
+                  {isArabic
+                    ? 'أنشئ حسابك المجاني، اختر تخصصك، وابدأ جلسة تدريب خلال أقل من دقيقتين.'
+                    : 'Create your free account, pick your specialty, and launch a practice session in under two minutes.'}
+                </p>
               </div>
-              <h3>{isArabic ? "منصة تضم أكثر من 8000 سؤال" : "Learning Platform with 8,000+ Questions"}</h3>
-              <p>{isArabic ? "منصة تعليمية شاملة تغطي جميع مواضيع البرومترك (SMLE) مع شروحات مفصلة" : "Comprehensive learning experience covering every SMLE topic with deep explanations"}</p>
-            </div>
-            <div className="feature-card">
-              <div className="feature-icon">
-                <img src="https://img.icons8.com/?size=100&id=rqxQtUue6iQU&format=png&color=000000" alt="Analytics" />
-              </div>
-              <h3>{isArabic ? "تحليلات مفصلة" : "Detailed Analytics"}</h3>
-              <p>{isArabic ? "تابع تقدمك مع تحليلات شاملة وتقسيم حسب الموضوع" : "Track your progress with comprehensive performance analysis and topic-wise breakdown"}</p>
-            </div>
-            <div className="feature-card">
-              <div className="feature-icon">
-                <img src="https://img.icons8.com/?size=100&id=rFihLhz2eItx&format=png&color=000000" alt="Training" />
-              </div>
-              <h3>{isArabic ? "تدريب موجه" : "Targeted Practice"}</h3>
-              <p>{isArabic ? "ركز على مواضيع محددة أو اختبر معلوماتك بشكل عام" : "Focus on specific topics or take mixed quizzes to test your overall knowledge"}</p>
-            </div>
-
-          </div>
-
-          {/* Section Divider */}
-          
-
-          {/* iOS Instructions Section */}
-          {showIOSInstructions && (
-            <div className="add-to-home-section important-section">
-              <h2>
-                <img 
-                  src="https://img.icons8.com/?size=100&id=30659&format=png&color=000000" 
-                  alt="iOS" 
-                  className="platform-icon"
-                />
-                {isArabic ? "كيفية إضافة الموقع إلى الشاشة الرئيسية - iOS" : "How to Add to Home Screen - iOS"}
-              </h2>
-              <div className="add-to-home-content">
-                <div className="add-to-home-instructions">
-                  <div className="add-to-home-platform ios-platform">
-                    <h3>
-                      <img 
-                        src="https://img.icons8.com/?size=100&id=30659&format=png&color=000000" 
-                        alt="iOS" 
-                        className="step-icon"
-                        style={{width: '20px', height: '20px', marginRight: '8px', verticalAlign: 'middle'}}
-                      />
-                      {isArabic ? "على أجهزة iPhone/iOS:" : "On iPhone/iOS:"}
-                    </h3>
-                    <ol>
-                      {isArabic ? (
-                        <>
-                          <li><span className="step-icon" role="img" aria-label="browser">🌐</span> افتح الموقع في متصفح <b>Safari</b>.</li>
-                          <li><span className="step-icon" role="img" aria-label="share">🔗</span> اضغط على زر المشاركة (المربع والسهم في الأسفل).</li>
-                          <li><span className="step-icon" role="img" aria-label="add">➕</span> اختر "إضافة إلى الشاشة الرئيسية".</li>
-                          <li><span className="step-icon" role="img" aria-label="home">🏠</span> اضغط "إضافة" وسيظهر الموقع على شاشتك الرئيسية.</li>
-                        </>
-                      ) : (
-                        <>
-                          <li><span className="step-icon" role="img" aria-label="browser">🌐</span> Open the website in <b>Safari</b> browser.</li>
-                          <li><span className="step-icon" role="img" aria-label="share">🔗</span> Tap the Share button (the square with an arrow at the bottom).</li>
-                          <li><span className="step-icon" role="img" aria-label="add">➕</span> Select "Add to Home Screen".</li>
-                          <li><span className="step-icon" role="img" aria-label="home">🏠</span> Tap "Add" and the site will appear on your home screen.</li>
-                        </>
-                      )}
-                    </ol>
-                    <div className="add-to-home-video">
-                      {/* iOS video tutorial */}
-                      <div className="responsive-video-wrapper">
-                        <video
-                          src={iosVideo}
-                          autoPlay
-                          loop
-                          muted
-                          playsInline
-                          controls={false}
-                          className="responsive-video"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              <div className="cta-actions">
+                <button className="btn primary" onClick={handleSignup}>
+                  {isArabic ? 'إنشاء حساب مجاني' : 'Create free account'}
+                </button>
+                <button className="btn outline" onClick={handleLogin}>
+                  {isArabic ? 'تسجيل الدخول' : 'I already have an account'}
+                </button>
               </div>
             </div>
-          )}
-
-          {/* Android Instructions Section */}
-          {showAndroidInstructions && (
-            <div className="add-to-home-section important-section">
-              <h2>
-                <img 
-                  src="https://img.icons8.com/?size=100&id=2586&format=png&color=000000" 
-                  alt="Android" 
-                  className="platform-icon"
-                />
-                {isArabic ? "كيفية إضافة الموقع إلى الشاشة الرئيسية - Android" : "How to Add to Home Screen - Android"}
-              </h2>
-              <div className="add-to-home-content">
-                <div className="add-to-home-instructions">
-                  <div className="add-to-home-platform android-platform">
-                    <h3>
-                      <img 
-                        src="https://img.icons8.com/?size=100&id=2586&format=png&color=000000" 
-                        alt="Android" 
-                        className="step-icon"
-                        style={{width: '20px', height: '20px', marginRight: '8px', verticalAlign: 'middle'}}
-                      />
-                      {isArabic ? "على أجهزة Android:" : "On Android:"}
-                    </h3>
-                    <ol>
-                      {isArabic ? (
-                        <>
-                          <li><span className="step-icon" role="img" aria-label="browser">🌐</span> افتح الموقع في متصفح <b>Chrome</b>.</li>
-                          <li><span className="step-icon" role="img" aria-label="menu">⋮</span> اضغط على النقاط الثلاث في أعلى يمين الشاشة.</li>
-                          <li><span className="step-icon" role="img" aria-label="add">➕</span> اختر "إضافة إلى الشاشة الرئيسية".</li>
-                          <li><span className="step-icon" role="img" aria-label="home">🏠</span> اضغط "إضافة" وسيظهر الموقع على شاشتك الرئيسية.</li>
-                        </>
-                      ) : (
-                        <>
-                          <li><span className="step-icon" role="img" aria-label="browser">🌐</span> Open the website in <b>Chrome</b> browser.</li>
-                          <li><span className="step-icon" role="img" aria-label="menu">⋮</span> Tap the three dots menu at the top right.</li>
-                          <li><span className="step-icon" role="img" aria-label="add">➕</span> Select "Add to Home screen".</li>
-                          <li><span className="step-icon" role="img" aria-label="home">🏠</span> Tap "Add" and the site will appear on your home screen.</li>
-                        </>
-                      )}
-                    </ol>
-                    <div className="add-to-home-video">
-                      {/* Android video tutorial */}
-                      <div className="responsive-video-wrapper">
-                        <video
-                          src={andriodVideo}
-                          autoPlay
-                          loop
-                          muted
-                          playsInline
-                          controls={false}
-                          className="responsive-video"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Section Divider */}
-          <hr className="section-divider" />
-
+          </section>
         </div>
-        {/* Stats + Footer Section */}
-        <div className="landing-stats fade-in-section">
-            <div className="stats-section">
-              <div className="stat-item">
-                <div className="stat-number">8,000+</div>
-                <div className="stat-label">{isArabic ? "سؤال" : "Questions"}</div>
-              </div>
-              <div className="stat-item">
-                <div className="stat-number">{isArabic ? "مجاني" : "FREE"}</div>
-                <div className="stat-label">{isArabic ? "للأبد" : "Forever"}</div>
-              </div>
-              <div className="stat-item">
-                <div className="stat-number">24/7</div>
-                <div className="stat-label">{isArabic ? "متاح دائماً" : "Available"}</div>
-              </div>
+
+        <div className="footer-wrapper">
+          <footer className="simple-footer">
+            <p>
+              {isArabic
+                ? <>© {new Date().getFullYear()} <strong>SQB</strong>. جميع الحقوق محفوظة.</>
+                : <>© {new Date().getFullYear()} <strong>SQB</strong>. All rights reserved.</>}
+            </p>
+            <div className="footer-links-row">
+              <a href="/privacy">{isArabic ? 'سياسة الخصوصية' : 'Privacy Policy'}</a>
+              <span>•</span>
+              <a href="/terms">{isArabic ? 'شروط الاستخدام' : 'Terms of Service'}</a>
+              <span>•</span>
+              <a href="/contact">{isArabic ? 'اتصل بنا' : 'Contact Us'}</a>
             </div>
-            <div className="footer-section">
-              <div className="footer-content">
-                <p className="footer-text">
-                  {isArabic 
-                    ? <>© {new Date().getFullYear()} <strong>SQB</strong>. جميع الحقوق محفوظة.</>
-                    : <>© {new Date().getFullYear()} <strong>SQB</strong>. All rights reserved.</>}
-                </p>
-              </div>
-            </div>
-          </div>
+            <p className="footer-disclaimer-text">
+              {isArabic
+                ? 'منصة تعليمية غير تابعة لـ Prometric أو SCFHS'
+                : 'Educational platform not affiliated with Prometric or SCFHS'}
+            </p>
+          </footer>
+        </div>
+
+        <div className="mobile-cta">
+          <button className="btn primary" onClick={handleSignup}>
+            {isArabic ? 'ابدأ مجاناً' : 'Start free'}
+          </button>
+          <button className="btn outline" onClick={handleLogin}>
+            {isArabic ? 'دخول' : 'Login'}
+          </button>
+        </div>
       </div>
     </>
   );

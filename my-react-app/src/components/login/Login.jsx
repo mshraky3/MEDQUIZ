@@ -58,7 +58,7 @@ const Login = () => {
       script.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9286976335875618";
       script.crossOrigin = "anonymous";
       document.head.appendChild(script);
-      
+
       return () => {
         // Cleanup script when component unmounts
         const existingScript = document.querySelector(`script[src="${script.src}"]`);
@@ -235,8 +235,7 @@ const Login = () => {
 
   return (
     <>
-      <Navbar />
-      <SEO 
+      <SEO
         title={isArabic ? "تسجيل الدخول - منصة SQB للتحضير لاختبار SMLE" : "Login - Access Your SMLE Prep Account"}
         description={isArabic
           ? "سجّل دخولك للوصول إلى أسئلة SQB التدريبية، والتحليلات المتقدمة، وأدوات التحضير الشاملة لاختبار البرومترك (SMLE)."
@@ -251,60 +250,84 @@ const Login = () => {
       />
       <div className="login-body" dir={isArabic ? "rtl" : "ltr"}>
         <div className="login-wrapper">
-          <div className="login-header">
-            <div className="login-icon" />
-          </div>
+          <div className="login-card">
+            <div className="login-header">
+              <span className="pill">
+                {isArabic ? 'مرحباً بعودتك' : 'Welcome back'}
+              </span>
+              <h1 className="login-title">{copy.loginTitle}</h1>
+              <p className="login-subtitle">
+                {isArabic
+                  ? 'استكمل رحلتك التدريبية وتابع تقدمك'
+                  : 'Continue your prep journey and track your progress'}
+              </p>
+            </div>
 
-          <div className="login-box">
-            <h2 className="login-title">{copy.loginTitle}</h2>
             {sessionExpired && (
-              <div className="login-error" style={{ marginBottom: 10 }}>
+              <div className="alert-box warning">
                 {copy.sessionExpired}
               </div>
             )}
-            <form onSubmit={handleSubmit}>
-              <input
-                type="text"
-                name="username"
-                placeholder={copy.usernamePlaceholder}
-                value={form.username}
-                onChange={handleChange}
-                className="login-input"
-              />
-              <div className="password-input-container">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  placeholder={copy.passwordPlaceholder}
-                  value={form.password}
-                  onChange={handleChange}
-                  className="login-input"
-                />
-                <button
-                  type="button"
-                  className="password-toggle-btn"
-                  onClick={() => setShowPassword(!showPassword)}
-                  tabIndex="-1"
-                >
-                  <img 
-                    src="https://img.icons8.com/?size=100&id=988&format=png&color=000000" 
-                    alt={isArabic ? (showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور") : (showPassword ? "Hide password" : "Show password")}
-                    className="password-toggle-icon"
-                  />
-                </button>
+
+            {successMessage && (
+              <div className="alert-box success">
+                {successMessage}
               </div>
-              <button type="submit" className="login-btn" disabled={loading}>
+            )}
+
+            <form onSubmit={handleSubmit} className="login-form">
+              <div className="form-group">
+                <label className="form-label">{copy.usernamePlaceholder}</label>
+                <input
+                  type="text"
+                  name="username"
+                  placeholder={isArabic ? 'اسم المستخدم' : 'Enter your username'}
+                  value={form.username}
+                  onChange={handleChange}
+                  className="form-input"
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">{copy.passwordPlaceholder}</label>
+                <div className="password-input-wrapper">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    placeholder={isArabic ? 'كلمة المرور' : 'Enter your password'}
+                    value={form.password}
+                    onChange={handleChange}
+                    className="form-input"
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle"
+                    onClick={() => setShowPassword(!showPassword)}
+                    tabIndex="-1"
+                  >
+                    {showPassword ? '👁️' : '👁️‍🗨️'}
+                  </button>
+                </div>
+              </div>
+
+              {error && (
+                <div className="alert-box error">
+                  {error}
+                </div>
+              )}
+
+              <button type="submit" className="btn primary large" disabled={loading}>
                 {loading ? copy.loggingIn : copy.loginButton}
               </button>
-              <a href="/signup" className='login-small' rel="noopener noreferrer">
-                {copy.contactLink}
-              </a>
-              {successMessage && <p className="login-success">{successMessage}</p>}
-              {error && <p className="login-error">{error}</p>}
+
+              <div className="login-footer-text">
+                <span>{isArabic ? 'لا تملك حساباً؟' : "Don't have an account?"}</span>
+                <a href="/signup" className="link-primary">
+                  {copy.contactLink}
+                </a>
+              </div>
             </form>
           </div>
-
-          <div className="login-footer" />
         </div>
 
         {/* Terms of Use Popup */}
@@ -419,8 +442,8 @@ const Login = () => {
                 <button className="popup-btn Contact-Us" onClick={() => navigate('/contact')}>
                   {copy.contactUs}
                 </button>
-                <button 
-                  className="popup-btn contact-support" 
+                <button
+                  className="popup-btn contact-support"
                   onClick={() => window.location.href = supportMailLink}
                 >
                   {copy.contactSupport}

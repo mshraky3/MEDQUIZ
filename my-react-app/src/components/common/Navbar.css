@@ -1,72 +1,155 @@
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
 /* Navbar Styles */
 .navbar {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  padding: 0;
-  background: linear-gradient(90deg, #f8fafc 0%, #e0e7ef 100%);
-  border-bottom: 2px solid #e0e7ef;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-  min-height: 64px;
+  padding: 0 32px;
+  background: rgba(11, 16, 33, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+  min-height: 72px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-direction: row;
   z-index: 1000;
+  animation: slideDown 0.6s ease-out;
+}
+
+.navbar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.5), transparent);
+  opacity: 0.5;
 }
 
 .navbar-left {
   display: flex;
   align-items: center;
-  height: 64px;
-  padding-left: 24px;
+  height: 72px;
+  animation: fadeIn 0.8s ease-out 0.2s both;
 }
 
 .navbar-right {
   display: flex;
   align-items: center;
-  margin-right: 32px;
+  animation: fadeIn 0.8s ease-out 0.3s both;
 }
 
 .back-button {
-  font-size: 16px;
-  padding: 8px 22px;
-  border-radius: 8px;
-  border: none;
-  background: linear-gradient(90deg, #2563eb 0%, #38bdf8 100%);
-  color: #fff;
+  font-size: 15px;
+  padding: 10px 20px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: #e2e8f0;
   font-weight: 600;
-  box-shadow: 0 1px 4px rgba(37,99,235,0.08);
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: 0.3px;
 }
 
 .back-button:hover {
-  background: linear-gradient(90deg, #1d4ed8 0%, #0ea5e9 100%);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(34, 211, 238, 0.35);
+  transform: translateX(-4px);
+  box-shadow: 0 4px 12px rgba(34, 211, 238, 0.2);
+}
+
+.back-button:active {
+  transform: translateX(-2px);
 }
 
 .user-info {
   display: flex;
   align-items: center;
-  background: linear-gradient(90deg, #e0e7ef 0%, #f8fafc 100%);
+  background: rgba(34, 211, 238, 0.1);
   border-radius: 999px;
-  padding: 7px 22px 7px 14px;
+  padding: 10px 20px 10px 12px;
   font-weight: 600;
-  color: #2563eb;
-  font-size: 16px;
-  letter-spacing: 0.01em;
-  box-shadow: 0 1px 3px rgba(37,99,235,0.04);
-  border: 1.5px solid #dbeafe;
+  color: #22d3ee;
+  font-size: 15px;
+  letter-spacing: 0.3px;
+  border: 1px solid rgba(34, 211, 238, 0.3);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.user-info::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.2), transparent);
+  transition: left 0.6s ease;
+}
+
+.user-info:hover::before {
+  left: 100%;
+}
+
+.user-info:hover {
+  background: rgba(34, 211, 238, 0.15);
+  border-color: rgba(34, 211, 238, 0.5);
+  box-shadow: 0 0 20px rgba(34, 211, 238, 0.3);
 }
 
 .user-icon {
   margin-right: 10px;
+  transition: transform 0.3s ease;
+}
+
+.user-info:hover .user-icon {
+  transform: scale(1.1) rotate(5deg);
 }
 
 /* Page content padding when navbar is present */
 .page-with-navbar {
-  padding-top: 64px;
+  padding-top: 72px;
 }
 
 @media (max-width: 768px) {
@@ -90,122 +173,113 @@
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
   .navbar {
-    min-height: 56px;
-    padding: 0 10px;
+    min-height: 64px;
+    padding: 0 16px;
   }
-  
+
   .navbar-left {
-    height: 56px;
-    padding-left: 10px;
+    height: 64px;
   }
-  
-  .navbar-right {
-    margin-right: 10px;
-  }
-  
+
   .back-button {
     font-size: 14px;
-    padding: 6px 16px;
+    padding: 8px 16px;
   }
-  
+
   .user-info {
     font-size: 14px;
-    padding: 6px 16px 6px 12px;
+    padding: 8px 16px 8px 10px;
   }
-  
+
   .user-icon {
     margin-right: 8px;
     width: 18px;
     height: 18px;
   }
+
+  .page-with-navbar {
+    padding-top: 64px;
+  }
 }
 
 @media (max-width: 480px) {
   .navbar {
-    min-height: 52px;
-    padding: 0 8px;
+    min-height: 56px;
+    padding: 0 12px;
   }
-  
+
   .navbar-left {
-    height: 52px;
-    padding-left: 8px;
+    height: 56px;
   }
-  
-  .navbar-right {
-    margin-right: 8px;
-  }
-  
+
   .back-button {
     font-size: 13px;
-    padding: 5px 12px;
+    padding: 7px 14px;
   }
-  
+
   .user-info {
     font-size: 13px;
-    padding: 5px 12px 5px 10px;
+    padding: 7px 14px 7px 8px;
     max-width: 150px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  
+
   .user-icon {
     margin-right: 6px;
     width: 16px;
     height: 16px;
   }
+
+  .page-with-navbar {
+    padding-top: 56px;
+  }
 }
 
 @media (max-width: 360px) {
   .navbar {
-    min-height: 48px;
-    padding: 0 6px;
+    min-height: 52px;
+    padding: 0 10px;
   }
-  
+
   .navbar-left {
-    height: 48px;
-    padding-left: 6px;
+    height: 52px;
   }
-  
-  .navbar-right {
-    margin-right: 6px;
-  }
-  
+
   .back-button {
     font-size: 12px;
-    padding: 4px 10px;
+    padding: 6px 12px;
   }
-  
+
   .user-info {
     font-size: 12px;
-    padding: 4px 10px 4px 8px;
+    padding: 6px 12px 6px 6px;
     max-width: 120px;
   }
-  
+
   .user-icon {
     margin-right: 4px;
     width: 14px;
     height: 14px;
+  }
+
+  .page-with-navbar {
+    padding-top: 52px;
   }
 }
 
 /* Landscape orientation adjustments */
 @media (max-width: 768px) and (orientation: landscape) {
   .navbar {
-    min-height: 48px;
+    min-height: 56px;
   }
-  
+
   .navbar-left {
-    height: 48px;
+    height: 56px;
   }
-  
-  .back-button {
-    padding: 4px 14px;
-    font-size: 13px;
-  }
-  
-  .user-info {
-    padding: 4px 14px 4px 10px;
-    font-size: 13px;
+
+  .page-with-navbar {
+    padding-top: 56px;
   }
 }

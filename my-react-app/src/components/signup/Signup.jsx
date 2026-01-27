@@ -3,6 +3,9 @@ import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import axios from 'axios';
 import Globals from '../../global.js';
 import './Signup.css';
+import useLang from '../../hooks/useLang';
+
+// Use login/landing style classes
 
 const Signup = () => {
     const [form, setForm] = useState({
@@ -19,6 +22,10 @@ const Signup = () => {
     const location = useLocation();
     const { token } = useParams();
 
+    const [lang, setLang] = useLang();
+    const isArabic = lang === 'ar';
+    const toggleLanguage = () => setLang((prev) => (prev === 'ar' ? 'en' : 'ar'));
+
     useEffect(() => {
         // Check if this is a temporary link signup
         if (token) {
@@ -34,7 +41,7 @@ const Signup = () => {
         try {
             setLoading(true);
             const response = await axios.get(`${Globals.URL}/api/validate-temp-link/${token}`);
-            
+
             if (response.data.valid) {
                 setTempLinkInfo(response.data.link);
                 setIsTempLink(true);
@@ -103,14 +110,14 @@ const Signup = () => {
 
                 if (response.data.success) {
                     setSuccess(true);
-                    
+
                     // Redirect to login after 2 seconds
                     setTimeout(() => {
-                        navigate('/login', { 
-                            state: { 
+                        navigate('/login', {
+                            state: {
                                 message: 'Account created successfully! Please log in.',
-                                username: form.username 
-                            } 
+                                username: form.username
+                            }
                         });
                     }, 2000);
                 } else {
@@ -125,14 +132,14 @@ const Signup = () => {
 
                 if (response.data.success) {
                     setSuccess(true);
-                    
+
                     // Redirect to login after 2 seconds
                     setTimeout(() => {
-                        navigate('/login', { 
-                            state: { 
+                        navigate('/login', {
+                            state: {
                                 message: 'Account created successfully! Please log in.',
-                                username: form.username 
-                            } 
+                                username: form.username
+                            }
                         });
                     }, 2000);
                 } else {
@@ -150,11 +157,24 @@ const Signup = () => {
 
     if (success) {
         return (
-            <div className="signup-container">
-                <div className="signup-card success">
-                    <div className="success-icon">✅</div>
-                    <h2>Account Created Successfully!</h2>
-                    <p>Your account has been created. Redirecting to login...</p>
+            <div className="login-body">
+                <div className="landing-lang-toggle">
+                    <button
+                        type="button"
+                        className="lang-toggle-btn"
+                        onClick={toggleLanguage}
+                        aria-label={isArabic ? 'Switch to English' : 'التبديل إلى العربية'}
+                    >
+                        <span className="lang-toggle-icon" role="img" aria-hidden="true">🌐</span>
+                        <span className="lang-toggle-text">{isArabic ? 'EN' : 'ع'}</span>
+                    </button>
+                </div>
+                <div className="login-wrapper signup-wide">
+                    <div className="login-card signup-short" style={{ textAlign: 'center' }}>
+                        <div className="success-icon" style={{ fontSize: 60, marginBottom: 20 }}>✅</div>
+                        <h2 style={{ color: '#f8fafc', fontWeight: 700, marginBottom: 12 }}>Account Created Successfully!</h2>
+                        <p style={{ color: 'var(--muted)' }}>Your account has been created. Redirecting to login...</p>
+                    </div>
                 </div>
             </div>
         );
@@ -162,11 +182,24 @@ const Signup = () => {
 
     if (loading && isTempLink) {
         return (
-            <div className="signup-container">
-                <div className="signup-card">
-                    <div className="loading-spinner">
-                        <div className="spinner"></div>
-                        Validating temporary link...
+            <div className="login-body">
+                <div className="landing-lang-toggle">
+                    <button
+                        type="button"
+                        className="lang-toggle-btn"
+                        onClick={toggleLanguage}
+                        aria-label={isArabic ? 'Switch to English' : 'التبديل إلى العربية'}
+                    >
+                        <span className="lang-toggle-icon" role="img" aria-hidden="true">🌐</span>
+                        <span className="lang-toggle-text">{isArabic ? 'EN' : 'ع'}</span>
+                    </button>
+                </div>
+                <div className="login-wrapper signup-wide">
+                    <div className="login-card signup-short">
+                        <div className="loading-spinner">
+                            <div className="spinner"></div>
+                            Validating temporary link...
+                        </div>
                     </div>
                 </div>
             </div>
@@ -174,92 +207,99 @@ const Signup = () => {
     }
 
     return (
-        <div className="signup-container">
-            <div className="signup-card">
-                <h2>Create Your Account</h2>
-                <p className="signup-subtitle">
-                    {isTempLink ? "Create your free account" : "Create your free account"}
-                </p>
-                
-                <form onSubmit={handleSubmit} className="signup-form">
-                    <div className="form-group">
-                        <label htmlFor="username">Username</label>
-                        <input
-                            type="text"
-                            id="username"
-                            name="username"
-                            value={form.username}
-                            onChange={handleInputChange}
-                            placeholder="Choose a username"
-                            required
-                        />
-                    </div>
-
-
-                    <div className="form-group">
-                        <label htmlFor="password">Password</label>
-                        <input
-                            type="password"
-                            id="password"
-                            name="password"
-                            value={form.password}
-                            onChange={handleInputChange}
-                            placeholder="Create a password"
-                            required
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label htmlFor="confirmPassword">Confirm Password</label>
-                        <input
-                            type="password"
-                            id="confirmPassword"
-                            name="confirmPassword"
-                            value={form.confirmPassword}
-                            onChange={handleInputChange}
-                            placeholder="Confirm your password"
-                            required
-                        />
-                    </div>
-
-                    {success && (
-                        <div className="success-message">
-                            <h3>✅ Account Created Successfully!</h3>
-                            <p>Your account has been created. Redirecting to login page...</p>
+        <div className="login-body" dir={isArabic ? 'rtl' : 'ltr'}>
+            <div className="landing-lang-toggle">
+                <button
+                    type="button"
+                    className="lang-toggle-btn"
+                    onClick={toggleLanguage}
+                    aria-label={isArabic ? 'Switch to English' : 'التبديل إلى العربية'}
+                >
+                    <span className="lang-toggle-icon" role="img" aria-hidden="true">🌐</span>
+                    <span className="lang-toggle-text">{isArabic ? 'EN' : 'ع'}</span>
+                </button>
+            </div>
+            <div className="login-wrapper signup-wide">
+                <div className="login-card signup-short">
+                    <div className="login-header">
+                        <div className="pill">{isArabic ? 'إنشاء حساب' : 'Sign Up'}</div>
+                        <div className="login-title">{isArabic ? 'أنشئ حسابك' : 'Create Your Account'}</div>
+                        <div className="login-subtitle">
+                            {isTempLink
+                                ? (isArabic ? 'أنشئ حسابك المجاني' : 'Create your free account')
+                                : (isArabic ? 'أنشئ حسابك المجاني' : 'Create your free account')}
                         </div>
-                    )}
-
-                    {error && (
-                        <div className="error-message">
-                            {error}
+                    </div>
+                    <form onSubmit={handleSubmit} className="login-form">
+                        <div className="form-group">
+                            <label className="form-label" htmlFor="username">{isArabic ? 'اسم المستخدم' : 'Username'}</label>
+                            <input
+                                type="text"
+                                id="username"
+                                name="username"
+                                className="form-input"
+                                value={form.username}
+                                onChange={handleInputChange}
+                                placeholder={isArabic ? 'اختر اسم مستخدم' : 'Choose a username'}
+                                required
+                            />
                         </div>
-                    )}
-
-                    <button 
-                        type="submit" 
-                        className="signup-button"
-                        disabled={loading}
-                    >
-                        {loading ? (
-                            <div className="loading-spinner">
-                                <div className="spinner"></div>
-                                Creating Account...
+                        <div className="form-group">
+                            <label className="form-label" htmlFor="password">{isArabic ? 'كلمة المرور' : 'Password'}</label>
+                            <input
+                                type="password"
+                                id="password"
+                                name="password"
+                                className="form-input"
+                                value={form.password}
+                                onChange={handleInputChange}
+                                placeholder={isArabic ? 'أنشئ كلمة مرور' : 'Create a password'}
+                                required
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label className="form-label" htmlFor="confirmPassword">{isArabic ? 'تأكيد كلمة المرور' : 'Confirm Password'}</label>
+                            <input
+                                type="password"
+                                id="confirmPassword"
+                                name="confirmPassword"
+                                className="form-input"
+                                value={form.confirmPassword}
+                                onChange={handleInputChange}
+                                placeholder={isArabic ? 'أعد كتابة كلمة المرور' : 'Confirm your password'}
+                                required
+                            />
+                        </div>
+                        {error && (
+                            <div className="alert-box error">
+                                {error}
                             </div>
-                        ) : (
-                            'Create Account'
                         )}
-                    </button>
-
-                    <div className="contact-support">
-                        <p>Having trouble creating your account?</p>
-                        <button 
-                            className="contact-button"
-                            onClick={() => window.location.href = 'mailto:alshraky3@gmail.com?subject=Account Support&body=Hi, I need help creating my account.'}
+                        <button
+                            type="submit"
+                            className="btn primary large"
+                            disabled={loading}
                         >
-                            Contact Support
+                            {loading ? (
+                                <div className="loading-spinner">
+                                    <div className="spinner"></div>
+                                    {isArabic ? 'جاري إنشاء الحساب...' : 'Creating Account...'}
+                                </div>
+                            ) : (
+                                isArabic ? 'أنشئ الحساب' : 'Create Account'
+                            )}
                         </button>
-                    </div>
-                </form>
+                        <div className="login-footer-text">
+                            {isArabic ? 'تواجه مشكلة؟' : 'Having trouble?'}{' '}
+                            <a
+                                className="link-primary"
+                                href="mailto:alshraky3@gmail.com?subject=Account Support&body=Hi, I need help creating my account."
+                            >
+                                {isArabic ? 'تواصل مع الدعم' : 'Contact Support'}
+                            </a>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     );

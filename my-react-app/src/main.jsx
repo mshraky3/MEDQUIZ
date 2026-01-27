@@ -2,7 +2,7 @@ import { StrictMode } from 'react'
 import './index.css'
 import App from './App.jsx';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import { createRoot } from 'react-dom/client'; 
+import { createRoot } from 'react-dom/client';
 import Login from './components/login/Login';
 import ADD from './components/ADD/ADD.jsx';
 import QUIZS from './components/quizs/QUIZS.jsx';
@@ -13,10 +13,11 @@ import WrongQuestions from './components/analysis/WrongQuestions.jsx';
 import Admin from './components/ADD/Admin.jsx';
 import Bank from './components/ADD/Bank.jsx';
 import Signup from './components/signup/Signup.jsx';
-import TempLinks from './components/ADD/TempLinks.jsx';
 import Contact from './components/contact/Contact.jsx';
 import ErrorBoundary from './components/common/ErrorBoundary.jsx';
 import Layout from './components/common/Layout.jsx';
+import Privacy from './components/legal/Privacy.jsx';
+import Terms from './components/legal/Terms.jsx';
 
 import Globals from './global.js';
 import { UserProvider } from './UserContext.jsx';
@@ -34,7 +35,7 @@ const router = createBrowserRouter([
     element: <Layout><Login /></Layout>,
     errorElement: <ErrorBoundary />,
   },
-  
+
   {
     path: "/ADD_ACCOUNT",
     element: <ADD host={getHostUrl} />,
@@ -67,7 +68,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/admin",
-    element: <Admin/>,
+    element: <Admin />,
     errorElement: <ErrorBoundary />,
   },
   {
@@ -86,13 +87,18 @@ const router = createBrowserRouter([
     errorElement: <ErrorBoundary />,
   },
   {
-    path: "/TEMP_LINKS",
-    element: <TempLinks host={getHostUrl} />,
+    path: "/contact",
+    element: <Layout><Contact /></Layout>,
     errorElement: <ErrorBoundary />,
   },
   {
-    path: "/contact",
-    element: <Layout><Contact /></Layout>,
+    path: "/privacy",
+    element: <Layout><Privacy /></Layout>,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/terms",
+    element: <Layout><Terms /></Layout>,
     errorElement: <ErrorBoundary />,
   },
   {
