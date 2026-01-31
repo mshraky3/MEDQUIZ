@@ -84,7 +84,7 @@ const sendEmail = async (to, subject, text, html = null) => {
 const questionsCache = {
     data: null,
     timestamp: null,
-    ttl: 5 * 60 * 1000 
+    ttl: 5 * 60 * 1000
 };
 
 // Free trial endpoints removed - accounts are now free
@@ -220,7 +220,7 @@ Created by: Admin Panel
 
 This account has been activated and is ready for use.
             `;
-            
+
             const emailHtml = `
                 <h2>🔧 Admin Account Created</h2>
                 <p><strong>Username:</strong> ${username}</p>
@@ -238,7 +238,7 @@ This account has been activated and is ready for use.
         }
 
         console.log(`✅ Admin created account: ${lowercaseUsername} (ID: ${newUserId})`);
-        return res.status(201).json({ 
+        return res.status(201).json({
             message: 'Account created successfully',
             userId: newUserId
         });
@@ -264,7 +264,7 @@ app.get('/get_all_users', async (req, res) => {
         } catch (alterErr) {
             console.log('Note: Some columns might already exist:', alterErr.message);
         }
-        
+
         // Check what columns actually exist in the accounts table
         const columnCheck = await db.query(`
             SELECT column_name 
@@ -272,22 +272,22 @@ app.get('/get_all_users', async (req, res) => {
             WHERE table_name = 'accounts' AND table_schema = 'public'
             ORDER BY ordinal_position
         `);
-        
+
         const existingColumns = columnCheck.rows.map(row => row.column_name);
         console.log('Available columns in accounts table:', existingColumns);
-        
+
         // Build the SELECT query with only necessary columns for admin interface
-        const availableColumns = existingColumns.filter(col => 
+        const availableColumns = existingColumns.filter(col =>
             ['id', 'username', 'password', 'logged_date', 'isactive', 'terms_accepted', 'email', 'created_at'].includes(col)
         );
-        
+
         if (availableColumns.length === 0) {
             return res.status(500).json({ message: "No valid columns found in accounts table" });
         }
-        
+
         const selectQuery = `SELECT ${availableColumns.join(', ')} FROM accounts`;
         console.log('Executing query:', selectQuery);
-        
+
         const result = await db.query(selectQuery);
         res.json({ users: result.rows });
     } catch (err) {
@@ -299,14 +299,163 @@ app.get('/get_all_users', async (req, res) => {
 // Helper: 30 minutes in ms
 const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
 
+// ============================================
+// LOGIN HISTORY & ACCOUNT SHARING DETECTION
+// ============================================
+
+// Helper function to create login_history table if not exists
+const ensureLoginHistoryTable = async () => {
+    try {
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS login_history (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES accounts(id) ON DELETE CASCADE,
+                username VARCHAR(255),
+                ip_address VARCHAR(100),
+                user_agent TEXT,
+                device_type VARCHAR(50),
+                browser VARCHAR(100),
+                os VARCHAR(100),
+                country VARCHAR(100),
+                city VARCHAR(100),
+                login_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                session_token VARCHAR(255),
+                is_suspicious BOOLEAN DEFAULT FALSE,
+                suspicious_reason TEXT
+            )
+        `);
+
+        // Add index for faster queries
+        await db.query(`
+            CREATE INDEX IF NOT EXISTS idx_login_history_user_id ON login_history(user_id)
+        `);
+        await db.query(`
+            CREATE INDEX IF NOT EXISTS idx_login_history_login_time ON login_history(login_time)
+        `);
+
+        logger.info('Login history table ensured');
+    } catch (err) {
+        logger.error('Error creating login_history table', err);
+    }
+};
+
+// Call on startup
+ensureLoginHistoryTable();
+
+// Helper function to parse user agent
+const parseUserAgent = (userAgent) => {
+    if (!userAgent) return { device: 'Unknown', browser: 'Unknown', os: 'Unknown' };
+
+    let device = 'Desktop';
+    let browser = 'Unknown';
+    let os = 'Unknown';
+
+    // Detect device type
+    if (/Mobile|Android|iPhone|iPad|iPod/i.test(userAgent)) {
+        device = /iPad/i.test(userAgent) ? 'Tablet' : 'Mobile';
+    }
+
+    // Detect browser
+    if (/Chrome/i.test(userAgent) && !/Edge|Edg/i.test(userAgent)) browser = 'Chrome';
+    else if (/Firefox/i.test(userAgent)) browser = 'Firefox';
+    else if (/Safari/i.test(userAgent) && !/Chrome/i.test(userAgent)) browser = 'Safari';
+    else if (/Edge|Edg/i.test(userAgent)) browser = 'Edge';
+    else if (/Opera|OPR/i.test(userAgent)) browser = 'Opera';
+
+    // Detect OS
+    if (/Windows/i.test(userAgent)) os = 'Windows';
+    else if (/Mac OS|Macintosh/i.test(userAgent)) os = 'macOS';
+    else if (/Linux/i.test(userAgent) && !/Android/i.test(userAgent)) os = 'Linux';
+    else if (/Android/i.test(userAgent)) os = 'Android';
+    else if (/iOS|iPhone|iPad|iPod/i.test(userAgent)) os = 'iOS';
+
+    return { device, browser, os };
+};
+
+// Helper function to detect suspicious login
+const detectSuspiciousLogin = async (userId, ipAddress, userAgent) => {
+    try {
+        // Get recent logins for this user (last 7 days)
+        const recentLogins = await db.query(`
+            SELECT DISTINCT ip_address, user_agent, device_type, browser, os, login_time
+            FROM login_history 
+            WHERE user_id = $1 AND login_time > NOW() - INTERVAL '7 days'
+            ORDER BY login_time DESC
+        `, [userId]);
+
+        const { device, browser, os } = parseUserAgent(userAgent);
+        const suspiciousReasons = [];
+
+        if (recentLogins.rows.length > 0) {
+            // Count unique IPs in last 24 hours
+            const last24hLogins = await db.query(`
+                SELECT COUNT(DISTINCT ip_address) as ip_count
+                FROM login_history 
+                WHERE user_id = $1 AND login_time > NOW() - INTERVAL '24 hours'
+            `, [userId]);
+
+            const uniqueIPs24h = parseInt(last24hLogins.rows[0].ip_count) || 0;
+
+            // Flag if more than 3 different IPs in 24 hours
+            if (uniqueIPs24h >= 3) {
+                suspiciousReasons.push(`Multiple IPs (${uniqueIPs24h}) in 24h`);
+            }
+
+            // Count unique devices in last 7 days
+            const uniqueDevices = new Set(recentLogins.rows.map(r => `${r.device_type}-${r.browser}-${r.os}`));
+            if (uniqueDevices.size >= 4) {
+                suspiciousReasons.push(`Multiple devices (${uniqueDevices.size}) in 7 days`);
+            }
+
+            // Check for rapid IP changes (different IP within 30 minutes)
+            const lastLogin = recentLogins.rows[0];
+            if (lastLogin && lastLogin.ip_address !== ipAddress) {
+                const timeSinceLastLogin = Date.now() - new Date(lastLogin.login_time).getTime();
+                if (timeSinceLastLogin < 30 * 60 * 1000) { // 30 minutes
+                    suspiciousReasons.push('IP changed within 30 minutes');
+                }
+            }
+
+            // Check for simultaneous sessions from different locations
+            const concurrentSessions = await db.query(`
+                SELECT COUNT(*) as count FROM login_history 
+                WHERE user_id = $1 
+                AND login_time > NOW() - INTERVAL '30 minutes'
+                AND ip_address != $2
+            `, [userId, ipAddress]);
+
+            if (parseInt(concurrentSessions.rows[0].count) > 0) {
+                suspiciousReasons.push('Concurrent sessions from different IPs');
+            }
+        }
+
+        return {
+            isSuspicious: suspiciousReasons.length > 0,
+            reasons: suspiciousReasons.join('; ')
+        };
+    } catch (err) {
+        logger.error('Error detecting suspicious login', err);
+        return { isSuspicious: false, reasons: '' };
+    }
+};
+
 app.post('/login', async (req, res) => {
     logger.info("Login request received", { username: req.body.username });
     const { username, password } = req.body;
-    
+
+    // Get IP and user agent for tracking
+    const ipAddress = req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+        req.headers['x-real-ip'] ||
+        req.connection?.remoteAddress ||
+        req.socket?.remoteAddress ||
+        'Unknown';
+    const userAgent = req.headers['user-agent'] || 'Unknown';
+    const { device, browser, os } = parseUserAgent(userAgent);
+
     // Convert to lowercase
     const lowercaseUsername = username.toLowerCase();
     const lowercasePassword = password.toLowerCase();
-    
+
     const client = await db.connect();
     try {
         await client.query('BEGIN');
@@ -361,6 +510,22 @@ app.post('/login', async (req, res) => {
         // Update login state and store session token
         await client.query("UPDATE accounts SET logged = $1, logged_date = $2, session_token = $3 WHERE id = $4", [true, now, sessionToken, userRow.id]);
         logger.debug(`Set logged=true and session_token for username: ${lowercaseUsername}`);
+
+        // Detect suspicious activity
+        const suspiciousCheck = await detectSuspiciousLogin(userRow.id, ipAddress, userAgent);
+
+        // Record login history
+        try {
+            await client.query(`
+                INSERT INTO login_history (user_id, username, ip_address, user_agent, device_type, browser, os, session_token, is_suspicious, suspicious_reason)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            `, [userRow.id, lowercaseUsername, ipAddress, userAgent, device, browser, os, sessionToken, suspiciousCheck.isSuspicious, suspiciousCheck.reasons]);
+            logger.info(`Login history recorded for ${lowercaseUsername}`, { ip: ipAddress, device, suspicious: suspiciousCheck.isSuspicious });
+        } catch (historyErr) {
+            logger.error('Failed to record login history', historyErr);
+            // Don't fail login if history recording fails
+        }
+
         await client.query('COMMIT');
         client.release();
         logger.debug(`Transaction committed for username: ${lowercaseUsername}`);
@@ -425,6 +590,359 @@ app.post('/logout', async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+// ============================================
+// ADMIN DASHBOARD ENDPOINTS
+// ============================================
+
+// Get comprehensive admin statistics
+app.get('/admin/stats', async (req, res) => {
+    try {
+        // Run all queries in parallel for performance
+        const [
+            totalUsersRes,
+            activeUsersRes,
+            newUsersWeekRes,
+            newUsersMonthRes,
+            totalQuizzesRes,
+            quizzesTodayRes,
+            quizzesWeekRes,
+            avgAccuracyRes,
+            loginsByDayRes,
+            topUsersRes,
+            suspiciousUsersRes,
+            quizzesByTopicRes,
+            recentLoginsRes,
+            totalQuestionsAnsweredRes,
+            onlineUsersRes,
+            userGrowthRes,
+            quizGrowthRes,
+            accuracyByTopicRes,
+            hourlyActivityRes,
+            retentionRateRes,
+            avgQuestionsPerQuizRes,
+            deviceStatsRes,
+            browserStatsRes,
+            loginsByHourRes,
+            quizCompletionRateRes,
+            streakLeadersRes,
+            accuracyDistributionRes
+        ] = await Promise.all([
+            // Total users
+            db.query('SELECT COUNT(*) as count FROM accounts'),
+            // Active users (logged in last 7 days)
+            db.query(`SELECT COUNT(*) as count FROM accounts WHERE logged_date > NOW() - INTERVAL '7 days'`),
+            // New users this week
+            db.query(`SELECT COUNT(*) as count FROM accounts WHERE created_at > NOW() - INTERVAL '7 days'`),
+            // New users this month
+            db.query(`SELECT COUNT(*) as count FROM accounts WHERE created_at > NOW() - INTERVAL '30 days'`),
+            // Total quizzes taken
+            db.query('SELECT COUNT(*) as count FROM user_quiz_sessions'),
+            // Quizzes today
+            db.query(`SELECT COUNT(*) as count FROM user_quiz_sessions WHERE start_time > NOW() - INTERVAL '24 hours'`),
+            // Quizzes this week
+            db.query(`SELECT COUNT(*) as count FROM user_quiz_sessions WHERE start_time > NOW() - INTERVAL '7 days'`),
+            // Average accuracy
+            db.query('SELECT ROUND(AVG(quiz_accuracy)::numeric, 1) as avg FROM user_quiz_sessions WHERE quiz_accuracy IS NOT NULL'),
+            // Logins by day (last 14 days)
+            db.query(`
+                SELECT DATE(login_time) as date, COUNT(*) as count 
+                FROM login_history 
+                WHERE login_time > NOW() - INTERVAL '14 days'
+                GROUP BY DATE(login_time) 
+                ORDER BY date
+            `),
+            // Top 10 most active users
+            db.query(`
+                SELECT a.id, a.username, COUNT(q.id) as quiz_count, 
+                       ROUND(AVG(q.quiz_accuracy)::numeric, 1) as avg_accuracy,
+                       SUM(q.total_questions) as total_questions_answered,
+                       MAX(q.start_time) as last_activity
+                FROM accounts a
+                LEFT JOIN user_quiz_sessions q ON a.id = q.user_id
+                GROUP BY a.id, a.username
+                HAVING COUNT(q.id) > 0
+                ORDER BY quiz_count DESC
+                LIMIT 10
+            `),
+            // Users flagged for suspicious activity
+            db.query(`
+                SELECT DISTINCT lh.user_id, a.username, 
+                       COUNT(DISTINCT lh.ip_address) as unique_ips,
+                       COUNT(DISTINCT CONCAT(lh.device_type, '-', lh.browser)) as unique_devices,
+                       MAX(lh.login_time) as last_login,
+                       STRING_AGG(DISTINCT lh.suspicious_reason, '; ') as reasons
+                FROM login_history lh
+                JOIN accounts a ON lh.user_id = a.id
+                WHERE lh.is_suspicious = true AND lh.login_time > NOW() - INTERVAL '30 days'
+                GROUP BY lh.user_id, a.username
+                ORDER BY unique_ips DESC
+                LIMIT 10
+            `),
+            // Quizzes by topic
+            db.query(`
+                SELECT question_type as topic, SUM(total_answered) as count,
+                       ROUND(AVG(accuracy)::numeric, 1) as avg_accuracy
+                FROM user_topic_analysis
+                GROUP BY question_type
+                ORDER BY count DESC
+            `),
+            // Recent logins (last 20)
+            db.query(`
+                SELECT lh.*, a.username
+                FROM login_history lh
+                JOIN accounts a ON lh.user_id = a.id
+                ORDER BY lh.login_time DESC
+                LIMIT 20
+            `),
+            // Total questions answered across all users
+            db.query('SELECT SUM(total_questions) as count FROM user_quiz_sessions'),
+            // Currently online users (active session in last 30 min)
+            db.query(`SELECT COUNT(*) as count FROM accounts WHERE logged = true AND logged_date > NOW() - INTERVAL '30 minutes'`),
+            // User growth by week (last 8 weeks)
+            db.query(`
+                SELECT DATE_TRUNC('week', created_at) as week, COUNT(*) as count
+                FROM accounts
+                WHERE created_at > NOW() - INTERVAL '8 weeks'
+                GROUP BY DATE_TRUNC('week', created_at)
+                ORDER BY week
+            `),
+            // Quiz growth by week (last 8 weeks)
+            db.query(`
+                SELECT DATE_TRUNC('week', start_time) as week, COUNT(*) as count
+                FROM user_quiz_sessions
+                WHERE start_time > NOW() - INTERVAL '8 weeks'
+                GROUP BY DATE_TRUNC('week', start_time)
+                ORDER BY week
+            `),
+            // Accuracy by topic (for radar chart)
+            db.query(`
+                SELECT question_type as topic, 
+                       ROUND(AVG(accuracy)::numeric, 1) as avg_accuracy,
+                       SUM(total_answered) as total_questions
+                FROM user_topic_analysis
+                GROUP BY question_type
+                ORDER BY total_questions DESC
+                LIMIT 8
+            `),
+            // Hourly activity pattern (quizzes started by hour)
+            db.query(`
+                SELECT EXTRACT(HOUR FROM start_time) as hour, COUNT(*) as count
+                FROM user_quiz_sessions
+                WHERE start_time > NOW() - INTERVAL '30 days'
+                GROUP BY EXTRACT(HOUR FROM start_time)
+                ORDER BY hour
+            `),
+            // User retention rate (users active in last 7 days who were also active in previous 7 days)
+            db.query(`
+                SELECT 
+                    COUNT(DISTINCT CASE WHEN logged_date > NOW() - INTERVAL '7 days' THEN id END) as active_this_week,
+                    COUNT(DISTINCT CASE WHEN logged_date BETWEEN NOW() - INTERVAL '14 days' AND NOW() - INTERVAL '7 days' THEN id END) as active_last_week
+                FROM accounts
+            `),
+            // Average questions per quiz
+            db.query('SELECT ROUND(AVG(total_questions)::numeric, 1) as avg FROM user_quiz_sessions WHERE total_questions > 0'),
+            // Device type distribution
+            db.query(`
+                SELECT device_type, COUNT(*) as count
+                FROM login_history
+                WHERE login_time > NOW() - INTERVAL '30 days' AND device_type IS NOT NULL
+                GROUP BY device_type
+                ORDER BY count DESC
+            `),
+            // Browser distribution
+            db.query(`
+                SELECT browser, COUNT(*) as count
+                FROM login_history
+                WHERE login_time > NOW() - INTERVAL '30 days' AND browser IS NOT NULL
+                GROUP BY browser
+                ORDER BY count DESC
+                LIMIT 5
+            `),
+            // Logins by hour of day
+            db.query(`
+                SELECT EXTRACT(HOUR FROM login_time) as hour, COUNT(*) as count
+                FROM login_history
+                WHERE login_time > NOW() - INTERVAL '30 days'
+                GROUP BY EXTRACT(HOUR FROM login_time)
+                ORDER BY hour
+            `),
+            // Quiz completion rate (quizzes with results vs started)
+            db.query(`
+                SELECT 
+                    COUNT(*) as total_started,
+                    COUNT(CASE WHEN quiz_accuracy IS NOT NULL THEN 1 END) as completed
+                FROM user_quiz_sessions
+            `),
+            // Streak leaders (users with highest current streaks from user_stats table if exists)
+            db.query(`
+                SELECT a.username, COALESCE(us.current_streak, 0) as streak
+                FROM accounts a
+                LEFT JOIN user_stats us ON a.id = us.user_id
+                ORDER BY COALESCE(us.current_streak, 0) DESC
+                LIMIT 5
+            `).catch(() => ({ rows: [] })),
+            // Accuracy distribution (group users by accuracy ranges)
+            db.query(`
+                SELECT 
+                    CASE 
+                        WHEN avg_acc < 40 THEN '0-40%'
+                        WHEN avg_acc < 60 THEN '40-60%'
+                        WHEN avg_acc < 80 THEN '60-80%'
+                        ELSE '80-100%'
+                    END as range,
+                    COUNT(*) as user_count
+                FROM (
+                    SELECT user_id, ROUND(AVG(quiz_accuracy)::numeric, 1) as avg_acc
+                    FROM user_quiz_sessions
+                    WHERE quiz_accuracy IS NOT NULL
+                    GROUP BY user_id
+                ) sub
+                GROUP BY range
+                ORDER BY range
+            `)
+        ]);
+
+        // Calculate derived metrics
+        const retentionData = retentionRateRes.rows[0];
+        const retentionRate = retentionData.active_last_week > 0
+            ? Math.round((retentionData.active_this_week / retentionData.active_last_week) * 100)
+            : 0;
+
+        const completionData = quizCompletionRateRes.rows[0];
+        const completionRate = completionData.total_started > 0
+            ? Math.round((completionData.completed / completionData.total_started) * 100)
+            : 0;
+
+        res.json({
+            overview: {
+                totalUsers: parseInt(totalUsersRes.rows[0]?.count) || 0,
+                activeUsers: parseInt(activeUsersRes.rows[0]?.count) || 0,
+                onlineNow: parseInt(onlineUsersRes.rows[0]?.count) || 0,
+                newUsersWeek: parseInt(newUsersWeekRes.rows[0]?.count) || 0,
+                newUsersMonth: parseInt(newUsersMonthRes.rows[0]?.count) || 0,
+                totalQuizzes: parseInt(totalQuizzesRes.rows[0]?.count) || 0,
+                quizzesToday: parseInt(quizzesTodayRes.rows[0]?.count) || 0,
+                quizzesThisWeek: parseInt(quizzesWeekRes.rows[0]?.count) || 0,
+                avgAccuracy: parseFloat(avgAccuracyRes.rows[0]?.avg) || 0,
+                totalQuestionsAnswered: parseInt(totalQuestionsAnsweredRes.rows[0]?.count) || 0,
+                avgQuestionsPerQuiz: parseFloat(avgQuestionsPerQuizRes.rows[0]?.avg) || 0,
+                retentionRate: retentionRate,
+                completionRate: completionRate,
+                suspiciousCount: suspiciousUsersRes.rows.length
+            },
+            charts: {
+                loginsByDay: loginsByDayRes.rows,
+                userGrowth: userGrowthRes.rows,
+                quizGrowth: quizGrowthRes.rows,
+                hourlyActivity: hourlyActivityRes.rows,
+                loginsByHour: loginsByHourRes.rows,
+                deviceStats: deviceStatsRes.rows,
+                browserStats: browserStatsRes.rows,
+                accuracyByTopic: accuracyByTopicRes.rows,
+                accuracyDistribution: accuracyDistributionRes.rows
+            },
+            topUsers: topUsersRes.rows,
+            suspiciousUsers: suspiciousUsersRes.rows,
+            quizzesByTopic: quizzesByTopicRes.rows,
+            recentLogins: recentLoginsRes.rows,
+            streakLeaders: streakLeadersRes.rows
+        });
+    } catch (err) {
+        logger.error('Error fetching admin stats', err);
+        res.status(500).json({ message: 'Server error fetching admin statistics' });
+    }
+});
+
+// Get detailed user info with activity
+app.get('/admin/users', async (req, res) => {
+    try {
+        const usersResult = await db.query(`
+            SELECT 
+                a.id, a.username, a.password, a.isactive, a.logged, a.logged_date, 
+                a.terms_accepted, a.email, a.created_at,
+                COUNT(DISTINCT q.id) as total_quizzes,
+                ROUND(AVG(q.quiz_accuracy)::numeric, 1) as avg_accuracy,
+                SUM(q.total_questions) as total_questions,
+                MAX(q.start_time) as last_quiz_date
+            FROM accounts a
+            LEFT JOIN user_quiz_sessions q ON a.id = q.user_id
+            GROUP BY a.id, a.username, a.password, a.isactive, a.logged, a.logged_date, 
+                     a.terms_accepted, a.email, a.created_at
+            ORDER BY a.id DESC
+        `);
+
+        // Get suspicious flags for each user
+        const suspiciousResult = await db.query(`
+            SELECT user_id, 
+                   COUNT(DISTINCT ip_address) as unique_ips_30d,
+                   COUNT(DISTINCT CONCAT(device_type, '-', browser)) as unique_devices_30d,
+                   BOOL_OR(is_suspicious) as has_suspicious_activity,
+                   STRING_AGG(DISTINCT suspicious_reason, '; ') FILTER (WHERE suspicious_reason IS NOT NULL AND suspicious_reason != '') as suspicious_reasons
+            FROM login_history
+            WHERE login_time > NOW() - INTERVAL '30 days'
+            GROUP BY user_id
+        `);
+
+        const suspiciousMap = {};
+        suspiciousResult.rows.forEach(row => {
+            suspiciousMap[row.user_id] = {
+                uniqueIPs: parseInt(row.unique_ips_30d) || 0,
+                uniqueDevices: parseInt(row.unique_devices_30d) || 0,
+                hasSuspiciousActivity: row.has_suspicious_activity,
+                suspiciousReasons: row.suspicious_reasons || ''
+            };
+        });
+
+        const users = usersResult.rows.map(user => ({
+            ...user,
+            total_quizzes: parseInt(user.total_quizzes) || 0,
+            avg_accuracy: parseFloat(user.avg_accuracy) || 0,
+            total_questions: parseInt(user.total_questions) || 0,
+            suspicious: suspiciousMap[user.id] || { uniqueIPs: 0, uniqueDevices: 0, hasSuspiciousActivity: false, suspiciousReasons: '' }
+        }));
+
+        res.json({ users });
+    } catch (err) {
+        logger.error('Error fetching admin users', err);
+        res.status(500).json({ message: 'Server error fetching users' });
+    }
+});
+
+// Get login history for a specific user
+app.get('/admin/users/:userId/login-history', async (req, res) => {
+    const { userId } = req.params;
+    try {
+        const result = await db.query(`
+            SELECT * FROM login_history 
+            WHERE user_id = $1 
+            ORDER BY login_time DESC 
+            LIMIT 50
+        `, [userId]);
+
+        res.json({ loginHistory: result.rows });
+    } catch (err) {
+        logger.error('Error fetching user login history', err);
+        res.status(500).json({ message: 'Server error fetching login history' });
+    }
+});
+
+// Clear suspicious flag for a user
+app.post('/admin/users/:userId/clear-suspicious', async (req, res) => {
+    const { userId } = req.params;
+    try {
+        await db.query(`
+            UPDATE login_history 
+            SET is_suspicious = false, suspicious_reason = NULL 
+            WHERE user_id = $1
+        `, [userId]);
+
+        res.json({ message: 'Suspicious flags cleared successfully' });
+    } catch (err) {
+        logger.error('Error clearing suspicious flags', err);
+        res.status(500).json({ message: 'Server error' });
     }
 });
 
@@ -512,7 +1030,7 @@ app.get('/user-analysis/:userId', requireSession, async (req, res) => {
         if (topics.length > 0) {
             // First try to find topics with 5+ questions for reliability
             const reliableTopics = topics.filter(t => t.total_answered >= 5);
-            
+
             if (reliableTopics.length >= 2) {
                 // We have enough reliable topics
                 best_topic = reliableTopics.reduce((a, b) => {
@@ -585,7 +1103,7 @@ app.get('/user-analysis/:userId', requireSession, async (req, res) => {
                 avg_time_per_question: latestQuiz.avg_time_per_question || 0,
                 topics_covered: (() => {
                     if (!latestQuiz.topics_covered) return [];
-                    
+
                     try {
                         if (typeof latestQuiz.topics_covered === 'string') {
                             const parsed = JSON.parse(latestQuiz.topics_covered);
@@ -596,9 +1114,9 @@ app.get('/user-analysis/:userId', requireSession, async (req, res) => {
                             return [];
                         }
                     } catch (e) {
-                        logger.warn("Failed to parse topics_covered", { 
-                            topics_covered: latestQuiz.topics_covered, 
-                            error: e.message 
+                        logger.warn("Failed to parse topics_covered", {
+                            topics_covered: latestQuiz.topics_covered,
+                            error: e.message
                         });
                         return [];
                     }
@@ -670,7 +1188,7 @@ app.get('/question-attempts/session/:sessionId', requireSession, async (req, res
 app.get('/wrong-questions/user/:userId', requireSession, async (req, res) => {
     const { userId } = req.params;
     const { limit = 50, offset = 0 } = req.query;
-    
+
     try {
         // Get wrong question attempts with question details
         const result = await db.query(`
@@ -687,7 +1205,7 @@ app.get('/wrong-questions/user/:userId', requireSession, async (req, res) => {
             ORDER BY uqa.attempted_at DESC
             LIMIT $2 OFFSET $3
         `, [userId, parseInt(limit), parseInt(offset)]);
-        
+
         // Get total count for pagination
         const countResult = await db.query(`
             SELECT COUNT(*) as total
@@ -695,7 +1213,7 @@ app.get('/wrong-questions/user/:userId', requireSession, async (req, res) => {
             WHERE uqa.user_id = $1 
             AND uqa.is_correct = false
         `, [userId]);
-        
+
         res.json({
             wrongQuestions: result.rows,
             total: parseInt(countResult.rows[0].total),
@@ -732,11 +1250,11 @@ app.get('/api/all-questions', async (req, res) => {
 
         // Fetch all necessary fields for question library
         const result = await db.query("SELECT id, question_text, option1, option2, option3, option4, question_type, correct_option, source FROM questions");
-        
+
         // Update cache
         questionsCache.data = result.rows;
         questionsCache.timestamp = now;
-        
+
         res.json({ questions: result.rows });
     } catch (err) {
         res.status(500).json({ message: 'Server error' });
@@ -766,18 +1284,18 @@ app.get('/user-streaks/:user_id', requireSession, async (req, res) => {
                     return d;
                 })
                 .sort((a, b) => a.getTime() - b.getTime());
-            
+
             let runningStreak = 0;
             let prevDate = null;
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             const yesterday = new Date(today);
             yesterday.setDate(yesterday.getDate() - 1);
-            
+
             // Calculate streaks from most recent to oldest
             for (let i = dates.length - 1; i >= 0; i--) {
                 const date = dates[i];
-                
+
                 if (!prevDate) {
                     runningStreak = 1;
                 } else {
@@ -788,17 +1306,17 @@ app.get('/user-streaks/:user_id', requireSession, async (req, res) => {
                         runningStreak = 1;
                     }
                 }
-                
+
                 longestStreak = Math.max(longestStreak, runningStreak);
                 prevDate = date;
-                
+
                 // Current streak is the streak ending on the most recent quiz date
                 // or yesterday if they haven't taken a quiz today
                 if (date.getTime() === today.getTime() || date.getTime() === yesterday.getTime()) {
                     currentStreak = runningStreak;
                 }
             }
-            
+
             lastActiveDate = dates[dates.length - 1];
         }
 
@@ -823,7 +1341,7 @@ app.get('/api/questions', async (req, res) => {
     let query = 'SELECT * FROM questions';
     let values = [];
     let conditions = [];
-    
+
     // Handle question type filtering
     if (!typesParam || typesParam === 'mix') {
         // No filter – return all
@@ -832,7 +1350,7 @@ app.get('/api/questions', async (req, res) => {
         conditions.push(`question_type = ANY($1::text[])`);
         values.push(selectedTypes);
     }
-    
+
     // Handle source filtering
     if (sourceParam && sourceParam !== 'mix') {
         const paramIndex = values.length + 1;
@@ -859,18 +1377,18 @@ app.get('/api/questions', async (req, res) => {
 
     try {
         // Log query for debugging
-        logger.debug('Executing questions query', { 
-            query: query.substring(0, 100) + '...', 
+        logger.debug('Executing questions query', {
+            query: query.substring(0, 100) + '...',
             paramCount: values.length + 1,
-            limit 
+            limit
         });
-        
+
         const startTime = Date.now();
         const result = await db.query(query, [...values, limit]);
         const endTime = Date.now();
-        
+
         logger.debug(`Questions query executed in ${endTime - startTime}ms, returned ${result.rows.length} questions`);
-        
+
         res.json({ questions: result.rows });
     } catch (err) {
         logger.error('Error fetching questions', err);
@@ -1155,7 +1673,7 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
 
         // Determine the actual source based on the questions that were answered
         let actualSource = source || 'general';
-        
+
         // If we have question IDs, determine the source from the actual questions
         if (question_ids && question_ids.length > 0) {
             try {
@@ -1167,7 +1685,7 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
                     ORDER BY count DESC 
                     LIMIT 1
                 `, [question_ids]);
-                
+
                 if (sourceQuery.rows.length > 0) {
                     actualSource = sourceQuery.rows[0].source;
                 }
@@ -1211,10 +1729,10 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
                 endTime
             ]
         );
-        
-        logger.info("Quiz session created", { 
-            id: result.rows[0].id, 
-            session_id: result.rows[0].session_id 
+
+        logger.info("Quiz session created", {
+            id: result.rows[0].id,
+            session_id: result.rows[0].session_id
         });
 
         // Record question progress for each answered question (parallelized)
@@ -1226,22 +1744,22 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
             `, [question_ids]);
 
             // Parallelize question progress inserts for better performance
-            const progressPromises = questionDetails.rows.map(question => 
+            const progressPromises = questionDetails.rows.map(question =>
                 db.query(`
                     INSERT INTO user_question_progress (user_id, question_id, question_type, source)
                     VALUES ($1, $2, $3, $4)
                     ON CONFLICT (user_id, question_id) DO NOTHING
                 `, [user_id, question.id, question.question_type, question.source || 'general'])
             );
-            
+
             await Promise.all(progressPromises);
         }
 
         // Record detailed question attempts if provided (parallelized)
         if (question_attempts && question_attempts.length > 0) {
-            logger.debug("Recording question attempts", { 
+            logger.debug("Recording question attempts", {
                 attemptCount: question_attempts.length,
-                sessionId: result.rows[0].id 
+                sessionId: result.rows[0].id
             });
 
             // Parallelize question attempt inserts for better performance
@@ -1258,29 +1776,29 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
                     attempt.time_taken,
                     result.rows[0].id
                 ]).catch(attemptError => {
-                    logger.warn("Failed to record question attempt", { 
+                    logger.warn("Failed to record question attempt", {
                         error: attemptError.message,
-                        attempt: attempt 
+                        attempt: attempt
                     });
                     // Return null for failed attempts so Promise.allSettled continues
                     return null;
                 })
             );
-            
+
             // Use allSettled to continue even if some attempts fail
             const results = await Promise.allSettled(attemptPromises);
             // Log any failures for debugging
             results.forEach((result, index) => {
                 if (result.status === 'rejected') {
-                    logger.warn("Question attempt insert failed", { 
+                    logger.warn("Question attempt insert failed", {
                         attemptIndex: index,
-                        error: result.reason?.message 
+                        error: result.reason?.message
                     });
                 }
             });
         }
 
-        res.status(201).json({ 
+        res.status(201).json({
             id: result.rows[0].id,
             session_id: result.rows[0].session_id,
             message: 'Quiz session created successfully'
@@ -1295,7 +1813,7 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
 app.get('/quiz-sessions/history/:userId', requireSession, async (req, res) => {
     const { userId } = req.params;
     const { page = 1, limit = 10, source, quiz_type, start_date, end_date } = req.query;
-    
+
     try {
         const offset = (page - 1) * limit;
         let whereConditions = ['user_id = $1'];
@@ -1363,9 +1881,9 @@ app.get('/quiz-sessions/history/:userId', requireSession, async (req, res) => {
             ORDER BY start_time DESC 
             LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}
         `;
-        
+
         const sessionsResult = await db.query(sessionsQuery, [...queryParams, limit, offset]);
-        
+
         // Convert numeric fields from strings to numbers
         const sessions = sessionsResult.rows.map(session => ({
             ...session,
@@ -1377,7 +1895,7 @@ app.get('/quiz-sessions/history/:userId', requireSession, async (req, res) => {
             fastest_question_time: parseInt(session.fastest_question_time) || 0,
             slowest_question_time: parseInt(session.slowest_question_time) || 0
         }));
-        
+
         res.json({
             sessions: sessions,
             pagination: {
@@ -1396,14 +1914,14 @@ app.get('/quiz-sessions/history/:userId', requireSession, async (req, res) => {
 // Get detailed quiz session by ID
 app.get('/quiz-sessions/:sessionId', requireSession, async (req, res) => {
     const { sessionId } = req.params;
-    
+
     logger.debug('Fetching quiz session details', { sessionId });
-    
+
     try {
         // Check if sessionId is a number or UUID
         const isNumeric = !isNaN(sessionId) && !isNaN(parseFloat(sessionId));
         let whereClause, queryParams;
-        
+
         if (isNumeric) {
             // Search by integer ID
             whereClause = 'WHERE id = $1';
@@ -1413,7 +1931,7 @@ app.get('/quiz-sessions/:sessionId', requireSession, async (req, res) => {
             whereClause = 'WHERE session_id = $1';
             queryParams = [sessionId];
         }
-        
+
         const sessionResult = await db.query(`
             SELECT 
                 id,
@@ -1438,10 +1956,10 @@ app.get('/quiz-sessions/:sessionId', requireSession, async (req, res) => {
             ${whereClause}
         `, queryParams);
 
-        logger.debug('Session query result', { 
-            rowCount: sessionResult.rows.length, 
+        logger.debug('Session query result', {
+            rowCount: sessionResult.rows.length,
             sessionId,
-            foundSession: sessionResult.rows[0] 
+            foundSession: sessionResult.rows[0]
         });
 
         if (sessionResult.rows.length === 0) {
@@ -1452,7 +1970,7 @@ app.get('/quiz-sessions/:sessionId', requireSession, async (req, res) => {
         // Get question attempts for this session
         const sessionIdForAttempts = sessionResult.rows[0].id;
         logger.debug('Fetching question attempts', { sessionIdForAttempts });
-        
+
         let attemptsResult;
         try {
             attemptsResult = await db.query(`
@@ -1476,15 +1994,15 @@ app.get('/quiz-sessions/:sessionId', requireSession, async (req, res) => {
                 WHERE qa.quiz_session_id = $1
                 ORDER BY qa.created_at ASC
             `, [sessionIdForAttempts]);
-            
-            logger.debug('Question attempts query result', { 
+
+            logger.debug('Question attempts query result', {
                 attemptCount: attemptsResult.rows.length,
-                sessionIdForAttempts 
+                sessionIdForAttempts
             });
         } catch (attemptsError) {
-            logger.warn('Error fetching question attempts, continuing without them', { 
+            logger.warn('Error fetching question attempts, continuing without them', {
                 error: attemptsError.message,
-                sessionIdForAttempts 
+                sessionIdForAttempts
             });
             // Continue without question attempts
             attemptsResult = { rows: [] };
@@ -1511,7 +2029,7 @@ app.get('/quiz-sessions/:sessionId', requireSession, async (req, res) => {
 
         // Check if this is an old session (no question attempts)
         const isOldSession = convertedAttempts.length === 0;
-        
+
         res.json({
             session: convertedSession,
             question_attempts: convertedAttempts,
@@ -1520,15 +2038,15 @@ app.get('/quiz-sessions/:sessionId', requireSession, async (req, res) => {
         });
     } catch (err) {
         logger.error('Error fetching quiz session details', err);
-        logger.error('Error details', { 
-            message: err.message, 
-            stack: err.stack, 
+        logger.error('Error details', {
+            message: err.message,
+            stack: err.stack,
             code: err.code,
-            sessionId 
+            sessionId
         });
-        res.status(500).json({ 
+        res.status(500).json({
             message: 'Failed to fetch quiz session details',
-            error: err.message 
+            error: err.message
         });
     }
 });
@@ -1537,7 +2055,7 @@ app.get('/quiz-sessions/:sessionId', requireSession, async (req, res) => {
 app.get('/quiz-sessions/stats/:userId', requireSession, async (req, res) => {
     const { userId } = req.params;
     const { period = 'all' } = req.query; // all, week, month, year
-    
+
     try {
         let dateFilter = '';
         if (period === 'week') {
@@ -1623,11 +2141,11 @@ app.post('/api/questions', async (req, res) => {
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
             [question_text, option1, option2, option3, option4, question_type, correct_option, source]
         );
-        
+
         // Invalidate cache when new question is added
         questionsCache.data = null;
         questionsCache.timestamp = null;
-        
+
         res.status(201).json({
             message: "Question added successfully",
             question: result.rows[0]
@@ -1706,7 +2224,7 @@ app.get('/questions', async (req, res) => {
 app.get('/api/check-completion/:userId', requireSession, async (req, res) => {
     const { userId } = req.params;
     const { type, source } = req.query;
-    
+
     try {
         // Get total questions for this cardinality
         const totalQuery = await db.query(`
@@ -1714,18 +2232,18 @@ app.get('/api/check-completion/:userId', requireSession, async (req, res) => {
             FROM questions 
             WHERE question_type = $1 AND source = $2
         `, [type, source]);
-        
+
         // Get completed questions for this cardinality
         const completedQuery = await db.query(`
             SELECT COUNT(*) as completed
             FROM user_question_progress 
             WHERE user_id = $1 AND question_type = $2 AND source = $3
         `, [userId, type, source]);
-        
+
         const total = parseInt(totalQuery.rows[0].total);
         const completed = parseInt(completedQuery.rows[0].completed);
         const isCompleted = total > 0 && completed >= total;
-        
+
         res.json({
             total,
             completed,
@@ -1741,7 +2259,7 @@ app.get('/api/check-completion/:userId', requireSession, async (req, res) => {
 // Award achievement when user completes a cardinality
 app.post('/api/award-achievement', requireSession, async (req, res) => {
     const { userId, achievementType, achievementKey, achievementName, achievementDescription } = req.body;
-    
+
     try {
         const result = await db.query(`
             INSERT INTO user_achievements (user_id, achievement_type, achievement_key, achievement_name, achievement_description)
@@ -1749,7 +2267,7 @@ app.post('/api/award-achievement', requireSession, async (req, res) => {
             ON CONFLICT (user_id, achievement_type, achievement_key) DO NOTHING
             RETURNING *
         `, [userId, achievementType, achievementKey, achievementName, achievementDescription]);
-        
+
         res.json({ success: true, achievement: result.rows[0] });
     } catch (err) {
         console.error('Error awarding achievement:', err);
@@ -1760,14 +2278,14 @@ app.post('/api/award-achievement', requireSession, async (req, res) => {
 // Get user achievements
 app.get('/api/user-achievements/:userId', requireSession, async (req, res) => {
     const { userId } = req.params;
-    
+
     try {
         const result = await db.query(`
             SELECT * FROM user_achievements 
             WHERE user_id = $1 
             ORDER BY earned_at DESC
         `, [userId]);
-        
+
         res.json({ achievements: result.rows });
     } catch (err) {
         console.error('Error fetching achievements:', err);
@@ -1778,13 +2296,13 @@ app.get('/api/user-achievements/:userId', requireSession, async (req, res) => {
 // Reset user progress for a specific cardinality
 app.post('/api/reset-progress', requireSession, async (req, res) => {
     const { userId, type, source } = req.body;
-    
+
     try {
         await db.query(`
             DELETE FROM user_question_progress 
             WHERE user_id = $1 AND question_type = $2 AND source = $3
         `, [userId, type, source]);
-        
+
         res.json({ success: true, message: 'Progress reset successfully' });
     } catch (err) {
         console.error('Error resetting progress:', err);
@@ -1839,7 +2357,7 @@ app.get('/debug/schema', async (req, res) => {
     try {
         const tables = ['user_quiz_sessions', 'questions'];
         const schema = {};
-        
+
         for (const table of tables) {
             const result = await db.query(`
                 SELECT column_name, data_type, column_default, is_nullable
@@ -1849,7 +2367,7 @@ app.get('/debug/schema', async (req, res) => {
             `, [table]);
             schema[table] = result.rows;
         }
-        
+
         res.json(schema);
     } catch (err) {
         console.error("Error fetching schema:", err);
@@ -1861,7 +2379,7 @@ app.get('/debug/schema', async (req, res) => {
 app.get('/debug/quiz-sessions/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
-        
+
         // First, check what columns exist
         const columnsCheck = await db.query(`
             SELECT column_name, data_type 
@@ -1869,9 +2387,9 @@ app.get('/debug/quiz-sessions/:userId', async (req, res) => {
             WHERE table_name = 'user_quiz_sessions'
             ORDER BY ordinal_position;
         `);
-        
+
         console.log('Available columns in user_quiz_sessions:', columnsCheck.rows);
-        
+
         const result = await db.query(`
             SELECT id, user_id, total_questions, correct_answers, COALESCE(source, 'general') as source, start_time, duration, avg_time_per_question
             FROM user_quiz_sessions 
@@ -1879,10 +2397,10 @@ app.get('/debug/quiz-sessions/:userId', async (req, res) => {
             ORDER BY start_time DESC 
             LIMIT 10
         `, [userId]);
-        
-        res.json({ 
+
+        res.json({
             columns: columnsCheck.rows,
-            quiz_sessions: result.rows 
+            quiz_sessions: result.rows
         });
     } catch (err) {
         console.error("Error fetching quiz sessions:", err);
@@ -2004,28 +2522,28 @@ app.put('/questions/:id', async (req, res) => {
 // Get user progress data
 app.get('/quiz-sessions/progress/:userId', requireSession, async (req, res) => {
     const { userId } = req.params;
-    
+
     try {
         logger.debug('Fetching progress data', { userId });
-        
+
         // Get total questions count
         const totalQuestionsResult = await db.query(`
             SELECT COUNT(*) as total_questions
             FROM questions
         `);
-        
+
         // Get answered questions count
         const answeredQuestionsResult = await db.query(`
             SELECT COUNT(DISTINCT question_id) as answered_questions
             FROM user_question_attempts
             WHERE user_id = $1
         `, [userId]);
-        
+
         const totalQuestions = parseInt(totalQuestionsResult.rows[0].total_questions);
         const answeredQuestions = parseInt(answeredQuestionsResult.rows[0].answered_questions);
         const percentageCompleted = totalQuestions > 0 ? (answeredQuestions / totalQuestions) * 100 : 0;
         const remainingQuestions = totalQuestions - answeredQuestions;
-        
+
         // Get source breakdown
         const sourceBreakdownResult = await db.query(`
             SELECT 
@@ -2036,7 +2554,7 @@ app.get('/quiz-sessions/progress/:userId', requireSession, async (req, res) => {
             LEFT JOIN user_question_attempts uqa ON q.id = uqa.question_id AND uqa.user_id = $1
             GROUP BY COALESCE(q.source, 'general')
         `, [userId]);
-        
+
         const sourceBreakdown = {};
         sourceBreakdownResult.rows.forEach(row => {
             sourceBreakdown[row.source] = {
@@ -2044,7 +2562,7 @@ app.get('/quiz-sessions/progress/:userId', requireSession, async (req, res) => {
                 answered: parseInt(row.answered_questions)
             };
         });
-        
+
         // Get question type breakdown
         const typeBreakdownResult = await db.query(`
             SELECT 
@@ -2055,7 +2573,7 @@ app.get('/quiz-sessions/progress/:userId', requireSession, async (req, res) => {
             LEFT JOIN user_question_attempts uqa ON q.id = uqa.question_id AND uqa.user_id = $1
             GROUP BY q.question_type
         `, [userId]);
-        
+
         const typeBreakdown = {};
         typeBreakdownResult.rows.forEach(row => {
             typeBreakdown[row.question_type] = {
@@ -2063,7 +2581,7 @@ app.get('/quiz-sessions/progress/:userId', requireSession, async (req, res) => {
                 answered: parseInt(row.answered_questions)
             };
         });
-        
+
         const progressData = {
             totalQuestions,
             answeredQuestions,
@@ -2072,20 +2590,20 @@ app.get('/quiz-sessions/progress/:userId', requireSession, async (req, res) => {
             sourceBreakdown,
             typeBreakdown
         };
-        
-        logger.info('Progress data fetched successfully', { 
-            userId, 
-            totalQuestions, 
-            answeredQuestions, 
-            percentageCompleted 
+
+        logger.info('Progress data fetched successfully', {
+            userId,
+            totalQuestions,
+            answeredQuestions,
+            percentageCompleted
         });
-        
+
         res.json(progressData);
-        
+
     } catch (err) {
-        logger.error('Error fetching progress data', { 
-            error: err.message, 
-            userId 
+        logger.error('Error fetching progress data', {
+            error: err.message,
+            userId
         });
         res.status(500).json({ message: 'Failed to fetch progress data' });
     }
@@ -2098,38 +2616,38 @@ app.listen(PORT, () => {
 
 // Get user account status (accounts are now free, no subscription needed)
 app.get('/api/user-subscription/:userId', async (req, res) => {
-  const { userId } = req.params;
-  
-  try {
-    const result = await db.query(
-      `SELECT id, username, email, isactive, signup_method 
+    const { userId } = req.params;
+
+    try {
+        const result = await db.query(
+            `SELECT id, username, email, isactive, signup_method 
        FROM accounts WHERE id = $1`,
-      [userId]
-    );
-    
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'User not found' });
+            [userId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const user = result.rows[0];
+
+        // Accounts are free - no subscription expiration
+        res.json({
+            user: {
+                ...user,
+                isactive: user.isactive,
+                daysRemaining: null // Free accounts don't expire
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching user status:', error);
+        res.status(500).json({ message: 'Failed to fetch user status' });
     }
-    
-    const user = result.rows[0];
-    
-    // Accounts are free - no subscription expiration
-    res.json({
-      user: {
-        ...user,
-        isactive: user.isactive,
-        daysRemaining: null // Free accounts don't expire
-      }
-    });
-  } catch (error) {
-    console.error('Error fetching user status:', error);
-    res.status(500).json({ message: 'Failed to fetch user status' });
-  }
 });
 
 app.delete('/users/:userId', async (req, res) => {
     const { userId } = req.params;
-    
+
     if (!userId) {
         return res.status(400).json({ message: 'Invalid user ID' });
     }
@@ -2137,67 +2655,67 @@ app.delete('/users/:userId', async (req, res) => {
     try {
         // Start a transaction to ensure all deletions succeed or fail together
         const client = await db.connect();
-        
+
         try {
             await client.query('BEGIN');
-            
+
             // Delete user data from all related tables in the correct order
             // (respecting foreign key constraints)
-            
+
             // 1. Delete question attempts
             await client.query(
                 'DELETE FROM user_question_attempts WHERE user_id = $1',
                 [userId]
             );
-            
+
             // 2. Delete quiz sessions
             await client.query(
                 'DELETE FROM user_quiz_sessions WHERE user_id = $1',
                 [userId]
             );
-            
+
             // 3. Delete topic analysis
             await client.query(
                 'DELETE FROM user_topic_analysis WHERE user_id = $1',
                 [userId]
             );
-            
+
             // 4. Delete user streaks
             await client.query(
                 'DELETE FROM user_streaks WHERE user_id = $1',
                 [userId]
             );
-            
+
             // 5. Delete user analysis
             await client.query(
                 'DELETE FROM user_analysis WHERE user_id = $1',
                 [userId]
             );
-            
+
             // 6. Finally, delete the user account from accounts table
             const result = await client.query(
                 'DELETE FROM accounts WHERE id = $1 RETURNING username',
                 [userId]
             );
-            
+
             if (result.rows.length === 0) {
                 await client.query('ROLLBACK');
                 return res.status(404).json({ message: 'User not found' });
             }
-            
+
             await client.query('COMMIT');
-            
-            res.json({ 
-                message: `User '${result.rows[0].username}' and all associated data deleted successfully` 
+
+            res.json({
+                message: `User '${result.rows[0].username}' and all associated data deleted successfully`
             });
-            
+
         } catch (error) {
             await client.query('ROLLBACK');
             throw error;
         } finally {
             client.release();
         }
-        
+
     } catch (err) {
         console.error('Error deleting user:', err);
         res.status(500).json({ message: 'Failed to delete user and associated data' });
@@ -2221,7 +2739,7 @@ function getSessionCredentials(req) {
 
 function requireSession(req, res, next) {
     const { username, sessionToken } = getSessionCredentials(req);
-    
+
     logger.debug('requireSession middleware', {
         method: req.method,
         url: req.url,
@@ -2230,7 +2748,7 @@ function requireSession(req, res, next) {
         query: req.query,
         body: req.body
     });
-    
+
     if (!username || !sessionToken) {
         logger.warn('Missing session credentials', { username, sessionToken: sessionToken ? 'present' : 'missing' });
         return res.status(401).json({ message: 'Missing session credentials' });
@@ -2238,8 +2756,8 @@ function requireSession(req, res, next) {
     db.query('SELECT session_token FROM accounts WHERE username = $1', [username])
         .then(result => {
             if (!result.rows.length || result.rows[0].session_token !== sessionToken) {
-                logger.warn('Session invalid or expired', { 
-                    username, 
+                logger.warn('Session invalid or expired', {
+                    username,
                     hasSessionInDB: result.rows.length > 0,
                     sessionMatches: result.rows.length > 0 ? result.rows[0].session_token === sessionToken : false
                 });
@@ -2550,7 +3068,7 @@ Purpose: Testing email notifications
 
 If you receive this email, the notification system is working correctly.
         `;
-        
+
         const emailHtml = `
             <h2>🧪 Test Email - MEDQIZE System</h2>
             <p><strong>System Status:</strong> ✅ Email system is working properly</p>
@@ -2562,17 +3080,17 @@ If you receive this email, the notification system is working correctly.
         `;
 
         await sendEmail('muhmodalshraky3@gmail.com', emailSubject, emailText, emailHtml);
-        
-        res.status(200).json({ 
-            success: true, 
-            message: 'Test email sent successfully' 
+
+        res.status(200).json({
+            success: true,
+            message: 'Test email sent successfully'
         });
     } catch (error) {
         console.error('❌ Test email failed:', error);
-        res.status(500).json({ 
-            success: false, 
+        res.status(500).json({
+            success: false,
             message: 'Failed to send test email',
-            error: error.message 
+            error: error.message
         });
     }
 });
@@ -2607,7 +3125,7 @@ ${message}
 
 Please respond to the user as soon as possible.
             `;
-            
+
             const emailHtml = `
                 <h2>📞 Contact Form Submission</h2>
                 <p><strong>Name:</strong> ${name}</p>
@@ -2691,14 +3209,14 @@ app.post('/api/admin/init-temp-links-tables', async (req, res) => {
 app.post('/api/admin/generate-temp-link', async (req, res) => {
     try {
         const { maxUses, createdBy } = req.body;
-        
+
         if (!maxUses || maxUses < 1) {
             return res.status(400).json({ message: 'Max uses must be at least 1' });
         }
 
         // Generate a unique token (similar to your preferred format)
         const token = Math.random().toString(36).substring(2, 8);
-        
+
         // Insert the new link
         const result = await db.query(
             `INSERT INTO temporary_signup_links (token, max_uses, created_by) 
@@ -2754,7 +3272,7 @@ app.get('/api/admin/temp-links', async (req, res) => {
 
         // Use frontend URL instead of backend URL for the signup links
         const frontendUrl = 'https://www.smle-question-bank.com';
-        
+
         const links = result.rows.map(link => ({
             id: link.id,
             token: link.token,
@@ -2780,36 +3298,36 @@ app.get('/api/admin/temp-links', async (req, res) => {
 app.get('/api/validate-temp-link/:token', async (req, res) => {
     try {
         const { token } = req.params;
-        
+
         const result = await db.query(
             `SELECT * FROM temporary_signup_links WHERE token = $1 AND is_active = true`,
             [token]
         );
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ 
-                valid: false, 
-                message: 'Invalid or expired link' 
+            return res.status(404).json({
+                valid: false,
+                message: 'Invalid or expired link'
             });
         }
 
         const link = result.rows[0];
-        
+
         if (link.current_uses >= link.max_uses) {
             // Auto-deactivate link when limit is reached
             await db.query(
                 `UPDATE temporary_signup_links SET is_active = false WHERE id = $1`,
                 [link.id]
             );
-            
-            return res.status(400).json({ 
-                valid: false, 
-                message: 'This link has reached its usage limit' 
+
+            return res.status(400).json({
+                valid: false,
+                message: 'This link has reached its usage limit'
             });
         }
 
-        res.json({ 
-            valid: true, 
+        res.json({
+            valid: true,
             link: {
                 id: link.id,
                 token: link.token,
@@ -2828,11 +3346,11 @@ app.get('/api/validate-temp-link/:token', async (req, res) => {
 app.post('/api/signup/free', async (req, res) => {
     try {
         const { username, password } = req.body;
-        
+
         if (!username || !password) {
-            return res.status(400).json({ 
+            return res.status(400).json({
                 success: false,
-                message: 'Username and password are required' 
+                message: 'Username and password are required'
             });
         }
 
@@ -2849,9 +3367,9 @@ app.post('/api/signup/free', async (req, res) => {
             );
 
             if (existingUser.rows.length > 0) {
-                return res.status(400).json({ 
+                return res.status(400).json({
                     success: false,
-                    message: 'Username already exists' 
+                    message: 'Username already exists'
                 });
             }
 
@@ -2876,7 +3394,7 @@ Created: ${new Date().toLocaleString()}
 
 This is a free account with full access to all features.
                 `;
-                
+
                 const emailHtml = `
                     <h2>✅ Free Account Created</h2>
                     <p><strong>Username:</strong> ${lowercaseUsername}</p>
@@ -2902,9 +3420,9 @@ This is a free account with full access to all features.
 
     } catch (err) {
         console.error('Error creating free account:', err);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
-            message: 'Failed to create account' 
+            message: 'Failed to create account'
         });
     }
 });
@@ -2913,7 +3431,7 @@ This is a free account with full access to all features.
 app.post('/api/signup/temp-link', async (req, res) => {
     try {
         const { token, username, password } = req.body;
-        
+
         if (!token || !username || !password) {
             return res.status(400).json({ message: 'Token, username, and password are required' });
         }
@@ -3005,7 +3523,7 @@ Link Usage: ${link.current_uses + 1}/${link.max_uses}
 
 This account was created using a temporary signup link and is ready for use.
                 `;
-                
+
                 const emailHtml = `
                     <h2>🔗 Account Created via Temp Link</h2>
                     <p><strong>Username:</strong> ${lowercaseUsername}</p>
@@ -3044,7 +3562,7 @@ This account was created using a temporary signup link and is ready for use.
 app.post('/api/admin/deactivate-temp-link/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        
+
         const result = await db.query(
             `UPDATE temporary_signup_links SET is_active = false WHERE id = $1 RETURNING *`,
             [id]
@@ -3054,9 +3572,9 @@ app.post('/api/admin/deactivate-temp-link/:id', async (req, res) => {
             return res.status(404).json({ message: 'Link not found' });
         }
 
-        res.json({ 
-            success: true, 
-            message: 'Link deactivated successfully' 
+        res.json({
+            success: true,
+            message: 'Link deactivated successfully'
         });
     } catch (err) {
         console.error('Error deactivating temp link:', err);
@@ -3069,31 +3587,31 @@ app.post('/api/admin/deactivate-temp-link/:id', async (req, res) => {
 // Get questions count by type and source for final quiz
 app.get('/final-quiz/questions-count', requireSession, async (req, res) => {
     const { questionType, source } = req.query;
-    
+
     try {
         logger.debug('Fetching questions count for final quiz', { questionType, source });
-        
+
         const result = await db.query(`
             SELECT COUNT(*) as total_questions
             FROM questions 
             WHERE question_type = $1 AND source = $2
         `, [questionType, source]);
-        
+
         const totalQuestions = parseInt(result.rows[0].total_questions);
-        
-        logger.info('Questions count fetched successfully', { 
-            questionType, 
-            source, 
-            totalQuestions 
+
+        logger.info('Questions count fetched successfully', {
+            questionType,
+            source,
+            totalQuestions
         });
-        
+
         res.json({ totalQuestions });
-        
+
     } catch (err) {
-        logger.error('Error fetching questions count for final quiz', { 
-            error: err.message, 
-            questionType, 
-            source 
+        logger.error('Error fetching questions count for final quiz', {
+            error: err.message,
+            questionType,
+            source
         });
         res.status(500).json({ message: 'Failed to fetch questions count' });
     }
@@ -3102,15 +3620,15 @@ app.get('/final-quiz/questions-count', requireSession, async (req, res) => {
 // Get all questions for final quiz (including previously answered ones)
 app.get('/final-quiz/questions', requireSession, async (req, res) => {
     const { questionType, source } = req.query;
-    
+
     try {
-        logger.debug('Fetching all questions for final quiz', { 
-            questionType, 
+        logger.debug('Fetching all questions for final quiz', {
+            questionType,
             source,
             username: req.query.username,
             sessionToken: req.query.sessionToken ? 'present' : 'missing'
         });
-        
+
         const result = await db.query(`
             SELECT 
                 id,
@@ -3126,22 +3644,22 @@ app.get('/final-quiz/questions', requireSession, async (req, res) => {
             WHERE question_type = $1 AND source = $2
             ORDER BY RANDOM()
         `, [questionType, source]);
-        
+
         const questions = result.rows;
-        
-        logger.info('Questions fetched successfully for final quiz', { 
-            questionType, 
-            source, 
-            count: questions.length 
+
+        logger.info('Questions fetched successfully for final quiz', {
+            questionType,
+            source,
+            count: questions.length
         });
-        
+
         res.json({ questions });
-        
+
     } catch (err) {
-        logger.error('Error fetching questions for final quiz', { 
-            error: err.message, 
-            questionType, 
-            source 
+        logger.error('Error fetching questions for final quiz', {
+            error: err.message,
+            questionType,
+            source
         });
         res.status(500).json({ message: 'Failed to fetch questions' });
     }
@@ -3149,34 +3667,34 @@ app.get('/final-quiz/questions', requireSession, async (req, res) => {
 
 // Submit final quiz session
 app.post('/final-quiz/submit', requireSession, async (req, res) => {
-    const { 
-        userId, 
-        questionType, 
-        source, 
-        totalQuestions, 
-        correctAnswers, 
-        timeTaken, 
+    const {
+        userId,
+        questionType,
+        source,
+        totalQuestions,
+        correctAnswers,
+        timeTaken,
         timeLimit,
         sessionMetadata,
         questionIds = [], // Array of question IDs used in the quiz
         questionAttempts = [] // Array of question attempts with user answers
     } = req.body;
-    
+
     try {
-        logger.info('Final quiz submission request received', { 
-            userId, 
-            questionType, 
-            source, 
-            totalQuestions, 
+        logger.info('Final quiz submission request received', {
+            userId,
+            questionType,
+            source,
+            totalQuestions,
             correctAnswers,
             timeTaken,
             timeLimit,
             sessionMetadata,
             requestBody: req.body
         });
-        
+
         const score = totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
-        
+
         logger.info('Inserting final quiz session into database', {
             userId,
             questionType,
@@ -3204,35 +3722,35 @@ app.post('/final-quiz/submit', requireSession, async (req, res) => {
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP, $9, $10)
             RETURNING id, session_id
         `, [
-            userId, 
-            questionType, 
-            source, 
-            totalQuestions, 
-            correctAnswers, 
-            score, 
-            timeTaken, 
-            timeLimit, 
+            userId,
+            questionType,
+            source,
+            totalQuestions,
+            correctAnswers,
+            score,
+            timeTaken,
+            timeLimit,
             JSON.stringify(sessionMetadata || {}),
             questionIds
         ]);
-        
+
         const sessionId = result.rows[0].id;
         const sessionUuid = result.rows[0].session_id;
-        
+
         logger.info('Final quiz session inserted successfully', {
             sessionId,
             sessionUuid,
             userId,
             score
         });
-        
+
         // Insert question attempts if provided
         if (questionAttempts && questionAttempts.length > 0) {
-            logger.info('Inserting question attempts', { 
-                sessionId, 
-                attemptsCount: questionAttempts.length 
+            logger.info('Inserting question attempts', {
+                sessionId,
+                attemptsCount: questionAttempts.length
             });
-            
+
             for (const attempt of questionAttempts) {
                 await db.query(`
                     INSERT INTO final_quiz_attempts (
@@ -3252,33 +3770,33 @@ app.post('/final-quiz/submit', requireSession, async (req, res) => {
                     attempt.timeTaken || 0
                 ]);
             }
-            
-            logger.info('Question attempts inserted successfully', { 
-                sessionId, 
-                attemptsCount: questionAttempts.length 
+
+            logger.info('Question attempts inserted successfully', {
+                sessionId,
+                attemptsCount: questionAttempts.length
             });
         }
-        
-        logger.info('Final quiz session submitted successfully', { 
-            userId, 
-            sessionId, 
-            sessionUuid, 
-            score: score.toFixed(2) 
+
+        logger.info('Final quiz session submitted successfully', {
+            userId,
+            sessionId,
+            sessionUuid,
+            score: score.toFixed(2)
         });
-        
-        res.json({ 
-            success: true, 
-            sessionId, 
+
+        res.json({
+            success: true,
+            sessionId,
             sessionUuid,
             score: parseFloat(score.toFixed(2))
         });
-        
+
     } catch (err) {
-        logger.error('Error submitting final quiz session', { 
-            error: err.message, 
-            userId, 
-            questionType, 
-            source 
+        logger.error('Error submitting final quiz session', {
+            error: err.message,
+            userId,
+            questionType,
+            source
         });
         res.status(500).json({ message: 'Failed to submit final quiz session' });
     }
@@ -3288,21 +3806,21 @@ app.post('/final-quiz/submit', requireSession, async (req, res) => {
 app.get('/final-quiz/sessions/:userId', requireSession, async (req, res) => {
     const { userId } = req.params;
     const { page = 1, limit = 10 } = req.query;
-    
+
     try {
         logger.info('Fetching final quiz sessions history', { userId, page, limit });
-        
+
         const offset = (parseInt(page) - 1) * parseInt(limit);
-        
+
         // Get total count
         const countResult = await db.query(`
             SELECT COUNT(*) as total 
             FROM final_review_sessions 
             WHERE user_id = $1
         `, [userId]);
-        
+
         const totalSessions = parseInt(countResult.rows[0].total);
-        
+
         // Get paginated results
         const sessionsResult = await db.query(`
             SELECT 
@@ -3323,7 +3841,7 @@ app.get('/final-quiz/sessions/:userId', requireSession, async (req, res) => {
             ORDER BY start_time DESC 
             LIMIT $2 OFFSET $3
         `, [userId, parseInt(limit), offset]);
-        
+
         // Convert numeric fields
         const sessions = sessionsResult.rows.map(session => ({
             ...session,
@@ -3333,13 +3851,13 @@ app.get('/final-quiz/sessions/:userId', requireSession, async (req, res) => {
             time_taken: parseInt(session.time_taken) || 0,
             time_limit: parseInt(session.time_limit) || 0
         }));
-        
-        logger.info('Final quiz sessions history fetched successfully', { 
-            userId, 
-            totalSessions, 
-            returnedSessions: sessions.length 
+
+        logger.info('Final quiz sessions history fetched successfully', {
+            userId,
+            totalSessions,
+            returnedSessions: sessions.length
         });
-        
+
         res.json({
             sessions: sessions,
             pagination: {
@@ -3349,11 +3867,11 @@ app.get('/final-quiz/sessions/:userId', requireSession, async (req, res) => {
                 limit: parseInt(limit)
             }
         });
-        
+
     } catch (err) {
-        logger.error('Error fetching final quiz sessions history', { 
-            error: err.message, 
-            userId 
+        logger.error('Error fetching final quiz sessions history', {
+            error: err.message,
+            userId
         });
         res.status(500).json({ message: 'Failed to fetch final quiz sessions history' });
     }
@@ -3362,14 +3880,14 @@ app.get('/final-quiz/sessions/:userId', requireSession, async (req, res) => {
 // Get detailed final quiz session
 app.get('/final-quiz/session/:sessionId', requireSession, async (req, res) => {
     const { sessionId } = req.params;
-    
+
     try {
         logger.info('Fetching detailed final quiz session', { sessionId });
-        
+
         // Check if sessionId is numeric (for id) or UUID (for session_id)
         const isNumeric = !isNaN(sessionId) && !isNaN(parseFloat(sessionId));
         let whereClause, queryParams;
-        
+
         if (isNumeric) {
             whereClause = 'WHERE id = $1';
             queryParams = [parseInt(sessionId)];
@@ -3377,7 +3895,7 @@ app.get('/final-quiz/session/:sessionId', requireSession, async (req, res) => {
             whereClause = 'WHERE session_id = $1';
             queryParams = [sessionId];
         }
-        
+
         const result = await db.query(`
             SELECT 
                 id,
@@ -3395,19 +3913,19 @@ app.get('/final-quiz/session/:sessionId', requireSession, async (req, res) => {
             FROM final_review_sessions 
             ${whereClause}
         `, queryParams);
-        
-        logger.info('Session query result:', { 
-            sessionId, 
+
+        logger.info('Session query result:', {
+            sessionId,
             rowCount: result.rows.length,
-            rows: result.rows 
+            rows: result.rows
         });
-        
+
         if (result.rows.length === 0) {
             return res.status(404).json({ message: 'Final quiz session not found' });
         }
-        
+
         const session = result.rows[0];
-        
+
         // Convert numeric fields
         const sessionData = {
             ...session,
@@ -3417,19 +3935,19 @@ app.get('/final-quiz/session/:sessionId', requireSession, async (req, res) => {
             time_taken: parseInt(session.time_taken) || 0,
             time_limit: parseInt(session.time_limit) || 0
         };
-        
-        logger.info('Final quiz session details fetched successfully', { 
-            sessionId, 
+
+        logger.info('Final quiz session details fetched successfully', {
+            sessionId,
             questionType: session.question_type,
-            source: session.source 
+            source: session.source
         });
-        
+
         res.json(sessionData);
-        
+
     } catch (err) {
-        logger.error('Error fetching final quiz session details', { 
-            error: err.message, 
-            sessionId 
+        logger.error('Error fetching final quiz session details', {
+            error: err.message,
+            sessionId
         });
         res.status(500).json({ message: 'Failed to fetch final quiz session details' });
     }
@@ -3438,14 +3956,14 @@ app.get('/final-quiz/session/:sessionId', requireSession, async (req, res) => {
 // Get questions for a specific final quiz session
 app.get('/final-quiz/session/:sessionId/questions', requireSession, async (req, res) => {
     const { sessionId } = req.params;
-    
+
     try {
         logger.info('Fetching questions for final quiz session', { sessionId });
-        
+
         // Check if sessionId is numeric (for id) or UUID (for session_id)
         const isNumeric = !isNaN(sessionId) && !isNaN(parseFloat(sessionId));
         let whereClause, queryParams;
-        
+
         if (isNumeric) {
             whereClause = 'WHERE id = $1';
             queryParams = [parseInt(sessionId)];
@@ -3453,24 +3971,24 @@ app.get('/final-quiz/session/:sessionId/questions', requireSession, async (req, 
             whereClause = 'WHERE session_id = $1';
             queryParams = [sessionId];
         }
-        
+
         // First get the question_ids from the session
         const sessionResult = await db.query(`
             SELECT question_ids 
             FROM final_review_sessions 
             ${whereClause}
         `, queryParams);
-        
+
         if (sessionResult.rows.length === 0) {
             return res.status(404).json({ message: 'Final quiz session not found' });
         }
-        
+
         const questionIds = sessionResult.rows[0].question_ids;
-        
+
         if (!questionIds || questionIds.length === 0) {
             return res.json({ questions: [] });
         }
-        
+
         // Get the questions with user answers using JOIN
         const questionsResult = await db.query(`
             SELECT 
@@ -3491,18 +4009,18 @@ app.get('/final-quiz/session/:sessionId/questions', requireSession, async (req, 
             WHERE q.id = ANY($1)
             ORDER BY array_position($1, q.id)
         `, [questionIds, sessionId]);
-        
-        logger.info('Questions with user answers fetched successfully for final quiz session', { 
-            sessionId, 
-            questionCount: questionsResult.rows.length 
+
+        logger.info('Questions with user answers fetched successfully for final quiz session', {
+            sessionId,
+            questionCount: questionsResult.rows.length
         });
-        
+
         res.json({ questions: questionsResult.rows });
-        
+
     } catch (err) {
-        logger.error('Error fetching questions for final quiz session', { 
-            error: err.message, 
-            sessionId 
+        logger.error('Error fetching questions for final quiz session', {
+            error: err.message,
+            sessionId
         });
         res.status(500).json({ message: 'Failed to fetch questions for final quiz session' });
     }
