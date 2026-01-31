@@ -64,25 +64,47 @@ const Signup = () => {
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setForm(prev => ({
-            ...prev,
-            [name]: value.toLowerCase()
-        }));
+
+        // For username, remove whitespace and only allow letters, numbers, and underscores
+        if (name === 'username') {
+            const sanitizedValue = value.replace(/\s/g, '').toLowerCase();
+            setForm(prev => ({
+                ...prev,
+                [name]: sanitizedValue
+            }));
+        } else {
+            setForm(prev => ({
+                ...prev,
+                [name]: value.toLowerCase()
+            }));
+        }
     };
 
     const validateForm = () => {
         if (!form.username || !form.password || !form.confirmPassword) {
-            setError('All fields are required');
+            setError(isArabic ? 'جميع الحقول مطلوبة' : 'All fields are required');
+            return false;
+        }
+
+        // Username validation: only letters, numbers, and underscores allowed
+        const usernameRegex = /^[a-z0-9_]+$/;
+        if (!usernameRegex.test(form.username)) {
+            setError(isArabic ? 'اسم المستخدم يجب أن يحتوي على أحرف وأرقام و _ فقط' : 'Username can only contain letters, numbers, and underscores');
+            return false;
+        }
+
+        if (form.username.length < 3) {
+            setError(isArabic ? 'اسم المستخدم يجب أن يكون 3 أحرف على الأقل' : 'Username must be at least 3 characters long');
             return false;
         }
 
         if (form.password !== form.confirmPassword) {
-            setError('Passwords do not match');
+            setError(isArabic ? 'كلمات المرور غير متطابقة' : 'Passwords do not match');
             return false;
         }
 
         if (form.password.length < 6) {
-            setError('Password must be at least 6 characters long');
+            setError(isArabic ? 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' : 'Password must be at least 6 characters long');
             return false;
         }
 

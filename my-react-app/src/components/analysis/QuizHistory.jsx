@@ -21,16 +21,16 @@ const QuizHistory = ({ userId, username, sessionToken }) => {
   const fetchSessions = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const queryParams = new URLSearchParams();
-      
+
       // Ensure pagination parameters are valid numbers
       const page = pagination.page || 1;
       const limit = pagination.limit || 10;
-      
+
       console.log('Pagination values:', { page, limit, pagination });
-      
+
       queryParams.append('page', page.toString());
       queryParams.append('limit', limit.toString());
 
@@ -41,33 +41,46 @@ const QuizHistory = ({ userId, username, sessionToken }) => {
       const url = `${Globals.URL}/quiz-sessions/history/${userId}?${queryParams.toString()}`;
       const response = await axios.get(url);
 
-      setSessions(response.data.sessions);
-      setPagination(response.data.pagination);
+      setSessions(response.data.sessions || []);
+
+      // Only update metadata from response, preserve user-controlled page/limit
+      if (response.data.pagination) {
+        setPagination(prev => ({
+          ...prev,
+          totalPages: response.data.pagination.totalPages,
+          totalSessions: response.data.pagination.totalSessions
+        }));
+      }
     } catch (err) {
       console.error('Error fetching quiz sessions:', err);
       setError('Failed to load quiz history');
+      setSessions([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Fetch detailed session information
+  // Fetch session details when expanded
   const fetchSessionDetails = async (sessionId) => {
     try {
-      const url = `${Globals.URL}/quiz-sessions/${sessionId}?username=${encodeURIComponent(username)}&sessionToken=${encodeURIComponent(sessionToken)}`;
+      const queryParams = new URLSearchParams();
+      queryParams.append('username', username);
+      queryParams.append('sessionToken', sessionToken);
+
+      const url = `${Globals.URL}/quiz-sessions/${sessionId}/details?${queryParams.toString()}`;
       const response = await axios.get(url);
+
       setSessionDetails(prev => ({
         ...prev,
         [sessionId]: response.data
       }));
     } catch (err) {
       console.error('Error fetching session details:', err);
-      setError('Failed to load session details');
     }
   };
 
   // Toggle session expansion
-  const toggleSessionExpansion = async (sessionId) => {
+  const toggleSession = async (sessionId) => {
     if (expandedSessionId === sessionId) {
       setExpandedSessionId(null);
     } else {
@@ -83,7 +96,7 @@ const QuizHistory = ({ userId, username, sessionToken }) => {
     if (userId) {
       fetchSessions();
     }
-  }, [userId, pagination]);
+  }, [userId, pagination.page, pagination.limit]);
 
   const handlePageChange = (newPage) => {
     setPagination(prev => ({
@@ -233,7 +246,7 @@ const QuizHistory = ({ userId, username, sessionToken }) => {
               </div>
 
               <div className="session-actions">
-                <button 
+                <button
                   onClick={() => toggleSessionExpansion(session.id)}
                   className="view-details-btn"
                 >
@@ -267,8 +280,8 @@ const QuizHistory = ({ userId, username, sessionToken }) => {
                     ) : (
                       <div className="questions-grid">
                         {sessionDetails[session.id].question_attempts.map((attempt, index) => (
-                          <div 
-                            key={attempt.id} 
+                          <div
+                            key={attempt.id}
                             className={`question-card ${flippedCards[attempt.id] ? 'flipped' : ''}`}
                           >
                             <div className="question-card-inner">
@@ -287,12 +300,12 @@ const QuizHistory = ({ userId, username, sessionToken }) => {
                                     </span>
                                   </div>
                                 </div>
-                                
+
                                 <div className="question-content">
                                   <div className="question-text">
                                     {attempt.question_text}
                                   </div>
-                                  
+
                                   <div className="answers-section">
                                     <div className="answer-row">
                                       <span className="answer-label wrong">Your Answer:</span>
@@ -305,7 +318,7 @@ const QuizHistory = ({ userId, username, sessionToken }) => {
                                       <span className="answer-text correct">{attempt.correct_option}</span>
                                     </div>
                                   </div>
-                                  
+
                                   <div className="question-actions">
                                     <button
                                       onClick={(e) =>
@@ -323,7 +336,7 @@ const QuizHistory = ({ userId, username, sessionToken }) => {
                                       {loadingButtons[attempt.id] ? 'Loading...' : '🔍 See More'}
                                     </button>
                                   </div>
-                                  
+
                                   <div className="question-meta">
                                     <span className="time-taken">⏱️ {attempt.time_taken}s</span>
                                     <span className="question-number">Question {index + 1}</span>
@@ -337,7 +350,7 @@ const QuizHistory = ({ userId, username, sessionToken }) => {
                                   <div className="ai-analysis-header">
                                     <h3>🧠 AI Analysis</h3>
                                   </div>
-                                  
+
                                   {loadingButtons[attempt.id] ? (
                                     <div className="ai-analysis-loading">
                                       <p>Analyzing question...</p>
@@ -349,8 +362,8 @@ const QuizHistory = ({ userId, username, sessionToken }) => {
                                       <p>{aiAnalysis[attempt.id] || 'No analysis available.'}</p>
                                     </div>
                                   )}
-                                  
-                                  <button 
+
+                                  <button
                                     className="back-to-question-btn"
                                     onClick={() => handleFlipBack(attempt.id)}
                                     disabled={loadingButtons[attempt.id]}
@@ -375,19 +388,19 @@ const QuizHistory = ({ userId, username, sessionToken }) => {
       {/* Pagination */}
       {pagination.total_pages > 1 && (
         <div className="quiz-history-pagination">
-          <button 
+          <button
             onClick={() => handlePageChange(pagination.current_page - 1)}
             disabled={pagination.current_page === 1}
             className="pagination-btn"
           >
             Previous
           </button>
-          
+
           <span className="pagination-info">
             Page {pagination.current_page} of {pagination.total_pages}
           </span>
-          
-          <button 
+
+          <button
             onClick={() => handlePageChange(pagination.current_page + 1)}
             disabled={pagination.current_page === pagination.total_pages}
             className="pagination-btn"
