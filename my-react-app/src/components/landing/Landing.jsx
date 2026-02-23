@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './Landing.css';
 import SEO from '../common/SEO';
 import useLang from '../../hooks/useLang';
@@ -107,6 +107,26 @@ const Landing = () => {
         </div>
 
         <div className="landing-shell">
+          <header className="landing-topbar" aria-label={isArabic ? 'التنقل الرئيسي' : 'Primary navigation'}>
+            <div className="topbar-brand-wrap">
+              <Link to="/" className="topbar-brand">SQB</Link>
+              <span className="topbar-tag">{isArabic ? 'بنك أسئلة SMLE' : 'SMLE Question Bank'}</span>
+            </div>
+            <nav className="topbar-links" aria-label={isArabic ? 'روابط سريعة' : 'Quick links'}>
+              <Link to="/about">{isArabic ? 'من نحن' : 'About'}</Link>
+              <Link to="/faq">{isArabic ? 'الأسئلة الشائعة' : 'FAQ'}</Link>
+              <Link to="/contact">{isArabic ? 'اتصل بنا' : 'Contact'}</Link>
+            </nav>
+            <div className="topbar-actions">
+              <button className="btn ghost" onClick={handleLogin}>
+                {isArabic ? 'تسجيل الدخول' : 'Login'}
+              </button>
+              <button className="btn primary" onClick={handleSignup}>
+                {isArabic ? 'ابدأ مجاناً' : 'Start free'}
+              </button>
+            </div>
+          </header>
+
           <section className="hero">
             <div className="hero-copy">
               <span className="pill">
@@ -172,6 +192,15 @@ const Landing = () => {
                 </div>
               </div>
             </div>
+          </section>
+
+          <section className="stat-grid" aria-label={isArabic ? 'إحصائيات المنصة' : 'Platform stats'}>
+            {stats.map((item) => (
+              <article key={item.labelEn} className="stat-card">
+                <div className="stat-value">{item.value}</div>
+                <div className="stat-label">{isArabic ? item.labelAr : item.labelEn}</div>
+              </article>
+            ))}
           </section>
 
           <section className="feature-section">
@@ -288,11 +317,15 @@ const Landing = () => {
                 : <>© {new Date().getFullYear()} <strong>SQB</strong>. All rights reserved.</>}
             </p>
             <div className="footer-links-row">
-              <a href="/privacy">{isArabic ? 'سياسة الخصوصية' : 'Privacy Policy'}</a>
+              <Link to="/privacy">{isArabic ? 'سياسة الخصوصية' : 'Privacy Policy'}</Link>
               <span>•</span>
-              <a href="/terms">{isArabic ? 'شروط الاستخدام' : 'Terms of Service'}</a>
+              <Link to="/terms">{isArabic ? 'شروط الاستخدام' : 'Terms of Service'}</Link>
               <span>•</span>
-              <a href="/contact">{isArabic ? 'اتصل بنا' : 'Contact Us'}</a>
+              <Link to="/about">{isArabic ? 'من نحن' : 'About Us'}</Link>
+              <span>•</span>
+              <Link to="/faq">{isArabic ? 'الأسئلة الشائعة' : 'FAQ'}</Link>
+              <span>•</span>
+              <Link to="/contact">{isArabic ? 'اتصل بنا' : 'Contact Us'}</Link>
             </div>
             <p className="footer-disclaimer-text">
               {isArabic

@@ -2051,3 +2051,136 @@
     justify-content: flex-end;
   }
 }
+
+/* ===== SUGGESTIONS PANEL STYLES ===== */
+.suggestions-card {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(168, 85, 247, 0.04)) !important;
+  border-color: rgba(139, 92, 246, 0.2) !important;
+}
+
+.suggestions-card .table-header h3 {
+  background: linear-gradient(135deg, #a855f7, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.suggestions-count {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 50px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.suggestions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.suggestion-item {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 14px;
+  transition: all 0.3s ease;
+}
+
+.suggestion-item:hover {
+  background: rgba(139, 92, 246, 0.08);
+  border-color: rgba(139, 92, 246, 0.2);
+}
+
+.suggestion-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.suggestion-category {
+  font-size: 1.1rem;
+}
+
+.suggestion-title {
+  flex: 1;
+  color: #f1f5f9;
+  font-weight: 600;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.priority-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.suggestion-desc {
+  color: #94a3b8;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  margin: 0 0 12px 0;
+}
+
+.suggestion-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 50px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.suggestion-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-select {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: #e2e8f0;
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.status-select:hover {
+  border-color: rgba(139, 92, 246, 0.4);
+}
+
+.status-select:focus {
+  outline: none;
+  border-color: #8b5cf6;
+}
+
+.delete-suggestion-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  opacity: 0.5;
+  transition: all 0.2s ease;
+  padding: 4px;
+}
+
+.delete-suggestion-btn:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}

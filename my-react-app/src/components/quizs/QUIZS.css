@@ -175,6 +175,50 @@
   animation: glow 2s ease-in-out infinite;
 }
 
+/* Suggestions Button */
+.suggestions-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 24px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 50%, #6d28d9 100%);
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
+  z-index: 100;
+  animation: fadeInUp 0.6s ease-out 0.5s both;
+}
+
+.suggestions-btn:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 8px 30px rgba(139, 92, 246, 0.5);
+}
+
+.suggestions-btn .suggestions-icon {
+  font-size: 18px;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.15);
+  }
+}
+
 @media (max-width: 800px) {
   .quiz-selection h1 {
     font-size: 28px;
@@ -192,6 +236,13 @@
 
   .options-container {
     gap: 1rem;
+  }
+
+  .suggestions-btn {
+    bottom: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    font-size: 13px;
   }
 }
 

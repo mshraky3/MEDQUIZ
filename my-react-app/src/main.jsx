@@ -18,9 +18,17 @@ import ErrorBoundary from './components/common/ErrorBoundary.jsx';
 import Layout from './components/common/Layout.jsx';
 import Privacy from './components/legal/Privacy.jsx';
 import Terms from './components/legal/Terms.jsx';
+import About from './components/legal/About.jsx';
+import FAQ from './components/legal/FAQ.jsx';
+import Suggestions from './components/suggestions/Suggestions.jsx';
+import CookieConsent from './components/common/CookieConsent.jsx';
 
 import Globals from './global.js';
 import { UserProvider } from './UserContext.jsx';
+
+// Initialize error tracking for global error handling
+import { initErrorTracking } from './utils/errorTracking.js';
+initErrorTracking();
 
 const getHostUrl = Globals.URL;
 
@@ -102,6 +110,21 @@ const router = createBrowserRouter([
     errorElement: <ErrorBoundary />,
   },
   {
+    path: "/about",
+    element: <Layout><About /></Layout>,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/faq",
+    element: <Layout><FAQ /></Layout>,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/suggestions",
+    element: <Layout><Suggestions /></Layout>,
+    errorElement: <ErrorBoundary />,
+  },
+  {
     path: "*",
     element: <ErrorBoundary />,
   },
@@ -111,6 +134,7 @@ createRoot(document.getElementById('root')).render(
   <StrictMode>
     <UserProvider>
       <RouterProvider router={router} />
+      <CookieConsent />
     </UserProvider>
   </StrictMode>,
 )

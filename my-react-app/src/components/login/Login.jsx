@@ -101,12 +101,12 @@ const Login = () => {
     "description": isArabic
       ? "سجّل دخولك إلى منصة SQB للوصول إلى أكثر من 5000 سؤال تدريبي وتحليلات دقيقة وأدوات تحضير شاملة لاختبار البرومترك (SMLE)."
       : "Login to your SQB account to access over 5,000 SMLE practice questions, detailed analytics, and comprehensive exam preparation tools.",
-    "url": "https://medquiz.vercel.app/login",
+    "url": "https://www.smle-question-bank.com/login",
     "mainEntity": {
       "@type": "LoginAction",
       "target": {
         "@type": "EntryPoint",
-        "urlTemplate": "https://medquiz.vercel.app/login"
+        "urlTemplate": "https://www.smle-question-bank.com/login"
       }
     }
   };
@@ -245,7 +245,7 @@ const Login = () => {
           ? "تسجيل دخول SMLE, منصة SQB, أسئلة برومترك, منصة طبية تعليمية"
           : "SMLE login, medical exam login, Saudi medical license login, SQB login, medical quiz login, secure login"
         }
-        url="https://medquiz.vercel.app/login"
+        url="https://www.smle-question-bank.com/login"
         structuredData={structuredData}
       />
       <div className="login-body" dir={isArabic ? "rtl" : "ltr"}>

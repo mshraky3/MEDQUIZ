@@ -532,3 +532,78 @@
         font-size: 48px;
     }
 }
+
+/* Suggestions Button */
+.suggestions-button {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+    margin-top: 12px;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(168, 85, 247, 0.1));
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    border-radius: 16px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.suggestions-button:hover {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(168, 85, 247, 0.15));
+    border-color: rgba(139, 92, 246, 0.5);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(139, 92, 246, 0.25);
+}
+
+.suggestions-icon {
+    font-size: 28px;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+.suggestions-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+}
+
+.suggestions-title {
+    color: #e9d5ff;
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.suggestions-subtitle {
+    color: #a78bfa;
+    font-size: 0.8rem;
+}
+
+.suggestions-arrow {
+    color: #a78bfa;
+    font-size: 1.2rem;
+    transition: transform 0.3s ease;
+}
+
+[dir="rtl"] .suggestions-arrow {
+    transform: rotate(180deg);
+}
+
+.suggestions-button:hover .suggestions-arrow {
+    transform: translateX(4px);
+}
+
+[dir="rtl"] .suggestions-button:hover .suggestions-arrow {
+    transform: translateX(-4px) rotate(180deg);
+}

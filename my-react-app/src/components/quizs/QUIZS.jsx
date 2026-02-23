@@ -86,7 +86,7 @@ const QUIZS = () => {
         setSelectedSource(source);
         setShowSourceSelector(false);
         setShowTypeSelector(true);
-        
+
         // Check if user has completed this source for any type
         if (id) {
             await checkCompletionForSource(source);
@@ -115,27 +115,27 @@ const QUIZS = () => {
         console.log('Timer confirm clicked, selectedTimer:', selectedTimer);
         console.log('selectedTypes:', selectedTypes);
         console.log('numQuestions:', numQuestions);
-        
+
         if (selectedTimer === undefined) {
             console.log('No timer selected, returning');
             return;
         }
-        
+
         // Handle the case where user came from "Mix All Types"
         const typesStr = selectedTypes.length > 0 ? selectedTypes.join(',') : 'mix';
         let timerMinutes = selectedTimer === 'custom' ? customTimerMinutes : selectedTimer;
-        
+
         console.log('Types string:', typesStr);
         console.log('Timer minutes:', timerMinutes);
-        
+
         setShowTimerSelector(false);
-        
+
         const quizRoute = `/quiz/${numQuestions}`;
         console.log('Navigating to:', quizRoute);
-        
+
         navigate(quizRoute, {
-            state: { 
-                id: id, 
+            state: {
+                id: id,
                 types: typesStr,
                 source: selectedSource,
                 timer: timerMinutes
@@ -171,7 +171,7 @@ const QUIZS = () => {
 
     const handleFinalSourceSelect = async (source) => {
         setSelectedFinalSource(source);
-        
+
         // Check authentication before making API call
         if (!user || !sessionToken) {
             console.error('Not authenticated for final source select');
@@ -179,7 +179,7 @@ const QUIZS = () => {
             setShowFinalQuizSource(false);
             return;
         }
-        
+
         // Fetch questions count for the selected criteria
         try {
             const response = await protectedGet(
@@ -190,7 +190,7 @@ const QUIZS = () => {
             console.error('Error fetching questions count:', error);
             setFinalQuizQuestionsCount(0);
         }
-        
+
         setShowFinalQuizSource(false);
         setShowFinalQuizTime(true);
     };
@@ -198,10 +198,10 @@ const QUIZS = () => {
     const handleFinalTimeSelect = (timeLimit) => {
         setFinalQuizTimeLimit(timeLimit);
         setShowFinalQuizTime(false);
-        
+
         // Navigate to regular quiz with final quiz parameters
         navigate(`/quiz/${finalQuizQuestionsCount}`, {
-            state: { 
+            state: {
                 id: id,
                 types: selectedFinalType,
                 source: selectedFinalSource,
@@ -216,12 +216,12 @@ const QUIZS = () => {
             alert('Time limit must be at least 30 minutes');
             return;
         }
-        
+
         setShowFinalQuizTime(false);
-        
+
         // Navigate to regular quiz with final quiz parameters
         navigate(`/quiz/${finalQuizQuestionsCount}`, {
-            state: { 
+            state: {
                 id: id,
                 types: selectedFinalType,
                 source: selectedFinalSource,
@@ -240,15 +240,15 @@ const QUIZS = () => {
             console.error('Not authenticated for check completion');
             return;
         }
-        
+
         try {
             const response = await protectedGet(`${Globals.URL}/api/check-completion/${id}?type=${encodeURIComponent(type)}&source=${encodeURIComponent(source)}`);
             const { isCompleted, total, completed } = response.data;
-            
+
             if (isCompleted && total > 0) {
                 // Award achievement if not already awarded
                 await awardAchievement(type, source);
-                
+
                 // Show congratulations popup
                 setCongratulationsData({
                     type,
@@ -283,12 +283,12 @@ const QUIZS = () => {
             console.error('Not authenticated for award achievement');
             return;
         }
-        
+
         try {
             const achievementKey = `${type}_${source}`;
             const achievementName = `Master of ${type} from ${source}`;
             const achievementDescription = `Completed all ${type} questions from ${source} source`;
-            
+
             await protectedPost(`${Globals.URL}/api/award-achievement`, {
                 userId: id,
                 achievementType: 'cardinality_completion',
@@ -304,23 +304,23 @@ const QUIZS = () => {
     // Handle restart and reset progress
     const handleRestart = async () => {
         if (!congratulationsData) return;
-        
+
         // Check authentication before making API call
         if (!user || !sessionToken) {
             console.error('Not authenticated for reset progress');
             return;
         }
-        
+
         try {
             await protectedPost(`${Globals.URL}/api/reset-progress`, {
                 userId: id,
                 type: congratulationsData.type,
                 source: congratulationsData.source
             });
-            
+
             setShowCongratulations(false);
             setCongratulationsData(null);
-            
+
             // Refresh the page or component to show updated state
             window.location.reload();
         } catch (error) {
@@ -373,36 +373,36 @@ const QUIZS = () => {
 
     // Helper for protected GET
     const protectedGet = async (url, config = {}) => {
-      if (!user || !sessionToken) throw new Error('Not authenticated');
-      const urlWithCreds = url + (url.includes('?') ? '&' : '?') + `username=${encodeURIComponent(user.username)}&sessionToken=${encodeURIComponent(sessionToken)}`;
-      try {
-        return await axios.get(urlWithCreds, config);
-      } catch (err) {
-        if (err.response && err.response.status === 401) {
-          setUser(null, null);
-          localStorage.clear();
-          window.location.href = '/login?session=expired';
-          return;
+        if (!user || !sessionToken) throw new Error('Not authenticated');
+        const urlWithCreds = url + (url.includes('?') ? '&' : '?') + `username=${encodeURIComponent(user.username)}&sessionToken=${encodeURIComponent(sessionToken)}`;
+        try {
+            return await axios.get(urlWithCreds, config);
+        } catch (err) {
+            if (err.response && err.response.status === 401) {
+                setUser(null, null);
+                localStorage.clear();
+                window.location.href = '/login?session=expired';
+                return;
+            }
+            throw err;
         }
-        throw err;
-      }
     };
 
     // Helper for protected POST
     const protectedPost = async (url, data, config = {}) => {
-      if (!user || !sessionToken) throw new Error('Not authenticated');
-      const urlWithCreds = url + (url.includes('?') ? '&' : '?') + `username=${encodeURIComponent(user.username)}&sessionToken=${encodeURIComponent(sessionToken)}`;
-      try {
-        return await axios.post(urlWithCreds, data, config);
-      } catch (err) {
-        if (err.response && err.response.status === 401) {
-          setUser(null, null);
-          localStorage.clear();
-          window.location.href = '/login?session=expired';
-          return;
+        if (!user || !sessionToken) throw new Error('Not authenticated');
+        const urlWithCreds = url + (url.includes('?') ? '&' : '?') + `username=${encodeURIComponent(user.username)}&sessionToken=${encodeURIComponent(sessionToken)}`;
+        try {
+            return await axios.post(urlWithCreds, data, config);
+        } catch (err) {
+            if (err.response && err.response.status === 401) {
+                setUser(null, null);
+                localStorage.clear();
+                window.location.href = '/login?session=expired';
+                return;
+            }
+            throw err;
         }
-        throw err;
-      }
     };
 
     useEffect(() => {
@@ -422,14 +422,14 @@ const QUIZS = () => {
     return (
         <>
             <Navbar />
-            <SEO 
+            <SEO
                 title="Quiz Selection - Choose Your SMLE Practice Questions"
                 description="Select from 10 to 200 SMLE practice questions. Choose specific medical topics (pediatrics, OB/GYN, medicine, surgery) or mix all types. Start your SMLE preparation with targeted practice sessions."
                 keywords="SMLE quiz selection, medical practice questions, SMLE practice test, medical exam questions, Saudi medical license quiz, medical topic selection"
                 url={`${Globals.URL}/quizs`}
                 structuredData={structuredData}
             />
-                <div className="quiz-selection">
+            <div className="quiz-selection">
                 {/* Streak Badge */}
                 {id && (
                     <div className="streak-badge">
@@ -472,6 +472,15 @@ const QUIZS = () => {
                         Go to Analysis
                     </button>
                 )}
+
+                {/* Suggestions Button */}
+                <button
+                    className="suggestions-btn"
+                    onClick={() => navigate('/suggestions')}
+                >
+                    <span className="suggestions-icon">💡</span>
+                    <span>الاقتراحات</span>
+                </button>
 
 
                 {/* Source Selector Modal */}
@@ -600,35 +609,35 @@ const QUIZS = () => {
                             <p className="questions-info">
                                 📝 Enter the number of questions you want (1-500)
                             </p>
-                            
+
                             {/* Mobile-friendly input with preset buttons */}
                             <div className="custom-questions-input">
                                 <label htmlFor="customQuestions">Number of Questions:</label>
-                                
+
                                 {/* Quick preset buttons for mobile */}
                                 <div className="quick-preset-buttons">
-                                    <button 
+                                    <button
                                         type="button"
                                         className="preset-btn"
                                         onClick={() => setCustomQuestionsCount(15)}
                                     >
                                         15
                                     </button>
-                                    <button 
+                                    <button
                                         type="button"
                                         className="preset-btn"
                                         onClick={() => setCustomQuestionsCount(25)}
                                     >
                                         25
                                     </button>
-                                    <button 
+                                    <button
                                         type="button"
                                         className="preset-btn"
                                         onClick={() => setCustomQuestionsCount(50)}
                                     >
                                         50
                                     </button>
-                                    <button 
+                                    <button
                                         type="button"
                                         className="preset-btn"
                                         onClick={() => setCustomQuestionsCount(75)}
@@ -636,7 +645,7 @@ const QUIZS = () => {
                                         75
                                     </button>
                                 </div>
-                                
+
                                 <div className="input-container">
                                     <input
                                         id="customQuestions"
@@ -651,14 +660,14 @@ const QUIZS = () => {
                                         pattern="[0-9]*"
                                     />
                                     <div className="input-controls">
-                                        <button 
+                                        <button
                                             type="button"
                                             className="control-btn minus"
                                             onClick={() => setCustomQuestionsCount(Math.max(1, customQuestionsCount - 1))}
                                         >
                                             −
                                         </button>
-                                        <button 
+                                        <button
                                             type="button"
                                             className="control-btn plus"
                                             onClick={() => setCustomQuestionsCount(Math.min(500, customQuestionsCount + 1))}
@@ -667,7 +676,7 @@ const QUIZS = () => {
                                         </button>
                                     </div>
                                 </div>
-                                
+
                                 {/* Range slider for mobile */}
                                 <div className="range-slider-container">
                                     <label htmlFor="questionsRange">Or use slider:</label>
@@ -687,7 +696,7 @@ const QUIZS = () => {
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <div className="custom-modal-buttons">
                                 <button
                                     onClick={handleCustomQuestionsConfirm}
@@ -695,8 +704,8 @@ const QUIZS = () => {
                                 >
                                     Continue
                                 </button>
-                                <button 
-                                    onClick={() => setShowCustomQuestions(false)} 
+                                <button
+                                    onClick={() => setShowCustomQuestions(false)}
                                     className="custom-cancel-btn"
                                 >
                                     Cancel
@@ -781,7 +790,7 @@ const QUIZS = () => {
                             <p className="final-quiz-note">
                                 This will include ALL questions, even those you've answered before.
                             </p>
-                            
+
                             <div className="timer-options">
                                 <button
                                     onClick={() => handleFinalTimeSelect(30)}

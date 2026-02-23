@@ -31,9 +31,16 @@
   margin-top: 0.5rem;
 }
 
+.footer-tagline-ar {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+  direction: rtl;
+}
+
 .footer-links {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 2rem;
   margin-bottom: 1.5rem;
 }
@@ -83,7 +90,7 @@
 /* Responsive footer adjustments */
 @media (max-width: 768px) {
   .footer-links {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
     gap: 1.5rem;
     text-align: center;
   }
@@ -92,6 +99,10 @@
 @media (max-width: 480px) {
   .footer {
     padding: 1.5rem 1rem;
+  }
+
+  .footer-links {
+    grid-template-columns: 1fr;
   }
 
   .footer-logo {

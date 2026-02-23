@@ -283,6 +283,8 @@ const Admin = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [suggestions, setSuggestions] = useState([]);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -299,7 +301,20 @@ const Admin = () => {
       }
     };
 
+    const fetchSuggestions = async () => {
+      try {
+        setSuggestionsLoading(true);
+        const response = await axios.get(`${API}/admin/suggestions`);
+        setSuggestions(response.data.suggestions || []);
+      } catch (err) {
+        console.error('Failed to fetch suggestions:', err);
+      } finally {
+        setSuggestionsLoading(false);
+      }
+    };
+
     fetchStats();
+    fetchSuggestions();
 
     // Auto refresh every 2 minutes
     const interval = setInterval(fetchStats, 120000);
@@ -391,6 +406,49 @@ const Admin = () => {
       path: '/TEMP_LINKS'
     }
   ];
+
+  const updateSuggestionStatus = async (id, status) => {
+    try {
+      await axios.put(`${API}/admin/suggestions/${id}`, { status });
+      setSuggestions(prev => prev.map(s => s.id === id ? { ...s, status } : s));
+    } catch (err) {
+      console.error('Failed to update suggestion:', err);
+    }
+  };
+
+  const deleteSuggestion = async (id) => {
+    if (!window.confirm('Delete this suggestion?')) return;
+    try {
+      await axios.delete(`${API}/admin/suggestions/${id}`);
+      setSuggestions(prev => prev.filter(s => s.id !== id));
+    } catch (err) {
+      console.error('Failed to delete suggestion:', err);
+    }
+  };
+
+  const getCategoryIcon = (category) => {
+    const icons = {
+      feature: '✨', improvement: '🚀', ui: '🎨',
+      content: '📚', bug: '🐛', other: '💡'
+    };
+    return icons[category] || '💡';
+  };
+
+  const getPriorityColor = (priority) => {
+    const colors = { high: '#ef4444', medium: '#eab308', low: '#22c55e' };
+    return colors[priority] || '#64748b';
+  };
+
+  const getStatusBadge = (status) => {
+    const badges = {
+      pending: { bg: '#fef3c7', color: '#d97706', label: 'Pending' },
+      reviewing: { bg: '#dbeafe', color: '#2563eb', label: 'Reviewing' },
+      planned: { bg: '#dcfce7', color: '#16a34a', label: 'Planned' },
+      implemented: { bg: '#d1fae5', color: '#059669', label: 'Done' },
+      rejected: { bg: '#fee2e2', color: '#dc2626', label: 'Rejected' }
+    };
+    return badges[status] || badges.pending;
+  };
 
   if (loading) {
     return (
@@ -731,6 +789,71 @@ const Admin = () => {
               ))}
               {(!stats?.suspiciousUsers || stats.suspiciousUsers.length === 0) && (
                 <div className="empty-state success">✅ No suspicious activity detected</div>
+              )}
+            </div>
+          </div>
+
+          {/* Suggestions Panel */}
+          <div className="table-card suggestions-card">
+            <div className="table-header">
+              <h3>💡 User Suggestions</h3>
+              <span className="suggestions-count">
+                {suggestions.filter(s => s.status === 'pending').length} pending
+              </span>
+            </div>
+            <div className="mini-table suggestions-list">
+              {suggestionsLoading ? (
+                <div className="empty-state">Loading suggestions...</div>
+              ) : suggestions.length > 0 ? (
+                suggestions.slice(0, 6).map((suggestion) => {
+                  const statusBadge = getStatusBadge(suggestion.status);
+                  return (
+                    <div key={suggestion.id} className="suggestion-item">
+                      <div className="suggestion-header">
+                        <span className="suggestion-category">
+                          {getCategoryIcon(suggestion.category)}
+                        </span>
+                        <span className="suggestion-title">{suggestion.title}</span>
+                        <span
+                          className="priority-dot"
+                          style={{ background: getPriorityColor(suggestion.priority) }}
+                          title={suggestion.priority}
+                        />
+                      </div>
+                      <p className="suggestion-desc">{suggestion.description?.substring(0, 100)}{suggestion.description?.length > 100 ? '...' : ''}</p>
+                      <div className="suggestion-footer">
+                        <span
+                          className="status-badge"
+                          style={{ background: statusBadge.bg, color: statusBadge.color }}
+                        >
+                          {statusBadge.label}
+                        </span>
+                        <div className="suggestion-actions">
+                          <select
+                            value={suggestion.status}
+                            onChange={(e) => updateSuggestionStatus(suggestion.id, e.target.value)}
+                            className="status-select"
+                          >
+                            <option value="pending">Pending</option>
+                            <option value="reviewing">Reviewing</option>
+                            <option value="planned">Planned</option>
+                            <option value="implemented">Implemented</option>
+                            <option value="rejected">Rejected</option>
+                          </select>
+                          <button
+                            className="delete-suggestion-btn"
+                            onClick={() => deleteSuggestion(suggestion.id)}
+                            title="Delete"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="empty-state">No suggestions yet</div>
               )}
             </div>
           </div>

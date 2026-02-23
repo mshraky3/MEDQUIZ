@@ -5,7 +5,7 @@ import useLang from '../../hooks/useLang';
 const Contact = () => {
     const [lang] = useLang();
     const isArabic = lang === 'ar';
-    
+
     const [form, setForm] = useState({
         name: '',
         mobile: '',
@@ -19,7 +19,7 @@ const Contact = () => {
         // Set document direction based on language
         const originalDir = document.documentElement.dir;
         document.documentElement.dir = isArabic ? 'rtl' : 'ltr';
-        
+
         // Cleanup function to restore original direction when component unmounts
         return () => {
             document.documentElement.dir = originalDir || 'ltr';
@@ -148,6 +148,16 @@ ${isArabic ? 'تم الإرسال من نموذج الاتصال SQB' : 'Sent fr
                                 </div>
                             ))}
                         </div>
+
+                        {/* Suggestions Button */}
+                        <a href="/suggestions" className="suggestions-button">
+                            <span className="suggestions-icon">💡</span>
+                            <div className="suggestions-text">
+                                <span className="suggestions-title">{isArabic ? 'الاقتراحات والأفكار' : 'Suggestions & Ideas'}</span>
+                                <span className="suggestions-subtitle">{isArabic ? 'ساعدنا في تحسين التطبيق' : 'Help us improve the app'}</span>
+                            </div>
+                            <span className="suggestions-arrow">→</span>
+                        </a>
                     </div>
 
                     {/* Contact Form */}
@@ -208,8 +218,8 @@ ${isArabic ? 'تم الإرسال من نموذج الاتصال SQB' : 'Sent fr
                                 ></textarea>
                             </div>
 
-                            <button 
-                                type="submit" 
+                            <button
+                                type="submit"
                                 className="submit-button"
                                 disabled={loading}
                             >
