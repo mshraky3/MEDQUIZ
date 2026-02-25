@@ -56,7 +56,7 @@ const QUIZ = () => {
   };
   // Helper for protected POST
   const protectedPost = async (url, data, config = {}) => {
-    if (!user || !sessionToken) throw new Error('Not authenticated');
+    if (!user || !sessionToken) throw new Error('error in authentication');
     const body = { ...data, username: user.username, sessionToken };
     try {
       return await axios.post(url, body, config);
