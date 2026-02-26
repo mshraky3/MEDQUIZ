@@ -48,7 +48,7 @@ const FinalExams = ({ userId, username, sessionToken }) => {
     // Fetch detailed session information
     const fetchSessionDetails = async (sessionId) => {
         if (!username || !sessionToken) {
-            console.error('Missing authentication credentials for session details');
+            console.error('Missing authentication for session details');
             return;
         }
         
@@ -62,14 +62,14 @@ const FinalExams = ({ userId, username, sessionToken }) => {
                 [sessionId]: response.data
             }));
         } catch (err) {
-            console.error('Error fetching session details:', err);
+            console.error('Error fetching session:', err);
         }
     };
 
     // Fetch questions for a specific session
     const fetchSessionQuestions = async (sessionId) => {
         if (!username || !sessionToken) {
-            console.error('Missing authentication credentials for session questions');
+            console.error('Missing authentication credentials for session');
             return;
         }
         
