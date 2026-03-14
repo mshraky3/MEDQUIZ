@@ -309,32 +309,6 @@ const Landing = () => {
           </section>
         </div>
 
-        <div className="footer-wrapper">
-          <footer className="simple-footer">
-            <p>
-              {isArabic
-                ? <>© {new Date().getFullYear()} <strong>SQB</strong>. جميع الحقوق محفوظة.</>
-                : <>© {new Date().getFullYear()} <strong>SQB</strong>. All rights reserved.</>}
-            </p>
-            <div className="footer-links-row">
-              <Link to="/privacy">{isArabic ? 'سياسة الخصوصية' : 'Privacy Policy'}</Link>
-              <span>•</span>
-              <Link to="/terms">{isArabic ? 'شروط الاستخدام' : 'Terms of Service'}</Link>
-              <span>•</span>
-              <Link to="/about">{isArabic ? 'من نحن' : 'About Us'}</Link>
-              <span>•</span>
-              <Link to="/faq">{isArabic ? 'الأسئلة الشائعة' : 'FAQ'}</Link>
-              <span>•</span>
-              <Link to="/contact">{isArabic ? 'اتصل بنا' : 'Contact Us'}</Link>
-            </div>
-            <p className="footer-disclaimer-text">
-              {isArabic
-                ? 'منصة تعليمية غير تابعة لـ Prometric أو SCFHS'
-                : 'Educational platform not affiliated with Prometric or SCFHS'}
-            </p>
-          </footer>
-        </div>
-
         <div className="mobile-cta">
           <button className="btn primary" onClick={handleSignup}>
             {isArabic ? 'ابدأ مجاناً' : 'Start free'}

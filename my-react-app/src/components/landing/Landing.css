@@ -41,13 +41,14 @@
 .landing-body {
   min-height: 100vh;
   margin: 0;
+  display: flex;
+  flex-direction: column;
   background:
     radial-gradient(circle at 10% 20%, rgba(34, 211, 238, 0.08), transparent 30%),
     radial-gradient(circle at 85% 10%, rgba(99, 102, 241, 0.09), transparent 25%),
     linear-gradient(145deg, #050814 0%, #0c1224 60%, #0b1021 100%);
   color: var(--text);
   font-family: var(--font-family-primary, 'Inter', system-ui, -apple-system, sans-serif);
-  padding-bottom: 0;
 }
 
 .landing-shell {
@@ -56,35 +57,24 @@
   padding: 28px 24px 56px;
   display: flex;
   flex-direction: column;
-  gap: 42px;
+  gap: 48px;
   width: 100%;
   box-sizing: border-box;
 }
 
 .landing-shell>section,
 .landing-topbar {
-  animation: sectionFade 0.65s ease both;
+  animation: sectionFade 0.5s ease forwards;
+  opacity: 0;
 }
 
-.landing-shell>section:nth-of-type(2) {
-  animation-delay: 0.05s;
-}
-
-.landing-shell>section:nth-of-type(3) {
-  animation-delay: 0.1s;
-}
-
-.landing-shell>section:nth-of-type(4) {
-  animation-delay: 0.15s;
-}
-
-.landing-shell>section:nth-of-type(5) {
-  animation-delay: 0.2s;
-}
-
-.landing-shell>section:nth-of-type(6) {
-  animation-delay: 0.25s;
-}
+.landing-topbar { animation-delay: 0s; }
+.landing-shell>section:nth-of-type(1) { animation-delay: 0.05s; }
+.landing-shell>section:nth-of-type(2) { animation-delay: 0.1s; }
+.landing-shell>section:nth-of-type(3) { animation-delay: 0.15s; }
+.landing-shell>section:nth-of-type(4) { animation-delay: 0.2s; }
+.landing-shell>section:nth-of-type(5) { animation-delay: 0.25s; }
+.landing-shell>section:nth-of-type(6) { animation-delay: 0.3s; }
 
 .landing-lang-toggle {
   position: fixed;
@@ -386,14 +376,16 @@
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
+  gap: 14px;
+  position: relative;
+  z-index: 2;
 }
 
 .stat-card {
   border: 1px solid var(--border);
   border-radius: 14px;
   background: var(--card);
-  padding: 14px;
+  padding: 20px 14px;
   text-align: center;
   transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
 }
@@ -690,66 +682,9 @@
 
 .btn:focus-visible,
 .topbar-links a:focus-visible,
-.footer-links-row a:focus-visible,
 .topbar-brand:focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
-}
-
-.footer-wrapper {
-  width: 100%;
-  background: linear-gradient(180deg, transparent 0%, rgba(11, 16, 33, 0.6) 50%, #0b1021 100%);
-  border-top: 1px solid var(--border);
-}
-
-.simple-footer {
-  max-width: 1200px;
-  margin: 0 auto;
-  text-align: center;
-  color: var(--muted);
-  font-size: 14px;
-  padding: 32px 24px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.simple-footer p {
-  margin: 0;
-}
-
-.simple-footer strong {
-  color: #f8fafc;
-}
-
-.footer-links-row {
-  margin-top: 12px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.footer-links-row a {
-  color: var(--muted);
-  text-decoration: none;
-  font-size: 13px;
-  transition: color 0.2s ease;
-}
-
-.footer-links-row a:hover {
-  color: var(--accent);
-}
-
-.footer-links-row span {
-  color: var(--dim);
-  font-size: 11px;
-}
-
-.footer-disclaimer-text {
-  margin-top: 12px !important;
-  font-size: 12px !important;
-  color: var(--dim) !important;
 }
 
 .mobile-cta {
@@ -807,7 +742,7 @@
 
   .landing-shell {
     padding: 74px 16px 26px;
-    gap: 24px;
+    gap: 28px;
   }
 
   .landing-lang-toggle {
@@ -900,20 +835,16 @@
     border-radius: 10px;
     font-size: 14px;
   }
-
-  .footer-wrapper {
-    margin-bottom: 74px;
-  }
-
-  .simple-footer {
-    padding: 24px 16px;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
 
   .landing-shell>section,
-  .landing-topbar,
+  .landing-topbar {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+
   .feature-icon,
   .feature-card,
   .hero-panel,
@@ -924,10 +855,5 @@
     animation: none !important;
     transition: none !important;
     transform: none !important;
-  }
-
-  .landing-shell>section,
-  .landing-topbar {
-    opacity: 1 !important;
   }
 }
