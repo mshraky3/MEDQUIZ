@@ -6,6 +6,8 @@ import https from "https";
 import OpenAI from 'openai';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
+import errorReportRoutes from './routes/error-report.js';
+import { notifyBackendError } from './services/errorNotificationService.js';
 
 dotenv.config();
 
@@ -58,7 +60,7 @@ const Email = nodemailer.createTransport({
     secure: false,
     auth: {
         user: "alshrakynodeapp@gmail.com",
-        pass: "ymfnqdsctolgcfzv",
+        pass: "ssjpnctdsyqxylxd",
     }
 });
 
@@ -1664,7 +1666,7 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
             await db.query(`
                 ALTER TABLE user_quiz_sessions 
                 ADD CONSTRAINT IF NOT EXISTS check_valid_quiz_source 
-                CHECK (source IN ('general', 'Midgard', 'GameBoy'))
+                CHECK (source IN ('general', 'Midgard', 'GameBoy', 'October25'))
             `);
         } catch (err) {
             // Column might already exist, ignore error
@@ -2180,7 +2182,7 @@ app.post("/ai-analysis", async (req, res) => {
             baseURL: "https://openrouter.ai/api/v1",
         });
 
-        const model = process.env.OPENROUTER_MODEL || "alibaba/tongyi-deepresearch-30b-a3b:free";
+        const model = process.env.OPENROUTER_MODEL || "qwen/qwen3-next-80b-a3b-instruct:free";
 
         const completion = await openai.chat.completions.create({
             model,
@@ -2195,7 +2197,7 @@ app.post("/ai-analysis", async (req, res) => {
         const aiAnswer = completion.choices?.[0]?.message?.content;
 
         if (!aiAnswer) {
-            console.error("OpenRouter API responded with no choices.", data);
+            console.error("OpenRouter API responded with no choices.", JSON.stringify(completion));
             return res.status(500).json({ error: "Invalid AI response format." });
         }
 
@@ -3160,6 +3162,290 @@ Please respond to the user as soon as possible.
     }
 });
 
+// ===== SUGGESTIONS FEATURE =====
+
+// Initialize suggestions table
+app.post('/api/admin/init-suggestions-table', async (req, res) => {
+    try {
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS suggestions (
+                id SERIAL PRIMARY KEY,
+                category VARCHAR(50) NOT NULL,
+                title VARCHAR(200) NOT NULL,
+                description TEXT NOT NULL,
+                priority VARCHAR(20) DEFAULT 'medium',
+                status VARCHAR(30) DEFAULT 'pending',
+                admin_notes TEXT,
+                created_at TIMESTAMP DEFAULT NOW(),
+                updated_at TIMESTAMP DEFAULT NOW()
+            )
+        `);
+        res.json({ success: true, message: 'Suggestions table created' });
+    } catch (error) {
+        console.error('Error creating suggestions table:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Submit a suggestion
+app.post('/api/suggestions', async (req, res) => {
+    try {
+        const { category, title, description, priority } = req.body;
+
+        if (!category || !title || !description) {
+            return res.status(400).json({
+                success: false,
+                message: 'Category, title, and description are required'
+            });
+        }
+
+        // Save to database
+        const result = await db.query(`
+            INSERT INTO suggestions (category, title, description, priority)
+            VALUES ($1, $2, $3, $4)
+            RETURNING id, created_at
+        `, [category, title, description, priority || 'medium']);
+
+        const suggestion = result.rows[0];
+
+        // Send email notification
+        const categoryLabels = {
+            feature: '✨ New Feature',
+            improvement: '🚀 Improvement',
+            ui: '🎨 UI/Design',
+            content: '📚 Content/Questions',
+            bug: '🐛 Bug Report',
+            other: '💡 Other'
+        };
+
+        const priorityLabels = {
+            low: '🟢 Nice to have',
+            medium: '🟡 Would be helpful',
+            high: '🔴 Really need this'
+        };
+
+        const emailHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.3);">
+          
+          <!-- Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 50%, #6d28d9 100%); padding: 40px; text-align: center;">
+              <div style="font-size: 50px; margin-bottom: 16px;">💡</div>
+              <h1 style="margin: 0; color: white; font-size: 24px; font-weight: 800;">New Suggestion Received</h1>
+              <p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.8); font-size: 14px;">MEDQIZE Feedback System</p>
+            </td>
+          </tr>
+          
+          <!-- Category & Priority Badges -->
+          <tr>
+            <td style="padding: 24px 32px; background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+              <table width="100%">
+                <tr>
+                  <td>
+                    <span style="display: inline-block; background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; padding: 8px 16px; border-radius: 50px; font-size: 13px; font-weight: 600;">
+                      ${categoryLabels[category] || category}
+                    </span>
+                  </td>
+                  <td align="right">
+                    <span style="display: inline-block; background: #f1f5f9; padding: 8px 16px; border-radius: 50px; font-size: 13px; font-weight: 600; color: #475569;">
+                      ${priorityLabels[priority] || priority}
+                    </span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Title -->
+          <tr>
+            <td style="padding: 32px 32px 16px 32px;">
+              <h2 style="margin: 0; color: #1e293b; font-size: 20px; font-weight: 700;">
+                📝 ${title}
+              </h2>
+            </td>
+          </tr>
+          
+          <!-- Description -->
+          <tr>
+            <td style="padding: 0 32px 32px 32px;">
+              <div style="background: linear-gradient(135deg, #f8fafc, #f1f5f9); border-radius: 12px; padding: 20px; border-left: 4px solid #8b5cf6;">
+                <p style="margin: 0; color: #475569; font-size: 15px; line-height: 1.7; white-space: pre-wrap;">${description}</p>
+              </div>
+            </td>
+          </tr>
+          
+          <!-- Meta Info -->
+          <tr>
+            <td style="padding: 0 32px 32px 32px;">
+              <table width="100%" style="background: #f8fafc; border-radius: 12px; overflow: hidden;">
+                <tr>
+                  <td style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0;">
+                    <span style="color: #64748b; font-size: 12px;">📅 Submitted</span><br>
+                    <span style="color: #1e293b; font-size: 14px; font-weight: 600;">${new Date().toLocaleString()}</span>
+                  </td>
+                  <td style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0;">
+                    <span style="color: #64748b; font-size: 12px;">🔢 Suggestion ID</span><br>
+                    <span style="color: #1e293b; font-size: 14px; font-weight: 600;">#${suggestion.id}</span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Action Button -->
+          <tr>
+            <td style="padding: 0 32px 32px 32px; text-align: center;">
+              <a href="https://medquiz.vercel.app/admin" style="display: inline-block; background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: white; padding: 14px 32px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 14px; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);">
+                📋 View in Admin Panel
+              </a>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="background: #1e293b; padding: 24px 32px; text-align: center;">
+              <p style="margin: 0; color: rgba(255,255,255,0.6); font-size: 12px;">
+                Auto-generated by MEDQIZE Feedback System
+              </p>
+            </td>
+          </tr>
+          
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+        `;
+
+        try {
+            await sendEmail(
+                'muhmodalshraky3@gmail.com',
+                `💡 New Suggestion: ${title}`,
+                `New suggestion received:\n\nCategory: ${category}\nPriority: ${priority}\nTitle: ${title}\n\nDescription:\n${description}`,
+                emailHtml
+            );
+            console.log('📧 Suggestion email sent for:', title);
+        } catch (emailError) {
+            console.error('Failed to send suggestion email:', emailError);
+        }
+
+        res.status(201).json({
+            success: true,
+            message: 'Suggestion submitted successfully',
+            suggestionId: suggestion.id
+        });
+
+    } catch (error) {
+        console.error('Error submitting suggestion:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to submit suggestion'
+        });
+    }
+});
+
+// Get all suggestions (admin)
+app.get('/api/admin/suggestions', async (req, res) => {
+    try {
+        const { status, category, priority } = req.query;
+
+        let query = 'SELECT * FROM suggestions WHERE 1=1';
+        const params = [];
+        let paramIndex = 1;
+
+        if (status) {
+            query += ` AND status = $${paramIndex++}`;
+            params.push(status);
+        }
+        if (category) {
+            query += ` AND category = $${paramIndex++}`;
+            params.push(category);
+        }
+        if (priority) {
+            query += ` AND priority = $${paramIndex++}`;
+            params.push(priority);
+        }
+
+        query += ' ORDER BY created_at DESC';
+
+        const result = await db.query(query, params);
+        res.json({ success: true, suggestions: result.rows });
+    } catch (error) {
+        console.error('Error fetching suggestions:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Update suggestion status (admin)
+app.put('/api/admin/suggestions/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status, admin_notes } = req.body;
+
+        const result = await db.query(`
+            UPDATE suggestions 
+            SET status = COALESCE($1, status),
+                admin_notes = COALESCE($2, admin_notes),
+                updated_at = NOW()
+            WHERE id = $3
+            RETURNING *
+        `, [status, admin_notes, id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'Suggestion not found' });
+        }
+
+        res.json({ success: true, suggestion: result.rows[0] });
+    } catch (error) {
+        console.error('Error updating suggestion:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Delete suggestion (admin)
+app.delete('/api/admin/suggestions/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await db.query('DELETE FROM suggestions WHERE id = $1', [id]);
+        res.json({ success: true, message: 'Suggestion deleted' });
+    } catch (error) {
+        console.error('Error deleting suggestion:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Get suggestions stats (admin)
+app.get('/api/admin/suggestions/stats', async (req, res) => {
+    try {
+        const stats = await db.query(`
+            SELECT 
+                COUNT(*) as total,
+                COUNT(*) FILTER (WHERE status = 'pending') as pending,
+                COUNT(*) FILTER (WHERE status = 'reviewing') as reviewing,
+                COUNT(*) FILTER (WHERE status = 'planned') as planned,
+                COUNT(*) FILTER (WHERE status = 'implemented') as implemented,
+                COUNT(*) FILTER (WHERE status = 'rejected') as rejected,
+                COUNT(*) FILTER (WHERE priority = 'high') as high_priority,
+                COUNT(*) FILTER (WHERE created_at > NOW() - INTERVAL '7 days') as this_week
+            FROM suggestions
+        `);
+        res.json({ success: true, stats: stats.rows[0] });
+    } catch (error) {
+        console.error('Error fetching suggestion stats:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
 // ===== TEMPORARY SIGNUP LINKS FEATURE =====
 
 // Create temporary signup links table
@@ -4024,6 +4310,34 @@ app.get('/final-quiz/session/:sessionId/questions', requireSession, async (req, 
         });
         res.status(500).json({ message: 'Failed to fetch questions for final quiz session' });
     }
+});
+
+// Error Report Routes
+app.use('/api/error-report', errorReportRoutes);
+
+// Global Error Handling Middleware - catches all unhandled errors
+app.use(async (err, req, res, next) => {
+    logger.error('Unhandled error:', err);
+
+    // Send error notification for 500+ errors
+    if (!res.headersSent) {
+        try {
+            await notifyBackendError(err, req, {
+                middleware: 'globalErrorHandler',
+                route: req.originalUrl,
+                method: req.method
+            });
+        } catch (notifyError) {
+            logger.error('Failed to send error notification:', notifyError);
+        }
+    }
+
+    // Send error response
+    const statusCode = err.statusCode || err.status || 500;
+    res.status(statusCode).json({
+        message: err.message || 'Internal server error',
+        ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
+    });
 });
 
 app.listen(3000, () => {
