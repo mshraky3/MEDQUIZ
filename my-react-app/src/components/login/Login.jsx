@@ -95,7 +95,7 @@ const Login = () => {
     "@context": "https://schema.org",
     "@type": "WebPage",
     "name": "تسجيل الدخول - منصة SQB للتحضير لاختبار SMLE",
-    "description": "سجّل دخولك إلى منصة SQB للوصول إلى أكثر من 5000 سؤال تدريبي وتحليلات دقيقة وأدوات تحضير شاملة لاختبار البرومترك (SMLE).",
+    "description": "سجّل دخولك إلى منصة SQB للوصول إلى أكثر من 11,000 سؤال تدريبي وتحليلات دقيقة وأدوات تحضير شاملة لاختبار البرومترك (SMLE). تجميعات اكتوبر 2025 متوفرة الآن.",
     "url": "https://www.smle-question-bank.com/login",
     "mainEntity": {
       "@type": "LoginAction",

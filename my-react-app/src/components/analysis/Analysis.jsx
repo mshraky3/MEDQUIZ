@@ -412,7 +412,11 @@ const Analysis = () => {
   // Section loading indicators
   const SectionLoader = ({ message }) => (
     <div className="section-loader">
-      <div className="loader" style={{ width: 30, height: 30, borderWidth: 3 }}></div>
+      <div className="orbital-spinner small">
+        <div className="orbital-ring orbital-ring-1"></div>
+        <div className="orbital-ring orbital-ring-2"></div>
+        <div className="orbital-core"></div>
+      </div>
       <p style={{ color: '#888', fontSize: '1rem', marginTop: 8 }}>{message}</p>
     </div>
   );

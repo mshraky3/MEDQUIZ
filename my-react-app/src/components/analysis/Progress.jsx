@@ -86,7 +86,8 @@ const Progress = ({ userId, username, sessionToken }) => {
   const sources = [
     { key: 'general', label: 'عام', color: '#3b82f6' },
     { key: 'Midgard', label: 'Midgard', color: '#10b981' },
-    { key: 'GameBoy', label: 'GameBoy', color: '#f59e0b' }
+    { key: 'GameBoy', label: 'GameBoy', color: '#f59e0b' },
+    { key: 'October25', label: '2025 تجميعات اكتوبر', color: '#a855f7' }
   ];
 
   const questionTypes = [

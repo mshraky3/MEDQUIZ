@@ -320,18 +320,59 @@ p {
   justify-content: flex-end;
 }
 
-/* Loading States */
-.loader {
-  width: 40px;
-  height: 40px;
-  border: 4px solid rgba(255, 255, 255, 0.1);
-  border-top: 4px solid #22d3ee;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  box-shadow: 0 0 15px rgba(34, 211, 238, 0.3);
+/* Loading States — Global Orbital Spinner */
+.orbital-spinner {
+  position: relative;
+  width: 50px;
+  height: 50px;
+  margin: var(--space-3) auto;
 }
 
-@keyframes spin {
+.orbital-spinner .orbital-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid transparent;
+}
+
+.orbital-spinner .orbital-ring-1 {
+  border-top-color: #22d3ee;
+  border-right-color: #22d3ee;
+  animation: orbital-spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+  filter: drop-shadow(0 0 6px rgba(34, 211, 238, 0.5));
+}
+
+.orbital-spinner .orbital-ring-2 {
+  inset: 6px;
+  border-bottom-color: #06b6d4;
+  border-left-color: #06b6d4;
+  animation: orbital-spin 1.6s cubic-bezier(0.5, 0, 0.5, 1) infinite reverse;
+  filter: drop-shadow(0 0 6px rgba(6, 182, 212, 0.4));
+}
+
+.orbital-spinner .orbital-core {
+  position: absolute;
+  inset: 16px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(34, 211, 238, 0.3), transparent);
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.orbital-spinner.small {
+  width: 28px;
+  height: 28px;
+  margin: 0 auto;
+}
+
+.orbital-spinner.small .orbital-ring {
+  border-width: 2px;
+}
+
+.orbital-spinner.small .orbital-core {
+  inset: 8px;
+}
+
+@keyframes orbital-spin {
   0% {
     transform: rotate(0deg);
   }
@@ -339,6 +380,32 @@ p {
   100% {
     transform: rotate(360deg);
   }
+}
+
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(0.8);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+/* Legacy spinner — still used by some components */
+.loader,
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-top: 4px solid #22d3ee;
+  border-radius: 50%;
+  animation: orbital-spin 1s linear infinite;
+  box-shadow: 0 0 15px rgba(34, 211, 238, 0.3);
 }
 
 .loading-container {

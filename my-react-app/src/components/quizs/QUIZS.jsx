@@ -39,8 +39,15 @@ const QUIZS = () => {
     const availableSources = [
         'general',
         'Midgard',
-        'GameBoy'
+        'GameBoy',
+        'October25'
     ];
+    const sourceLabels = {
+        general: 'عام',
+        Midgard: 'Midgard',
+        GameBoy: 'GameBoy',
+        October25: '2025 تجميعات اكتوبر'
+    };
     const availableTypes = [
         'pediatric',
         'obstetrics and gynecology',
@@ -112,12 +119,7 @@ const QUIZS = () => {
     };
 
     const handleTimerConfirm = () => {
-        console.log('Timer confirm clicked, selectedTimer:', selectedTimer);
-        console.log('selectedTypes:', selectedTypes);
-        console.log('numQuestions:', numQuestions);
-
         if (selectedTimer === undefined) {
-            console.log('No timer selected, returning');
             return;
         }
 
@@ -125,13 +127,9 @@ const QUIZS = () => {
         const typesStr = selectedTypes.length > 0 ? selectedTypes.join(',') : 'mix';
         let timerMinutes = selectedTimer === 'custom' ? customTimerMinutes : selectedTimer;
 
-        console.log('Types string:', typesStr);
-        console.log('Timer minutes:', timerMinutes);
-
         setShowTimerSelector(false);
 
         const quizRoute = `/quiz/${numQuestions}`;
-        console.log('Navigating to:', quizRoute);
 
         navigate(quizRoute, {
             state: {
@@ -495,7 +493,7 @@ const QUIZS = () => {
                                         onClick={() => handleSourceSelect(source)}
                                         className="custom-source-btn"
                                     >
-                                        {source}
+                                        {sourceLabels[source] || source}
                                     </button>
                                 ))}
                             </div>
@@ -514,7 +512,7 @@ const QUIZS = () => {
                         <div className="custom-modal-content">
                             <h2>اختر نوع الأسئلة</h2>
                             <p className="source-info">
-                                📚 المصدر: <strong>{selectedSource}</strong>
+                                📚 المصدر: <strong>{sourceLabels[selectedSource] || selectedSource}</strong>
                             </p>
                             <div className="custom-checkbox-group">
                                 {availableTypes.map((type) => (

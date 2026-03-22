@@ -4,7 +4,7 @@ import './Landing.css';
 import SEO from '../common/SEO';
 
 const stats = [
-  { label: 'سؤال', value: '8,000+' },
+  { label: 'سؤال', value: '11,000+' },
   { label: 'مجاني للأبد', value: 'FREE' },
   { label: 'تدريب يومي', value: '24/7' },
   { label: 'مواضيع مغطاة', value: '40+' }

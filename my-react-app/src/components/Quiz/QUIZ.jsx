@@ -121,14 +121,6 @@ const QUIZ = () => {
             return;
           }
 
-          // Debug: Log the credentials being used
-          console.log('Final Quiz - Using credentials:', {
-            username: user.username,
-            sessionToken: sessionToken ? 'present' : 'missing',
-            questionType: types,
-            source: source
-          });
-
           // Final quiz endpoint - get all questions including previously answered ones
           endpoint = '/final-quiz/questions';
           response = await protectedGet(`${Globals.URL}${endpoint}`, {
@@ -263,10 +255,6 @@ const QUIZ = () => {
       const correctCount = finalAnswers.filter(a => a.isCorrect).length;
       const accuracy = ((correctCount / totalQuestions) * 100).toFixed(2);
       const topicsCovered = [...new Set(questions.map(q => q.question_type))];
-      console.log("QUIZ - topicsCovered:", topicsCovered);
-      console.log("QUIZ - questions types:", questions.map(q => q.question_type));
-      console.log("QUIZ - Duration being sent:", duration, "seconds");
-      console.log("QUIZ - Avg time per question:", (duration / totalQuestions).toFixed(2), "seconds");
 
       try {
         // Use different endpoint based on quiz type

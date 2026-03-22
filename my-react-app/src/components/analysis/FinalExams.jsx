@@ -427,7 +427,11 @@ const FinalExams = ({ userId, username, sessionToken }) => {
                                                                             {loadingButtons[question.id] ? (
                                                                                 <div className="ai-analysis-loading">
                                                                                     <p>جاري تحليل السؤال...</p>
-                                                                                    <div className="spinner"></div>
+                                                                                    <div className="orbital-spinner small">
+                                                                                        <div className="orbital-ring orbital-ring-1"></div>
+                                                                                        <div className="orbital-ring orbital-ring-2"></div>
+                                                                                        <div className="orbital-core"></div>
+                                                                                    </div>
                                                                                     <p className="loading-subtext">يرجى الانتظار...</p>
                                                                                 </div>
                                                                             ) : (
@@ -459,7 +463,11 @@ const FinalExams = ({ userId, username, sessionToken }) => {
                                     </div>
                                 ) : (
                                     <div className="loading-details">
-                                        <div className="spinner small"></div>
+                                        <div className="orbital-spinner small">
+                                            <div className="orbital-ring orbital-ring-1"></div>
+                                            <div className="orbital-ring orbital-ring-2"></div>
+                                            <div className="orbital-core"></div>
+                                        </div>
                                         <span>جاري التحميل...</span>
                                     </div>
                                 )}

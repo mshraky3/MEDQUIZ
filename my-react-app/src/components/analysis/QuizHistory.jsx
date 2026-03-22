@@ -171,6 +171,7 @@ const QuizHistory = ({ userId, username, sessionToken }) => {
     switch (source) {
       case 'Midgard': return '🎮';
       case 'GameBoy': return '🕹️';
+      case 'October25': return '🗓️';
       default: return '📚';
     }
   };
@@ -178,7 +179,11 @@ const QuizHistory = ({ userId, username, sessionToken }) => {
   if (loading && sessions.length === 0) {
     return (
       <div className="quiz-history-loading">
-        <div className="loader"></div>
+        <div className="orbital-spinner">
+          <div className="orbital-ring orbital-ring-1"></div>
+          <div className="orbital-ring orbital-ring-2"></div>
+          <div className="orbital-core"></div>
+        </div>
         <p>جاري تحميل سجل الاختبارات...</p>
       </div>
     );
