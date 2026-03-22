@@ -1,0 +1,140 @@
+import { StrictMode } from 'react'
+import './index.css'
+import App from './App.jsx';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { createRoot } from 'react-dom/client';
+import Login from './components/login/Login';
+import ADD from './components/ADD/ADD.jsx';
+import QUIZS from './components/quizs/QUIZS.jsx';
+import QUIZ from './components/Quiz/QUIZ.jsx';
+import ADDQ from './components/ADD/ADDQ.jsx';
+import Analysis from './components/analysis/Analysis.jsx'
+import WrongQuestions from './components/analysis/WrongQuestions.jsx';
+import Admin from './components/ADD/Admin.jsx';
+import Bank from './components/ADD/Bank.jsx';
+import Signup from './components/signup/Signup.jsx';
+import Contact from './components/contact/Contact.jsx';
+import ErrorBoundary from './components/common/ErrorBoundary.jsx';
+import Layout from './components/common/Layout.jsx';
+import Privacy from './components/legal/Privacy.jsx';
+import Terms from './components/legal/Terms.jsx';
+import About from './components/legal/About.jsx';
+import FAQ from './components/legal/FAQ.jsx';
+import Suggestions from './components/suggestions/Suggestions.jsx';
+import CookieConsent from './components/common/CookieConsent.jsx';
+
+import Globals from './global.js';
+import { UserProvider } from './UserContext.jsx';
+
+// Initialize error tracking for global error handling
+import { initErrorTracking } from './utils/errorTracking.js';
+initErrorTracking();
+
+const getHostUrl = Globals.URL;
+
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <App />,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/login",
+    element: <Layout><Login /></Layout>,
+    errorElement: <ErrorBoundary />,
+  },
+
+  {
+    path: "/ADD_ACCOUNT",
+    element: <ADD host={getHostUrl} />,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/quizs",
+    element: <Layout><QUIZS /></Layout>,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/quiz/:numQuestions",
+    element: <Layout><QUIZ /></Layout>,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/ADDQ",
+    element: <ADDQ host={Globals.URL} />,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/analysis",
+    element: <Layout><Analysis /></Layout>,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/wrong-questions",
+    element: <Layout><WrongQuestions /></Layout>,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/admin",
+    element: <Admin />,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/Bank",
+    element: <Bank />,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/signup",
+    element: <Layout><Signup /></Layout>,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/signup/:token",
+    element: <Layout><Signup /></Layout>,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/contact",
+    element: <Layout><Contact /></Layout>,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/privacy",
+    element: <Layout><Privacy /></Layout>,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/terms",
+    element: <Layout><Terms /></Layout>,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/about",
+    element: <Layout><About /></Layout>,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/faq",
+    element: <Layout><FAQ /></Layout>,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/suggestions",
+    element: <Layout><Suggestions /></Layout>,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "*",
+    element: <ErrorBoundary />,
+  },
+]);
+
+createRoot(document.getElementById('root')).render(
+  <StrictMode>
+    <UserProvider>
+      <RouterProvider router={router} />
+      <CookieConsent />
+    </UserProvider>
+  </StrictMode>,
+)

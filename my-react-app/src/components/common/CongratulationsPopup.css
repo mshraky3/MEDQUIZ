@@ -1,0 +1,285 @@
+.congratulations-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(11, 16, 33, 0.9);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.3s ease;
+}
+
+.congratulations-popup {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 24px;
+    padding: 30px;
+    max-width: 500px;
+    width: 90%;
+    text-align: center;
+    box-shadow:
+        0 20px 40px rgba(0, 0, 0, 0.4),
+        0 0 0 1px rgba(255, 255, 255, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    animation: slideIn 0.4s ease;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.congratulations-popup::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(34, 211, 238, 0.1), transparent);
+    animation: shimmer 3s infinite;
+}
+
+.congratulations-header {
+    margin-bottom: 25px;
+    position: relative;
+    z-index: 1;
+}
+
+.celebration-icon {
+    font-size: 4rem;
+    margin-bottom: 10px;
+    animation: bounce 2s infinite;
+}
+
+.congratulations-header h2 {
+    color: #e2e8f0;
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+    text-shadow: 0 0 20px rgba(34, 211, 238, 0.3);
+    background: linear-gradient(135deg, #22d3ee 0%, #67e8f9 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.congratulations-content {
+    margin-bottom: 30px;
+    position: relative;
+    z-index: 1;
+}
+
+.achievement-badge {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow:
+        0 8px 16px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.badge-icon {
+    font-size: 3rem;
+    margin-bottom: 10px;
+    animation: pulse 2s infinite;
+}
+
+.achievement-badge h3 {
+    color: #e2e8f0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0 0 10px 0;
+}
+
+.achievement-badge p {
+    color: #94a3b8;
+    font-size: 1rem;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.achievement-details {
+    color: #cbd5e1;
+    margin-bottom: 20px;
+}
+
+.achievement-details p {
+    margin: 0 0 15px 0;
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.cardinality-info {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.type-badge,
+.source-badge {
+    background: rgba(34, 211, 238, 0.15);
+    color: #22d3ee;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border: 1px solid rgba(34, 211, 238, 0.3);
+}
+
+.congratulations-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+    position: relative;
+    z-index: 1;
+}
+
+.restart-button,
+.close-button {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 150px;
+}
+
+.restart-button {
+    background: linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%);
+    color: #0f172a;
+    box-shadow: 0 4px 15px rgba(34, 211, 238, 0.3);
+}
+
+.restart-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(34, 211, 238, 0.4);
+    background: linear-gradient(135deg, #67e8f9 0%, #22d3ee 100%);
+}
+
+.close-button {
+    background: rgba(255, 255, 255, 0.05);
+    color: #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.close-button:hover {
+    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.8);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes bounce {
+
+    0%,
+    20%,
+    50%,
+    80%,
+    100% {
+        transform: translateY(0);
+    }
+
+    40% {
+        transform: translateY(-10px);
+    }
+
+    60% {
+        transform: translateY(-5px);
+    }
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%) translateY(-100%) rotate(45deg);
+    }
+
+    100% {
+        transform: translateX(100%) translateY(100%) rotate(45deg);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .congratulations-popup {
+        padding: 20px;
+        margin: 20px;
+    }
+
+    .celebration-icon {
+        font-size: 3rem;
+    }
+
+    .congratulations-header h2 {
+        font-size: 1.5rem;
+    }
+
+    .badge-icon {
+        font-size: 2.5rem;
+    }
+
+    .achievement-badge h3 {
+        font-size: 1.2rem;
+    }
+
+    .congratulations-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .restart-button,
+    .close-button {
+        width: 100%;
+        max-width: 200px;
+    }
+}
