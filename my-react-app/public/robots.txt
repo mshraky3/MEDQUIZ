@@ -1,0 +1,31 @@
+User-agent: *
+Allow: /
+
+# Disallow admin and sensitive areas
+Disallow: /admin
+Disallow: /ADD_ACCOUNT
+Disallow: /ADDQ
+Disallow: /Bank
+
+# Allow important pages for SEO
+Allow: /login
+Allow: /signup
+Allow: /quizs
+Allow: /analysis
+Allow: /contact
+Allow: /about
+Allow: /faq
+Allow: /privacy
+Allow: /terms
+Allow: /suggestions
+Allow: /quiz/
+
+# Crawl delay to be respectful to the server
+Crawl-delay: 1
+
+# Sitemap location
+Sitemap: https://www.smle-question-bank.com/sitemap.xml
+Sitemap: https://www.smle-question-bank.com/sitemap-questions.xml
+
+# Host directive
+Host: https://www.smle-question-bank.com 
