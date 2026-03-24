@@ -138,7 +138,15 @@ const QUIZ = () => {
         }
 
         if (response.data.questions?.length > 0) {
-          setQuestions(response.data.questions);
+          const sanitizedQuestions = response.data.questions.filter(
+            (q) => q && typeof q === 'object' && q.question_text
+          );
+
+          if (sanitizedQuestions.length > 0) {
+            setQuestions(sanitizedQuestions);
+          } else {
+            setError("تعذر تحميل الأسئلة بسبب بيانات غير صالحة.");
+          }
         } else {
           setError("لم يتم إرجاع أي أسئلة.");
         }
@@ -228,6 +236,13 @@ const QUIZ = () => {
   useEffect(() => {
     setSelectedAnswer(questionAnswers[currentQuestionIndex] || null);
   }, [currentQuestionIndex, questionAnswers]);
+
+  // Keep index valid if the question list changes size.
+  useEffect(() => {
+    if (questions.length > 0 && currentQuestionIndex >= questions.length) {
+      setCurrentQuestionIndex(0);
+    }
+  }, [questions, currentQuestionIndex]);
 
 
   useEffect(() => {
@@ -427,6 +442,17 @@ const QUIZ = () => {
   }
 
   const currentQuestion = questions[currentQuestionIndex];
+
+  if (!currentQuestion) {
+    return (
+      <ErrorScreen
+        message="حدث خلل أثناء تحميل السؤال الحالي. حاول إعادة المحاولة."
+        navigate={navigate}
+        id={id}
+        onRetry={handleRetry}
+      />
+    );
+  }
 
   return (
     <>
