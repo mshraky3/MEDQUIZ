@@ -1,101 +1,116 @@
 import React, { useEffect } from 'react';
 
-const SEO = ({ 
-  title, 
-  description, 
-  keywords, 
-  image, 
-  url, 
+const MANAGED_ATTRIBUTE = 'data-seo-managed';
+const MANAGED_SCRIPT_ATTRIBUTE = 'data-seo-script';
+const defaultKeywords = 'اختبارات الهيئة السعودية للتخصصات الصحية, اختبار البرومترك, بنك أسئلة SMLE, اسئلة برومترك, Saudi Medical Licensing Examination, Prometric, medical questions, Saudi Prometric questions, medical MCQ';
+
+const SEO = ({
+  title,
+  description,
+  keywords,
+  image,
+  imageAlt,
+  url,
   type = 'website',
-  structuredData = null 
+  structuredData = [],
+  siteName = 'SQB',
+  robots = 'index, follow',
+  lang = 'ar',
+  dir = 'rtl',
+  locale = 'ar_SA',
+  alternates = []
 }) => {
-  const siteName = 'SQB';
-  const fullTitle = title ? `${title} | ${siteName}` : siteName;
-  const defaultImage = 'https://www.smle-question-bank.com/login-icon.png';
-  const defaultUrl = 'https://www.smle-question-bank.com/';
-  const defaultKeywords = `اختبارات الهيئة السعودية للتخصصات الصحية, تدريب على اختبار الهيأة, اختبار البرومترك, كويزات برومترك, اسئلة الهيئة السعودية للتخصصات الصحية, بنك اسئلة برومترك, تجميعات برومترك, تجميعات اكتوبر 2025, تجميعات SMLE, بنك اسئلة SMLE, اسئلة اختبار البرومترك, تدريب برومترك, اسئلة طبية سعودية, اختبارات طبية, اختبار الرخصة الطبية السعودية, SMLE, Prometric, Saudi Medical Licensing Examination, medical questions, medical quiz, medical exam preparation, Saudi medical license, medical board exam, medical practice test, Saudi medical students, SQB, اس كيو بي, SMLE question bank, October 2025 questions, Saudi Prometric, Prometric exam, Prometric practice, Prometric Saudi Arabia, Saudi Prometric questions, Saudi Prometric bank, Saudi Prometric free, Saudi Prometric preparation, Saudi Prometric online, Saudi Prometric MCQ, Saudi Prometric 2025, free medical quiz, medical MCQ`;
-
   useEffect(() => {
-    document.title = fullTitle;
+    const fullTitle = title || siteName;
+    const schemaItems = Array.isArray(structuredData)
+      ? structuredData.filter(Boolean)
+      : structuredData
+        ? [structuredData]
+        : [];
 
-    // Update meta tags
-    const updateMetaTag = (name, content) => {
-      let meta = document.querySelector(`meta[name="${name}"]`);
-      if (!meta) {
-        meta = document.createElement('meta');
-        meta.name = name;
-        document.head.appendChild(meta);
+    const setMeta = (selector, attributes, content) => {
+      let element = document.head.querySelector(selector);
+
+      if (!element) {
+        element = document.createElement('meta');
+        Object.entries(attributes).forEach(([key, value]) => {
+          element.setAttribute(key, value);
+        });
+        element.setAttribute(MANAGED_ATTRIBUTE, 'true');
+        document.head.appendChild(element);
       }
-      meta.content = content;
+
+      element.setAttribute('content', content);
     };
 
-    const updatePropertyTag = (property, content) => {
-      let meta = document.querySelector(`meta[property="${property}"]`);
-      if (!meta) {
-        meta = document.createElement('meta');
-        meta.setAttribute('property', property);
-        document.head.appendChild(meta);
+    const setLink = (selector, attributes) => {
+      let element = document.head.querySelector(selector);
+
+      if (!element) {
+        element = document.createElement('link');
+        element.setAttribute(MANAGED_ATTRIBUTE, 'true');
+        document.head.appendChild(element);
       }
-      meta.content = content;
-    };
 
-    // Update basic meta tags
-    updateMetaTag('description', description);
-    updateMetaTag('keywords', keywords || defaultKeywords);
-    updateMetaTag('author', siteName);
-    updateMetaTag('robots', 'index, follow');
-
-    // Update canonical URL
-    let canonical = document.querySelector('link[rel="canonical"]');
-    if (!canonical) {
-      canonical = document.createElement('link');
-      canonical.rel = 'canonical';
-      document.head.appendChild(canonical);
-    }
-    canonical.href = url || defaultUrl;
-
-    // Update Open Graph tags
-    updatePropertyTag('og:type', type);
-    updatePropertyTag('og:title', fullTitle);
-    updatePropertyTag('og:description', description);
-    updatePropertyTag('og:image', image || defaultImage);
-    updatePropertyTag('og:url', url || defaultUrl);
-    updatePropertyTag('og:site_name', siteName);
-    updatePropertyTag('og:locale', 'ar_SA');
-
-    // Update Twitter tags
-    updatePropertyTag('twitter:card', 'summary_large_image');
-    updatePropertyTag('twitter:title', fullTitle);
-    updatePropertyTag('twitter:description', description);
-    updatePropertyTag('twitter:image', image || defaultImage);
-    updatePropertyTag('twitter:url', url || defaultUrl);
-
-    // Add structured data
-    if (structuredData) {
-      // Remove existing structured data
-      const existingScripts = document.querySelectorAll('script[type="application/ld+json"]');
-      existingScripts.forEach(script => {
-        if (script.textContent.includes('"@type":"WebPage"')) {
-          script.remove();
-        }
+      Object.entries(attributes).forEach(([key, value]) => {
+        element.setAttribute(key, value);
       });
+    };
 
-      // Add new structured data
+    document.title = fullTitle;
+    document.documentElement.lang = lang;
+    document.documentElement.dir = dir;
+
+    setMeta('meta[name="description"]', { name: 'description' }, description);
+    setMeta('meta[name="keywords"]', { name: 'keywords' }, keywords || defaultKeywords);
+    setMeta('meta[name="author"]', { name: 'author' }, siteName);
+    setMeta('meta[name="robots"]', { name: 'robots' }, robots);
+
+    setLink('link[rel="canonical"]', { rel: 'canonical', href: url });
+
+    setMeta('meta[property="og:type"]', { property: 'og:type' }, type);
+    setMeta('meta[property="og:title"]', { property: 'og:title' }, fullTitle);
+    setMeta('meta[property="og:description"]', { property: 'og:description' }, description);
+    setMeta('meta[property="og:image"]', { property: 'og:image' }, image);
+    setMeta('meta[property="og:image:alt"]', { property: 'og:image:alt' }, imageAlt || fullTitle);
+    setMeta('meta[property="og:url"]', { property: 'og:url' }, url);
+    setMeta('meta[property="og:site_name"]', { property: 'og:site_name' }, siteName);
+    setMeta('meta[property="og:locale"]', { property: 'og:locale' }, locale);
+
+    setMeta('meta[name="twitter:card"]', { name: 'twitter:card' }, 'summary_large_image');
+    setMeta('meta[name="twitter:title"]', { name: 'twitter:title' }, fullTitle);
+    setMeta('meta[name="twitter:description"]', { name: 'twitter:description' }, description);
+    setMeta('meta[name="twitter:image"]', { name: 'twitter:image' }, image);
+    setMeta('meta[name="twitter:image:alt"]', { name: 'twitter:image:alt' }, imageAlt || fullTitle);
+    setMeta('meta[name="twitter:url"]', { name: 'twitter:url' }, url);
+
+    document.head.querySelectorAll(`link[rel="alternate"][${MANAGED_ATTRIBUTE}="true"]`).forEach((element) => {
+      element.remove();
+    });
+
+    alternates.forEach((hrefLang) => {
+      const element = document.createElement('link');
+      element.setAttribute('rel', 'alternate');
+      element.setAttribute('hreflang', hrefLang);
+      element.setAttribute('href', url);
+      element.setAttribute(MANAGED_ATTRIBUTE, 'true');
+      document.head.appendChild(element);
+    });
+
+    document.head.querySelectorAll(`script[${MANAGED_SCRIPT_ATTRIBUTE}="true"]`).forEach((element) => {
+      element.remove();
+    });
+
+    schemaItems.forEach((item) => {
       const script = document.createElement('script');
       script.type = 'application/ld+json';
-      script.textContent = JSON.stringify(structuredData);
+      script.setAttribute(MANAGED_SCRIPT_ATTRIBUTE, 'true');
+      script.textContent = JSON.stringify(item);
       document.head.appendChild(script);
-    }
+    });
+  }, [alternates, description, dir, image, imageAlt, keywords, lang, locale, robots, siteName, structuredData, title, type, url]);
 
-    // Cleanup function
-    return () => {
-      // Optionally clean up meta tags on unmount
-      // This is optional as the component will update them on next render
-    };
-  }, [fullTitle, description, keywords, url, image, type, structuredData]);
-
-  // This component doesn't render anything visible
   return null;
 };
 
-export default SEO; 
+export default SEO;

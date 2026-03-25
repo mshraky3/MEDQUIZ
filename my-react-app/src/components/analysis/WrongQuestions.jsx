@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './analysis.css';
 import Globals from '../../global.js';
-import SEO from '../common/SEO';
 import Navbar from '../common/Navbar.jsx';
 import { useContext } from 'react';
 import { UserContext } from '../../UserContext';
@@ -113,24 +112,9 @@ const WrongQuestions = () => {
         }
     }, [hasMore, loading, currentPage, fetchWrongQuestions]);
 
-    const structuredData = {
-        "@context": "https://schema.org",
-        "@type": "WebPage",
-        "name": "Wrong Questions Review - SMLE Study Tool",
-        "description": "Review and analyze all the questions you answered incorrectly to improve your SMLE performance.",
-        "url": `${Globals.URL}/wrong-questions`
-    };
-
     return (
         <>
             <Navbar />
-            <SEO
-                title="Wrong Questions Review - Improve Your SMLE Performance"
-                description="Review all questions you answered incorrectly with AI-powered explanations to improve your SMLE exam preparation and performance."
-                keywords="SMLE wrong questions, medical exam mistakes, SMLE improvement, medical quiz review, wrong answers analysis, SMLE study help"
-                url={`${Globals.URL}/wrong-questions`}
-                structuredData={structuredData}
-            />
             <div className="analysis-wrapper fade-in">
                 <div className="screen-header">
 

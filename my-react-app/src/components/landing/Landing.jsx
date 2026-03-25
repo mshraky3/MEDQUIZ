@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Landing.css';
-import SEO from '../common/SEO';
 
 const stats = [
   { label: 'سؤال', value: '11,000+' },
@@ -48,6 +47,27 @@ const steps = [
   }
 ];
 
+const seoTopics = [
+  {
+    title: 'تحضير منظم لاختبار SMLE',
+    desc: 'ابدأ بجلسات قصيرة أو طويلة حسب وقتك، وراجع أداءك حسب التخصص والموضوع.'
+  },
+  {
+    title: 'تغطية لأسئلة البرومترك الطبية',
+    desc: 'المنصة مصممة لدعم التحضير للأطباء والطلاب الباحثين عن تدريب عربي واضح على نمط الأسئلة الطبية الشائع.'
+  },
+  {
+    title: 'مراجعة نقاط الضعف بسرعة',
+    desc: 'اعرف أين تخطئ، وارجع إلى الأسئلة الخاطئة، وركّز على المواضيع التي تحتاج إلى عمل فعلي.'
+  }
+];
+
+const faqHighlights = [
+  'ما الفرق بين الجلسة السريعة والجلسة الطويلة داخل المنصة؟',
+  'هل تعمل SQB على الهاتف والأجهزة اللوحية؟',
+  'كيف تساعدني التحليلات على رفع مستواي قبل اختبار SMLE؟'
+];
+
 const Landing = () => {
   const navigate = useNavigate();
 
@@ -64,13 +84,6 @@ const Landing = () => {
 
   return (
     <>
-      <SEO
-        title="منصة برومترك (SMLE) الشاملة"
-        description="استعد لاختبار البرومترك السعودي (SMLE) مع مجموعتنا الشاملة التي تضم أكثر من 8000 سؤال دقيق وتحليلات مفصلة. حساب مجاني بالكامل."
-        keywords="SMLE, Prometric, Saudi Medical Licensing Examination, medical questions, medical quiz, medical exam preparation, Saudi medical license, medical board exam, medical practice test, medical study guide, Saudi medical students, free"
-        url="https://www.smle-question-bank.com"
-        lang="ar"
-      />
       <div className="landing-body" dir="rtl">
         <div className="landing-shell">
           <header className="landing-topbar" aria-label="التنقل الرئيسي">
@@ -184,6 +197,25 @@ const Landing = () => {
             </div>
           </section>
 
+          <section className="seo-section">
+            <div className="section-head">
+              <p className="pill subtle">SMLE • برومترك • السعودية</p>
+              <h2>محتوى موجّه لما يبحث عنه طلاب الطب والأطباء فعلاً</h2>
+              <p>
+                إذا كنت تبحث عن بنك أسئلة لاختبار الهيئة السعودية للتخصصات الصحية أو طريقة عملية للتحضير لاختبار البرومترك،
+                فهذه المنصة تجمع بين الأسئلة، التدرج في التدريب، والتحليل بعد كل جلسة.
+              </p>
+            </div>
+            <div className="seo-grid">
+              {seoTopics.map((topic) => (
+                <article key={topic.title} className="seo-card">
+                  <h3>{topic.title}</h3>
+                  <p>{topic.desc}</p>
+                </article>
+              ))}
+            </div>
+          </section>
+
           <section className="mid-cta">
             <div className="mid-cta-copy">
               <h3>ابدأ جلسة تدريب الآن</h3>
@@ -238,6 +270,42 @@ const Landing = () => {
                 </p>
               </div>
             </div>
+          </section>
+
+          <section className="resource-section">
+            <div className="resource-card">
+              <div className="section-head">
+                <p className="pill subtle">روابط أساسية</p>
+                <h2>صفحات تساعدك قبل البدء</h2>
+                <p>
+                  قبل إنشاء الحساب أو بدء التدريب، يمكنك قراءة مزيد من التفاصيل عن المنصة، الاطلاع على الأسئلة الشائعة،
+                  أو التواصل معنا مباشرة إذا كنت تحتاج مساعدة.
+                </p>
+              </div>
+              <div className="resource-links">
+                <Link to="/about" className="resource-link-card">
+                  <h3>من نحن</h3>
+                  <p>تعرف على هدف SQB وما الذي تقدمه للأطباء وطلاب الطب في السعودية.</p>
+                </Link>
+                <Link to="/faq" className="resource-link-card">
+                  <h3>الأسئلة الشائعة</h3>
+                  <p>إجابات سريعة حول الحسابات، الاستخدام، والجوال وطبيعة بنك الأسئلة.</p>
+                </Link>
+                <Link to="/contact" className="resource-link-card">
+                  <h3>اتصل بنا</h3>
+                  <p>تواصل مع فريق SQB إذا احتجت دعماً أو كان لديك استفسار عن المنصة.</p>
+                </Link>
+              </div>
+            </div>
+            <aside className="faq-preview-card">
+              <h3>أسئلة يبحث عنها المستخدمون كثيراً</h3>
+              <ul>
+                {faqHighlights.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+              <Link to="/faq" className="faq-preview-link">عرض صفحة الأسئلة الشائعة</Link>
+            </aside>
           </section>
 
           <section className="cta-band">

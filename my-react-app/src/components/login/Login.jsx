@@ -3,7 +3,6 @@ import axios from 'axios';
 import './Login.css';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Globals from '../../global.js';
-import SEO from '../common/SEO';
 import Navbar from '../common/Navbar.jsx';
 import { UserContext } from '../../UserContext';
 
@@ -90,21 +89,6 @@ const Login = () => {
       }));
     }
   }, [user]);
-
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    "name": "تسجيل الدخول - منصة SQB للتحضير لاختبار SMLE",
-    "description": "سجّل دخولك إلى منصة SQB للوصول إلى أكثر من 11,000 سؤال تدريبي وتحليلات دقيقة وأدوات تحضير شاملة لاختبار البرومترك (SMLE). تجميعات اكتوبر 2025 متوفرة الآن.",
-    "url": "https://www.smle-question-bank.com/login",
-    "mainEntity": {
-      "@type": "LoginAction",
-      "target": {
-        "@type": "EntryPoint",
-        "urlTemplate": "https://www.smle-question-bank.com/login"
-      }
-    }
-  };
 
   const copy = {
     loginTitle: "تسجيل الدخول",
@@ -226,13 +210,6 @@ const Login = () => {
 
   return (
     <>
-      <SEO
-        title="تسجيل الدخول - منصة SQB للتحضير لاختبار SMLE"
-        description="سجّل دخولك للوصول إلى أسئلة SQB التدريبية، والتحليلات المتقدمة، وأدوات التحضير الشاملة لاختبار البرومترك (SMLE)."
-        keywords="تسجيل دخول SMLE, منصة SQB, أسئلة برومترك, منصة طبية تعليمية"
-        url="https://www.smle-question-bank.com/login"
-        structuredData={structuredData}
-      />
       <div className="login-body" dir="rtl">
         <div className="login-wrapper">
           <div className="login-card">

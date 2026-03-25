@@ -3,7 +3,6 @@ import axios from 'axios';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './QUIZS.css';
 import Globals from '../../global.js';
-import SEO from '../common/SEO';
 import Navbar from '../common/Navbar.jsx';
 import AchievementBadges from '../common/AchievementBadges.jsx';
 import CongratulationsPopup from '../common/CongratulationsPopup.jsx';
@@ -61,24 +60,6 @@ const QUIZS = () => {
         { label: 'ساعة', value: 60 },
         { label: 'مخصص', value: 'custom' }
     ];
-
-    // SEO structured data for quiz selection page
-    const structuredData = {
-        "@context": "https://schema.org",
-        "@type": "WebPage",
-        "name": "SMLE Quiz Selection - Choose Your Practice Questions",
-        "description": "Select from 10 to 200 SMLE practice questions. Choose specific medical topics or mix all types. Start your SMLE preparation with targeted practice sessions.",
-        "url": `${Globals.URL}/quizs`,
-        "mainEntity": {
-            "@type": "EducationalService",
-            "name": "SMLE Quiz Selection",
-            "description": "Choose your SMLE practice quiz with customizable question counts and topic selection",
-            "offers": {
-                "@type": "Offer",
-                "availability": "https://schema.org/InStock"
-            }
-        }
-    };
 
     const handleOptionClick = (num) => {
         if (num === 'custom') {
@@ -420,13 +401,6 @@ const QUIZS = () => {
     return (
         <>
             <Navbar />
-            <SEO
-                title="Quiz Selection - Choose Your SMLE Practice Questions"
-                description="Select from 10 to 200 SMLE practice questions. Choose specific medical topics (pediatrics, OB/GYN, medicine, surgery) or mix all types. Start your SMLE preparation with targeted practice sessions."
-                keywords="SMLE quiz selection, medical practice questions, SMLE practice test, medical exam questions, Saudi medical license quiz, medical topic selection"
-                url={`${Globals.URL}/quizs`}
-                structuredData={structuredData}
-            />
             <div className="quiz-selection">
                 {/* Streak Badge */}
                 {id && (

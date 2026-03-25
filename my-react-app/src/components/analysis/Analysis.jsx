@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import './analysis.css';
 import Globals from '../../global.js';
-import SEO from '../common/SEO';
 import OverallStats from './OverallStats';
 import TopicAnalysisTable from './TopicAnalysisTable';
 import QuestionAttemptsTable from './QuestionAttemptsTable';
@@ -176,24 +175,6 @@ const Analysis = () => {
 
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState(location.state?.activeTab || 'overview');
-
-  // SEO structured data for analysis page
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    "name": "SMLE Performance Analysis - Track Your Progress",
-    "description": "Comprehensive SMLE performance analysis with detailed statistics, topic-wise breakdown, and progress tracking. Monitor your strengths and weaknesses.",
-    "url": `${Globals.URL}/analysis`,
-    "mainEntity": {
-      "@type": "EducationalService",
-      "name": "SMLE Performance Analytics",
-      "description": "Detailed analysis of SMLE practice performance with topic-wise statistics and progress tracking",
-      "provider": {
-        "@type": "Organization",
-        "name": "SQB"
-      }
-    }
-  };
 
   // Function to calculate best and worst topics from topicAnalysis data
   const calculateBestWorstTopics = useCallback((topicAnalysis) => {
@@ -586,13 +567,6 @@ const Analysis = () => {
   return (
     <>
       <Navbar />
-      <SEO
-        title="Performance Analysis - Track Your SMLE Progress"
-        description="Comprehensive SMLE performance analysis with detailed statistics, topic-wise breakdown, and progress tracking. Monitor your strengths and weaknesses to improve your exam preparation."
-        keywords="SMLE analysis, medical exam performance, SMLE progress tracking, medical quiz analytics, Saudi medical license analysis, performance statistics"
-        url={`${Globals.URL}/analysis`}
-        structuredData={structuredData}
-      />
       <div className="analysis-wrapper fade-in">
         <h2 className="screen-title">تقرير الأداء</h2>
 
