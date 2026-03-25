@@ -17,26 +17,12 @@ const CookieConsent = () => {
         localStorage.setItem('cookie-consent', 'accepted');
         localStorage.setItem('cookie-consent-date', new Date().toISOString());
         setShowBanner(false);
-        // Load AdSense scripts if not already loaded
-        loadAdSenseIfNeeded();
     };
 
     const acceptNecessary = () => {
         localStorage.setItem('cookie-consent', 'necessary-only');
         localStorage.setItem('cookie-consent-date', new Date().toISOString());
         setShowBanner(false);
-    };
-
-    const loadAdSenseIfNeeded = () => {
-        // AdSense is already loaded in index.html, this just tracks consent
-        if (typeof window !== 'undefined' && window.adsbygoogle) {
-            try {
-                // Push any pending ad slots
-                (window.adsbygoogle = window.adsbygoogle || []).push({});
-            } catch (e) {
-                // Ad already loaded
-            }
-        }
     };
 
     if (!showBanner) return null;
@@ -49,11 +35,11 @@ const CookieConsent = () => {
                     <div className="cookie-consent-text">
                         <h3>نستخدم ملفات تعريف الارتباط | We use cookies</h3>
                         <p>
-                            نستخدم ملفات تعريف الارتباط (الكوكيز) لتحسين تجربتك على موقعنا وعرض إعلانات مخصصة عبر Google AdSense. 
+                            نستخدم ملفات تعريف الارتباط (الكوكيز) لتحسين تجربتك على موقعنا وعرض إعلانات مخصصة عبر Google AdSense.
                             بالنقر على "قبول الكل"، فإنك توافق على استخدام جميع ملفات تعريف الارتباط.
                         </p>
                         <p>
-                            We use cookies to improve your experience and display personalized ads through Google AdSense. 
+                            We use cookies to improve your experience and display personalized ads through Google AdSense.
                             By clicking "Accept All", you consent to the use of all cookies.
                         </p>
                         <a href="/privacy" className="cookie-consent-link">

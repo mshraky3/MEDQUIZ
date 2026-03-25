@@ -38,6 +38,7 @@ const Navbar = () => {
       <div className="navbar-center">
         <div className={`navbar-nav-links ${menuOpen ? 'nav-links-open' : ''}`}>
           <Link to="/quizs" className="nav-link" onClick={() => setMenuOpen(false)}>الرئيسية</Link>
+          <Link to="/guides" className="nav-link" onClick={() => setMenuOpen(false)}>أدلة التحضير</Link>
           <Link to="/about" className="nav-link" onClick={() => setMenuOpen(false)}>من نحن</Link>
           <Link to="/faq" className="nav-link" onClick={() => setMenuOpen(false)}>الأسئلة الشائعة</Link>
           <Link to="/contact" className="nav-link" onClick={() => setMenuOpen(false)}>تواصل معنا</Link>

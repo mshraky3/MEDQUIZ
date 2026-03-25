@@ -1,5 +1,46 @@
 import React, { useEffect, useState } from 'react';
 
+const ADSENSE_SCRIPT_SRC = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9286976335875618';
+const ADSENSE_CLIENT_ID = 'ca-pub-9286976335875618';
+
+// Keep ads off utility/auth/interactive-only views.
+const AD_ELIGIBLE_PATHS = new Set([
+  '/',
+  '/guides',
+  '/guides/smle-study-plan',
+  '/guides/wrong-questions-method',
+  '/about',
+  '/faq',
+  '/contact',
+  '/privacy',
+  '/terms'
+]);
+
+const isConsentAccepted = () => {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  return localStorage.getItem('cookie-consent') === 'accepted';
+};
+
+const ensureAdSenseScript = () => {
+  if (typeof document === 'undefined') {
+    return;
+  }
+
+  const existing = document.querySelector(`script[src="${ADSENSE_SCRIPT_SRC}"]`);
+  if (existing) {
+    return;
+  }
+
+  const script = document.createElement('script');
+  script.async = true;
+  script.src = ADSENSE_SCRIPT_SRC;
+  script.crossOrigin = 'anonymous';
+  document.head.appendChild(script);
+};
+
 /**
  * GoogleAd Component - AdSense Compliant
  * 
@@ -23,15 +64,26 @@ const GoogleAd = ({ disabled = false }) => {
       return;
     }
 
+    if (typeof window === 'undefined') {
+      setShouldShow(false);
+      return;
+    }
+
+    const currentPath = window.location.pathname;
+    if (!AD_ELIGIBLE_PATHS.has(currentPath) || !isConsentAccepted()) {
+      setShouldShow(false);
+      return;
+    }
+
     // Small delay to ensure page content is loaded
     const timer = setTimeout(() => {
       // Check if the page has substantial content (AdSense policy requirement)
-      const mainContent = document.querySelector('.quiz-container, .analysis-wrapper, .quizs-wrapper, .landing-body');
+      const mainContent = document.querySelector('.landing-body, .legal-page, .faq-page, .contact-container, .guides-page, .guide-article');
 
       if (mainContent) {
-        // Check for minimum text content (at least 300 characters of actual content)
+        // Require substantial text content before displaying ads.
         const textContent = mainContent.innerText || '';
-        const hasSubstantialContent = textContent.length > 300;
+        const hasSubstantialContent = textContent.length > 1200;
 
         // Check we're not on a loading or error state
         const isLoading = document.querySelector('.loading-spinner, .loading-content');
@@ -48,8 +100,9 @@ const GoogleAd = ({ disabled = false }) => {
 
   useEffect(() => {
     // Only load ads in production and when conditions are met
-    if (shouldShow && process.env.NODE_ENV === 'production') {
+    if (shouldShow && import.meta.env.PROD) {
       try {
+        ensureAdSenseScript();
         (window.adsbygoogle = window.adsbygoogle || []).push({});
       } catch (e) {
         console.error('Ad could not be loaded', e);
@@ -66,7 +119,7 @@ const GoogleAd = ({ disabled = false }) => {
     <div className="ad-container" style={{ marginTop: '2rem', marginBottom: '1rem' }}>
       <ins className="adsbygoogle"
         style={{ display: 'block' }}
-        data-ad-client="ca-pub-9286976335875618"
+        data-ad-client={ADSENSE_CLIENT_ID}
         data-ad-format="auto"
         data-full-width-responsive="true"></ins>
     </div>
