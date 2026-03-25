@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "postbuild": "node scripts/postbuild-seo.mjs",
+    "postbuild": "node -e \"const fs=require('fs');const path=require('path');(async()=>{const p=path.resolve('scripts/postbuild-seo.mjs');if(fs.existsSync(p)){await import('file://'+p);}else{console.warn('[postbuild] scripts/postbuild-seo.mjs not found, skipping prerender.');}})().catch((err)=>{console.error(err);process.exit(1);});\"",
     "lint": "eslint .",
     "preview": "vite preview"
   },
