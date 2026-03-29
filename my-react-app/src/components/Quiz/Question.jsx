@@ -25,6 +25,9 @@ const Question = ({
     return '#28a745'; // Green
   };
 
+  const safeQuestionText = question?.question_text || 'Question content is unavailable.';
+  const optionKeys = ['option1', 'option2', 'option3', 'option4'];
+
   return (
     <div className="quiz-container-card">
       {/* Timer Display */}
@@ -43,16 +46,17 @@ const Question = ({
           </div>
         </div>
         <div className="question-content">
-          <div className="question-text">{question.question_text}</div>
+          <div className="question-text">{safeQuestionText}</div>
 
           <div className="options">
-            {['option1', 'option2', 'option3', 'option4'].map((optKey, index) => (
+            {optionKeys.map((optKey, index) => (
               <button
                 key={index}
-                className={`option-button ${selectedAnswer === question[optKey] ? "selected" : ""}`}
-                onClick={() => onSelectOption(question[optKey])}
+                className={`option-button ${selectedAnswer === question?.[optKey] ? "selected" : ""}`}
+                onClick={() => question?.[optKey] && onSelectOption(question[optKey])}
+                disabled={!question?.[optKey]}
               >
-                {question[optKey]}
+                {question?.[optKey] || 'Option unavailable'}
               </button>
             ))}
           </div>

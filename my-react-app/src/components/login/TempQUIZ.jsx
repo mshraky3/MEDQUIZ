@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import GoogleAd from '../common/GoogleAd';
 import trialQuestions from '../ADD/datafortrile.js';
 
 const TempQUIZ = () => {
@@ -42,23 +41,6 @@ const TempQUIZ = () => {
   const [quizFinished, setQuizFinished] = useState(false);
   const [loading, setLoading] = useState(true);
   const [quizStartTime] = useState(Date.now());
-
-  // Add Google AdSense script
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.async = true;
-    script.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9286976335875618";
-    script.crossOrigin = "anonymous";
-    document.head.appendChild(script);
-
-    return () => {
-      // Cleanup script when component unmounts
-      const existingScript = document.querySelector(`script[src="${script.src}"]`);
-      if (existingScript) {
-        document.head.removeChild(existingScript);
-      }
-    };
-  }, []);
 
   // Simulate loading delay
   useEffect(() => {
@@ -132,8 +114,6 @@ const Question = ({ currentQuestion, currentIndex, totalQuestions, selectedAnswe
         {currentIndex + 1 < totalQuestions ? "Next Question" : "Finish Quiz"}
       </button>
     </div>
-    {/* Ad only shows when there's substantial question content visible */}
-    <GoogleAd />
   </div>
 );
 

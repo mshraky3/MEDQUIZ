@@ -11,6 +11,15 @@ import Question from './Question';
 import Globals from '../../global.js';
 import { UserContext } from '../../UserContext';
 
+const isValidQuestion = (question) => {
+  return (
+    question &&
+    typeof question === 'object' &&
+    typeof question.question_text === 'string' &&
+    question.question_text.trim().length > 0
+  );
+};
+
 const QUIZ = () => {
   const { numQuestions } = useParams();
   const navigate = useNavigate();
@@ -138,9 +147,7 @@ const QUIZ = () => {
         }
 
         if (response.data.questions?.length > 0) {
-          const sanitizedQuestions = response.data.questions.filter(
-            (q) => q && typeof q === 'object' && q.question_text
-          );
+          const sanitizedQuestions = response.data.questions.filter(isValidQuestion);
 
           if (sanitizedQuestions.length > 0) {
             setQuestions(sanitizedQuestions);
@@ -250,7 +257,8 @@ const QUIZ = () => {
       if (!id || dataSent || !quizFinished || finalDuration === null) return;
 
       // Build answers array from questionAnswers
-      const finalAnswers = questions.map((question, index) => {
+      const validQuestions = questions.filter(isValidQuestion);
+      const finalAnswers = validQuestions.map((question, index) => {
         const selectedAnswer = questionAnswers[index];
         const isCorrect = selectedAnswer === question.correct_option;
         return {
@@ -262,14 +270,14 @@ const QUIZ = () => {
         };
       });
 
-      if (finalAnswers.length !== questions.length) return;
+      if (finalAnswers.length !== validQuestions.length || validQuestions.length === 0) return;
 
       setDataSent(true);
       const duration = finalDuration;
       const totalQuestions = finalAnswers.length;
       const correctCount = finalAnswers.filter(a => a.isCorrect).length;
       const accuracy = ((correctCount / totalQuestions) * 100).toFixed(2);
-      const topicsCovered = [...new Set(questions.map(q => q.question_type))];
+      const topicsCovered = [...new Set(validQuestions.map(q => q.question_type))];
 
       try {
         // Use different endpoint based on quiz type
@@ -279,13 +287,13 @@ const QUIZ = () => {
         } else {
           endpoint = '/quiz-sessions';
         }
-        const questionIds = questions.map(q => q.id);
+        const questionIds = validQuestions.map(q => q.id);
         let sessionData;
 
         if (isFinalQuiz) {
           // Build question attempts for final quiz
           const questionAttempts = finalAnswers.map((answer, index) => {
-            const question = questions[index];
+            const question = validQuestions[index];
             return {
               questionId: question.id,
               userAnswer: answer.selected,
@@ -305,7 +313,7 @@ const QUIZ = () => {
             correctAnswers: correctCount,
             timeTaken: duration,
             timeLimit: timerMinutes ? timerMinutes * 60 : null,
-            questionIds: questions.map(q => q.id), // Include question IDs
+            questionIds: validQuestions.map(q => q.id), // Include question IDs
             questionAttempts: questionAttempts, // Include question attempts
             sessionMetadata: {
               device: 'web',
@@ -333,7 +341,7 @@ const QUIZ = () => {
         // Send individual question attempts (skip for final quiz)
         if (!isFinalQuiz) {
           const attemptPromises = finalAnswers.map((answer, index) => {
-            const question = questions[index];
+            const question = validQuestions[index];
             const attemptData = {
               user_id: id,
               question_id: question.id,
@@ -352,8 +360,8 @@ const QUIZ = () => {
         // Update topic analysis (skip for final quiz)
         if (!isFinalQuiz) {
           const topicAnalysisPromises = topicsCovered.map(topic => {
-            const topicQuestions = questions.filter(q => q.question_type === topic);
-            const topicAnswers = finalAnswers.filter((_, index) => questions[index].question_type === topic);
+            const topicQuestions = validQuestions.filter(q => q.question_type === topic);
+            const topicAnswers = finalAnswers.filter((_, index) => validQuestions[index].question_type === topic);
             const topicCorrect = topicAnswers.filter(a => a.isCorrect).length;
             const topicAccuracy = topicQuestions.length > 0 ? (topicCorrect / topicQuestions.length) * 100 : 0;
 
@@ -394,7 +402,8 @@ const QUIZ = () => {
   }
 
   if (quizFinished) {
-    const finalAnswers = questions.map((question, index) => {
+    const validQuestions = questions.filter(isValidQuestion);
+    const finalAnswers = validQuestions.map((question, index) => {
       const selectedAnswer = questionAnswers[index];
       const isCorrect = selectedAnswer === question.correct_option;
       return {
@@ -408,7 +417,7 @@ const QUIZ = () => {
 
     const correctCount = finalAnswers.filter(a => a.isCorrect).length;
     const totalQuestions = finalAnswers.length;
-    const accuracy = ((correctCount / totalQuestions) * 100).toFixed(2);
+    const accuracy = totalQuestions > 0 ? ((correctCount / totalQuestions) * 100).toFixed(2) : '0.00';
     // Use the stored final duration instead of recalculating
     const duration = finalDuration !== null ? finalDuration : Math.floor((Date.now() - quizStartTimeRef.current) / 1000);
 
@@ -443,7 +452,7 @@ const QUIZ = () => {
 
   const currentQuestion = questions[currentQuestionIndex];
 
-  if (!currentQuestion) {
+  if (!isValidQuestion(currentQuestion)) {
     return (
       <ErrorScreen
         message="حدث خلل أثناء تحميل السؤال الحالي. حاول إعادة المحاولة."

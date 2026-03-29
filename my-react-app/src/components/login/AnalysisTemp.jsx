@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 // Import necessary components from the analysis folder
-import GoogleAd from '../common/GoogleAd';
 import OverallStats from '../analysis/OverallStats';
 import StreakInfo from '../analysis/StreakInfo';
 import TopicAnalysisTable from '../analysis/TopicAnalysisTable';
@@ -14,23 +13,6 @@ const AnalysisTemp = () => {
   const navigate = useNavigate();
 
   const { id, answers, questions, duration, types, source } = location.state || {};
-
-  // Add Google AdSense script
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.async = true;
-    script.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9286976335875618";
-    script.crossOrigin = "anonymous";
-    document.head.appendChild(script);
-    
-    return () => {
-      // Cleanup script when component unmounts
-      const existingScript = document.querySelector(`script[src="${script.src}"]`);
-      if (existingScript) {
-        document.head.removeChild(existingScript);
-      }
-    };
-  }, []);
 
   if (!answers || !questions) {
     return (
@@ -75,7 +57,7 @@ const AnalysisTemp = () => {
 
   // Get the selected topic from the quiz data
   const selectedTopic = types || 'surgery'; // Default to surgery if not specified
-  
+
   const topicMap = {};
   answers.forEach((ans, index) => {
     const question = questions[index];
@@ -139,8 +121,8 @@ const AnalysisTemp = () => {
           <div className="trial-text-content">
             <h4>Free Trial Experience</h4>
             <p>
-              You've just experienced a sample of our comprehensive SMLE question bank. 
-              With a full subscription, you'll get access to 8,000+ questions, detailed analytics, 
+              You've just experienced a sample of our comprehensive SMLE question bank.
+              With a full subscription, you'll get access to 8,000+ questions, detailed analytics,
               and personalized study recommendations.
             </p>
           </div>
@@ -160,9 +142,9 @@ const AnalysisTemp = () => {
       <LastQuizSummary latest_quiz={userAnalysis.latest_quiz} />
 
       {/* === QuestionAttemptsTable Component === */}
-      <QuestionAttemptsTable 
-        questionAttempts={questionAttempts} 
-        questions={questions} 
+      <QuestionAttemptsTable
+        questionAttempts={questionAttempts}
+        questions={questions}
         latestQuiz={userAnalysis.latest_quiz}
         isTrial={true}
       />
@@ -189,7 +171,7 @@ const AnalysisTemp = () => {
           >
             🚀 Contact Us for Full Access
           </button>
-          
+
           <button
             onClick={handleContactUs}
             className="trial-action-btn contact"
@@ -198,7 +180,6 @@ const AnalysisTemp = () => {
           </button>
         </div>
       </div>
-      <GoogleAd />
     </div>
   );
 };

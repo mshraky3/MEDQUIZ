@@ -93,6 +93,7 @@ const Landing = () => {
             </div>
             <nav className="topbar-links" aria-label="روابط سريعة">
               <Link to="/about">من نحن</Link>
+              <Link to="/guides">أدلة التحضير</Link>
               <Link to="/faq">الأسئلة الشائعة</Link>
               <Link to="/contact">اتصل بنا</Link>
             </nav>
@@ -286,6 +287,10 @@ const Landing = () => {
                 <Link to="/about" className="resource-link-card">
                   <h3>من نحن</h3>
                   <p>تعرف على هدف SQB وما الذي تقدمه للأطباء وطلاب الطب في السعودية.</p>
+                </Link>
+                <Link to="/guides" className="resource-link-card">
+                  <h3>أدلة التحضير</h3>
+                  <p>مقالات عملية عن خطة SMLE، مراجعة الأخطاء، وإدارة الوقت قبل الاختبار.</p>
                 </Link>
                 <Link to="/faq" className="resource-link-card">
                   <h3>الأسئلة الشائعة</h3>

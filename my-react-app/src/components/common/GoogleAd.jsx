@@ -28,12 +28,10 @@ const ensureAdSenseScript = () => {
   if (typeof document === 'undefined') {
     return;
   }
-
   const existing = document.querySelector(`script[src="${ADSENSE_SCRIPT_SRC}"]`);
   if (existing) {
     return;
   }
-
   const script = document.createElement('script');
   script.async = true;
   script.src = ADSENSE_SCRIPT_SRC;
@@ -56,14 +54,12 @@ const ensureAdSenseScript = () => {
  */
 const GoogleAd = ({ disabled = false }) => {
   const [shouldShow, setShouldShow] = useState(false);
-
   useEffect(() => {
     // Don't show if explicitly disabled
     if (disabled) {
       setShouldShow(false);
       return;
     }
-
     if (typeof window === 'undefined') {
       setShouldShow(false);
       return;

@@ -22,6 +22,9 @@ import About from './components/legal/About.jsx';
 import FAQ from './components/legal/FAQ.jsx';
 import Suggestions from './components/suggestions/Suggestions.jsx';
 import CookieConsent from './components/common/CookieConsent.jsx';
+import GuidesHub from './components/guides/GuidesHub.jsx';
+import SmleStudyPlanGuide from './components/guides/SmleStudyPlanGuide.jsx';
+import WrongQuestionsMethodGuide from './components/guides/WrongQuestionsMethodGuide.jsx';
 
 import Globals from './global.js';
 import { UserProvider } from './UserContext.jsx';
@@ -122,6 +125,21 @@ const router = createBrowserRouter([
   {
     path: "/suggestions",
     element: <Layout><Suggestions /></Layout>,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/guides",
+    element: <Layout><GuidesHub /></Layout>,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/guides/smle-study-plan",
+    element: <Layout><SmleStudyPlanGuide /></Layout>,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/guides/wrong-questions-method",
+    element: <Layout><WrongQuestionsMethodGuide /></Layout>,
     errorElement: <ErrorBoundary />,
   },
   {

@@ -259,6 +259,69 @@ const routeMap = {
       </main>
     `
     },
+    '/guides': {
+        title: 'أدلة التحضير لاختبار SMLE | SQB',
+        description: 'مكتبة أدلة عملية للتحضير لاختبار SMLE والبرومترك: خطط مذاكرة، مراجعة الأخطاء، إدارة الوقت، ونصائح أداء عالية العائد.',
+        keywords: 'SMLE study guides, دليل SMLE, خطة مذاكرة SMLE, مراجعة أخطاء SMLE, برومترك طب, نصائح اختبار الهيئة',
+        alternates: ['ar-SA', 'ar', 'x-default'],
+        structuredData: [
+            routePageData('/guides', 'أدلة التحضير لاختبار SMLE | SQB', 'أدلة ومقالات تعليمية للتحضير لاختبار SMLE والبرومترك.'),
+            breadcrumbs([
+                { name: 'الرئيسية', path: '/' },
+                { name: 'الأدلة', path: '/guides' }
+            ])
+        ],
+        prerenderHtml: `
+            <main class="seo-shell" dir="rtl">
+                <h1>أدلة التحضير لاختبار SMLE</h1>
+                <p>صفحة تضم مقالات تعليمية عميقة حول خطط المذاكرة، مراجعة الأخطاء، وإدارة الوقت في اختبار SMLE والبرومترك.</p>
+                <nav aria-label="أدلة التحضير">
+                    <a href="/guides/smle-study-plan">خطة SMLE من 12 أسبوع</a>
+                    <a href="/guides/wrong-questions-method">طريقة مراجعة الأسئلة الخاطئة</a>
+                </nav>
+            </main>
+        `
+    },
+    '/guides/smle-study-plan': {
+        title: 'خطة SMLE من 12 أسبوع | SQB',
+        description: 'دليل عملي لبناء خطة مذاكرة 12 أسبوع لاختبار SMLE: تقسيم المراحل، إدارة الوقت، ومؤشرات الجاهزية قبل يوم الاختبار.',
+        keywords: 'خطة SMLE, study plan SMLE, جدول مذاكرة SMLE, التحضير لاختبار الهيئة السعودية',
+        alternates: ['ar-SA', 'ar', 'x-default'],
+        structuredData: [
+            routePageData('/guides/smle-study-plan', 'خطة SMLE من 12 أسبوع | SQB', 'دليل تدريجي للتحضير لاختبار SMLE خلال 12 أسبوع.'),
+            breadcrumbs([
+                { name: 'الرئيسية', path: '/' },
+                { name: 'الأدلة', path: '/guides' },
+                { name: 'خطة 12 أسبوع', path: '/guides/smle-study-plan' }
+            ])
+        ],
+        prerenderHtml: `
+            <main class="seo-shell" dir="rtl">
+                <h1>خطة SMLE من 12 أسبوع</h1>
+                <p>دليل يشرح تقسيم التحضير إلى مراحل، تنظيم اليوم الدراسي، ومراجعة الأخطاء بشكل منهجي لرفع الجاهزية قبل الاختبار.</p>
+            </main>
+        `
+    },
+    '/guides/wrong-questions-method': {
+        title: 'طريقة مراجعة الأسئلة الخاطئة | SQB',
+        description: 'طريقة عملية لتحويل أخطاء أسئلة SMLE إلى قواعد قرار ثابتة: تصنيف الخطأ، التكرار المتباعد، وبناء قائمة أخطاء عالية العائد.',
+        keywords: 'مراجعة الأخطاء SMLE, wrong questions method, أخطاء اختبار SMLE, تحسين دقة الإجابة',
+        alternates: ['ar-SA', 'ar', 'x-default'],
+        structuredData: [
+            routePageData('/guides/wrong-questions-method', 'طريقة مراجعة الأسئلة الخاطئة | SQB', 'دليل عملي لمنهجية مراجعة الأسئلة الخاطئة في SMLE.'),
+            breadcrumbs([
+                { name: 'الرئيسية', path: '/' },
+                { name: 'الأدلة', path: '/guides' },
+                { name: 'مراجعة الأخطاء', path: '/guides/wrong-questions-method' }
+            ])
+        ],
+        prerenderHtml: `
+            <main class="seo-shell" dir="rtl">
+                <h1>طريقة مراجعة الأسئلة الخاطئة</h1>
+                <p>دليل يوضح كيف تصنف الخطأ وتبني آلية مراجعة تمنع تكراره في اختبارات SMLE والبرومترك.</p>
+            </main>
+        `
+    },
     '/login': {
         title: 'تسجيل الدخول | SQB',
         description: 'سجّل دخولك إلى منصة SQB للوصول إلى لوحة التدريب، جلسات الأسئلة، والمتابعة التحليلية الخاصة بالتحضير لاختبار SMLE والبرومترك.',
