@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { safeGetItem } from '../../utils/safeStorage.js';
 
 const ADSENSE_SCRIPT_SRC = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9286976335875618';
 const ADSENSE_CLIENT_ID = 'ca-pub-9286976335875618';
@@ -21,7 +22,7 @@ const isConsentAccepted = () => {
     return false;
   }
 
-  return localStorage.getItem('cookie-consent') === 'accepted';
+  return safeGetItem('cookie-consent') === 'accepted';
 };
 
 const ensureAdSenseScript = () => {

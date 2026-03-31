@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
+import { safeGetItem, safeSetItem, safeRemoveItem } from './utils/safeStorage.js';
 
 export const UserContext = createContext();
 
@@ -8,22 +9,27 @@ export const UserProvider = ({ children }) => {
 
   // Load from localStorage on mount
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    const storedToken = localStorage.getItem('sessionToken');
+    const storedUser = safeGetItem('user');
+    const storedToken = safeGetItem('sessionToken');
     if (storedUser && storedToken) {
-      setUserState(JSON.parse(storedUser));
-      setSessionToken(storedToken);
+      try {
+        setUserState(JSON.parse(storedUser));
+        setSessionToken(storedToken);
+      } catch (_) {
+        setUserState(null);
+        setSessionToken(null);
+      }
     }
   }, []);
 
   // Save to localStorage on change
   useEffect(() => {
     if (user && sessionToken) {
-      localStorage.setItem('user', JSON.stringify(user));
-      localStorage.setItem('sessionToken', sessionToken);
+      safeSetItem('user', JSON.stringify(user));
+      safeSetItem('sessionToken', sessionToken);
     } else {
-      localStorage.removeItem('user');
-      localStorage.removeItem('sessionToken');
+      safeRemoveItem('user');
+      safeRemoveItem('sessionToken');
     }
   }, [user, sessionToken]);
 

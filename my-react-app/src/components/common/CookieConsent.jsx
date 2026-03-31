@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import './CookieConsent.css';
+import { safeGetItem, safeSetItem } from '../../utils/safeStorage.js';
 
 const CookieConsent = () => {
     const [showBanner, setShowBanner] = useState(false);
 
     useEffect(() => {
-        const consent = localStorage.getItem('cookie-consent');
+        const consent = safeGetItem('cookie-consent');
         if (!consent) {
             // Small delay so banner appears after page loads
             const timer = setTimeout(() => setShowBanner(true), 1000);
@@ -14,14 +15,14 @@ const CookieConsent = () => {
     }, []);
 
     const acceptAll = () => {
-        localStorage.setItem('cookie-consent', 'accepted');
-        localStorage.setItem('cookie-consent-date', new Date().toISOString());
+        safeSetItem('cookie-consent', 'accepted');
+        safeSetItem('cookie-consent-date', new Date().toISOString());
         setShowBanner(false);
     };
 
     const acceptNecessary = () => {
-        localStorage.setItem('cookie-consent', 'necessary-only');
-        localStorage.setItem('cookie-consent-date', new Date().toISOString());
+        safeSetItem('cookie-consent', 'necessary-only');
+        safeSetItem('cookie-consent-date', new Date().toISOString());
         setShowBanner(false);
     };
 
