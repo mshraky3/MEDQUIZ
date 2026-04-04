@@ -319,7 +319,7 @@ const ADD = (props) => {
                             <div className="chart-card">
                                 <h3>📈 Logins (Last 7 Days)</h3>
                                 <SimpleBarChart
-                                    data={stats?.loginsByDay || []}
+                                    data={stats?.charts?.loginsByDay || []}
                                     labelKey="date"
                                     valueKey="count"
                                 />

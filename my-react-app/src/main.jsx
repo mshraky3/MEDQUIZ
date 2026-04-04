@@ -25,6 +25,7 @@ import CookieConsent from './components/common/CookieConsent.jsx';
 import GuidesHub from './components/guides/GuidesHub.jsx';
 import SmleStudyPlanGuide from './components/guides/SmleStudyPlanGuide.jsx';
 import WrongQuestionsMethodGuide from './components/guides/WrongQuestionsMethodGuide.jsx';
+import TempLinks from './components/ADD/TempLinks.jsx';
 
 import Globals from './global.js';
 import { UserProvider } from './UserContext.jsx';
@@ -85,6 +86,11 @@ const router = createBrowserRouter([
   {
     path: "/Bank",
     element: <Bank />,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/TEMP_LINKS",
+    element: <TempLinks host={Globals.URL} />,
     errorElement: <ErrorBoundary />,
   },
   {

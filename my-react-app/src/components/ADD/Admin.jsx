@@ -8,18 +8,19 @@ const API = import.meta.env.VITE_API;
 
 // Simple animated number component
 const AnimatedNumber = ({ value, suffix = '', prefix = '' }) => {
+  const safeValue = (value != null && !isNaN(Number(value))) ? Number(value) : 0;
   const [displayValue, setDisplayValue] = useState(0);
 
   useEffect(() => {
     const duration = 1000;
     const steps = 30;
-    const stepValue = value / steps;
+    const stepValue = safeValue / steps;
     let current = 0;
 
     const timer = setInterval(() => {
       current += stepValue;
-      if (current >= value) {
-        setDisplayValue(value);
+      if (current >= safeValue) {
+        setDisplayValue(safeValue);
         clearInterval(timer);
       } else {
         setDisplayValue(Math.round(current));
@@ -27,7 +28,7 @@ const AnimatedNumber = ({ value, suffix = '', prefix = '' }) => {
     }, duration / steps);
 
     return () => clearInterval(timer);
-  }, [value]);
+  }, [safeValue]);
 
   return <span>{prefix}{displayValue.toLocaleString()}{suffix}</span>;
 };
@@ -304,7 +305,7 @@ const Admin = () => {
     const fetchSuggestions = async () => {
       try {
         setSuggestionsLoading(true);
-        const response = await axios.get(`${API}/admin/suggestions`);
+        const response = await axios.get(`${API}/api/admin/suggestions`);
         setSuggestions(response.data.suggestions || []);
       } catch (err) {
         console.error('Failed to fetch suggestions:', err);
@@ -409,7 +410,7 @@ const Admin = () => {
 
   const updateSuggestionStatus = async (id, status) => {
     try {
-      await axios.put(`${API}/admin/suggestions/${id}`, { status });
+      await axios.put(`${API}/api/admin/suggestions/${id}`, { status });
       setSuggestions(prev => prev.map(s => s.id === id ? { ...s, status } : s));
     } catch (err) {
       console.error('Failed to update suggestion:', err);
@@ -419,7 +420,7 @@ const Admin = () => {
   const deleteSuggestion = async (id) => {
     if (!window.confirm('Delete this suggestion?')) return;
     try {
-      await axios.delete(`${API}/admin/suggestions/${id}`);
+      await axios.delete(`${API}/api/admin/suggestions/${id}`);
       setSuggestions(prev => prev.filter(s => s.id !== id));
     } catch (err) {
       console.error('Failed to delete suggestion:', err);
@@ -546,7 +547,7 @@ const Admin = () => {
               <AnimatedNumber value={overview.totalQuestionsAnswered} />
             </div>
             <div className="stat-meta">
-              <span className="stat-badge neutral">~{overview.avgQuestionsPerQuiz} per quiz</span>
+              <span className="stat-badge neutral">~{overview.avgQuestionsPerQuiz ?? 0} per quiz</span>
             </div>
           </div>
 
@@ -560,7 +561,7 @@ const Admin = () => {
             </div>
             <div className="stat-progress">
               <div className="progress-bar">
-                <div className="progress-fill" style={{ width: `${overview.avgAccuracy}%` }} />
+                <div className="progress-fill" style={{ width: `${overview.avgAccuracy ?? 0}%` }} />
               </div>
             </div>
           </div>
@@ -571,35 +572,35 @@ const Admin = () => {
           <div className="stat-card-small">
             <div className="stat-icon-small">🟢</div>
             <div className="stat-info">
-              <span className="stat-value-small">{overview.onlineNow}</span>
+              <span className="stat-value-small">{overview.onlineNow ?? 0}</span>
               <span className="stat-label-small">Online Now</span>
             </div>
           </div>
           <div className="stat-card-small">
             <div className="stat-icon-small">📈</div>
             <div className="stat-info">
-              <span className="stat-value-small">{overview.newUsersMonth}</span>
+              <span className="stat-value-small">{overview.newUsersMonth ?? 0}</span>
               <span className="stat-label-small">New Users (30d)</span>
             </div>
           </div>
           <div className="stat-card-small">
             <div className="stat-icon-small">🔄</div>
             <div className="stat-info">
-              <span className="stat-value-small">{overview.retentionRate}%</span>
+              <span className="stat-value-small">{overview.retentionRate ?? 0}%</span>
               <span className="stat-label-small">Retention Rate</span>
             </div>
           </div>
           <div className="stat-card-small">
             <div className="stat-icon-small">✔️</div>
             <div className="stat-info">
-              <span className="stat-value-small">{overview.completionRate}%</span>
+              <span className="stat-value-small">{overview.completionRate ?? 0}%</span>
               <span className="stat-label-small">Quiz Completion</span>
             </div>
           </div>
           <div className="stat-card-small warning">
             <div className="stat-icon-small">⚠️</div>
             <div className="stat-info">
-              <span className="stat-value-small">{overview.suspiciousCount}</span>
+              <span className="stat-value-small">{overview.suspiciousCount ?? 0}</span>
               <span className="stat-label-small">Suspicious Users</span>
             </div>
           </div>
@@ -726,7 +727,7 @@ const Admin = () => {
                   <span className="rank-badge">{idx + 1}</span>
                   <div className="user-info-mini">
                     <span className="username">{user.username}</span>
-                    <span className="user-stats">{user.quiz_count} quizzes • {user.avg_accuracy || 0}% avg</span>
+                    <span className="user-stats">{user.quiz_count ?? 0} quizzes • {isNaN(Number(user.avg_accuracy)) ? 0 : (user.avg_accuracy ?? 0)}% avg</span>
                   </div>
                   <span className="questions-count">{user.total_questions_answered || 0} Q</span>
                 </div>
