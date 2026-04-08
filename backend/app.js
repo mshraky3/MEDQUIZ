@@ -1666,7 +1666,7 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
             await db.query(`
                 ALTER TABLE user_quiz_sessions 
                 ADD CONSTRAINT IF NOT EXISTS check_valid_quiz_source 
-                CHECK (source IN ('general', 'Midgard', 'GameBoy', 'October25', 'December25'))
+                CHECK (source IN ('general', 'Midgard', 'GameBoy', 'October25', 'December25', 'November25'))
             `);
         } catch (err) {
             // Column might already exist, ignore error
