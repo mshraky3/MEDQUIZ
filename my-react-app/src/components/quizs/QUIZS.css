@@ -484,6 +484,38 @@ footer {
   margin: 20px 0;
 }
 
+/* Source Section Styling */
+.source-section {
+  margin-bottom: 12px;
+}
+
+.section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+  margin-top: 0;
+  padding: 0 4px;
+  text-align: right;
+}
+
+.source-section:first-child {
+  margin-top: 0;
+}
+
+.source-section:last-of-type {
+  margin-bottom: 0;
+}
+
+/* Divider between sections */
+.source-section-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+  margin: 16px 0;
+}
+
 .custom-source-btn {
   padding: 16px 20px;
   font-size: 16px;

@@ -35,17 +35,34 @@ const QUIZS = () => {
     const [finalQuizTimeLimit, setFinalQuizTimeLimit] = useState(30);
 
     const quizOptions = [10, 50, 'custom'];
+
+    // Source configuration with categories
+    const sourceConfig = {
+        collections: [
+            { id: 'October25', label: '2025 تجميعات اكتوبر' },
+            { id: 'December25', label: '2025 تجميعات ديسمبر' }
+        ],
+        other: [
+            { id: 'general', label: 'عام' },
+            { id: 'Midgard', label: 'Midgard' },
+            { id: 'GameBoy', label: 'GameBoy' }
+        ]
+    };
+
+    // Build compatible arrays for backward compatibility
     const availableSources = [
         'general',
         'Midgard',
         'GameBoy',
-        'October25'
+        'October25',
+        'December25'
     ];
     const sourceLabels = {
         general: 'عام',
         Midgard: 'Midgard',
         GameBoy: 'GameBoy',
-        October25: '2025 تجميعات اكتوبر'
+        October25: '2025 تجميعات اكتوبر',
+        December25: '2025 تجميعات ديسمبر'
     };
     const availableTypes = [
         'pediatric',
@@ -460,17 +477,42 @@ const QUIZS = () => {
                     <div className="custom-source-selector-modal">
                         <div className="custom-modal-content">
                             <h2>اختر مصدر الأسئلة</h2>
-                            <div className="custom-source-buttons">
-                                {availableSources.map((source) => (
-                                    <button
-                                        key={source}
-                                        onClick={() => handleSourceSelect(source)}
-                                        className="custom-source-btn"
-                                    >
-                                        {sourceLabels[source] || source}
-                                    </button>
-                                ))}
+
+                            {/* Collections Section */}
+                            <div className="source-section">
+                                <h3 className="section-title">تجميعات</h3>
+                                <div className="custom-source-buttons">
+                                    {sourceConfig.collections.map((source) => (
+                                        <button
+                                            key={source.id}
+                                            onClick={() => handleSourceSelect(source.id)}
+                                            className="custom-source-btn"
+                                        >
+                                            {source.label}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
+
+                            {/* Visual Separator */}
+                            <div className="source-section-divider"></div>
+
+                            {/* Other Sources Section */}
+                            <div className="source-section">
+                                <h3 className="section-title">مصادر أخرى</h3>
+                                <div className="custom-source-buttons">
+                                    {sourceConfig.other.map((source) => (
+                                        <button
+                                            key={source.id}
+                                            onClick={() => handleSourceSelect(source.id)}
+                                            className="custom-source-btn"
+                                        >
+                                            {source.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
                             <div className="custom-modal-buttons">
                                 <button onClick={() => setShowSourceSelector(false)} className="custom-cancel-btn">
                                     إلغاء
