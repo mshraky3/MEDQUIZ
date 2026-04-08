@@ -40,6 +40,7 @@ const QUIZS = () => {
     const sourceConfig = {
         collections: [
             { id: 'October25', label: '2025 تجميعات اكتوبر' },
+            { id: 'November25', label: '2025 تجميعات نوفمبر' },
             { id: 'December25', label: '2025 تجميعات ديسمبر' }
         ],
         other: [
@@ -55,6 +56,7 @@ const QUIZS = () => {
         'Midgard',
         'GameBoy',
         'October25',
+        'November25',
         'December25'
     ];
     const sourceLabels = {
@@ -62,6 +64,7 @@ const QUIZS = () => {
         Midgard: 'Midgard',
         GameBoy: 'GameBoy',
         October25: '2025 تجميعات اكتوبر',
+        November25: '2025 تجميعات نوفمبر',
         December25: '2025 تجميعات ديسمبر'
     };
     const availableTypes = [
