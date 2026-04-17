@@ -68,7 +68,7 @@ const Email = nodemailer.createTransport({
 const sendEmail = async (to, subject, text, html = null) => {
     try {
         const result = await Email.sendMail({
-            from: "alshrakynodeapp@gmail.com",
+            from: '"MEDQIZE" <alshrakynodeapp@gmail.com>',
             to: to,
             subject: subject,
             text: text,
