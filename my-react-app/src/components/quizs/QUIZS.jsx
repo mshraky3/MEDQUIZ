@@ -49,7 +49,7 @@ const QUIZS = () => {
         ],
         collections2026: [
             { id: 'January25', label: '2026 تجميعات يناير' },
-            { id: 'FebMarApr25', label: '2026 تجميعات فبراير-ابريل' }
+            { id: 'FebMarApr25', label: '2026 تجميعات فبراير-مارس-ابريل' }
         ],
         other: [
             { id: 'general', label: 'عام' },
@@ -77,7 +77,7 @@ const QUIZS = () => {
         November25: '2025 تجميعات نوفمبر',
         December25: '2025 تجميعات ديسمبر',
         January25: '2026 تجميعات يناير',
-        FebMarApr25: '2026 تجميعات فبراير-ابريل'
+        FebMarApr25: '2026 تجميعات فبراير-مارس-ابريل'
     };
     const availableTypes = [
         'pediatric',

@@ -91,7 +91,7 @@ const Progress = ({ userId, username, sessionToken }) => {
     { key: 'November25', label: '2025 تجميعات نوفمبر', color: '#ec4899' },
     { key: 'December25', label: '2025 تجميعات ديسمبر', color: '#14b8a6' },
     { key: 'January25', label: '2026 تجميعات يناير', color: '#6366f1' },
-    { key: 'FebMarApr25', label: '2026 تجميعات فبراير-ابريل', color: '#f43f5e' }
+    { key: 'FebMarApr25', label: '2026 تجميعات فبراير-مارس-ابريل', color: '#f43f5e' }
   ];
 
   const questionTypes = [
