@@ -27,6 +27,9 @@ const errorCooldowns = new Map();
 // Offline queue for errors when network fails
 let offlineQueue = [];
 
+// Re-entrancy guard to prevent recursive error handling
+let _isReportingError = false;
+
 // Check if we're in browser environment
 const isBrowser = typeof window !== 'undefined';
 
@@ -383,27 +386,33 @@ export function reportRenderError(error, errorInfo = {}) {
  * @param {PromiseRejectionEvent} event
  */
 export function reportUnhandledRejection(event) {
-    const error = event.reason;
-    const userInfo = getUserInfo();
+    if (_isReportingError) return;
+    _isReportingError = true;
+    try {
+        const error = event.reason;
+        const userInfo = getUserInfo();
 
-    const errorData = {
-        errorType: 'UNHANDLED_PROMISE_REJECTION',
-        message: error?.message || String(error) || 'Unhandled promise rejection',
-        endpoint: null,
-        method: null,
-        statusCode: 500,
-        page: getCurrentPage(),
-        userAgent: getUserAgent(),
-        ...userInfo,
-        timestamp: new Date().toISOString(),
-        stackTrace: error?.stack,
-        additionalInfo: {
-            errorName: error?.name,
-            promiseType: typeof error
-        }
-    };
+        const errorData = {
+            errorType: 'UNHANDLED_PROMISE_REJECTION',
+            message: error?.message || String(error) || 'Unhandled promise rejection',
+            endpoint: null,
+            method: null,
+            statusCode: 500,
+            page: getCurrentPage(),
+            userAgent: getUserAgent(),
+            ...userInfo,
+            timestamp: new Date().toISOString(),
+            stackTrace: error?.stack,
+            additionalInfo: {
+                errorName: error?.name,
+                promiseType: typeof error
+            }
+        };
 
-    sendErrorReport(errorData);
+        sendErrorReport(errorData);
+    } finally {
+        _isReportingError = false;
+    }
 }
 
 /**
@@ -411,28 +420,34 @@ export function reportUnhandledRejection(event) {
  * @param {ErrorEvent} event
  */
 export function reportGlobalError(event) {
-    const userInfo = getUserInfo();
+    if (_isReportingError) return;
+    _isReportingError = true;
+    try {
+        const userInfo = getUserInfo();
 
-    const errorData = {
-        errorType: 'GLOBAL_JS_ERROR',
-        message: event.message || 'JavaScript error',
-        endpoint: null,
-        method: null,
-        statusCode: 500,
-        page: getCurrentPage(),
-        userAgent: getUserAgent(),
-        ...userInfo,
-        timestamp: new Date().toISOString(),
-        stackTrace: event.error?.stack,
-        additionalInfo: {
-            filename: event.filename,
-            lineno: event.lineno,
-            colno: event.colno,
-            errorName: event.error?.name
-        }
-    };
+        const errorData = {
+            errorType: 'GLOBAL_JS_ERROR',
+            message: event.message || 'JavaScript error',
+            endpoint: null,
+            method: null,
+            statusCode: 500,
+            page: getCurrentPage(),
+            userAgent: getUserAgent(),
+            ...userInfo,
+            timestamp: new Date().toISOString(),
+            stackTrace: event.error?.stack,
+            additionalInfo: {
+                filename: event.filename,
+                lineno: event.lineno,
+                colno: event.colno,
+                errorName: event.error?.name
+            }
+        };
 
-    sendErrorReport(errorData);
+        sendErrorReport(errorData);
+    } finally {
+        _isReportingError = false;
+    }
 }
 
 /**

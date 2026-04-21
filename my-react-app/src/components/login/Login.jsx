@@ -3,7 +3,6 @@ import axios from 'axios';
 import './Login.css';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Globals from '../../global.js';
-import Navbar from '../common/Navbar.jsx';
 import { UserContext } from '../../UserContext';
 
 const Login = () => {
@@ -57,6 +56,9 @@ const Login = () => {
           if (res.data.valid) {
             navigate('/quizs', { state: { id: user.id } });
           }
+        })
+        .catch(() => {
+          // Network error or server unavailable — stay on login page
         });
     }
   }, [user, sessionToken, navigate]);

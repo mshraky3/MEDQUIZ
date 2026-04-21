@@ -87,7 +87,11 @@ const Progress = ({ userId, username, sessionToken }) => {
     { key: 'general', label: 'عام', color: '#3b82f6' },
     { key: 'Midgard', label: 'Midgard', color: '#10b981' },
     { key: 'GameBoy', label: 'GameBoy', color: '#f59e0b' },
-    { key: 'October25', label: '2025 تجميعات اكتوبر', color: '#a855f7' }
+    { key: 'October25', label: '2025 تجميعات اكتوبر', color: '#a855f7' },
+    { key: 'November25', label: '2025 تجميعات نوفمبر', color: '#ec4899' },
+    { key: 'December25', label: '2025 تجميعات ديسمبر', color: '#14b8a6' },
+    { key: 'January25', label: '2026 تجميعات يناير', color: '#6366f1' },
+    { key: 'FebMarApr25', label: '2026 تجميعات فبراير-ابريل', color: '#f43f5e' }
   ];
 
   const questionTypes = [

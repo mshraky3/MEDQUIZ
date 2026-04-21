@@ -190,6 +190,7 @@ const routeMap = {
         title: 'اتصل بنا | SQB',
         description: 'تواصل مع فريق SQB للحصول على الدعم أو الاستفسار عن الاشتراكات أو إرسال الملاحظات والاقتراحات المتعلقة بمنصة التحضير لاختبار SMLE.',
         keywords: 'اتصل بنا SQB, دعم SMLE, تواصل منصة طبية, دعم برومترك, contact SQB',
+        robots: 'noindex, nofollow, noarchive',
         alternates: ['ar-SA', 'ar', 'x-default'],
         structuredData: [
             {
@@ -326,6 +327,7 @@ const routeMap = {
         title: 'تسجيل الدخول | SQB',
         description: 'سجّل دخولك إلى منصة SQB للوصول إلى لوحة التدريب، جلسات الأسئلة، والمتابعة التحليلية الخاصة بالتحضير لاختبار SMLE والبرومترك.',
         keywords: 'تسجيل الدخول SQB, login SMLE, منصة تحضير برومترك, دخول بنك اسئلة SMLE',
+        robots: 'noindex, nofollow, noarchive',
         alternates: ['ar-SA', 'ar', 'x-default'],
         structuredData: [
             routePageData('/login', 'تسجيل الدخول | SQB', 'صفحة تسجيل الدخول إلى منصة SQB.'),
@@ -345,6 +347,7 @@ const routeMap = {
         title: 'إنشاء حساب مجاني | SQB',
         description: 'أنشئ حسابك المجاني في منصة SQB وابدأ التدريب على أسئلة SMLE والبرومترك مع تجربة عربية مبسطة وتحليلات تساعدك على تحسين مستواك.',
         keywords: 'إنشاء حساب SQB, signup SMLE, حساب مجاني برومترك, منصة اسئلة طبية',
+        robots: 'noindex, nofollow, noarchive',
         alternates: ['ar-SA', 'ar', 'x-default'],
         structuredData: [
             routePageData('/signup', 'إنشاء حساب مجاني | SQB', 'صفحة إنشاء حساب مجاني في منصة SQB.'),

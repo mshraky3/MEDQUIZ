@@ -4,18 +4,28 @@ import { safeGetItem } from '../../utils/safeStorage.js';
 const ADSENSE_SCRIPT_SRC = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9286976335875618';
 const ADSENSE_CLIENT_ID = 'ca-pub-9286976335875618';
 
-// Keep ads off utility/auth/interactive-only views.
+// Strict allowlist: only long-form publisher content pages.
 const AD_ELIGIBLE_PATHS = new Set([
-  '/',
   '/guides',
   '/guides/smle-study-plan',
-  '/guides/wrong-questions-method',
-  '/about',
-  '/faq',
-  '/contact',
-  '/privacy',
-  '/terms'
+  '/guides/wrong-questions-method'
 ]);
+
+// Defense-in-depth: hard block utility, auth, and interactive exam paths.
+const AD_BLOCKED_PREFIXES = [
+  '/login',
+  '/signup',
+  '/contact',
+  '/suggestions',
+  '/quizs',
+  '/quiz',
+  '/analysis',
+  '/wrong-questions',
+  '/ADD',
+  '/admin',
+  '/Bank',
+  '/TEMP_LINKS'
+];
 
 const isConsentAccepted = () => {
   if (typeof window === 'undefined') {
@@ -67,7 +77,8 @@ const GoogleAd = ({ disabled = false }) => {
     }
 
     const currentPath = window.location.pathname;
-    if (!AD_ELIGIBLE_PATHS.has(currentPath) || !isConsentAccepted()) {
+    const isBlockedPath = AD_BLOCKED_PREFIXES.some((prefix) => currentPath.startsWith(prefix));
+    if (isBlockedPath || !AD_ELIGIBLE_PATHS.has(currentPath) || !isConsentAccepted()) {
       setShouldShow(false);
       return;
     }
@@ -75,18 +86,19 @@ const GoogleAd = ({ disabled = false }) => {
     // Small delay to ensure page content is loaded
     const timer = setTimeout(() => {
       // Check if the page has substantial content (AdSense policy requirement)
-      const mainContent = document.querySelector('.landing-body, .legal-page, .faq-page, .contact-container, .guides-page, .guide-article');
+      const mainContent = document.querySelector('.guides-page, .guide-article');
 
       if (mainContent) {
         // Require substantial text content before displaying ads.
         const textContent = mainContent.innerText || '';
-        const hasSubstantialContent = textContent.length > 1200;
+        const hasSubstantialContent = textContent.length > 1400;
 
         // Check we're not on a loading or error state
         const isLoading = document.querySelector('.loading-spinner, .loading-content');
         const isError = document.querySelector('.error-content, .error-screen');
+        const hasFormOnlyPattern = !!document.querySelector('form') && textContent.length < 1800;
 
-        if (hasSubstantialContent && !isLoading && !isError) {
+        if (hasSubstantialContent && !isLoading && !isError && !hasFormOnlyPattern) {
           setShouldShow(true);
         }
       }
