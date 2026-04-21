@@ -1654,7 +1654,7 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
                 ALTER TABLE user_quiz_sessions 
                 ADD COLUMN IF NOT EXISTS fastest_question_time INTEGER DEFAULT 0
             `);
-            await db.query(`
+            await db.query(`                                                                                                            
                 ALTER TABLE user_quiz_sessions 
                 ADD COLUMN IF NOT EXISTS slowest_question_time INTEGER DEFAULT 0
             `);
@@ -1666,7 +1666,7 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
             await db.query(`
                 ALTER TABLE user_quiz_sessions 
                 ADD CONSTRAINT IF NOT EXISTS check_valid_quiz_source 
-                CHECK (source IN ('general', 'Midgard', 'GameBoy', 'October25', 'December25', 'November25'))
+                CHECK (source IN ('general', 'Midgard', 'GameBoy', 'October25', 'December25', 'November25', 'January25', 'FebMarApr25'))
             `);
         } catch (err) {
             // Column might already exist, ignore error
