@@ -25,6 +25,8 @@ import CookieConsent from './components/common/CookieConsent.jsx';
 import GuidesHub from './components/guides/GuidesHub.jsx';
 import SmleStudyPlanGuide from './components/guides/SmleStudyPlanGuide.jsx';
 import WrongQuestionsMethodGuide from './components/guides/WrongQuestionsMethodGuide.jsx';
+import SmleVsPrometricGuide from './components/guides/SmleVsPrometricGuide.jsx';
+import SmleHighYieldTopicsGuide from './components/guides/SmleHighYieldTopicsGuide.jsx';
 import TempLinks from './components/ADD/TempLinks.jsx';
 
 import Globals from './global.js';
@@ -146,6 +148,16 @@ const router = createBrowserRouter([
   {
     path: "/guides/wrong-questions-method",
     element: <Layout><WrongQuestionsMethodGuide /></Layout>,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/guides/smle-vs-prometric-differences",
+    element: <Layout><SmleVsPrometricGuide /></Layout>,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/guides/smle-high-yield-topics",
+    element: <Layout><SmleHighYieldTopicsGuide /></Layout>,
     errorElement: <ErrorBoundary />,
   },
   {

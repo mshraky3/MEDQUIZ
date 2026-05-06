@@ -37,6 +37,8 @@ const Footer = () => {
 
           <div className="footer-section">
             <h4>Resources | موارد</h4>
+            <Link to="/guides/smle-vs-prometric-differences">SMLE vs Prometric Guide</Link>
+            <Link to="/guides/smle-high-yield-topics">High-Yield SMLE Topics</Link>
             <a href="mailto:alshraky3@gmail.com">Support | الدعم</a>
             <a href="https://wa.link/gqafib" target="_blank" rel="noopener noreferrer">WhatsApp | واتساب</a>
             <span className="footer-info">8,000+ Questions | أسئلة</span>

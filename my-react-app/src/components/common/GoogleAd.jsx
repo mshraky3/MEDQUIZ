@@ -8,7 +8,9 @@ const ADSENSE_CLIENT_ID = 'ca-pub-9286976335875618';
 const AD_ELIGIBLE_PATHS = new Set([
   '/guides',
   '/guides/smle-study-plan',
-  '/guides/wrong-questions-method'
+  '/guides/wrong-questions-method',
+  '/guides/smle-vs-prometric-differences',
+  '/guides/smle-high-yield-topics'
 ]);
 
 // Defense-in-depth: hard block utility, auth, and interactive exam paths.

@@ -52,6 +52,33 @@ function routePageData(path, name, description) {
     };
 }
 
+function articleSchema(path, headline, description, keywords = '') {
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        headline,
+        description,
+        url: makeUrl(path),
+        inLanguage: 'ar-SA',
+        datePublished: '2026-04-21',
+        dateModified: '2026-04-21',
+        author: {
+            '@type': 'Organization',
+            name: 'SQB'
+        },
+        publisher: {
+            '@type': 'EducationalOrganization',
+            name: 'SQB',
+            logo: {
+                '@type': 'ImageObject',
+                url: `${SITE_ORIGIN}/tab_logo.png`
+            }
+        },
+        image: DEFAULT_IMAGE,
+        keywords
+    };
+}
+
 const organizationSchema = {
     '@context': 'https://schema.org',
     '@type': 'EducationalOrganization',
@@ -279,6 +306,8 @@ const routeMap = {
                 <nav aria-label="أدلة التحضير">
                     <a href="/guides/smle-study-plan">خطة SMLE من 12 أسبوع</a>
                     <a href="/guides/wrong-questions-method">طريقة مراجعة الأسئلة الخاطئة</a>
+                    <a href="/guides/smle-vs-prometric-differences">الفرق بين SMLE وPrometric</a>
+                    <a href="/guides/smle-high-yield-topics">أهم مواضيع SMLE عالية العائد</a>
                 </nav>
             </main>
         `
@@ -290,6 +319,7 @@ const routeMap = {
         alternates: ['ar-SA', 'ar', 'x-default'],
         structuredData: [
             routePageData('/guides/smle-study-plan', 'خطة SMLE من 12 أسبوع | SQB', 'دليل تدريجي للتحضير لاختبار SMLE خلال 12 أسبوع.'),
+            articleSchema('/guides/smle-study-plan', 'خطة SMLE من 12 أسبوع | SQB', 'دليل تدريجي للتحضير لاختبار SMLE خلال 12 أسبوع.', 'خطة SMLE, study plan SMLE, جدول مذاكرة SMLE'),
             breadcrumbs([
                 { name: 'الرئيسية', path: '/' },
                 { name: 'الأدلة', path: '/guides' },
@@ -310,6 +340,7 @@ const routeMap = {
         alternates: ['ar-SA', 'ar', 'x-default'],
         structuredData: [
             routePageData('/guides/wrong-questions-method', 'طريقة مراجعة الأسئلة الخاطئة | SQB', 'دليل عملي لمنهجية مراجعة الأسئلة الخاطئة في SMLE.'),
+            articleSchema('/guides/wrong-questions-method', 'طريقة مراجعة الأسئلة الخاطئة | SQB', 'دليل عملي لمنهجية مراجعة الأسئلة الخاطئة في SMLE.', 'مراجعة الأخطاء SMLE, wrong questions method, أخطاء اختبار SMLE'),
             breadcrumbs([
                 { name: 'الرئيسية', path: '/' },
                 { name: 'الأدلة', path: '/guides' },
@@ -320,6 +351,48 @@ const routeMap = {
             <main class="seo-shell" dir="rtl">
                 <h1>طريقة مراجعة الأسئلة الخاطئة</h1>
                 <p>دليل يوضح كيف تصنف الخطأ وتبني آلية مراجعة تمنع تكراره في اختبارات SMLE والبرومترك.</p>
+            </main>
+        `
+    },
+    '/guides/smle-vs-prometric-differences': {
+        title: 'الفرق بين SMLE وPrometric | SQB',
+        description: 'مقارنة عملية بين SMLE وPrometric من حيث نمط الأسئلة وإدارة الوقت واستراتيجية المذاكرة لتحسين الأداء قبل الاختبار.',
+        keywords: 'الفرق بين SMLE وPrometric, SMLE vs Prometric, اختبار الهيئة السعودية, طريقة مذاكرة البرومترك',
+        alternates: ['ar-SA', 'ar', 'x-default'],
+        structuredData: [
+            routePageData('/guides/smle-vs-prometric-differences', 'الفرق بين SMLE وPrometric | SQB', 'دليل يشرح الفروقات العملية بين اختبار SMLE وبرومترك.'),
+            articleSchema('/guides/smle-vs-prometric-differences', 'الفرق بين SMLE وPrometric | SQB', 'دليل يشرح الفروقات العملية بين اختبار SMLE وبرومترك.', 'الفرق بين SMLE وPrometric, SMLE vs Prometric, اختبار الهيئة السعودية'),
+            breadcrumbs([
+                { name: 'الرئيسية', path: '/' },
+                { name: 'الأدلة', path: '/guides' },
+                { name: 'الفرق بين SMLE وPrometric', path: '/guides/smle-vs-prometric-differences' }
+            ])
+        ],
+        prerenderHtml: `
+            <main class="seo-shell" dir="rtl">
+                <h1>الفرق بين SMLE وPrometric</h1>
+                <p>مقارنة عملية تساعدك على تعديل طريقة المذاكرة وإدارة الوقت حسب طبيعة كل اختبار.</p>
+            </main>
+        `
+    },
+    '/guides/smle-high-yield-topics': {
+        title: 'أهم مواضيع SMLE عالية العائد | SQB',
+        description: 'دليل لتحديد مواضيع SMLE الأكثر تأثيرا على الدرجة مع نموذج عملي لتوزيع وقت المذاكرة وفق الأولويات.',
+        keywords: 'مواضيع SMLE عالية العائد, high yield SMLE topics, أولويات مذاكرة SMLE, توزيع وقت SMLE',
+        alternates: ['ar-SA', 'ar', 'x-default'],
+        structuredData: [
+            routePageData('/guides/smle-high-yield-topics', 'أهم مواضيع SMLE عالية العائد | SQB', 'دليل يوضح ترتيب أولويات مواضيع SMLE حسب العائد.'),
+            articleSchema('/guides/smle-high-yield-topics', 'أهم مواضيع SMLE عالية العائد | SQB', 'دليل يوضح ترتيب أولويات مواضيع SMLE حسب العائد.', 'مواضيع SMLE عالية العائد, high yield SMLE topics, أولويات مذاكرة SMLE'),
+            breadcrumbs([
+                { name: 'الرئيسية', path: '/' },
+                { name: 'الأدلة', path: '/guides' },
+                { name: 'مواضيع SMLE عالية العائد', path: '/guides/smle-high-yield-topics' }
+            ])
+        ],
+        prerenderHtml: `
+            <main class="seo-shell" dir="rtl">
+                <h1>أهم مواضيع SMLE عالية العائد</h1>
+                <p>خريطة أولويات عملية لتوزيع وقتك على المواضيع الأكثر تأثيرا على الأداء في الاختبار.</p>
             </main>
         `
     },
