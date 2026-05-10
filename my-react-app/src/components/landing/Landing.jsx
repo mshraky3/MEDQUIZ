@@ -1,10 +1,11 @@
 import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { track } from '@vercel/analytics';
 import './Landing.css';
 
 const stats = [
   { label: 'سؤال', value: '11,000+' },
-  { label: 'مجاني للأبد', value: 'FREE' },
+  { label: 'بدء مجاني', value: '0 ريال' },
   { label: 'تدريب يومي', value: '24/7' },
   { label: 'مواضيع مغطاة', value: '40+' }
 ];
@@ -71,8 +72,23 @@ const faqHighlights = [
 const Landing = () => {
   const navigate = useNavigate();
 
-  const handleSignup = () => navigate('/signup');
-  const handleLogin = () => navigate('/login');
+  const safeTrack = (eventName, payload) => {
+    try {
+      track(eventName, payload);
+    } catch (error) {
+      console.debug('Analytics track skipped:', error);
+    }
+  };
+
+  const handleSignup = () => {
+    safeTrack('landing_cta_signup_click', { section: 'landing' });
+    navigate('/signup');
+  };
+
+  const handleLogin = () => {
+    safeTrack('landing_cta_login_click', { section: 'landing' });
+    navigate('/login');
+  };
 
   useEffect(() => {
     const originalDir = document.documentElement.dir;
@@ -113,10 +129,10 @@ const Landing = () => {
                 منصة SMLE
               </span>
               <h1>
-                تجربة تدريب على برومترك حديثة، منظمة، ومجانية
+                ابدأ تدريب SMLE خلال دقيقة واحدة
               </h1>
               <p>
-                تعلم بوضوح: أسئلة دقيقة، تحليلات فورية، ومسارات تدريب منظمة تضعك في وضع الاختبار منذ اليوم الأول.
+                بنك أسئلة واضح وسريع: أنشئ حسابك، ابدأ أول اختبار، وارجع يومياً بخطة مراجعة عملية.
               </p>
               <div className="cta-row">
                 <button className="btn primary" onClick={handleSignup}>
@@ -127,9 +143,9 @@ const Landing = () => {
                 </button>
               </div>
               <div className="trust-bar">
-                <span>مهيأة للجوال • تدعم العربية بالكامل</span>
+                <span>بدء مجاني • بدون بطاقة بنكية • مهيأة للجوال</span>
                 <span>•</span>
-                <span>لا قيود على المحتوى</span>
+                <span>تدعم العربية بالكامل</span>
               </div>
             </div>
 

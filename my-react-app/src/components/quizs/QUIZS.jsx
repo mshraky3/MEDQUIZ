@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef, useContext } from 'react';
 import axios from 'axios';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { track } from '@vercel/analytics';
 import './QUIZS.css';
 import Globals from '../../global.js';
 
@@ -100,6 +101,27 @@ const QUIZS = () => {
             setNumQuestions(num);
             setShowSourceSelector(true);
         }
+    };
+
+    const handleQuickStart = () => {
+        try {
+            track('quiz_quick_start_click', {
+                questions: 10,
+                source: 'general',
+                types: 'mix'
+            });
+        } catch (error) {
+            console.debug('Analytics track skipped:', error);
+        }
+
+        navigate('/quiz/10', {
+            state: {
+                id: id,
+                types: 'mix',
+                source: 'general',
+                timer: null
+            }
+        });
     };
 
     const handleSourceSelect = async (source) => {
@@ -454,6 +476,14 @@ const QUIZS = () => {
                 {id && <AchievementBadges userId={id} />}
 
                 <h1>اختر اختبارك</h1>
+                <p className="quiz-subtitle">ابدأ سريعاً الآن أو خصص الاختبار كما تريد.</p>
+
+                <button
+                    className="quick-start-btn"
+                    onClick={handleQuickStart}
+                >
+                    ابدأ سريعاً: 10 أسئلة مختلطة
+                </button>
 
                 <div className="options-container">
                     {quizOptions.map((num) => (

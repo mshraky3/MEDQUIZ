@@ -79,6 +79,32 @@
   animation: fadeInUp 0.6s ease-out 0.1s both;
 }
 
+.quiz-subtitle {
+  margin-bottom: 1.2rem !important;
+}
+
+.quick-start-btn {
+  width: 100%;
+  max-width: 520px;
+  margin-bottom: 1.2rem;
+  padding: 16px 28px;
+  font-size: 16px;
+  font-weight: 800;
+  color: #0b1021;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 6px 18px rgba(34, 211, 238, 0.35);
+  animation: fadeInUp 0.6s ease-out 0.15s both;
+}
+
+.quick-start-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 26px rgba(34, 211, 238, 0.42);
+}
+
 .options-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -229,7 +255,8 @@
   }
 
   .quiz-option-btn,
-  .analysis-btn {
+  .analysis-btn,
+  .quick-start-btn {
     padding: 0.9rem 2rem;
     font-size: 16px;
   }
@@ -268,7 +295,8 @@
   }
 
   .quiz-option-btn,
-  .analysis-btn {
+  .analysis-btn,
+  .quick-start-btn {
     padding: 0.8rem 1.5rem;
     font-size: 14px;
     border-radius: 10px;
