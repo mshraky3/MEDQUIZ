@@ -18,6 +18,15 @@ const Login = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
+  // Email migration state
+  const [showMigrationPopup, setShowMigrationPopup] = useState(false);
+  const [migrationEmail, setMigrationEmail] = useState('');
+  const [migrationOtp, setMigrationOtp] = useState('');
+  const [migrationStep, setMigrationStep] = useState('notify'); // 'notify' | 'otp'
+  const [migrationLoading, setMigrationLoading] = useState(false);
+  const [migrationError, setMigrationError] = useState('');
+  const [migrationUsername, setMigrationUsername] = useState('');
+
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -76,7 +85,7 @@ const Login = () => {
   const copy = {
     loginTitle: "تسجيل الدخول",
     sessionExpired: "انتهت جلسة الدخول الخاصة بك أو قام مستخدم آخر بتسجيل الدخول بهذا الحساب. الرجاء تسجيل الدخول مرة أخرى.",
-    usernamePlaceholder: "اسم المستخدم",
+    usernamePlaceholder: "البريد الإلكتروني",
     passwordPlaceholder: "كلمة المرور",
     loginButton: "تسجيل الدخول",
     loggingIn: "جاري تسجيل الدخول...",
@@ -91,7 +100,7 @@ const Login = () => {
     contactSupport: "تواصل مع الدعم",
     requiredFieldsError: "يرجى إدخال اسم المستخدم وكلمة المرور.",
     accountInUseError: "هذا الحساب مستخدم حالياً على جهاز أو متصفح آخر. يرجى الانتظار 30 دقيقة أو تسجيل الخروج من الجهاز الآخر.",
-    credentialsError: "اسم المستخدم أو كلمة المرور غير صحيحة. حاول مرة أخرى.",
+    credentialsError: "البريد الإلكتروني أو كلمة المرور غير صحيحة. حاول مرة أخرى.",
     acceptTermsError: "تعذر قبول الشروط. يرجى المحاولة مرة أخرى.",
     popupIntro: "انتهى اشتراكك أو أنك مستخدم جديد؟\nيرجى التواصل معنا.",
     contactSupportEmail: "مرحباً، أحتاج مساعدة في تسجيل الدخول إلى حسابي.",
@@ -149,8 +158,18 @@ const Login = () => {
           return;
         }
 
+        const loggedUser = response.data.user || { username };
+        setUser(loggedUser, response.data.sessionToken);
+
+        if (response.data.showEmailMigrationNotice) {
+          setMigrationUsername(loggedUser.username || cleanedUsername);
+          setMigrationEmail(loggedUser.email || '');
+          setMigrationStep('notify');
+          setMigrationError('');
+          setShowMigrationPopup(true);
+        }
+
         setLoading(false);
-        setUser(response.data.user || { username }, response.data.sessionToken);
         navigate('/quizs', { state: response.data });
       })
       .catch((err) => {
@@ -166,6 +185,52 @@ const Login = () => {
         }
         setLoading(false);
       });
+  };
+
+  const handleSendMigrationOtp = async () => {
+    if (!migrationEmail) {
+      setMigrationError('يرجى إدخال البريد الإلكتروني');
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(migrationEmail)) {
+      setMigrationError('يرجى إدخال بريد إلكتروني صحيح');
+      return;
+    }
+    setMigrationLoading(true);
+    setMigrationError('');
+    try {
+      await axios.post(`${Globals.URL}/api/auth/send-otp`, {
+        email: migrationEmail.toLowerCase().trim(),
+        purpose: 'migration'
+      });
+      setMigrationStep('otp');
+    } catch (err) {
+      setMigrationError(err.response?.data?.message || 'فشل إرسال الرمز. حاول مرة أخرى.');
+    } finally {
+      setMigrationLoading(false);
+    }
+  };
+
+  const handleVerifyMigrationOtp = async () => {
+    if (!migrationOtp || migrationOtp.length !== 4) {
+      setMigrationError('يرجى إدخال الرمز المكون من 4 أرقام');
+      return;
+    }
+    setMigrationLoading(true);
+    setMigrationError('');
+    try {
+      await axios.post(`${Globals.URL}/api/auth/verify-migration-otp`, {
+        username: migrationUsername,
+        email: migrationEmail.toLowerCase().trim(),
+        otp_code: migrationOtp
+      });
+      setShowMigrationPopup(false);
+    } catch (err) {
+      setMigrationError(err.response?.data?.message || 'الرمز غير صحيح أو منتهي الصلاحية');
+    } finally {
+      setMigrationLoading(false);
+    }
   };
 
   const handleAcceptTerms = async () => {
@@ -224,10 +289,11 @@ const Login = () => {
                 <input
                   type="text"
                   name="username"
-                  placeholder="اسم المستخدم"
+                  placeholder="البريد الإلكتروني"
                   value={form.username}
                   onChange={handleChange}
                   className="form-input"
+                  autoComplete="email"
                 />
               </div>
 
@@ -327,6 +393,93 @@ const Login = () => {
               >
                 {copy.continue}
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* Email Migration Popup */}
+        {showMigrationPopup && (
+          <div className="popup-overlay" style={{ zIndex: 1100 }}>
+            <div className="popup-content large-popup" style={{ maxWidth: 420 }}>
+              {migrationStep === 'notify' ? (
+                <>
+                  <h3 style={{ color: '#6366f1', marginBottom: 12 }}>📢 تحديث مهم</h3>
+                  <p style={{ marginBottom: 16, lineHeight: 1.7 }}>
+                    من الآن سيكون تسجيل الدخول عبر <strong>البريد الإلكتروني</strong> بدلاً من اسم المستخدم.
+                    يرجى تأكيد بريدك الإلكتروني لاستكمال التحديث.
+                  </p>
+                  <div style={{ marginBottom: 12 }}>
+                    <label style={{ display: 'block', marginBottom: 6, color: '#94a3b8', fontSize: 14 }}>البريد الإلكتروني</label>
+                    <input
+                      type="email"
+                      className="form-input"
+                      value={migrationEmail}
+                      onChange={(e) => setMigrationEmail(e.target.value)}
+                      placeholder="أدخل بريدك الإلكتروني"
+                      style={{ marginBottom: 0 }}
+                    />
+                  </div>
+                  {migrationError && <div className="alert-box error" style={{ marginBottom: 12 }}>{migrationError}</div>}
+                  <div className="popup-buttons" style={{ flexDirection: 'column', gap: 8 }}>
+                    <button
+                      className="popup-btn try-free"
+                      onClick={handleSendMigrationOtp}
+                      disabled={migrationLoading}
+                    >
+                      {migrationLoading ? 'جاري الإرسال...' : 'إرسال رمز التحقق'}
+                    </button>
+                    <button
+                      className="popup-btn no-thanks"
+                      onClick={() => setShowMigrationPopup(false)}
+                      disabled={migrationLoading}
+                    >
+                      تخطى الآن
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <h3 style={{ color: '#6366f1', marginBottom: 12 }}>تأكيد البريد الإلكتروني</h3>
+                  <p style={{ marginBottom: 16, color: '#94a3b8' }}>
+                    أدخل الرمز المرسل إلى {migrationEmail}
+                  </p>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={migrationOtp}
+                    onChange={(e) => setMigrationOtp(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                    placeholder="0000"
+                    maxLength={4}
+                    inputMode="numeric"
+                    style={{ textAlign: 'center', fontSize: '28px', letterSpacing: '10px', marginBottom: 12 }}
+                  />
+                  {migrationError && <div className="alert-box error" style={{ marginBottom: 12 }}>{migrationError}</div>}
+                  <div className="popup-buttons" style={{ flexDirection: 'column', gap: 8 }}>
+                    <button
+                      className="popup-btn try-free"
+                      onClick={handleVerifyMigrationOtp}
+                      disabled={migrationLoading}
+                    >
+                      {migrationLoading ? 'جاري التحقق...' : 'تأكيد'}
+                    </button>
+                    <button
+                      className="popup-btn no-thanks"
+                      onClick={() => { setMigrationStep('notify'); setMigrationOtp(''); setMigrationError(''); }}
+                      disabled={migrationLoading}
+                    >
+                      ← رجوع
+                    </button>
+                    <button
+                      className="popup-btn no-thanks"
+                      onClick={() => setShowMigrationPopup(false)}
+                      disabled={migrationLoading}
+                      style={{ color: '#64748b' }}
+                    >
+                      تخطى الآن
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         )}
