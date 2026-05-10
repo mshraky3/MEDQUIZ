@@ -344,6 +344,31 @@ const ensureLoginHistoryTable = async () => {
 // Call on startup
 ensureLoginHistoryTable();
 
+// ============================================
+// OTP TABLE INITIALIZATION
+// ============================================
+const ensureOtpTable = async () => {
+    try {
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS signup_otps (
+                id SERIAL PRIMARY KEY,
+                email VARCHAR(255) NOT NULL,
+                otp_code VARCHAR(4) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                expires_at TIMESTAMP NOT NULL,
+                used BOOLEAN DEFAULT FALSE
+            )
+        `);
+        await db.query(`
+            ALTER TABLE accounts ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT FALSE
+        `);
+        logger.info('OTP table and email_verified column ensured');
+    } catch (err) {
+        logger.error('Error ensuring OTP table', err);
+    }
+};
+ensureOtpTable();
+
 // Helper function to parse user agent
 const parseUserAgent = (userAgent) => {
     if (!userAgent) return { device: 'Unknown', browser: 'Unknown', os: 'Unknown' };
@@ -461,8 +486,11 @@ app.post('/login', async (req, res) => {
     const client = await db.connect();
     try {
         await client.query('BEGIN');
-        // Lock the user row for update
-        const userResult = await client.query("SELECT * FROM accounts WHERE username = $1 FOR UPDATE", [lowercaseUsername]);
+        // Dual-lookup: match by email OR username (for existing users)
+        const userResult = await client.query(
+            "SELECT * FROM accounts WHERE (email = $1 OR username = $1) FOR UPDATE",
+            [lowercaseUsername]
+        );
         const userRow = userResult.rows[0];
         logger.debug("User row after SELECT FOR UPDATE", userRow);
 
@@ -545,7 +573,8 @@ app.post('/login', async (req, res) => {
             expired: false,
             user: updatedUser,
             sessionToken,
-            showTerms: !userRow.terms_accepted
+            showTerms: !userRow.terms_accepted,
+            showEmailMigrationNotice: !userRow.email_verified
         });
 
     } catch (error) {
@@ -3628,68 +3657,197 @@ app.get('/api/validate-temp-link/:token', async (req, res) => {
     }
 });
 
+// ============================================
+// AUTH — SEND OTP
+// ============================================
+app.post('/api/auth/send-otp', async (req, res) => {
+    try {
+        const { email, purpose } = req.body;
+
+        if (!email || !purpose) {
+            return res.status(400).json({ success: false, message: 'Email and purpose are required' });
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ success: false, message: 'Invalid email format' });
+        }
+
+        const lowerEmail = email.toLowerCase().trim();
+
+        // For signup: email must not already be verified/in-use
+        if (purpose === 'signup') {
+            const existing = await db.query(
+                'SELECT id FROM accounts WHERE email = $1 AND email_verified = TRUE',
+                [lowerEmail]
+            );
+            if (existing.rows.length > 0) {
+                return res.status(400).json({ success: false, message: 'This email is already registered' });
+            }
+        }
+
+        // Invalidate previous unused OTPs for this email
+        await db.query(
+            'UPDATE signup_otps SET used = TRUE WHERE email = $1 AND used = FALSE',
+            [lowerEmail]
+        );
+
+        // Generate 4-digit OTP
+        const otp = Math.floor(1000 + Math.random() * 9000).toString();
+        const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+        await db.query(
+            'INSERT INTO signup_otps (email, otp_code, expires_at) VALUES ($1, $2, $3)',
+            [lowerEmail, otp, expiresAt]
+        );
+
+        // Send OTP email
+        const subject = 'رمز التحقق - MEDQIZE';
+        const html = `
+            <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px;background:#0f172a;color:#f8fafc;border-radius:12px;">
+                <h2 style="color:#6366f1;margin-bottom:8px;">MEDQIZE</h2>
+                <p style="margin-bottom:24px;">رمز التحقق الخاص بك هو:</p>
+                <div style="background:#1e293b;border-radius:8px;padding:24px;text-align:center;font-size:48px;font-weight:700;letter-spacing:16px;color:#a5b4fc;">
+                    ${otp}
+                </div>
+                <p style="margin-top:24px;color:#94a3b8;font-size:14px;">
+                    هذا الرمز صالح لمدة 5 دقائق فقط.<br/>إذا لم تطلب هذا الرمز، يمكنك تجاهل هذه الرسالة.
+                </p>
+            </div>
+        `;
+        const text = `رمز التحقق الخاص بك هو: ${otp} — صالح لمدة 5 دقائق.`;
+
+        await sendEmail(lowerEmail, subject, text, html);
+
+        return res.status(200).json({ success: true, message: 'OTP sent successfully' });
+
+    } catch (err) {
+        logger.error('Error sending OTP', err);
+        return res.status(500).json({ success: false, message: 'Failed to send OTP' });
+    }
+});
+
+// ============================================
+// AUTH — VERIFY MIGRATION OTP
+// ============================================
+app.post('/api/auth/verify-migration-otp', async (req, res) => {
+    try {
+        const { username, email, otp_code } = req.body;
+
+        if (!username || !email || !otp_code) {
+            return res.status(400).json({ success: false, message: 'Username, email, and OTP are required' });
+        }
+
+        const lowerEmail = email.toLowerCase().trim();
+        const lowerUsername = username.toLowerCase().trim();
+
+        // Find user
+        const userResult = await db.query(
+            'SELECT id FROM accounts WHERE username = $1 OR email = $1',
+            [lowerUsername]
+        );
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+        const userId = userResult.rows[0].id;
+
+        // Verify OTP
+        const otpResult = await db.query(
+            `SELECT id FROM signup_otps 
+             WHERE email = $1 AND otp_code = $2 AND used = FALSE AND expires_at > NOW()
+             ORDER BY created_at DESC LIMIT 1`,
+            [lowerEmail, otp_code]
+        );
+
+        if (otpResult.rows.length === 0) {
+            return res.status(400).json({ success: false, message: 'Invalid or expired OTP' });
+        }
+
+        // Mark OTP used + update account
+        await db.query('UPDATE signup_otps SET used = TRUE WHERE id = $1', [otpResult.rows[0].id]);
+        await db.query(
+            'UPDATE accounts SET email = $1, email_verified = TRUE WHERE id = $2',
+            [lowerEmail, userId]
+        );
+
+        return res.status(200).json({ success: true, message: 'Email verified successfully' });
+
+    } catch (err) {
+        logger.error('Error verifying migration OTP', err);
+        return res.status(500).json({ success: false, message: 'Failed to verify OTP' });
+    }
+});
+
 // Create free account
 app.post('/api/signup/free', async (req, res) => {
     try {
-        const { username, password } = req.body;
+        const { email, password, otp_code } = req.body;
 
-        if (!username || !password) {
+        if (!email || !password || !otp_code) {
             return res.status(400).json({
                 success: false,
-                message: 'Username and password are required'
+                message: 'Email, password, and OTP are required'
             });
         }
 
-        // Convert to lowercase
-        const lowercaseUsername = username.toLowerCase();
-        const lowercasePassword = password.toLowerCase();
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ success: false, message: 'Invalid email format' });
+        }
+
+        if (password.length < 8) {
+            return res.status(400).json({ success: false, message: 'Password must be at least 8 characters' });
+        }
+
+        const lowerEmail = email.toLowerCase().trim();
+        const lowerPassword = password.toLowerCase();
+
+        // Verify OTP
+        const otpResult = await db.query(
+            `SELECT id FROM signup_otps 
+             WHERE email = $1 AND otp_code = $2 AND used = FALSE AND expires_at > NOW()
+             ORDER BY created_at DESC LIMIT 1`,
+            [lowerEmail, otp_code]
+        );
+
+        if (otpResult.rows.length === 0) {
+            return res.status(400).json({ success: false, message: 'Invalid or expired OTP' });
+        }
 
         const client = await db.connect();
         try {
-            // Check if username already exists
+            // Check if email already verified/in-use
             const existingUser = await client.query(
-                'SELECT id FROM accounts WHERE username = $1',
-                [lowercaseUsername]
+                'SELECT id FROM accounts WHERE email = $1 AND email_verified = TRUE',
+                [lowerEmail]
             );
 
             if (existingUser.rows.length > 0) {
                 return res.status(400).json({
                     success: false,
-                    message: 'Username already exists'
+                    message: 'This email is already registered'
                 });
             }
 
-            // Create the account
+            // Mark OTP used
+            await db.query('UPDATE signup_otps SET used = TRUE WHERE id = $1', [otpResult.rows[0].id]);
+
+            // Create the account (username = email for backward compat)
             const accountResult = await client.query(
-                `INSERT INTO accounts (username, password, isactive, logged, terms_accepted) 
-                 VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-                [lowercaseUsername, lowercasePassword, true, false, false]
+                `INSERT INTO accounts (username, email, password, isactive, logged, terms_accepted, email_verified) 
+                 VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+                [lowerEmail, lowerEmail, lowerPassword, true, false, false, true]
             );
 
             const newUserId = accountResult.rows[0].id;
 
-            // Send email notification
+            // Send email notification to admin
             try {
-                const emailSubject = `✅ Free Account Created - ${lowercaseUsername}`;
-                const emailText = `
-New free account created:
-
-Username: ${lowercaseUsername}
-User ID: ${newUserId}
-Created: ${new Date().toLocaleString()}
-
-This is a free account with full access to all features.
-                `;
-
-                const emailHtml = `
-                    <h2>✅ Free Account Created</h2>
-                    <p><strong>Username:</strong> ${lowercaseUsername}</p>
-                    <p><strong>User ID:</strong> ${newUserId}</p>
-                    <p><strong>Created:</strong> ${new Date().toLocaleString()}</p>
-                    <p>This is a free account with full access to all features.</p>
-                `;
-
-                await sendEmail('muhmodalshraky3@gmail.com', emailSubject, emailText, emailHtml);
+                const emailSubject = `✅ Free Account Created - ${lowerEmail}`;
+                const emailText = `New free account created:\nEmail: ${lowerEmail}\nUser ID: ${newUserId}\nCreated: ${new Date().toLocaleString()}`;
+                await sendEmail('muhmodalshraky3@gmail.com', emailSubject, emailText);
             } catch (emailError) {
                 console.error('Failed to send free account creation email:', emailError);
             }
@@ -3716,15 +3874,36 @@ This is a free account with full access to all features.
 // Create account from temporary link
 app.post('/api/signup/temp-link', async (req, res) => {
     try {
-        const { token, username, password } = req.body;
+        const { token, email, password, otp_code } = req.body;
 
-        if (!token || !username || !password) {
-            return res.status(400).json({ message: 'Token, username, and password are required' });
+        if (!token || !email || !password || !otp_code) {
+            return res.status(400).json({ message: 'Token, email, password, and OTP are required' });
         }
 
-        // Convert to lowercase
-        const lowercaseUsername = username.toLowerCase();
-        const lowercasePassword = password.toLowerCase();
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ message: 'Invalid email format' });
+        }
+
+        if (password.length < 8) {
+            return res.status(400).json({ message: 'Password must be at least 8 characters' });
+        }
+
+        const lowerEmail = email.toLowerCase().trim();
+        const lowerPassword = password.toLowerCase();
+
+        // Verify OTP first
+        const otpResult = await db.query(
+            `SELECT id FROM signup_otps 
+             WHERE email = $1 AND otp_code = $2 AND used = FALSE AND expires_at > NOW()
+             ORDER BY created_at DESC LIMIT 1`,
+            [lowerEmail, otp_code]
+        );
+
+        if (otpResult.rows.length === 0) {
+            return res.status(400).json({ message: 'Invalid or expired OTP' });
+        }
 
         const client = await db.connect();
         try {
@@ -3753,22 +3932,25 @@ app.post('/api/signup/temp-link', async (req, res) => {
                 return res.status(400).json({ message: 'This link has reached its usage limit' });
             }
 
-            // Check if username already exists
+            // Check if email already in-use
             const existingUser = await client.query(
-                'SELECT id FROM accounts WHERE username = $1',
-                [lowercaseUsername]
+                'SELECT id FROM accounts WHERE email = $1 AND email_verified = TRUE',
+                [lowerEmail]
             );
 
             if (existingUser.rows.length > 0) {
                 await client.query('ROLLBACK');
-                return res.status(400).json({ message: 'Username already exists' });
+                return res.status(400).json({ message: 'This email is already registered' });
             }
 
-            // Create the account
+            // Mark OTP used
+            await db.query('UPDATE signup_otps SET used = TRUE WHERE id = $1', [otpResult.rows[0].id]);
+
+            // Create the account (username = email for backward compat)
             const accountResult = await client.query(
-                `INSERT INTO accounts (username, password, isactive, logged, terms_accepted) 
-                 VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-                [lowercaseUsername, lowercasePassword, true, false, false]
+                `INSERT INTO accounts (username, email, password, isactive, logged, terms_accepted, email_verified) 
+                 VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+                [lowerEmail, lowerEmail, lowerPassword, true, false, false, true]
             );
 
             const newUserId = accountResult.rows[0].id;
@@ -3777,7 +3959,7 @@ app.post('/api/signup/temp-link', async (req, res) => {
             await client.query(
                 `INSERT INTO temp_link_accounts (link_id, user_id, username) 
                  VALUES ($1, $2, $3)`,
-                [link.id, newUserId, lowercaseUsername]
+                [link.id, newUserId, lowerEmail]
             );
 
             // Update link usage
@@ -3795,32 +3977,11 @@ app.post('/api/signup/temp-link', async (req, res) => {
 
             await client.query('COMMIT');
 
-            // Send email notification
+            // Send email notification to admin
             try {
-                const emailSubject = `🔗 Account Created via Temp Link - ${lowercaseUsername}`;
-                const emailText = `
-New account created via temporary signup link:
-
-Username: ${lowercaseUsername}
-User ID: ${newUserId}
-Link Token: ${token}
-Created: ${new Date().toLocaleString()}
-Link Usage: ${link.current_uses + 1}/${link.max_uses}
-
-This account was created using a temporary signup link and is ready for use.
-                `;
-
-                const emailHtml = `
-                    <h2>🔗 Account Created via Temp Link</h2>
-                    <p><strong>Username:</strong> ${lowercaseUsername}</p>
-                    <p><strong>User ID:</strong> ${newUserId}</p>
-                    <p><strong>Link Token:</strong> ${token}</p>
-                    <p><strong>Created:</strong> ${new Date().toLocaleString()}</p>
-                    <p><strong>Link Usage:</strong> ${link.current_uses + 1}/${link.max_uses}</p>
-                    <p>This account was created using a temporary signup link and is ready for use.</p>
-                `;
-
-                await sendEmail('muhmodalshraky3@gmail.com', emailSubject, emailText, emailHtml);
+                const emailSubject = `🔗 Account Created via Temp Link - ${lowerEmail}`;
+                const emailText = `New account created via temp link:\nEmail: ${lowerEmail}\nUser ID: ${newUserId}\nLink Token: ${token}\nCreated: ${new Date().toLocaleString()}\nLink Usage: ${link.current_uses + 1}/${link.max_uses}`;
+                await sendEmail('muhmodalshraky3@gmail.com', emailSubject, emailText);
             } catch (emailError) {
                 console.error('Failed to send temp link account creation email:', emailError);
             }
