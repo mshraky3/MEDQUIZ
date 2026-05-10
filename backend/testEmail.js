@@ -1,6 +1,10 @@
 import dotenv from 'dotenv';
 dotenv.config();
-import { sendErrorNotification } from './services/errorNotificationService.js';
+
+// Set recipient BEFORE dynamic import so the service picks it up at init time
+process.env.DEVELOPER_EMAILS = 'alshraky3@gmail.com';
+
+const { sendErrorNotification } = await import('./services/errorNotificationService.js');
 
 const testError = {
     errorType: 'CRITICAL_TEST_ERROR',

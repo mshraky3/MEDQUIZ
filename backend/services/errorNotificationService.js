@@ -7,14 +7,14 @@ import nodemailer from 'nodemailer';
 
 // Email configuration
 const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    tls: true,
-    secure: false,
-    auth: {
-        user: "alshrakynodeapp@gmail.com",
-        pass: "ssjpnctdsyqxylxd"
-    }
+  host: "smtp.gmail.com",
+  port: 587,
+  tls: true,
+  secure: false,
+  auth: {
+    user: "alshrakynodeapp@gmail.com",
+    pass: "ssjpnctdsyqxylxd"
+  }
 });
 
 // Developer emails to notify
@@ -22,229 +22,229 @@ const DEVELOPER_EMAILS = process.env.DEVELOPER_EMAILS?.split(',') || ['muhmodals
 
 // Rate limiting configuration
 const RATE_LIMIT = {
-    maxEmailsPerHour: 20,
-    cooldownMinutes: 5
+  maxEmailsPerHour: 20,
+  cooldownMinutes: 5
 };
 
 // Track sent emails for rate limiting
 const emailTracker = {
-    hourlyCount: 0,
-    hourlyResetTime: Date.now() + 3600000,
-    errorCooldowns: new Map(), // errorKey -> lastSentTime
-    errorFrequency: new Map()  // errorKey -> count in last hour
+  hourlyCount: 0,
+  hourlyResetTime: Date.now() + 3600000,
+  errorCooldowns: new Map(), // errorKey -> lastSentTime
+  errorFrequency: new Map()  // errorKey -> count in last hour
 };
 
 // Severity levels
 const SEVERITY = {
-    CRITICAL: { level: 'CRITICAL', color: '#dc2626', emoji: '🚨', bgGradient: 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)' },
-    HIGH: { level: 'HIGH', color: '#ea580c', emoji: '⚠️', bgGradient: 'linear-gradient(135deg, #ea580c 0%, #c2410c 100%)' },
-    MEDIUM: { level: 'MEDIUM', color: '#ca8a04', emoji: '⚡', bgGradient: 'linear-gradient(135deg, #ca8a04 0%, #a16207 100%)' },
-    LOW: { level: 'LOW', color: '#2563eb', emoji: 'ℹ️', bgGradient: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)' }
+  CRITICAL: { level: 'CRITICAL', color: '#dc2626', emoji: '🚨', bgGradient: 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)' },
+  HIGH: { level: 'HIGH', color: '#ea580c', emoji: '⚠️', bgGradient: 'linear-gradient(135deg, #ea580c 0%, #c2410c 100%)' },
+  MEDIUM: { level: 'MEDIUM', color: '#ca8a04', emoji: '⚡', bgGradient: 'linear-gradient(135deg, #ca8a04 0%, #a16207 100%)' },
+  LOW: { level: 'LOW', color: '#2563eb', emoji: 'ℹ️', bgGradient: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)' }
 };
 
 /**
  * Classify error severity based on status code and error type
  */
 function classifyErrorSeverity(errorData) {
-    const { statusCode, errorType, message } = errorData;
+  const { statusCode, errorType, message } = errorData;
 
-    // Database errors are always critical
-    if (errorType?.includes('DATABASE') || message?.toLowerCase().includes('database')) {
-        return SEVERITY.CRITICAL;
-    }
+  // Database errors are always critical
+  if (errorType?.includes('DATABASE') || message?.toLowerCase().includes('database')) {
+    return SEVERITY.CRITICAL;
+  }
 
-    // Connection failures are critical
-    if (errorType?.includes('CONNECTION') || message?.toLowerCase().includes('connection')) {
-        return SEVERITY.CRITICAL;
-    }
+  // Connection failures are critical
+  if (errorType?.includes('CONNECTION') || message?.toLowerCase().includes('connection')) {
+    return SEVERITY.CRITICAL;
+  }
 
-    // 500+ errors are critical
-    if (statusCode >= 500) {
-        return SEVERITY.CRITICAL;
-    }
+  // 500+ errors are critical
+  if (statusCode >= 500) {
+    return SEVERITY.CRITICAL;
+  }
 
-    // Authentication errors are high
-    if (statusCode === 401 || statusCode === 403) {
-        return SEVERITY.HIGH;
-    }
+  // Authentication errors are high
+  if (statusCode === 401 || statusCode === 403) {
+    return SEVERITY.HIGH;
+  }
 
-    // Unknown errors are high
-    if (errorType?.includes('UNKNOWN') || !errorType) {
-        return SEVERITY.HIGH;
-    }
+  // Unknown errors are high
+  if (errorType?.includes('UNKNOWN') || !errorType) {
+    return SEVERITY.HIGH;
+  }
 
-    // 4xx errors are medium
-    if (statusCode >= 400 && statusCode < 500) {
-        return SEVERITY.MEDIUM;
-    }
+  // 4xx errors are medium
+  if (statusCode >= 400 && statusCode < 500) {
+    return SEVERITY.MEDIUM;
+  }
 
-    return SEVERITY.LOW;
+  return SEVERITY.LOW;
 }
 
 /**
  * Generate unique error key for rate limiting
  */
 function getErrorKey(errorData) {
-    return `${errorData.errorType || 'UNKNOWN'}_${errorData.endpoint || 'unknown'}_${errorData.statusCode || 0}`;
+  return `${errorData.errorType || 'UNKNOWN'}_${errorData.endpoint || 'unknown'}_${errorData.statusCode || 0}`;
 }
 
 /**
  * Check if we can send an email (rate limiting)
  */
 function canSendEmail(errorKey) {
-    const now = Date.now();
+  const now = Date.now();
 
-    // Reset hourly counter if needed
-    if (now > emailTracker.hourlyResetTime) {
-        emailTracker.hourlyCount = 0;
-        emailTracker.hourlyResetTime = now + 3600000;
-        emailTracker.errorFrequency.clear();
-    }
+  // Reset hourly counter if needed
+  if (now > emailTracker.hourlyResetTime) {
+    emailTracker.hourlyCount = 0;
+    emailTracker.hourlyResetTime = now + 3600000;
+    emailTracker.errorFrequency.clear();
+  }
 
-    // Check hourly limit
-    if (emailTracker.hourlyCount >= RATE_LIMIT.maxEmailsPerHour) {
-        console.log('[ErrorNotification] Hourly email limit reached');
-        return false;
-    }
+  // Check hourly limit
+  if (emailTracker.hourlyCount >= RATE_LIMIT.maxEmailsPerHour) {
+    console.log('[ErrorNotification] Hourly email limit reached');
+    return false;
+  }
 
-    // Check cooldown for same error type
-    const lastSent = emailTracker.errorCooldowns.get(errorKey);
-    if (lastSent && (now - lastSent) < (RATE_LIMIT.cooldownMinutes * 60 * 1000)) {
-        console.log(`[ErrorNotification] Cooldown active for error: ${errorKey}`);
-        return false;
-    }
+  // Check cooldown for same error type
+  const lastSent = emailTracker.errorCooldowns.get(errorKey);
+  if (lastSent && (now - lastSent) < (RATE_LIMIT.cooldownMinutes * 60 * 1000)) {
+    console.log(`[ErrorNotification] Cooldown active for error: ${errorKey}`);
+    return false;
+  }
 
-    return true;
+  return true;
 }
 
 /**
  * Update rate limiting trackers
  */
 function updateTrackers(errorKey) {
-    const now = Date.now();
-    emailTracker.hourlyCount++;
-    emailTracker.errorCooldowns.set(errorKey, now);
+  const now = Date.now();
+  emailTracker.hourlyCount++;
+  emailTracker.errorCooldowns.set(errorKey, now);
 
-    // Update frequency
-    const currentFreq = emailTracker.errorFrequency.get(errorKey) || 0;
-    emailTracker.errorFrequency.set(errorKey, currentFreq + 1);
+  // Update frequency
+  const currentFreq = emailTracker.errorFrequency.get(errorKey) || 0;
+  emailTracker.errorFrequency.set(errorKey, currentFreq + 1);
 }
 
 /**
  * Format timestamp for display
  */
 function formatTimestamp(timestamp) {
-    const date = new Date(timestamp);
-    return date.toLocaleString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: true
-    });
+  const date = new Date(timestamp);
+  return date.toLocaleString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true
+  });
 }
 
 /**
  * Generate unique error ID
  */
 function generateErrorId() {
-    const timestamp = Date.now();
-    const random = Math.random().toString(36).substring(2, 11);
-    return `${timestamp}-${random}`;
+  const timestamp = Date.now();
+  const random = Math.random().toString(36).substring(2, 11);
+  return `${timestamp}-${random}`;
 }
 
 /**
  * Get status code badge color
  */
 function getStatusColor(statusCode) {
-    if (statusCode >= 500) return '#dc2626';
-    if (statusCode >= 400) return '#ca8a04';
-    if (statusCode >= 300) return '#2563eb';
-    return '#16a34a';
+  if (statusCode >= 500) return '#dc2626';
+  if (statusCode >= 400) return '#ca8a04';
+  if (statusCode >= 300) return '#2563eb';
+  return '#16a34a';
 }
 
 /**
  * Escape HTML to prevent XSS in emails
  */
 function escapeHtml(text) {
-    if (!text) return '';
-    return String(text)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
+  if (!text) return '';
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 /**
  * Format JSON for display
  */
 function formatJson(data) {
-    if (!data) return 'N/A';
-    try {
-        if (typeof data === 'string') {
-            data = JSON.parse(data);
-        }
-        return escapeHtml(JSON.stringify(data, null, 2));
-    } catch {
-        return escapeHtml(String(data));
+  if (!data) return 'N/A';
+  try {
+    if (typeof data === 'string') {
+      data = JSON.parse(data);
     }
+    return escapeHtml(JSON.stringify(data, null, 2));
+  } catch {
+    return escapeHtml(String(data));
+  }
 }
 
 /**
  * Generate beautiful HTML email template
  */
 function generateEmailHtml(errorData, severity, errorId, frequency) {
-    const isProduction = process.env.NODE_ENV === 'production';
-    const envBadge = isProduction
-        ? '<span style="display: inline-block; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; padding: 6px 16px; border-radius: 50px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 2px 8px rgba(220, 38, 38, 0.4);">🔴 Production</span>'
-        : '<span style="display: inline-block; background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: white; padding: 6px 16px; border-radius: 50px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 2px 8px rgba(22, 163, 74, 0.4);">🟢 Development</span>';
+  const isProduction = process.env.NODE_ENV === 'production';
+  const envBadge = isProduction
+    ? '<span style="display: inline-block; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; padding: 6px 16px; border-radius: 50px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 2px 8px rgba(220, 38, 38, 0.4);">🔴 Production</span>'
+    : '<span style="display: inline-block; background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: white; padding: 6px 16px; border-radius: 50px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 2px 8px rgba(22, 163, 74, 0.4);">🟢 Development</span>';
 
-    const frequencyBadge = frequency > 1
-        ? `<span style="display: inline-block; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; padding: 6px 14px; border-radius: 50px; font-size: 12px; font-weight: 700; margin-left: 8px; box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);">🔄 ×${frequency}</span>`
-        : '';
+  const frequencyBadge = frequency > 1
+    ? `<span style="display: inline-block; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; padding: 6px 14px; border-radius: 50px; font-size: 12px; font-weight: 700; margin-left: 8px; box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);">🔄 ×${frequency}</span>`
+    : '';
 
-    const hourlyCount = emailTracker.hourlyCount;
-    const hourlyBadge = hourlyCount > 5
-        ? `<span style="display: inline-block; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 6px 14px; border-radius: 50px; font-size: 12px; font-weight: 700; margin-left: 8px; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);">📊 ${hourlyCount}/hr</span>`
-        : '';
+  const hourlyCount = emailTracker.hourlyCount;
+  const hourlyBadge = hourlyCount > 5
+    ? `<span style="display: inline-block; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 6px 14px; border-radius: 50px; font-size: 12px; font-weight: 700; margin-left: 8px; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);">📊 ${hourlyCount}/hr</span>`
+    : '';
 
-    const appUrl = process.env.APP_URL || 'http://localhost:5173';
-    const pageUrl = errorData.page ? `${appUrl}${errorData.page}` : appUrl;
+  const appUrl = process.env.APP_URL || 'http://localhost:5173';
+  const pageUrl = errorData.page ? `${appUrl}${errorData.page}` : appUrl;
 
-    // Get severity-specific styles
-    const severityStyles = {
-        CRITICAL: {
-            gradient: 'linear-gradient(135deg, #dc2626 0%, #991b1b 50%, #7f1d1d 100%)',
-            glow: 'rgba(220, 38, 38, 0.3)',
-            icon: '🚨',
-            accent: '#fca5a5'
-        },
-        HIGH: {
-            gradient: 'linear-gradient(135deg, #ea580c 0%, #c2410c 50%, #9a3412 100%)',
-            glow: 'rgba(234, 88, 12, 0.3)',
-            icon: '⚠️',
-            accent: '#fdba74'
-        },
-        MEDIUM: {
-            gradient: 'linear-gradient(135deg, #eab308 0%, #ca8a04 50%, #a16207 100%)',
-            glow: 'rgba(234, 179, 8, 0.3)',
-            icon: '⚡',
-            accent: '#fde047'
-        },
-        LOW: {
-            gradient: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%)',
-            glow: 'rgba(59, 130, 246, 0.3)',
-            icon: 'ℹ️',
-            accent: '#93c5fd'
-        }
-    };
+  // Get severity-specific styles
+  const severityStyles = {
+    CRITICAL: {
+      gradient: 'linear-gradient(135deg, #dc2626 0%, #991b1b 50%, #7f1d1d 100%)',
+      glow: 'rgba(220, 38, 38, 0.3)',
+      icon: '🚨',
+      accent: '#fca5a5'
+    },
+    HIGH: {
+      gradient: 'linear-gradient(135deg, #ea580c 0%, #c2410c 50%, #9a3412 100%)',
+      glow: 'rgba(234, 88, 12, 0.3)',
+      icon: '⚠️',
+      accent: '#fdba74'
+    },
+    MEDIUM: {
+      gradient: 'linear-gradient(135deg, #eab308 0%, #ca8a04 50%, #a16207 100%)',
+      glow: 'rgba(234, 179, 8, 0.3)',
+      icon: '⚡',
+      accent: '#fde047'
+    },
+    LOW: {
+      gradient: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%)',
+      glow: 'rgba(59, 130, 246, 0.3)',
+      icon: 'ℹ️',
+      accent: '#93c5fd'
+    }
+  };
 
-    const style = severityStyles[severity.level] || severityStyles.HIGH;
+  const style = severityStyles[severity.level] || severityStyles.HIGH;
 
-    return `
+  return `
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
 <head>
@@ -552,8 +552,8 @@ function generateEmailHtml(errorData, severity, errorId, frequency) {
  * Generate email subject
  */
 function generateSubject(errorData, severity, frequency) {
-    const repeatText = frequency > 1 ? ` (×${frequency})` : '';
-    return `${severity.emoji} [${severity.level}] System Error: ${errorData.errorType || 'UNKNOWN_ERROR'}${repeatText}`;
+  const repeatText = frequency > 1 ? ` (×${frequency})` : '';
+  return `${severity.emoji} [${severity.level}] System Error: ${errorData.errorType || 'UNKNOWN_ERROR'}${repeatText}`;
 }
 
 /**
@@ -562,53 +562,53 @@ function generateSubject(errorData, severity, frequency) {
  * @returns {Promise<{success: boolean, errorId?: string, message?: string}>}
  */
 export async function sendErrorNotification(errorData) {
-    try {
-        // Classify severity
-        const severity = classifyErrorSeverity(errorData);
+  try {
+    // Classify severity
+    const severity = classifyErrorSeverity(errorData);
 
-        // Only send emails for CRITICAL and HIGH severity
-        if (severity.level !== 'CRITICAL' && severity.level !== 'HIGH') {
-            console.log(`[ErrorNotification] Skipping email for ${severity.level} severity error`);
-            return { success: false, message: `Skipped: ${severity.level} severity` };
-        }
-
-        // Check rate limiting
-        const errorKey = getErrorKey(errorData);
-        if (!canSendEmail(errorKey)) {
-            return { success: false, message: 'Rate limited' };
-        }
-
-        // Get error frequency
-        const frequency = (emailTracker.errorFrequency.get(errorKey) || 0) + 1;
-
-        // Generate error ID
-        const errorId = generateErrorId();
-
-        // Generate email content
-        const htmlContent = generateEmailHtml(errorData, severity, errorId, frequency);
-        const subject = generateSubject(errorData, severity, frequency);
-
-        // Send email
-        const mailOptions = {
-            from: '"MEDQIZE Error Monitor" <alshrakynodeapp@gmail.com>',
-            to: DEVELOPER_EMAILS.join(', '),
-            subject: subject,
-            html: htmlContent
-        };
-
-        await transporter.sendMail(mailOptions);
-
-        // Update trackers
-        updateTrackers(errorKey);
-
-        console.log(`[ErrorNotification] Email sent successfully. Error ID: ${errorId}`);
-
-        return { success: true, errorId };
-
-    } catch (error) {
-        console.error('[ErrorNotification] Failed to send email:', error);
-        return { success: false, message: error.message };
+    // Only send emails for CRITICAL and HIGH severity
+    if (severity.level !== 'CRITICAL' && severity.level !== 'HIGH') {
+      console.log(`[ErrorNotification] Skipping email for ${severity.level} severity error`);
+      return { success: false, message: `Skipped: ${severity.level} severity` };
     }
+
+    // Check rate limiting
+    const errorKey = getErrorKey(errorData);
+    if (!canSendEmail(errorKey)) {
+      return { success: false, message: 'Rate limited' };
+    }
+
+    // Get error frequency
+    const frequency = (emailTracker.errorFrequency.get(errorKey) || 0) + 1;
+
+    // Generate error ID
+    const errorId = generateErrorId();
+
+    // Generate email content
+    const htmlContent = generateEmailHtml(errorData, severity, errorId, frequency);
+    const subject = generateSubject(errorData, severity, frequency);
+
+    // Send email
+    const mailOptions = {
+      from: '"SQB" <alshrakynodeapp@gmail.com>',
+      to: DEVELOPER_EMAILS.join(', '),
+      subject: subject,
+      html: htmlContent
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    // Update trackers
+    updateTrackers(errorKey);
+
+    console.log(`[ErrorNotification] Email sent successfully. Error ID: ${errorId}`);
+
+    return { success: true, errorId };
+
+  } catch (error) {
+    console.error('[ErrorNotification] Failed to send email:', error);
+    return { success: false, message: error.message };
+  }
 }
 
 /**
@@ -618,45 +618,45 @@ export async function sendErrorNotification(errorData) {
  * @param {Object} additionalInfo - Additional context (optional)
  */
 export async function notifyBackendError(error, req = null, additionalInfo = {}) {
-    const errorData = {
-        errorType: error.name || 'BACKEND_ERROR',
-        message: error.message,
-        endpoint: req?.originalUrl || req?.url,
-        method: req?.method,
-        statusCode: error.statusCode || error.status || 500,
-        page: req?.headers?.referer || req?.headers?.origin,
-        userAgent: req?.headers?.['user-agent'],
-        userId: req?.user?.id,
-        username: req?.user?.username,
-        branchId: req?.user?.branchId,
-        timestamp: new Date().toISOString(),
-        stackTrace: error.stack,
-        requestData: {
-            body: req?.body,
-            params: req?.params,
-            query: req?.query
-        },
-        additionalInfo
-    };
+  const errorData = {
+    errorType: error.name || 'BACKEND_ERROR',
+    message: error.message,
+    endpoint: req?.originalUrl || req?.url,
+    method: req?.method,
+    statusCode: error.statusCode || error.status || 500,
+    page: req?.headers?.referer || req?.headers?.origin,
+    userAgent: req?.headers?.['user-agent'],
+    userId: req?.user?.id,
+    username: req?.user?.username,
+    branchId: req?.user?.branchId,
+    timestamp: new Date().toISOString(),
+    stackTrace: error.stack,
+    requestData: {
+      body: req?.body,
+      params: req?.params,
+      query: req?.query
+    },
+    additionalInfo
+  };
 
-    return sendErrorNotification(errorData);
+  return sendErrorNotification(errorData);
 }
 
 /**
  * Get current rate limiting status
  */
 export function getRateLimitStatus() {
-    return {
-        hourlyCount: emailTracker.hourlyCount,
-        maxPerHour: RATE_LIMIT.maxEmailsPerHour,
-        cooldownMinutes: RATE_LIMIT.cooldownMinutes,
-        activeErrors: emailTracker.errorCooldowns.size
-    };
+  return {
+    hourlyCount: emailTracker.hourlyCount,
+    maxPerHour: RATE_LIMIT.maxEmailsPerHour,
+    cooldownMinutes: RATE_LIMIT.cooldownMinutes,
+    activeErrors: emailTracker.errorCooldowns.size
+  };
 }
 
 export default {
-    sendErrorNotification,
-    notifyBackendError,
-    getRateLimitStatus,
-    SEVERITY
+  sendErrorNotification,
+  notifyBackendError,
+  getRateLimitStatus,
+  SEVERITY
 };
