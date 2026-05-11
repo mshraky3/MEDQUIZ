@@ -167,6 +167,8 @@ const Login = () => {
           setMigrationStep('notify');
           setMigrationError('');
           setShowMigrationPopup(true);
+          setLoading(false);
+          return;
         }
 
         setLoading(false);
@@ -226,6 +228,7 @@ const Login = () => {
         otp_code: migrationOtp
       });
       setShowMigrationPopup(false);
+      navigate('/quizs');
     } catch (err) {
       setMigrationError(err.response?.data?.message || 'الرمز غير صحيح أو منتهي الصلاحية');
     } finally {
@@ -430,7 +433,7 @@ const Login = () => {
                     </button>
                     <button
                       className="popup-btn no-thanks"
-                      onClick={() => setShowMigrationPopup(false)}
+                      onClick={() => { setShowMigrationPopup(false); navigate('/quizs'); }}
                       disabled={migrationLoading}
                     >
                       تخطى الآن
@@ -471,7 +474,7 @@ const Login = () => {
                     </button>
                     <button
                       className="popup-btn no-thanks"
-                      onClick={() => setShowMigrationPopup(false)}
+                      onClick={() => { setShowMigrationPopup(false); navigate('/quizs'); }}
                       disabled={migrationLoading}
                       style={{ color: '#64748b' }}
                     >

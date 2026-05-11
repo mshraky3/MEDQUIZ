@@ -406,6 +406,21 @@ p {
   border-radius: 50%;
   animation: orbital-spin 1s linear infinite;
   box-shadow: 0 0 15px rgba(34, 211, 238, 0.3);
+  flex-shrink: 0;
+}
+
+.loading-spinner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.loading-spinner .spinner {
+  width: 20px;
+  height: 20px;
+  border-width: 3px;
+  box-shadow: none;
 }
 
 .loading-container {

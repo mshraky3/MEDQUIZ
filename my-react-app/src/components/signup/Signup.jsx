@@ -161,9 +161,9 @@ const Signup = () => {
             <div className="login-body" dir="rtl">
                 <div className="login-wrapper signup-wide">
                     <div className="login-card signup-short">
-                        <div className="loading-spinner">
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '24px 0' }}>
                             <div className="spinner"></div>
-                            جاري التحقق من الرابط...
+                            <span>جاري التحقق من الرابط...</span>
                         </div>
                     </div>
                 </div>
