@@ -68,7 +68,7 @@ const Email = nodemailer.createTransport({
 const sendEmail = async (to, subject, text, html = null) => {
     try {
         const result = await Email.sendMail({
-            from: '"MEDQIZE" <alshrakynodeapp@gmail.com>',
+            from: '"SQB" <alshrakynodeapp@gmail.com>',
             to: to,
             subject: subject,
             text: text,
@@ -3703,19 +3703,8 @@ app.post('/api/auth/send-otp', async (req, res) => {
         );
 
         // Send OTP email
-        const subject = 'رمز التحقق - MEDQIZE';
-        const html = `
-            <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px;background:#0f172a;color:#f8fafc;border-radius:12px;">
-                <h2 style="color:#6366f1;margin-bottom:8px;">MEDQIZE</h2>
-                <p style="margin-bottom:24px;">رمز التحقق الخاص بك هو:</p>
-                <div style="background:#1e293b;border-radius:8px;padding:24px;text-align:center;font-size:48px;font-weight:700;letter-spacing:16px;color:#a5b4fc;">
-                    ${otp}
-                </div>
-                <p style="margin-top:24px;color:#94a3b8;font-size:14px;">
-                    هذا الرمز صالح لمدة 5 دقائق فقط.<br/>إذا لم تطلب هذا الرمز، يمكنك تجاهل هذه الرسالة.
-                </p>
-            </div>
-        `;
+        const subject = 'رمز التحقق';
+        const html = `<p>رمز التحقق الخاص بك هو: <strong>${otp}</strong></p><p>صالح لمدة 5 دقائق.</p>`;
         const text = `رمز التحقق الخاص بك هو: ${otp} — صالح لمدة 5 دقائق.`;
 
         await sendEmail(lowerEmail, subject, text, html);
