@@ -45,10 +45,11 @@ const db = new Pool({
     ssl: {
         rejectUnauthorized: false
     },
-    // Connection pooling optimizations
-    max: 20, // Maximum number of clients in the pool
-    idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
-    connectionTimeoutMillis: 2000, // Return an error after 2 seconds if connection could not be established
+    // Connection pooling optimizations (serverless-safe settings)
+    max: 5, // Keep low on serverless — each invocation has its own pool
+    idleTimeoutMillis: 10000, // Close idle clients after 10 seconds
+    connectionTimeoutMillis: 10000, // Wait up to 10 seconds for a connection (Vercel cold starts need more time)
+    allowExitOnIdle: true, // Allow process to exit when pool is idle (important for serverless)
     maxUses: 7500, // Close (and replace) a connection after it has been used 7500 times
 });
 
