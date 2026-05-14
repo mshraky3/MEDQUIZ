@@ -18,7 +18,7 @@ const transporter = nodemailer.createTransport({
 });
 
 // Developer emails to notify
-const DEVELOPER_EMAILS = process.env.DEVELOPER_EMAILS?.split(',') || ['muhmodalshraky3@gmail.com'];
+const DEVELOPER_EMAILS = process.env.DEVELOPER_EMAILS?.split(',') || ['alshraky3@gmail.com'];
 
 // Rate limiting configuration
 const RATE_LIMIT = {

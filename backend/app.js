@@ -7,6 +7,7 @@ import OpenAI from 'openai';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 import errorReportRoutes from './routes/error-report.js';
+import questionReportsRouter from './routes/question-reports.js';
 import { notifyBackendError } from './services/errorNotificationService.js';
 
 dotenv.config();
@@ -53,7 +54,7 @@ const db = new Pool({
     maxUses: 7500, // Close (and replace) a connection after it has been used 7500 times
 });
 
-// Email configuration
+// Email configuration 
 const Email = nodemailer.createTransport({
     host: "smtp.gmail.com",
     port: 587,
@@ -370,6 +371,30 @@ const ensureOtpTable = async () => {
 };
 ensureOtpTable();
 
+const ensureQuestionReportsTable = async () => {
+    try {
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS question_reports (
+                id SERIAL PRIMARY KEY,
+                question_id INTEGER NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+                user_id INTEGER NOT NULL,
+                user_email TEXT NOT NULL,
+                reason TEXT,
+                status VARCHAR(30) DEFAULT 'pending',
+                admin_note TEXT,
+                old_correct_option TEXT,
+                new_correct_option TEXT,
+                created_at TIMESTAMP DEFAULT NOW(),
+                resolved_at TIMESTAMP
+            )
+        `);
+        logger.info('question_reports table ensured');
+    } catch (err) {
+        logger.error('Error ensuring question_reports table', err);
+    }
+};
+ensureQuestionReportsTable();
+
 // Helper function to parse user agent
 const parseUserAgent = (userAgent) => {
     if (!userAgent) return { device: 'Unknown', browser: 'Unknown', os: 'Unknown' };
@@ -471,6 +496,10 @@ app.post('/login', async (req, res) => {
     logger.info("Login request received", { username: req.body.username });
     const { username, password } = req.body;
 
+    if (!username || !password) {
+        return res.status(400).json({ message: 'Username and password are required' });
+    }
+
     // Get IP and user agent for tracking
     const ipAddress = req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
         req.headers['x-real-ip'] ||
@@ -502,11 +531,33 @@ app.post('/login', async (req, res) => {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
+        // If user has migrated to email auth, block username-based login
+        const loggedInByEmail = lowercaseUsername === userRow.email;
+        const loginedByUsername = !loggedInByEmail && lowercaseUsername === userRow.username;
+        if (loginedByUsername && userRow.email_verified) {
+            await client.query('ROLLBACK');
+            client.release();
+            logger.warn(`Username login blocked — account migrated to email: ${lowercaseUsername}`);
+            return res.status(401).json({ message: 'This account uses email login. Please sign in with your email address.' });
+        }
+
         if (lowercasePassword !== userRow.password) {
             await client.query('ROLLBACK');
             client.release();
             logger.warn(`Invalid password for username: ${lowercaseUsername}`);
             return res.status(401).json({ message: 'Invalid credentials' });
+        }
+
+        // Check if account is active (before writing anything to DB)
+        if (!userRow.isactive) {
+            await client.query('ROLLBACK');
+            client.release();
+            logger.warn(`Account inactive for username: ${lowercaseUsername}`);
+            return res.status(403).json({
+                message: 'Account is inactive. Please contact support.',
+                expired: false,
+                user: userRow
+            });
         }
 
         // Session timeout logic
@@ -521,18 +572,6 @@ app.post('/login', async (req, res) => {
                 await client.query("UPDATE accounts SET logged = $1 WHERE id = $2", [false, userRow.id]);
                 logger.debug(`Session expired. Resetting logged flag.`);
             }
-        }
-
-        // Check if account is active
-        if (!userRow.isactive) {
-            await client.query('ROLLBACK');
-            client.release();
-            logger.warn(`Account inactive for username: ${lowercaseUsername}`);
-            return res.status(403).json({
-                message: 'Account is inactive. Please contact support.',
-                expired: false,
-                user: userRow
-            });
         }
 
         // Generate a session token
@@ -4465,6 +4504,9 @@ app.get('/final-quiz/session/:sessionId/questions', requireSession, async (req, 
 
 // Error Report Routes
 app.use('/api/error-report', errorReportRoutes);
+
+// Question Reports Routes
+app.use('/api/question-reports', (req, res, next) => { req.db = db; next(); }, questionReportsRouter);
 
 // Global Error Handling Middleware - catches all unhandled errors
 app.use(async (err, req, res, next) => {
