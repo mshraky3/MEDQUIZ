@@ -1,0 +1,170 @@
+.report-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 16px;
+}
+
+.report-modal {
+    background: #1a2237;
+    border: 1px solid #2d3f60;
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 480px;
+    width: 100%;
+    position: relative;
+    color: #e2e8f0;
+}
+
+.report-modal-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: none;
+    border: none;
+    color: #94a3b8;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: color 0.2s;
+}
+
+.report-modal-close:hover {
+    color: #e2e8f0;
+}
+
+.report-modal-title {
+    margin: 0 0 16px 0;
+    font-size: 18px;
+    color: #f8fafc;
+}
+
+.report-modal-question-preview {
+    background: #0f172a;
+    border: 1px solid #2d3f60;
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    color: #cbd5e1;
+    line-height: 1.5;
+    max-height: 100px;
+    overflow-y: auto;
+}
+
+.report-modal-label {
+    display: block;
+    font-size: 14px;
+    color: #94a3b8;
+    margin-bottom: 8px;
+}
+
+.report-optional {
+    font-size: 12px;
+    color: #64748b;
+}
+
+.report-modal-textarea {
+    width: 100%;
+    background: #0f172a;
+    border: 1px solid #2d3f60;
+    border-radius: 8px;
+    color: #e2e8f0;
+    padding: 10px 12px;
+    font-size: 14px;
+    resize: vertical;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+.report-modal-textarea:focus {
+    outline: none;
+    border-color: #22d3ee;
+}
+
+.report-modal-error {
+    color: #f87171;
+    font-size: 13px;
+    margin: 8px 0 0 0;
+}
+
+.report-modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+    justify-content: flex-end;
+}
+
+.report-btn-cancel {
+    background: none;
+    border: 1px solid #2d3f60;
+    color: #94a3b8;
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+}
+
+.report-btn-cancel:hover {
+    border-color: #94a3b8;
+    color: #e2e8f0;
+}
+
+.report-btn-submit {
+    background: #22d3ee;
+    border: none;
+    color: #0b1021;
+    padding: 8px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.report-btn-submit:hover:not(:disabled) {
+    background: #06b6d4;
+}
+
+.report-btn-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.report-modal-success {
+    text-align: center;
+    padding: 8px 0;
+}
+
+.report-modal-success p {
+    color: #86efac;
+    margin-bottom: 16px;
+    font-size: 15px;
+}
+
+/* Small report flag button used in Question.jsx */
+.report-question-btn {
+    background: none;
+    border: 1px solid #2d3f60;
+    color: #64748b;
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 12px;
+    transition: color 0.2s, border-color 0.2s;
+}
+
+.report-question-btn:hover {
+    color: #f87171;
+    border-color: #f87171;
+}

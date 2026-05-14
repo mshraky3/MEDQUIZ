@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { safeGetItem } from '../../utils/safeStorage.js';
 
 const ADSENSE_SCRIPT_SRC = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9286976335875618';
@@ -67,6 +67,7 @@ const ensureAdSenseScript = () => {
  */
 const GoogleAd = ({ disabled = false }) => {
   const [shouldShow, setShouldShow] = useState(false);
+  const insRef = useRef(null);
   useEffect(() => {
     // Don't show if explicitly disabled
     if (disabled) {
@@ -114,7 +115,10 @@ const GoogleAd = ({ disabled = false }) => {
     if (shouldShow && import.meta.env.PROD) {
       try {
         ensureAdSenseScript();
-        (window.adsbygoogle = window.adsbygoogle || []).push({});
+        // Guard against pushing to an already-initialized ins element (SPA re-mounts)
+        if (insRef.current && !insRef.current.getAttribute('data-adsbygoogle-status')) {
+          (window.adsbygoogle = window.adsbygoogle || []).push({});
+        }
       } catch (e) {
         console.error('Ad could not be loaded', e);
       }
@@ -129,6 +133,7 @@ const GoogleAd = ({ disabled = false }) => {
   return (
     <div className="ad-container" style={{ marginTop: '2rem', marginBottom: '1rem' }}>
       <ins className="adsbygoogle"
+        ref={insRef}
         style={{ display: 'block' }}
         data-ad-client={ADSENSE_CLIENT_ID}
         data-ad-format="auto"

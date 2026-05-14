@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
+import ReportModal from './ReportModal';
+import './ReportModal.css';
 
 const Question = ({
   question,
@@ -10,8 +12,11 @@ const Question = ({
   onPreviousQuestion,
   onFinishQuiz,
   timeRemaining,
-  timerMinutes
+  timerMinutes,
+  userId,
+  userEmail,
 }) => {
+  const [showReport, setShowReport] = useState(false);
   const formatTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
@@ -29,59 +34,78 @@ const Question = ({
   const optionKeys = ['option1', 'option2', 'option3', 'option4'];
 
   return (
-    <div className="quiz-container-card">
-      {/* Timer Display */}
-      {timerMinutes && (
-        <div className="timer-display" style={{ color: getTimerColor() }}>
-          ⏰ {formatTime(timeRemaining)}
-        </div>
-      )}
-
-      {/* Question Card */}
-      <div className="question-card">
-        <div className="question-header">
-          <div className="header-top">
-            <h3>سؤال {questionNumber}</h3>
-            <div className="progress-compact">{questionNumber}/{totalQuestions}</div>
+    <>
+      <div className="quiz-container-card">
+        {/* Timer Display */}
+        {timerMinutes && (
+          <div className="timer-display" style={{ color: getTimerColor() }}>
+            ⏰ {formatTime(timeRemaining)}
           </div>
-        </div>
-        <div className="question-content">
-          <div className="question-text">{safeQuestionText}</div>
+        )}
 
-          <div className="options">
-            {optionKeys.map((optKey, index) => (
+        {/* Question Card */}
+        <div className="question-card">
+          <div className="question-header">
+            <div className="header-top">
+              <h3>سؤال {questionNumber}</h3>
+              <div className="progress-compact">{questionNumber}/{totalQuestions}</div>
+            </div>
+          </div>
+          <div className="question-content">
+            <div className="question-text">{safeQuestionText}</div>
+
+            <div className="options">
+              {optionKeys.map((optKey, index) => (
+                <button
+                  key={index}
+                  className={`option-button ${selectedAnswer === question?.[optKey] ? "selected" : ""}`}
+                  onClick={() => question?.[optKey] && onSelectOption(question[optKey])}
+                  disabled={!question?.[optKey]}
+                >
+                  {question?.[optKey] || 'Option unavailable'}
+                </button>
+              ))}
+            </div>
+
+            {/* Report button */}
+            {userId && userEmail && (
+              <div style={{ textAlign: 'right' }}>
+                <button className="report-question-btn" onClick={() => setShowReport(true)}>
+                  🚩 Report
+                </button>
+              </div>
+            )}
+
+            {/* Navigation Buttons inside question card */}
+            <div className="navigation-section">
               <button
-                key={index}
-                className={`option-button ${selectedAnswer === question?.[optKey] ? "selected" : ""}`}
-                onClick={() => question?.[optKey] && onSelectOption(question[optKey])}
-                disabled={!question?.[optKey]}
+                className="nav-button prev-button"
+                onClick={onPreviousQuestion}
+                disabled={questionNumber === 1}
               >
-                {question?.[optKey] || 'Option unavailable'}
+                → السابق
               </button>
-            ))}
-          </div>
 
-          {/* Navigation Buttons inside question card */}
-          <div className="navigation-section">
-            <button
-              className="nav-button prev-button"
-              onClick={onPreviousQuestion}
-              disabled={questionNumber === 1}
-            >
-              → السابق
-            </button>
-
-            <button
-              className="nav-button next-button"
-              onClick={questionNumber === totalQuestions ? onFinishQuiz : onNextQuestion}
-              disabled={questionNumber === totalQuestions && !selectedAnswer}
-            >
-              {questionNumber === totalQuestions ? "إنهاء الاختبار" : "التالي ←"}
-            </button>
+              <button
+                className="nav-button next-button"
+                onClick={questionNumber === totalQuestions ? onFinishQuiz : onNextQuestion}
+                disabled={questionNumber === totalQuestions && !selectedAnswer}
+              >
+                {questionNumber === totalQuestions ? "إنهاء الاختبار" : "التالي ←"}
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+      {showReport && (
+        <ReportModal
+          question={question}
+          userId={userId}
+          userEmail={userEmail}
+          onClose={() => setShowReport(false)}
+        />
+      )}
+    </>
   );
 };
 

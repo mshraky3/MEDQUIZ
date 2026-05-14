@@ -20,6 +20,7 @@ const AdminNavbar = () => {
     { path: '/ADD_ACCOUNT', label: '👤 Users', icon: '👤' },
     { path: '/ADDQ', label: '➕ Add Questions', icon: '➕' },
     { path: '/Bank', label: '📚 Question Bank', icon: '📚' },
+    { path: '/question-reports', label: '🚩 Reports', icon: '🚩' },
     { path: '/TEMP_LINKS', label: '🔗 Temp Links', icon: '🔗' },
   ];
 

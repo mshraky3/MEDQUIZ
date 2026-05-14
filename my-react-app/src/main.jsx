@@ -28,6 +28,7 @@ import WrongQuestionsMethodGuide from './components/guides/WrongQuestionsMethodG
 import SmleVsPrometricGuide from './components/guides/SmleVsPrometricGuide.jsx';
 import SmleHighYieldTopicsGuide from './components/guides/SmleHighYieldTopicsGuide.jsx';
 import TempLinks from './components/ADD/TempLinks.jsx';
+import QuestionReports from './components/ADD/QuestionReports.jsx';
 
 import Globals from './global.js';
 import { UserProvider } from './UserContext.jsx';
@@ -93,6 +94,11 @@ const router = createBrowserRouter([
   {
     path: "/TEMP_LINKS",
     element: <TempLinks host={Globals.URL} />,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/question-reports",
+    element: <QuestionReports />,
     errorElement: <ErrorBoundary />,
   },
   {

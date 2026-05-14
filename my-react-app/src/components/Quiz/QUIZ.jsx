@@ -476,6 +476,8 @@ const QUIZ = () => {
         onFinishQuiz={handleFinishQuiz}
         timeRemaining={timeRemaining}
         timerMinutes={timerMinutes}
+        userId={user?.id}
+        userEmail={user?.email}
       />
 
       {/* Unanswered Questions Popup */}
