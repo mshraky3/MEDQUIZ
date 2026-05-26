@@ -8,6 +8,7 @@ import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 import errorReportRoutes from './routes/error-report.js';
 import questionReportsRouter from './routes/question-reports.js';
+import emailCampaignsRouter from './routes/email-campaigns.js';
 import { notifyBackendError } from './services/errorNotificationService.js';
 
 dotenv.config();
@@ -371,12 +372,31 @@ const ensureOtpTable = async () => {
 };
 ensureOtpTable();
 
+// ============================================
+// EMAIL CAMPAIGN COLUMNS INITIALIZATION
+// ============================================
+const ensureEmailCampaignColumns = async () => {
+    try {
+        await db.query(`
+            ALTER TABLE accounts
+                ADD COLUMN IF NOT EXISTS welcome_email_sent BOOLEAN DEFAULT FALSE,
+                ADD COLUMN IF NOT EXISTS welcome_email_sent_at TIMESTAMP,
+                ADD COLUMN IF NOT EXISTS inactivity_email_sent_at TIMESTAMP,
+                ADD COLUMN IF NOT EXISTS feedback_email_sent_at TIMESTAMP
+        `);
+        logger.info('Email campaign columns ensured');
+    } catch (err) {
+        logger.error('Error ensuring email campaign columns', err);
+    }
+};
+ensureEmailCampaignColumns();
+
 const ensureQuestionReportsTable = async () => {
     try {
         await db.query(`
             CREATE TABLE IF NOT EXISTS question_reports (
                 id SERIAL PRIMARY KEY,
-                question_id INTEGER NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+                question_id INTEGER NOT NULL,
                 user_id INTEGER NOT NULL,
                 user_email TEXT NOT NULL,
                 reason TEXT,
@@ -3743,8 +3763,43 @@ app.post('/api/auth/send-otp', async (req, res) => {
         );
 
         // Send OTP email
-        const subject = 'رمز التحقق';
-        const html = `<p>رمز التحقق الخاص بك هو: <strong>${otp}</strong></p><p>صالح لمدة 5 دقائق.</p>`;
+        const subject = 'رمز التحقق — MEDQIZE';
+        const html = `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#0b1021;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0b1021;padding:40px 0;">
+    <tr><td align="center">
+      <table width="480" cellpadding="0" cellspacing="0" style="background:#111827;border-radius:16px;overflow:hidden;border:1px solid #1e293b;">
+        <!-- Header -->
+        <tr>
+          <td align="center" style="padding:32px 40px 24px;background:#111827;border-bottom:1px solid #1e293b;">
+            <span style="font-size:28px;font-weight:800;color:#22d3ee;letter-spacing:2px;">MEDQIZE</span>
+          </td>
+        </tr>
+        <!-- Body -->
+        <tr>
+          <td align="center" style="padding:36px 40px 16px;">
+            <p style="margin:0 0 8px;font-size:18px;color:#94a3b8;">رمز التحقق الخاص بك</p>
+            <p style="margin:0 0 28px;font-size:13px;color:#475569;">أدخل الرمز أدناه للمتابعة. صالح لمدة <strong style="color:#f8fafc;">5 دقائق</strong>.</p>
+            <!-- OTP Box -->
+            <div style="background:#0b1021;border:2px solid #22d3ee;border-radius:12px;padding:24px 48px;display:inline-block;margin-bottom:28px;">
+              <span style="font-size:48px;font-weight:800;color:#22d3ee;letter-spacing:16px;">${otp}</span>
+            </div>
+            <p style="margin:0;font-size:13px;color:#475569;">إذا لم تطلب هذا الرمز، يمكنك تجاهل هذا البريد.</p>
+          </td>
+        </tr>
+        <!-- Footer -->
+        <tr>
+          <td align="center" style="padding:20px 40px 28px;border-top:1px solid #1e293b;">
+            <p style="margin:0;font-size:12px;color:#334155;">© 2026 MEDQIZE · جميع الحقوق محفوظة</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
         const text = `رمز التحقق الخاص بك هو: ${otp} — صالح لمدة 5 دقائق.`;
 
         await sendEmail(lowerEmail, subject, text, html);
@@ -4507,6 +4562,9 @@ app.use('/api/error-report', errorReportRoutes);
 
 // Question Reports Routes
 app.use('/api/question-reports', (req, res, next) => { req.db = db; next(); }, questionReportsRouter);
+
+// Email Campaign Routes (test + cron)
+app.use('/', (req, res, next) => { req.db = db; next(); }, emailCampaignsRouter);
 
 // Global Error Handling Middleware - catches all unhandled errors
 app.use(async (err, req, res, next) => {

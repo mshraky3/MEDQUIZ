@@ -11,5 +11,15 @@
             "src": "/(.*)",
             "dest": "/app.js"
         }
+    ],
+    "crons": [
+        {
+            "path": "/api/cron/welcome-emails",
+            "schedule": "0 * * * *"
+        },
+        {
+            "path": "/api/cron/daily-emails",
+            "schedule": "0 9 * * *"
+        }
     ]
 }

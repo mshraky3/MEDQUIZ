@@ -13,9 +13,11 @@ const Email = nodemailer.createTransport({
     },
 });
 
+const ADMIN_EMAIL = 'alshraky3@gmail.com';
+
 const sendEmail = async (to, subject, html) => {
     await Email.sendMail({
-        from: '"SQB" <alshrakynodeapp@gmail.com>',
+        from: '"MEDQIZE" <alshrakynodeapp@gmail.com>',
         to,
         subject,
         html,
@@ -31,11 +33,68 @@ router.post('/', async (req, res) => {
     }
 
     try {
-        await req.db.query(
+        const insertRes = await req.db.query(
             `INSERT INTO question_reports (question_id, user_id, user_email, reason)
-             VALUES ($1, $2, $3, $4)`,
+             VALUES ($1, $2, $3, $4) RETURNING id`,
             [question_id, user_id, user_email, reason || null]
         );
+        const reportId = insertRes.rows[0].id;
+
+        // Fetch question text for the notification email
+        const qRes = await req.db.query(
+            `SELECT question_text FROM questions WHERE id = $1`,
+            [question_id]
+        );
+        const questionText = qRes.rows[0]?.question_text || `Question ID: ${question_id}`;
+
+        // Notify admin
+        try {
+            await sendEmail(
+                ADMIN_EMAIL,
+                `🚩 New Question Report #${reportId}`,
+                `<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:0;background:#0b1021;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0b1021;padding:32px 0;">
+    <tr><td align="center">
+      <table width="500" cellpadding="0" cellspacing="0" style="background:#111827;border-radius:12px;overflow:hidden;border:1px solid #1e293b;">
+        <tr>
+          <td style="padding:24px 32px 20px;background:#111827;border-bottom:1px solid #1e293b;">
+            <span style="font-size:22px;font-weight:800;color:#22d3ee;">MEDQIZE</span>
+            <span style="font-size:13px;color:#64748b;margin-left:12px;">Admin Alert</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:28px 32px 12px;">
+            <p style="margin:0 0 6px;font-size:18px;color:#f8fafc;font-weight:700;">🚩 New Question Report</p>
+            <p style="margin:0 0 20px;font-size:13px;color:#64748b;">Report #${reportId} — submitted by ${user_email}</p>
+            <div style="background:#0b1021;border:1px solid #1e293b;border-radius:8px;padding:16px;margin-bottom:16px;">
+              <p style="margin:0 0 6px;font-size:11px;color:#475569;text-transform:uppercase;letter-spacing:1px;">Question</p>
+              <p style="margin:0;color:#e2e8f0;font-size:14px;">${questionText}</p>
+            </div>
+            ${reason ? `<div style="background:#0b1021;border:1px solid #1e293b;border-radius:8px;padding:16px;margin-bottom:16px;">
+              <p style="margin:0 0 6px;font-size:11px;color:#475569;text-transform:uppercase;letter-spacing:1px;">User's Reason</p>
+              <p style="margin:0;color:#e2e8f0;font-size:14px;">${reason}</p>
+            </div>` : '<p style="color:#475569;font-size:13px;font-style:italic;">No reason provided.</p>'}
+            <a href="https://medquiz-web.vercel.app/question-reports" style="display:inline-block;margin-top:8px;padding:10px 20px;background:#22d3ee;color:#0b1021;border-radius:6px;font-weight:700;text-decoration:none;font-size:13px;">Review in Admin Panel →</a>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:16px 32px 24px;border-top:1px solid #1e293b;">
+            <p style="margin:0;font-size:11px;color:#334155;">MEDQIZE · Question Reports System</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+            );
+        } catch (emailErr) {
+            console.error('[QuestionReports] Admin notification email failed:', emailErr);
+            // Don't fail the request if email fails
+        }
+
         return res.status(201).json({ success: true, message: 'Report submitted' });
     } catch (err) {
         console.error('[QuestionReports] Failed to insert report:', err);
@@ -183,7 +242,7 @@ router.put('/:id/resolve', async (req, res) => {
                     </div>
                     <p>After review, the question and its answer are confirmed to be correct. We appreciate you taking the time to help maintain quality.</p>
                     ${admin_note ? `<p style="color:#64748b;font-size:13px;">Admin note: ${admin_note}</p>` : ''}
-                    <p style="color:#94a3b8;font-size:12px;margin-top:24px;">— The SQB Team</p>
+                    <p style="color:#94a3b8;font-size:12px;margin-top:24px;">— The MEDQIZE Team</p>
                 </div>
                 `
             );
