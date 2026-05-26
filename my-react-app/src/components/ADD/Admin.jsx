@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './Admin.css';
 import AdminNavbar from './AdminNavbar.jsx';
+import Globals from '../../global.js';
 
-const API = import.meta.env.VITE_API;
+const API = Globals.URL;
 
 // Simple animated number component
 const AnimatedNumber = ({ value, suffix = '', prefix = '' }) => {
@@ -608,7 +609,7 @@ const Admin = () => {
 
         {/* Charts Section */}
         <div className="charts-section">
-          {/* Login Activity Chart */}
+          {/* Login Activity Chart - full width */}
           <div className="chart-card wide">
             <div className="chart-header">
               <h3>📊 Login Activity (Last 14 Days)</h3>
@@ -622,7 +623,7 @@ const Admin = () => {
             />
           </div>
 
-          {/* Growth Charts */}
+          {/* Growth Charts - side by side */}
           <div className="chart-card">
             <div className="chart-header">
               <h3>👥 User Growth (8 Weeks)</h3>
@@ -649,7 +650,7 @@ const Admin = () => {
             />
           </div>
 
-          {/* Device & Browser Distribution */}
+          {/* Device & Browser Distribution - side by side */}
           <div className="chart-card">
             <div className="chart-header">
               <h3>📱 Device Distribution</h3>
@@ -675,7 +676,7 @@ const Admin = () => {
             />
           </div>
 
-          {/* Hourly Activity Heatmap */}
+          {/* Hourly Activity Heatmap - full width */}
           <div className="chart-card wide">
             <div className="chart-header">
               <h3>🕐 Activity by Hour (30 Days)</h3>
@@ -686,8 +687,8 @@ const Admin = () => {
             />
           </div>
 
-          {/* Topic Performance */}
-          <div className="chart-card wide">
+          {/* Topic Performance - side by side with Accuracy */}
+          <div className="chart-card">
             <div className="chart-header">
               <h3>📚 Questions by Topic</h3>
             </div>

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import AdminNavbar from './AdminNavbar.jsx';
+import Globals from '../../global.js';
 
-const API = import.meta.env.VITE_API;
+const API = Globals.URL;
 
 const STATUS_LABELS = {
     pending: { label: 'Pending', color: '#f59e0b' },
@@ -23,8 +24,10 @@ const QuestionReports = () => {
             setError(null);
             const res = await axios.get(`${API}/api/question-reports`);
             setReports(res.data.reports || []);
-        } catch {
-            setError('Failed to load reports.');
+        } catch (err) {
+            const msg = err?.response?.data?.message || err?.message || 'Unknown error';
+            setError(`Failed to load reports: ${msg}`);
+            console.error('[QuestionReports] fetch error:', err);
         } finally {
             setLoading(false);
         }
@@ -73,7 +76,15 @@ const QuestionReports = () => {
                 </p>
 
                 {loading && <p style={{ color: '#94a3b8' }}>Loading...</p>}
-                {error && <p style={{ color: '#f87171' }}>{error}</p>}
+                {error && (
+                    <div style={{ background: '#1a0000', border: '1px solid #7f1d1d', borderRadius: 8, padding: 16, marginBottom: 24 }}>
+                        <p style={{ color: '#f87171', margin: '0 0 8px 0' }}>{error}</p>
+                        <p style={{ color: '#64748b', fontSize: 12, margin: '0 0 12px 0' }}>API: {API || '⚠️ VITE_API not set'}</p>
+                        <button onClick={fetchReports} style={{ background: '#7f1d1d', color: '#fca5a5', border: 'none', borderRadius: 6, padding: '6px 14px', cursor: 'pointer' }}>
+                            Retry
+                        </button>
+                    </div>
+                )}
 
                 {!loading && !error && (
                     <>

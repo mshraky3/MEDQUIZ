@@ -1140,10 +1140,10 @@
   border: 3px solid rgba(34, 211, 238, 0.2);
   border-top-color: #22d3ee;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  animation: spin-loader 1s linear infinite;
 }
 
-@keyframes spin {
+@keyframes spin-loader {
   to {
     transform: rotate(360deg);
   }
@@ -1386,7 +1386,7 @@
 /* Charts Section */
 .charts-section {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 1.25rem;
   margin-bottom: 1.5rem;
   position: relative;
@@ -1921,14 +1921,6 @@
   .stats-grid-secondary {
     grid-template-columns: repeat(3, 1fr);
   }
-
-  .charts-section {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .chart-card.wide {
-    grid-column: span 2;
-  }
 }
 
 @media (max-width: 1024px) {
@@ -1942,14 +1934,6 @@
 
   .stats-grid-secondary {
     grid-template-columns: repeat(3, 1fr);
-  }
-
-  .charts-section {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .chart-card.wide {
-    grid-column: span 2;
   }
 
   .tables-section {
