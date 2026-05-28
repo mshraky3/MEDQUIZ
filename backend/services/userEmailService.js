@@ -6,24 +6,24 @@
 import nodemailer from 'nodemailer';
 
 const Email = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
-    tls: true,
-    auth: {
-        user: 'alshrakynodeapp@gmail.com',
-        pass: 'ssjpnctdsyqxylxd',
-    },
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false,
+  tls: true,
+  auth: {
+    user: 'alshrakynodeapp@gmail.com',
+    pass: 'ssjpnctdsyqxylxd',
+  },
 });
 
 const sendEmail = async (to, subject, html, text) => {
-    await Email.sendMail({
-        from: '"SQB" <alshrakynodeapp@gmail.com>',
-        to,
-        subject,
-        text: text || '',
-        html,
-    });
+  await Email.sendMail({
+    from: '"SQB" <alshrakynodeapp@gmail.com>',
+    to,
+    subject,
+    text: text || '',
+    html,
+  });
 };
 
 // ─── Shared layout wrapper ─────────────────────────────────────────────────
@@ -58,7 +58,7 @@ const wrapLayout = (bodyContent) => `<!DOCTYPE html>
 
 // ─── 1. WELCOME EMAIL ──────────────────────────────────────────────────────
 export const sendWelcomeEmail = async (to, username) => {
-    const html = wrapLayout(`
+  const html = wrapLayout(`
         <tr>
           <td align="center" style="padding:36px 40px 32px;">
             <div style="font-size:48px;margin-bottom:16px;">🎉</div>
@@ -89,16 +89,16 @@ export const sendWelcomeEmail = async (to, username) => {
           </td>
         </tr>
     `);
-    await sendEmail(to, '🎉 أهلًا بك في SQB!', html, `أهلًا يا ${username}! يسعدنا انضمامك إلى SQB.`);
+  await sendEmail(to, '🎉 أهلًا بك في SQB!', html, `أهلًا يا ${username}! يسعدنا انضمامك إلى SQB.`);
 };
 
 // ─── 2. INACTIVITY EMAIL ───────────────────────────────────────────────────
 const MOTIVATIONAL_QUOTES = [
-    { text: 'النجاح ليس صدفة، بل هو تعب واجتهاد مستمر', attr: '' },
+  { text: 'النجاح ليس صدفة، بل هو تعب واجتهاد مستمر', attr: '' },
 ];
 
 export const sendInactivityEmail = async (to, username) => {
-    const quotesHtml = MOTIVATIONAL_QUOTES.map(q => `
+  const quotesHtml = MOTIVATIONAL_QUOTES.map(q => `
         <tr>
           <td style="padding:6px 0;">
             <div style="background:#0b1021;border-right:3px solid #22d3ee;border-radius:8px;padding:14px 18px;">
@@ -109,7 +109,7 @@ export const sendInactivityEmail = async (to, username) => {
         </tr>
     `).join('');
 
-    const html = wrapLayout(`
+  const html = wrapLayout(`
         <tr>
           <td align="center" style="padding:36px 40px 32px;">
             <div style="font-size:48px;margin-bottom:16px;">📚</div>
@@ -141,12 +141,12 @@ export const sendInactivityEmail = async (to, username) => {
           </td>
         </tr>
     `);
-    await sendEmail(to, '📚 نفتقدك! الاختبار ينتظرك', html, `نفتقدك يا ${username}! عُد إلى SQB وأكمل مراجعتك.`);
+  await sendEmail(to, '📚 نفتقدك! الاختبار ينتظرك', html, `نفتقدك يا ${username}! عُد إلى SQB وأكمل مراجعتك.`);
 };
 
 // ─── 3. STREAK REMINDER EMAIL ──────────────────────────────────────────────
 export const sendStreakReminderEmail = async (to, username, currentStreak) => {
-    const html = wrapLayout(`
+  const html = wrapLayout(`
         <tr>
           <td align="center" style="padding:36px 40px 32px;">
             <div style="font-size:48px;margin-bottom:16px;">🔥</div>
@@ -181,17 +181,17 @@ export const sendStreakReminderEmail = async (to, username, currentStreak) => {
           </td>
         </tr>
     `);
-    await sendEmail(
-        to,
-        `🔥 لا تكسر سلسلتك! ${currentStreak} أيام متتالية`,
-        html,
-        `سلسلتك ${currentStreak} أيام في خطر يا ${username}! أكمل جلستك اليوم على SQB.`
-    );
+  await sendEmail(
+    to,
+    `🔥 لا تكسر سلسلتك! ${currentStreak} أيام متتالية`,
+    html,
+    `سلسلتك ${currentStreak} أيام في خطر يا ${username}! أكمل جلستك اليوم على SQB.`
+  );
 };
 
 // ─── 4. FEEDBACK EMAIL ─────────────────────────────────────────────────────
 export const sendFeedbackEmail = async (to, username) => {
-    const html = wrapLayout(`
+  const html = wrapLayout(`
         <tr>
           <td align="center" style="padding:36px 40px 32px;">
             <div style="font-size:48px;margin-bottom:16px;">💬</div>
@@ -221,5 +221,5 @@ export const sendFeedbackEmail = async (to, username) => {
           </td>
         </tr>
     `);
-    await sendEmail(to, '💬 رأيك يهمّنا — SQB', html, `يا ${username}، رأيك يساعدنا على تحسين منصتنا. شاركنا اقتراحاتك!`);
+  await sendEmail(to, '💬 رأيك يهمّنا — SQB', html, `يا ${username}، رأيك يساعدنا على تحسين منصتنا. شاركنا اقتراحاتك!`);
 };

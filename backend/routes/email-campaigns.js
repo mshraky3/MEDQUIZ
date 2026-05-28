@@ -87,7 +87,7 @@ router.get('/api/email-test/feedback', async (req, res) => {
  * and a verified email. Sends welcome email and marks as sent.
  * Schedule: every hour  (0 * * * *)
  */
-router.post('/api/cron/welcome-emails', cronAuth, async (req, res) => {
+router.get('/api/cron/welcome-emails', cronAuth, async (req, res) => {
     const db = req.db;
     try {
         const { rows } = await db.query(`
@@ -131,7 +131,7 @@ router.post('/api/cron/welcome-emails', cronAuth, async (req, res) => {
  *   3. Feedback requests     — account 7+ days old, never sent
  * Schedule: daily at 9 AM  (0 9 * * *)
  */
-router.post('/api/cron/daily-emails', cronAuth, async (req, res) => {
+router.get('/api/cron/daily-emails', cronAuth, async (req, res) => {
     const db = req.db;
     const results = { inactivity: 0, streak: 0, feedback: 0, errors: [] };
 
@@ -171,7 +171,7 @@ router.post('/api/cron/daily-emails', cronAuth, async (req, res) => {
             SELECT a.id, a.username, a.email, us.current_streak
             FROM accounts a
             JOIN user_streaks us ON us.user_id = a.id
-            WHERE us.last_active_date = CURRENT_DATE - INTERVAL '1 day'
+            WHERE us.last_active_date::date = CURRENT_DATE - 1
               AND us.current_streak > 2
               AND a.email IS NOT NULL
               AND a.email_verified = TRUE

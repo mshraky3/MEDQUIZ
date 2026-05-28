@@ -382,7 +382,16 @@ const ensureEmailCampaignColumns = async () => {
                 ADD COLUMN IF NOT EXISTS welcome_email_sent BOOLEAN DEFAULT FALSE,
                 ADD COLUMN IF NOT EXISTS welcome_email_sent_at TIMESTAMP,
                 ADD COLUMN IF NOT EXISTS inactivity_email_sent_at TIMESTAMP,
-                ADD COLUMN IF NOT EXISTS feedback_email_sent_at TIMESTAMP
+                ADD COLUMN IF NOT EXISTS feedback_email_sent_at TIMESTAMP,
+                ADD COLUMN IF NOT EXISTS email_grace_logins INT DEFAULT 0
+        `);
+        // Mark all pre-existing accounts (older than 24 hours) as already welcomed
+        // so they don't receive a welcome email on the first cron run.
+        await db.query(`
+            UPDATE accounts
+            SET welcome_email_sent = TRUE
+            WHERE welcome_email_sent = FALSE
+              AND created_at < NOW() - INTERVAL '24 hours'
         `);
         logger.info('Email campaign columns ensured');
     } catch (err) {
@@ -580,6 +589,29 @@ app.post('/login', async (req, res) => {
             });
         }
 
+        // Grace login enforcement for users without a verified email
+        if (!userRow.email_verified) {
+            const graceCount = userRow.email_grace_logins || 0;
+            if (graceCount >= 3) {
+                // All 3 chances used — delete account and related data
+                await client.query('DELETE FROM login_history WHERE user_id = $1', [userRow.id]);
+                await client.query('DELETE FROM user_question_attempts WHERE user_id = $1', [userRow.id]);
+                await client.query('DELETE FROM user_quiz_sessions WHERE user_id = $1', [userRow.id]);
+                await client.query('DELETE FROM user_topic_analysis WHERE user_id = $1', [userRow.id]);
+                await client.query('DELETE FROM user_streaks WHERE user_id = $1', [userRow.id]);
+                await client.query('DELETE FROM user_analysis WHERE user_id = $1', [userRow.id]);
+                await client.query('DELETE FROM user_question_progress WHERE user_id = $1', [userRow.id]);
+                await client.query('DELETE FROM accounts WHERE id = $1', [userRow.id]);
+                await client.query('COMMIT');
+                client.release();
+                logger.warn(`Account deleted due to no email after 3 grace logins: ${lowercaseUsername}`);
+                return res.status(403).json({
+                    message: 'تم حذف حسابك لعدم إضافة بريد إلكتروني. يمكنك إنشاء حساب جديد.',
+                    accountDeleted: true
+                });
+            }
+        }
+
         // Session timeout logic
         let now = new Date();
         if (userRow.logged) {
@@ -597,8 +629,14 @@ app.post('/login', async (req, res) => {
         // Generate a session token
         const sessionToken = crypto.randomBytes(24).toString('hex');
 
-        // Update login state and store session token
-        await client.query("UPDATE accounts SET logged = $1, logged_date = $2, session_token = $3 WHERE id = $4", [true, now, sessionToken, userRow.id]);
+        // Update login state and store session token; increment grace counter for unverified users
+        const newGraceCount = (!userRow.email_verified)
+            ? (userRow.email_grace_logins || 0) + 1
+            : (userRow.email_grace_logins || 0);
+        await client.query(
+            "UPDATE accounts SET logged = $1, logged_date = $2, session_token = $3, email_grace_logins = $4 WHERE id = $5",
+            [true, now, sessionToken, newGraceCount, userRow.id]
+        );
         logger.debug(`Set logged=true and session_token for username: ${lowercaseUsername}`);
 
         // Detect suspicious activity
@@ -634,7 +672,8 @@ app.post('/login', async (req, res) => {
             user: updatedUser,
             sessionToken,
             showTerms: !userRow.terms_accepted,
-            showEmailMigrationNotice: !userRow.email_verified
+            showEmailMigrationNotice: !userRow.email_verified,
+            graceLoginsUsed: !userRow.email_verified ? newGraceCount : 0
         });
 
     } catch (error) {
