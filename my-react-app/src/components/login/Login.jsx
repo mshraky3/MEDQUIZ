@@ -26,6 +26,7 @@ const Login = () => {
   const [migrationLoading, setMigrationLoading] = useState(false);
   const [migrationError, setMigrationError] = useState('');
   const [migrationUsername, setMigrationUsername] = useState('');
+  const [graceLoginsUsed, setGraceLoginsUsed] = useState(0);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -166,6 +167,7 @@ const Login = () => {
           setMigrationEmail(loggedUser.email || '');
           setMigrationStep('notify');
           setMigrationError('');
+          setGraceLoginsUsed(response.data.graceLoginsUsed || 0);
           setShowMigrationPopup(true);
           setLoading(false);
           return;
@@ -177,7 +179,9 @@ const Login = () => {
       .catch((err) => {
         const newAttempts = failedAttempts + 1;
         setFailedAttempts(newAttempts);
-        if (err.response && err.response.data && err.response.data.alreadyLogged) {
+        if (err.response?.data?.accountDeleted) {
+          setError('تم حذف حسابك لعدم إضافة بريد إلكتروني بعد 3 محاولات. يمكنك إنشاء حساب جديد.');
+        } else if (err.response && err.response.data && err.response.data.alreadyLogged) {
           setError(copy.accountInUseError);
         } else {
           if (newAttempts >= 10) {
@@ -401,91 +405,107 @@ const Login = () => {
         )}
 
         {/* Email Migration Popup */}
-        {showMigrationPopup && (
-          <div className="popup-overlay" style={{ zIndex: 1100 }}>
-            <div className="popup-content large-popup" style={{ maxWidth: 420 }}>
-              {migrationStep === 'notify' ? (
-                <>
-                  <h3 style={{ color: '#6366f1', marginBottom: 12 }}>📢 تحديث مهم</h3>
-                  <p style={{ marginBottom: 16, lineHeight: 1.7 }}>
-                    من الآن سيكون تسجيل الدخول عبر <strong>البريد الإلكتروني</strong> بدلاً من اسم المستخدم.
-                    يرجى تأكيد بريدك الإلكتروني لاستكمال التحديث.
-                  </p>
-                  <div style={{ marginBottom: 12 }}>
-                    <label style={{ display: 'block', marginBottom: 6, color: '#94a3b8', fontSize: 14 }}>البريد الإلكتروني</label>
+        {showMigrationPopup && (() => {
+          const graceLeft = 3 - graceLoginsUsed;
+          const isLastChance = graceLeft <= 0;
+          const warningColor = graceLeft <= 1 ? '#ef4444' : graceLeft === 2 ? '#f97316' : '#6366f1';
+          const warningText = isLastChance
+            ? '⛔ هذه آخر فرصة! لن تتمكن من الدخول مرة أخرى بدون بريد إلكتروني.'
+            : graceLeft === 1
+              ? `⚠️ تحذير: لديك محاولة دخول واحدة فقط متبقية قبل حذف حسابك نهائياً.`
+              : `ℹ️ لديك ${graceLeft} محاولات دخول متبقية قبل حذف حسابك.`;
+          return (
+            <div className="popup-overlay" style={{ zIndex: 1100 }}>
+              <div className="popup-content large-popup" style={{ maxWidth: 420 }}>
+                {migrationStep === 'notify' ? (
+                  <>
+                    <h3 style={{ color: warningColor, marginBottom: 12 }}>📧 أضف بريدك الإلكتروني</h3>
+                    <div style={{ background: isLastChance ? '#450a0a' : graceLeft === 1 ? '#431407' : '#1e1b4b', border: `1px solid ${warningColor}`, borderRadius: 10, padding: '12px 16px', marginBottom: 16, color: warningColor, fontSize: 14, lineHeight: 1.7 }}>
+                      {warningText}
+                    </div>
+                    <p style={{ marginBottom: 16, lineHeight: 1.7, color: '#94a3b8', fontSize: 14 }}>
+                      أضف بريدك الإلكتروني الآن لتأمين حسابك والاستفادة من جميع ميزات المنصة.
+                    </p>
+                    <div style={{ marginBottom: 12 }}>
+                      <label style={{ display: 'block', marginBottom: 6, color: '#94a3b8', fontSize: 14 }}>البريد الإلكتروني</label>
+                      <input
+                        type="email"
+                        className="form-input"
+                        value={migrationEmail}
+                        onChange={(e) => setMigrationEmail(e.target.value)}
+                        placeholder="أدخل بريدك الإلكتروني"
+                        style={{ marginBottom: 0 }}
+                      />
+                    </div>
+                    {migrationError && <div className="alert-box error" style={{ marginBottom: 12 }}>{migrationError}</div>}
+                    <div className="popup-buttons" style={{ flexDirection: 'column', gap: 8 }}>
+                      <button
+                        className="popup-btn try-free"
+                        onClick={handleSendMigrationOtp}
+                        disabled={migrationLoading}
+                      >
+                        {migrationLoading ? 'جاري الإرسال...' : 'إرسال رمز التحقق'}
+                      </button>
+                      {!isLastChance && (
+                        <button
+                          className="popup-btn no-thanks"
+                          onClick={() => { setShowMigrationPopup(false); navigate('/quizs'); }}
+                          disabled={migrationLoading}
+                        >
+                          تخطى الآن
+                        </button>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <h3 style={{ color: '#6366f1', marginBottom: 12 }}>تأكيد البريد الإلكتروني</h3>
+                    <p style={{ marginBottom: 16, color: '#94a3b8' }}>
+                      أدخل الرمز المرسل إلى {migrationEmail}
+                    </p>
                     <input
-                      type="email"
+                      type="text"
                       className="form-input"
-                      value={migrationEmail}
-                      onChange={(e) => setMigrationEmail(e.target.value)}
-                      placeholder="أدخل بريدك الإلكتروني"
-                      style={{ marginBottom: 0 }}
+                      value={migrationOtp}
+                      onChange={(e) => setMigrationOtp(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                      placeholder="0000"
+                      maxLength={4}
+                      inputMode="numeric"
+                      style={{ textAlign: 'center', fontSize: '28px', letterSpacing: '10px', marginBottom: 12 }}
                     />
-                  </div>
-                  {migrationError && <div className="alert-box error" style={{ marginBottom: 12 }}>{migrationError}</div>}
-                  <div className="popup-buttons" style={{ flexDirection: 'column', gap: 8 }}>
-                    <button
-                      className="popup-btn try-free"
-                      onClick={handleSendMigrationOtp}
-                      disabled={migrationLoading}
-                    >
-                      {migrationLoading ? 'جاري الإرسال...' : 'إرسال رمز التحقق'}
-                    </button>
-                    <button
-                      className="popup-btn no-thanks"
-                      onClick={() => { setShowMigrationPopup(false); navigate('/quizs'); }}
-                      disabled={migrationLoading}
-                    >
-                      تخطى الآن
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <h3 style={{ color: '#6366f1', marginBottom: 12 }}>تأكيد البريد الإلكتروني</h3>
-                  <p style={{ marginBottom: 16, color: '#94a3b8' }}>
-                    أدخل الرمز المرسل إلى {migrationEmail}
-                  </p>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={migrationOtp}
-                    onChange={(e) => setMigrationOtp(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                    placeholder="0000"
-                    maxLength={4}
-                    inputMode="numeric"
-                    style={{ textAlign: 'center', fontSize: '28px', letterSpacing: '10px', marginBottom: 12 }}
-                  />
-                  {migrationError && <div className="alert-box error" style={{ marginBottom: 12 }}>{migrationError}</div>}
-                  <div className="popup-buttons" style={{ flexDirection: 'column', gap: 8 }}>
-                    <button
-                      className="popup-btn try-free"
-                      onClick={handleVerifyMigrationOtp}
-                      disabled={migrationLoading}
-                    >
-                      {migrationLoading ? 'جاري التحقق...' : 'تأكيد'}
-                    </button>
-                    <button
-                      className="popup-btn no-thanks"
-                      onClick={() => { setMigrationStep('notify'); setMigrationOtp(''); setMigrationError(''); }}
-                      disabled={migrationLoading}
-                    >
-                      ← رجوع
-                    </button>
-                    <button
-                      className="popup-btn no-thanks"
-                      onClick={() => { setShowMigrationPopup(false); navigate('/quizs'); }}
-                      disabled={migrationLoading}
-                      style={{ color: '#64748b' }}
-                    >
-                      تخطى الآن
-                    </button>
-                  </div>
-                </>
-              )}
+                    {migrationError && <div className="alert-box error" style={{ marginBottom: 12 }}>{migrationError}</div>}
+                    <div className="popup-buttons" style={{ flexDirection: 'column', gap: 8 }}>
+                      <button
+                        className="popup-btn try-free"
+                        onClick={handleVerifyMigrationOtp}
+                        disabled={migrationLoading}
+                      >
+                        {migrationLoading ? 'جاري التحقق...' : 'تأكيد'}
+                      </button>
+                      <button
+                        className="popup-btn no-thanks"
+                        onClick={() => { setMigrationStep('notify'); setMigrationOtp(''); setMigrationError(''); }}
+                        disabled={migrationLoading}
+                      >
+                        ← رجوع
+                      </button>
+                      {!isLastChance && (
+                        <button
+                          className="popup-btn no-thanks"
+                          onClick={() => { setShowMigrationPopup(false); navigate('/quizs'); }}
+                          disabled={migrationLoading}
+                          style={{ color: '#64748b' }}
+                        >
+                          تخطى الآن
+                        </button>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Subscription Expired Popup */}
         {showPopup && (
