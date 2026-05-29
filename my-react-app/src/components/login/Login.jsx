@@ -326,6 +326,10 @@ const Login = () => {
                 </div>
               </div>
 
+              <div style={{ textAlign: 'left', marginBottom: 8 }}>
+                <a href="/forgot-password" className="link-primary" style={{ fontSize: 13 }}>نسيت كلمة المرور؟</a>
+              </div>
+
               {error && (
                 <div className="alert-box error">
                   {error}

@@ -29,6 +29,7 @@ import SmleVsPrometricGuide from './components/guides/SmleVsPrometricGuide.jsx';
 import SmleHighYieldTopicsGuide from './components/guides/SmleHighYieldTopicsGuide.jsx';
 import TempLinks from './components/ADD/TempLinks.jsx';
 import QuestionReports from './components/ADD/QuestionReports.jsx';
+import ForgotPassword from './components/login/ForgotPassword';
 
 import Globals from './global.js';
 import { UserProvider } from './UserContext.jsx';
@@ -109,6 +110,11 @@ const router = createBrowserRouter([
   {
     path: "/signup/:token",
     element: <Layout><Signup /></Layout>,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/forgot-password",
+    element: <Layout><ForgotPassword /></Layout>,
     errorElement: <ErrorBoundary />,
   },
   {
