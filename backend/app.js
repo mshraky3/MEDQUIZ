@@ -3786,6 +3786,17 @@ app.post('/api/auth/send-otp', async (req, res) => {
             }
         }
 
+        // For reset: email must belong to an existing account
+        if (purpose === 'reset') {
+            const existing = await db.query(
+                'SELECT id FROM accounts WHERE email = $1',
+                [lowerEmail]
+            );
+            if (existing.rows.length === 0) {
+                return res.status(404).json({ success: false, message: 'No account found with this email address' });
+            }
+        }
+
         // Invalidate previous unused OTPs for this email
         await db.query(
             'UPDATE signup_otps SET used = TRUE WHERE email = $1 AND used = FALSE',
@@ -3899,6 +3910,54 @@ app.post('/api/auth/verify-migration-otp', async (req, res) => {
     } catch (err) {
         logger.error('Error verifying migration OTP', err);
         return res.status(500).json({ success: false, message: 'Failed to verify OTP' });
+    }
+});
+
+// ============================================
+// AUTH — RESET PASSWORD
+// ============================================
+app.post('/api/auth/reset-password', async (req, res) => {
+    try {
+        const { email, otp_code, new_password } = req.body;
+
+        if (!email || !otp_code || !new_password) {
+            return res.status(400).json({ success: false, message: 'Email, OTP, and new password are required' });
+        }
+
+        if (new_password.length < 8) {
+            return res.status(400).json({ success: false, message: 'Password must be at least 8 characters' });
+        }
+
+        const lowerEmail = email.toLowerCase().trim();
+        const lowerPassword = new_password.toLowerCase();
+
+        // Verify OTP
+        const otpResult = await db.query(
+            `SELECT id FROM signup_otps
+             WHERE email = $1 AND otp_code = $2 AND used = FALSE AND expires_at > NOW()
+             ORDER BY created_at DESC LIMIT 1`,
+            [lowerEmail, otp_code]
+        );
+
+        if (otpResult.rows.length === 0) {
+            return res.status(400).json({ success: false, message: 'Invalid or expired code' });
+        }
+
+        // Mark OTP used
+        await db.query('UPDATE signup_otps SET used = TRUE WHERE id = $1', [otpResult.rows[0].id]);
+
+        // Update password
+        await db.query(
+            'UPDATE accounts SET password = $1 WHERE email = $2',
+            [lowerPassword, lowerEmail]
+        );
+
+        logger.info('Password reset successful', { email: lowerEmail });
+        return res.status(200).json({ success: true, message: 'Password reset successfully' });
+
+    } catch (err) {
+        logger.error('Error resetting password', err);
+        return res.status(500).json({ success: false, message: 'Failed to reset password' });
     }
 });
 
