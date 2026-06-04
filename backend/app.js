@@ -9,6 +9,7 @@ import nodemailer from 'nodemailer';
 import errorReportRoutes from './routes/error-report.js';
 import questionReportsRouter from './routes/question-reports.js';
 import emailCampaignsRouter from './routes/email-campaigns.js';
+import paymentRoutes from './routes/payment.js';
 import { notifyBackendError } from './services/errorNotificationService.js';
 
 dotenv.config();
@@ -55,7 +56,27 @@ const db = new Pool({
     maxUses: 7500, // Close (and replace) a connection after it has been used 7500 times
 });
 
-// Email configuration 
+// Lazily detect whether the payment/subscription columns from migration 001
+// exist yet. This lets the new payment-prep code deploy SAFELY before the
+// migration is applied — queries fall back to legacy behavior until then.
+// Result is memoized for the lifetime of the process (re-checked on failure).
+let _paymentColumnsExist = null;
+async function hasPaymentColumns() {
+    if (_paymentColumnsExist === true) return true;
+    try {
+        const r = await db.query(
+            `SELECT column_name FROM information_schema.columns
+             WHERE table_name = 'accounts'
+               AND column_name IN ('subscription_status', 'is_admin_created', 'account_type')`
+        );
+        _paymentColumnsExist = r.rows.length === 3;
+    } catch (e) {
+        _paymentColumnsExist = false;
+    }
+    return _paymentColumnsExist;
+}
+
+// Email configuration
 const Email = nodemailer.createTransport({
     host: "smtp.gmail.com",
     port: 587,
@@ -2744,14 +2765,25 @@ app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
 
-// Get user account status (accounts are now free, no subscription needed)
+// Get user account/subscription status.
+// FUTURE SUBSCRIPTION CHECK POINT: when PAYMENT_ENFORCEMENT_ENABLED=true this
+// endpoint will surface real subscription state (status, expiry, days remaining).
+// While the flag is disabled, all accounts are treated as free with full access.
 app.get('/api/user-subscription/:userId', async (req, res) => {
     const { userId } = req.params;
 
     try {
+        // Select subscription columns only if migration 001 has been applied;
+        // otherwise fall back to the legacy column set.
+        const columnsReady = await hasPaymentColumns();
+        const selectCols = columnsReady
+            ? `id, username, email, isactive,
+               subscription_status, subscription_expiry_date,
+               account_type, is_admin_created`
+            : `id, username, email, isactive`;
+
         const result = await db.query(
-            `SELECT id, username, email, isactive, signup_method 
-       FROM accounts WHERE id = $1`,
+            `SELECT ${selectCols} FROM accounts WHERE id = $1`,
             [userId]
         );
 
@@ -2760,13 +2792,24 @@ app.get('/api/user-subscription/:userId', async (req, res) => {
         }
 
         const user = result.rows[0];
+        // Enforcement only possible once both the flag is on AND columns exist.
+        const enforcementEnabled = columnsReady && process.env.PAYMENT_ENFORCEMENT_ENABLED === 'true';
 
-        // Accounts are free - no subscription expiration
+        // Enforcement disabled => everyone is free with unlimited access.
+        let daysRemaining = null;
+        if (enforcementEnabled && user.subscription_expiry_date) {
+            const ms = new Date(user.subscription_expiry_date).getTime() - Date.now();
+            daysRemaining = Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
+        }
+
         res.json({
+            enforcement: enforcementEnabled,
             user: {
                 ...user,
                 isactive: user.isactive,
-                daysRemaining: null // Free accounts don't expire
+                // While enforcement is off, report free access regardless of stored status.
+                subscription_status: enforcementEnabled ? user.subscription_status : 'free',
+                daysRemaining
             }
         });
     } catch (error) {
@@ -2916,273 +2959,11 @@ app.post('/accept-terms', async (req, res) => {
 
 // Note: Migration endpoint removed - using accounts table only
 
-// ===== PAYMENT WORKFLOW ENDPOINTS =====
-// Payment endpoints removed - accounts are now free
-
-// Payment endpoints removed - accounts are now free
-/*
-app.post('/api/payment/confirm', async (req, res) => {
-    console.log('🔧 [Backend] Manual payment confirmation request received');
-    try {
-        const { userId } = req.body;
-        console.log('🔍 [Backend] User ID for manual confirmation:', userId);
-        
-        if (!userId) {
-            console.log('❌ [Backend] No user ID provided for manual confirmation');
-            return res.status(400).json({ 
-                success: false, 
-                message: 'User ID is required' 
-            });
-        }
-
-        const client = await db.connect();
-        try {
-            // Check if user exists
-            console.log('📊 [Backend] Checking if user exists in database...');
-            const userCheck = await client.query(
-                'SELECT username, password FROM accounts WHERE id = $1',
-                [userId]
-            );
-            
-            if (userCheck.rows.length === 0) {
-                console.log('❌ [Backend] User not found for manual confirmation:', userId);
-                return res.status(404).json({ 
-                    success: false, 
-                    message: 'User not found' 
-                });
-            }
-            
-            const currentUser = userCheck.rows[0];
-            console.log('📋 [Backend] Current user:', currentUser.username);
-            
-            // Update user to mark as paid (change password to 'paid' to indicate payment status)
-            console.log('💳 [Backend] Updating user to mark as paid...');
-            await client.query(
-                'UPDATE accounts SET password = $1, isactive = $2 WHERE id = $3',
-                ['paid', true, userId]
-            );
-            
-            // Send email notification for payment confirmation
-            try {
-                const emailSubject = `💰 Payment Confirmed - User ID: ${userId}`;
-                const emailText = `
-Payment has been confirmed:
-
-User ID: ${userId}
-Username: ${currentUser.username}
-Payment Amount: $1.00 USD (3.75 SAR)
-Confirmed: ${new Date().toLocaleString()}
-Status: Payment confirmed, user can now complete account setup
-
-The user can now proceed to the signup page to create their account.
-                `;
-                
-                const emailHtml = `
-                    <h2>💰 Payment Confirmed</h2>
-                    <p><strong>User ID:</strong> ${userId}</p>
-                    <p><strong>Username:</strong> ${currentUser.username}</p>
-                    <p><strong>Payment Amount:</strong> $1.00 USD (3.75 SAR)</p>
-                    <p><strong>Confirmed:</strong> ${new Date().toLocaleString()}</p>
-                    <p><strong>Status:</strong> Payment confirmed, user can now complete account setup</p>
-                    <p>The user can now proceed to the signup page to create their account.</p>
-                `;
-
-                await sendEmail('muhmodalshraky3@gmail.com', emailSubject, emailText, emailHtml);
-                console.log('📧 Payment confirmation email sent for user:', userId);
-            } catch (emailError) {
-                console.error('❌ Failed to send payment confirmation email:', emailError);
-                // Don't fail the payment confirmation if email fails
-            }
-            
-            console.log(`✅ [Backend] Manual payment confirmation successful for user: ${userId}`);
-            res.status(200).json({ 
-                success: true, 
-                message: 'Payment confirmed successfully' 
-            });
-        } finally {
-            client.release();
-        }
-    } catch (error) {
-        console.error('❌ [Backend] Error during manual payment confirmation:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to confirm payment' 
-        });
-    }
-});
-
-// Payment endpoints removed - accounts are now free
-/*
-// Create user record after payment (before account setup)
-app.post('/api/payment/create-user', async (req, res) => {
-    try {
-        const { userId, paymentDetails } = req.body;
-        
-        if (!userId || !paymentDetails) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'User ID and payment details are required' 
-            });
-        }
-
-        const client = await db.connect();
-        try {
-            // Check if user already exists
-            const existingUser = await client.query(
-                'SELECT id FROM accounts WHERE id = $1',
-                [userId]
-            );
-            
-            if (existingUser.rows.length > 0) {
-                return res.status(400).json({ 
-                    success: false, 
-                    message: 'User already exists' 
-                });
-            }
-
-            // Create user record with 'paid' status
-            // isactive: true (paid users get active accounts)
-            // logged: false (not logged in yet)
-            // terms_accepted: false (must accept terms on first login)
-            await client.query(
-                'INSERT INTO accounts (id, username, password, isactive, logged, terms_accepted) VALUES ($1, $2, $3, $4, $5, $6)',
-                [userId, `temp_${userId}`, 'paid', true, false, false]
-            );
-            
-            console.log(`✅ User record created for payment: ${userId}`);
-            res.status(200).json({ 
-                success: true, 
-                message: 'User record created successfully',
-                userId: userId
-            });
-        } finally {
-            client.release();
-        }
-    } catch (error) {
-        console.error('Error creating user record:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to create user record' 
-        });
-    }
-});
-
-// Create account for paid user
-app.post('/api/payment/create-account', async (req, res) => {
-    try {
-        const { userId, username, password } = req.body;
-        
-        if (!userId || !username || !password) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'All fields are required' 
-            });
-        }
-
-        // Convert to lowercase
-        const lowercaseUsername = username.toLowerCase();
-        const lowercasePassword = password.toLowerCase();
-
-        const client = await db.connect();
-        try {
-            // Check if user exists and payment is confirmed
-            const userCheck = await client.query(
-                'SELECT username, password FROM accounts WHERE id = $1',
-                [userId]
-            );
-            
-            if (userCheck.rows.length === 0) {
-                return res.status(404).json({ 
-                    success: false, 
-                    message: 'User not found' 
-                });
-            }
-            
-            if (userCheck.rows[0].password !== 'paid') {
-                return res.status(400).json({ 
-                    success: false, 
-                    message: 'Payment not confirmed' 
-                });
-            }
-
-            // Check if username already exists
-            const existingUser = await client.query(
-                'SELECT id FROM accounts WHERE username = $1',
-                [lowercaseUsername]
-            );
-            
-            if (existingUser.rows.length > 0) {
-                return res.status(400).json({ 
-                    success: false, 
-                    message: 'Username already exists' 
-                });
-            }
-
-            // Store password as plain text for now (we'll add encryption later)
-            // TODO: Add password hashing/encryption here
-
-            // Update user with account details
-            await client.query(
-                'UPDATE accounts SET username = $1, password = $2 WHERE id = $3',
-                [lowercaseUsername, lowercasePassword, userId]
-            );
-            
-            // Send email notification for account completion
-            try {
-                const emailSubject = `✅ Account Setup Complete - ${lowercaseUsername}`;
-                const emailText = `
-User has completed their account setup after payment:
-
-Username: ${lowercaseUsername}
-User ID: ${userId}
-Payment Method: PayPal Credit Card
-Payment Amount: $1.00 USD (3.75 SAR)
-Completed: ${new Date().toLocaleString()}
-Status: Account is now active and ready for use
-
-The user can now log in and access all premium features.
-                `;
-                
-                const emailHtml = `
-                    <h2>✅ Account Setup Complete</h2>
-                    <p><strong>Username:</strong> ${lowercaseUsername}</p>
-                    <p><strong>User ID:</strong> ${userId}</p>
-                    <p><strong>Payment Method:</strong> PayPal Credit Card</p>
-                    <p><strong>Payment Amount:</strong> $1.00 USD (3.75 SAR)</p>
-                    <p><strong>Completed:</strong> ${new Date().toLocaleString()}</p>
-                    <p><strong>Status:</strong> Account is now active and ready for use</p>
-                    <p>The user can now log in and access all premium features.</p>
-                `;
-
-                await sendEmail('muhmodalshraky3@gmail.com', emailSubject, emailText, emailHtml);
-                console.log('📧 Account completion email sent for user:', lowercaseUsername);
-            } catch (emailError) {
-                console.error('❌ Failed to send account completion email:', emailError);
-                // Don't fail the account creation if email fails
-            }
-            
-            console.log(`✅ Account setup completed for user: ${lowercaseUsername} (ID: ${userId})`);
-            res.status(200).json({ 
-                success: true, 
-                message: 'Account created successfully' 
-            });
-        } finally {
-            client.release();
-        }
-    } catch (error) {
-        console.error('Error creating account:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to create account' 
-        });
-    }
-});
-
-// PayPal webhook endpoint removed - accounts are now free
-
-// PayPal payment verification endpoint - REMOVED
-// Payment endpoints removed - accounts are now free
-*/
+// ===== PAYMENT WORKFLOW =====
+// Legacy PayPal payment endpoints removed. Payment integration is now handled
+// by the Moyasar stub module at routes/payment.js, gated behind the
+// PAYMENT_ENFORCEMENT_ENABLED feature flag (defaults to disabled). See also
+// services/paymentService.js and middleware/subscriptionGuard.js.
 
 // Test email endpoint
 app.get('/api/test-email', async (req, res) => {
@@ -4128,12 +3909,22 @@ app.post('/api/signup/temp-link', async (req, res) => {
             // Mark OTP used
             await db.query('UPDATE signup_otps SET used = TRUE WHERE id = $1', [otpResult.rows[0].id]);
 
-            // Create the account (username = email for backward compat)
-            const accountResult = await client.query(
-                `INSERT INTO accounts (username, email, password, isactive, logged, terms_accepted, email_verified) 
-                 VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
-                [lowerEmail, lowerEmail, lowerPassword, true, false, false, true]
-            );
+            // Create the account (username = email for backward compat).
+            // Accounts created via admin temp links are flagged for future
+            // payment exemption (is_admin_created / account_type='admin_created').
+            // Falls back to the legacy insert if migration 001 isn't applied yet.
+            const columnsReady = await hasPaymentColumns();
+            const accountResult = columnsReady
+                ? await client.query(
+                    `INSERT INTO accounts (username, email, password, isactive, logged, terms_accepted, email_verified, is_admin_created, account_type)
+                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
+                    [lowerEmail, lowerEmail, lowerPassword, true, false, false, true, true, 'admin_created']
+                )
+                : await client.query(
+                    `INSERT INTO accounts (username, email, password, isactive, logged, terms_accepted, email_verified)
+                     VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+                    [lowerEmail, lowerEmail, lowerPassword, true, false, false, true]
+                );
 
             const newUserId = accountResult.rows[0].id;
 
@@ -4663,6 +4454,10 @@ app.use('/api/question-reports', (req, res, next) => { req.db = db; next(); }, q
 
 // Email Campaign Routes (test + cron)
 app.use('/', (req, res, next) => { req.db = db; next(); }, emailCampaignsRouter);
+
+// Payment Routes (Moyasar) — STUB, gated by PAYMENT_ENFORCEMENT_ENABLED.
+// Returns 503 "disabled" on every endpoint until the flag is set to "true".
+app.use('/api/payment', (req, res, next) => { req.db = db; next(); }, paymentRoutes);
 
 // Global Error Handling Middleware - catches all unhandled errors
 app.use(async (err, req, res, next) => {
