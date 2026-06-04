@@ -16,8 +16,10 @@ import Signup from './components/signup/Signup.jsx';
 import Contact from './components/contact/Contact.jsx';
 import ErrorBoundary from './components/common/ErrorBoundary.jsx';
 import Layout from './components/common/Layout.jsx';
+import RequireAuth from './components/common/RequireAuth.jsx';
 import Privacy from './components/legal/Privacy.jsx';
 import Terms from './components/legal/Terms.jsx';
+import RefundPolicy from './components/legal/RefundPolicy.jsx';
 import About from './components/legal/About.jsx';
 import FAQ from './components/legal/FAQ.jsx';
 import Suggestions from './components/suggestions/Suggestions.jsx';
@@ -59,12 +61,12 @@ const router = createBrowserRouter([
   },
   {
     path: "/quizs",
-    element: <Layout><QUIZS /></Layout>,
+    element: <Layout><RequireAuth><QUIZS /></RequireAuth></Layout>,
     errorElement: <ErrorBoundary />,
   },
   {
     path: "/quiz/:numQuestions",
-    element: <Layout><QUIZ /></Layout>,
+    element: <Layout><RequireAuth><QUIZ /></RequireAuth></Layout>,
     errorElement: <ErrorBoundary />,
   },
   {
@@ -74,12 +76,12 @@ const router = createBrowserRouter([
   },
   {
     path: "/analysis",
-    element: <Layout><Analysis /></Layout>,
+    element: <Layout><RequireAuth><Analysis /></RequireAuth></Layout>,
     errorElement: <ErrorBoundary />,
   },
   {
     path: "/wrong-questions",
-    element: <Layout><WrongQuestions /></Layout>,
+    element: <Layout><RequireAuth><WrongQuestions /></RequireAuth></Layout>,
     errorElement: <ErrorBoundary />,
   },
   {
@@ -130,6 +132,11 @@ const router = createBrowserRouter([
   {
     path: "/terms",
     element: <Layout><Terms /></Layout>,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/refund-policy",
+    element: <Layout><RefundPolicy /></Layout>,
     errorElement: <ErrorBoundary />,
   },
   {

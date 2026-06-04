@@ -145,12 +145,10 @@ const Login = () => {
       .then((response) => {
         const username = cleanedUsername;
 
-        if (response.data.expired) {
-          // Show subscription expired message
-          setShowPopup(true);
-          setLoading(false);
-          return;
-        }
+        // FUTURE: subscription-expiry handling will go here. When payment
+        // enforcement is enabled the backend will return `expired: true` for
+        // lapsed subscriptions and this is where the renewal prompt belongs.
+        // Currently all accounts are free, so no expiry check is performed.
 
         if (response.data.showTerms) {
           setShowTermsPopup(true);
@@ -174,7 +172,10 @@ const Login = () => {
         }
 
         setLoading(false);
-        navigate('/quizs', { state: response.data });
+        // Return the user to the protected page they were sent here from
+        // (set by RequireAuth), defaulting to the quizzes dashboard.
+        const redirectTo = location.state?.from || '/quizs';
+        navigate(redirectTo, { state: response.data });
       })
       .catch((err) => {
         const newAttempts = failedAttempts + 1;

@@ -1,5 +1,6 @@
 import React from 'react';
 import Landing from './components/landing/Landing';
+import Footer from './components/common/Footer.jsx';
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import RouteSEO from './components/common/RouteSEO.jsx';
@@ -11,6 +12,7 @@ function App() {
             {process.env.NODE_ENV === 'production' && <Analytics />}
             {process.env.NODE_ENV === 'production' && <SpeedInsights />}
             <Landing />
+            <Footer />
         </div>
     );
 }

@@ -104,7 +104,29 @@ const Terms = () => {
                 </section>
 
                 <section className="legal-section">
-                    <h2>9. Service Modifications</h2>
+                    <h2>9. Subscription & Payment (Not Currently Active)</h2>
+                    <p>
+                        <strong>The Service is currently provided free of charge to all users.</strong> No payment
+                        is collected and no subscription is required.
+                    </p>
+                    <p>
+                        We may introduce a paid subscription in the future. If and when payment features are
+                        activated:
+                    </p>
+                    <ul>
+                        <li>New accounts will be billed an annual subscription of 99 SAR per year.</li>
+                        <li>Users who registered before the paid rollout will be grandfathered and retain free access.</li>
+                        <li>Accounts created by administrators are exempt from subscription charges.</li>
+                        <li>No free trials are offered.</li>
+                        <li>Refunds, where applicable, are governed by our <Link to="/refund-policy">Refund Policy</Link>.</li>
+                    </ul>
+                    <p>
+                        <em>This section describes future functionality and is not currently in effect.</em>
+                    </p>
+                </section>
+
+                <section className="legal-section">
+                    <h2>10. Service Modifications</h2>
                     <p>
                         We reserve the right to modify, suspend, or discontinue the Service (or any part thereof)
                         at any time with or without notice. We shall not be liable to you or any third party for
@@ -113,7 +135,7 @@ const Terms = () => {
                 </section>
 
                 <section className="legal-section">
-                    <h2>10. Termination</h2>
+                    <h2>11. Termination</h2>
                     <p>
                         We may terminate or suspend your account and access to the Service immediately, without
                         prior notice or liability, for any reason, including breach of these Terms.
@@ -121,7 +143,7 @@ const Terms = () => {
                 </section>
 
                 <section className="legal-section">
-                    <h2>11. Changes to Terms</h2>
+                    <h2>12. Changes to Terms</h2>
                     <p>
                         We reserve the right to update these Terms at any time. We will notify users of significant
                         changes by posting a notice on our website. Continued use of the Service after changes
@@ -130,7 +152,7 @@ const Terms = () => {
                 </section>
 
                 <section className="legal-section">
-                    <h2>12. Governing Law</h2>
+                    <h2>13. Governing Law</h2>
                     <p>
                         These Terms shall be governed by and construed in accordance with the laws of Saudi Arabia,
                         without regard to its conflict of law provisions.
@@ -138,11 +160,14 @@ const Terms = () => {
                 </section>
 
                 <section className="legal-section">
-                    <h2>13. Contact Information</h2>
+                    <h2>14. Contact Information</h2>
                     <p>
                         If you have any questions about these Terms, please contact us at:
                     </p>
                     <p><strong>Email:</strong> alshraky3@gmail.com</p>
+                    <p><strong>WhatsApp:</strong> +966 58 261 9119</p>
+                    <p><strong>Legal Entity | الكيان القانوني:</strong> شركة دار الخبرة التجارية</p>
+                    <p><strong>Commercial Registration | السجل التجاري:</strong> 7040567922</p>
                 </section>
             </div>
         </div>

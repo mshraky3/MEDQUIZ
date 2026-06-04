@@ -226,6 +226,11 @@
 /* Page content padding when navbar is present */
 .page-with-navbar {
   padding-top: 72px;
+  /* Sticky-footer column: content grows, Footer (margin-top:auto) sits at the
+     bottom so it is always reachable, even when a page's content is short. */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 @media (max-width: 768px) {

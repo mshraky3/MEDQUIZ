@@ -124,66 +124,25 @@ const Landing = () => {
           </header>
 
           <section className="hero">
-            <div className="hero-copy">
-              <span className="pill">
-                منصة SMLE
-              </span>
-              <h1>
-                ابدأ تدريب SMLE خلال دقيقة واحدة
-              </h1>
-              <p>
-                بنك أسئلة واضح وسريع: أنشئ حسابك، ابدأ أول اختبار، وارجع يومياً بخطة مراجعة عملية.
-              </p>
-              <div className="cta-row">
-                <button className="btn primary" onClick={handleSignup}>
-                  ابدأ مجاناً الآن
-                </button>
-                <button className="btn ghost" onClick={handleLogin}>
-                  تسجيل الدخول
-                </button>
-              </div>
-              <div className="trust-bar">
-                <span>بدء مجاني • بدون بطاقة بنكية • مهيأة للجوال</span>
-                <span>•</span>
-                <span>تدعم العربية بالكامل</span>
-              </div>
+            <span className="pill">منصة SMLE · بنك أسئلة طبي</span>
+            <h1>ابدأ تدريب SMLE خلال دقيقة واحدة</h1>
+            <p>
+              بنك أسئلة واضح وسريع: أنشئ حسابك، ابدأ أول اختبار، وارجع يومياً بخطة مراجعة عملية.
+            </p>
+            <div className="cta-row">
+              <button className="btn primary" onClick={handleSignup}>
+                ابدأ مجاناً الآن
+              </button>
+              <button className="btn ghost" onClick={handleLogin}>
+                تسجيل الدخول
+              </button>
             </div>
-
-            <div className="hero-panel">
-              <div className="panel-chip">لوحة أداء مباشرة</div>
-              <div className="panel-card">
-                <div className="panel-metric">
-                  <div className="metric-label">الدقة</div>
-                  <div className="metric-value">86%</div>
-                  <div className="metric-delta positive">+6%</div>
-                </div>
-                <div className="panel-metric">
-                  <div className="metric-label">وقت السؤال</div>
-                  <div className="metric-value">41s</div>
-                  <div className="metric-delta neutral">=</div>
-                </div>
-                <div className="panel-track">
-                  <div className="track-head">
-                    <span>تقدم المواضيع</span>
-                    <span className="track-pill">تحديث فوري</span>
-                  </div>
-                  <div className="track-bars">
-                    <div className="track-bar" style={{ width: '78%' }}>
-                      <span>Internal Medicine</span>
-                      <strong>78%</strong>
-                    </div>
-                    <div className="track-bar" style={{ width: '64%' }}>
-                      <span>Pediatric</span>
-                      <strong>64%</strong>
-                    </div>
-                    <div className="track-bar" style={{ width: '52%' }}>
-                      <span>Surgery</span>
-                      <strong>52%</strong>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <ul className="hero-trust">
+              <li>بدء مجاني</li>
+              <li>بدون بطاقة بنكية</li>
+              <li>مهيأة للجوال</li>
+              <li>تدعم العربية بالكامل</li>
+            </ul>
           </section>
 
           <section className="stat-grid" aria-label="إحصائيات المنصة">
@@ -233,23 +192,6 @@ const Landing = () => {
             </div>
           </section>
 
-          <section className="mid-cta">
-            <div className="mid-cta-copy">
-              <h3>ابدأ جلسة تدريب الآن</h3>
-              <p>
-                انقر للانضمام فوراً، أو سجّل الدخول لاستكمال تقدمك على أي جهاز.
-              </p>
-            </div>
-            <div className="mid-cta-actions">
-              <button className="btn primary" onClick={handleSignup}>
-                إنشاء حساب مجاني
-              </button>
-              <button className="btn ghost" onClick={handleLogin}>
-                تسجيل الدخول
-              </button>
-            </div>
-          </section>
-
           <section className="flow-section">
             <div className="flow-card">
               <div className="flow-head">
@@ -269,22 +211,6 @@ const Landing = () => {
                     </div>
                   </div>
                 ))}
-              </div>
-            </div>
-            <div className="flow-side">
-              <div className="side-card">
-                <h3>تصميم يركز على الإجراءات</h3>
-                <ul>
-                  <li>CTA واضح في الأعلى والأسفل لبدء سريع.</li>
-                  <li>ألوان تباين عالية وخط واضح للحفاظ على التركيز.</li>
-                  <li>تخطيط شبكي منظم لعرض الميزات دون ازدحام.</li>
-                </ul>
-              </div>
-              <div className="side-card muted">
-                <h3>دعم الهاتف والتطبيق</h3>
-                <p>
-                  واجهة مرنة، تعمل بسلاسة على المتصفح والجوال، مع دعم إضافة المنصة كشاشة رئيسية.
-                </p>
               </div>
             </div>
           </section>

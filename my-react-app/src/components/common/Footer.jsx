@@ -31,23 +31,34 @@ const Footer = () => {
 
           <div className="footer-section">
             <h4>Legal | قانوني</h4>
-            <Link to="/privacy">Privacy Policy | الخصوصية</Link>
             <Link to="/terms">Terms of Service | الشروط</Link>
+            <Link to="/refund-policy">Refund Policy | سياسة الاسترداد</Link>
+            <Link to="/privacy">Privacy Policy | الخصوصية</Link>
+            <Link to="/contact">Contact Us | اتصل بنا</Link>
           </div>
 
-          <div className="footer-section">
-            <h4>Resources | موارد</h4>
-            <Link to="/guides/smle-vs-prometric-differences">SMLE vs Prometric Guide</Link>
-            <Link to="/guides/smle-high-yield-topics">High-Yield SMLE Topics</Link>
-            <a href="mailto:alshraky3@gmail.com">Support | الدعم</a>
-            <a href="https://wa.link/gqafib" target="_blank" rel="noopener noreferrer">WhatsApp | واتساب</a>
-            <span className="footer-info">8,000+ Questions | أسئلة</span>
-            <span className="footer-info">40+ Topics | تخصص</span>
+          <div className="footer-section footer-contact-section">
+            <h4>Contact | تواصل</h4>
+            <p className="footer-contact-line" dir="rtl">
+              <span>البريد الإلكتروني | Email:</span>
+              <a href="mailto:alshraky3@gmail.com" dir="ltr">alshraky3@gmail.com</a>
+            </p>
+            <p className="footer-contact-line" dir="rtl">
+              <span>واتساب | WhatsApp:</span>
+              <a href="https://wa.me/966582619119" target="_blank" rel="noopener noreferrer" dir="ltr">0582619119</a>
+            </p>
+            <p className="footer-contact-line" dir="rtl">
+              <span>صفحة الاتصال | Contact Page:</span>
+              <Link to="/contact">اتصل بنا</Link>
+            </p>
           </div>
         </div>
 
         <div className="footer-bottom">
           <p>© {currentYear} SMLE Question Bank (SQB). All rights reserved. جميع الحقوق محفوظة</p>
+          <p className="footer-legal-entity" dir="rtl">
+            شركة دار الخبرة التجارية &nbsp;|&nbsp; السجل التجاري (الرقم الموحد): 7040567922
+          </p>
           <p className="footer-disclaimer">
             This platform is for educational purposes only. Not affiliated with Prometric or SCFHS.
           </p>

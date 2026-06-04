@@ -6,6 +6,11 @@ export const UserContext = createContext();
 export const UserProvider = ({ children }) => {
   const [user, setUserState] = useState(null);
   const [sessionToken, setSessionToken] = useState(null);
+  // authReady stays false until we've finished reading localStorage on mount.
+  // Route guards must wait for this before deciding to redirect, otherwise an
+  // authenticated user is bounced to /login on the first render (token not yet
+  // hydrated).
+  const [authReady, setAuthReady] = useState(false);
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -20,6 +25,7 @@ export const UserProvider = ({ children }) => {
         setSessionToken(null);
       }
     }
+    setAuthReady(true);
   }, []);
 
   // Save to localStorage on change
@@ -40,7 +46,7 @@ export const UserProvider = ({ children }) => {
   };
 
   return (
-    <UserContext.Provider value={{ user, setUser, sessionToken }}>
+    <UserContext.Provider value={{ user, setUser, sessionToken, authReady }}>
       {children}
     </UserContext.Provider>
   );

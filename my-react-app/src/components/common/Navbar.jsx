@@ -4,25 +4,32 @@ import { UserContext } from '../../UserContext';
 import './Navbar.css';
 
 const Navbar = () => {
-  const { user } = useContext(UserContext);
+  const { user, sessionToken } = useContext(UserContext);
   const navigate = useNavigate();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
 
+  // A visitor is only "home" inside the app once they hold a valid session.
+  const isAuthenticated = !!(user && user.id && sessionToken);
+
+  // Authenticated users' "home" is the quizzes dashboard; everyone else's is
+  // the public landing page. This is the single source of truth so the brand,
+  // the الرئيسية link, and the back button can never send a logged-out visitor
+  // into a protected route.
+  const homePath = isAuthenticated ? '/quizs' : '/';
+
   const handleGoBack = () => {
-    if (location.pathname === '/quizs') {
-      navigate('/login');
-    } else if (user && user.id) {
-      navigate('/quizs', { state: { id: user.id } });
+    if (location.pathname === '/quizs' || location.pathname === '/') {
+      navigate(homePath);
     } else {
-      navigate('/');
+      navigate(homePath, user && user.id ? { state: { id: user.id } } : undefined);
     }
   };
 
   return (
     <nav className="navbar" dir="rtl">
       <div className="navbar-right">
-        <Link to="/" className="navbar-brand">SQB</Link>
+        <Link to={homePath} className="navbar-brand">SQB</Link>
         {user && user.username && (
           <span className="user-info">
             <svg className="user-icon" width="22" height="22" fill="none" viewBox="0 0 24 24">
@@ -37,7 +44,9 @@ const Navbar = () => {
 
       <div className="navbar-center">
         <div className={`navbar-nav-links ${menuOpen ? 'nav-links-open' : ''}`}>
-          <Link to="/quizs" className="nav-link" onClick={() => setMenuOpen(false)}>الرئيسية</Link>
+          {isAuthenticated && (
+            <Link to={homePath} className="nav-link" onClick={() => setMenuOpen(false)}>الرئيسية</Link>
+          )}
           <Link to="/guides" className="nav-link" onClick={() => setMenuOpen(false)}>أدلة التحضير</Link>
           <Link to="/about" className="nav-link" onClick={() => setMenuOpen(false)}>من نحن</Link>
           <Link to="/faq" className="nav-link" onClick={() => setMenuOpen(false)}>الأسئلة الشائعة</Link>

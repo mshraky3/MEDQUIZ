@@ -1,5 +1,9 @@
 /* Unified Footer Component */
 .footer {
+  /* Explicitly stay in normal flow. Guards against stray global `footer`
+     element rules elsewhere in the app (CSS here is unscoped/global). */
+  position: static;
+  inset: auto;
   background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
   border-top: 1px solid rgba(34, 211, 238, 0.2);
   padding: 2rem 1.5rem;
@@ -85,6 +89,42 @@
 .footer-disclaimer {
   font-size: 0.75rem !important;
   color: #475569 !important;
+}
+
+.footer-legal-entity {
+  font-size: 0.875rem !important;
+  color: #cbd5e1 !important;
+  font-weight: 600;
+  margin-top: 0.5rem !important;
+  padding-top: 0.6rem;
+  border-top: 1px solid rgba(34, 211, 238, 0.15);
+  display: inline-block;
+}
+
+/* Dedicated contact column (bilingual, RTL/LTR aware) */
+.footer-contact-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: baseline;
+  margin: 0 0 0.5rem 0;
+  font-size: 0.85rem;
+  color: #94a3b8;
+  line-height: 1.5;
+}
+
+.footer-contact-line span {
+  color: #cbd5e1;
+}
+
+.footer-contact-line a {
+  color: #22d3ee;
+  text-decoration: none;
+  word-break: break-word;
+}
+
+.footer-contact-line a:hover {
+  text-decoration: underline;
 }
 
 /* Responsive footer adjustments */
