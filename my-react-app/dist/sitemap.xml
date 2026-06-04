@@ -1,121 +1,72 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
-  <!-- Homepage -->
   <url>
     <loc>https://www.smle-question-bank.com/</loc>
-    <lastmod>2026-02-07</lastmod>
+    <lastmod>2026-04-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="ar-SA" href="https://www.smle-question-bank.com/" />
     <xhtml:link rel="alternate" hreflang="ar" href="https://www.smle-question-bank.com/" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.smle-question-bank.com/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.smle-question-bank.com/" />
   </url>
-
-  <!-- Login Page -->
-  <url>
-    <loc>https://www.smle-question-bank.com/login</loc>
-    <lastmod>2026-02-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <!-- Signup Page -->
-  <url>
-    <loc>https://www.smle-question-bank.com/signup</loc>
-    <lastmod>2026-02-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <!-- About Page -->
   <url>
     <loc>https://www.smle-question-bank.com/about</loc>
-    <lastmod>2026-02-07</lastmod>
+    <lastmod>2026-04-21</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
-
-  <!-- FAQ Page -->
   <url>
     <loc>https://www.smle-question-bank.com/faq</loc>
-    <lastmod>2026-02-07</lastmod>
+    <lastmod>2026-04-21</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
-
-  <!-- Contact Page -->
   <url>
-    <loc>https://www.smle-question-bank.com/contact</loc>
-    <lastmod>2026-02-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
+    <loc>https://www.smle-question-bank.com/guides</loc>
+    <lastmod>2026-04-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
   </url>
-
-  <!-- Privacy Policy -->
+  <url>
+    <loc>https://www.smle-question-bank.com/guides/smle-study-plan</loc>
+    <lastmod>2026-04-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.smle-question-bank.com/guides/wrong-questions-method</loc>
+    <lastmod>2026-04-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.smle-question-bank.com/guides/smle-vs-prometric-differences</loc>
+    <lastmod>2026-04-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.smle-question-bank.com/guides/smle-high-yield-topics</loc>
+    <lastmod>2026-04-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
   <url>
     <loc>https://www.smle-question-bank.com/privacy</loc>
-    <lastmod>2026-02-07</lastmod>
+    <lastmod>2026-04-21</lastmod>
     <changefreq>yearly</changefreq>
-    <priority>0.5</priority>
+    <priority>0.4</priority>
   </url>
-
-  <!-- Terms of Service -->
   <url>
     <loc>https://www.smle-question-bank.com/terms</loc>
-    <lastmod>2026-02-07</lastmod>
+    <lastmod>2026-04-21</lastmod>
     <changefreq>yearly</changefreq>
-    <priority>0.5</priority>
+    <priority>0.4</priority>
   </url>
-
-  <!-- Quiz Selection Page -->
   <url>
-    <loc>https://www.smle-question-bank.com/quizs</loc>
-    <lastmod>2026-02-07</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <!-- Analysis Page -->
-  <url>
-    <loc>https://www.smle-question-bank.com/analysis</loc>
-    <lastmod>2026-02-07</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <!-- Suggestions Page -->
-  <url>
-    <loc>https://www.smle-question-bank.com/suggestions</loc>
-    <lastmod>2026-02-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
-
-  <!-- Quiz Pages (Dynamic) -->
-  <url>
-    <loc>https://www.smle-question-bank.com/quiz/10</loc>
-    <lastmod>2026-02-07</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-
-  <url>
-    <loc>https://www.smle-question-bank.com/quiz/20</loc>
-    <lastmod>2026-02-07</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-
-  <url>
-    <loc>https://www.smle-question-bank.com/quiz/50</loc>
-    <lastmod>2026-02-07</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-
-  <url>
-    <loc>https://www.smle-question-bank.com/quiz/100</loc>
-    <lastmod>2026-02-07</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
+    <loc>https://www.smle-question-bank.com/refund-policy</loc>
+    <lastmod>2026-06-04</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.4</priority>
   </url>
 </urlset>
