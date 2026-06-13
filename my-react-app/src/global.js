@@ -1,5 +1,5 @@
 const Globals = {
-    URL: 'http://localhost:3000',
+    URL: 'https://medquiz.vercel.app',
     // Production: https://medquiz.vercel.app
     // Local dev: http://localhost:3000
 
