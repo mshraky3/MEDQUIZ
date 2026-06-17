@@ -476,6 +476,21 @@ const routeMap = {
         robots: 'noindex, nofollow, noarchive',
         structuredData: [routePageData('/analysis', 'تحليل الأداء | SQB', 'صفحة تحليل أداء داخلية.')]
     },
+    '/summaries': {
+        title: 'الملخصات | SQB',
+        description: 'ملخصات المواضيع داخل منصة SQB — محتوى خاص بالأعضاء.',
+        keywords: 'ملخصات SQB, ملخصات SMLE',
+        robots: 'noindex, nofollow, noarchive',
+        structuredData: [routePageData('/summaries', 'الملخصات | SQB', 'صفحة الملخصات الداخلية.')]
+    },
+    '/summaries-detail': {
+        title: 'ملخص الموضوع | SQB',
+        description: 'صفحة ملخص موضوع داخلية — محتوى خاص بالأعضاء.',
+        keywords: 'ملخص SMLE',
+        robots: 'noindex, nofollow, noarchive',
+        canonicalPath: '/summaries',
+        structuredData: [routePageData('/summaries', 'ملخص الموضوع | SQB', 'صفحة ملخص داخلية.')]
+    },
     '/wrong-questions': {
         title: 'مراجعة الأسئلة الخاطئة | SQB',
         description: 'صفحة داخلية لمراجعة الأسئلة الخاطئة.',
@@ -515,6 +530,10 @@ function resolveRouteKey(pathname) {
 
     if (/^\/quiz\/[^/]+/.test(pathname)) {
         return '/quiz-dynamic';
+    }
+
+    if (/^\/summaries\/[^/]+/.test(pathname)) {
+        return '/summaries-detail';
     }
 
     return routeMap[pathname] ? pathname : 'default';

@@ -1,7 +1,9 @@
+const PRODUCTION_URL = 'https://medquiz.vercel.app';
+const LOCAL_URL = 'http://localhost:3000';
+
 const Globals = {
-    URL: 'https://medquiz.vercel.app',
-    // Production: https://medquiz.vercel.app
-    // Local dev: http://localhost:3000
+    // Switch this to PRODUCTION_URL when you are ready to deploy
+    URL: LOCAL_URL, 
 
     // Payment enforcement is DISABLED — all accounts are free. This mirrors the
     // backend PAYMENT_ENFORCEMENT_ENABLED flag and is only a UI hint; the server

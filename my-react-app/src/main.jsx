@@ -32,11 +32,11 @@ import SmleHighYieldTopicsGuide from './components/guides/SmleHighYieldTopicsGui
 import TempLinks from './components/ADD/TempLinks.jsx';
 import QuestionReports from './components/ADD/QuestionReports.jsx';
 import ForgotPassword from './components/login/ForgotPassword';
+import SummariesPage from './components/summaries/SummariesPage.jsx';
 
 import Globals from './global.js';
 import { UserProvider } from './UserContext.jsx';
 
-// Initialize error tracking for global error handling
 import { initErrorTracking } from './utils/errorTracking.js';
 initErrorTracking();
 
@@ -82,6 +82,16 @@ const router = createBrowserRouter([
   {
     path: "/wrong-questions",
     element: <Layout><RequireAuth><WrongQuestions /></RequireAuth></Layout>,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/summaries",
+    element: <Layout><RequireAuth><SummariesPage /></RequireAuth></Layout>,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/summaries/:slug",
+    element: <Layout><RequireAuth><SummariesPage /></RequireAuth></Layout>,
     errorElement: <ErrorBoundary />,
   },
   {
