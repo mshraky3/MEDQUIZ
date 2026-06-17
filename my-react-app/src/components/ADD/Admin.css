@@ -1134,21 +1134,6 @@
   color: #94a3b8;
 }
 
-.loading-spinner {
-  width: 48px;
-  height: 48px;
-  border: 3px solid rgba(34, 211, 238, 0.2);
-  border-top-color: #22d3ee;
-  border-radius: 50%;
-  animation: spin-loader 1s linear infinite;
-}
-
-@keyframes spin-loader {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 .dashboard-error .error-icon {
   font-size: 3rem;
 }

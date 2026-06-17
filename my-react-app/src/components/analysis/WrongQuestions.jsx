@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './analysis.css';
 import Globals from '../../global.js';
-import Navbar from '../common/Navbar.jsx';
+import Spinner from '../common/Spinner.jsx';
 import { useContext } from 'react';
 import { UserContext } from '../../UserContext';
 
@@ -113,9 +113,7 @@ const WrongQuestions = () => {
     }, [hasMore, loading, currentPage, fetchWrongQuestions]);
 
     return (
-        <>
-            <Navbar />
-            <div className="analysis-wrapper fade-in">
+        <div className="analysis-wrapper fade-in">
                 <div className="screen-header">
 
                     <h2 className="screen-title">مراجعة الأسئلة الخاطئة</h2>
@@ -126,7 +124,7 @@ const WrongQuestions = () => {
 
                 {loading && wrongQuestions.length === 0 ? (
                     <div className="loading-state">
-                        <div className="spinner"></div>
+                        <Spinner size="lg" />
                         <p>جاري تحميل الأسئلة الخاطئة...</p>
                     </div>
                 ) : error ? (
@@ -234,7 +232,7 @@ const WrongQuestions = () => {
                                                     {loadingButtons[question.id] ? (
                                                         <div className="ai-analysis-loading">
                                                             <p>جاري تحليل السؤال...</p>
-                                                            <div className="spinner"></div>
+                                                            <Spinner size="sm" />
                                                             <p className="loading-subtext">يرجى الانتظار...</p>
                                                         </div>
                                                     ) : (
@@ -273,7 +271,6 @@ const WrongQuestions = () => {
                 )}
 
             </div>
-        </>
     );
 };
 

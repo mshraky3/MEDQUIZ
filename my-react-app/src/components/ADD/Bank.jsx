@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./Bank.css";
 import Globals from '../../global.js';
+import Spinner from '../common/Spinner.jsx';
 
 const Bank = () => {
   const [questions, setQuestions] = useState([]);
@@ -133,7 +134,7 @@ const Bank = () => {
       <h1 className="title">Question Bank</h1>
       {loading ? (
         <div className="loading-screen">
-          <div className="spinner"></div>
+          <Spinner size="lg" />
           <p>Loading questions, please wait...</p>
         </div>
       ) : (

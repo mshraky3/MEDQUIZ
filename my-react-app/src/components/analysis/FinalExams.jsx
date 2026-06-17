@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Globals from '../../global.js';
+import Spinner from '../common/Spinner.jsx';
 import './FinalExams.css';
 
 const FinalExams = ({ userId, username, sessionToken }) => {
@@ -218,14 +219,7 @@ const FinalExams = ({ userId, username, sessionToken }) => {
     if (loading) {
         return (
             <div className="final-exams-container">
-                <div className="loading-spinner">
-                    <div className="orbital-spinner">
-                        <div className="orbital-ring orbital-ring-1"></div>
-                        <div className="orbital-ring orbital-ring-2"></div>
-                        <div className="orbital-core"></div>
-                    </div>
-                    <p>جاري تحميل جلسات الاختبار النهائي...</p>
-                </div>
+                <Spinner fullScreen label="جاري تحميل جلسات الاختبار النهائي..." />
             </div>
         );
     }
@@ -427,11 +421,7 @@ const FinalExams = ({ userId, username, sessionToken }) => {
                                                                             {loadingButtons[question.id] ? (
                                                                                 <div className="ai-analysis-loading">
                                                                                     <p>جاري تحليل السؤال...</p>
-                                                                                    <div className="orbital-spinner small">
-                                                                                        <div className="orbital-ring orbital-ring-1"></div>
-                                                                                        <div className="orbital-ring orbital-ring-2"></div>
-                                                                                        <div className="orbital-core"></div>
-                                                                                    </div>
+                                                                                    <Spinner size="sm" />
                                                                                     <p className="loading-subtext">يرجى الانتظار...</p>
                                                                                 </div>
                                                                             ) : (
@@ -463,11 +453,7 @@ const FinalExams = ({ userId, username, sessionToken }) => {
                                     </div>
                                 ) : (
                                     <div className="loading-details">
-                                        <div className="orbital-spinner small">
-                                            <div className="orbital-ring orbital-ring-1"></div>
-                                            <div className="orbital-ring orbital-ring-2"></div>
-                                            <div className="orbital-core"></div>
-                                        </div>
+                                        <Spinner size="sm" />
                                         <span>جاري التحميل...</span>
                                     </div>
                                 )}

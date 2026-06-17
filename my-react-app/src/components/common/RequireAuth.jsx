@@ -1,6 +1,7 @@
 import React, { useContext } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { UserContext } from '../../UserContext';
+import Spinner from './Spinner.jsx';
 
 /**
  * Route guard for authenticated-only pages.
@@ -27,22 +28,12 @@ const RequireAuth = ({ children }) => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: 'var(--bg, #0b1021)',
+          background: 'var(--bg, #0f172a)',
         }}
         aria-busy="true"
         aria-live="polite"
       >
-        <span
-          style={{
-            width: 36,
-            height: 36,
-            border: '3px solid rgba(255,255,255,0.15)',
-            borderTopColor: 'var(--accent, #22d3ee)',
-            borderRadius: '50%',
-            animation: 'requireauth-spin 0.8s linear infinite',
-          }}
-        />
-        <style>{`@keyframes requireauth-spin { to { transform: rotate(360deg); } }`}</style>
+        <Spinner size="md" />
       </div>
     );
   }

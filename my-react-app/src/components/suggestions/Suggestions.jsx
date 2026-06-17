@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Spinner from '../common/Spinner.jsx';
 import './Suggestions.css';
 
 const Suggestions = () => {
@@ -206,7 +207,7 @@ const Suggestions = () => {
                     >
                         {loading ? (
                             <div className="btn-loading">
-                                <div className="spinner"></div>
+                                <Spinner size="sm" />
                                 <span>جاري الإرسال...</span>
                             </div>
                         ) : (

@@ -1,15 +1,11 @@
 import React from 'react';
+import Spinner from '../common/Spinner.jsx';
 import './Loading.css';
 
 const Loading = () => (
   <div className="quiz-container">
     <div className="loading-content">
-      <div className="loading-orbital">
-        <div className="orbital-ring orbital-ring-1"></div>
-        <div className="orbital-ring orbital-ring-2"></div>
-        <div className="orbital-ring orbital-ring-3"></div>
-        <div className="orbital-core"></div>
-      </div>
+      <Spinner size="lg" />
       <h2>جاري تحميل الأسئلة</h2>
       <p>جاري تجهيز الاختبار...</p>
       <div className="loading-bar">

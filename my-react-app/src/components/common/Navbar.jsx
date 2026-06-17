@@ -47,6 +47,9 @@ const Navbar = () => {
           {isAuthenticated && (
             <Link to={homePath} className="nav-link" onClick={() => setMenuOpen(false)}>الرئيسية</Link>
           )}
+          {isAuthenticated && (
+            <Link to="/summaries" className="nav-link" onClick={() => setMenuOpen(false)}>الملخصات</Link>
+          )}
           <Link to="/guides" className="nav-link" onClick={() => setMenuOpen(false)}>أدلة التحضير</Link>
           <Link to="/about" className="nav-link" onClick={() => setMenuOpen(false)}>من نحن</Link>
           <Link to="/faq" className="nav-link" onClick={() => setMenuOpen(false)}>الأسئلة الشائعة</Link>

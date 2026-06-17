@@ -100,28 +100,8 @@ const Landing = () => {
 
   return (
     <>
-      <div className="landing-body" dir="rtl">
+      <div className="landing-body">
         <div className="landing-shell">
-          <header className="landing-topbar" aria-label="التنقل الرئيسي">
-            <div className="topbar-brand-wrap">
-              <Link to="/" className="topbar-brand">SQB</Link>
-              <span className="topbar-tag">بنك أسئلة SMLE</span>
-            </div>
-            <nav className="topbar-links" aria-label="روابط سريعة">
-              <Link to="/about">من نحن</Link>
-              <Link to="/guides">أدلة التحضير</Link>
-              <Link to="/faq">الأسئلة الشائعة</Link>
-              <Link to="/contact">اتصل بنا</Link>
-            </nav>
-            <div className="topbar-actions">
-              <button className="btn ghost" onClick={handleLogin}>
-                تسجيل الدخول
-              </button>
-              <button className="btn primary" onClick={handleSignup}>
-                ابدأ مجاناً
-              </button>
-            </div>
-          </header>
 
           <section className="hero">
             <span className="pill">منصة SMLE · بنك أسئلة طبي</span>

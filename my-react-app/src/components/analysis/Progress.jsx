@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Globals from '../../global.js';
+import Spinner from '../common/Spinner.jsx';
 import './Progress.css';
 
 const Progress = ({ userId, username, sessionToken }) => {
@@ -39,14 +40,7 @@ const Progress = ({ userId, username, sessionToken }) => {
   if (loading) {
     return (
       <div className="progress-container">
-        <div className="loading-spinner">
-          <div className="orbital-spinner">
-            <div className="orbital-ring orbital-ring-1"></div>
-            <div className="orbital-ring orbital-ring-2"></div>
-            <div className="orbital-core"></div>
-          </div>
-          <p>جاري تحميل بيانات التقدم...</p>
-        </div>
+        <Spinner fullScreen label="جاري تحميل بيانات التقدم..." />
       </div>
     );
   }

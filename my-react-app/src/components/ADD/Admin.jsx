@@ -4,6 +4,7 @@ import axios from 'axios';
 import './Admin.css';
 import AdminNavbar from './AdminNavbar.jsx';
 import Globals from '../../global.js';
+import Spinner from '../common/Spinner.jsx';
 
 const API = Globals.URL;
 
@@ -458,7 +459,7 @@ const Admin = () => {
         <AdminNavbar />
         <div className="admin-container">
           <div className="dashboard-loading">
-            <div className="loading-spinner" />
+            <Spinner size="lg" />
             <p>Loading dashboard...</p>
           </div>
         </div>

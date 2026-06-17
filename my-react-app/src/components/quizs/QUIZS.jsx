@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useContext } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { track } from '@vercel/analytics';
@@ -59,17 +59,6 @@ const QUIZS = () => {
         ]
     };
 
-    // Build compatible arrays for backward compatibility
-    const availableSources = [
-        'general',
-        'Midgard',
-        'GameBoy',
-        'October25',
-        'November25',
-        'December25',
-        'January25',
-        'FebMarApr25'
-    ];
     const sourceLabels = {
         general: 'عام',
         Midgard: 'Midgard',
@@ -268,8 +257,6 @@ const QUIZS = () => {
         });
     };
 
-    const checkboxRef = useRef(null);
-
     // Check completion for a specific source and type combination
     const checkCompletion = async (type, source) => {
         // Check authentication before making API call
@@ -461,6 +448,12 @@ const QUIZS = () => {
         fetchStreaks();
     }, [id, user, sessionToken, setUser]);
 
+    // When any selector/popup is open, gently dim + recede the button cluster
+    // behind it for a clean "in/out" transition.
+    const anyModalOpen = showSourceSelector || showTypeSelector || showTimerSelector ||
+        showCustomQuestions || showFinalQuizType || showFinalQuizSource ||
+        showFinalQuizTime || showCongratulations;
+
     return (
         <>
             <div className="quiz-selection">
@@ -475,47 +468,61 @@ const QUIZS = () => {
                 {/* Achievement Badges */}
                 {id && <AchievementBadges userId={id} />}
 
-                <h1>اختر اختبارك</h1>
-                <p className="quiz-subtitle">ابدأ سريعاً الآن أو خصص الاختبار كما تريد.</p>
+                <div className={`quiz-main${anyModalOpen ? ' is-dimmed' : ''}`}>
+                    <h1>اختر اختبارك</h1>
+                    <p className="quiz-subtitle">ابدأ سريعاً الآن أو خصص الاختبار كما تريد.</p>
 
-                <button
-                    className="quick-start-btn"
-                    onClick={handleQuickStart}
-                >
-                    ابدأ سريعاً: 10 أسئلة مختلطة
-                </button>
+                    <button
+                        className="quick-start-btn"
+                        onClick={handleQuickStart}
+                    >
+                        ابدأ سريعاً: 10 أسئلة مختلطة
+                    </button>
 
-                <div className="options-container">
-                    {quizOptions.map((num) => (
+                    <div className="options-container">
+                        {quizOptions.map((num, i) => (
+                            <button
+                                key={num}
+                                className="quiz-option-btn"
+                                style={{ animationDelay: `${0.28 + i * 0.08}s` }}
+                                onClick={() => handleOptionClick(num)}
+                            >
+                                {num === 'custom' ? 'عدد مخصص' : `${num} سؤال`}
+                            </button>
+                        ))}
+                        {user && sessionToken && (
+                            <button
+                                className="quiz-option-btn final-quiz-btn"
+                                style={{ animationDelay: `${0.28 + quizOptions.length * 0.08}s` }}
+                                onClick={handleFinalQuizClick}
+                            >
+                                🎯 اختبار نهائي
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Secondary navigation actions */}
+                    <div className="secondary-actions">
+                        {id && (
+                            <button
+                                className="secondary-btn"
+                                onClick={() => navigate('/analysis', { state: { id: id } })}
+                            >
+                                <span className="secondary-btn-icon">📊</span>
+                                <span>الذهاب للتحليل</span>
+                            </button>
+                        )}
                         <button
-                            key={num}
-                            className="quiz-option-btn"
-                            onClick={() => handleOptionClick(num)}
+                            className="secondary-btn"
+                            onClick={() => navigate('/summaries')}
                         >
-                            {num === 'custom' ? 'عدد مخصص' : `${num} سؤال`}
+                            <span className="secondary-btn-icon">📚</span>
+                            <span>الملخصات</span>
                         </button>
-                    ))}
-                    {user && sessionToken && (
-                        <button
-                            className="quiz-option-btn final-quiz-btn"
-                            onClick={handleFinalQuizClick}
-                        >
-                            🎯 اختبار نهائي
-                        </button>
-                    )}
+                    </div>
                 </div>
 
-                {/* Analysis button */}
-                {id && (
-                    <button
-                        className="analysis-btn"
-                        onClick={() => navigate('/analysis', { state: { id: id } })}
-                    >
-                        الذهاب للتحليل
-                    </button>
-                )}
-
-                {/* Suggestions Button */}
+                {/* Suggestions Button (floating) */}
                 <button
                     className="suggestions-btn"
                     onClick={() => navigate('/suggestions')}

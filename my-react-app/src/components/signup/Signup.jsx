@@ -3,6 +3,7 @@ import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { track } from '@vercel/analytics';
 import Globals from '../../global.js';
+import Spinner from '../common/Spinner.jsx';
 import './Signup.css';
 
 const Signup = () => {
@@ -162,7 +163,7 @@ const Signup = () => {
                 <div className="login-wrapper signup-wide">
                     <div className="login-card signup-short">
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '24px 0' }}>
-                            <div className="spinner"></div>
+                            <Spinner size="md" />
                             <span>جاري التحقق من الرابط...</span>
                         </div>
                     </div>
@@ -233,7 +234,7 @@ const Signup = () => {
                                 disabled={loading}
                             >
                                 {loading ? (
-                                    <div className="loading-spinner"><div className="spinner"></div>جاري الإرسال...</div>
+                                    <div className="loading-spinner"><Spinner size="sm" />جاري الإرسال...</div>
                                 ) : 'إرسال رمز التحقق'}
                             </button>
                             <div className="login-footer-text">
@@ -264,7 +265,7 @@ const Signup = () => {
                             {error && <div className="alert-box error">{error}</div>}
                             <button type="submit" className="btn primary large" disabled={loading}>
                                 {loading ? (
-                                    <div className="loading-spinner"><div className="spinner"></div>جاري إنشاء الحساب...</div>
+                                    <div className="loading-spinner"><Spinner size="sm" />جاري إنشاء الحساب...</div>
                                 ) : 'إنشاء الحساب'}
                             </button>
                             <button

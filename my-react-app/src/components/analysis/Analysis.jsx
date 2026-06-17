@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useContext } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import './analysis.css';
@@ -10,8 +10,7 @@ import LastQuizSummary from './LastQuizSummary';
 import QuizHistory from './QuizHistory';
 import Progress from './Progress';
 import FinalExams from './FinalExams';
-import Navbar from '../common/Navbar.jsx';
-import { useContext } from 'react';
+import Spinner from '../common/Spinner.jsx';
 import { UserContext } from '../../UserContext';
 
 const BestWorstTopic = ({ best, worst }) => (
@@ -393,11 +392,7 @@ const Analysis = () => {
   // Section loading indicators
   const SectionLoader = ({ message }) => (
     <div className="section-loader">
-      <div className="orbital-spinner small">
-        <div className="orbital-ring orbital-ring-1"></div>
-        <div className="orbital-ring orbital-ring-2"></div>
-        <div className="orbital-core"></div>
-      </div>
+      <Spinner size="sm" />
       <p style={{ color: '#888', fontSize: '1rem', marginTop: 8 }}>{message}</p>
     </div>
   );
@@ -540,14 +535,7 @@ const Analysis = () => {
         if (!user?.username || !sessionToken) {
           return (
             <div className="analysis-container">
-              <div className="loading-spinner">
-                <div className="orbital-spinner">
-                  <div className="orbital-ring orbital-ring-1"></div>
-                  <div className="orbital-ring orbital-ring-2"></div>
-                  <div className="orbital-core"></div>
-                </div>
-                <p>جاري تحميل بيانات المستخدم...</p>
-              </div>
+              <Spinner fullScreen label="جاري تحميل بيانات المستخدم..." />
             </div>
           );
         }
@@ -565,9 +553,7 @@ const Analysis = () => {
   };
 
   return (
-    <>
-      <Navbar />
-      <div className="analysis-wrapper fade-in">
+    <div className="analysis-wrapper fade-in">
         <h2 className="screen-title">تقرير الأداء</h2>
 
         {/* Tab Navigation */}
@@ -614,8 +600,7 @@ const Analysis = () => {
             ابدأ اختبار جديد
           </button>
         </div>
-      </div>
-    </>
+    </div>
   );
 };
 

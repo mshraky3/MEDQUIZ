@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import axios from 'axios';
 import Globals from '../../global.js';
+import Spinner from '../common/Spinner.jsx';
 import './analysis.css';
 
 const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz, isTrial }) => {
@@ -162,7 +163,7 @@ const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz, isTria
                                                 {loadingButtons[attempt.id] ? (
                                                     <div className="ai-analysis-loading">
                                                         <p>جاري تحليل السؤال...</p>
-                                                        <div className="spinner"></div>
+                                                        <Spinner size="sm" />
                                                         <p className="loading-subtext">يرجى الانتظار...</p>
                                                     </div>
                                                 ) : (

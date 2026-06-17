@@ -144,23 +144,6 @@ input::placeholder {
   color: #22d3ee;
 }
 
-.spinner {
-  border: 6px solid rgba(255, 255, 255, 0.1);
-  border-top: 6px solid #22d3ee;
-  border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  margin: 0 auto 20px;
-  animation: spin 1s linear infinite;
-  box-shadow: 0 0 20px rgba(34, 211, 238, 0.3);
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 /* Success message */
 .success-message {
   background-color: rgba(34, 197, 94, 0.2);

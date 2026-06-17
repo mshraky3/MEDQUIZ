@@ -1,0 +1,88 @@
+/* ============================================================= */
+/* Canonical app spinner — the ONLY loading spinner design.       */
+/* Collision-free sqb- prefixed names so no other stylesheet can  */
+/* distort it (the old orbital/border spinners are gone).         */
+/* ============================================================= */
+
+.sqb-spinner {
+    position: relative;
+    display: inline-block;
+    flex: 0 0 auto;
+    vertical-align: middle;
+}
+
+.sqb-spinner-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    box-sizing: border-box;
+}
+
+.sqb-spinner-ring:nth-child(1) {
+    border-top-color: #3b82f6;
+    border-right-color: #3b82f6;
+    animation: sqb-spin 1.1s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+}
+
+.sqb-spinner-ring:nth-child(2) {
+    inset: 22%;
+    border-bottom-color: #10b981;
+    border-left-color: #10b981;
+    animation: sqb-spin 1.5s cubic-bezier(0.5, 0, 0.5, 1) infinite reverse;
+}
+
+.sqb-spinner-core {
+    position: absolute;
+    inset: 38%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.35), transparent 70%);
+    animation: sqb-pulse 1.8s ease-in-out infinite;
+}
+
+/* sizes */
+.sqb-spinner-sm { width: 22px; height: 22px; }
+.sqb-spinner-sm .sqb-spinner-ring { border-width: 2px; }
+.sqb-spinner-md { width: 44px; height: 44px; }
+.sqb-spinner-md .sqb-spinner-ring { border-width: 3px; }
+.sqb-spinner-lg { width: 76px; height: 76px; }
+.sqb-spinner-lg .sqb-spinner-ring { border-width: 3px; }
+
+@keyframes sqb-spin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes sqb-pulse {
+    0%, 100% { opacity: 0.35; transform: scale(0.75); }
+    50% { opacity: 1; transform: scale(1.1); }
+}
+
+/* inline (spinner + label on one line) */
+.sqb-loading-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* full-screen / section centered block */
+.sqb-loading-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    min-height: 220px;
+    padding: 2rem;
+    text-align: center;
+}
+
+.sqb-loading-label {
+    margin: 0;
+    color: var(--muted, #94a3b8);
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sqb-spinner-ring, .sqb-spinner-core { animation-duration: 2.4s; }
+}

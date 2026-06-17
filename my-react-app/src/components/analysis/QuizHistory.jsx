@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import Globals from '../../global.js';
+import Spinner from '../common/Spinner.jsx';
 import './QuizHistory.css';
 
 const QuizHistory = ({ userId, username, sessionToken }) => {
@@ -179,11 +180,7 @@ const QuizHistory = ({ userId, username, sessionToken }) => {
   if (loading && sessions.length === 0) {
     return (
       <div className="quiz-history-loading">
-        <div className="orbital-spinner">
-          <div className="orbital-ring orbital-ring-1"></div>
-          <div className="orbital-ring orbital-ring-2"></div>
-          <div className="orbital-core"></div>
-        </div>
+        <Spinner size="lg" />
         <p>جاري تحميل سجل الاختبارات...</p>
       </div>
     );
@@ -357,7 +354,7 @@ const QuizHistory = ({ userId, username, sessionToken }) => {
                                   {loadingButtons[attempt.id] ? (
                                     <div className="ai-analysis-loading">
                                       <p>جاري تحليل السؤال...</p>
-                                      <div className="spinner"></div>
+                                      <Spinner size="sm" />
                                       <p className="loading-subtext">يرجى الانتظار...</p>
                                     </div>
                                   ) : (

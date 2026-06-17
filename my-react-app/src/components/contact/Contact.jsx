@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Spinner from '../common/Spinner.jsx';
 import './Contact.css';
 
 const Contact = () => {
@@ -220,7 +221,7 @@ ${form.message}
                             >
                                 {loading ? (
                                     <div className="loading-spinner">
-                                        <div className="spinner"></div>
+                                        <Spinner size="sm" />
                                         جاري الإرسال...
                                     </div>
                                 ) : (

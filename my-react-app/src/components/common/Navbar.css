@@ -20,16 +20,6 @@
   }
 }
 
-@keyframes shimmer {
-  0% {
-    background-position: -1000px 0;
-  }
-
-  100% {
-    background-position: 1000px 0;
-  }
-}
-
 /* Navbar Styles */
 .navbar {
   position: fixed;
@@ -37,10 +27,10 @@
   left: 0;
   right: 0;
   padding: 0 32px;
-  background: rgba(11, 16, 33, 0.85);
+  background: rgba(15, 23, 42, 0.88);
   backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+  border-bottom: 1px solid rgba(51, 65, 85, 0.8);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
   min-height: 72px;
   display: flex;
   align-items: center;
@@ -57,7 +47,7 @@
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.5), transparent);
+  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.5), transparent);
   opacity: 0.5;
 }
 
@@ -91,11 +81,11 @@
 }
 
 .back-button:hover {
-  background: rgba(34, 211, 238, 0.15);
-  border-color: rgba(34, 211, 238, 0.4);
-  color: #22d3ee;
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.4);
+  color: #3b82f6;
   transform: translateX(3px);
-  box-shadow: 0 0 16px rgba(34, 211, 238, 0.25);
+  box-shadow: 0 0 16px rgba(59, 130, 246, 0.25);
 }
 
 .back-button:active {
@@ -103,7 +93,7 @@
 }
 
 .navbar-brand {
-  color: #22d3ee;
+  color: #3b82f6;
   font-weight: 800;
   font-size: 1.2rem;
   text-decoration: none;
@@ -141,8 +131,8 @@
 }
 
 .nav-link:hover {
-  color: #22d3ee;
-  background: rgba(34, 211, 238, 0.08);
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.08);
 }
 
 /* Hamburger menu button */
@@ -180,14 +170,14 @@
 .user-info {
   display: flex;
   align-items: center;
-  background: rgba(34, 211, 238, 0.1);
+  background: rgba(59, 130, 246, 0.1);
   border-radius: 999px;
   padding: 10px 20px 10px 12px;
   font-weight: 600;
-  color: #22d3ee;
+  color: #3b82f6;
   font-size: 15px;
   letter-spacing: 0.3px;
-  border: 1px solid rgba(34, 211, 238, 0.3);
+  border: 1px solid rgba(59, 130, 246, 0.3);
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
@@ -200,7 +190,7 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.2), transparent);
+  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.2), transparent);
   transition: left 0.6s ease;
 }
 
@@ -209,9 +199,9 @@
 }
 
 .user-info:hover {
-  background: rgba(34, 211, 238, 0.15);
-  border-color: rgba(34, 211, 238, 0.5);
-  box-shadow: 0 0 20px rgba(34, 211, 238, 0.3);
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
 }
 
 .user-icon {

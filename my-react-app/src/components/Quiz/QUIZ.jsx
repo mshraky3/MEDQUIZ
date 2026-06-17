@@ -28,7 +28,6 @@ const QUIZ = () => {
   const [questions, setQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
-  const [answers, setAnswers] = useState([]);
   const [quizFinished, setQuizFinished] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
