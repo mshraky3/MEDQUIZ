@@ -11,15 +11,17 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1068.0",
     "@fingerprintjs/fingerprintjs": "^4.6.2",
     "axios": "^1.9.0",
     "compression": "^1.8.0",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
-    "openai": "^4.60.0",
     "nodemailer": "^7.0.6",
     "nodemon": "^3.1.10",
+    "openai": "^4.60.0",
+    "pdfjs-dist": "^6.0.227",
     "pg": "^8.16.0"
   }
 }

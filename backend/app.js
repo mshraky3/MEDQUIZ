@@ -2,7 +2,6 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { Pool } from 'pg';
-import https from "https";
 import OpenAI from 'openai';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
@@ -10,6 +9,8 @@ import errorReportRoutes from './routes/error-report.js';
 import questionReportsRouter from './routes/question-reports.js';
 import emailCampaignsRouter from './routes/email-campaigns.js';
 import paymentRoutes from './routes/payment.js';
+import summariesRouter from './routes/summaries.js';
+import summaryContent from './content/summaryHtml/index.js';
 import { notifyBackendError } from './services/errorNotificationService.js';
 
 dotenv.config();
@@ -38,7 +39,6 @@ const logger = {
         console.error(`❌ [ERROR] ${message}`, error ? error.stack || error : '');
     }
 };
-const agent = new https.Agent({ keepAlive: true });
 const db = new Pool({
     user: process.env.DBUSER,
     host: process.env.DBHOST,
@@ -55,6 +55,54 @@ const db = new Pool({
     allowExitOnIdle: true, // Allow process to exit when pool is idle (important for serverless)
     maxUses: 7500, // Close (and replace) a connection after it has been used 7500 times
 });
+
+// One-time, idempotent schema bootstrap. Runs once per process (cold start) and
+// is safe to re-run thanks to IF NOT EXISTS. Replaces the old manual
+// POST /init-progress-tables endpoint and guarantees the performance indexes
+// that keep /user-streaks and /api/user-achievements fast exist.
+let _schemaReady = null;
+function ensureSchema() {
+    if (_schemaReady) return _schemaReady;
+    _schemaReady = (async () => {
+        try {
+            await db.query(`
+                CREATE TABLE IF NOT EXISTS user_question_progress (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+                    question_id INTEGER NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+                    question_type VARCHAR(50),
+                    source VARCHAR(50),
+                    completed_at TIMESTAMP DEFAULT NOW(),
+                    UNIQUE(user_id, question_id)
+                )
+            `);
+            await db.query(`
+                CREATE TABLE IF NOT EXISTS user_achievements (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+                    achievement_type VARCHAR(50) NOT NULL,
+                    achievement_key VARCHAR(100) NOT NULL,
+                    achievement_name VARCHAR(200) NOT NULL,
+                    achievement_description TEXT,
+                    earned_at TIMESTAMP DEFAULT NOW(),
+                    UNIQUE(user_id, achievement_type, achievement_key)
+                )
+            `);
+            // Performance indexes — these directly address the slow-request warnings.
+            await db.query(`CREATE INDEX IF NOT EXISTS idx_user_question_progress_user_id ON user_question_progress(user_id)`);
+            await db.query(`CREATE INDEX IF NOT EXISTS idx_user_question_progress_cardinality ON user_question_progress(user_id, question_type, source)`);
+            await db.query(`CREATE INDEX IF NOT EXISTS idx_user_achievements_user_id ON user_achievements(user_id)`);
+            await db.query(`CREATE INDEX IF NOT EXISTS idx_user_quiz_sessions_user_id ON user_quiz_sessions(user_id)`);
+            logger.info('Schema bootstrap complete (tables + performance indexes ensured)');
+        } catch (err) {
+            _schemaReady = null; // allow a retry on a later invocation
+            logger.error('Schema bootstrap failed', err);
+        }
+    })();
+    return _schemaReady;
+}
+// Kick off at module load; non-blocking so it never delays the first request.
+ensureSchema();
 
 // Lazily detect whether the payment/subscription columns from migration 001
 // exist yet. This lets the new payment-prep code deploy SAFELY before the
@@ -113,62 +161,6 @@ const questionsCache = {
     ttl: 5 * 60 * 1000
 };
 
-// Free trial endpoints removed - accounts are now free
-/*
-const FREE_TRIAL_QUESTIONS = [
-    // Surgery questions (10)
-    { id: 1, question_text: "A patient received a severe blow on the inferolateral side of the left knee joint while playing football. Radiographic examination confirmed a fracture of the head and neck of the fibula. Which of the following nerves is most vulnerable for damage?", option1: "Tibial", option2: "Deep peroneal", option3: "Common peroneal", option4: "Superficial peroneal", question_type: "surgery", correct_option: "Common peroneal" },
-    { id: 2, question_text: "A 19-year-old fell on an outstretched hand while playing football. Examination confirmed tenderness over the anatomic snuff box. Which of the following is the most suspected fracture?", option1: "Colles", option2: "Cuboid", option3: "Scaphoid", option4: "Hook of hamate", question_type: "surgery", correct_option: "Scaphoid" },
-    { id: 3, question_text: "A 45-year-old man had transurethral catheterization before a long surgical procedure. Postoperatively he developed hematuria and a urethral injury is suspected. Which part of the urethra is most likely injured?", option1: "Penile", option2: "Prostatic", option3: "Membranous", option4: "Middle spongy", question_type: "surgery", correct_option: "Membranous" },
-    { id: 4, question_text: "A patient presented after a blunt injury over the left leg. Examination confirmed sensory loss on adjacent sides of the great and second toes, and impaired dorsiflexion of the foot. Which nerve is most likely injured?", option1: "Sural", option2: "Saphenous", option3: "Deep peroneal", option4: "Posterior tibial", question_type: "surgery", correct_option: "Deep peroneal" },
-    { id: 5, question_text: "A 60-year-old man presents to the Emergency Department with epigastric pain radiating to the back. He is a smoker with long-standing diabetes and hypertension. Abdominal exam reveals a pulsatile supra-umbilical mass. What is the most likely diagnosis?", option1: "Abdominal aortic aneurysm", option2: "Secondary liver metastasis", option3: "Renal cell carcinoma", option4: "Peri-umbilical hernia", question_type: "surgery", correct_option: "Abdominal aortic aneurysm" },
-    { id: 6, question_text: "A 45-year-old man presented to the Emergency Department complaining of lower abdominal pain for 3 days. He gave a history of being hit by a piece of wood in the same site of pain 4 days back. Examination revealed lethargic patient in pain, which was aggravated by moving his leg. there was grayish turbid semipurulent secretions from a small break in the skin of right lower quadrant. Which of the following is the most appropriate next step in the management?", option1: "Observation", option2: "Surgical drainage", option3: "CT scan abdomen", option4: "Culture and sensitivity for secretions", question_type: "surgery", correct_option: "Surgical drainage" },
-    { id: 7, question_text: "A 37-year-old man was involved in a fight and sustained a stab wound to the neck. On presentation, patient was conscious, alert. Examination showed a 2 cm wound anterior to the left ear and close to the angle of the mandible with blood ooze. which of the following is the most appropriate next step?", option1: "Chest X ray", option2: "Observation", option3: "CTA of the neck", option4: "Exploration of the wound", question_type: "surgery", correct_option: "CTA of the neck" },
-    { id: 8, question_text: "A 19-year-old woman brought to the Emergency Department after being stabbed to the right upper quadrant. On arrival, she was conscious and oriented. Examination showed only a penetrating wound to the anterior abdominal wall at anterior axillary line just below the right costal margin. Which of the following is the most appropriate next step?", option1: "Observation", option2: "CT scan abdomen", option3: "Ultrasound abdomen", option4: "Exploratory laparotomy", question_type: "surgery", correct_option: "CT scan abdomen" },
-    { id: 9, question_text: "A 25-year-old man brought to the Emergency Department after he was involved in motor vehicle crash, which was driving at a speed of 130 km/hour. Patient was wearing seat belt. On arrival to the Emergency Department, he was conscious, and alert. Chest X-ray: Normal. Which of the following is the most appropriate next step?", option1: "US abdomen", option2: "CT scan abdomen", option3: "Diagnostic laparoscopy", option4: "Exploratory Laparotomy", question_type: "surgery", correct_option: "CT scan abdomen" },
-    { id: 10, question_text: "A 33-year-old man was involved in a motor vehicle crash. On arrival to the Emergency Department, he was conscious and alert. Examination showed an open wound to the anterior surface of the neck with devitalized tissue. Blood pressure 100/60 mmHg Heart rate 104/min Respiratory rate 28/min Oxygen saturation 87% Which of the following is the most appropriate next step?", option1: "Oxygen mask", option2: "Tracheostomy", option3: "Cricothyroidotomy", option4: "Endotracheal intubation", question_type: "surgery", correct_option: "Endotracheal intubation" },
-    
-    // Medicine questions (10)
-    { id: 11, question_text: "A 55-year-old man with CHF. Which therapy reduces mortality?", option1: "Digoxin", option2: "Diuretics", option3: "Anticoagulation", option4: "ACE inhibitors", question_type: "medicine", correct_option: "ACE inhibitors" },
-    { id: 12, question_text: "Which crystals are responsible for pseudogout?", option1: "Calcium urate", option2: "Calcium oxalate", option3: "Calcium chloride", option4: "Calcium pyrophosphate", question_type: "medicine", correct_option: "Calcium pyrophosphate" },
-    { id: 13, question_text: "A surgeon sustains a needle-stick injury from a patient with chronic hepatitis C. Risk of HCV transmission?", option1: "0.03%", option2: "0.3%", option3: "3%", option4: "30%", question_type: "medicine", correct_option: "3%" },
-    { id: 14, question_text: "A 64-year-old man presents to the clinic after having first episode of right knee pain for 2 weeks duration. He asks for a medicine to relieve his pain. He does not have any other symptoms apart from epigastric burning. He has no history of injury to the knee. Examination of knee is normal. Which is the most appropriate analgesic for this patient at this stage?", option1: "Aspirin", option2: "Codeine", option3: "Ibuprofen", option4: "Paracetamol", question_type: "medicine", correct_option: "Paracetamol" },
-    { id: 15, question_text: "A 40-year-old man with advanced colonic cancer. Most common site of metastasis?", option1: "Lung", option2: "Liver", option3: "Thyroid", option4: "Prostate", question_type: "medicine", correct_option: "Liver" },
-    { id: 16, question_text: "What is the best way to prevent giardiasis?", option1: "Hand washing", option2: "Avoid eating fruits", option3: "Avoid eating vegetables", option4: "Prophylactic antibiotics", question_type: "medicine", correct_option: "Hand washing" },
-    { id: 17, question_text: "A 40-year-old healthy woman presents to Emergency Room with a 4-hour history of sudden onset right lower limb pain. Her examination reveals intact femoral pulse but absent distal pulses, diminished sensory exam with an altered motor exam. Labs are normal. ECG shows atrial fibrillation. Which of the following is the most appropriate next step?", option1: "Heparin", option2: "Morphine", option3: "CT angiogram", option4: "Vascular ultrasound", question_type: "medicine", correct_option: "Heparin" },
-    { id: 18, question_text: "A 62-year-old man with known diabetes and hypertension presents with 4-hour history of sudden left leg pain. He has a prior history of claudication after walking 200 meters relieved by rest. Non-compliant with oral hypoglycemic and statin. Smoker for 40 years. Which of the following is the most appropriate investigation?", option1: "CT angiogram", option2: "Vascular ultrasound", option3: "Conventional angiogram", option4: "Magnetic resonance angiogram", question_type: "medicine", correct_option: "CT angiogram" },
-    { id: 19, question_text: "A 54-year-old man with known diabetes and heavy smoker presents with a history of classic vascular claudication of his left leg after walking 100 meters to the mosque. Pulse examination reveals intact pulses on the right leg and diminished distal pulses below the popliteal artery. Which of the following is the most appropriate way to improve his claudication distance?", option1: "Dual antiplatelet therapy", option2: "Supervised exercise program", option3: "Supervised smoking cessation", option4: "Aggressive blood sugar control program", question_type: "medicine", correct_option: "Supervised exercise program" },
-    { id: 20, question_text: "A 72-year-old man known to have diabetes and hypertension presents with an ingrowing toenail. Which of the following is the most appropriate step before operating on the toe?", option1: "Start antibiotics", option2: "Examine the other toes", option3: "Swab the toe for culture", option4: "Examine peripheral pulses", question_type: "medicine", correct_option: "Examine peripheral pulses" },
-    
-    // Pediatric questions (10)
-    { id: 21, question_text: "A pediatrician is called to attend a caesarean section delivery of 38 week's gestation baby. On delivery, the neonate does not cry immediately, appears cyanotic and floppy. After drying suctioning and stimulation, the baby cries weakly, has irregular breathing, heart rate 110/min, some flexion of extremities, and pink body with blue extremities. What is the most accurate Apgar score?", option1: "6", option2: "7", option3: "8", option4: "9", question_type: "pediatric", correct_option: "8" },
-    { id: 22, question_text: "Most important food allergy to note before flu vaccine?", option1: "Chicken", option2: "Shellfish", option3: "Eggs", option4: "Nuts", question_type: "pediatric", correct_option: "Eggs" },
-    { id: 23, question_text: "6-year-old with fever, oral vesicles, and cervical lymphadenopathy. Cause?", option1: "EBV", option2: "Herpes simplex", option3: "Varicella zoster", option4: "HPV", question_type: "pediatric", correct_option: "Herpes simplex" },
-    { id: 24, question_text: "6-year-old with fever, vomiting, jaundice, hepatomegaly. Hepatitis type?", option1: "A", option2: "B", option3: "C", option4: "D", question_type: "pediatric", correct_option: "A" },
-    { id: 25, question_text: "9-year-old from Africa with fever, meningismus, lymphocytic CSF. Cause?", option1: "Poliovirus", option2: "Coronavirus", option3: "CMV", option4: "EBV", question_type: "pediatric", correct_option: "Poliovirus" },
-    { id: 26, question_text: "3-day-old febrile neonate with gram+ bacilli in CSF. Empiric treatment?", option1: "Meropenem", option2: "Cefotaxime", option3: "Gentamicin", option4: "Ampicillin", question_type: "pediatric", correct_option: "Ampicillin" },
-    { id: 27, question_text: "3-year-old with fever, anemia, splenomegaly. Giemsa stain shows:", option1: "P. falciparum", option2: "P. malariae", option3: "P. ovale", option4: "P. vivax", question_type: "pediatric", correct_option: "P. falciparum" },
-    { id: 28, question_text: "Most common organ affected by mumps in 4-year-old?", option1: "Skin", option2: "Lungs", option3: "Testes", option4: "Parotid", question_type: "pediatric", correct_option: "Parotid" },
-    { id: 29, question_text: "Most common causative agent in pediatric acute otitis media?", option1: "Viral", option2: "Fungal", option3: "Bacterial", option4: "Mycoplasma", question_type: "pediatric", correct_option: "Bacterial" },
-    { id: 30, question_text: "Which defines \"fever of unknown origin\" in pediatrics?", option1: "7 days", option2: "14 days", option3: "21 days", option4: "28 days", question_type: "pediatric", correct_option: "14 days" },
-    
-    // Obstetrics and Gynecology questions (10)
-    { id: 31, question_text: "A 34-week pregnant woman with chlamydia. Most common neonatal infection acquired?", option1: "Eye", option2: "Ear", option3: "Liver", option4: "Lung", question_type: "obstetrics and gynecology", correct_option: "Eye" },
-    { id: 32, question_text: "A 26-year-old woman planning pregnancy. Which supplement is most recommended preconception?", option1: "Zinc", option2: "Iron", option3: "Calcium", option4: "Folic acid", question_type: "obstetrics and gynecology", correct_option: "Folic acid" },
-    { id: 33, question_text: "A 28-year-old woman with irregular periods and hirsutism. Most likely diagnosis?", option1: "PCOS", option2: "Hypothyroidism", option3: "Cushing's syndrome", option4: "Adrenal hyperplasia", question_type: "obstetrics and gynecology", correct_option: "PCOS" },
-    { id: 34, question_text: "A 35-year-old woman with postmenopausal bleeding. First investigation?", option1: "Endometrial biopsy", option2: "Pap smear", option3: "Ultrasound", option4: "Hormone levels", question_type: "obstetrics and gynecology", correct_option: "Endometrial biopsy" },
-    { id: 35, question_text: "A 24-year-old woman with severe dysmenorrhea. Most likely cause?", option1: "Endometriosis", option2: "Fibroids", option3: "PID", option4: "Adenomyosis", question_type: "obstetrics and gynecology", correct_option: "Endometriosis" },
-    { id: 36, question_text: "A 30-year-old woman with amenorrhea and galactorrhea. Most likely diagnosis?", option1: "Prolactinoma", option2: "Hypothyroidism", option3: "PCOS", option4: "Pregnancy", question_type: "obstetrics and gynecology", correct_option: "Prolactinoma" },
-    { id: 37, question_text: "A 40-year-old woman with heavy menstrual bleeding. Most common cause?", option1: "Fibroids", option2: "Endometrial cancer", option3: "Adenomyosis", option4: "Coagulopathy", question_type: "obstetrics and gynecology", correct_option: "Fibroids" },
-    { id: 38, question_text: "A 22-year-old woman with primary amenorrhea. Most common cause?", option1: "Turner syndrome", option2: "PCOS", option3: "Hypothalamic amenorrhea", option4: "Asherman's syndrome", question_type: "obstetrics and gynecology", correct_option: "Turner syndrome" },
-    { id: 39, question_text: "A 45-year-old woman with hot flashes and mood changes. Most appropriate treatment?", option1: "HRT", option2: "SSRIs", option3: "Clonidine", option4: "Lifestyle changes", question_type: "obstetrics and gynecology", correct_option: "HRT" },
-    { id: 40, question_text: "A 32-year-old woman with recurrent miscarriages. Most common cause?", option1: "Chromosomal abnormalities", option2: "Uterine anomalies", option3: "Antiphospholipid syndrome", option4: "Endocrine disorders", question_type: "obstetrics and gynecology", correct_option: "Chromosomal abnormalities" }
-];
-*/
-
-// In-memory storage for free trial sessions (in production, use Redis or database)
-// REMOVED: Free trial sessions - accounts are now free
-// const freeTrialSessions = new Map();
 
 const app = express();
 
@@ -445,6 +437,99 @@ const ensureQuestionReportsTable = async () => {
 };
 ensureQuestionReportsTable();
 
+// ============================================
+// TOPIC SUMMARIES INITIALIZATION
+// ============================================
+// Slide-deck summaries per exam topic + per-user reading progress. Created at
+// startup (same pattern as the tables above) so the feature needs NO manual
+// production migration. The two decks we already have are seeded idempotently;
+// the upload script (scripts/uploadSummaries.js) fills in page_count.
+const ensureSummariesTables = async () => {
+    try {
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS summaries (
+                id SERIAL PRIMARY KEY,
+                slug VARCHAR(80) UNIQUE NOT NULL,
+                title VARCHAR(255) NOT NULL,
+                title_en VARCHAR(255),
+                question_type VARCHAR(80) NOT NULL,
+                description TEXT,
+                page_count INTEGER DEFAULT 0,
+                r2_prefix VARCHAR(255) NOT NULL,
+                is_published BOOLEAN DEFAULT TRUE,
+                sort_order INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS summary_progress (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+                summary_id INTEGER NOT NULL REFERENCES summaries(id) ON DELETE CASCADE,
+                last_page INTEGER DEFAULT 1,
+                max_page_reached INTEGER DEFAULT 1,
+                completed BOOLEAN DEFAULT FALSE,
+                first_viewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                last_viewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE (user_id, summary_id)
+            )
+        `);
+        await db.query(`CREATE INDEX IF NOT EXISTS idx_summary_progress_user ON summary_progress(user_id)`);
+        // HTML content (the slides rendered in-app — no PDF/download). Authored in
+        // content/summaryHtml and synced below so summaries are visible without R2.
+        await db.query(`ALTER TABLE summaries ADD COLUMN IF NOT EXISTS content_html TEXT`);
+        // Category (specialty group) + overview flag for hub grouping of main vs sub-topic decks.
+        await db.query(`ALTER TABLE summaries ADD COLUMN IF NOT EXISTS category VARCHAR(80)`);
+        await db.query(`ALTER TABLE summaries ADD COLUMN IF NOT EXISTS is_overview BOOLEAN DEFAULT FALSE`);
+
+        // Seed main + sub-topic decks. question_type must match the canonical
+        // questions.question_type set so "practice" links to the right bank.
+        // ON CONFLICT keeps existing rows in sync with the repo (source of truth).
+        await db.query(`
+            INSERT INTO summaries (slug, title, title_en, question_type, description, r2_prefix, category, is_overview, sort_order)
+            VALUES
+                ('surgery', 'ملخص الجراحة', 'Surgery Summary', 'surgery',
+                 'ملخص شامل لأهم مواضيع الجراحة عالية العائد في اختبار SMLE.', 'summaries/surgery/', 'الجراحة', TRUE, 1),
+                ('trauma', 'الرضوح والطوارئ الجراحية', 'Trauma & Surgical Emergencies', 'surgery',
+                 'موضوع فرعي: المسح الأولي، إصابات الصدر والبطن، الصدمة، الحروق.', 'summaries/trauma/', 'الجراحة', FALSE, 2),
+                ('medicine', 'ملخص الباطنة', 'Medicine Summary', 'medicine',
+                 'ملخص شامل لأهم مواضيع الباطنة عالية العائد في اختبار SMLE.', 'summaries/medicine/', 'الباطنة', TRUE, 1),
+                ('cardiology', 'أمراض القلب', 'Cardiology', 'medicine',
+                 'موضوع فرعي: القلب الإقفاري، فشل القلب، الصمامات، اضطرابات النظم.', 'summaries/cardiology/', 'الباطنة', FALSE, 2),
+                ('pediatrics', 'ملخص طب الأطفال', 'Pediatrics Summary', 'pediatric',
+                 'ملخص شامل لأهم مواضيع طب الأطفال عالية العائد في اختبار SMLE.', 'summaries/pediatrics/', 'طب الأطفال', TRUE, 1),
+                ('neonatology', 'حديثو الولادة', 'Neonatology', 'pediatric',
+                 'موضوع فرعي: الإنعاش، الضائقة التنفسية، اليرقان، الإنتان.', 'summaries/neonatology/', 'طب الأطفال', FALSE, 2),
+                ('obgyn', 'ملخص النساء والولادة', 'OB/GYN Summary', 'obstetrics and gynecology',
+                 'ملخص شامل لأهم مواضيع النساء والولادة عالية العائد في اختبار SMLE.', 'summaries/obgyn/', 'النساء والولادة', TRUE, 1),
+                ('high-risk-obstetrics', 'الحمل عالي الخطورة', 'High-Risk Obstetrics', 'obstetrics and gynecology',
+                 'موضوع فرعي: اضطرابات الضغط، تحسس Rh، تقييد النمو، النزف.', 'summaries/high-risk-obstetrics/', 'النساء والولادة', FALSE, 2)
+            ON CONFLICT (slug) DO UPDATE SET
+                title = EXCLUDED.title,
+                title_en = EXCLUDED.title_en,
+                question_type = EXCLUDED.question_type,
+                description = EXCLUDED.description,
+                category = EXCLUDED.category,
+                is_overview = EXCLUDED.is_overview,
+                sort_order = EXCLUDED.sort_order,
+                updated_at = NOW()
+        `);
+
+        // Sync authored HTML content (repo files are the source of truth).
+        for (const [slug, html] of Object.entries(summaryContent)) {
+            await db.query(
+                `UPDATE summaries SET content_html = $1, updated_at = NOW() WHERE slug = $2`,
+                [html, slug]
+            );
+        }
+        logger.info('summaries tables ensured');
+    } catch (err) {
+        logger.error('Error ensuring summaries tables', err);
+    }
+};
+ensureSummariesTables();
+
 // Helper function to parse user agent
 const parseUserAgent = (userAgent) => {
     if (!userAgent) return { device: 'Unknown', browser: 'Unknown', os: 'Unknown' };
@@ -658,6 +743,10 @@ app.post('/login', async (req, res) => {
             "UPDATE accounts SET logged = $1, logged_date = $2, session_token = $3, email_grace_logins = $4 WHERE id = $5",
             [true, now, sessionToken, newGraceCount, userRow.id]
         );
+        // Token rotated — drop any cached session under this username (and its
+        // email alias) so a previously cached old token can't pass requireSession.
+        invalidateSessionCache(userRow.username);
+        invalidateSessionCache(userRow.email);
         logger.debug(`Set logged=true and session_token for username: ${lowercaseUsername}`);
 
         // Detect suspicious activity
@@ -709,7 +798,8 @@ app.post('/login', async (req, res) => {
 app.post('/session-validate', async (req, res) => {
     const { username } = req.body;
     try {
-        const user = await db.query("SELECT * FROM accounts WHERE username = $1", [username]);
+        // Only the columns needed for the timeout check — avoids hauling the full row.
+        const user = await db.query("SELECT id, logged, logged_date FROM accounts WHERE username = $1", [username]);
         const userRow = user.rows[0];
         if (!userRow) {
             return res.status(401).json({ valid: false, message: 'User not found' });
@@ -717,7 +807,7 @@ app.post('/session-validate', async (req, res) => {
         let now = new Date();
         const lastLogin = new Date(userRow.logged_date);
         if (userRow.logged && (now - lastLogin < SESSION_TIMEOUT_MS)) {
-            return res.status(200).json({ valid: true, user: userRow });
+            return res.status(200).json({ valid: true });
         } else {
             // Session expired, unlock
             await db.query("UPDATE accounts SET logged = $1 WHERE id = $2", [false, userRow.id]);
@@ -737,6 +827,7 @@ app.post('/logout', async (req, res) => {
     }
     try {
         await db.query("UPDATE accounts SET logged = $1 WHERE username = $2", [false, username]);
+        invalidateSessionCache(username); // drop cached session so it can't be reused
         res.status(200).json({ message: 'Logout successful' });
     } catch (error) {
         console.error(error);
@@ -2461,47 +2552,9 @@ app.post('/api/reset-progress', requireSession, async (req, res) => {
     }
 });
 
-// Create user progress tracking tables
-app.post('/init-progress-tables', async (req, res) => {
-    try {
-        // Create user_question_progress table to track completed questions by cardinality
-        await db.query(`
-            CREATE TABLE IF NOT EXISTS user_question_progress (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
-                question_id INTEGER NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
-                question_type VARCHAR(50),
-                source VARCHAR(50),
-                completed_at TIMESTAMP DEFAULT NOW(),
-                UNIQUE(user_id, question_id)
-            )
-        `);
-
-        // Create user_achievements table to track completed cardinalities
-        await db.query(`
-            CREATE TABLE IF NOT EXISTS user_achievements (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
-                achievement_type VARCHAR(50) NOT NULL,
-                achievement_key VARCHAR(100) NOT NULL,
-                achievement_name VARCHAR(200) NOT NULL,
-                achievement_description TEXT,
-                earned_at TIMESTAMP DEFAULT NOW(),
-                UNIQUE(user_id, achievement_type, achievement_key)
-            )
-        `);
-
-        // Create indexes for better performance
-        await db.query(`CREATE INDEX IF NOT EXISTS idx_user_question_progress_user_id ON user_question_progress(user_id)`);
-        await db.query(`CREATE INDEX IF NOT EXISTS idx_user_question_progress_cardinality ON user_question_progress(user_id, question_type, source)`);
-        await db.query(`CREATE INDEX IF NOT EXISTS idx_user_achievements_user_id ON user_achievements(user_id)`);
-
-        res.json({ message: 'Progress tracking tables initialized successfully' });
-    } catch (err) {
-        console.error('Error initializing progress tables:', err);
-        res.status(500).json({ message: 'Failed to initialize progress tables' });
-    }
-});
+// Note: progress tables + performance indexes are now created at startup by
+// ensureSchema() (see top of file) — the manual /init-progress-tables endpoint
+// was removed.
 
 // Debug endpoint to check database schema
 app.get('/debug/schema', async (req, res) => {
@@ -2910,25 +2963,36 @@ function getSessionCredentials(req) {
     }
 }
 
+// Short-lived in-memory cache of validated sessions. Previously every request to
+// a protected route did a DB round-trip just to check the session token, which
+// dominated the "Slow request" warnings. With a 30s TTL we skip the DB on the
+// hot path while keeping the "another login kicks the old session" guarantee:
+// /login and /logout evict the entry so a rotated token is never served stale.
+const sessionCache = new Map(); // username -> { token, expiresAt }
+const SESSION_CACHE_TTL = 30_000; // 30 seconds
+
+function invalidateSessionCache(username) {
+    if (username) sessionCache.delete(username);
+}
+
 function requireSession(req, res, next) {
     const { username, sessionToken } = getSessionCredentials(req);
-
-    logger.debug('requireSession middleware', {
-        method: req.method,
-        url: req.url,
-        username: username,
-        sessionToken: sessionToken ? 'present' : 'missing',
-        query: req.query,
-        body: req.body
-    });
 
     if (!username || !sessionToken) {
         logger.warn('Missing session credentials', { username, sessionToken: sessionToken ? 'present' : 'missing' });
         return res.status(401).json({ message: 'Missing session credentials' });
     }
+
+    // Fast path: a recently validated (username, token) pair skips the DB.
+    const cached = sessionCache.get(username);
+    if (cached && cached.token === sessionToken && cached.expiresAt > Date.now()) {
+        return next();
+    }
+
     db.query('SELECT session_token FROM accounts WHERE username = $1', [username])
         .then(result => {
             if (!result.rows.length || result.rows[0].session_token !== sessionToken) {
+                sessionCache.delete(username); // evict any stale entry
                 logger.warn('Session invalid or expired', {
                     username,
                     hasSessionInDB: result.rows.length > 0,
@@ -2936,7 +3000,7 @@ function requireSession(req, res, next) {
                 });
                 return res.status(401).json({ message: 'Session invalid or expired' });
             }
-            logger.debug('Session validated successfully', { username });
+            sessionCache.set(username, { token: sessionToken, expiresAt: Date.now() + SESSION_CACHE_TTL });
             next();
         })
         .catch(err => {
@@ -4458,6 +4522,9 @@ app.use('/', (req, res, next) => { req.db = db; next(); }, emailCampaignsRouter)
 // Payment Routes (Moyasar) — STUB, gated by PAYMENT_ENFORCEMENT_ENABLED.
 // Returns 503 "disabled" on every endpoint until the flag is set to "true".
 app.use('/api/payment', (req, res, next) => { req.db = db; next(); }, paymentRoutes);
+
+// Topic Summaries Routes (slide decks + study questions + reading progress)
+app.use('/api/summaries', (req, res, next) => { req.db = db; next(); }, summariesRouter);
 
 // Global Error Handling Middleware - catches all unhandled errors
 app.use(async (err, req, res, next) => {
