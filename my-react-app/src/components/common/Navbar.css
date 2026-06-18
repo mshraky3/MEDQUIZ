@@ -139,12 +139,17 @@
 .navbar-hamburger {
   display: none;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
   gap: 5px;
   background: none;
   border: none;
   cursor: pointer;
   padding: 8px;
   margin-left: 8px;
+  /* Keep the icon at 22px but guarantee a 44px touch target for mobile a11y. */
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .hamburger-line {

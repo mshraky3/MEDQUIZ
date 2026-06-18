@@ -15,7 +15,7 @@ const Bilingual = ({ ar, en }) => (
 );
 
 const offerings = [
-    { ar: 'بنك أسئلة شامل: أكثر من 8,000 سؤال طبي محدّث يغطي جميع التخصصات.', en: 'Comprehensive question bank: 8,000+ updated medical questions across all specialties.' },
+    { ar: 'بنك أسئلة شامل: أكثر من 11,000 سؤال طبي محدّث يغطي جميع التخصصات.', en: 'Comprehensive question bank: 11,000+ updated medical questions across all specialties.' },
     { ar: 'تحليلات مفصلة: تتبّع أداءك وحدّد نقاط القوة والضعف لديك.', en: 'Detailed analytics: track your performance and identify strengths and weaknesses.' },
     { ar: 'اختبارات متنوعة: من جلسات قصيرة (10 أسئلة) إلى اختبارات شاملة (100 سؤال).', en: 'Varied quizzes: from short sessions (10 questions) to full exams (100 questions).' },
     { ar: 'تتبّع التقدم: متابعة تطوّرك عبر الزمن مع إحصائيات دقيقة.', en: 'Progress tracking: monitor your improvement over time with precise statistics.' },

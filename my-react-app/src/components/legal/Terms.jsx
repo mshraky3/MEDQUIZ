@@ -26,7 +26,7 @@ const Terms = () => {
                         students prepare for the Saudi Medical Licensing Examination (SMLE). Our Service provides:
                     </p>
                     <ul>
-                        <li>Access to a comprehensive question bank with 8,000+ practice questions</li>
+                        <li>Access to a comprehensive question bank with 11,000+ practice questions</li>
                         <li>Quiz and practice test functionality</li>
                         <li>Performance analytics and progress tracking</li>
                         <li>Study resources organized by medical specialty</li>

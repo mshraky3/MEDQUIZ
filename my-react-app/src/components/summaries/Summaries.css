@@ -28,7 +28,8 @@
 /* ---- Hub grid ---- */
 .summaries-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    /* min(100%, …) prevents the fixed 260px track from overflowing very narrow phones */
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
     gap: 18px;
 }
 
@@ -896,7 +897,7 @@
 .subtopic-wrap.open { max-height: 1600px; }
 
 .subtopic-grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 190px), 1fr));
     gap: 12px; padding: 4px 22px 22px;
 }
 

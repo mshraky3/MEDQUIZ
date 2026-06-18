@@ -357,7 +357,9 @@
 .seo-grid {
   margin-top: 32px;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  /* auto-fit + min(100%, …) keeps any card count tidy (no orphan row) and
+     never overflows on small screens. */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
   gap: 20px;
 }
 
@@ -420,7 +422,7 @@
 .resource-links {
   margin-top: 32px;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
   gap: 18px;
 }
 
@@ -671,11 +673,6 @@
 
   .feature-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .seo-grid,
-  .resource-links {
-    grid-template-columns: 1fr;
   }
 
   .stat-grid {
