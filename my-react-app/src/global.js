@@ -3,7 +3,7 @@ const LOCAL_URL = 'http://localhost:3000';
 
 const Globals = {
     // Switch this to PRODUCTION_URL when you are ready to deploy
-    URL: PRODUCTION_URL, 
+    URL: LOCAL_URL, 
 
     // Payment enforcement is DISABLED — all accounts are free. This mirrors the
     // backend PAYMENT_ENFORCEMENT_ENABLED flag and is only a UI hint; the server

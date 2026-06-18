@@ -2,6 +2,9 @@ const SITE_ORIGIN = 'https://www.smle-question-bank.com';
 const SITE_NAME = 'SQB';
 const DEFAULT_IMAGE = `${SITE_ORIGIN}/og-image.svg`;
 const DEFAULT_ROBOTS = 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1';
+// Freshness signal: recomputed at module load (build time for prerendered HTML,
+// current date for client-injected JSON-LD). Keeps `dateModified` from going stale.
+const BUILD_DATE = new Date().toISOString().slice(0, 10);
 
 const faqItems = [
     {
@@ -61,7 +64,7 @@ function articleSchema(path, headline, description, keywords = '') {
         url: makeUrl(path),
         inLanguage: 'ar-SA',
         datePublished: '2026-04-21',
-        dateModified: '2026-04-21',
+        dateModified: BUILD_DATE,
         author: {
             '@type': 'Organization',
             name: 'SQB'
@@ -76,6 +79,25 @@ function articleSchema(path, headline, description, keywords = '') {
         },
         image: DEFAULT_IMAGE,
         keywords
+    };
+}
+
+function courseSchema(path, name, description, keywords = '') {
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'Course',
+        name,
+        description,
+        url: makeUrl(path),
+        inLanguage: 'ar-SA',
+        educationalLevel: 'Professional',
+        about: 'Saudi Medical Licensing Examination (SMLE)',
+        keywords,
+        provider: {
+            '@type': 'EducationalOrganization',
+            name: 'SQB',
+            sameAs: SITE_ORIGIN
+        }
     };
 }
 
@@ -339,6 +361,7 @@ const routeMap = {
         structuredData: [
             routePageData('/guides/smle-study-plan', 'خطة SMLE من 12 أسبوع | SQB', 'دليل تدريجي للتحضير لاختبار SMLE خلال 12 أسبوع.'),
             articleSchema('/guides/smle-study-plan', 'خطة SMLE من 12 أسبوع | SQB', 'دليل تدريجي للتحضير لاختبار SMLE خلال 12 أسبوع.', 'خطة SMLE, study plan SMLE, جدول مذاكرة SMLE'),
+            courseSchema('/guides/smle-study-plan', 'خطة SMLE من 12 أسبوع', 'دليل تدريجي للتحضير لاختبار SMLE خلال 12 أسبوع.', 'خطة SMLE, study plan SMLE, جدول مذاكرة SMLE'),
             breadcrumbs([
                 { name: 'الرئيسية', path: '/' },
                 { name: 'الأدلة', path: '/guides' },
@@ -360,6 +383,7 @@ const routeMap = {
         structuredData: [
             routePageData('/guides/wrong-questions-method', 'طريقة مراجعة الأسئلة الخاطئة | SQB', 'دليل عملي لمنهجية مراجعة الأسئلة الخاطئة في SMLE.'),
             articleSchema('/guides/wrong-questions-method', 'طريقة مراجعة الأسئلة الخاطئة | SQB', 'دليل عملي لمنهجية مراجعة الأسئلة الخاطئة في SMLE.', 'مراجعة الأخطاء SMLE, wrong questions method, أخطاء اختبار SMLE'),
+            courseSchema('/guides/wrong-questions-method', 'طريقة مراجعة الأسئلة الخاطئة في SMLE', 'دليل عملي لمنهجية مراجعة الأسئلة الخاطئة في SMLE.', 'مراجعة الأخطاء SMLE, wrong questions method, أخطاء اختبار SMLE'),
             breadcrumbs([
                 { name: 'الرئيسية', path: '/' },
                 { name: 'الأدلة', path: '/guides' },
@@ -381,6 +405,7 @@ const routeMap = {
         structuredData: [
             routePageData('/guides/smle-vs-prometric-differences', 'الفرق بين SMLE وPrometric | SQB', 'دليل يشرح الفروقات العملية بين اختبار SMLE وبرومترك.'),
             articleSchema('/guides/smle-vs-prometric-differences', 'الفرق بين SMLE وPrometric | SQB', 'دليل يشرح الفروقات العملية بين اختبار SMLE وبرومترك.', 'الفرق بين SMLE وPrometric, SMLE vs Prometric, اختبار الهيئة السعودية'),
+            courseSchema('/guides/smle-vs-prometric-differences', 'الفرق بين SMLE وPrometric', 'دليل يشرح الفروقات العملية بين اختبار SMLE وبرومترك.', 'الفرق بين SMLE وPrometric, SMLE vs Prometric, اختبار الهيئة السعودية'),
             breadcrumbs([
                 { name: 'الرئيسية', path: '/' },
                 { name: 'الأدلة', path: '/guides' },
@@ -402,6 +427,7 @@ const routeMap = {
         structuredData: [
             routePageData('/guides/smle-high-yield-topics', 'أهم مواضيع SMLE عالية العائد | SQB', 'دليل يوضح ترتيب أولويات مواضيع SMLE حسب العائد.'),
             articleSchema('/guides/smle-high-yield-topics', 'أهم مواضيع SMLE عالية العائد | SQB', 'دليل يوضح ترتيب أولويات مواضيع SMLE حسب العائد.', 'مواضيع SMLE عالية العائد, high yield SMLE topics, أولويات مذاكرة SMLE'),
+            courseSchema('/guides/smle-high-yield-topics', 'أهم مواضيع SMLE عالية العائد', 'دليل يوضح ترتيب أولويات مواضيع SMLE حسب العائد.', 'مواضيع SMLE عالية العائد, high yield SMLE topics, أولويات مذاكرة SMLE'),
             breadcrumbs([
                 { name: 'الرئيسية', path: '/' },
                 { name: 'الأدلة', path: '/guides' },
