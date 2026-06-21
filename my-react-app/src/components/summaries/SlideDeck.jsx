@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import Icon from '../common/Icon.jsx';
 import sqbLogo from '../../tab_logo.png';
 
-// Pen palette.
-const COLORS = ['#22d3ee', '#ef4444', '#34d399', '#fbbf24', '#f8fafc', '#1e293b'];
+// Pen palette (tuned for the light study canvas).
+const COLORS = ['#2563eb', '#ef4444', '#16a34a', '#f59e0b', '#7c3aed', '#0f172a'];
 
 /**
  * Split the authored summary HTML into slides: a title slide (.sum-head + any
@@ -195,10 +196,10 @@ const SlideDeck = ({ contentHtml, resumePct = 0, onProgress }) => {
                 </div>
                 <div className="stb-sep" />
                 <div className="stb-group">
-                    <button className={`stb-btn ${tool === 'move' ? 'on' : ''}`} title="تصفّح" onClick={() => setTool('move')}>🖱️</button>
-                    <button className={`stb-btn ${tool === 'pen' ? 'on' : ''}`} title="قلم" onClick={() => setTool('pen')}>✏️</button>
-                    <button className={`stb-btn ${tool === 'highlighter' ? 'on' : ''}`} title="تظليل" onClick={() => setTool('highlighter')}>🖊️</button>
-                    <button className={`stb-btn ${tool === 'eraser' ? 'on' : ''}`} title="ممحاة" onClick={() => setTool('eraser')}>🧽</button>
+                    <button className={`stb-btn ${tool === 'move' ? 'on' : ''}`} title="تصفّح" onClick={() => setTool('move')}><Icon name="cursor" size={18} /></button>
+                    <button className={`stb-btn ${tool === 'pen' ? 'on' : ''}`} title="قلم" onClick={() => setTool('pen')}><Icon name="pen" size={18} /></button>
+                    <button className={`stb-btn ${tool === 'highlighter' ? 'on' : ''}`} title="تظليل" onClick={() => setTool('highlighter')}><Icon name="highlighter" size={18} /></button>
+                    <button className={`stb-btn ${tool === 'eraser' ? 'on' : ''}`} title="ممحاة" onClick={() => setTool('eraser')}><Icon name="eraser" size={18} /></button>
                 </div>
                 <div className="stb-group">
                     {COLORS.map((c) => (
@@ -213,9 +214,9 @@ const SlideDeck = ({ contentHtml, resumePct = 0, onProgress }) => {
                 </div>
                 <div className="stb-sep" />
                 <div className="stb-group">
-                    <button className="stb-btn" title="تراجع" onClick={undo}>↶</button>
-                    <button className="stb-btn" title="مسح رسم الشريحة" onClick={clearSlide}>🗑️</button>
-                    <button className="stb-btn" title="ملء الشاشة" onClick={toggleFs}>⛶</button>
+                    <button className="stb-btn" title="تراجع" onClick={undo}><Icon name="undo" size={18} /></button>
+                    <button className="stb-btn" title="مسح رسم الشريحة" onClick={clearSlide}><Icon name="trash" size={18} /></button>
+                    <button className="stb-btn" title="ملء الشاشة" onClick={toggleFs}><Icon name="maximize" size={18} /></button>
                 </div>
             </div>
         </div>

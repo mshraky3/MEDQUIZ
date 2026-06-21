@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
+import Icon from '../common/Icon.jsx';
 import axios from 'axios';
 import Globals from '../../global.js';
 import Spinner from '../common/Spinner.jsx';
@@ -104,13 +105,13 @@ const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz, isTria
                                             <div className="question-header">
                                                 <div className="question-meta">
                                                     <span className="type-badge">
-                                                        📖 {questionType}
+                                                        <Icon name="book" size={15} /> {questionType}
                                                     </span>
                                                     <span className="source-badge">
-                                                        📚 {questionSource}
+                                                        <Icon name="book-open" size={15} /> {questionSource}
                                                     </span>
                                                     <span className={`result-badge ${isCorrect ? 'correct' : 'wrong'}`}>
-                                                        {isCorrect ? '✅ صحيح' : '❌ خطأ'}
+                                                        {isCorrect ? <><Icon name="check-circle" size={13} /> صحيح</> : <><Icon name="x-circle" size={13} /> خطأ</>}
                                                     </span>
                                                 </div>
                                             </div>
@@ -147,7 +148,7 @@ const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz, isTria
                                                         className="see-more-button"
                                                         disabled={loadingButtons[attempt.id]}
                                                     >
-                                                        {loadingButtons[attempt.id] ? 'جاري التحميل...' : '🔍 عرض المزيد'}
+                                                        {loadingButtons[attempt.id] ? 'جاري التحميل...' : <><Icon name="search" size={13} /> عرض المزيد</>}
                                                     </button>
                                                 </div>
                                             </div>
@@ -157,7 +158,7 @@ const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz, isTria
                                         <div className="question-card-back">
                                             <div className="ai-analysis-back">
                                                 <div className="ai-analysis-header">
-                                                    <h3>🧠 تحليل الذكاء الاصطناعي</h3>
+                                                    <h3><Icon name="brain" size={15} /> تحليل الذكاء الاصطناعي</h3>
                                                 </div>
 
                                                 {loadingButtons[attempt.id] ? (

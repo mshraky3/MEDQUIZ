@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useContext } from 'react';
+import Icon from '../common/Icon.jsx';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import './analysis.css';
@@ -24,13 +25,13 @@ const BestWorstTopic = ({ best, worst }) => (
               background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
               color: 'white'
             }}>
-              🏆 الأفضل
+              <Icon name="trophy" size={15} /> الأفضل
             </span>
             <span className="accuracy-badge" style={{
               background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
               color: 'white'
             }}>
-              📊 {best ? `${Number(best.accuracy).toFixed(1)}%` : 'N/A'}
+              <Icon name="bar-chart" size={15} /> {best ? `${Number(best.accuracy).toFixed(1)}%` : 'N/A'}
             </span>
           </div>
         </div>
@@ -67,13 +68,13 @@ const BestWorstTopic = ({ best, worst }) => (
               background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
               color: 'white'
             }}>
-              📉 يحتاج تحسين
+              <Icon name="trending-down" size={15} /> يحتاج تحسين
             </span>
             <span className="accuracy-badge" style={{
               background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
               color: 'white'
             }}>
-              📊 {worst ? `${Number(worst.accuracy).toFixed(1)}%` : 'N/A'}
+              <Icon name="bar-chart" size={15} /> {worst ? `${Number(worst.accuracy).toFixed(1)}%` : 'N/A'}
             </span>
           </div>
         </div>
@@ -117,21 +118,21 @@ const FloatingStreakBadge = ({ streakData, loading: streakLoading }) => {
   return (
     <div className={`floating-streak-badge ${expanded ? 'expanded' : ''}`} onClick={() => setExpanded(!expanded)}>
       <div className="streak-badge-icon">
-        <span className="streak-fire">{currentStreak > 0 ? '🔥' : '💤'}</span>
+        <span className="streak-fire">{currentStreak > 0 ? <Icon name="flame" size={18} /> : <Icon name="moon" size={18} />}</span>
         <span className="streak-count">{currentStreak}</span>
       </div>
       {expanded && (
         <div className="streak-badge-details">
           <div className="streak-badge-row">
-            <span>🔥 السَّلسلة الحالية</span>
+            <span><Icon name="flame" size={15} /> السَّلسلة الحالية</span>
             <strong>{currentStreak} يوم</strong>
           </div>
           <div className="streak-badge-row">
-            <span>🏆 أطول سلسلة</span>
+            <span><Icon name="trophy" size={15} /> أطول سلسلة</span>
             <strong>{longestStreak} يوم</strong>
           </div>
           <div className="streak-badge-hint">
-            {currentStreak > 0 ? 'استمر! أنت في سلسلة رائعة 💪' : 'ابدأ سلسلتك اليوم!'}
+            {currentStreak > 0 ? <>استمر! أنت في سلسلة رائعة <Icon name="flame" size={14} /></> : 'ابدأ سلسلتك اليوم!'}
           </div>
         </div>
       )}
@@ -584,14 +585,14 @@ const Analysis = () => {
             onClick={() => navigate("/wrong-questions")}
             className="secondary-button"
           >
-            📚 مراجعة الأسئلة الخاطئة
+            <Icon name="book-open" size={15} /> مراجعة الأسئلة الخاطئة
           </button>
           <button
             onClick={handleRefresh}
             className="secondary-button"
             disabled={refreshing}
           >
-            {refreshing ? '🔄 جاري التحديث...' : '🔄 تحديث البيانات'}
+            {refreshing ? <><Icon name="refresh" size={14} /> جاري التحديث...</> : <><Icon name="refresh" size={14} /> تحديث البيانات</>}
           </button>
           <button
             onClick={() => navigate("/quizs", { state: { id } })}

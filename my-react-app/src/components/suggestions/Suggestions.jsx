@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Icon from '../common/Icon.jsx';
 import Spinner from '../common/Spinner.jsx';
 import './Suggestions.css';
 
@@ -21,12 +22,12 @@ const Suggestions = () => {
     }, []);
 
     const categories = [
-        { value: 'feature', label: '✨ ميزة جديدة' },
-        { value: 'improvement', label: '🚀 تحسين' },
-        { value: 'ui', label: '🎨 واجهة/تصميم' },
-        { value: 'content', label: '📚 محتوى/أسئلة' },
-        { value: 'bug', label: '🐛 إبلاغ عن خطأ' },
-        { value: 'other', label: '💡 أخرى' }
+        { value: 'feature', label: 'ميزة جديدة' },
+        { value: 'improvement', label: 'تحسين' },
+        { value: 'ui', label: 'واجهة/تصميم' },
+        { value: 'content', label: 'محتوى/أسئلة' },
+        { value: 'bug', label: 'إبلاغ عن خطأ' },
+        { value: 'other', label: 'أخرى' }
     ];
 
     const priorities = [
@@ -86,13 +87,13 @@ const Suggestions = () => {
                             </svg>
                         </div>
                     </div>
-                    <h2>شكراً لاقتراحك! 🎉</h2>
+                    <h2>شكراً لاقتراحك! <Icon name="sparkles" size={20} /></h2>
                     <p>نقدر مساهمتك في تحسين التطبيق. سنراجع اقتراحك ونأخذه بعين الاعتبار.</p>
                     <button
                         className="submit-another-btn"
                         onClick={() => setSuccess(false)}
                     >
-                        📝 إرسال اقتراح آخر
+                        <Icon name="pen" size={15} /> إرسال اقتراح آخر
                     </button>
                 </div>
             </div>
@@ -104,14 +105,14 @@ const Suggestions = () => {
             <div className="suggestions-card">
                 {/* Header */}
                 <div className="suggestions-header">
-                    <div className="header-icon">💡</div>
+                    <div className="header-icon"><Icon name="lightbulb" size={32} /></div>
                     <h1>الاقتراحات والأفكار</h1>
                     <p>ساعدنا في تحسين التطبيق! شاركنا أفكارك واقتراحاتك</p>
                 </div>
 
                 {/* Info Banner */}
                 <div className="info-banner">
-                    <span className="info-icon">ℹ️</span>
+                    <span className="info-icon"><Icon name="info" size={16} /></span>
                     <span>اقتراحاتك مهمة جداً لنا ونقوم بمراجعتها بشكل دوري</span>
                 </div>
 
@@ -120,7 +121,7 @@ const Suggestions = () => {
                     {/* Category Selection */}
                     <div className="form-section">
                         <label className="section-label">
-                            📂 نوع الاقتراح
+                            <Icon name="folder" size={14} /> نوع الاقتراح
                         </label>
                         <div className="category-grid">
                             {categories.map(cat => (
@@ -139,7 +140,7 @@ const Suggestions = () => {
                     {/* Title Input */}
                     <div className="form-section">
                         <label className="section-label" htmlFor="title">
-                            📝 عنوان الاقتراح *
+                            <Icon name="pen" size={14} /> عنوان الاقتراح *
                         </label>
                         <input
                             type="text"
@@ -156,7 +157,7 @@ const Suggestions = () => {
                     {/* Description */}
                     <div className="form-section">
                         <label className="section-label" htmlFor="description">
-                            📋 وصف تفصيلي *
+                            <Icon name="clipboard" size={14} /> وصف تفصيلي *
                         </label>
                         <textarea
                             id="description"
@@ -176,7 +177,7 @@ const Suggestions = () => {
                     {/* Priority Selection */}
                     <div className="form-section">
                         <label className="section-label">
-                            ⭐ مدى الأهمية
+                            <Icon name="star" size={14} /> مدى الأهمية
                         </label>
                         <div className="priority-options">
                             {priorities.map(pri => (
@@ -212,7 +213,7 @@ const Suggestions = () => {
                             </div>
                         ) : (
                             <>
-                                <span>🚀</span>
+                                <span><Icon name="rocket" size={16} /></span>
                                 <span>إرسال الاقتراح</span>
                             </>
                         )}

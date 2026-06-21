@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
+import Icon from './Icon.jsx';
 import axios from 'axios';
 import Globals from '../../global.js';
 import { UserContext } from '../../UserContext';
@@ -63,7 +64,7 @@ const AchievementBadges = ({ userId }) => {
                     title={achievement.achievement_description}
                 >
                     <span className="achievement-emoji">
-                        {getAchievementIcon(achievement.achievement_type)}
+                        <Icon name={getAchievementIcon(achievement.achievement_type)} size={22} />
                     </span>
                     <span className="achievement-text">
                         {getShortAchievementText(achievement.achievement_name)}
@@ -77,13 +78,13 @@ const AchievementBadges = ({ userId }) => {
 const getAchievementIcon = (type) => {
     switch (type) {
         case 'cardinality_completion':
-            return '🎯';
+            return 'target';
         case 'perfect_score':
-            return '⭐';
+            return 'star';
         case 'streak':
-            return '🔥';
+            return 'flame';
         default:
-            return '🏆';
+            return 'trophy';
     }
 };
 

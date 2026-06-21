@@ -15,7 +15,7 @@
 }
 
 .congratulations-popup {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(15, 23, 42, 0.04);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-radius: 24px;
@@ -30,7 +30,7 @@
     animation: slideIn 0.4s ease;
     position: relative;
     overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(15, 23, 42, 0.10);
 }
 
 .congratulations-popup::before {
@@ -40,7 +40,7 @@
     left: -50%;
     width: 200%;
     height: 200%;
-    background: linear-gradient(45deg, transparent, rgba(34, 211, 238, 0.1), transparent);
+    background: linear-gradient(45deg, transparent, rgba(35, 109, 237, 0.1), transparent);
     animation: shimmer 3s infinite;
 }
 
@@ -61,8 +61,8 @@
     font-size: 2rem;
     font-weight: 700;
     margin: 0;
-    text-shadow: 0 0 20px rgba(34, 211, 238, 0.3);
-    background: linear-gradient(135deg, #22d3ee 0%, #67e8f9 100%);
+    text-shadow: 0 0 20px rgba(35, 109, 237, 0.3);
+    background: linear-gradient(135deg, #236ded 0%, #6d9ef3 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -75,7 +75,7 @@
 }
 
 .achievement-badge {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(15, 23, 42, 0.04);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border-radius: 16px;
@@ -84,7 +84,7 @@
     box-shadow:
         0 8px 16px rgba(0, 0, 0, 0.2),
         inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(15, 23, 42, 0.10);
 }
 
 .badge-icon {
@@ -94,21 +94,21 @@
 }
 
 .achievement-badge h3 {
-    color: #e2e8f0;
+    color: #1e293b;
     font-size: 1.5rem;
     font-weight: 700;
     margin: 0 0 10px 0;
 }
 
 .achievement-badge p {
-    color: #94a3b8;
+    color: #64748b;
     font-size: 1rem;
     margin: 0;
     line-height: 1.4;
 }
 
 .achievement-details {
-    color: #cbd5e1;
+    color: #1e293b;
     margin-bottom: 20px;
 }
 
@@ -127,13 +127,13 @@
 
 .type-badge,
 .source-badge {
-    background: rgba(34, 211, 238, 0.15);
-    color: #22d3ee;
+    background: rgba(35, 109, 237, 0.15);
+    color: #236ded;
     padding: 8px 16px;
     border-radius: 20px;
     font-weight: 600;
     font-size: 0.9rem;
-    border: 1px solid rgba(34, 211, 238, 0.3);
+    border: 1px solid rgba(35, 109, 237, 0.3);
 }
 
 .congratulations-actions {
@@ -158,29 +158,29 @@
 }
 
 .restart-button {
-    background: linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%);
-    color: #0f172a;
-    box-shadow: 0 4px 15px rgba(34, 211, 238, 0.3);
+    background: linear-gradient(135deg, #236ded 0%, #1054ca 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(35, 109, 237, 0.3);
 }
 
 .restart-button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(34, 211, 238, 0.4);
-    background: linear-gradient(135deg, #67e8f9 0%, #22d3ee 100%);
+    box-shadow: 0 6px 20px rgba(35, 109, 237, 0.4);
+    background: linear-gradient(135deg, #6d9ef3 0%, #236ded 100%);
 }
 
 .close-button {
-    background: rgba(255, 255, 255, 0.05);
-    color: #e2e8f0;
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(15, 23, 42, 0.04);
+    color: #1e293b;
+    border: 1px solid rgba(15, 23, 42, 0.10);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 .close-button:hover {
     transform: translateY(-2px);
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(15, 23, 42, 0.04);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-    border-color: rgba(255, 255, 255, 0.25);
+    border-color: rgba(15, 23, 42, 0.10);
 }
 
 /* Animations */

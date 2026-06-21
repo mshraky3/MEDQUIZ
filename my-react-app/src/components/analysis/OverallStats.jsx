@@ -1,4 +1,5 @@
 import React from 'react';
+import Icon from '../common/Icon.jsx';
 import './analysis.css';
 
 const OverallStats = ({ userAnalysis }) => {
@@ -29,13 +30,13 @@ const OverallStats = ({ userAnalysis }) => {
                         <div className="question-header">
                             <div className="question-meta">
                                 <span className="type-badge">
-                                    📊 نظرة على الأداء
+                                    <Icon name="bar-chart" size={15} /> نظرة على الأداء
                                 </span>
                                 <span className="accuracy-badge" style={{
                                     background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
                                     color: 'white'
                                 }}>
-                                    🎯 {calculateAccuracy()}%
+                                    <Icon name="target" size={15} /> {calculateAccuracy()}%
                                 </span>
                             </div>
                         </div>
@@ -86,13 +87,13 @@ const OverallStats = ({ userAnalysis }) => {
                                 <div className="question-header">
                                     <div className="question-meta">
                                         <span className="source-badge">
-                                            📚 {source.source}
+                                            <Icon name="book-open" size={15} /> {source.source}
                                         </span>
                                         <span className="accuracy-badge" style={{
                                             background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
                                             color: 'white'
                                         }}>
-                                            📊 {source.avg_accuracy}%
+                                            <Icon name="bar-chart" size={15} /> {source.avg_accuracy}%
                                         </span>
                                     </div>
                                 </div>
@@ -127,7 +128,7 @@ const OverallStats = ({ userAnalysis }) => {
                             <div className="question-header">
                                 <div className="question-meta">
                                     <span className="type-badge">
-                                        📚 تفصيل المصادر
+                                        <Icon name="book-open" size={15} /> تفصيل المصادر
                                     </span>
                                 </div>
                             </div>

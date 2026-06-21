@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import Icon from './Icon.jsx';
 import './Footer.css';
 
 const Footer = () => {
@@ -9,7 +10,7 @@ const Footer = () => {
     <footer className="footer">
       <div className="footer-content">
         <div className="footer-brand">
-          <span className="footer-logo">📚 SMLE Question Bank</span>
+          <span className="footer-logo"><Icon name="book-open" size={20} /> SMLE Question Bank</span>
           <p className="footer-tagline">Your comprehensive SMLE preparation platform</p>
           <p className="footer-tagline-ar">منصتك الشاملة للتحضير لاختبار الهيئة والبرومترك</p>
         </div>

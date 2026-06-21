@@ -1,7 +1,7 @@
 /* Main container */
 .app-container {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background-color: #0b1021;
+  background-color: #ffffff;
   padding: 20px;
   max-width: 800px;
   margin: 0 auto;
@@ -11,7 +11,7 @@
 /* Title */
 .title {
   font-size: 2rem;
-  color: #22d3ee;
+  color: #236ded;
   text-align: center;
   margin-bottom: 20px;
 }
@@ -27,14 +27,14 @@
   width: 100%;
   padding: 10px;
   font-size: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(15, 23, 42, 0.10);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
-  color: #e2e8f0;
+  background: rgba(15, 23, 42, 0.04);
+  color: #1e293b;
 }
 
 .search-input::placeholder {
-  color: #64748b;
+  color: #475569;
 }
 
 .question-list {
@@ -42,11 +42,11 @@
 }
 
 .question-card {
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(15, 23, 42, 0.10);
   border-radius: 12px;
   padding: 15px;
   margin-bottom: 15px;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(15, 23, 42, 0.04);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
@@ -64,7 +64,7 @@
   display: block;
   font-weight: bold;
   margin-bottom: 5px;
-  color: #e2e8f0;
+  color: #1e293b;
 }
 
 textarea,
@@ -73,16 +73,16 @@ select {
   width: 100%;
   padding: 8px;
   font-size: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(15, 23, 42, 0.10);
   border-radius: 8px;
   margin-bottom: 10px;
-  background: rgba(255, 255, 255, 0.05);
-  color: #e2e8f0;
+  background: rgba(15, 23, 42, 0.04);
+  color: #1e293b;
 }
 
 textarea::placeholder,
 input::placeholder {
-  color: #64748b;
+  color: #475569;
 }
 
 /* Buttons */
@@ -99,13 +99,13 @@ input::placeholder {
 }
 
 .quiz-button {
-  background: linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%);
-  box-shadow: 0 4px 15px rgba(34, 211, 238, 0.3);
+  background: linear-gradient(135deg, #236ded 0%, #1054ca 100%);
+  box-shadow: 0 4px 15px rgba(35, 109, 237, 0.3);
 }
 
 .quiz-button:hover {
-  background: linear-gradient(135deg, #67e8f9 0%, #22d3ee 100%);
-  box-shadow: 0 6px 20px rgba(34, 211, 238, 0.4);
+  background: linear-gradient(135deg, #6d9ef3 0%, #236ded 100%);
+  box-shadow: 0 6px 20px rgba(35, 109, 237, 0.4);
   transform: translateY(-2px);
 }
 
@@ -123,25 +123,25 @@ input::placeholder {
 .question-text {
   font-size: 1.2rem;
   margin-bottom: 10px;
-  color: #e2e8f0;
+  color: #1e293b;
 }
 
 .options p {
   margin: 5px 0;
-  color: #94a3b8;
+  color: #64748b;
 }
 
 .correct-answer,
 .question-type {
   margin-top: 10px;
-  color: #94a3b8;
+  color: #64748b;
 }
 
 /* Loading screen */
 .loading-screen {
   text-align: center;
   margin-top: 100px;
-  color: #22d3ee;
+  color: #236ded;
 }
 
 /* Success message */
@@ -186,9 +186,9 @@ input::placeholder {
 .next-question-preview {
   margin-top: 10px;
   padding: 8px;
-  background: rgba(255, 255, 255, 0.03);
-  border-left: 4px solid #22d3ee;
-  color: #94a3b8;
+  background: rgba(15, 23, 42, 0.04);
+  border-left: 4px solid #236ded;
+  color: #64748b;
   font-size: 0.9rem;
   width: 100%;
   max-width: 600px;

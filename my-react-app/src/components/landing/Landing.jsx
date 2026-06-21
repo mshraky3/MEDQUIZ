@@ -1,6 +1,8 @@
 import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { track } from '@vercel/analytics';
+import Icon from '../common/Icon.jsx';
+import HeroArt from './HeroArt.jsx';
 import './Landing.css';
 
 const stats = [
@@ -12,22 +14,22 @@ const stats = [
 
 const features = [
   {
-    icon: '📚',
+    icon: 'book-open',
     title: 'تغطية كاملة لاختبار SMLE',
     desc: 'بنك أسئلة منسق وفق أحدث مخطط برومترك مع سياق سريري واضح.'
   },
   {
-    icon: '📈',
+    icon: 'trending-up',
     title: 'تحليلات موجهة',
     desc: 'تتبع نقاط الضعف والسرعة والدقة عبر لوحات واضحة.'
   },
   {
-    icon: '🎯',
+    icon: 'target',
     title: 'تدريب متكيف',
     desc: 'تمارين موجهة، محاكاة زمنية، ومراجعة ذكية.'
   },
   {
-    icon: '🧠',
+    icon: 'brain',
     title: 'تفكير سريري',
     desc: 'سيناريوهات سريرية تركز على اتخاذ القرار لا الحفظ.'
   }
@@ -108,10 +110,12 @@ const Landing = () => {
         <div className="landing-shell">
 
           <section className="hero">
-            <span className="pill">منصة SMLE · بنك أسئلة طبي</span>
-            <h1>ابدأ تدريب SMLE خلال دقيقة واحدة</h1>
+            <HeroArt />
+            <span className="pill">منصة SMLE · أكثر من 11,000 سؤال محدّث</span>
+            <h1>تدرّب بذكاء، واجتَز اختبار SMLE بثقة</h1>
             <p>
-              بنك أسئلة واضح وسريع: أنشئ حسابك، ابدأ أول اختبار، وارجع يومياً بخطة مراجعة عملية.
+              بنك أسئلة محدّث على نمط البرومترك، مع شرح سريري لكل إجابة وتحليل فوري يكشف نقاط ضعفك
+              ويرتّب أولويات مراجعتك — كل ما تحتاجه للوصول إلى درجتك المستهدفة في مكان واحد.
             </p>
             <div className="cta-row">
               <button className="btn primary" onClick={handleSignup}>
@@ -122,10 +126,10 @@ const Landing = () => {
               </button>
             </div>
             <ul className="hero-trust">
-              <li>بدء مجاني</li>
+              <li>ابدأ مجاناً</li>
               <li>بدون بطاقة بنكية</li>
-              <li>مهيأة للجوال</li>
-              <li>تدعم العربية بالكامل</li>
+              <li>شرح سريري لكل سؤال</li>
+              <li>تحليلات فورية للأداء</li>
             </ul>
           </section>
 
@@ -149,7 +153,7 @@ const Landing = () => {
             <div className="feature-grid">
               {features.map((feature) => (
                 <div key={feature.title} className="feature-card">
-                  <span className="feature-icon" aria-hidden="true">{feature.icon}</span>
+                  <span className="feature-icon" aria-hidden="true"><Icon name={feature.icon} size={28} /></span>
                   <h3>{feature.title}</h3>
                   <p>{feature.desc}</p>
                 </div>

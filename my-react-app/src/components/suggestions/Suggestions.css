@@ -3,7 +3,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #0b1021;
+    background: #ffffff;
     padding: 20px;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     position: relative;
@@ -26,7 +26,7 @@
 }
 
 .suggestions-card {
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(15, 23, 42, 0.04);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-radius: 24px;
@@ -39,7 +39,7 @@
     width: 100%;
     position: relative;
     z-index: 1;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(15, 23, 42, 0.10);
 }
 
 /* Header */
@@ -79,7 +79,7 @@
 }
 
 .suggestions-header p {
-    color: #94a3b8;
+    color: #64748b;
     font-size: 0.95rem;
     line-height: 1.5;
 }
@@ -116,7 +116,7 @@
 }
 
 .section-label {
-    color: #e2e8f0;
+    color: #1e293b;
     font-size: 0.9rem;
     font-weight: 600;
 }
@@ -130,10 +130,10 @@
 
 .category-btn {
     padding: 12px 8px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(15, 23, 42, 0.04);
+    border: 1px solid rgba(15, 23, 42, 0.10);
     border-radius: 12px;
-    color: #94a3b8;
+    color: #64748b;
     font-size: 0.8rem;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -149,7 +149,7 @@
 .category-btn.active {
     background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(168, 85, 247, 0.15));
     border-color: rgba(139, 92, 246, 0.5);
-    color: #e9d5ff;
+    color: #1e293b;
     box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
 }
 
@@ -158,10 +158,10 @@
 .suggestions-form textarea {
     width: 100%;
     padding: 14px 16px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(15, 23, 42, 0.04);
+    border: 1px solid rgba(15, 23, 42, 0.10);
     border-radius: 12px;
-    color: #f1f5f9;
+    color: #1e293b;
     font-size: 0.95rem;
     transition: all 0.3s ease;
     font-family: inherit;
@@ -172,12 +172,12 @@
     outline: none;
     border-color: rgba(139, 92, 246, 0.5);
     box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(15, 23, 42, 0.04);
 }
 
 .suggestions-form input::placeholder,
 .suggestions-form textarea::placeholder {
-    color: #64748b;
+    color: #475569;
 }
 
 .suggestions-form textarea {
@@ -189,7 +189,7 @@
 .char-counter {
     text-align: right;
     font-size: 0.75rem;
-    color: #64748b;
+    color: #475569;
 }
 
 .char-counter .warning {
@@ -208,8 +208,8 @@
     align-items: center;
     gap: 8px;
     padding: 10px 16px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(15, 23, 42, 0.04);
+    border: 1px solid rgba(15, 23, 42, 0.10);
     border-radius: 50px;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -237,7 +237,7 @@
 }
 
 .priority-text {
-    color: #94a3b8;
+    color: #64748b;
     font-size: 0.85rem;
     transition: color 0.3s ease;
 }
@@ -248,11 +248,11 @@
 
 .priority-option.active {
     border-color: var(--priority-color);
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(15, 23, 42, 0.04);
 }
 
 .priority-option.active .priority-text {
-    color: #f1f5f9;
+    color: #1e293b;
 }
 
 /* Submit Button */
@@ -355,13 +355,13 @@
 }
 
 .success-card h2 {
-    color: #f1f5f9;
+    color: #1e293b;
     font-size: 1.5rem;
     margin-bottom: 12px;
 }
 
 .success-card p {
-    color: #94a3b8;
+    color: #64748b;
     font-size: 0.95rem;
     line-height: 1.6;
     margin-bottom: 24px;

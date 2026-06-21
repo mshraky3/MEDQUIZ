@@ -4,8 +4,8 @@
      element rules elsewhere in the app (CSS here is unscoped/global). */
   position: static;
   inset: auto;
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  border-top: 1px solid rgba(34, 211, 238, 0.2);
+  background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%);
+  border-top: 1px solid rgba(35, 109, 237, 0.2);
   padding: 2rem 1.5rem;
   width: 100%;
   margin-top: auto;
@@ -20,23 +20,26 @@
   text-align: center;
   margin-bottom: 1.5rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.10);
 }
 
 .footer-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-size: 1.25rem;
   font-weight: 700;
-  color: #22d3ee;
+  color: #236ded;
 }
 
 .footer-tagline {
-  color: #94a3b8;
+  color: #64748b;
   font-size: 0.875rem;
   margin-top: 0.5rem;
 }
 
 .footer-tagline-ar {
-  color: #94a3b8;
+  color: #64748b;
   font-size: 0.85rem;
   margin-top: 0.25rem;
   direction: rtl;
@@ -50,7 +53,7 @@
 }
 
 .footer-section h4 {
-  color: #e2e8f0;
+  color: #1e293b;
   font-size: 0.9rem;
   font-weight: 600;
   margin-bottom: 0.75rem;
@@ -59,7 +62,7 @@
 .footer-section a,
 .footer-section span {
   display: block;
-  color: #94a3b8;
+  color: #64748b;
   font-size: 0.85rem;
   text-decoration: none;
   margin-bottom: 0.5rem;
@@ -67,17 +70,17 @@
 }
 
 .footer-section a:hover {
-  color: #22d3ee;
+  color: #236ded;
 }
 
 .footer-bottom {
   text-align: center;
   padding-top: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid rgba(15, 23, 42, 0.10);
 }
 
 .footer-bottom p {
-  color: #64748b;
+  color: #475569;
   font-size: 0.8rem;
   margin: 0.25rem 0;
 }
@@ -89,11 +92,11 @@
 
 .footer-legal-entity {
   font-size: 0.875rem !important;
-  color: #cbd5e1 !important;
+  color: #1e293b !important;
   font-weight: 600;
   margin-top: 0.5rem !important;
   padding-top: 0.6rem;
-  border-top: 1px solid rgba(34, 211, 238, 0.15);
+  border-top: 1px solid rgba(35, 109, 237, 0.15);
   display: inline-block;
 }
 
@@ -105,16 +108,16 @@
   align-items: baseline;
   margin: 0 0 0.5rem 0;
   font-size: 0.85rem;
-  color: #94a3b8;
+  color: #64748b;
   line-height: 1.5;
 }
 
 .footer-contact-line span {
-  color: #cbd5e1;
+  color: #1e293b;
 }
 
 .footer-contact-line a {
-  color: #22d3ee;
+  color: #236ded;
   text-decoration: none;
   word-break: break-word;
 }

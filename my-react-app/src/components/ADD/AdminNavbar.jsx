@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import Icon from '../common/Icon.jsx';
 import './AdminNavbar.css';
 
 const AdminNavbar = () => {
@@ -16,12 +17,12 @@ const AdminNavbar = () => {
   };
 
   const navLinks = [
-    { path: '/admin', label: '🏠 Dashboard', icon: '🏠' },
-    { path: '/ADD_ACCOUNT', label: '👤 Users', icon: '👤' },
-    { path: '/ADDQ', label: '➕ Add Questions', icon: '➕' },
-    { path: '/Bank', label: '📚 Question Bank', icon: '📚' },
-    { path: '/question-reports', label: '🚩 Reports', icon: '🚩' },
-    { path: '/TEMP_LINKS', label: '🔗 Temp Links', icon: '🔗' },
+    { path: '/admin', label: 'Dashboard', icon: 'home' },
+    { path: '/ADD_ACCOUNT', label: 'Users', icon: 'user' },
+    { path: '/ADDQ', label: 'Add Questions', icon: 'plus' },
+    { path: '/Bank', label: 'Question Bank', icon: 'book-open' },
+    { path: '/question-reports', label: 'Reports', icon: 'flag' },
+    { path: '/TEMP_LINKS', label: 'Temp Links', icon: 'link' },
   ];
 
   return (
@@ -29,7 +30,7 @@ const AdminNavbar = () => {
       <div className="admin-navbar-content">
         {/* Logo/Brand */}
         <div className="admin-navbar-brand">
-          <span className="admin-navbar-icon">⚙️</span>
+          <span className="admin-navbar-icon"><Icon name="settings" size={18} /></span>
           <span className="admin-navbar-title">Admin Panel</span>
         </div>
 
@@ -41,7 +42,7 @@ const AdminNavbar = () => {
               className={`admin-nav-link ${location.pathname === link.path ? 'active' : ''}`}
               onClick={() => navigate(link.path)}
             >
-              {link.label}
+              <Icon name={link.icon} size={16} /> {link.label}
             </button>
           ))}
         </div>
@@ -57,7 +58,7 @@ const AdminNavbar = () => {
           onClick={() => setMenuOpen(!menuOpen)}
           aria-label="Toggle menu"
         >
-          {menuOpen ? '✕' : '☰'}
+          {menuOpen ? <Icon name="x" size={20} /> : <Icon name="menu" size={20} />}
         </button>
       </div>
 
@@ -72,8 +73,8 @@ const AdminNavbar = () => {
               setMenuOpen(false);
             }}
           >
-            <span className="mobile-link-icon">{link.icon}</span>
-            {link.label.replace(link.icon + ' ', '')}
+            <span className="mobile-link-icon"><Icon name={link.icon} size={18} /></span>
+            {link.label}
           </button>
         ))}
         <button

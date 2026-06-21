@@ -4,10 +4,10 @@
     position: sticky;
     top: 0;
     z-index: 1000;
-    background: rgba(15, 23, 42, 0.95);
+    background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid rgba(15, 23, 42, 0.10);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
@@ -46,7 +46,7 @@
 .admin-navbar-title {
     font-size: 18px;
     font-weight: 700;
-    background: linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%);
+    background: linear-gradient(135deg, #236ded 0%, #1054ca 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -67,7 +67,7 @@
     padding: 8px 16px;
     font-size: 14px;
     font-weight: 500;
-    color: #94a3b8;
+    color: #64748b;
     background: transparent;
     border: 1px solid transparent;
     border-radius: 8px;
@@ -77,15 +77,15 @@
 }
 
 .admin-nav-link:hover {
-    color: #e2e8f0;
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.1);
+    color: #1e293b;
+    background: rgba(15, 23, 42, 0.04);
+    border-color: rgba(15, 23, 42, 0.10);
 }
 
 .admin-nav-link.active {
-    color: #22d3ee;
-    background: rgba(34, 211, 238, 0.1);
-    border-color: rgba(34, 211, 238, 0.3);
+    color: #236ded;
+    background: rgba(35, 109, 237, 0.1);
+    border-color: rgba(35, 109, 237, 0.3);
 }
 
 /* Back Button */
@@ -97,18 +97,18 @@
     font-size: 14px;
     font-weight: 600;
     color: #ffffff;
-    background: linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%);
+    background: linear-gradient(135deg, #236ded 0%, #1054ca 100%);
     border: none;
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    box-shadow: 0 4px 15px rgba(34, 211, 238, 0.3);
+    box-shadow: 0 4px 15px rgba(35, 109, 237, 0.3);
 }
 
 .admin-back-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(34, 211, 238, 0.4);
+    box-shadow: 0 6px 20px rgba(35, 109, 237, 0.4);
 }
 
 /* Mobile Menu Toggle */
@@ -119,17 +119,17 @@
     width: 44px;
     height: 44px;
     font-size: 22px;
-    color: #e2e8f0;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #1e293b;
+    background: rgba(15, 23, 42, 0.04);
+    border: 1px solid rgba(15, 23, 42, 0.10);
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
 }
 
 .admin-menu-toggle:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: #22d3ee;
+    background: rgba(15, 23, 42, 0.04);
+    color: #236ded;
 }
 
 /* Mobile Menu */
@@ -138,8 +138,8 @@
     flex-direction: column;
     gap: 4px;
     padding: 12px 16px 16px;
-    background: rgba(15, 23, 42, 0.98);
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.98);
+    border-top: 1px solid rgba(15, 23, 42, 0.10);
     max-height: 0;
     overflow: hidden;
     transition: all 0.3s ease;
@@ -157,9 +157,9 @@
     padding: 14px 16px;
     font-size: 15px;
     font-weight: 500;
-    color: #94a3b8;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    color: #64748b;
+    background: rgba(15, 23, 42, 0.04);
+    border: 1px solid rgba(15, 23, 42, 0.10);
     border-radius: 10px;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -168,25 +168,25 @@
 }
 
 .admin-mobile-link:hover {
-    background: rgba(255, 255, 255, 0.06);
-    color: #e2e8f0;
+    background: rgba(15, 23, 42, 0.04);
+    color: #1e293b;
 }
 
 .admin-mobile-link.active {
-    color: #22d3ee;
-    background: rgba(34, 211, 238, 0.1);
-    border-color: rgba(34, 211, 238, 0.3);
+    color: #236ded;
+    background: rgba(35, 109, 237, 0.1);
+    border-color: rgba(35, 109, 237, 0.3);
 }
 
 .admin-mobile-link.back {
     margin-top: 8px;
-    background: linear-gradient(135deg, rgba(34, 211, 238, 0.15) 0%, rgba(6, 182, 212, 0.15) 100%);
-    border-color: rgba(34, 211, 238, 0.3);
-    color: #22d3ee;
+    background: linear-gradient(135deg, rgba(35, 109, 237, 0.15) 0%, rgba(16, 84, 202, 0.15) 100%);
+    border-color: rgba(35, 109, 237, 0.3);
+    color: #236ded;
 }
 
 .admin-mobile-link.back:hover {
-    background: linear-gradient(135deg, rgba(34, 211, 238, 0.25) 0%, rgba(6, 182, 212, 0.25) 100%);
+    background: linear-gradient(135deg, rgba(35, 109, 237, 0.25) 0%, rgba(16, 84, 202, 0.25) 100%);
 }
 
 .mobile-link-icon {

@@ -1,4 +1,5 @@
 import React from 'react';
+import Icon from './Icon.jsx';
 import './CongratulationsPopup.css';
 
 const CongratulationsPopup = ({ 
@@ -16,13 +17,13 @@ const CongratulationsPopup = ({
         <div className="congratulations-overlay">
             <div className="congratulations-popup">
                 <div className="congratulations-header">
-                    <div className="celebration-icon">🎉</div>
+                    <div className="celebration-icon"><Icon name="sparkles" size={40} /></div>
                     <h2>Congratulations!</h2>
                 </div>
                 
                 <div className="congratulations-content">
                     <div className="achievement-badge">
-                        <div className="badge-icon">🏆</div>
+                        <div className="badge-icon"><Icon name="trophy" size={36} /></div>
                         <h3>{achievementName}</h3>
                         <p>{achievementDescription}</p>
                     </div>
@@ -41,13 +42,13 @@ const CongratulationsPopup = ({
                         className="restart-button"
                         onClick={onRestart}
                     >
-                        🔄 Restart & Start Again
+                        <Icon name="refresh" size={16} /> Restart & Start Again
                     </button>
                     <button 
                         className="close-button"
                         onClick={onClose}
                     >
-                        ✖️ Close
+                        <Icon name="x" size={16} /> Close
                     </button>
                 </div>
             </div>

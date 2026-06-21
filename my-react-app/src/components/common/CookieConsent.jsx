@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Icon from './Icon.jsx';
 import './CookieConsent.css';
 import { safeGetItem, safeSetItem } from '../../utils/safeStorage.js';
 
@@ -32,7 +33,7 @@ const CookieConsent = () => {
         <div className="cookie-consent-overlay">
             <div className="cookie-consent-banner">
                 <div className="cookie-consent-content">
-                    <div className="cookie-consent-icon">🍪</div>
+                    <div className="cookie-consent-icon"><Icon name="cookie" size={28} /></div>
                     <div className="cookie-consent-text">
                         <h3>نستخدم ملفات تعريف الارتباط | We use cookies</h3>
                         <p>

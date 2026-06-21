@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import Icon from '../common/Icon.jsx';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './analysis.css';
@@ -129,7 +130,7 @@ const WrongQuestions = () => {
                     </div>
                 ) : error ? (
                     <div className="error-state">
-                        <p>❌ {error}</p>
+                        <p><Icon name="x-circle" size={15} /> {error}</p>
                         <button
                             onClick={() => fetchWrongQuestions(0, false)}
                             className="primary-button"
@@ -139,7 +140,7 @@ const WrongQuestions = () => {
                     </div>
                 ) : wrongQuestions.length === 0 ? (
                     <div className="no-data-state">
-                        <h3>🎉 ممتاز!</h3>
+                        <h3><Icon name="sparkles" size={20} /> ممتاز!</h3>
                         <p>لم تخطئ في أي سؤال بعد.</p>
                         <button
                             onClick={() => navigate('/quizs')}
@@ -176,13 +177,13 @@ const WrongQuestions = () => {
                                                 <div className="question-header">
                                                     <div className="question-meta">
                                                         <span className="type-badge">
-                                                            📖 {question.question_type}
+                                                            <Icon name="book" size={15} /> {question.question_type}
                                                         </span>
                                                         <span className="source-badge">
-                                                            📚 {question.source || 'general'}
+                                                            <Icon name="book-open" size={15} /> {question.source || 'general'}
                                                         </span>
                                                         <span className="date-badge">
-                                                            📅 {new Date(question.attempted_at).toLocaleDateString()}
+                                                            <Icon name="calendar" size={15} /> {new Date(question.attempted_at).toLocaleDateString()}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -216,7 +217,7 @@ const WrongQuestions = () => {
                                                             className="see-more-button"
                                                             disabled={loadingButtons[question.id]}
                                                         >
-                                                            {loadingButtons[question.id] ? 'جاري التحميل...' : '🔍 اعرف أكثر'}
+                                                            {loadingButtons[question.id] ? 'جاري التحميل...' : <><Icon name="search" size={13} /> اعرف أكثر</>}
                                                         </button>
                                                     </div>
                                                 </div>
@@ -226,7 +227,7 @@ const WrongQuestions = () => {
                                             <div className="question-card-back">
                                                 <div className="ai-analysis-back">
                                                     <div className="ai-analysis-header">
-                                                        <h3>🧠 تحليل الذكاء الاصطناعي</h3>
+                                                        <h3><Icon name="brain" size={15} /> تحليل الذكاء الاصطناعي</h3>
                                                     </div>
 
                                                     {loadingButtons[question.id] ? (

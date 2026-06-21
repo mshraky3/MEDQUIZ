@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Icon from '../common/Icon.jsx';
 
 const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
 
@@ -36,15 +37,18 @@ const QuestionCard = ({ question, number }) => {
                         >
                             <span className="sq-letter">{LETTERS[i]}</span>
                             <span className="sq-opt-text">{opt}</span>
-                            {revealed && i === answer && <span className="sq-mark">✓</span>}
-                            {revealed && i === selected && i !== answer && <span className="sq-mark">✕</span>}
+                            {revealed && i === answer && <span className="sq-mark"><Icon name="check" size={15} /></span>}
+                            {revealed && i === selected && i !== answer && <span className="sq-mark"><Icon name="x" size={15} /></span>}
                         </button>
                     );
                 })}
             </div>
             {revealed && (
                 <div className="sq-explain">
-                    <b>{selected === answer ? 'إجابة صحيحة ✓' : 'إجابة خاطئة ✕'}</b>
+                    <b className="sq-verdict" style={{ color: selected === answer ? '#16a34a' : '#dc2626' }}>
+                        <Icon name={selected === answer ? 'check' : 'x'} size={15} />
+                        {selected === answer ? ' Correct' : ' Incorrect'}
+                    </b>
                     {explanation ? <span> — {explanation}</span> : null}
                     {source && source !== 'general' && <span className="sq-source">{source}</span>}
                 </div>

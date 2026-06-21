@@ -1,4 +1,5 @@
 import React, { useState, useContext, useEffect } from 'react';
+import Icon from '../common/Icon.jsx';
 import axios from 'axios';
 import './Login.css';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -322,7 +323,7 @@ const Login = () => {
                     onClick={() => setShowPassword(!showPassword)}
                     tabIndex="-1"
                   >
-                    {showPassword ? '👁️' : '👁️‍🗨️'}
+                    {showPassword ? <Icon name="eye" size={18} /> : <Icon name="eye-off" size={18} />}
                   </button>
                 </div>
               </div>
@@ -415,16 +416,16 @@ const Login = () => {
           const isLastChance = graceLeft <= 0;
           const warningColor = graceLeft <= 1 ? '#ef4444' : graceLeft === 2 ? '#f97316' : '#6366f1';
           const warningText = isLastChance
-            ? '⛔ هذه آخر فرصة! لن تتمكن من الدخول مرة أخرى بدون بريد إلكتروني.'
+            ? 'هذه آخر فرصة! لن تتمكن من الدخول مرة أخرى بدون بريد إلكتروني.'
             : graceLeft === 1
-              ? `⚠️ تحذير: لديك محاولة دخول واحدة فقط متبقية قبل حذف حسابك نهائياً.`
-              : `ℹ️ لديك ${graceLeft} محاولات دخول متبقية قبل حذف حسابك.`;
+              ? `تحذير: لديك محاولة دخول واحدة فقط متبقية قبل حذف حسابك نهائياً.`
+              : `لديك ${graceLeft} محاولات دخول متبقية قبل حذف حسابك.`;
           return (
             <div className="popup-overlay" style={{ zIndex: 1100 }}>
               <div className="popup-content large-popup" style={{ maxWidth: 420 }}>
                 {migrationStep === 'notify' ? (
                   <>
-                    <h3 style={{ color: warningColor, marginBottom: 12 }}>📧 أضف بريدك الإلكتروني</h3>
+                    <h3 style={{ color: warningColor, marginBottom: 12 }}><Icon name="mail" size={18} /> أضف بريدك الإلكتروني</h3>
                     <div style={{ background: isLastChance ? '#450a0a' : graceLeft === 1 ? '#431407' : '#1e1b4b', border: `1px solid ${warningColor}`, borderRadius: 10, padding: '12px 16px', marginBottom: 16, color: warningColor, fontSize: 14, lineHeight: 1.7 }}>
                       {warningText}
                     </div>

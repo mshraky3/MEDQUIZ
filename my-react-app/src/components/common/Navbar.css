@@ -27,10 +27,10 @@
   left: 0;
   right: 0;
   padding: 0 32px;
-  background: rgba(15, 23, 42, 0.88);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(51, 65, 85, 0.8);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.10);
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08);
   min-height: 72px;
   display: flex;
   align-items: center;
@@ -68,9 +68,9 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.06);
-  color: #e2e8f0;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  background: rgba(15, 23, 42, 0.04);
+  color: #1e293b;
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
@@ -121,7 +121,7 @@
 }
 
 .nav-link {
-  color: #94a3b8;
+  color: #64748b;
   text-decoration: none;
   font-size: 0.9rem;
   font-weight: 500;
@@ -155,7 +155,7 @@
 .hamburger-line {
   width: 22px;
   height: 2px;
-  background: #e2e8f0;
+  background: #1e293b;
   border-radius: 2px;
   transition: all 0.3s ease;
 }
@@ -391,5 +391,24 @@
 
   .page-with-navbar {
     padding-top: 56px;
+  }
+}
+
+/* On phones the email/username is too long for the bar — keep just the
+   avatar in a compact pill so the navbar never feels cramped. (Placed last so
+   it overrides the max-width rules in the 480/360 blocks above.) */
+@media (max-width: 600px) {
+  .user-name {
+    display: none;
+  }
+
+  .user-info {
+    max-width: none;
+    padding: 7px;
+    border-radius: 50%;
+  }
+
+  .user-icon {
+    margin: 0;
   }
 }

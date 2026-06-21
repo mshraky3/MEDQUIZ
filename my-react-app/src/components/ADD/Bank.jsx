@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import Icon from '../common/Icon.jsx';
 import axios from "axios";
 import "./Bank.css";
 import Globals from '../../global.js';
@@ -107,7 +108,7 @@ const Bank = () => {
         prev.map((q) => (q.id === editingQuestion ? response.data.question : q))
       );
       cancelEditing();
-      setSuccessMessage("✅ Question updated successfully!");
+      setSuccessMessage("Question updated successfully!");
       setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
       console.error("Error updating question:", error);

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Icon from '../common/Icon.jsx';
 import axios from 'axios';
 import Globals from '../../global.js';
 import Spinner from '../common/Spinner.jsx';
@@ -241,7 +242,7 @@ const FinalExams = ({ userId, username, sessionToken }) => {
         return (
             <div className="final-exams-container">
                 <div className="no-data">
-                    <div className="no-data-icon">🎯</div>
+                    <div className="no-data-icon"><Icon name="target" size={40} /></div>
                     <h3>لا توجد جلسات اختبار نهائي</h3>
                     <p>لم تكمل أي جلسة اختبار نهائي بعد.</p>
                     <p>ابدأ مراجعة شاملة باختبار نهائي!</p>
@@ -253,7 +254,7 @@ const FinalExams = ({ userId, username, sessionToken }) => {
     return (
         <div className="final-exams-container">
             <div className="final-exams-header">
-                <h2>🎯 جلسات الاختبار النهائي</h2>
+                <h2><Icon name="target" size={15} /> جلسات الاختبار النهائي</h2>
                 <p className="final-exams-description">
                     جلسات مراجعة شاملة لجميع الأسئلة من المعايير المختارة
                 </p>
@@ -364,10 +365,10 @@ const FinalExams = ({ userId, username, sessionToken }) => {
                                                                         <div className="question-header">
                                                                             <div className="question-meta">
                                                                                 <span className="type-badge">
-                                                                                    📖 {question.question_type}
+                                                                                    <Icon name="book" size={15} /> {question.question_type}
                                                                                 </span>
                                                                                 <span className={`result-badge ${question.is_correct ? 'correct' : 'wrong'}`}>
-                                                                                    {question.is_correct ? '✅ صحيح' : '❌ خطأ'}
+                                                                                    {question.is_correct ? <><Icon name="check-circle" size={13} /> صحيح</> : <><Icon name="x-circle" size={13} /> خطأ</>}
                                                                                 </span>
                                                                             </div>
                                                                         </div>
@@ -401,7 +402,7 @@ const FinalExams = ({ userId, username, sessionToken }) => {
                                                                                     className="see-more-button"
                                                                                     disabled={loadingButtons[question.id]}
                                                                                 >
-                                                                                    {loadingButtons[question.id] ? 'جاري التحميل...' : '🔍 اعرف أكثر'}
+                                                                                    {loadingButtons[question.id] ? 'جاري التحميل...' : <><Icon name="search" size={13} /> اعرف أكثر</>}
                                                                                 </button>
                                                                             </div>
 
@@ -415,7 +416,7 @@ const FinalExams = ({ userId, username, sessionToken }) => {
                                                                     <div className="question-card-back">
                                                                         <div className="ai-analysis-back">
                                                                             <div className="ai-analysis-header">
-                                                                                <h3>🧠 تحليل الذكاء الاصطناعي</h3>
+                                                                                <h3><Icon name="brain" size={15} /> تحليل الذكاء الاصطناعي</h3>
                                                                             </div>
 
                                                                             {loadingButtons[question.id] ? (

@@ -33,20 +33,20 @@ class RenderErrorBoundary extends Component {
           minHeight: '100vh',
           padding: '20px',
           textAlign: 'center',
-          background: '#0b1021'
+          background: '#eef2fb'
         }}>
           <div style={{
-            background: 'rgba(255, 255, 255, 0.03)',
+            background: '#ffffff',
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
             borderRadius: '24px',
             padding: '40px',
             maxWidth: '500px',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+            border: '1px solid #d4deee',
+            boxShadow: '0 8px 32px rgba(15, 23, 42, 0.12)'
           }}>
-            <h1 style={{ color: '#f87171', marginBottom: '20px', fontSize: '1.8rem' }}>حدث خطأ غير متوقع</h1>
-            <p style={{ color: '#94a3b8', marginBottom: '30px', lineHeight: '1.6' }}>
+            <h1 style={{ color: '#dc2626', marginBottom: '20px', fontSize: '1.8rem' }}>حدث خطأ غير متوقع</h1>
+            <p style={{ color: '#475569', marginBottom: '30px', lineHeight: '1.6' }}>
               حدث خطأ أثناء تحميل هذه الصفحة.
             </p>
             <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
@@ -54,14 +54,14 @@ class RenderErrorBoundary extends Component {
                 onClick={() => window.location.href = '/'}
                 style={{
                   padding: '12px 24px',
-                  background: 'linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%)',
-                  color: '#0f172a',
+                  background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                  color: '#ffffff',
                   border: 'none',
                   borderRadius: '12px',
                   cursor: 'pointer',
                   fontSize: '16px',
                   fontWeight: '600',
-                  boxShadow: '0 4px 15px rgba(34, 211, 238, 0.3)'
+                  boxShadow: '0 4px 15px rgba(37, 99, 235, 0.3)'
                 }}
               >
                 Go Home
@@ -70,9 +70,9 @@ class RenderErrorBoundary extends Component {
                 onClick={() => window.location.reload()}
                 style={{
                   padding: '12px 24px',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  color: '#e2e8f0',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  background: '#eef2fb',
+                  color: '#1e293b',
+                  border: '1px solid #d4deee',
                   borderRadius: '12px',
                   cursor: 'pointer',
                   fontSize: '16px',
@@ -119,20 +119,20 @@ const RouteErrorBoundary = () => {
       minHeight: '100vh',
       padding: '20px',
       textAlign: 'center',
-      background: '#0b1021'
+      background: '#eef2fb'
     }}>
       <div style={{
-        background: 'rgba(255, 255, 255, 0.03)',
+        background: '#ffffff',
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
         borderRadius: '24px',
         padding: '40px',
         maxWidth: '500px',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+        border: '1px solid #d4deee',
+        boxShadow: '0 8px 32px rgba(15, 23, 42, 0.12)'
       }}>
-        <h1 style={{ color: '#f87171', marginBottom: '20px', fontSize: '1.8rem' }}>حدث خطأ غير متوقع</h1>
-        <p style={{ color: '#94a3b8', marginBottom: '30px', lineHeight: '1.6' }}>
+        <h1 style={{ color: '#dc2626', marginBottom: '20px', fontSize: '1.8rem' }}>حدث خطأ غير متوقع</h1>
+        <p style={{ color: '#475569', marginBottom: '30px', lineHeight: '1.6' }}>
           {error?.status === 404
             ? 'الصفحة المطلوبة غير موجودة.'
             : 'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.'
@@ -143,14 +143,14 @@ const RouteErrorBoundary = () => {
             onClick={() => navigate('/')}
             style={{
               padding: '12px 24px',
-              background: 'linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%)',
-              color: '#0f172a',
+              background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+              color: '#ffffff',
               border: 'none',
               borderRadius: '12px',
               cursor: 'pointer',
               fontSize: '16px',
               fontWeight: '600',
-              boxShadow: '0 4px 15px rgba(34, 211, 238, 0.3)'
+              boxShadow: '0 4px 15px rgba(37, 99, 235, 0.3)'
             }}
           >
             Go Home
@@ -159,9 +159,9 @@ const RouteErrorBoundary = () => {
             onClick={() => navigate(-1)}
             style={{
               padding: '12px 24px',
-              background: 'rgba(255, 255, 255, 0.05)',
-              color: '#e2e8f0',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
+              background: '#eef2fb',
+              color: '#1e293b',
+              border: '1px solid #d4deee',
               borderRadius: '12px',
               cursor: 'pointer',
               fontSize: '16px',

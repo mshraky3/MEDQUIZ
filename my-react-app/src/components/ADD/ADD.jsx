@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import Icon from '../common/Icon.jsx';
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./add.css";
@@ -109,13 +110,13 @@ const ADD = (props) => {
                 password,
             });
 
-            setMessage(`✅ ${response.data.message}`);
+            setMessage(`${response.data.message}`);
             setUsername("");
             setPassword("");
             fetchUsers(); // Refresh user list
         } catch (err) {
             const errorMessage = err.response?.data?.message || "Failed to add account. Please try again.";
-            setError(`❌ ${errorMessage}`);
+            setError(`${errorMessage}`);
             setMessage("");
         } finally {
             setLoading(false);
@@ -134,11 +135,11 @@ const ADD = (props) => {
 
         try {
             const response = await axios.delete(`${props.host}/users/${userId}`);
-            setMessage(`✅ ${response.data.message}`);
+            setMessage(`${response.data.message}`);
             setUsers(users.filter(user => user.id !== userId));
         } catch (err) {
             const errorMessage = err.response?.data?.message || "Failed to delete user. Please try again.";
-            setError(`❌ ${errorMessage}`);
+            setError(`${errorMessage}`);
         } finally {
             setDeletingUser(null);
         }
@@ -148,10 +149,10 @@ const ADD = (props) => {
     const handleClearSuspicious = async (userId) => {
         try {
             await axios.post(`${props.host}/admin/users/${userId}/clear-suspicious`);
-            setMessage("✅ Suspicious flags cleared");
+            setMessage("Suspicious flags cleared");
             fetchUsers();
         } catch (err) {
-            setError("❌ Failed to clear suspicious flags");
+            setError("Failed to clear suspicious flags");
         }
     };
 
@@ -239,25 +240,25 @@ const ADD = (props) => {
                         className={`tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
                         onClick={() => setActiveTab('overview')}
                     >
-                        📊 Overview
+                        <Icon name="bar-chart" size={16} /> Overview
                     </button>
                     <button
                         className={`tab-btn ${activeTab === 'users' ? 'active' : ''}`}
                         onClick={() => setActiveTab('users')}
                     >
-                        👥 Users ({users.length})
+                        <Icon name="users" size={16} /> Users ({users.length})
                     </button>
                     <button
                         className={`tab-btn ${activeTab === 'suspicious' ? 'active' : ''}`}
                         onClick={() => setActiveTab('suspicious')}
                     >
-                        ⚠️ Suspicious ({suspiciousUsers.length})
+                        <Icon name="alert-triangle" size={16} /> Suspicious ({suspiciousUsers.length})
                     </button>
                     <button
                         className={`tab-btn ${activeTab === 'add' ? 'active' : ''}`}
                         onClick={() => setActiveTab('add')}
                     >
-                        ➕ Add User
+                        <Icon name="plus" size={16} /> Add User
                     </button>
                 </div>
 
@@ -271,14 +272,14 @@ const ADD = (props) => {
                         {/* Stats Cards */}
                         <div className="stats-grid">
                             <div className="stat-card-mini">
-                                <div className="stat-icon">👥</div>
+                                <div className="stat-icon"><Icon name="users" size={16} /></div>
                                 <div className="stat-info">
                                     <span className="stat-value">{stats?.overview?.totalUsers || 0}</span>
                                     <span className="stat-label">Total Users</span>
                                 </div>
                             </div>
                             <div className="stat-card-mini">
-                                <div className="stat-icon">🟢</div>
+                                <div className="stat-icon"><Icon name="circle" size={16} /></div>
                                 <div className="stat-info">
                                     <span className="stat-value">{stats?.overview?.activeUsers || 0}</span>
                                     <span className="stat-label">Active (7 days)</span>
@@ -292,21 +293,21 @@ const ADD = (props) => {
                                 </div>
                             </div>
                             <div className="stat-card-mini">
-                                <div className="stat-icon">📝</div>
+                                <div className="stat-icon"><Icon name="pen" size={16} /></div>
                                 <div className="stat-info">
                                     <span className="stat-value">{stats?.overview?.totalQuizzes || 0}</span>
                                     <span className="stat-label">Total Quizzes</span>
                                 </div>
                             </div>
                             <div className="stat-card-mini">
-                                <div className="stat-icon">🎯</div>
+                                <div className="stat-icon"><Icon name="target" size={16} /></div>
                                 <div className="stat-info">
                                     <span className="stat-value">{stats?.overview?.avgAccuracy || 0}%</span>
                                     <span className="stat-label">Avg Accuracy</span>
                                 </div>
                             </div>
                             <div className="stat-card-mini warning">
-                                <div className="stat-icon">⚠️</div>
+                                <div className="stat-icon"><Icon name="alert-triangle" size={16} /></div>
                                 <div className="stat-info">
                                     <span className="stat-value">{suspiciousUsers.length}</span>
                                     <span className="stat-label">Suspicious</span>
@@ -317,7 +318,7 @@ const ADD = (props) => {
                         {/* Charts Section */}
                         <div className="charts-grid">
                             <div className="chart-card">
-                                <h3>📈 Logins (Last 7 Days)</h3>
+                                <h3><Icon name="trending-up" size={16} /> Logins (Last 7 Days)</h3>
                                 <SimpleBarChart
                                     data={stats?.charts?.loginsByDay || []}
                                     labelKey="date"
@@ -325,7 +326,7 @@ const ADD = (props) => {
                                 />
                             </div>
                             <div className="chart-card">
-                                <h3>🏆 Top Users</h3>
+                                <h3><Icon name="trophy" size={16} /> Top Users</h3>
                                 <SimpleBarChart
                                     data={stats?.topUsers || []}
                                     labelKey="username"
@@ -334,7 +335,7 @@ const ADD = (props) => {
                                 />
                             </div>
                             <div className="chart-card">
-                                <h3>📚 Questions by Topic</h3>
+                                <h3><Icon name="book-open" size={16} /> Questions by Topic</h3>
                                 <SimpleBarChart
                                     data={stats?.quizzesByTopic || []}
                                     labelKey="topic"
@@ -345,12 +346,12 @@ const ADD = (props) => {
 
                         {/* Recent Logins */}
                         <div className="recent-section">
-                            <h3>🕐 Recent Logins</h3>
+                            <h3><Icon name="clock" size={16} /> Recent Logins</h3>
                             <div className="recent-logins-list">
                                 {stats?.recentLogins?.slice(0, 5).map((login, idx) => (
                                     <div key={idx} className={`recent-login-item ${login.is_suspicious ? 'suspicious' : ''}`}>
                                         <div className="login-user">
-                                            <span className="login-avatar">👤</span>
+                                            <span className="login-avatar"><Icon name="user" size={16} /></span>
                                             <span className="login-username">{login.username}</span>
                                         </div>
                                         <div className="login-details">
@@ -361,7 +362,7 @@ const ADD = (props) => {
                                             {new Date(login.login_time).toLocaleString()}
                                         </div>
                                         {login.is_suspicious && (
-                                            <span className="suspicious-badge">⚠️</span>
+                                            <span className="suspicious-badge"><Icon name="alert-triangle" size={16} /></span>
                                         )}
                                     </div>
                                 ))}
@@ -379,7 +380,7 @@ const ADD = (props) => {
                         {/* Search and Sort Controls */}
                         <div className="users-controls">
                             <div className="search-box">
-                                <span className="search-icon">🔍</span>
+                                <span className="search-icon"><Icon name="search" size={16} /></span>
                                 <input
                                     type="text"
                                     placeholder="Search users..."
@@ -412,7 +413,7 @@ const ADD = (props) => {
                                 className="refresh-btn"
                                 onClick={() => { fetchUsers(); fetchStats(); }}
                             >
-                                🔄 Refresh
+                                <Icon name="refresh" size={16} /> Refresh
                             </button>
                         </div>
 
@@ -434,7 +435,7 @@ const ADD = (props) => {
                                             <td className="user-cell">
                                                 <div className="user-info-compact">
                                                     <span className="user-avatar-small">
-                                                        {user.suspicious?.hasSuspiciousActivity ? '⚠️' : '👤'}
+                                                        {user.suspicious?.hasSuspiciousActivity ? <Icon name="alert-triangle" size={16} /> : <Icon name="user" size={16} />}
                                                     </span>
                                                     <div>
                                                         <div className="user-name">{user.username}</div>
@@ -444,33 +445,33 @@ const ADD = (props) => {
                                             </td>
                                             <td>
                                                 <span className={`status-badge ${user.isactive ? 'active' : 'inactive'}`}>
-                                                    {user.isactive ? '✅ Active' : '❌ Inactive'}
+                                                    {user.isactive ? <><Icon name="check-circle" size={14} /> Active</> : <><Icon name="x-circle" size={14} /> Inactive</>}
                                                 </span>
                                                 {user.logged && (
-                                                    <span className="online-indicator">🟢 Online</span>
+                                                    <span className="online-indicator"><Icon name="circle" size={16} /> Online</span>
                                                 )}
                                             </td>
                                             <td className="activity-cell">
                                                 <div className="activity-stats">
-                                                    <span>📝 {user.total_quizzes || 0} quizzes</span>
-                                                    <span>🎯 {user.avg_accuracy || 0}% accuracy</span>
-                                                    <span>📅 {user.logged_date ? new Date(user.logged_date).toLocaleDateString() : 'Never'}</span>
+                                                    <span><Icon name="pen" size={16} /> {user.total_quizzes || 0} quizzes</span>
+                                                    <span><Icon name="target" size={16} /> {user.avg_accuracy || 0}% accuracy</span>
+                                                    <span><Icon name="calendar" size={16} /> {user.logged_date ? new Date(user.logged_date).toLocaleDateString() : 'Never'}</span>
                                                 </div>
                                             </td>
                                             <td className="security-cell">
                                                 {user.suspicious?.hasSuspiciousActivity ? (
                                                     <div className="security-warning">
-                                                        <span className="warning-badge">⚠️ Suspicious</span>
+                                                        <span className="warning-badge"><Icon name="alert-triangle" size={16} /> Suspicious</span>
                                                         <div className="security-details">
-                                                            <span>🌐 {user.suspicious.uniqueIPs} IPs</span>
-                                                            <span>📱 {user.suspicious.uniqueDevices} devices</span>
+                                                            <span><Icon name="globe" size={16} /> {user.suspicious.uniqueIPs} IPs</span>
+                                                            <span><Icon name="phone" size={16} /> {user.suspicious.uniqueDevices} devices</span>
                                                         </div>
                                                         <div className="suspicious-reasons">
                                                             {user.suspicious.suspiciousReasons}
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    <span className="security-ok">✅ OK</span>
+                                                    <span className="security-ok"><Icon name="check-circle" size={16} /> OK</span>
                                                 )}
                                             </td>
                                             <td className="actions-cell">
@@ -483,7 +484,7 @@ const ADD = (props) => {
                                                     }}
                                                     title="View Login History"
                                                 >
-                                                    📋
+                                                    <Icon name="clipboard" size={16} />
                                                 </button>
                                                 {user.suspicious?.hasSuspiciousActivity && (
                                                     <button
@@ -491,7 +492,7 @@ const ADD = (props) => {
                                                         onClick={() => handleClearSuspicious(user.id)}
                                                         title="Clear Suspicious Flag"
                                                     >
-                                                        ✓
+                                                        <Icon name="check" size={16} />
                                                     </button>
                                                 )}
                                                 <button
@@ -500,7 +501,7 @@ const ADD = (props) => {
                                                     disabled={deletingUser === user.id}
                                                     title="Delete User"
                                                 >
-                                                    {deletingUser === user.id ? '⏳' : '🗑️'}
+                                                    {deletingUser === user.id ? <Icon name="hourglass" size={16} /> : <Icon name="trash" size={16} />}
                                                 </button>
                                             </td>
                                         </tr>
@@ -518,7 +519,7 @@ const ADD = (props) => {
                 {activeTab === 'suspicious' && (
                     <div className="tab-content">
                         <div className="suspicious-header">
-                            <h2>⚠️ Suspicious Activity Detection</h2>
+                            <h2><Icon name="alert-triangle" size={16} /> Suspicious Activity Detection</h2>
                             <p className="suspicious-info">
                                 Users are flagged when they show signs of account sharing: multiple IPs in 24h,
                                 many different devices, or rapid location changes.
@@ -527,7 +528,7 @@ const ADD = (props) => {
 
                         {suspiciousUsers.length === 0 ? (
                             <div className="no-suspicious">
-                                <span className="no-suspicious-icon">✅</span>
+                                <span className="no-suspicious-icon"><Icon name="check-circle" size={16} /></span>
                                 <h3>No Suspicious Activity Detected</h3>
                                 <p>All users appear to be using their accounts normally.</p>
                             </div>
@@ -537,7 +538,7 @@ const ADD = (props) => {
                                     <div key={user.id} className="suspicious-card">
                                         <div className="suspicious-card-header">
                                             <div className="suspicious-user">
-                                                <span className="warning-icon">⚠️</span>
+                                                <span className="warning-icon"><Icon name="alert-triangle" size={16} /></span>
                                                 <div>
                                                     <h4>{user.username}</h4>
                                                     <span className="user-id-small">ID: {user.id}</span>
@@ -552,19 +553,19 @@ const ADD = (props) => {
                                                         fetchLoginHistory(user.id);
                                                     }}
                                                 >
-                                                    📋 View History
+                                                    <Icon name="clipboard" size={16} /> View History
                                                 </button>
                                                 <button
                                                     className="btn-success"
                                                     onClick={() => handleClearSuspicious(user.id)}
                                                 >
-                                                    ✓ Clear Flag
+                                                    <Icon name="check" size={16} /> Clear Flag
                                                 </button>
                                                 <button
                                                     className="btn-danger"
                                                     onClick={() => handleDeleteUser(user.id, user.username)}
                                                 >
-                                                    🗑️ Delete
+                                                    <Icon name="trash" size={16} /> Delete
                                                 </button>
                                             </div>
                                         </div>
@@ -599,7 +600,7 @@ const ADD = (props) => {
                 {activeTab === 'add' && (
                     <div className="tab-content">
                         <div className="add-user-section">
-                            <h2>➕ Add New User Account</h2>
+                            <h2><Icon name="plus" size={16} /> Add New User Account</h2>
                             <form onSubmit={handleSubmit} className="add-user-form">
                                 <div className="form-group">
                                     <label htmlFor="username">Username</label>
@@ -624,7 +625,7 @@ const ADD = (props) => {
                                     />
                                 </div>
                                 <button type="submit" className="btn-primary" disabled={loading}>
-                                    {loading ? "⏳ Creating..." : "➕ Create Account"}
+                                    {loading ? <><Icon name="hourglass" size={14} /> Creating...</> : <><Icon name="plus" size={14} /> Create Account</>}
                                 </button>
                             </form>
                         </div>
@@ -636,8 +637,8 @@ const ADD = (props) => {
                     <div className="modal-overlay" onClick={() => setShowLoginHistory(false)}>
                         <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                             <div className="modal-header">
-                                <h3>📋 Login History: {selectedUser.username}</h3>
-                                <button className="modal-close" onClick={() => setShowLoginHistory(false)}>✕</button>
+                                <h3><Icon name="clipboard" size={16} /> Login History: {selectedUser.username}</h3>
+                                <button className="modal-close" onClick={() => setShowLoginHistory(false)}><Icon name="x" size={16} /></button>
                             </div>
                             <div className="modal-body">
                                 {loginHistory.length === 0 ? (
@@ -650,15 +651,15 @@ const ADD = (props) => {
                                                     {new Date(login.login_time).toLocaleString()}
                                                 </div>
                                                 <div className="history-details">
-                                                    <span className="history-ip">🌐 {login.ip_address}</span>
+                                                    <span className="history-ip"><Icon name="globe" size={16} /> {login.ip_address}</span>
                                                     <span className="history-device">
-                                                        {login.device_type === 'Mobile' ? '📱' : '💻'} {login.device_type}
+                                                        {login.device_type === 'Mobile' ? <Icon name="phone" size={14} /> : <Icon name="monitor" size={14} />} {login.device_type}
                                                     </span>
-                                                    <span className="history-browser">🌍 {login.browser} / {login.os}</span>
+                                                    <span className="history-browser"><Icon name="globe" size={16} /> {login.browser} / {login.os}</span>
                                                 </div>
                                                 {login.is_suspicious && (
                                                     <div className="history-warning">
-                                                        ⚠️ {login.suspicious_reason}
+                                                        <Icon name="alert-triangle" size={16} /> {login.suspicious_reason}
                                                     </div>
                                                 )}
                                             </div>

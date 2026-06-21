@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import Icon from '../common/Icon.jsx';
 import { api } from '../../utils/apiClient';
 
 const PAGE_SIZE = 25;
@@ -68,7 +69,7 @@ const SummaryQuestionsList = ({ slug }) => {
                                     key={idx}
                                     className={`summary-q-option ${opt === item.correct_option ? 'correct' : ''}`}
                                 >
-                                    {opt === item.correct_option ? '✓ ' : ''}{opt}
+                                    {opt === item.correct_option ? <Icon name="check" size={13} /> : null} {opt}
                                 </div>
                             ))}
                         </div>

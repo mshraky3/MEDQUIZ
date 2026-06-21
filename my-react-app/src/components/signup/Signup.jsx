@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Icon from '../common/Icon.jsx';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { track } from '@vercel/analytics';
@@ -38,11 +39,11 @@ const Signup = () => {
                 setIsTempLink(true);
                 setError('');
             } else {
-                setError('❌ Invalid or expired temporary link');
+                setError('Invalid or expired temporary link');
                 setTimeout(() => navigate('/contact'), 3000);
             }
         } catch (err) {
-            setError('❌ Invalid or expired temporary link');
+            setError('Invalid or expired temporary link');
             setTimeout(() => navigate('/contact'), 3000);
         } finally {
             setLoading(false);
@@ -148,7 +149,7 @@ const Signup = () => {
             <div className="login-body" dir="rtl">
                 <div className="login-wrapper signup-wide">
                     <div className="login-card signup-short" style={{ textAlign: 'center' }}>
-                        <div className="success-icon" style={{ fontSize: 60, marginBottom: 20 }}>✅</div>
+                        <div className="success-icon" style={{ fontSize: 60, marginBottom: 20 }}><Icon name="check-circle" size={56} /></div>
                         <h2 style={{ color: '#f8fafc', fontWeight: 700, marginBottom: 12 }}>تم إنشاء الحساب بنجاح!</h2>
                         <p style={{ color: 'var(--muted)' }}>جاري التحويل لتسجيل الدخول...</p>
                     </div>

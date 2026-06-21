@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import Icon from '../common/Icon.jsx';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './Admin.css';
@@ -381,28 +382,28 @@ const Admin = () => {
 
   const adminCards = [
     {
-      icon: '👤',
+      icon: 'user',
       title: 'User Management',
       description: 'Add new user accounts and manage existing users',
       buttonText: 'Manage Users',
       path: '/ADD_ACCOUNT'
     },
     {
-      icon: '❓',
+      icon: 'help-circle',
       title: 'Question Bank',
       description: 'Add new questions and manage the question database',
       buttonText: 'Add Questions',
       path: '/ADDQ'
     },
     {
-      icon: '📚',
+      icon: 'book-open',
       title: 'Question Library',
       description: 'View and browse all questions in the database',
       buttonText: 'View All Questions',
       path: '/Bank'
     },
     {
-      icon: '🔗',
+      icon: 'link',
       title: 'Temp Signup Links',
       description: 'Create and manage temporary signup links for free accounts',
       buttonText: 'Manage Links',
@@ -431,10 +432,10 @@ const Admin = () => {
 
   const getCategoryIcon = (category) => {
     const icons = {
-      feature: '✨', improvement: '🚀', ui: '🎨',
-      content: '📚', bug: '🐛', other: '💡'
+      feature: 'sparkles', improvement: 'rocket', ui: 'palette',
+      content: 'book-open', bug: 'bug', other: 'lightbulb'
     };
-    return icons[category] || '💡';
+    return icons[category] || 'lightbulb';
   };
 
   const getPriorityColor = (priority) => {
@@ -473,7 +474,7 @@ const Admin = () => {
         <AdminNavbar />
         <div className="admin-container">
           <div className="dashboard-error">
-            <span className="error-icon">⚠️</span>
+            <span className="error-icon"><Icon name="alert-triangle" size={16} /></span>
             <p>{error}</p>
             <button onClick={() => setRefreshKey(k => k + 1)}>Retry</button>
           </div>
@@ -497,7 +498,7 @@ const Admin = () => {
               className="quick-action-btn"
               onClick={() => navigate(card.path)}
             >
-              <span className="quick-action-icon">{card.icon}</span>
+              <span className="quick-action-icon"><Icon name={card.icon} size={20} /></span>
               <span className="quick-action-label">{card.title}</span>
             </button>
           ))}
@@ -505,7 +506,7 @@ const Admin = () => {
             className="quick-action-btn refresh-btn"
             onClick={() => setRefreshKey(k => k + 1)}
           >
-            <span className="quick-action-icon">🔄</span>
+            <span className="quick-action-icon"><Icon name="refresh" size={16} /></span>
             <span className="quick-action-label">Refresh</span>
           </button>
         </div>
@@ -514,7 +515,7 @@ const Admin = () => {
         <div className="stats-grid-main">
           <div className="stat-card-large primary">
             <div className="stat-card-header">
-              <span className="stat-icon">👥</span>
+              <span className="stat-icon"><Icon name="users" size={16} /></span>
               <span className="stat-label">Total Users</span>
             </div>
             <div className="stat-value-large">
@@ -528,7 +529,7 @@ const Admin = () => {
 
           <div className="stat-card-large secondary">
             <div className="stat-card-header">
-              <span className="stat-icon">📝</span>
+              <span className="stat-icon"><Icon name="pen" size={16} /></span>
               <span className="stat-label">Total Quizzes</span>
             </div>
             <div className="stat-value-large">
@@ -542,7 +543,7 @@ const Admin = () => {
 
           <div className="stat-card-large tertiary">
             <div className="stat-card-header">
-              <span className="stat-icon">✅</span>
+              <span className="stat-icon"><Icon name="check-circle" size={16} /></span>
               <span className="stat-label">Questions Answered</span>
             </div>
             <div className="stat-value-large">
@@ -555,7 +556,7 @@ const Admin = () => {
 
           <div className="stat-card-large highlight">
             <div className="stat-card-header">
-              <span className="stat-icon">🎯</span>
+              <span className="stat-icon"><Icon name="target" size={16} /></span>
               <span className="stat-label">Avg Accuracy</span>
             </div>
             <div className="stat-value-large">
@@ -572,35 +573,35 @@ const Admin = () => {
         {/* Secondary Stats Row */}
         <div className="stats-grid-secondary">
           <div className="stat-card-small">
-            <div className="stat-icon-small">🟢</div>
+            <div className="stat-icon-small"><Icon name="circle" size={16} /></div>
             <div className="stat-info">
               <span className="stat-value-small">{overview.onlineNow ?? 0}</span>
               <span className="stat-label-small">Online Now</span>
             </div>
           </div>
           <div className="stat-card-small">
-            <div className="stat-icon-small">📈</div>
+            <div className="stat-icon-small"><Icon name="trending-up" size={16} /></div>
             <div className="stat-info">
               <span className="stat-value-small">{overview.newUsersMonth ?? 0}</span>
               <span className="stat-label-small">New Users (30d)</span>
             </div>
           </div>
           <div className="stat-card-small">
-            <div className="stat-icon-small">🔄</div>
+            <div className="stat-icon-small"><Icon name="refresh" size={16} /></div>
             <div className="stat-info">
               <span className="stat-value-small">{overview.retentionRate ?? 0}%</span>
               <span className="stat-label-small">Retention Rate</span>
             </div>
           </div>
           <div className="stat-card-small">
-            <div className="stat-icon-small">✔️</div>
+            <div className="stat-icon-small"><Icon name="check" size={16} /></div>
             <div className="stat-info">
               <span className="stat-value-small">{overview.completionRate ?? 0}%</span>
               <span className="stat-label-small">Quiz Completion</span>
             </div>
           </div>
           <div className="stat-card-small warning">
-            <div className="stat-icon-small">⚠️</div>
+            <div className="stat-icon-small"><Icon name="alert-triangle" size={16} /></div>
             <div className="stat-info">
               <span className="stat-value-small">{overview.suspiciousCount ?? 0}</span>
               <span className="stat-label-small">Suspicious Users</span>
@@ -613,7 +614,7 @@ const Admin = () => {
           {/* Login Activity Chart - full width */}
           <div className="chart-card wide">
             <div className="chart-header">
-              <h3>📊 Login Activity (Last 14 Days)</h3>
+              <h3><Icon name="bar-chart" size={16} /> Login Activity (Last 14 Days)</h3>
             </div>
             <LineChart
               data={processedLoginData}
@@ -627,7 +628,7 @@ const Admin = () => {
           {/* Growth Charts - side by side */}
           <div className="chart-card">
             <div className="chart-header">
-              <h3>👥 User Growth (8 Weeks)</h3>
+              <h3><Icon name="users" size={16} /> User Growth (8 Weeks)</h3>
             </div>
             <MiniBarChart
               data={processedUserGrowth}
@@ -640,7 +641,7 @@ const Admin = () => {
 
           <div className="chart-card">
             <div className="chart-header">
-              <h3>📝 Quiz Activity (8 Weeks)</h3>
+              <h3><Icon name="pen" size={16} /> Quiz Activity (8 Weeks)</h3>
             </div>
             <MiniBarChart
               data={processedQuizGrowth}
@@ -654,7 +655,7 @@ const Admin = () => {
           {/* Device & Browser Distribution - side by side */}
           <div className="chart-card">
             <div className="chart-header">
-              <h3>📱 Device Distribution</h3>
+              <h3><Icon name="phone" size={16} /> Device Distribution</h3>
             </div>
             <DonutChart
               data={stats?.charts?.deviceStats || []}
@@ -667,7 +668,7 @@ const Admin = () => {
 
           <div className="chart-card">
             <div className="chart-header">
-              <h3>🌐 Browser Usage</h3>
+              <h3><Icon name="globe" size={16} /> Browser Usage</h3>
             </div>
             <HorizontalBarChart
               data={stats?.charts?.browserStats || []}
@@ -680,7 +681,7 @@ const Admin = () => {
           {/* Hourly Activity Heatmap - full width */}
           <div className="chart-card wide">
             <div className="chart-header">
-              <h3>🕐 Activity by Hour (30 Days)</h3>
+              <h3><Icon name="clock" size={16} /> Activity by Hour (30 Days)</h3>
             </div>
             <HourlyHeatmap
               data={stats?.charts?.hourlyActivity || []}
@@ -691,7 +692,7 @@ const Admin = () => {
           {/* Topic Performance - side by side with Accuracy */}
           <div className="chart-card">
             <div className="chart-header">
-              <h3>📚 Questions by Topic</h3>
+              <h3><Icon name="book-open" size={16} /> Questions by Topic</h3>
             </div>
             <HorizontalBarChart
               data={stats?.quizzesByTopic || []}
@@ -704,7 +705,7 @@ const Admin = () => {
           {/* Accuracy Distribution */}
           <div className="chart-card">
             <div className="chart-header">
-              <h3>🎯 User Accuracy Distribution</h3>
+              <h3><Icon name="target" size={16} /> User Accuracy Distribution</h3>
             </div>
             <DonutChart
               data={stats?.charts?.accuracyDistribution || []}
@@ -721,7 +722,7 @@ const Admin = () => {
           {/* Top Users */}
           <div className="table-card">
             <div className="table-header">
-              <h3>🏆 Top Users by Activity</h3>
+              <h3><Icon name="trophy" size={16} /> Top Users by Activity</h3>
             </div>
             <div className="mini-table">
               {stats?.topUsers?.slice(0, 8).map((user, idx) => (
@@ -743,7 +744,7 @@ const Admin = () => {
           {/* Recent Logins */}
           <div className="table-card">
             <div className="table-header">
-              <h3>🔐 Recent Logins</h3>
+              <h3><Icon name="lock" size={16} /> Recent Logins</h3>
             </div>
             <div className="mini-table">
               {stats?.recentLogins?.slice(0, 8).map((login, idx) => (
@@ -751,12 +752,12 @@ const Admin = () => {
                   <div className="login-info">
                     <span className="username">{login.username}</span>
                     <span className="login-device">
-                      {login.device_type === 'mobile' ? '📱' : '💻'} {login.browser}
+                      {login.device_type === 'mobile' ? <Icon name="phone" size={14} /> : <Icon name="monitor" size={14} />} {login.browser}
                     </span>
                   </div>
                   <div className="login-meta">
                     <span className="login-time">{formatTimeAgo(login.login_time)}</span>
-                    {login.is_suspicious && <span className="suspicious-badge">⚠️</span>}
+                    {login.is_suspicious && <span className="suspicious-badge"><Icon name="alert-triangle" size={16} /></span>}
                   </div>
                 </div>
               ))}
@@ -769,7 +770,7 @@ const Admin = () => {
           {/* Suspicious Activity */}
           <div className="table-card warning-card">
             <div className="table-header">
-              <h3>⚠️ Suspicious Activity</h3>
+              <h3><Icon name="alert-triangle" size={16} /> Suspicious Activity</h3>
               <button
                 className="view-all-btn"
                 onClick={() => navigate('/ADD_ACCOUNT')}
@@ -791,7 +792,7 @@ const Admin = () => {
                 </div>
               ))}
               {(!stats?.suspiciousUsers || stats.suspiciousUsers.length === 0) && (
-                <div className="empty-state success">✅ No suspicious activity detected</div>
+                <div className="empty-state success"><Icon name="check-circle" size={16} /> No suspicious activity detected</div>
               )}
             </div>
           </div>
@@ -799,7 +800,7 @@ const Admin = () => {
           {/* Suggestions Panel */}
           <div className="table-card suggestions-card">
             <div className="table-header">
-              <h3>💡 User Suggestions</h3>
+              <h3><Icon name="lightbulb" size={16} /> User Suggestions</h3>
               <span className="suggestions-count">
                 {suggestions.filter(s => s.status === 'pending').length} pending
               </span>
@@ -814,7 +815,7 @@ const Admin = () => {
                     <div key={suggestion.id} className="suggestion-item">
                       <div className="suggestion-header">
                         <span className="suggestion-category">
-                          {getCategoryIcon(suggestion.category)}
+                          <Icon name={getCategoryIcon(suggestion.category)} size={18} />
                         </span>
                         <span className="suggestion-title">{suggestion.title}</span>
                         <span
@@ -848,7 +849,7 @@ const Admin = () => {
                             onClick={() => deleteSuggestion(suggestion.id)}
                             title="Delete"
                           >
-                            🗑️
+                            <Icon name="trash" size={16} />
                           </button>
                         </div>
                       </div>
@@ -864,7 +865,7 @@ const Admin = () => {
           {/* Topic Accuracy */}
           <div className="table-card">
             <div className="table-header">
-              <h3>📊 Topic Performance</h3>
+              <h3><Icon name="bar-chart" size={16} /> Topic Performance</h3>
             </div>
             <div className="mini-table">
               {stats?.charts?.accuracyByTopic?.slice(0, 6).map((topic, idx) => (

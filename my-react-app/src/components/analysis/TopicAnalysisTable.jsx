@@ -1,4 +1,5 @@
 import React from 'react';
+import Icon from '../common/Icon.jsx';
 import './analysis.css';
 
 const TopicAnalysisTable = ({ topicAnalysis, topics }) => {
@@ -28,7 +29,7 @@ const TopicAnalysisTable = ({ topicAnalysis, topics }) => {
               <div className="question-header">
                 <div className="question-meta">
                   <span className="type-badge">
-                    📖 {topic.question_type}
+                    <Icon name="book" size={15} /> {topic.question_type}
                   </span>
                   <span className="accuracy-badge" style={{
                     background: accuracy >= 80 ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' :
@@ -36,7 +37,7 @@ const TopicAnalysisTable = ({ topicAnalysis, topics }) => {
                         'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
                     color: 'white'
                   }}>
-                    📊 {accuracy}%
+                    <Icon name="bar-chart" size={15} /> {accuracy}%
                   </span>
                 </div>
               </div>

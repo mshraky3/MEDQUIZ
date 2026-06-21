@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Icon from '../common/Icon.jsx';
 import axios from 'axios';
 import AdminNavbar from './AdminNavbar.jsx';
 import Globals from '../../global.js';
@@ -70,7 +71,7 @@ const QuestionReports = () => {
         <div style={{ minHeight: '100vh', background: '#0b1021', color: '#e2e8f0' }}>
             <AdminNavbar />
             <div style={{ maxWidth: 900, margin: '0 auto', padding: '32px 16px' }}>
-                <h1 style={{ fontSize: 24, marginBottom: 8 }}>🚩 Question Reports</h1>
+                <h1 style={{ fontSize: 24, marginBottom: 8 }}><Icon name="flag" size={16} /> Question Reports</h1>
                 <p style={{ color: '#94a3b8', marginBottom: 32 }}>
                     Review questions reported by users. Resolve each report and an email will be sent to the reporter.
                 </p>
@@ -79,7 +80,7 @@ const QuestionReports = () => {
                 {error && (
                     <div style={{ background: '#1a0000', border: '1px solid #7f1d1d', borderRadius: 8, padding: 16, marginBottom: 24 }}>
                         <p style={{ color: '#f87171', margin: '0 0 8px 0' }}>{error}</p>
-                        <p style={{ color: '#64748b', fontSize: 12, margin: '0 0 12px 0' }}>API: {API || '⚠️ VITE_API not set'}</p>
+                        <p style={{ color: '#64748b', fontSize: 12, margin: '0 0 12px 0' }}>API: {API || 'VITE_API not set'}</p>
                         <button onClick={fetchReports} style={{ background: '#7f1d1d', color: '#fca5a5', border: 'none', borderRadius: 6, padding: '6px 14px', cursor: 'pointer' }}>
                             Retry
                         </button>
@@ -119,7 +120,7 @@ const QuestionReports = () => {
                                                     color: report[opt] === report.correct_option ? '#86efac' : '#cbd5e1',
                                                     border: report[opt] === report.correct_option ? '1px solid #22c55e' : '1px solid #2d3f60',
                                                 }}>
-                                                    {report[opt] === report.correct_option ? '✓ ' : ''}{report[opt]}
+                                                    {report[opt] === report.correct_option ? <Icon name="check" size={13} /> : null} {report[opt]}
                                                 </span>
                                             ))}
                                         </div>
@@ -151,7 +152,7 @@ const QuestionReports = () => {
                                                     disabled={resolving === report.id}
                                                     onClick={() => handleResolve(report.id, 'correct')}
                                                 >
-                                                    {resolving === report.id ? 'Saving...' : '✔ Question is Correct'}
+                                                    {resolving === report.id ? 'Saving...' : <><Icon name="check" size={14} /> Question is Correct</>}
                                                 </button>
 
                                                 {/* Option 2: Correct the answer */}
@@ -167,7 +168,7 @@ const QuestionReports = () => {
                                                         disabled={resolving === report.id}
                                                         onClick={() => handleResolve(report.id, 'corrected')}
                                                     >
-                                                        {resolving === report.id ? 'Saving...' : '✏ Apply Correction'}
+                                                        {resolving === report.id ? 'Saving...' : <><Icon name="pen" size={14} /> Apply Correction</>}
                                                     </button>
                                                 </div>
                                             </div>

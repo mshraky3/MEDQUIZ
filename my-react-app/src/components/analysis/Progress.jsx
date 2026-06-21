@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Icon from '../common/Icon.jsx';
 import axios from 'axios';
 import Globals from '../../global.js';
 import Spinner from '../common/Spinner.jsx';
@@ -49,9 +50,9 @@ const Progress = ({ userId, username, sessionToken }) => {
     return (
       <div className="progress-container">
         <div className="error-message">
-          <p>❌ {error}</p>
+          <p><Icon name="x-circle" size={15} /> {error}</p>
           <button onClick={fetchProgressData} className="retry-button">
-            🔄 Retry
+            <Icon name="refresh" size={15} /> Retry
           </button>
         </div>
       </div>
@@ -62,7 +63,7 @@ const Progress = ({ userId, username, sessionToken }) => {
     return (
       <div className="progress-container">
         <div className="no-data">
-          <p>📊 لا توجد بيانات تقدم متاحة</p>
+          <p><Icon name="bar-chart" size={15} /> لا توجد بيانات تقدم متاحة</p>
         </div>
       </div>
     );
@@ -99,7 +100,7 @@ const Progress = ({ userId, username, sessionToken }) => {
     <div className="progress-container">
       {/* Overall Progress */}
       <div className="progress-section">
-        <h3 className="section-title">📊 التقدم العام</h3>
+        <h3 className="section-title"><Icon name="bar-chart" size={15} /> التقدم العام</h3>
         <div className="progress-overview">
           <div className="progress-card main-progress">
             <div className="progress-header">
@@ -132,7 +133,7 @@ const Progress = ({ userId, username, sessionToken }) => {
 
       {/* Source Breakdown */}
       <div className="progress-section">
-        <h3 className="section-title">📚 التقدم حسب المصدر</h3>
+        <h3 className="section-title"><Icon name="book-open" size={15} /> التقدم حسب المصدر</h3>
         <div className="breakdown-grid">
           {sources.map(source => {
             const sourceData = sourceBreakdown[source.key] || { answered: 0, total: 0 };
@@ -171,7 +172,7 @@ const Progress = ({ userId, username, sessionToken }) => {
 
       {/* Question Type Breakdown */}
       <div className="progress-section">
-        <h3 className="section-title">🎯 التقدم حسب التخصص</h3>
+        <h3 className="section-title"><Icon name="target" size={15} /> التقدم حسب التخصص</h3>
         <div className="breakdown-grid">
           {questionTypes.map(type => {
             const typeData = typeBreakdown[type.key] || { answered: 0, total: 0 };
@@ -210,10 +211,10 @@ const Progress = ({ userId, username, sessionToken }) => {
 
       {/* Progress Insights */}
       <div className="progress-section">
-        <h3 className="section-title">💡 ملاحظات التقدم</h3>
+        <h3 className="section-title"><Icon name="lightbulb" size={15} /> ملاحظات التقدم</h3>
         <div className="insights-grid">
           <div className="insight-card">
-            <div className="insight-icon">🎯</div>
+            <div className="insight-icon"><Icon name="target" size={26} /></div>
             <div className="insight-content">
               <h4>مجالات التركيز</h4>
               <p>
@@ -226,7 +227,7 @@ const Progress = ({ userId, username, sessionToken }) => {
           </div>
 
           <div className="insight-card">
-            <div className="insight-icon">📈</div>
+            <div className="insight-icon"><Icon name="trending-up" size={26} /></div>
             <div className="insight-content">
               <h4>نسبة الإكمال</h4>
               <p>
@@ -237,14 +238,14 @@ const Progress = ({ userId, username, sessionToken }) => {
           </div>
 
           <div className="insight-card">
-            <div className="insight-icon">🏆</div>
+            <div className="insight-icon"><Icon name="trophy" size={26} /></div>
             <div className="insight-content">
               <h4>الإنجاز</h4>
               <p>
-                {percentageCompleted >= 100 ? '🎉 ممتاز! لقد أكملت جميع الأسئلة!' :
-                  percentageCompleted >= 75 ? '🔥 تقدم رائع! أنت قريب من النهاية!' :
-                    percentageCompleted >= 50 ? '📚 تقدم جيد! استمر في المذاكرة!' :
-                      '🚀 بداية رائعة! استمر في التدريب لتحسين تقدمك!'}
+                {percentageCompleted >= 100 ? <><Icon name="sparkles" size={14} /> ممتاز! لقد أكملت جميع الأسئلة!</> :
+                  percentageCompleted >= 75 ? <><Icon name="flame" size={14} /> تقدم رائع! أنت قريب من النهاية!</> :
+                    percentageCompleted >= 50 ? <><Icon name="book-open" size={14} /> تقدم جيد! استمر في المذاكرة!</> :
+                      <><Icon name="rocket" size={14} /> بداية رائعة! استمر في التدريب لتحسين تقدمك!</>}
               </p>
             </div>
           </div>

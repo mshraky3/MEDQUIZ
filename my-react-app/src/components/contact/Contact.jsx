@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Icon from '../common/Icon.jsx';
 import Spinner from '../common/Spinner.jsx';
 import './Contact.css';
 
@@ -98,14 +99,14 @@ ${form.message}
         return (
             <div className="contact-container" dir="rtl">
                 <div className="contact-card success">
-                    <div className="success-icon">✅</div>
+                    <div className="success-icon"><Icon name="check-circle" size={40} /></div>
                     <h2>تم إرسال الرسالة!</h2>
                     <p>شكراً لتواصلك معنا! سنعود إليك في أقرب وقت ممكن.</p>
                     <div className="contact-fallback">
                         <p>يمكنك أيضاً التواصل معنا مباشرة:</p>
                         <div className="whatsapp-links">
                             <a href="https://wa.link/gqafib" className="whatsapp-link">
-                                📱 WhatsApp: 0582619119
+                                <Icon name="phone" size={15} /> WhatsApp: 0582619119
                             </a>
                         </div>
                     </div>
@@ -147,7 +148,7 @@ ${form.message}
 
                         {/* Suggestions Button */}
                         <a href="/suggestions" className="suggestions-button">
-                            <span className="suggestions-icon">💡</span>
+                            <span className="suggestions-icon"><Icon name="lightbulb" size={18} /></span>
                             <div className="suggestions-text">
                                 <span className="suggestions-title">الاقتراحات والأفكار</span>
                                 <span className="suggestions-subtitle">ساعدنا في تحسين التطبيق</span>
@@ -225,7 +226,7 @@ ${form.message}
                                         جاري الإرسال...
                                     </div>
                                 ) : (
-                                    '📧 إرسال الرسالة'
+                                    (<><Icon name="send" size={16} /> إرسال الرسالة</>)
                                 )}
                             </button>
                         </form>

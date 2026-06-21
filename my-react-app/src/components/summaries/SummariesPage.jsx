@@ -3,10 +3,11 @@ import { useParams } from 'react-router-dom';
 import SECTIONS, { findSubtopic } from './content/index.js';
 import QuestionCard from './QuestionCard.jsx';
 import SummaryAnnotation from './SummaryAnnotation.jsx';
+import Icon from '../common/Icon.jsx';
 import './Summaries.css';
 
 /**
- * Cards-in-cards summaries hub.
+ * Cards-in-cards summaries hub (English UI).
  *
  *  Level 1 — specialty cards (accordion, one open at a time)
  *  Level 2 — sub-topic cards revealed inside the open specialty
@@ -17,12 +18,23 @@ import './Summaries.css';
  * is a sub-topic, its modal directly.
  */
 const TOOLS = [
-    { id: 'move', icon: '🖱️', label: 'تصفّح' },
-    { id: 'pen', icon: '✏️', label: 'قلم' },
-    { id: 'highlighter', icon: '🖊️', label: 'تظليل' },
-    { id: 'eraser', icon: '🧽', label: 'ممحاة' },
+    { id: 'move', icon: 'cursor', label: 'Browse' },
+    { id: 'pen', icon: 'pen', label: 'Pen' },
+    { id: 'highlighter', icon: 'highlighter', label: 'Highlighter' },
+    { id: 'eraser', icon: 'eraser', label: 'Eraser' },
 ];
-const COLORS = ['#3b82f6', '#ef4444', '#10b981', '#fbbf24', '#f8fafc'];
+const COLORS = ['#2563eb', '#ef4444', '#16a34a', '#f59e0b', '#0f172a'];
+
+// Each section/subtopic carries an Arabic `title` + English `title_en`. When the
+// title is already English (e.g. OB/GYN), keep it as the heading and use title_en
+// as a descriptive subtitle; otherwise show title_en as the (single) English name.
+const enLabel = (item) => {
+    const hasLatin = /[A-Za-z]/.test(item?.title || '');
+    return {
+        primary: hasLatin ? item.title : (item.title_en || item.title),
+        secondary: hasLatin ? item.title_en : null,
+    };
+};
 
 const SummariesPage = () => {
     const { slug } = useParams();
@@ -91,15 +103,16 @@ const SummariesPage = () => {
     const questions = openSub?.subtopic.questions || [];
 
     return (
-        <div className="summaries-hub">
+        <div className="summaries-hub" dir="ltr">
             <header className="hub-head">
-                <h1>📚 الملخصات</h1>
-                <p>اختر تخصصاً لعرض مواضيعه، ثم افتح أي موضوع ليفتح بملء الشاشة للتركيز — مع أدوات رسم وتظليل أثناء المذاكرة.</p>
+                <h1><Icon name="book-open" size={28} className="hub-head-icon" /> Summaries</h1>
+                <p>Pick a specialty to browse its topics, then open any topic full-screen to focus — with pen &amp; highlighter tools for active study.</p>
             </header>
 
             <div className="spec-cards">
                 {SECTIONS.map((s) => {
                     const isActive = activeSpecialty === s.id;
+                    const { primary, secondary } = enLabel(s);
                     return (
                         <div
                             key={s.id}
@@ -112,32 +125,35 @@ const SummariesPage = () => {
                                 aria-expanded={isActive}
                                 onClick={() => setActiveSpecialty(isActive ? null : s.id)}
                             >
-                                <span className="spec-card-icon" aria-hidden="true">{s.icon}</span>
+                                <span className="spec-card-icon" aria-hidden="true"><Icon name={s.icon} size={24} /></span>
                                 <span className="spec-card-text">
-                                    <span className="spec-card-title">{s.title}</span>
-                                    {s.title_en && <span className="spec-card-en">{s.title_en}</span>}
+                                    <span className="spec-card-title">{primary}</span>
+                                    {secondary && <span className="spec-card-en">{secondary}</span>}
                                 </span>
-                                <span className="spec-card-count">{s.subtopics.length} مواضيع</span>
+                                <span className="spec-card-count">{s.subtopics.length} topic{s.subtopics.length !== 1 ? 's' : ''}</span>
                                 <span className={`spec-card-chev ${isActive ? 'open' : ''}`} aria-hidden="true">▾</span>
                             </button>
 
                             <div className={`subtopic-wrap ${isActive ? 'open' : ''}`}>
                                 <div className="subtopic-grid">
-                                    {s.subtopics.map((t, i) => (
-                                        <button
-                                            key={t.id}
-                                            type="button"
-                                            className="sub-card"
-                                            onClick={() => openSubtopic(s, t)}
-                                        >
-                                            <span className="sub-card-index">{String(i + 1).padStart(2, '0')}</span>
-                                            <span className="sub-card-title">{t.title}</span>
-                                            {t.title_en && <span className="sub-card-en">{t.title_en}</span>}
-                                            {t.questions?.length > 0 && (
-                                                <span className="sub-card-q">{t.questions.length} أسئلة</span>
-                                            )}
-                                        </button>
-                                    ))}
+                                    {s.subtopics.map((t, i) => {
+                                        const tl = enLabel(t);
+                                        return (
+                                            <button
+                                                key={t.id}
+                                                type="button"
+                                                className="sub-card"
+                                                onClick={() => openSubtopic(s, t)}
+                                            >
+                                                <span className="sub-card-index">{String(i + 1).padStart(2, '0')}</span>
+                                                <span className="sub-card-title">{tl.primary}</span>
+                                                {tl.secondary && <span className="sub-card-en">{tl.secondary}</span>}
+                                                {t.questions?.length > 0 && (
+                                                    <span className="sub-card-q">{t.questions.length} question{t.questions.length !== 1 ? 's' : ''}</span>
+                                                )}
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         </div>
@@ -149,19 +165,23 @@ const SummariesPage = () => {
             {openSub && (
                 <div
                     className="summary-panel"
-                    dir="rtl"
+                    dir="ltr"
                     ref={panelRef}
                     style={openSub.section.accent ? { '--accent': openSub.section.accent } : undefined}
                 >
                     <header className="panel-head">
                         <div className="panel-head-text">
-                            <span className="panel-spec">{openSub.section.icon} {openSub.section.title}</span>
-                            <h2 className="panel-title">{openSub.subtopic.title}</h2>
-                            {openSub.subtopic.title_en && (
-                                <span className="panel-title-en">{openSub.subtopic.title_en}</span>
+                            <span className="panel-spec">
+                                <Icon name={openSub.section.icon} size={18} /> {enLabel(openSub.section).primary}
+                            </span>
+                            <h2 className="panel-title">{enLabel(openSub.subtopic).primary}</h2>
+                            {enLabel(openSub.subtopic).secondary && (
+                                <span className="panel-title-en">{enLabel(openSub.subtopic).secondary}</span>
                             )}
                         </div>
-                        <button type="button" className="panel-close" onClick={closePanel} aria-label="إغلاق">✕</button>
+                        <button type="button" className="panel-close" onClick={closePanel} aria-label="Close">
+                            <Icon name="x" size={20} />
+                        </button>
                     </header>
 
                     <div className="panel-tabs">
@@ -170,7 +190,7 @@ const SummariesPage = () => {
                             className={`panel-tab ${tab === 'summary' ? 'active' : ''}`}
                             onClick={() => changeTab('summary')}
                         >
-                            الملخص
+                            Summary
                         </button>
                         {questions.length > 0 && (
                             <button
@@ -178,7 +198,7 @@ const SummariesPage = () => {
                                 className={`panel-tab ${tab === 'questions' ? 'active' : ''}`}
                                 onClick={() => changeTab('questions')}
                             >
-                                اختبر نفسك <span className="panel-tab-badge">{questions.length}</span>
+                                Test yourself <span className="panel-tab-badge">{questions.length}</span>
                             </button>
                         )}
                     </div>
@@ -221,7 +241,7 @@ const SummariesPage = () => {
                                     aria-label={t.label}
                                     aria-pressed={tool === t.id}
                                     onClick={() => setTool(t.id)}
-                                >{t.icon}</button>
+                                ><Icon name={t.icon} size={18} /></button>
                             ))}
                         </div>
                         <div className="stb-sep" />
@@ -232,16 +252,16 @@ const SummariesPage = () => {
                                     type="button"
                                     className={`stb-color ${color === c ? 'on' : ''}`}
                                     style={{ background: c }}
-                                    aria-label={`لون ${c}`}
+                                    aria-label={`Color ${c}`}
                                     onClick={() => pickColor(c)}
                                 />
                             ))}
                         </div>
                         <div className="stb-sep" />
                         <div className="stb-group">
-                            <button type="button" className="stb-btn" title="تراجع" aria-label="تراجع" onClick={() => annotationRef.current?.undo()}>↶</button>
-                            <button type="button" className="stb-btn" title="مسح الكل" aria-label="مسح الكل" onClick={() => annotationRef.current?.clear()}>🗑️</button>
-                            <button type="button" className="stb-btn" title={isFs ? 'إنهاء ملء الشاشة' : 'ملء الشاشة'} aria-label="ملء الشاشة" onClick={toggleFs}>⛶</button>
+                            <button type="button" className="stb-btn" title="Undo" aria-label="Undo" onClick={() => annotationRef.current?.undo()}><Icon name="undo" size={18} /></button>
+                            <button type="button" className="stb-btn" title="Clear all" aria-label="Clear all" onClick={() => annotationRef.current?.clear()}><Icon name="trash" size={18} /></button>
+                            <button type="button" className="stb-btn" title={isFs ? 'Exit full screen' : 'Full screen'} aria-label="Full screen" onClick={toggleFs}><Icon name="maximize" size={18} /></button>
                         </div>
                     </div>
                 </div>

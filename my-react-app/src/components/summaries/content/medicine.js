@@ -9,7 +9,7 @@ const medicine = {
     id: 'medicine',
     title: 'الباطنة',
     title_en: 'Internal Medicine',
-    icon: '🩺',
+    icon: 'stethoscope',
     accent: '#22d3ee',
     intro: 'أهم مواضيع الباطنة عالية العائد في SMLE: القلب · الصدر · الجهاز الهضمي والكبد · الغدد · الكلى · الدم والأورام · الأمراض المعدية · الروماتيزم والأعصاب — مع الخوارزميات والأسئلة التفاعلية.',
     subtopics: [

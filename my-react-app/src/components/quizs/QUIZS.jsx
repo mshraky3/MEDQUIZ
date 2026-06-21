@@ -7,6 +7,7 @@ import Globals from '../../global.js';
 
 import AchievementBadges from '../common/AchievementBadges.jsx';
 import CongratulationsPopup from '../common/CongratulationsPopup.jsx';
+import Icon from '../common/Icon.jsx';
 import { UserContext } from '../../UserContext';
 
 const QUIZS = () => {
@@ -460,7 +461,7 @@ const QUIZS = () => {
                 {/* Streak Badge */}
                 {id && (
                     <div className="streak-badge">
-                        <span className="streak-emoji">🔥</span>
+                        <span className="streak-emoji"><Icon name="flame" size={18} /></span>
                         <span className="streak-count">{currentStreak}</span>
                     </div>
                 )}
@@ -496,7 +497,7 @@ const QUIZS = () => {
                                 style={{ animationDelay: `${0.28 + quizOptions.length * 0.08}s` }}
                                 onClick={handleFinalQuizClick}
                             >
-                                🎯 اختبار نهائي
+                                <Icon name="target" size={18} /> اختبار نهائي
                             </button>
                         )}
                     </div>
@@ -508,7 +509,7 @@ const QUIZS = () => {
                                 className="secondary-btn"
                                 onClick={() => navigate('/analysis', { state: { id: id } })}
                             >
-                                <span className="secondary-btn-icon">📊</span>
+                                <span className="secondary-btn-icon"><Icon name="bar-chart" size={18} /></span>
                                 <span>الذهاب للتحليل</span>
                             </button>
                         )}
@@ -516,7 +517,7 @@ const QUIZS = () => {
                             className="secondary-btn"
                             onClick={() => navigate('/summaries')}
                         >
-                            <span className="secondary-btn-icon">📚</span>
+                            <span className="secondary-btn-icon"><Icon name="book-open" size={18} /></span>
                             <span>الملخصات</span>
                         </button>
                     </div>
@@ -527,7 +528,7 @@ const QUIZS = () => {
                     className="suggestions-btn"
                     onClick={() => navigate('/suggestions')}
                 >
-                    <span className="suggestions-icon">💡</span>
+                    <span className="suggestions-icon"><Icon name="lightbulb" size={18} /></span>
                     <span>الاقتراحات</span>
                 </button>
 
@@ -631,7 +632,7 @@ const QUIZS = () => {
                         <div className="custom-modal-content">
                             <h2>اختر نوع الأسئلة</h2>
                             <p className="source-info">
-                                📚 المصدر: <strong>{sourceLabels[selectedSource] || selectedSource}</strong>
+                                <Icon name="book-open" size={16} /> المصدر: <strong>{sourceLabels[selectedSource] || selectedSource}</strong>
                             </p>
                             <div className="custom-checkbox-group">
                                 {availableTypes.map((type) => (
@@ -670,7 +671,7 @@ const QUIZS = () => {
                         <div className="custom-modal-content">
                             <h2>ضبط المؤقت</h2>
                             <p className="timer-info">
-                                ⏰ اختر مدة المؤقت أو "بدون مؤقت" لوقت غير محدود
+                                <Icon name="clock" size={16} /> اختر مدة المؤقت أو "بدون مؤقت" لوقت غير محدود
                             </p>
                             <div className="timer-options">
                                 <button
@@ -724,7 +725,7 @@ const QUIZS = () => {
                         <div className="custom-modal-content">
                             <h2>عدد أسئلة مخصص</h2>
                             <p className="questions-info">
-                                📝 أدخل عدد الأسئلة المطلوب (1-500)
+                                <Icon name="pen" size={16} /> أدخل عدد الأسئلة المطلوب (1-500)
                             </p>
 
                             {/* Mobile-friendly input with preset buttons */}
@@ -838,7 +839,7 @@ const QUIZS = () => {
                 {showFinalQuizType && (
                     <div className="custom-source-selector-modal">
                         <div className="custom-modal-content">
-                            <h2>🎯 اختبار نهائي - اختر النوع</h2>
+                            <h2><Icon name="target" size={20} /> اختبار نهائي - اختر النوع</h2>
                             <p className="final-quiz-description">
                                 مراجعة شاملة لجميع الأسئلة من المعايير المختارة
                             </p>
@@ -869,7 +870,7 @@ const QUIZS = () => {
                 {showFinalQuizSource && (
                     <div className="custom-source-selector-modal">
                         <div className="custom-modal-content">
-                            <h2>🎯 اختبار نهائي - اختر المصدر</h2>
+                            <h2><Icon name="target" size={20} /> اختبار نهائي - اختر المصدر</h2>
                             <p className="final-quiz-description">
                                 اختر مصدر أسئلة {selectedFinalType}
                             </p>
@@ -954,7 +955,7 @@ const QUIZS = () => {
                 {showFinalQuizTime && (
                     <div className="custom-timer-selector-modal">
                         <div className="custom-modal-content">
-                            <h2>🎯 اختبار نهائي - ضبط الوقت</h2>
+                            <h2><Icon name="target" size={20} /> اختبار نهائي - ضبط الوقت</h2>
                             <p className="final-quiz-description">
                                 {finalQuizQuestionsCount} سؤال متاح من {selectedFinalType} - {selectedFinalSource}
                             </p>

@@ -15,7 +15,7 @@
     display: inline-flex;
     padding: var(--space-2) var(--space-3);
     border-radius: 999px;
-    background: rgba(34, 211, 238, 0.12);
+    background: rgba(35, 109, 237, 0.12);
     color: var(--primary-light);
     font-weight: 700;
     font-size: var(--text-sm);
@@ -65,8 +65,8 @@
 
 .guide-card:hover {
     transform: translateY(-4px);
-    border-color: rgba(34, 211, 238, 0.35);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3), 0 0 20px rgba(34, 211, 238, 0.1);
+    border-color: rgba(35, 109, 237, 0.35);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3), 0 0 20px rgba(35, 109, 237, 0.1);
 }
 
 .guide-card h2 {

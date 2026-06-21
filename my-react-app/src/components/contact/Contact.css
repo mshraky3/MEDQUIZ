@@ -4,7 +4,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #0b1021;
+    background: #ffffff;
     padding: 16px;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     position: relative;
@@ -19,15 +19,15 @@
     width: 100%;
     height: 100%;
     background:
-        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(34, 211, 238, 0.15), transparent 50%),
-        radial-gradient(ellipse 60% 40% at 80% 50%, rgba(6, 182, 212, 0.1), transparent 40%),
-        radial-gradient(ellipse 50% 30% at 20% 80%, rgba(34, 211, 238, 0.08), transparent 40%);
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(35, 109, 237, 0.15), transparent 50%),
+        radial-gradient(ellipse 60% 40% at 80% 50%, rgba(16, 84, 202, 0.1), transparent 40%),
+        radial-gradient(ellipse 50% 30% at 20% 80%, rgba(35, 109, 237, 0.08), transparent 40%);
     z-index: 0;
     pointer-events: none;
 }
 
 .contact-card {
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(15, 23, 42, 0.04);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-radius: 24px;
@@ -42,7 +42,7 @@
     overflow-y: auto;
     position: relative;
     z-index: 1;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(15, 23, 42, 0.10);
 }
 
 /* Custom scrollbar for contact card */
@@ -51,17 +51,17 @@
 }
 
 .contact-card::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(15, 23, 42, 0.04);
     border-radius: 10px;
 }
 
 .contact-card::-webkit-scrollbar-thumb {
-    background: rgba(34, 211, 238, 0.3);
+    background: rgba(35, 109, 237, 0.3);
     border-radius: 10px;
 }
 
 .contact-card::-webkit-scrollbar-thumb:hover {
-    background: rgba(34, 211, 238, 0.5);
+    background: rgba(35, 109, 237, 0.5);
 }
 
 .contact-card.success {
@@ -103,14 +103,14 @@
     margin-bottom: 4px;
     font-weight: 800;
     letter-spacing: -0.5px;
-    background: linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%);
+    background: linear-gradient(135deg, #236ded 0%, #1054ca 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
 }
 
 .contact-header p {
-    color: #94a3b8;
+    color: #64748b;
     font-size: 0.85rem;
     line-height: 1.3;
 }
@@ -128,7 +128,7 @@
 
 /* Contact Information Section */
 .contact-info-section h2 {
-    color: #e2e8f0;
+    color: #1e293b;
     font-size: 1rem;
     margin-bottom: 10px;
     font-weight: 700;
@@ -145,9 +145,9 @@
     align-items: center;
     gap: 10px;
     padding: 10px;
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(15, 23, 42, 0.04);
     border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(15, 23, 42, 0.10);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -155,9 +155,9 @@
     transform: translateY(-2px);
     box-shadow:
         0 4px 12px rgba(0, 0, 0, 0.2),
-        0 8px 24px rgba(34, 211, 238, 0.1);
-    border-color: rgba(34, 211, 238, 0.3);
-    background: rgba(255, 255, 255, 0.05);
+        0 8px 24px rgba(35, 109, 237, 0.1);
+    border-color: rgba(35, 109, 237, 0.3);
+    background: rgba(15, 23, 42, 0.04);
 }
 
 .info-icon {
@@ -166,10 +166,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%);
+    background: linear-gradient(135deg, #236ded 0%, #1054ca 100%);
     border-radius: 10px;
     flex-shrink: 0;
-    box-shadow: 0 2px 8px rgba(34, 211, 238, 0.3);
+    box-shadow: 0 2px 8px rgba(35, 109, 237, 0.3);
     padding: 8px;
 }
 
@@ -181,7 +181,7 @@
 }
 
 .info-content h3 {
-    color: #e2e8f0;
+    color: #1e293b;
     font-size: 0.875rem;
     margin: 0 0 4px 0;
     font-weight: 600;
@@ -189,13 +189,13 @@
 }
 
 .info-content p {
-    color: #94a3b8;
+    color: #64748b;
     margin: 0;
     font-size: 0.875rem;
 }
 
 .info-link {
-    color: #22d3ee;
+    color: #236ded;
     text-decoration: none;
     font-weight: 600;
     transition: all 0.3s ease;
@@ -203,13 +203,13 @@
 }
 
 .info-link:hover {
-    color: #67e8f9;
+    color: #6d9ef3;
     text-decoration: none;
 }
 
 /* Contact Form Section */
 .contact-form-section h2 {
-    color: #e2e8f0;
+    color: #1e293b;
     font-size: 1rem;
     margin-bottom: 12px;
     font-weight: 700;
@@ -234,7 +234,7 @@
 }
 
 .form-group label {
-    color: #e2e8f0;
+    color: #1e293b;
     font-weight: 600;
     font-size: 0.85rem;
     letter-spacing: 0.3px;
@@ -244,29 +244,29 @@
 .form-group select,
 .form-group textarea {
     padding: 10px 14px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(15, 23, 42, 0.10);
     border-radius: 10px;
     font-size: 0.9rem;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     font-family: inherit;
-    background: rgba(255, 255, 255, 0.05);
-    color: #e2e8f0;
+    background: rgba(15, 23, 42, 0.04);
+    color: #1e293b;
 }
 
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
     outline: none;
-    border-color: #22d3ee;
+    border-color: #236ded;
     box-shadow:
-        0 0 0 3px rgba(34, 211, 238, 0.15),
-        0 2px 8px rgba(34, 211, 238, 0.1);
-    background: rgba(255, 255, 255, 0.08);
+        0 0 0 3px rgba(35, 109, 237, 0.15),
+        0 2px 8px rgba(35, 109, 237, 0.1);
+    background: rgba(15, 23, 42, 0.04);
 }
 
 .form-group input::placeholder,
 .form-group textarea::placeholder {
-    color: #64748b;
+    color: #475569;
 }
 
 .form-group select {
@@ -279,8 +279,8 @@
 }
 
 .form-group select option {
-    background: #1e293b;
-    color: #e2e8f0;
+    background: #ffffff;
+    color: #1e293b;
 }
 
 .form-group textarea {
@@ -291,8 +291,8 @@
 }
 
 .submit-button {
-    background: linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%);
-    color: #0f172a;
+    background: linear-gradient(135deg, #236ded 0%, #1054ca 100%);
+    color: #ffffff;
     border: none;
     padding: 10px 20px;
     border-radius: 10px;
@@ -306,17 +306,17 @@
     gap: 8px;
     margin-top: 0;
     box-shadow:
-        0 4px 12px rgba(34, 211, 238, 0.25),
-        0 2px 4px rgba(34, 211, 238, 0.15);
+        0 4px 12px rgba(35, 109, 237, 0.25),
+        0 2px 4px rgba(35, 109, 237, 0.15);
     letter-spacing: 0.3px;
 }
 
 .submit-button:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow:
-        0 6px 16px rgba(34, 211, 238, 0.35),
-        0 4px 8px rgba(34, 211, 238, 0.25);
-    background: linear-gradient(135deg, #67e8f9 0%, #22d3ee 100%);
+        0 6px 16px rgba(35, 109, 237, 0.35),
+        0 4px 8px rgba(35, 109, 237, 0.25);
+    background: linear-gradient(135deg, #6d9ef3 0%, #236ded 100%);
 }
 
 .submit-button:active:not(:disabled) {
@@ -342,19 +342,19 @@
 }
 
 .info-link[href*="wa.me"]:hover {
-    color: #128C7E;
+    color: #123f8c;
 }
 
 .contact-fallback {
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(15, 23, 42, 0.04);
     padding: 16px;
     border-radius: 14px;
     margin: 20px 0;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(15, 23, 42, 0.10);
 }
 
 .contact-fallback p {
-    color: #94a3b8;
+    color: #64748b;
     font-size: 0.85rem;
     margin-bottom: 10px;
 }
@@ -561,7 +561,7 @@
 }
 
 .suggestions-title {
-    color: #e9d5ff;
+    color: #1e293b;
     font-size: 0.95rem;
     font-weight: 700;
 }

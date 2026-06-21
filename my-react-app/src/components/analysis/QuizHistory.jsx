@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import Icon from '../common/Icon.jsx';
 import axios from 'axios';
 import Globals from '../../global.js';
 import Spinner from '../common/Spinner.jsx';
@@ -170,10 +171,10 @@ const QuizHistory = ({ userId, username, sessionToken }) => {
 
   const getSourceIcon = (source) => {
     switch (source) {
-      case 'Midgard': return '🎮';
-      case 'GameBoy': return '🕹️';
-      case 'October25': return '🗓️';
-      default: return '📚';
+      case 'Midgard': return 'gamepad';
+      case 'GameBoy': return 'gamepad';
+      case 'October25': return 'calendar';
+      default: return 'book-open';
     }
   };
 
@@ -218,7 +219,7 @@ const QuizHistory = ({ userId, username, sessionToken }) => {
                 <div className="session-info">
                   <span className="session-date">{formatDate(session.start_time)}</span>
                   <span className="session-source">
-                    {getSourceIcon(session.source)} {session.source}
+                    <Icon name={getSourceIcon(session.source)} size={15} /> {session.source}
                   </span>
                 </div>
                 <div className="session-accuracy" style={{ color: getAccuracyColor(session.quiz_accuracy) }}>
@@ -262,7 +263,7 @@ const QuizHistory = ({ userId, username, sessionToken }) => {
                     <h4>أسئلة وإجابات الاختبار</h4>
                     {sessionDetails[session.id].is_old_session ? (
                       <div className="old-session-notice">
-                        <div className="notice-icon">ℹ️</div>
+                        <div className="notice-icon"><Icon name="info" size={30} /></div>
                         <div className="notice-content">
                           <h5>جلسة قديمة</h5>
                           <p>{sessionDetails[session.id].message}</p>
@@ -271,7 +272,7 @@ const QuizHistory = ({ userId, username, sessionToken }) => {
                       </div>
                     ) : sessionDetails[session.id].question_attempts.length === 0 ? (
                       <div className="no-attempts-notice">
-                        <div className="notice-icon">📝</div>
+                        <div className="notice-icon"><Icon name="clipboard" size={30} /></div>
                         <div className="notice-content">
                           <h5>لا توجد تفاصيل</h5>
                           <p>لا توجد محاولات مفصلة لهذه الجلسة.</p>
@@ -290,13 +291,13 @@ const QuizHistory = ({ userId, username, sessionToken }) => {
                                 <div className="question-header">
                                   <div className="question-meta">
                                     <span className="type-badge">
-                                      📖 {attempt.question_type}
+                                      <Icon name="book" size={15} /> {attempt.question_type}
                                     </span>
                                     <span className="source-badge">
-                                      📚 {attempt.source || 'general'}
+                                      <Icon name="book-open" size={15} /> {attempt.source || 'general'}
                                     </span>
                                     <span className={`result-badge ${attempt.is_correct ? 'correct' : 'wrong'}`}>
-                                      {attempt.is_correct ? '✅ صحيح' : '❌ خطأ'}
+                                      {attempt.is_correct ? <><Icon name="check-circle" size={13} /> صحيح</> : <><Icon name="x-circle" size={13} /> خطأ</>}
                                     </span>
                                   </div>
                                 </div>
@@ -333,12 +334,12 @@ const QuizHistory = ({ userId, username, sessionToken }) => {
                                       className="see-more-button"
                                       disabled={loadingButtons[attempt.id]}
                                     >
-                                      {loadingButtons[attempt.id] ? 'جاري التحميل...' : '🔍 اعرف أكثر'}
+                                      {loadingButtons[attempt.id] ? 'جاري التحميل...' : <><Icon name="search" size={13} /> اعرف أكثر</>}
                                     </button>
                                   </div>
 
                                   <div className="question-meta">
-                                    <span className="time-taken">⏱️ {attempt.time_taken}s</span>
+                                    <span className="time-taken"><Icon name="clock" size={15} /> {attempt.time_taken}s</span>
                                     <span className="question-number">سؤال {index + 1}</span>
                                   </div>
                                 </div>
@@ -348,7 +349,7 @@ const QuizHistory = ({ userId, username, sessionToken }) => {
                               <div className="question-card-back">
                                 <div className="ai-analysis-back">
                                   <div className="ai-analysis-header">
-                                    <h3>🧠 تحليل الذكاء الاصطناعي</h3>
+                                    <h3><Icon name="brain" size={15} /> تحليل الذكاء الاصطناعي</h3>
                                   </div>
 
                                   {loadingButtons[attempt.id] ? (

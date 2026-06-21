@@ -1,4 +1,5 @@
 import React from 'react';
+import Icon from '../common/Icon.jsx';
 
 /**
  * Student-facing progress panel ("تتبع تقدمك"): how far they've read the deck,
@@ -20,7 +21,7 @@ const SummaryProgress = ({ pageCount = 0, progress, stats, isHtml = false }) => 
     return (
         <div className="summary-progress-panel">
             <div className="summary-stat-card">
-                <p className="summary-stat-label">📖 تقدّم القراءة</p>
+                <p className="summary-stat-label"><Icon name="book" size={14} /> تقدّم القراءة</p>
                 <p className="summary-stat-value">
                     {readPct}<span className="unit">%</span>
                 </p>
@@ -35,7 +36,7 @@ const SummaryProgress = ({ pageCount = 0, progress, stats, isHtml = false }) => 
             </div>
 
             <div className="summary-stat-card">
-                <p className="summary-stat-label">✅ أسئلة الموضوع المنجزة</p>
+                <p className="summary-stat-label"><Icon name="check-circle" size={14} /> أسئلة الموضوع المنجزة</p>
                 <p className="summary-stat-value">
                     {doneQ}<span className="unit"> / {totalQ}</span>
                 </p>
@@ -45,7 +46,7 @@ const SummaryProgress = ({ pageCount = 0, progress, stats, isHtml = false }) => 
             </div>
 
             <div className="summary-stat-card">
-                <p className="summary-stat-label">🎯 دقتك في الموضوع</p>
+                <p className="summary-stat-label"><Icon name="target" size={14} /> دقتك في الموضوع</p>
                 <p className="summary-stat-value">
                     {accuracy != null ? <>{accuracy.toFixed(1)}<span className="unit">%</span></> : '—'}
                 </p>

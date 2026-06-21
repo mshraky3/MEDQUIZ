@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Icon from '../common/Icon.jsx';
 import axios from 'axios';
 import Globals from '../../global.js';
 import './ReportModal.css';
@@ -26,12 +27,12 @@ const ReportModal = ({ question, userId, userEmail, onClose }) => {
     return (
         <div className="report-modal-overlay" onClick={onClose}>
             <div className="report-modal" onClick={(e) => e.stopPropagation()}>
-                <button className="report-modal-close" onClick={onClose}>✕</button>
-                <h3 className="report-modal-title">🚩 Report Question</h3>
+                <button className="report-modal-close" onClick={onClose}><Icon name="x" size={18} /></button>
+                <h3 className="report-modal-title"><Icon name="flag" size={16} /> Report Question</h3>
 
                 {status === 'success' ? (
                     <div className="report-modal-success">
-                        <p>✅ Report submitted. We'll review it and email you with the result.</p>
+                        <p><Icon name="check-circle" size={16} /> Report submitted. We'll review it and email you with the result.</p>
                         <button className="report-btn-submit" onClick={onClose}>Close</button>
                     </div>
                 ) : (

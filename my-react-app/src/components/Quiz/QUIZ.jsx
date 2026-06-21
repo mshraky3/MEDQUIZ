@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useContext } from 'react';
+import Icon from '../common/Icon.jsx';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import './QUIZ.css';
@@ -483,7 +484,7 @@ const QUIZ = () => {
       {showUnansweredPopup && (
         <div className="unanswered-popup-overlay">
           <div className="unanswered-popup">
-            <h3>⚠️ {unansweredCount} Unanswered Questions</h3>
+            <h3><Icon name="alert-triangle" size={18} /> {unansweredCount} Unanswered Questions</h3>
             <p className="redirect-message">
               Going to first unanswered question in <span className="countdown">{countdown}</span>...
             </p>

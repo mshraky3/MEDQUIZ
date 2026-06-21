@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import Icon from '../common/Icon.jsx';
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./add.css";
@@ -29,7 +30,7 @@ const TempLinks = (props) => {
             setLinks(response.data.links);
             setError("");
         } catch (err) {
-            setError("❌ Failed to fetch temporary links. Please try again.");
+            setError("Failed to fetch temporary links. Please try again.");
         } finally {
             setLoading(false);
         }
@@ -49,7 +50,7 @@ const TempLinks = (props) => {
 
             if (response.data.success) {
                 setGeneratedLink(response.data.link);
-                setMessage(`✅ Temporary link generated successfully!`);
+                setMessage(`Temporary link generated successfully!`);
                 setGenerateForm({ maxUses: 1, createdBy: "admin" });
                 setShowGenerateForm(false);
                 fetchLinks(); // Refresh the list
@@ -57,7 +58,7 @@ const TempLinks = (props) => {
                 throw new Error(response.data.message || "Failed to generate link");
             }
         } catch (err) {
-            setError(`❌ ${err.response?.data?.message || err.message || "Failed to generate link"}`);
+            setError(`${err.response?.data?.message || err.message || "Failed to generate link"}`);
         } finally {
             setLoading(false);
         }
@@ -73,13 +74,13 @@ const TempLinks = (props) => {
             const response = await axios.post(`${props.host}/api/admin/deactivate-temp-link/${linkId}`);
             
             if (response.data.success) {
-                setMessage("✅ Link deactivated successfully!");
+                setMessage("Link deactivated successfully!");
                 fetchLinks(); // Refresh the list
             } else {
                 throw new Error(response.data.message || "Failed to deactivate link");
             }
         } catch (err) {
-            setError(`❌ ${err.response?.data?.message || err.message || "Failed to deactivate link"}`);
+            setError(`${err.response?.data?.message || err.message || "Failed to deactivate link"}`);
         } finally {
             setLoading(false);
         }
@@ -87,10 +88,10 @@ const TempLinks = (props) => {
 
     const copyToClipboard = (text) => {
         navigator.clipboard.writeText(text).then(() => {
-            setMessage("✅ Link copied to clipboard!");
+            setMessage("Link copied to clipboard!");
             setTimeout(() => setMessage(""), 3000);
         }).catch(() => {
-            setError("❌ Failed to copy link to clipboard");
+            setError("Failed to copy link to clipboard");
         });
     };
 
@@ -103,7 +104,7 @@ const TempLinks = (props) => {
             <AdminNavbar />
             <div className="container">
                 <div className="admin-header">
-                    <h1>🔗 Temporary Signup Links</h1>
+                    <h1><Icon name="link" size={16} /> Temporary Signup Links</h1>
                     <p>Create and manage temporary signup links for free accounts</p>
                 </div>
 
@@ -113,13 +114,13 @@ const TempLinks = (props) => {
                 {/* Generate New Link Section */}
                 <div className="admin-section">
                     <div className="section-header">
-                        <h2>➕ Generate New Link</h2>
+                        <h2><Icon name="plus" size={16} /> Generate New Link</h2>
                         <button
                             type="button"
                             onClick={() => setShowGenerateForm(!showGenerateForm)}
                             className="toggle-button"
                         >
-                            {showGenerateForm ? "❌ Cancel" : "➕ Generate Link"}
+                            {showGenerateForm ? <><Icon name="x" size={14} /> Cancel</> : <><Icon name="plus" size={14} /> Generate Link</>}
                         </button>
                     </div>
 
@@ -220,7 +221,7 @@ const TempLinks = (props) => {
                             </div>
 
                             <button type="submit" className="button" disabled={loading}>
-                                {loading ? "⏳ Generating..." : "🔗 Generate Link"}
+                                {loading ? <><Icon name="hourglass" size={14} /> Generating...</> : <><Icon name="link" size={14} /> Generate Link</>}
                             </button>
                         </form>
                     )}
@@ -228,7 +229,7 @@ const TempLinks = (props) => {
                     {/* Show Generated Link */}
                     {generatedLink && (
                         <div className="generated-link-card">
-                            <h3>✅ Link Generated Successfully!</h3>
+                            <h3><Icon name="check-circle" size={16} /> Link Generated Successfully!</h3>
                             <div className="link-info">
                                 <div className="link-url">
                                     <strong>Link URL:</strong>
@@ -244,14 +245,14 @@ const TempLinks = (props) => {
                                             onClick={() => copyToClipboard(generatedLink.url)}
                                             className="copy-button"
                                         >
-                                            📋 Copy
+                                            <Icon name="clipboard" size={16} /> Copy
                                         </button>
                                     </div>
                                 </div>
                                 <div className="link-details">
                                     <p><strong>Token:</strong> {generatedLink.token}</p>
                                     <p><strong>Max Uses:</strong> {generatedLink.maxUses}</p>
-                                    <p><strong>Status:</strong> <span className="status active">✅ Active</span></p>
+                                    <p><strong>Status:</strong> <span className="status active"><Icon name="check-circle" size={16} /> Active</span></p>
                                 </div>
                             </div>
                         </div>
@@ -261,21 +262,21 @@ const TempLinks = (props) => {
                 {/* Links List Section */}
                 <div className="admin-section">
                     <div className="section-header">
-                        <h2>📋 All Temporary Links</h2>
+                        <h2><Icon name="clipboard" size={16} /> All Temporary Links</h2>
                         <button
                             type="button"
                             onClick={fetchLinks}
                             className="refresh-button"
                             disabled={loading}
                         >
-                            🔄 Refresh
+                            <Icon name="refresh" size={16} /> Refresh
                         </button>
                     </div>
 
                     {loading && links.length === 0 ? (
-                        <div className="loading-message">⏳ Loading links...</div>
+                        <div className="loading-message"><Icon name="hourglass" size={16} /> Loading links...</div>
                     ) : links.length === 0 ? (
-                        <div className="no-data">📭 No temporary links found.</div>
+                        <div className="no-data"><Icon name="inbox" size={16} /> No temporary links found.</div>
                     ) : (
                         <div className="links-list">
                             {links.map((link) => (
@@ -283,7 +284,7 @@ const TempLinks = (props) => {
                                     <div className="link-header">
                                         <div className="link-status">
                                             <span className={`status ${link.isActive ? 'active' : 'inactive'}`}>
-                                                {link.isActive ? "✅ Active" : "❌ Inactive"}
+                                                {link.isActive ? <><Icon name="check-circle" size={14} /> Active</> : <><Icon name="x-circle" size={14} /> Inactive</>}
                                             </span>
                                         </div>
                                         <div className="link-actions">
@@ -293,7 +294,7 @@ const TempLinks = (props) => {
                                                 className="action-button copy"
                                                 title="Copy link"
                                             >
-                                                📋 Copy
+                                                <Icon name="clipboard" size={16} /> Copy
                                             </button>
                                             {link.isActive && (
                                                 <button
@@ -302,7 +303,7 @@ const TempLinks = (props) => {
                                                     className="action-button deactivate"
                                                     title="Deactivate link"
                                                 >
-                                                    🚫 Deactivate
+                                                    <Icon name="ban" size={16} /> Deactivate
                                                 </button>
                                             )}
                                         </div>
@@ -335,7 +336,7 @@ const TempLinks = (props) => {
 
                                         {link.accountsCreated > 0 && (
                                             <div className="created-accounts">
-                                                <strong>📊 Accounts Created ({link.accountsCreated}):</strong>
+                                                <strong><Icon name="bar-chart" size={16} /> Accounts Created ({link.accountsCreated}):</strong>
                                                 <div className="accounts-list">
                                                     {link.createdAccounts.map((account, index) => (
                                                         <div key={index} className="account-item">

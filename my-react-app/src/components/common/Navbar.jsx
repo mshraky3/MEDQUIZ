@@ -37,7 +37,7 @@ const Navbar = () => {
               <circle cx="12" cy="8" r="2.5" fill="#2563eb" />
               <ellipse cx="12" cy="17" rx="6.5" ry="4.5" fill="#2563eb" opacity="0.18" />
             </svg>
-            {user.username}
+            <span className="user-name">{user.username}</span>
           </span>
         )}
       </div>

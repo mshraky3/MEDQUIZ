@@ -1,7 +1,7 @@
 /* Legal Pages Styling */
 .legal-page {
     min-height: 100vh;
-    background: #0b1021;
+    background: #ffffff;
     padding: 2rem 1rem 4rem;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
@@ -9,18 +9,18 @@
 .legal-container {
     max-width: 800px;
     margin: 0 auto;
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(15, 23, 42, 0.04);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-radius: 16px;
     padding: 2.5rem;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(15, 23, 42, 0.10);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 .legal-back {
     display: inline-block;
-    color: #22d3ee;
+    color: #236ded;
     text-decoration: none;
     font-size: 0.9rem;
     margin-bottom: 1.5rem;
@@ -28,22 +28,22 @@
 }
 
 .legal-back:hover {
-    color: #67e8f9;
+    color: #6d9ef3;
 }
 
 .legal-container h1 {
-    color: #e2e8f0;
+    color: #1e293b;
     font-size: 2rem;
     font-weight: 700;
     margin-bottom: 0.5rem;
 }
 
 .legal-updated {
-    color: #64748b;
+    color: #475569;
     font-size: 0.875rem;
     margin-bottom: 2rem;
     padding-bottom: 1.5rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(15, 23, 42, 0.10);
 }
 
 .legal-section {
@@ -51,28 +51,28 @@
 }
 
 .legal-section h2 {
-    color: #22d3ee;
+    color: #236ded;
     font-size: 1.25rem;
     font-weight: 600;
     margin-bottom: 1rem;
 }
 
 .legal-section h3 {
-    color: #e2e8f0;
+    color: #1e293b;
     font-size: 1rem;
     font-weight: 600;
     margin: 1rem 0 0.5rem;
 }
 
 .legal-section p {
-    color: #94a3b8;
+    color: #64748b;
     font-size: 0.95rem;
     line-height: 1.7;
     margin-bottom: 0.75rem;
 }
 
 .legal-section ul {
-    color: #94a3b8;
+    color: #64748b;
     font-size: 0.95rem;
     line-height: 1.7;
     padding-left: 1.5rem;
@@ -84,7 +84,7 @@
 }
 
 .legal-section a {
-    color: #22d3ee;
+    color: #236ded;
     text-decoration: none;
 }
 
@@ -93,7 +93,7 @@
 }
 
 .legal-section strong {
-    color: #e2e8f0;
+    color: #1e293b;
 }
 
 /* Bilingual blocks (About page): Arabic primary, English secondary,
@@ -101,7 +101,7 @@
 .bilingual {
     margin-bottom: 1rem;
     padding-inline-start: 0.85rem;
-    border-inline-start: 2px solid rgba(34, 211, 238, 0.35);
+    border-inline-start: 2px solid rgba(35, 109, 237, 0.35);
 }
 
 .bilingual-list .bilingual {
@@ -109,7 +109,7 @@
 }
 
 .bilingual-ar {
-    color: #e2e8f0 !important;
+    color: #1e293b !important;
     font-size: 1rem !important;
     line-height: 1.85 !important;
     text-align: right;
@@ -117,7 +117,7 @@
 }
 
 .bilingual-en {
-    color: #94a3b8 !important;
+    color: #64748b !important;
     font-size: 0.875rem !important;
     line-height: 1.6 !important;
     text-align: left;
@@ -126,7 +126,7 @@
 
 /* Contact section */
 .contact-intro {
-    color: #e2e8f0 !important;
+    color: #1e293b !important;
     text-align: right;
     margin-bottom: 1rem !important;
 }
@@ -149,12 +149,12 @@
 }
 
 .contact-label {
-    color: #e2e8f0;
+    color: #1e293b;
     font-weight: 600;
 }
 
 .contact-list a {
-    color: #22d3ee;
+    color: #236ded;
     text-decoration: none;
     direction: ltr;
     unicode-bidi: embed;
@@ -166,16 +166,16 @@
 }
 
 .contact-location {
-    color: #94a3b8 !important;
+    color: #64748b !important;
     text-align: right;
 }
 
 .contact-legal {
-    color: #cbd5e1 !important;
+    color: #1e293b !important;
     font-weight: 500;
     text-align: right;
     padding-top: 0.75rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 1px solid rgba(15, 23, 42, 0.10);
 }
 
 /* Responsive */

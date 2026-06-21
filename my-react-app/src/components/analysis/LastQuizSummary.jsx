@@ -1,4 +1,5 @@
 import React from 'react';
+import Icon from '../common/Icon.jsx';
 import './analysis.css';
 
 const LastQuizSummary = ({ latest_quiz }) => {
@@ -11,13 +12,13 @@ const LastQuizSummary = ({ latest_quiz }) => {
                         <div className="question-header">
                             <div className="question-meta">
                                 <span className="type-badge">
-                                    📊 ملخص الاختبار
+                                    <Icon name="bar-chart" size={15} /> ملخص الاختبار
                                 </span>
                                 <span className="source-badge">
-                                    📚 {latest_quiz.source || 'general'}
+                                    <Icon name="book-open" size={15} /> {latest_quiz.source || 'general'}
                                 </span>
                                 <span className="date-badge">
-                                    📅 آخر اختبار
+                                    <Icon name="calendar" size={15} /> آخر اختبار
                                 </span>
                             </div>
                         </div>
@@ -82,7 +83,7 @@ const LastQuizSummary = ({ latest_quiz }) => {
                                     onClick={() => window.location.reload()}
                                     className="see-more-button"
                                 >
-                                    🔄 تحديث
+                                    <Icon name="refresh" size={15} /> تحديث
                                 </button>
                             </div>
                         </div>

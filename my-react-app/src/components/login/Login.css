@@ -69,15 +69,15 @@
 }
 
 :root {
-  --bg: #0f172a;
-  --card: rgba(255, 255, 255, 0.04);
-  --glass: rgba(255, 255, 255, 0.06);
-  --text: #e2e8f0;
-  --muted: #94a3b8;
+  --bg: #ffffff;
+  --card: rgba(0, 0, 0, 0.04);
+  --glass: rgba(0, 0, 0, 0.06);
+  --text: #1e293b;
+  --muted: #64748b;
   --accent: #3b82f6;
   --accent-strong: #2563eb;
   --pill-bg: rgba(59, 130, 246, 0.16);
-  --border: rgba(255, 255, 255, 0.08);
+  --border: rgba(15, 23, 42, 0.10);
   --shadow: 0 25px 80px rgba(0, 0, 0, 0.35);
 }
 
@@ -88,7 +88,7 @@
   justify-content: center;
   background: radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.08), transparent 30%),
     radial-gradient(circle at 85% 10%, rgba(99, 102, 241, 0.09), transparent 25%),
-    linear-gradient(145deg, #050814 0%, #0c1224 60%, #0f172a 100%);
+    linear-gradient(145deg, #eef2fb 0%, #ffffff 60%, #ffffff 100%);
   color: var(--text);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   padding: 40px 20px;
@@ -141,7 +141,7 @@
 .login-title {
   font-size: clamp(32px, 5vw, 42px);
   font-weight: 800;
-  color: #f8fafc;
+  color: #0f1e3d;
   margin: 12px 0;
   letter-spacing: -0.5px;
 }
@@ -177,7 +177,7 @@
 .form-input {
   width: 100%;
   padding: 14px 16px;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(15, 23, 42, 0.04);
   border: 1px solid var(--border);
   border-radius: 12px;
   color: var(--text);
@@ -189,7 +189,7 @@
 .form-input:focus {
   outline: none;
   border-color: var(--accent);
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(15, 23, 42, 0.04);
   box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15), 0 8px 16px rgba(59, 130, 246, 0.2);
   transform: translateY(-2px);
 }
@@ -253,7 +253,7 @@
 .alert-box.success {
   background: rgba(34, 197, 94, 0.1);
   border-color: rgba(34, 197, 94, 0.3);
-  color: #86efac;
+  color: #1e293b;
 }
 
 .alert-box.error {
@@ -265,7 +265,7 @@
 .alert-box.warning {
   background: rgba(251, 191, 36, 0.1);
   border-color: rgba(251, 191, 36, 0.3);
-  color: #fde047;
+  color: #1e293b;
 }
 
 .btn {
@@ -288,7 +288,7 @@
 
 .btn.primary {
   background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-  color: #0f172a;
+  color: #ffffff;
   border: none;
   box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
   position: relative;
@@ -302,7 +302,7 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.4), transparent);
   transition: left 0.6s ease;
 }
 
@@ -412,14 +412,14 @@
 }
 
 .popup-content h3 {
-  color: #f8fafc;
+  color: #0f1e3d;
   font-size: 24px;
   font-weight: 700;
   margin: 0 0 16px 0;
 }
 
 .popup-content h4 {
-  color: #f8fafc;
+  color: #0f1e3d;
   font-size: 20px;
   font-weight: 600;
   margin: 0 0 12px 0;
@@ -464,17 +464,17 @@
 }
 
 .terms-section::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(15, 23, 42, 0.04);
   border-radius: 3px;
 }
 
 .terms-section::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(15, 23, 42, 0.04);
   border-radius: 3px;
 }
 
 .terms-section::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(15, 23, 42, 0.04);
 }
 
 .checkbox-label {
@@ -516,7 +516,7 @@
 
 .popup-btn.try-free {
   background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-  color: #0f172a;
+  color: #ffffff;
   border: none;
   box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
 }
@@ -538,8 +538,8 @@
 }
 
 .popup-btn.no-thanks:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(15, 23, 42, 0.04);
+  border-color: rgba(15, 23, 42, 0.10);
 }
 
 .popup-btn.Contact-Us,
@@ -597,7 +597,7 @@
 }
 
 .popup-content {
-  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%);
   border-radius: 20px;
   padding: 2.5rem;
   max-width: 320px;
@@ -607,7 +607,7 @@
     0 25px 50px rgba(0, 0, 0, 0.15),
     0 0 0 1px rgba(255, 255, 255, 0.05);
   animation: fadeInPopup 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(15, 23, 42, 0.10);
 }
 
 @keyframes fadeInPopup {
@@ -625,7 +625,7 @@
 .popup-content p {
   font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
   font-size: 14px;
-  color: #e2e8f0;
+  color: #1e293b;
   margin-bottom: 1rem;
   line-height: 1.5;
   font-weight: 400;
@@ -642,8 +642,8 @@
   padding: 1.5rem;
   width: 100%;
   flex-shrink: 0;
-  border-top: 1px solid #e2e8f0;
-  background: rgba(15, 23, 42, 0.95);
+  border-top: 1px solid #e6ecf7;
+  background: rgba(255, 255, 255, 0.95);
 }
 
 .popup-btn {
@@ -677,14 +677,14 @@
 }
 
 .no-thanks {
-  background-color: rgba(255, 255, 255, 0.06);
-  color: #64748b;
-  border: 2px solid #334155;
+  background-color: rgba(15, 23, 42, 0.04);
+  color: #475569;
+  border: 2px solid #d4deee;
 }
 
 .no-thanks:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  border-color: #475569;
+  background-color: rgba(15, 23, 42, 0.04);
+  border-color: #d4deee;
 }
 
 .try-free {
@@ -715,7 +715,7 @@
 .popup-content .terms-section {
   margin: 0;
   padding: 1.5rem;
-  background: rgba(15, 23, 42, 0.5);
+  background: rgba(15, 23, 42, 0.04);
   border-radius: 0;
   border-left: none;
   box-sizing: border-box;
@@ -728,7 +728,7 @@
 .terms-section {
   margin-bottom: 16px;
   padding: 16px;
-  background: rgba(15, 23, 42, 0.5);
+  background: rgba(15, 23, 42, 0.04);
   border-radius: 10px;
   border-left: 3px solid #3b82f6; /* already blue */
   box-sizing: border-box;
@@ -737,7 +737,7 @@
 .terms-section h4 {
   margin-bottom: 12px;
   font-size: 16px;
-  color: #e2e8f0;
+  color: #1e293b;
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -757,9 +757,9 @@
   padding: 16px 1.5rem;
   font-size: 15px;
   font-weight: 600;
-  color: #e2e8f0;
-  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-  border-top: 2px solid #334155;
+  color: #1e293b;
+  background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%);
+  border-top: 2px solid #d4deee;
   transition: all 0.3s ease;
   box-sizing: border-box;
   width: 100%;
@@ -780,7 +780,7 @@
   accent-color: #3b82f6;
   flex-shrink: 0;
   border-radius: 4px;
-  border: 2px solid #cbd5e1;
+  border: 2px solid #e6ecf7;
   transition: all 0.3s ease;
 }
 
@@ -860,7 +860,7 @@
   background: none;
   border: none;
   font-size: 24px;
-  color: #64748b;
+  color: #475569;
   cursor: pointer;
   padding: 8px;
   border-radius: 50%;

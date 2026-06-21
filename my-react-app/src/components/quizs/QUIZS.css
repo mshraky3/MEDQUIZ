@@ -35,14 +35,14 @@
 }
 
 :root {
-  --bg: #0f172a;
-  --card: rgba(255, 255, 255, 0.04);
-  --card-hover: rgba(255, 255, 255, 0.08);
-  --text: #e2e8f0;
-  --muted: #94a3b8;
+  --bg: #ffffff;
+  --card: rgba(0, 0, 0, 0.04);
+  --card-hover: rgba(0, 0, 0, 0.08);
+  --text: #1e293b;
+  --muted: #64748b;
   --accent: #3b82f6;
   --accent-strong: #2563eb;
-  --border: rgba(255, 255, 255, 0.08);
+  --border: rgba(15, 23, 42, 0.10);
   --shadow: 0 25px 80px rgba(0, 0, 0, 0.35);
 }
 
@@ -55,8 +55,8 @@
      which used to push the global Footer below the fold on /quizs. */
   flex: 1 0 auto;
   background: radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.08), transparent 30%),
-    radial-gradient(circle at 85% 10%, rgba(16, 185, 129, 0.09), transparent 25%),
-    linear-gradient(145deg, #050814 0%, #0c1224 60%, #0f172a 100%);
+    radial-gradient(circle at 85% 10%, rgba(16, 78, 185, 0.09), transparent 25%),
+    linear-gradient(145deg, #eef2fb 0%, #ffffff 60%, #ffffff 100%);
   text-align: center;
   padding: 40px 2rem 2rem;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -84,7 +84,7 @@
   font-size: clamp(32px, 5vw, 48px);
   font-weight: 800;
   margin-bottom: 1rem;
-  color: #f8fafc;
+  color: #0f1e3d;
   letter-spacing: -0.5px;
   animation: fadeInUp 0.6s ease-out;
 }
@@ -108,7 +108,7 @@
   padding: 16px 28px;
   font-size: 16px;
   font-weight: 800;
-  color: #0f172a;
+  color: #ffffff;
   background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   border: none;
   border-radius: 16px;
@@ -182,7 +182,7 @@
 
 .quiz-option-btn.final-quiz-btn {
   background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-  color: #0f172a;
+  color: #ffffff;
   border: none;
   font-weight: 800;
 }
@@ -372,7 +372,7 @@
   position: absolute;
   top: 90px;
   right: 20px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.04);
   border: 1px solid rgba(59, 130, 246, 0.3);
   border-radius: 999px;
   padding: 8px 16px 8px 12px;
@@ -422,7 +422,7 @@
 .contact-me-btn {
   padding: 0;
   font-size: small;
-  color: #333;
+  color: #475569;
   background-color: transparent;
   border: none;
   border-radius: 12px;
@@ -462,7 +462,7 @@
 }
 
 .custom-modal-content h2 {
-  color: #f8fafc;
+  color: #0f1e3d;
   font-size: 28px;
   font-weight: 800;
   margin-bottom: 1.5rem;
@@ -480,14 +480,14 @@
   margin-bottom: 12px;
   user-select: none;
   transition: all 0.2s ease;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(15, 23, 42, 0.04);
   border: 1px solid var(--border);
   border-radius: 12px;
   font-weight: 500;
 }
 
 .custom-checkbox-group label:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(15, 23, 42, 0.04);
   border-color: rgba(59, 130, 246, 0.3);
   transform: translateX(4px);
 }
@@ -507,7 +507,7 @@
   transform: translateY(-50%);
   height: 20px;
   width: 20px;
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(15, 23, 42, 0.04);
   border: 1px solid var(--border);
   border-radius: 6px;
   transition: all 0.3s ease;
@@ -526,7 +526,7 @@
   top: 2px;
   width: 5px;
   height: 10px;
-  border: solid #0f172a;
+  border: solid #d4deee;
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
 }
@@ -563,7 +563,7 @@
   padding: 12px 14px;
   border-radius: 10px;
   border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(15, 23, 42, 0.04);
   color: var(--text);
   font-size: 14px;
   font-weight: 600;
@@ -577,8 +577,8 @@
 }
 
 .collection-select option {
-  background: #111827;
-  color: #f8fafc;
+  background: #ffffff;
+  color: #0f1e3d;
 }
 
 .section-title {
@@ -613,7 +613,7 @@
   font-size: 16px;
   font-weight: 600;
   color: var(--text);
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(15, 23, 42, 0.04);
   border: 1px solid var(--border);
   border-radius: 12px;
   cursor: pointer;
@@ -623,7 +623,7 @@
 }
 
 .custom-source-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.04);
   border-color: rgba(59, 130, 246, 0.4);
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
@@ -665,7 +665,7 @@
 
 .custom-start-btn {
   background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-  color: #0f172a;
+  color: #ffffff;
   box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
 }
 
@@ -676,7 +676,7 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.3), transparent);
   transition: left 0.6s ease;
 }
 
@@ -691,7 +691,7 @@
 
 .custom-mix-btn {
   background: linear-gradient(135deg, #c7e941, var(--accent));
-  color: #0f172a;
+  color: #ffffff;
   box-shadow: 0 4px 14px rgba(199, 233, 65, 0.4);
 }
 
@@ -701,13 +701,13 @@
 }
 
 .custom-cancel-btn {
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(15, 23, 42, 0.04);
   border: 1px solid var(--border);
   color: var(--text);
 }
 
 .custom-cancel-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.04);
   transform: translateY(-2px);
 }
 
@@ -1017,10 +1017,10 @@
 
 .timer-option-btn {
   padding: 1rem;
-  border: 2px solid #ddd;
+  border: 2px solid #e6ecf7;
   border-radius: 8px;
   background-color: white;
-  color: #333;
+  color: #475569;
   cursor: pointer;
   font-weight: bold;
   transition: all 0.3s ease;
@@ -1028,21 +1028,21 @@
 }
 
 .timer-option-btn:hover {
-  border-color: #00b6e0;
+  border-color: #1157cf;
   background-color: #f0f8fb;
   transform: scale(1.02);
 }
 
 .timer-option-btn.selected {
-  border-color: #00b6e0;
-  background-color: #00b6e0;
+  border-color: #1157cf;
+  background-color: #1157cf;
   color: white;
   transform: scale(1.05);
 }
 
 .timer-info {
   font-size: 1rem;
-  color: #666;
+  color: #475569;
   margin-bottom: 1rem;
   text-align: center;
 }
@@ -1056,13 +1056,13 @@
   display: block;
   margin-bottom: 0.5rem;
   font-weight: bold;
-  color: #333;
+  color: #475569;
 }
 
 .custom-timer-number-input {
   width: 100px;
   padding: 0.5rem;
-  border: 2px solid #ddd;
+  border: 2px solid #e6ecf7;
   border-radius: 6px;
   text-align: center;
   font-size: 1rem;
@@ -1071,8 +1071,8 @@
 
 .custom-timer-number-input:focus {
   outline: none;
-  border-color: #00b6e0;
-  box-shadow: 0 0 0 3px rgba(0, 182, 224, 0.1);
+  border-color: #1157cf;
+  box-shadow: 0 0 0 3px rgba(17, 87, 207, 0.1);
 }
 
 /* Timer selector responsive styles */
@@ -1144,8 +1144,8 @@
 }
 
 .custom-questions-modal .custom-modal-content {
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(11, 16, 33, 0.98) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.98) 100%);
+  border: 1px solid rgba(15, 23, 42, 0.10);
   border-radius: 24px;
   padding: 2rem;
   max-width: 500px;
@@ -1159,14 +1159,14 @@
 }
 
 .custom-questions-modal h2 {
-  color: #f8fafc;
+  color: #0f1e3d;
   margin-bottom: 1rem;
   font-size: 1.5rem;
   font-weight: 800;
 }
 
 .questions-info {
-  color: #94a3b8;
+  color: #64748b;
   margin-bottom: 1.5rem;
   font-size: 1rem;
 }
@@ -1179,7 +1179,7 @@
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 600;
-  color: #e2e8f0;
+  color: #1e293b;
   font-size: 1rem;
 }
 
@@ -1193,13 +1193,13 @@
 }
 
 .preset-btn {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(15, 23, 42, 0.10);
   border-radius: 10px;
   padding: 0.5rem 1rem;
   font-size: 0.9rem;
   font-weight: 600;
-  color: #e2e8f0;
+  color: #1e293b;
   cursor: pointer;
   transition: all 0.2s ease;
   min-width: 50px;
@@ -1213,7 +1213,7 @@
 
 .preset-btn:active {
   background: linear-gradient(135deg, #3b82f6, #2563eb);
-  color: #0f172a;
+  color: #ffffff;
   transform: scale(0.95);
 }
 
@@ -1229,14 +1229,14 @@
 .custom-questions-number-input {
   width: 120px;
   padding: 0.8rem;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(15, 23, 42, 0.10);
   border-radius: 10px;
   font-size: 1rem;
   text-align: center;
   transition: border-color 0.3s ease;
   min-height: 44px;
-  background: rgba(255, 255, 255, 0.06);
-  color: #f8fafc;
+  background: rgba(15, 23, 42, 0.04);
+  color: #0f1e3d;
   font-weight: 600;
 }
 
@@ -1266,7 +1266,7 @@
 
 .control-btn {
   background: linear-gradient(135deg, #3b82f6, #2563eb);
-  color: #0f172a;
+  color: #ffffff;
   border: none;
   border-radius: 10px;
   width: 36px;
@@ -1283,7 +1283,7 @@
 }
 
 .control-btn:hover {
-  background: linear-gradient(135deg, #2563eb, #0891b2);
+  background: linear-gradient(135deg, #2563eb, #0e48ac);
   transform: scale(1.05);
 }
 
@@ -1300,7 +1300,7 @@
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 600;
-  color: #e2e8f0;
+  color: #1e293b;
   font-size: 0.9rem;
 }
 
@@ -1308,7 +1308,7 @@
   width: 100%;
   height: 8px;
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(15, 23, 42, 0.04);
   outline: none;
   -webkit-appearance: none;
   appearance: none;
@@ -1323,7 +1323,7 @@
   border-radius: 50%;
   background: linear-gradient(135deg, #3b82f6, #2563eb);
   cursor: pointer;
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(15, 23, 42, 0.10);
   box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
 }
 
@@ -1333,7 +1333,7 @@
   border-radius: 50%;
   background: linear-gradient(135deg, #3b82f6, #2563eb);
   cursor: pointer;
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(15, 23, 42, 0.10);
   box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
 }
 
@@ -1342,7 +1342,7 @@
   justify-content: space-between;
   margin-top: 0.5rem;
   font-size: 0.8rem;
-  color: #94a3b8;
+  color: #64748b;
 }
 
 /* Custom Questions Modal Responsive Styles */
@@ -1741,9 +1741,9 @@
 /* Final Quiz Cancel Button */
 .custom-source-selector-modal:has(.final-quiz-description) .custom-cancel-btn,
 .custom-timer-selector-modal:has(.final-quiz-description) .custom-cancel-btn {
-  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
-  color: white;
-  border: none;
+  background: linear-gradient(135deg, #eef2f9 0%, #e1eafb 100%);
+  color: #475569;
+  border: 1px solid #d4deee;
   border-radius: 10px;
   padding: 0.8rem 1.5rem;
   font-size: 1rem;
@@ -1757,13 +1757,13 @@
 
 .custom-source-selector-modal:has(.final-quiz-description) .custom-cancel-btn:hover,
 .custom-timer-selector-modal:has(.final-quiz-description) .custom-cancel-btn:hover {
-  background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
+  background: linear-gradient(135deg, #e1eafb 0%, #e1eafb 100%);
   transform: translateY(-2px) scale(1.02);
   box-shadow: 0 5px 15px rgba(108, 117, 125, 0.4);
 }
 
 .custom-timer-selector-modal:has(.final-quiz-description) .custom-start-btn {
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  background: linear-gradient(135deg, #28a745 0%, #205ec9 100%);
   color: white;
   border: none;
   border-radius: 10px;
@@ -1778,13 +1778,13 @@
 }
 
 .custom-timer-selector-modal:has(.final-quiz-description) .custom-start-btn:hover {
-  background: linear-gradient(135deg, #20c997 0%, #17a2b8 100%);
+  background: linear-gradient(135deg, #205ec9 0%, #1752b8 100%);
   transform: translateY(-2px) scale(1.02);
   box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
 }
 
 .custom-timer-selector-modal:has(.final-quiz-description) .custom-cancel-btn {
-  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+  background: linear-gradient(135deg, #e1eafb 0%, #e1eafb 100%);
   color: white;
   border: none;
   border-radius: 10px;
@@ -1798,7 +1798,7 @@
 }
 
 .custom-timer-selector-modal:has(.final-quiz-description) .custom-cancel-btn:hover {
-  background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
+  background: linear-gradient(135deg, #e1eafb 0%, #e1eafb 100%);
   transform: translateY(-2px) scale(1.02);
   box-shadow: 0 5px 15px rgba(108, 117, 125, 0.4);
 }
@@ -1830,14 +1830,14 @@
 }
 
 .final-quiz-modal-content h2 {
-  color: #333;
+  color: #475569;
   margin-bottom: 0.5rem;
   font-size: 1.8rem;
   text-align: center;
 }
 
 .final-quiz-info {
-  color: #666;
+  color: #475569;
   text-align: center;
   margin-bottom: 2rem;
   font-size: 1rem;
@@ -1853,7 +1853,7 @@
 }
 
 .final-quiz-step h3 {
-  color: #333;
+  color: #475569;
   margin-bottom: 1rem;
   font-size: 1.2rem;
 }
@@ -1868,8 +1868,8 @@
 
 .final-quiz-type-btn {
   background: #e9ecef;
-  color: #495057;
-  border: 2px solid #dee2e6;
+  color: #475569;
+  border: 2px solid #e6ecf7;
   border-radius: 8px;
   padding: 0.8rem 1.2rem;
   font-size: 0.9rem;
@@ -1881,7 +1881,7 @@
 
 .final-quiz-type-btn:hover {
   background: #dee2e6;
-  border-color: #adb5bd;
+  border-color: #d4deee;
 }
 
 .final-quiz-type-btn.selected {
@@ -1901,8 +1901,8 @@
 
 .final-quiz-source-btn {
   background: #e9ecef;
-  color: #495057;
-  border: 2px solid #dee2e6;
+  color: #475569;
+  border: 2px solid #e6ecf7;
   border-radius: 8px;
   padding: 0.8rem 1.2rem;
   font-size: 0.9rem;
@@ -1914,7 +1914,7 @@
 
 .final-quiz-source-btn:hover {
   background: #dee2e6;
-  border-color: #adb5bd;
+  border-color: #d4deee;
 }
 
 .final-quiz-source-btn.selected {
@@ -1969,7 +1969,7 @@
 .final-quiz-time-field {
   width: 100px;
   padding: 0.8rem;
-  border: 2px solid #dee2e6;
+  border: 2px solid #e6ecf7;
   border-radius: 8px;
   font-size: 1rem;
   text-align: center;
@@ -1984,7 +1984,7 @@
 
 .time-unit {
   font-size: 1rem;
-  color: #666;
+  color: #475569;
   font-weight: 600;
 }
 
@@ -1997,7 +1997,7 @@
 }
 
 .final-quiz-start-btn {
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  background: linear-gradient(135deg, #28a745 0%, #205ec9 100%);
   color: white;
   border: none;
   border-radius: 8px;
@@ -2015,15 +2015,15 @@
 }
 
 .final-quiz-start-btn:disabled {
-  background: #6c757d;
+  background: #e1eafb;
   cursor: not-allowed;
   box-shadow: none;
 }
 
 .final-quiz-cancel-btn {
-  background: #6c757d;
-  color: white;
-  border: none;
+  background: #e1eafb;
+  color: #475569;
+  border: 1px solid #d4deee;
   border-radius: 8px;
   padding: 1rem 2rem;
   font-size: 1.1rem;
@@ -2033,7 +2033,7 @@
 }
 
 .final-quiz-cancel-btn:hover {
-  background: #5a6268;
+  background: #e1eafb;
   transform: translateY(-1px);
 }
 

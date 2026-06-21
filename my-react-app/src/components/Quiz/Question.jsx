@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Icon from '../common/Icon.jsx';
 import ReportModal from './ReportModal';
 import './ReportModal.css';
 
@@ -39,7 +40,7 @@ const Question = ({
         {/* Timer Display */}
         {timerMinutes && (
           <div className="timer-display" style={{ color: getTimerColor() }}>
-            ⏰ {formatTime(timeRemaining)}
+            <Icon name="clock" size={15} /> {formatTime(timeRemaining)}
           </div>
         )}
 
@@ -71,7 +72,7 @@ const Question = ({
             {userId && userEmail && (
               <div style={{ textAlign: 'right' }}>
                 <button className="report-question-btn" onClick={() => setShowReport(true)}>
-                  🚩 Report
+                  <Icon name="flag" size={15} /> Report
                 </button>
               </div>
             )}

@@ -12,7 +12,7 @@
 .section-title {
   font-size: var(--text-xl);
   font-weight: 700;
-  color: #22d3ee;
+  color: #236ded;
   margin-bottom: var(--space-4);
   display: flex;
   align-items: center;
@@ -39,8 +39,8 @@
 }
 
 .retry-button {
-  background: linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%);
-  color: #0f172a;
+  background: linear-gradient(135deg, #236ded 0%, #1054ca 100%);
+  color: #ffffff;
   border: none;
   padding: var(--space-2) var(--space-4);
   border-radius: var(--radius-md);
@@ -51,17 +51,17 @@
 }
 
 .retry-button:hover {
-  background: linear-gradient(135deg, #67e8f9 0%, #22d3ee 100%);
+  background: linear-gradient(135deg, #6d9ef3 0%, #236ded 100%);
   transform: translateY(-1px);
 }
 
 .no-data {
   text-align: center;
   padding: var(--space-6);
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(15, 23, 42, 0.10);
   border-radius: var(--radius-lg);
-  color: #94a3b8;
+  color: #64748b;
 }
 
 /* Progress Overview */
@@ -72,16 +72,16 @@
 }
 
 .main-progress {
-  background: linear-gradient(135deg, rgba(34, 211, 238, 0.15) 0%, rgba(6, 182, 212, 0.1) 100%);
+  background: linear-gradient(135deg, rgba(35, 109, 237, 0.15) 0%, rgba(16, 84, 202, 0.1) 100%);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  color: #e2e8f0;
+  color: #1e293b;
   border-radius: var(--radius-xl);
   padding: var(--space-6);
   box-shadow:
     0 10px 25px rgba(0, 0, 0, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(34, 211, 238, 0.2);
+  border: 1px solid rgba(35, 109, 237, 0.2);
 }
 
 .progress-header {
@@ -95,24 +95,24 @@
   font-size: var(--text-lg);
   font-weight: 600;
   margin: 0;
-  color: #e2e8f0;
+  color: #1e293b;
 }
 
 .progress-percentage {
   font-size: var(--text-2xl);
   font-weight: 700;
-  background: rgba(34, 211, 238, 0.2);
+  background: rgba(35, 109, 237, 0.2);
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
   backdrop-filter: blur(10px);
-  color: #22d3ee;
-  border: 1px solid rgba(34, 211, 238, 0.3);
+  color: #236ded;
+  border: 1px solid rgba(35, 109, 237, 0.3);
 }
 
 .progress-bar {
   width: 100%;
   height: 12px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(15, 23, 42, 0.04);
   border-radius: var(--radius-lg);
   overflow: hidden;
   margin-bottom: var(--space-4);
@@ -120,10 +120,10 @@
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #22d3ee 0%, #06b6d4 100%);
+  background: linear-gradient(90deg, #236ded 0%, #1054ca 100%);
   border-radius: var(--radius-lg);
   transition: width 0.8s ease;
-  box-shadow: 0 0 15px rgba(34, 211, 238, 0.5);
+  box-shadow: 0 0 15px rgba(35, 109, 237, 0.5);
 }
 
 .progress-stats {
@@ -143,7 +143,7 @@
   font-size: var(--text-sm);
   opacity: 0.8;
   margin-bottom: var(--space-1);
-  color: #94a3b8;
+  color: #64748b;
 }
 
 .stat-value {
@@ -171,10 +171,10 @@
 }
 
 .breakdown-card {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(15, 23, 42, 0.04);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(15, 23, 42, 0.10);
   border-radius: var(--radius-lg);
   padding: var(--space-4);
   box-shadow:
@@ -186,9 +186,9 @@
 .breakdown-card:hover {
   box-shadow:
     0 8px 24px rgba(0, 0, 0, 0.3),
-    0 0 20px rgba(34, 211, 238, 0.1);
+    0 0 20px rgba(35, 109, 237, 0.1);
   transform: translateY(-2px);
-  border-color: rgba(34, 211, 238, 0.2);
+  border-color: rgba(35, 109, 237, 0.2);
 }
 
 .breakdown-header {
@@ -202,19 +202,19 @@
   font-size: var(--text-base);
   font-weight: 600;
   margin: 0;
-  color: #e2e8f0;
+  color: #1e293b;
 }
 
 .breakdown-percentage {
   font-size: var(--text-lg);
   font-weight: 700;
-  color: #22d3ee;
+  color: #236ded;
 }
 
 .breakdown-progress-bar {
   width: 100%;
   height: 8px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.04);
   border-radius: var(--radius-md);
   overflow: hidden;
   margin-bottom: var(--space-3);
@@ -224,8 +224,8 @@
   height: 100%;
   border-radius: var(--radius-md);
   transition: width 0.6s ease;
-  background: linear-gradient(90deg, #22d3ee 0%, #06b6d4 100%);
-  box-shadow: 0 0 10px rgba(34, 211, 238, 0.4);
+  background: linear-gradient(90deg, #236ded 0%, #1054ca 100%);
+  box-shadow: 0 0 10px rgba(35, 109, 237, 0.4);
 }
 
 .breakdown-stats {
@@ -244,14 +244,14 @@
 
 .breakdown-label {
   font-size: var(--text-sm);
-  color: #94a3b8;
+  color: #64748b;
   margin-bottom: var(--space-1);
 }
 
 .breakdown-value {
   font-size: var(--text-base);
   font-weight: 600;
-  color: #e2e8f0;
+  color: #1e293b;
 }
 
 /* Insights Grid */
@@ -262,10 +262,10 @@
 }
 
 .insight-card {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(15, 23, 42, 0.04);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(15, 23, 42, 0.10);
   border-radius: var(--radius-lg);
   padding: var(--space-4);
   display: flex;
@@ -280,9 +280,9 @@
 .insight-card:hover {
   box-shadow:
     0 8px 24px rgba(0, 0, 0, 0.3),
-    0 0 20px rgba(34, 211, 238, 0.1);
+    0 0 20px rgba(35, 109, 237, 0.1);
   transform: translateY(-2px);
-  border-color: rgba(34, 211, 238, 0.2);
+  border-color: rgba(35, 109, 237, 0.2);
 }
 
 .insight-icon {
@@ -293,21 +293,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(34, 211, 238, 0.1);
+  background: rgba(35, 109, 237, 0.1);
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(34, 211, 238, 0.2);
+  border: 1px solid rgba(35, 109, 237, 0.2);
 }
 
 .insight-content h4 {
   font-size: var(--text-base);
   font-weight: 600;
-  color: #e2e8f0;
+  color: #1e293b;
   margin: 0 0 var(--space-2) 0;
 }
 
 .insight-content p {
   font-size: var(--text-sm);
-  color: #94a3b8;
+  color: #64748b;
   line-height: 1.5;
   margin: 0;
 }

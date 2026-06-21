@@ -1,9 +1,9 @@
 /* FAQ Page Styles */
 .faq-page {
     min-height: 100vh;
-    background: linear-gradient(135deg, #0a0f1c 0%, #1a1f3a 50%, #0d1117 100%);
+    background: linear-gradient(135deg, #eef2fb 0%, #ffffff 50%, #ffffff 100%);
     padding: 100px 20px 40px;
-    color: #e2e8f0;
+    color: #1e293b;
 }
 
 .faq-container {
@@ -15,7 +15,7 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    color: #22d3ee;
+    color: #236ded;
     text-decoration: none;
     font-weight: 600;
     font-size: 0.95rem;
@@ -35,7 +35,7 @@
 .faq-header h1 {
     font-size: 2.2rem;
     font-weight: 800;
-    background: linear-gradient(135deg, #22d3ee, #818cf8);
+    background: linear-gradient(135deg, #236ded, #818cf8);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -43,7 +43,7 @@
 }
 
 .faq-header p {
-    color: #94a3b8;
+    color: #64748b;
     font-size: 1rem;
     margin: 0.25rem 0;
 }
@@ -55,20 +55,20 @@
 }
 
 .faq-item {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(15, 23, 42, 0.04);
+    border: 1px solid rgba(15, 23, 42, 0.10);
     border-radius: 16px;
     overflow: hidden;
     transition: all 0.3s ease;
 }
 
 .faq-item:hover {
-    border-color: rgba(34, 211, 238, 0.25);
+    border-color: rgba(35, 109, 237, 0.25);
 }
 
 .faq-item-open {
-    border-color: rgba(34, 211, 238, 0.35);
-    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(35, 109, 237, 0.35);
+    background: rgba(15, 23, 42, 0.04);
 }
 
 .faq-question {
@@ -79,7 +79,7 @@
     padding: 1.25rem 1.5rem;
     border: none;
     background: transparent;
-    color: #e2e8f0;
+    color: #1e293b;
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
@@ -90,7 +90,7 @@
 }
 
 .faq-question:hover {
-    color: #22d3ee;
+    color: #236ded;
 }
 
 .faq-icon {
@@ -98,8 +98,8 @@
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: rgba(34, 211, 238, 0.15);
-    color: #22d3ee;
+    background: rgba(35, 109, 237, 0.15);
+    color: #236ded;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -113,7 +113,7 @@
 }
 
 .faq-answer p {
-    color: #94a3b8;
+    color: #64748b;
     font-size: 0.95rem;
     line-height: 1.7;
     margin: 0.25rem 0;
@@ -140,8 +140,8 @@
 .faq-contact-cta {
     margin-top: 3rem;
     padding: 2.5rem;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(15, 23, 42, 0.04);
+    border: 1px solid rgba(15, 23, 42, 0.10);
     border-radius: 20px;
     text-align: center;
 }
@@ -149,12 +149,12 @@
 .faq-contact-cta h2 {
     font-size: 1.4rem;
     font-weight: 700;
-    color: #e2e8f0;
+    color: #1e293b;
     margin-bottom: 0.5rem;
 }
 
 .faq-contact-cta p {
-    color: #94a3b8;
+    color: #64748b;
     margin-bottom: 1.5rem;
 }
 
@@ -172,17 +172,17 @@
     font-size: 0.95rem;
     text-decoration: none;
     transition: all 0.3s ease;
-    background: linear-gradient(135deg, #22d3ee, #818cf8);
-    color: #0f172a;
+    background: linear-gradient(135deg, #236ded, #818cf8);
+    color: #ffffff;
 }
 
 .faq-cta-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(34, 211, 238, 0.3);
+    box-shadow: 0 8px 24px rgba(35, 109, 237, 0.3);
 }
 
 .faq-cta-whatsapp {
-    background: linear-gradient(135deg, #25d366, #128c7e);
+    background: linear-gradient(135deg, #25d366, #123f8c);
     color: white;
 }
 

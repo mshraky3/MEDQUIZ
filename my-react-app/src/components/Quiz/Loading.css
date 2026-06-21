@@ -8,25 +8,25 @@
   min-height: 400px;
   text-align: center;
   padding: 2rem;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(15, 23, 42, 0.04);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(15, 23, 42, 0.10);
   box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .loading-content h2 {
-  color: #e2e8f0;
+  color: #1e293b;
   font-size: 1.8rem;
   margin-bottom: 0.5rem;
   font-weight: 600;
 }
 
 .loading-content p {
-  color: #94a3b8;
+  color: #64748b;
   font-size: 1rem;
   margin-bottom: 1.5rem;
 }
@@ -35,7 +35,7 @@
 .loading-bar {
   width: 200px;
   height: 3px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.04);
   border-radius: 4px;
   overflow: hidden;
 }
@@ -43,7 +43,7 @@
 .loading-bar-fill {
   width: 40%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, #22d3ee, transparent);
+  background: linear-gradient(90deg, transparent, #236ded, transparent);
   border-radius: 4px;
   animation: loading-sweep 1.5s ease-in-out infinite;
 }

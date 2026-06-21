@@ -1,9 +1,10 @@
 import React from 'react';
+import Icon from '../common/Icon.jsx';
 
 const ErrorScreen = ({ message, navigate, id, onRetry }) => (
   <div className="quiz-container">
     <div className="error-content">
-      <div className="error-icon">⚠️</div>
+      <div className="error-icon"><Icon name="alert-triangle" size={36} /></div>
       <h2>فشل التحميل</h2>
       <p>{message}</p>
       <div className="error-actions">
@@ -12,7 +13,7 @@ const ErrorScreen = ({ message, navigate, id, onRetry }) => (
             className="retry-button"
             onClick={onRetry}
           >
-            🔄 إعادة المحاولة
+            <Icon name="refresh" size={15} /> إعادة المحاولة
           </button>
         )}
         <button
