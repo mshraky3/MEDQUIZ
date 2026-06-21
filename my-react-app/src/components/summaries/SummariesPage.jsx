@@ -1,9 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import SECTIONS, { findSubtopic } from './content/index.js';
 import QuestionCard from './QuestionCard.jsx';
 import SummaryAnnotation from './SummaryAnnotation.jsx';
 import Icon from '../common/Icon.jsx';
+import { UserContext } from '../../UserContext';
+import { safeGetItem, safeSetItem } from '../../utils/safeStorage.js';
 import './Summaries.css';
 
 /**
@@ -38,12 +40,40 @@ const enLabel = (item) => {
 
 const SummariesPage = () => {
     const { slug } = useParams();
+    const { user } = useContext(UserContext);
     const [activeSpecialty, setActiveSpecialty] = useState(SECTIONS[0]?.id || null);
     const [openSub, setOpenSub] = useState(null); // { section, subtopic }
     const [tab, setTab] = useState('summary');     // 'summary' | 'questions'
     const [tool, setTool] = useState('move');
     const [color, setColor] = useState(COLORS[0]);
     const [isFs, setIsFs] = useState(false);
+
+    // Manual completion tracking — a map of { [subtopicId]: true }, persisted per
+    // user in localStorage so finished topics stay marked across sessions/devices
+    // (same browser). Toggled from the study modal; reflected on the hub cards.
+    const progressKey = `summaries.progress.${user?.username || user?.email || 'guest'}`;
+    const [done, setDone] = useState({});
+
+    useEffect(() => {
+        try {
+            const raw = safeGetItem(progressKey);
+            setDone(raw ? JSON.parse(raw) : {});
+        } catch (_) {
+            setDone({});
+        }
+    }, [progressKey]);
+
+    const isDone = (subId) => !!done[subId];
+    const toggleDone = (subId) => {
+        setDone((prev) => {
+            const next = { ...prev };
+            if (next[subId]) delete next[subId];
+            else next[subId] = true;
+            safeSetItem(progressKey, JSON.stringify(next));
+            return next;
+        });
+    };
+    const doneCount = (section) => section.subtopics.reduce((n, t) => n + (done[t.id] ? 1 : 0), 0);
 
     const panelRef = useRef(null);
     const bodyRef = useRef(null);
@@ -113,6 +143,9 @@ const SummariesPage = () => {
                 {SECTIONS.map((s) => {
                     const isActive = activeSpecialty === s.id;
                     const { primary, secondary } = enLabel(s);
+                    const nDone = doneCount(s);
+                    const nTotal = s.subtopics.length;
+                    const allDone = nDone === nTotal && nTotal > 0;
                     return (
                         <div
                             key={s.id}
@@ -130,7 +163,13 @@ const SummariesPage = () => {
                                     <span className="spec-card-title">{primary}</span>
                                     {secondary && <span className="spec-card-en">{secondary}</span>}
                                 </span>
-                                <span className="spec-card-count">{s.subtopics.length} topic{s.subtopics.length !== 1 ? 's' : ''}</span>
+                                {nDone > 0 ? (
+                                    <span className={`spec-card-progress ${allDone ? 'all-done' : ''}`}>
+                                        <Icon name="check" size={13} /> {nDone}/{nTotal} done
+                                    </span>
+                                ) : (
+                                    <span className="spec-card-count">{nTotal} topic{nTotal !== 1 ? 's' : ''}</span>
+                                )}
                                 <span className={`spec-card-chev ${isActive ? 'open' : ''}`} aria-hidden="true">▾</span>
                             </button>
 
@@ -138,13 +177,19 @@ const SummariesPage = () => {
                                 <div className="subtopic-grid">
                                     {s.subtopics.map((t, i) => {
                                         const tl = enLabel(t);
+                                        const completed = isDone(t.id);
                                         return (
                                             <button
                                                 key={t.id}
                                                 type="button"
-                                                className="sub-card"
+                                                className={`sub-card ${completed ? 'is-done' : ''}`}
                                                 onClick={() => openSubtopic(s, t)}
                                             >
+                                                {completed && (
+                                                    <span className="sub-card-done" aria-label="Completed">
+                                                        <Icon name="check" size={13} />
+                                                    </span>
+                                                )}
                                                 <span className="sub-card-index">{String(i + 1).padStart(2, '0')}</span>
                                                 <span className="sub-card-title">{tl.primary}</span>
                                                 {tl.secondary && <span className="sub-card-en">{tl.secondary}</span>}
@@ -179,6 +224,16 @@ const SummariesPage = () => {
                                 <span className="panel-title-en">{enLabel(openSub.subtopic).secondary}</span>
                             )}
                         </div>
+                        <button
+                            type="button"
+                            className={`panel-done-btn ${isDone(openSub.subtopic.id) ? 'on' : ''}`}
+                            onClick={() => toggleDone(openSub.subtopic.id)}
+                            aria-pressed={isDone(openSub.subtopic.id)}
+                            title={isDone(openSub.subtopic.id) ? 'Marked as done — click to undo' : 'Mark this topic as done'}
+                        >
+                            <Icon name={isDone(openSub.subtopic.id) ? 'check' : 'circle'} size={16} />
+                            <span className="label">{isDone(openSub.subtopic.id) ? 'Done' : 'Mark as done'}</span>
+                        </button>
                         <button type="button" className="panel-close" onClick={closePanel} aria-label="Close">
                             <Icon name="x" size={20} />
                         </button>

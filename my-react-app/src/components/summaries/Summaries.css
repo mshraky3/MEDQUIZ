@@ -908,6 +908,15 @@
 .spec-card-chev { flex: 0 0 auto; font-size: 1.1rem; color: #93a4bd; transition: transform 0.28s ease; }
 .spec-card-chev.open { transform: rotate(180deg); color: var(--accent); }
 
+/* per-specialty completion pill (shown once at least one topic is done) */
+.spec-card-progress {
+    flex: 0 0 auto; display: inline-flex; align-items: center; gap: 5px;
+    font-size: 0.72rem; font-weight: 800; color: #15803d;
+    background: rgba(22, 163, 74, 0.12); border: 1px solid rgba(22, 163, 74, 0.35);
+    border-radius: 999px; padding: 5px 11px; white-space: nowrap;
+}
+.spec-card-progress.all-done { color: #fff; background: #16a34a; border-color: #16a34a; }
+
 /* accordion reveal */
 .subtopic-wrap { max-height: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
 .subtopic-wrap.open { max-height: 1600px; }
@@ -942,6 +951,23 @@
     border-radius: 999px; padding: 3px 9px;
 }
 
+/* completed sub-topic — green accent + check badge, visible at a glance on the hub */
+.sub-card.is-done {
+    border-color: rgba(22, 163, 74, 0.45);
+    background: #f3fbf5;
+    padding-inline-end: 34px;
+}
+.sub-card.is-done::before { background: #16a34a; opacity: 1; }
+.sub-card.is-done:hover { border-color: #16a34a; box-shadow: 0 10px 24px rgba(22, 163, 74, 0.18); }
+.sub-card.is-done .sub-card-index { color: #16a34a; }
+.sub-card-done {
+    position: absolute; top: 10px; inset-inline-end: 10px;
+    width: 22px; height: 22px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: #16a34a; color: #fff;
+    box-shadow: 0 2px 6px rgba(22, 163, 74, 0.4);
+}
+
 /* ---- Level 3: full-screen study modal ---- */
 /* Full-screen focused study modal — one topic at a time, centred content */
 .summary-panel {
@@ -972,6 +998,23 @@
     transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
 }
 .panel-close:hover { background: rgba(220, 38, 38, 0.12); color: #dc2626; transform: rotate(90deg); }
+
+/* "Mark as done" toggle — neutral when off, solid green when on */
+.panel-done-btn {
+    flex: 0 0 auto; align-self: center; display: inline-flex; align-items: center; gap: 7px;
+    height: 36px; padding: 0 14px; border-radius: 10px;
+    font-family: inherit; font-size: 0.82rem; font-weight: 800; cursor: pointer;
+    background: rgba(15, 23, 42, 0.04); border: 1px solid #d4deee; color: #475569;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
+}
+.panel-done-btn:hover { border-color: #16a34a; color: #15803d; background: rgba(22, 163, 74, 0.10); }
+.panel-done-btn:active { transform: scale(0.96); }
+.panel-done-btn.on { background: #16a34a; border-color: #16a34a; color: #fff; }
+.panel-done-btn.on:hover { background: #15803d; border-color: #15803d; color: #fff; }
+@media (max-width: 640px) {
+    .panel-done-btn { padding: 0 10px; }
+    .panel-done-btn span.label { display: none; }
+}
 
 .panel-tabs { display: flex; gap: 4px; flex: 0 0 auto; padding: 12px max(22px, calc((100% - 920px) / 2)) 0; border-bottom: 1px solid #d4deee; }
 .panel-tab {
