@@ -999,10 +999,11 @@
 }
 .panel-close:hover { background: rgba(220, 38, 38, 0.12); color: #dc2626; transform: rotate(90deg); }
 
-/* "Mark as done" toggle — neutral when off, solid green when on */
+/* "Mark as done" toggle — sits at the right end of the tabs row */
 .panel-done-btn {
-    flex: 0 0 auto; align-self: center; display: inline-flex; align-items: center; gap: 7px;
-    height: 36px; padding: 0 14px; border-radius: 10px;
+    flex: 0 0 auto; align-self: center; margin-inline-start: auto; margin-bottom: 6px;
+    display: inline-flex; align-items: center; gap: 7px;
+    height: 34px; padding: 0 14px; border-radius: 10px;
     font-family: inherit; font-size: 0.82rem; font-weight: 800; cursor: pointer;
     background: rgba(15, 23, 42, 0.04); border: 1px solid #d4deee; color: #475569;
     transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.12s ease;

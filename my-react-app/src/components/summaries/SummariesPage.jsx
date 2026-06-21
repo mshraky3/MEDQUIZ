@@ -224,16 +224,6 @@ const SummariesPage = () => {
                                 <span className="panel-title-en">{enLabel(openSub.subtopic).secondary}</span>
                             )}
                         </div>
-                        <button
-                            type="button"
-                            className={`panel-done-btn ${isDone(openSub.subtopic.id) ? 'on' : ''}`}
-                            onClick={() => toggleDone(openSub.subtopic.id)}
-                            aria-pressed={isDone(openSub.subtopic.id)}
-                            title={isDone(openSub.subtopic.id) ? 'Marked as done — click to undo' : 'Mark this topic as done'}
-                        >
-                            <Icon name={isDone(openSub.subtopic.id) ? 'check' : 'circle'} size={16} />
-                            <span className="label">{isDone(openSub.subtopic.id) ? 'Done' : 'Mark as done'}</span>
-                        </button>
                         <button type="button" className="panel-close" onClick={closePanel} aria-label="Close">
                             <Icon name="x" size={20} />
                         </button>
@@ -256,6 +246,16 @@ const SummariesPage = () => {
                                 Test yourself <span className="panel-tab-badge">{questions.length}</span>
                             </button>
                         )}
+                        <button
+                            type="button"
+                            className={`panel-done-btn ${isDone(openSub.subtopic.id) ? 'on' : ''}`}
+                            onClick={() => toggleDone(openSub.subtopic.id)}
+                            aria-pressed={isDone(openSub.subtopic.id)}
+                            title={isDone(openSub.subtopic.id) ? 'Marked as done — click to undo' : 'Mark this topic as done'}
+                        >
+                            <Icon name={isDone(openSub.subtopic.id) ? 'check' : 'circle'} size={16} />
+                            <span className="label">{isDone(openSub.subtopic.id) ? 'Done' : 'Mark as done'}</span>
+                        </button>
                     </div>
 
                     <div className="panel-body" ref={bodyRef}>
