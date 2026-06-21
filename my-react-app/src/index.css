@@ -1,39 +1,39 @@
 /* Global Design System for SQB */
 :root {
-  /* Color Palette - Midnight Scholar Dark Theme */
-  --primary-color: #3b82f6;
-  --primary-dark: #2563eb;
-  --primary-light: #60a5fa;
-  --secondary-color: #10b981;
-  --secondary-dark: #059669;
-  --accent-color: #3b82f6;
-  --accent-light: #60a5fa;
+  /* Color Palette - Scheme #2 "Scholar blue" Light Theme */
+  --primary-color: #2563eb;
+  --primary-dark: #1d4ed8;
+  --primary-light: #3b82f6;
+  --secondary-color: #16a34a;
+  --secondary-dark: #15803d;
+  --accent-color: #2563eb;
+  --accent-light: #3b82f6;
 
-  /* Neutral Colors - Dark Theme */
-  --text-dark: #e2e8f0;
-  --text-medium: #94a3b8;
+  /* Neutral Colors - Light Theme */
+  --text-dark: #0f1e3d;
+  --text-medium: #475569;
   --text-light: #64748b;
-  --bg-light: #0f172a;
-  --bg-white: #1e293b;
-  --border-color: #334155;
-  --border-light: #1e293b;
+  --bg-light: #eef2fb;
+  --bg-white: #ffffff;
+  --border-color: #d4deee;
+  --border-light: #e6ecf7;
 
   /* Semantic surfaces */
-  --bg: #0f172a;
-  --surface: #1e293b;
-  --surface-2: #0f172a;
-  --surface-tint: #172554;
+  --bg: #eef2fb;
+  --surface: #ffffff;
+  --surface-2: #f5f8fd;
+  --surface-tint: #e1eafb;
 
-  /* Status Colors (tuned for dark backgrounds) */
-  --success-color: #10b981;
-  --error-color: #f87171;
-  --warning-color: #fbbf24;
-  --info-color: #60a5fa;
+  /* Status Colors (tuned for light backgrounds) */
+  --success-color: #16a34a;
+  --error-color: #dc2626;
+  --warning-color: #d97706;
+  --info-color: #2563eb;
 
-  /* Shadows - deeper for dark theme */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 14px 36px rgba(0, 0, 0, 0.5);
+  /* Shadows - soft for light theme */
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 4px 14px rgba(15, 23, 42, 0.10);
+  --shadow-lg: 0 14px 36px rgba(15, 23, 42, 0.16);
 
   /* Border Radius */
   --radius-sm: 8px;
@@ -110,6 +110,12 @@
   box-sizing: border-box;
 }
 
+/* Inline SVG icons (src/components/common/Icon.jsx) — align with adjacent text. */
+.app-icon {
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -118,6 +124,11 @@ body {
   line-height: 1.6;
   color: var(--text-dark);
   background-color: var(--bg);
+  /* Soft tinted mesh so pages read with depth instead of flat white. */
+  background-image:
+    radial-gradient(900px 600px at 8% -5%, rgba(59, 130, 246, 0.07), transparent 60%),
+    radial-gradient(820px 560px at 100% 0%, rgba(99, 102, 241, 0.06), transparent 55%);
+  background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   direction: ltr;
