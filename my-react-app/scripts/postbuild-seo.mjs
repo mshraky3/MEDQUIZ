@@ -125,7 +125,6 @@ if (!fs.existsSync(templatePath)) {
   const template = fs.readFileSync(templatePath, 'utf8');
   const routes = getPrerenderRoutes();
   let count = 0;
-
   for (const { path: routePath, html: prerenderHtml, seo } of routes) {
     const outPath = outputPathForRoute(routePath);
     fs.mkdirSync(path.dirname(outPath), { recursive: true });
@@ -135,7 +134,6 @@ if (!fs.existsSync(templatePath)) {
 
   const sitemapPath = path.join(distDir, 'sitemap.xml');
   fs.writeFileSync(sitemapPath, buildSitemap(routes), 'utf8');
-
   console.log(
     `[postbuild-seo] Prerendered ${count} route(s) and regenerated sitemap.xml (lastmod ${BUILD_DATE}). Origin: ${SITE_ORIGIN}`
   );

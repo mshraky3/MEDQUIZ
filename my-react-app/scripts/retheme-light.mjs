@@ -31,7 +31,6 @@ const HEX = {
   'e5eef8': '1e293b', 'edf2f7': '1e293b',
   'cbd5e1': '475569', '94a3b8': '475569', 'a0aec0': '475569',
 };
-
 // rgba prefix map (keeps the alpha). [r,g,b] -> [r,g,b]
 const RGBA = [
   [[34, 211, 238], [14, 165, 233]],   // accent glow
@@ -65,7 +64,6 @@ function walk(dir, acc = []) {
   }
   return acc;
 }
-
 const files = walk(SRC).filter((f) => !EXCLUDE.has(f));
 let changed = 0;
 for (const f of files) {
