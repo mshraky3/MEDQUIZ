@@ -9,6 +9,7 @@ import errorReportRoutes from './routes/error-report.js';
 import questionReportsRouter from './routes/question-reports.js';
 import emailCampaignsRouter from './routes/email-campaigns.js';
 import paymentRoutes from './routes/payment.js';
+import { checkSubscriptionAccess, isPaymentEnforcementEnabled } from './services/paymentService.js';
 import summariesRouter from './routes/summaries.js';
 import summaryContent from './content/summaryHtml/index.js';
 import { notifyBackendError } from './services/errorNotificationService.js';
@@ -123,6 +124,68 @@ async function hasPaymentColumns() {
     }
     return _paymentColumnsExist;
 }
+
+// One-time, idempotent payment/subscription schema bootstrap. Migration 001 is
+// folded into boot so it self-applies (no manual psql step). Adds the
+// subscription columns + payment_events table, and grandfathers every
+// PRE-EXISTING account EXACTLY ONCE — tracked in schema_migrations so accounts
+// created AFTER rollout are correctly gated (never auto-grandfathered later).
+let _paymentSchemaReady = null;
+function ensurePaymentSchema() {
+    if (_paymentSchemaReady) return _paymentSchemaReady;
+    _paymentSchemaReady = (async () => {
+        try {
+            await db.query(`
+                ALTER TABLE accounts
+                  ADD COLUMN IF NOT EXISTS subscription_status         VARCHAR(50)  NOT NULL DEFAULT 'free',
+                  ADD COLUMN IF NOT EXISTS subscription_expiry_date    TIMESTAMPTZ  DEFAULT NULL,
+                  ADD COLUMN IF NOT EXISTS account_type                VARCHAR(50)  NOT NULL DEFAULT 'standard',
+                  ADD COLUMN IF NOT EXISTS is_admin_created            BOOLEAN      NOT NULL DEFAULT FALSE,
+                  ADD COLUMN IF NOT EXISTS payment_gateway_customer_id VARCHAR(255) DEFAULT NULL,
+                  ADD COLUMN IF NOT EXISTS grandfathered_at            TIMESTAMPTZ  DEFAULT NULL
+            `);
+            await db.query(`CREATE INDEX IF NOT EXISTS idx_accounts_subscription_status ON accounts(subscription_status)`);
+            await db.query(`CREATE INDEX IF NOT EXISTS idx_accounts_is_admin_created     ON accounts(is_admin_created)`);
+            await db.query(`
+                CREATE TABLE IF NOT EXISTS payment_events (
+                  id              BIGSERIAL PRIMARY KEY,
+                  account_id      INT REFERENCES accounts(id) ON DELETE SET NULL,
+                  event_type      VARCHAR(100) NOT NULL,
+                  gateway         VARCHAR(50)  NOT NULL DEFAULT 'moyasar',
+                  gateway_ref     VARCHAR(255),
+                  amount_halalas  INT,
+                  currency        VARCHAR(10)  DEFAULT 'SAR',
+                  status          VARCHAR(50),
+                  raw_payload     JSONB,
+                  received_at     TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+                )
+            `);
+            await db.query(`CREATE INDEX IF NOT EXISTS idx_payment_events_account  ON payment_events(account_id)`);
+            await db.query(`CREATE INDEX IF NOT EXISTS idx_payment_events_received ON payment_events(received_at)`);
+
+            // Grandfather pre-rollout accounts EXACTLY ONCE.
+            await db.query(`CREATE TABLE IF NOT EXISTS schema_migrations (name TEXT PRIMARY KEY, applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
+            const applied = await db.query(`SELECT 1 FROM schema_migrations WHERE name = '001_grandfather_existing'`);
+            if (applied.rows.length === 0) {
+                const r = await db.query(`
+                    UPDATE accounts
+                       SET grandfathered_at = NOW(), subscription_status = 'grandfathered'
+                     WHERE grandfathered_at IS NULL
+                `);
+                await db.query(`INSERT INTO schema_migrations (name) VALUES ('001_grandfather_existing') ON CONFLICT DO NOTHING`);
+                logger.info(`Grandfathered ${r.rowCount} pre-rollout account(s) (one-time)`);
+            }
+            _paymentColumnsExist = true; // prime the lazy cache used elsewhere
+            logger.info('Payment/subscription schema ensured');
+        } catch (err) {
+            _paymentSchemaReady = null; // allow a retry on a later invocation
+            logger.error('Payment schema bootstrap failed', err);
+        }
+    })();
+    return _paymentSchemaReady;
+}
+// Kick off at module load (after ensureSchema so accounts table exists).
+ensurePaymentSchema();
 
 // Email configuration
 const Email = nodemailer.createTransport({
@@ -768,17 +831,55 @@ app.post('/login', async (req, res) => {
         client.release();
         logger.debug(`Transaction committed for username: ${lowercaseUsername}`);
 
+        // --- Subscription state (payment readiness) ---
+        // Only enforce when the migration columns exist AND the flag is on, so
+        // flipping PAYMENT_ENFORCEMENT_ENABLED before migration 001 runs can
+        // never lock anyone out. `active` already covers admin/grandfathered.
+        let subscription = {
+            enforced: false,
+            status: 'free',
+            active: true,
+            expiryDate: null,
+            daysRemaining: null,
+            reason: 'enforcement_disabled',
+        };
+        try {
+            const columnsReady = await hasPaymentColumns();
+            if (columnsReady && isPaymentEnforcementEnabled()) {
+                const { allowed, reason } = checkSubscriptionAccess(userRow);
+                let daysRemaining = null;
+                if (userRow.subscription_expiry_date) {
+                    const ms = new Date(userRow.subscription_expiry_date).getTime() - Date.now();
+                    daysRemaining = Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
+                }
+                subscription = {
+                    enforced: true,
+                    status: userRow.subscription_status,
+                    active: allowed,
+                    expiryDate: userRow.subscription_expiry_date || null,
+                    daysRemaining,
+                    reason,
+                };
+            }
+        } catch (subErr) {
+            logger.error('Failed computing subscription state at login', subErr);
+        }
+
         const updatedUser = {
             ...userRow,
             logged: true,
             logged_date: now,
             sessionToken,
-            terms_accepted: userRow.terms_accepted
+            terms_accepted: userRow.terms_accepted,
+            // Persisted client-side and read by the route guard. Undefined on
+            // legacy stored sessions is treated as allowed (no mid-session lockout).
+            accessAllowed: subscription.active,
         };
 
         return res.status(200).json({
             message: 'Login successful',
-            expired: false,
+            expired: subscription.enforced && !subscription.active && subscription.reason === 'subscription_required',
+            subscription,
             user: updatedUser,
             sessionToken,
             showTerms: !userRow.terms_accepted,
