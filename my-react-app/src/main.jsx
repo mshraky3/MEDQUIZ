@@ -33,6 +33,8 @@ import TempLinks from './components/ADD/TempLinks.jsx';
 import QuestionReports from './components/ADD/QuestionReports.jsx';
 import ForgotPassword from './components/login/ForgotPassword';
 import SummariesPage from './components/summaries/SummariesPage.jsx';
+import Subscribe from './components/subscribe/Subscribe.jsx';
+import PaymentCallback from './components/subscribe/PaymentCallback.jsx';
 
 import Globals from './global.js';
 import { UserProvider } from './UserContext.jsx';
@@ -112,6 +114,16 @@ const router = createBrowserRouter([
   {
     path: "/question-reports",
     element: <QuestionReports />,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/subscribe",
+    element: <Layout><RequireAuth><Subscribe /></RequireAuth></Layout>,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/payment/callback",
+    element: <Layout><RequireAuth><PaymentCallback /></RequireAuth></Layout>,
     errorElement: <ErrorBoundary />,
   },
   {
