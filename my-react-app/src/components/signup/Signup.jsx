@@ -111,7 +111,7 @@ const Signup = () => {
 
         setLoading(true);
         try {
-            const endpoint = isTempLink ? '/api/signup/temp-link' : '/api/signup/free';
+            const endpoint = isTempLink ? '/api/signup/temp-link' : '/api/signup/subscription';
             const payload = isTempLink
                 ? { token, email: form.email.trim().toLowerCase(), password: form.password, otp_code: otp }
                 : { email: form.email.trim().toLowerCase(), password: form.password, otp_code: otp };
@@ -120,7 +120,7 @@ const Signup = () => {
 
             if (response.data.success) {
                 try {
-                    track('signup_success', { entryType: isTempLink ? 'temp-link' : 'free-account' });
+                    track('signup_success', { entryType: isTempLink ? 'temp-link' : 'paid-subscription' });
                 } catch (trackError) {
                     console.debug('Analytics track skipped:', trackError);
                 }
@@ -182,7 +182,7 @@ const Signup = () => {
                         <div className="login-title">أنشئ حسابك</div>
                         <div className="login-subtitle">
                             {step === 'credentials'
-                                ? 'أنشئ حسابك المجاني ثم ابدأ اختباراً سريعاً من 10 أسئلة'
+                                ? 'أنشئ حسابك بـ 99SAR ثم ابدأ اختباراً سريعاً من 10 أسئلة'
                                 : `أدخل رمز التحقق المرسل إلى ${form.email}`}
                         </div>
                     </div>

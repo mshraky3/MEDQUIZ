@@ -104,25 +104,16 @@ const Terms = () => {
                 </section>
 
                 <section className="legal-section">
-                    <h2>9. Subscription & Payment (Not Currently Active)</h2>
+                    <h2>9. Subscription & Payment</h2>
                     <p>
-                        <strong>The Service is currently provided free of charge to all users.</strong> No payment
-                        is collected and no subscription is required.
-                    </p>
-                    <p>
-                        We may introduce a paid subscription in the future. If and when payment features are
-                        activated:
+                        <strong>The Service requires a paid subscription of 99 SAR per year.</strong> Payment
+                        is required to access the platform's features.
                     </p>
                     <ul>
                         <li>New accounts will be billed an annual subscription of 99 SAR per year.</li>
-                        <li>Users who registered before the paid rollout will be grandfathered and retain free access.</li>
-                        <li>Accounts created by administrators are exempt from subscription charges.</li>
-                        <li>No free trials are offered.</li>
+                        <li>Accounts created by administrators may be exempt from subscription charges.</li>
                         <li>Refunds, where applicable, are governed by our <Link to="/refund-policy">Refund Policy</Link>.</li>
                     </ul>
-                    <p>
-                        <em>This section describes future functionality and is not currently in effect.</em>
-                    </p>
                 </section>
 
                 <section className="legal-section">
