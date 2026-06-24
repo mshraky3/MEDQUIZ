@@ -106,14 +106,19 @@ const Terms = () => {
                 <section className="legal-section">
                     <h2>9. Subscription & Payment</h2>
                     <p>
-                        <strong>The Service requires a paid subscription of 99 SAR per year.</strong> Payment
-                        is required to access the platform's features.
+                        The Service operates on a paid annual subscription:
                     </p>
                     <ul>
-                        <li>New accounts will be billed an annual subscription of 99 SAR per year.</li>
-                        <li>Accounts created by administrators may be exempt from subscription charges.</li>
+                        <li>New accounts are billed an annual subscription of <strong>100 SAR per year</strong>.</li>
+                        <li>Users who registered before the paid rollout are grandfathered and retain free access.</li>
+                        <li>Accounts created by administrators are exempt from subscription charges.</li>
+                        <li>No free trials are offered.</li>
                         <li>Refunds, where applicable, are governed by our <Link to="/refund-policy">Refund Policy</Link>.</li>
                     </ul>
+                    <p>
+                        Payments are processed securely through Moyasar, a licensed Saudi payment gateway. We do not
+                        store full card details on our servers.
+                    </p>
                 </section>
 
                 <section className="legal-section">

@@ -7,7 +7,7 @@ import './Landing.css';
 
 const stats = [
   { label: 'سؤال', value: '11,000+' },
-  { label: 'بدء مجاني', value: '0 ريال' },
+  { label: 'الاشتراك السنوي', value: '100 ريال' },
   { label: 'تدريب يومي', value: '24/7' },
   { label: 'مواضيع مغطاة', value: '40+' }
 ];
@@ -37,7 +37,7 @@ const features = [
 
 const steps = [
   {
-    label: 'أنشئ حسابك المجاني',
+    label: 'أنشئ حسابك',
     hint: 'سجّل خلال ثوانٍ وكل شيء يبقى متزامناً.'
   },
   {
@@ -119,15 +119,15 @@ const Landing = () => {
             </p>
             <div className="cta-row">
               <button className="btn primary" onClick={handleSignup}>
-                ابدأ مجاناً الآن
+                ابدأ الآن
               </button>
               <button className="btn ghost" onClick={handleLogin}>
                 تسجيل الدخول
               </button>
             </div>
             <ul className="hero-trust">
-              <li>ابدأ مجاناً</li>
-              <li>بدون بطاقة بنكية</li>
+              <li>اشتراك سنوي 100 ريال</li>
+              <li>وصول كامل لمدة سنة</li>
               <li>شرح سريري لكل سؤال</li>
               <li>تحليلات فورية للأداء</li>
             </ul>
@@ -249,12 +249,12 @@ const Landing = () => {
                 <p className="pill subtle">جاهز للبدء؟</p>
                 <h2>ادخل وضع الاختبار اليوم</h2>
                 <p>
-                  أنشئ حسابك المجاني، اختر تخصصك، وابدأ جلسة تدريب خلال أقل من دقيقتين.
+                  أنشئ حسابك، اختر تخصصك، وابدأ جلسة تدريب خلال أقل من دقيقتين.
                 </p>
               </div>
               <div className="cta-actions">
                 <button className="btn primary" onClick={handleSignup}>
-                  إنشاء حساب مجاني
+                  إنشاء حساب
                 </button>
                 <button className="btn outline" onClick={handleLogin}>
                   تسجيل الدخول
@@ -266,7 +266,7 @@ const Landing = () => {
 
         <div className="mobile-cta">
           <button className="btn primary" onClick={handleSignup}>
-            ابدأ مجاناً
+            ابدأ الآن
           </button>
           <button className="btn outline" onClick={handleLogin}>
             دخول

@@ -42,6 +42,17 @@ const RequireAuth = ({ children }) => {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
+  // Subscription gate. `accessAllowed === false` is set only by a fresh login
+  // under payment enforcement for an unpaid/expired account; it funnels the
+  // user to the paywall. `undefined` (legacy stored sessions, and the
+  // grandfathered/admin/active cases) passes through untouched, so no one is
+  // locked out mid-session. Never redirect while already on the paywall flow.
+  const onPaywall =
+    location.pathname.startsWith('/subscribe') || location.pathname.startsWith('/payment');
+  if (user.accessAllowed === false && !onPaywall) {
+    return <Navigate to="/subscribe" replace />;
+  }
+
   return children;
 };
 

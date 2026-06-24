@@ -105,7 +105,7 @@ const TempLinks = (props) => {
             <div className="container">
                 <div className="admin-header">
                     <h1><Icon name="link" size={16} /> Temporary Signup Links</h1>
-                    <p>Create and manage temporary signup links for special accounts</p>
+                    <p>Create and manage temporary signup links for free accounts</p>
                 </div>
 
                 {error && <div className="error">{error}</div>}

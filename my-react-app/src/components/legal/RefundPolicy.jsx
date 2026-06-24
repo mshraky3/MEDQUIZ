@@ -12,9 +12,11 @@ const RefundPolicy = () => {
                 <p className="legal-updated">Last updated: June 2026</p>
 
                 <section className="legal-section">
-                    <h2>1. Subscription Pricing</h2>
+                    <h2>1. Subscription</h2>
                     <p>
-                        SMLE Question Bank is available for <strong>99 SAR per year</strong>. This subscription provides full access to all features including the comprehensive question bank, detailed analytics, and progress tracking.
+                        SMLE Question Bank offers a paid <strong>annual subscription of 100 SAR per year</strong> for
+                        new accounts. Users who registered before the paid rollout, and admin-created accounts, retain
+                        free access and are not billed.
                     </p>
                 </section>
 
@@ -37,7 +39,8 @@ const RefundPolicy = () => {
                             next renewal but does not retroactively refund the current active period.
                         </li>
                         <li>
-                            Admin-created accounts with special access terms are not subject to billing and therefore not eligible for refunds.
+                            Accounts that received access for free (grandfathered users and admin-created accounts)
+                            are not subject to billing and therefore not eligible for refunds.
                         </li>
                     </ul>
                 </section>
@@ -54,7 +57,7 @@ const RefundPolicy = () => {
                 <section className="legal-section">
                     <h2>4. Payment Processing</h2>
                     <p>
-                        Future payments will be processed securely through Moyasar, a licensed Saudi payment gateway.
+                        Payments are processed securely through Moyasar, a licensed Saudi payment gateway.
                         We do not store full card details on our servers.
                     </p>
                 </section>

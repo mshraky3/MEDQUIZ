@@ -91,7 +91,7 @@ const Login = () => {
     passwordPlaceholder: "كلمة المرور",
     loginButton: "تسجيل الدخول",
     loggingIn: "جاري تسجيل الدخول...",
-    contactLink: "إنشاء حساب بـ 99SAR",
+    contactLink: "إنشاء حساب مجاني",
     termsTitle: "شروط الاستخدام",
     termsAccept: "أوافق على شروط الاستخدام",
     continue: "متابعة",
@@ -146,10 +146,11 @@ const Login = () => {
       .then((response) => {
         const username = cleanedUsername;
 
-        // Subscription expiry handling: When payment enforcement is enabled,
-        // the backend will return `expired: true` for lapsed subscriptions and
-        // this is where the renewal prompt belongs.
-        // Now that payments are active at 99SAR/year, subscription checks are enforced.
+        // Subscription gate: when payment enforcement is on, the backend returns
+        // a `subscription` object. Unpaid / expired accounts are funnelled to the
+        // /subscribe paywall (handled in the redirect below); grandfathered,
+        // admin, and active accounts pass straight through. RequireAuth is the
+        // safety net for the popup paths (terms / email-migration) that follow.
 
         if (response.data.showTerms) {
           setShowTermsPopup(true);
@@ -173,6 +174,12 @@ const Login = () => {
         }
 
         setLoading(false);
+        // Unpaid / expired subscription → paywall.
+        const sub = response.data.subscription;
+        if (sub && sub.enforced && !sub.active) {
+          navigate('/subscribe', { replace: true });
+          return;
+        }
         // Return the user to the protected page they were sent here from
         // (set by RequireAuth), defaulting to the quizzes dashboard.
         const redirectTo = location.state?.from || '/quizs';
@@ -399,7 +406,7 @@ const Login = () => {
                 {copy.termsAccept}
               </label>
               <button
-                className="popup-btn subscribe-btn"
+                className="popup-btn try-free"
                 onClick={handleAcceptTerms}
                 disabled={!termsChecked}
                 style={{ marginTop: '15px' }}
@@ -446,7 +453,7 @@ const Login = () => {
                     {migrationError && <div className="alert-box error" style={{ marginBottom: 12 }}>{migrationError}</div>}
                     <div className="popup-buttons" style={{ flexDirection: 'column', gap: 8 }}>
                       <button
-                        className="popup-btn subscribe-btn"
+                        className="popup-btn try-free"
                         onClick={handleSendMigrationOtp}
                         disabled={migrationLoading}
                       >
@@ -482,7 +489,7 @@ const Login = () => {
                     {migrationError && <div className="alert-box error" style={{ marginBottom: 12 }}>{migrationError}</div>}
                     <div className="popup-buttons" style={{ flexDirection: 'column', gap: 8 }}>
                       <button
-                        className="popup-btn subscribe-btn"
+                        className="popup-btn try-free"
                         onClick={handleVerifyMigrationOtp}
                         disabled={migrationLoading}
                       >
