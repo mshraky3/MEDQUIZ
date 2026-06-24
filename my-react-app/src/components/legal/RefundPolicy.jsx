@@ -12,18 +12,16 @@ const RefundPolicy = () => {
                 <p className="legal-updated">Last updated: June 2026</p>
 
                 <section className="legal-section">
-                    <h2>1. Current Policy</h2>
+                    <h2>1. Subscription Pricing</h2>
                     <p>
-                        SMLE Question Bank is currently provided <strong>free of charge</strong>. No payments are
-                        collected from users, and therefore <strong>no refunds are applicable</strong> at this time.
+                        SMLE Question Bank is available for <strong>99 SAR per year</strong>. This subscription provides full access to all features including the comprehensive question bank, detailed analytics, and progress tracking.
                     </p>
                 </section>
 
                 <section className="legal-section">
-                    <h2>2. Future Subscriptions</h2>
+                    <h2>2. Refund Terms</h2>
                     <p>
-                        If a paid subscription is introduced in the future (an annual plan of 99 SAR per year), the
-                        following refund terms will apply to subscription purchases:
+                        The following refund terms apply to subscription purchases:
                     </p>
                     <ul>
                         <li>
@@ -39,13 +37,9 @@ const RefundPolicy = () => {
                             next renewal but does not retroactively refund the current active period.
                         </li>
                         <li>
-                            Accounts that received access for free (grandfathered users and admin-created accounts)
-                            are not subject to billing and therefore not eligible for refunds.
+                            Admin-created accounts with special access terms are not subject to billing and therefore not eligible for refunds.
                         </li>
                     </ul>
-                    <p>
-                        <em>This section describes future functionality and is not currently in effect.</em>
-                    </p>
                 </section>
 
                 <section className="legal-section">

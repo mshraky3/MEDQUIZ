@@ -20,7 +20,7 @@ const offerings = [
     { ar: 'اختبارات متنوعة: من جلسات قصيرة (10 أسئلة) إلى اختبارات شاملة (100 سؤال).', en: 'Varied quizzes: from short sessions (10 questions) to full exams (100 questions).' },
     { ar: 'تتبّع التقدم: متابعة تطوّرك عبر الزمن مع إحصائيات دقيقة.', en: 'Progress tracking: monitor your improvement over time with precise statistics.' },
     { ar: 'أكثر من 40 تخصصاً: تغطية شاملة لجميع التخصصات الطبية المطلوبة.', en: '40+ topics: complete coverage of all required medical specialties.' },
-    { ar: 'وصول مجاني: المنصة متاحة مجاناً بالكامل لجميع المستخدمين حالياً.', en: 'Free access: the platform is currently fully free for all users.' }
+    { ar: 'اشتراك مميز: احصل على وصول كامل مقابل 99SAR.', en: 'Premium subscription: get full access for 99SAR.' }
 ];
 
 const reasons = [

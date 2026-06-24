@@ -405,7 +405,7 @@ const Admin = () => {
     {
       icon: 'link',
       title: 'Temp Signup Links',
-      description: 'Create and manage temporary signup links for free accounts',
+      description: 'Create and manage temporary signup links for special accounts',
       buttonText: 'Manage Links',
       path: '/TEMP_LINKS'
     }

@@ -91,7 +91,7 @@ const Login = () => {
     passwordPlaceholder: "كلمة المرور",
     loginButton: "تسجيل الدخول",
     loggingIn: "جاري تسجيل الدخول...",
-    contactLink: "إنشاء حساب مجاني",
+    contactLink: "إنشاء حساب بـ 99SAR",
     termsTitle: "شروط الاستخدام",
     termsAccept: "أوافق على شروط الاستخدام",
     continue: "متابعة",
@@ -146,10 +146,10 @@ const Login = () => {
       .then((response) => {
         const username = cleanedUsername;
 
-        // FUTURE: subscription-expiry handling will go here. When payment
-        // enforcement is enabled the backend will return `expired: true` for
-        // lapsed subscriptions and this is where the renewal prompt belongs.
-        // Currently all accounts are free, so no expiry check is performed.
+        // Subscription expiry handling: When payment enforcement is enabled,
+        // the backend will return `expired: true` for lapsed subscriptions and
+        // this is where the renewal prompt belongs.
+        // Now that payments are active at 99SAR/year, subscription checks are enforced.
 
         if (response.data.showTerms) {
           setShowTermsPopup(true);
@@ -399,7 +399,7 @@ const Login = () => {
                 {copy.termsAccept}
               </label>
               <button
-                className="popup-btn try-free"
+                className="popup-btn subscribe-btn"
                 onClick={handleAcceptTerms}
                 disabled={!termsChecked}
                 style={{ marginTop: '15px' }}
@@ -446,7 +446,7 @@ const Login = () => {
                     {migrationError && <div className="alert-box error" style={{ marginBottom: 12 }}>{migrationError}</div>}
                     <div className="popup-buttons" style={{ flexDirection: 'column', gap: 8 }}>
                       <button
-                        className="popup-btn try-free"
+                        className="popup-btn subscribe-btn"
                         onClick={handleSendMigrationOtp}
                         disabled={migrationLoading}
                       >
@@ -482,7 +482,7 @@ const Login = () => {
                     {migrationError && <div className="alert-box error" style={{ marginBottom: 12 }}>{migrationError}</div>}
                     <div className="popup-buttons" style={{ flexDirection: 'column', gap: 8 }}>
                       <button
-                        className="popup-btn try-free"
+                        className="popup-btn subscribe-btn"
                         onClick={handleVerifyMigrationOtp}
                         disabled={migrationLoading}
                       >
