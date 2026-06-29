@@ -175,6 +175,22 @@ function ensurePaymentSchema() {
                 await db.query(`INSERT INTO schema_migrations (name) VALUES ('001_grandfather_existing') ON CONFLICT DO NOTHING`);
                 logger.info(`Grandfathered ${r.rowCount} pre-rollout account(s) (one-time)`);
             }
+
+            // Catch-up grandfathering: every account that exists as of THIS rollout
+            // stays free for good — only brand-new signups created afterwards pay
+            // ("login = no payment, signup = payment"). Migration 001 only covered
+            // accounts present when it first ran; this one-time pass sweeps any
+            // accounts created since (e.g. recent signups, the owner's account).
+            const applied2 = await db.query(`SELECT 1 FROM schema_migrations WHERE name = '002_grandfather_all_current'`);
+            if (applied2.rows.length === 0) {
+                const r2 = await db.query(`
+                    UPDATE accounts
+                       SET grandfathered_at = NOW(), subscription_status = 'grandfathered'
+                     WHERE grandfathered_at IS NULL
+                `);
+                await db.query(`INSERT INTO schema_migrations (name) VALUES ('002_grandfather_all_current') ON CONFLICT DO NOTHING`);
+                logger.info(`Grandfathered ${r2.rowCount} existing account(s) so only new signups pay (one-time)`);
+            }
             _paymentColumnsExist = true; // prime the lazy cache used elsewhere
             logger.info('Payment/subscription schema ensured');
         } catch (err) {
@@ -898,22 +914,33 @@ app.post('/login', async (req, res) => {
 // Validate session endpoint
 app.post('/session-validate', async (req, res) => {
     const { username } = req.body;
+    // The token must be validated too — otherwise a stale token (e.g. after a
+    // login on another device rotated it) would still pass the logged/timeout
+    // check, send the user into the app, and then 401 on the first protected
+    // request — the "logged in then instantly kicked out" symptom. Accept the
+    // token from the Authorization header (preferred) or the body.
+    const { sessionToken } = getSessionCredentials(req);
     try {
-        // Only the columns needed for the timeout check — avoids hauling the full row.
-        const user = await db.query("SELECT id, logged, logged_date FROM accounts WHERE username = $1", [username]);
+        // Match by email OR username (existing accounts may sign in by either).
+        const user = await db.query(
+            "SELECT id, logged, logged_date, session_token FROM accounts WHERE (username = $1 OR email = $1)",
+            [username]
+        );
         const userRow = user.rows[0];
         if (!userRow) {
             return res.status(401).json({ valid: false, message: 'User not found' });
         }
-        let now = new Date();
+        const now = new Date();
         const lastLogin = new Date(userRow.logged_date);
-        if (userRow.logged && (now - lastLogin < SESSION_TIMEOUT_MS)) {
+        const fresh = userRow.logged && (now - lastLogin < SESSION_TIMEOUT_MS);
+        const tokenMatches = !!sessionToken && userRow.session_token === sessionToken;
+        if (fresh && tokenMatches) {
             return res.status(200).json({ valid: true });
-        } else {
-            // Session expired, unlock
-            await db.query("UPDATE accounts SET logged = $1 WHERE id = $2", [false, userRow.id]);
-            return res.status(200).json({ valid: false, message: 'Session expired' });
         }
+        // Don't clear `logged` here: a token mismatch means THIS token is stale
+        // (another device may hold the live session) — flipping logged=false would
+        // disrupt the valid session. Simply report this session as invalid.
+        return res.status(200).json({ valid: false, message: 'Session expired' });
     } catch (error) {
         console.error(error);
         res.status(500).json({ valid: false, message: 'Internal server error' });
@@ -3049,19 +3076,20 @@ app.delete('/users/:userId', async (req, res) => {
     }
 });
 
-// Helper to extract session credentials from query or body
+// Helper to extract session credentials from the request.
+// The session token is read from the `Authorization: Bearer <token>` header so
+// it never has to travel in the URL (where it would leak into access logs,
+// browser history and the Referer header). Query/body are kept as a backward-
+// compatible fallback so older clients (and POSTs that still carry the token in
+// the body) keep working during/after rollout. Username is not secret, so it
+// may continue to come from the query string or body where routes use it as data.
 function getSessionCredentials(req) {
-    if (req.method === 'GET') {
-        return {
-            username: req.query.username,
-            sessionToken: req.query.sessionToken
-        };
-    } else {
-        return {
-            username: req.body.username,
-            sessionToken: req.body.sessionToken
-        };
-    }
+    const authHeader = req.headers['authorization'] || '';
+    const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+    return {
+        username: req.query.username || req.body?.username,
+        sessionToken: bearerToken || req.query.sessionToken || req.body?.sessionToken
+    };
 }
 
 // Short-lived in-memory cache of validated sessions. Previously every request to
