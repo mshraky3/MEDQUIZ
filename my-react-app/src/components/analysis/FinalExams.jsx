@@ -34,7 +34,8 @@ const FinalExams = ({ userId, username, sessionToken }) => {
         try {
             setLoading(true);
             const response = await axios.get(
-                `${Globals.URL}/final-quiz/sessions/${userId}?page=${page}&limit=${limit}&username=${encodeURIComponent(username)}&sessionToken=${encodeURIComponent(sessionToken)}`
+                `${Globals.URL}/final-quiz/sessions/${userId}?page=${page}&limit=${limit}&username=${encodeURIComponent(username)}`,
+                { headers: { Authorization: `Bearer ${sessionToken}` } }
             );
 
             setSessions(response.data.sessions);
@@ -56,7 +57,8 @@ const FinalExams = ({ userId, username, sessionToken }) => {
 
         try {
             const response = await axios.get(
-                `${Globals.URL}/final-quiz/session/${sessionId}?username=${encodeURIComponent(username)}&sessionToken=${encodeURIComponent(sessionToken)}`
+                `${Globals.URL}/final-quiz/session/${sessionId}?username=${encodeURIComponent(username)}`,
+                { headers: { Authorization: `Bearer ${sessionToken}` } }
             );
 
             setSessionDetails(prev => ({
@@ -77,7 +79,8 @@ const FinalExams = ({ userId, username, sessionToken }) => {
 
         try {
             const response = await axios.get(
-                `${Globals.URL}/final-quiz/session/${sessionId}/questions?username=${encodeURIComponent(username)}&sessionToken=${encodeURIComponent(sessionToken)}`
+                `${Globals.URL}/final-quiz/session/${sessionId}/questions?username=${encodeURIComponent(username)}`,
+                { headers: { Authorization: `Bearer ${sessionToken}` } }
             );
 
             setSessionQuestions(prev => ({
