@@ -17,8 +17,12 @@ const router = express.Router();
 
 // --- Session guard (mirrors app.js requireSession, but uses req.db + sets userId)
 async function requireSession(req, res, next) {
+    // Prefer the session token from the Authorization header (keeps it out of
+    // URLs/logs); fall back to query/body for backward compatibility.
+    const authHeader = req.headers['authorization'] || '';
+    const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
     const username = req.query.username || req.body?.username;
-    const sessionToken = req.query.sessionToken || req.body?.sessionToken;
+    const sessionToken = bearerToken || req.query.sessionToken || req.body?.sessionToken;
     if (!username || !sessionToken) {
         return res.status(401).json({ message: 'Missing session credentials' });
     }

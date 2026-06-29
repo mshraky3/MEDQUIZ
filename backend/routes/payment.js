@@ -20,6 +20,37 @@ import {
 
 const router = express.Router();
 
+/**
+ * Session guard for routes that return a specific user's data, mirroring the
+ * pattern in routes/summaries.js: Bearer token (or query/body fallback) is
+ * checked against accounts.session_token.
+ */
+async function requireOwnSession(req, res, next) {
+    const authHeader = req.headers['authorization'] || '';
+    const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+    const username = req.query.username || req.body?.username;
+    const sessionToken = bearerToken || req.query.sessionToken || req.body?.sessionToken;
+    if (!username || !sessionToken) {
+        return res.status(401).json({ success: false, message: 'Missing session credentials' });
+    }
+    try {
+        const r = await req.db.query(
+            'SELECT id, session_token FROM accounts WHERE username = $1',
+            [username]
+        );
+        if (!r.rows.length || r.rows[0].session_token !== sessionToken) {
+            return res.status(401).json({ success: false, message: 'Session invalid or expired' });
+        }
+        if (String(r.rows[0].id) !== String(req.params.userId)) {
+            return res.status(403).json({ success: false, message: 'Cannot view another account\'s subscription status.' });
+        }
+        next();
+    } catch (err) {
+        console.error('[payment/status] session check failed:', err);
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+}
+
 const DISABLED_RESPONSE = {
     success: false,
     enabled: false,
@@ -99,7 +130,7 @@ router.post('/webhook', requirePaymentEnabled, async (req, res) => {
  * GET /api/payment/status/:userId
  * Current subscription state for a user.
  */
-router.get('/status/:userId', requirePaymentEnabled, async (req, res) => {
+router.get('/status/:userId', requirePaymentEnabled, requireOwnSession, async (req, res) => {
     try {
         const { userId } = req.params;
         const r = await req.db.query(
