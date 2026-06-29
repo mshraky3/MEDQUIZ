@@ -5,6 +5,7 @@ import './Login.css';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Globals from '../../global.js';
 import { UserContext } from '../../UserContext';
+import { safeGetItem } from '../../utils/safeStorage.js';
 
 const Login = () => {
   const { setUser, user, sessionToken } = useContext(UserContext);
@@ -56,23 +57,44 @@ const Login = () => {
     }
   }, [location.state, navigate, location.pathname]);
 
-  // Auto-login if session is valid
+  // Redirect away from /login if a session ALREADY exists when the page loads.
+  // Runs once on mount and reads the stored session directly (not React context)
+  // on purpose: a login via the form below is handled by handleSubmit, so this
+  // must NOT depend on `user`/`sessionToken` — otherwise it re-fires the instant
+  // setUser() runs after a fresh login, races handleSubmit's own routing, skips
+  // the terms popup, and can bounce the user around ("kicked out after login").
   useEffect(() => {
     if (window.location.search.includes('session=expired')) {
       setSessionExpired(true);
     }
-    if (user && sessionToken) {
-      axios.post(`${Globals.URL}/session-validate`, { username: user.username })
+    let stored = null;
+    try { stored = JSON.parse(safeGetItem('user') || 'null'); } catch (_) { stored = null; }
+    const storedToken = safeGetItem('sessionToken');
+    if (stored && storedToken && stored.username) {
+      // Validate the token server-side (the endpoint now checks the token, not
+      // just the logged flag) so a stale session never pulls us into the app.
+      axios.post(
+        `${Globals.URL}/session-validate`,
+        { username: stored.username },
+        { headers: { Authorization: `Bearer ${storedToken}` } }
+      )
         .then(res => {
           if (res.data.valid) {
-            navigate('/quizs', { state: { id: user.id } });
+            // Respect the subscription gate: unpaid/expired accounts belong on
+            // the paywall, everyone else on the quizzes dashboard.
+            if (stored.accessAllowed === false) {
+              navigate('/subscribe', { replace: true });
+            } else {
+              navigate('/quizs', { replace: true, state: { id: stored.id } });
+            }
           }
         })
         .catch(() => {
           // Network error or server unavailable — stay on login page
         });
     }
-  }, [user, sessionToken, navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Autofill username from context if user is known (never autofill password for security)
   useEffect(() => {
