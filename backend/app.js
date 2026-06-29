@@ -13,6 +13,7 @@ import { checkSubscriptionAccess, isPaymentEnforcementEnabled } from './services
 import summariesRouter from './routes/summaries.js';
 import summaryContent from './content/summaryHtml/index.js';
 import { notifyBackendError } from './services/errorNotificationService.js';
+import { sendWelcomeEmail } from './services/userEmailService.js';
 
 dotenv.config();
 
@@ -3998,6 +3999,19 @@ app.post('/api/signup/free', async (req, res) => {
             );
 
             const newUserId = accountResult.rows[0].id;
+
+            // Send the welcome email immediately (don't wait up to a day for the
+            // daily cron). Best-effort: never fail signup if the email errors, and
+            // mark it sent so the cron doesn't send a duplicate later.
+            try {
+                await sendWelcomeEmail(lowerEmail, lowerEmail);
+                await client.query(
+                    'UPDATE accounts SET welcome_email_sent = TRUE, welcome_email_sent_at = NOW() WHERE id = $1',
+                    [newUserId]
+                );
+            } catch (welcomeErr) {
+                console.error('Failed to send welcome email at signup:', welcomeErr);
+            }
 
             // Send email notification to admin
             try {
