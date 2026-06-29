@@ -410,7 +410,7 @@ const QUIZS = () => {
         } catch (err) {
             if (err.response && err.response.status === 401) {
                 setUser(null, null);
-                localStorage.clear();
+                localStorage.removeItem('user'); localStorage.removeItem('sessionToken');
                 window.location.href = '/login?session=expired';
                 return;
             }
@@ -427,7 +427,7 @@ const QUIZS = () => {
         } catch (err) {
             if (err.response && err.response.status === 401) {
                 setUser(null, null);
-                localStorage.clear();
+                localStorage.removeItem('user'); localStorage.removeItem('sessionToken');
                 window.location.href = '/login?session=expired';
                 return;
             }
