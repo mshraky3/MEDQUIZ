@@ -404,9 +404,9 @@ const QUIZS = () => {
     // Helper for protected GET
     const protectedGet = async (url, config = {}) => {
         if (!user || !sessionToken) throw new Error('Not authenticated');
-        const urlWithCreds = url + (url.includes('?') ? '&' : '?') + `username=${encodeURIComponent(user.username)}&sessionToken=${encodeURIComponent(sessionToken)}`;
+        const urlWithUser = url + (url.includes('?') ? '&' : '?') + `username=${encodeURIComponent(user.username)}`;
         try {
-            return await axios.get(urlWithCreds, config);
+            return await axios.get(urlWithUser, { ...config, headers: { ...(config.headers || {}), Authorization: `Bearer ${sessionToken}` } });
         } catch (err) {
             if (err.response && err.response.status === 401) {
                 setUser(null, null);
@@ -421,9 +421,9 @@ const QUIZS = () => {
     // Helper for protected POST
     const protectedPost = async (url, data, config = {}) => {
         if (!user || !sessionToken) throw new Error('Not authenticated');
-        const urlWithCreds = url + (url.includes('?') ? '&' : '?') + `username=${encodeURIComponent(user.username)}&sessionToken=${encodeURIComponent(sessionToken)}`;
+        const urlWithUser = url + (url.includes('?') ? '&' : '?') + `username=${encodeURIComponent(user.username)}`;
         try {
-            return await axios.post(urlWithCreds, data, config);
+            return await axios.post(urlWithUser, data, { ...config, headers: { ...(config.headers || {}), Authorization: `Bearer ${sessionToken}` } });
         } catch (err) {
             if (err.response && err.response.status === 401) {
                 setUser(null, null);

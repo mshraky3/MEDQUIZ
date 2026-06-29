@@ -250,6 +250,7 @@ const Privacy = () => {
                         <li><strong>Email | البريد الإلكتروني:</strong> alshraky3@gmail.com</li>
                         <li><strong>WhatsApp | واتساب:</strong> 0582619119</li>
                         <li><strong>Location | الموقع:</strong> Saudi Arabia | المملكة العربية السعودية</li>
+                        <li><strong>Legal Entity | الكيان القانوني:</strong> شركة دار الخبرة التجارية — السجل التجاري: 7040567922</li>
                     </ul>
                     <p>
                         <Link to="/contact">Contact Us Page | صفحة الاتصال</Link>

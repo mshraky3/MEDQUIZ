@@ -88,7 +88,7 @@
   top: -120px;
   inset-inline-start: -100px;
   background: radial-gradient(circle, rgba(59, 130, 246, 0.55), transparent 70%);
-  animation: orbDrift 18s ease-in-out infinite;
+  animation: orbDrift 18s ease-in-out 1 forwards;
 }
 
 .landing-body::after {
@@ -97,7 +97,7 @@
   top: 32%;
   inset-inline-end: -160px;
   background: radial-gradient(circle, rgba(124, 58, 237, 0.34), transparent 70%);
-  animation: orbDrift 22s ease-in-out infinite reverse;
+  animation: orbDrift 22s ease-in-out 1 reverse forwards;
 }
 
 .landing-shell {
@@ -258,24 +258,30 @@
   display: block;
 }
 
+/* Decorative hero animations play as a finite entrance flourish, then settle
+   into a stable resting state. Perpetual (infinite) animations — especially the
+   non-composited ECG stroke draw — keep the main thread busy forever, which
+   prevents Lighthouse from ever recording an LCP (reported as NO_LCP) and
+   cascades into TBT / long-main-thread-task errors. Finite animations let the
+   page reach idle so the metrics can be measured. */
 .ha-float {
-  animation: haFloat 6s ease-in-out infinite;
+  animation: haFloat 6s ease-in-out 2;
 }
 
 .ha-float-slow {
-  animation: haFloat 9.5s ease-in-out infinite;
+  animation: haFloat 9.5s ease-in-out 1;
 }
 
 .ha-spin {
   transform-box: fill-box;
   transform-origin: center;
-  animation: haSpin 48s linear infinite;
+  animation: haSpin 12s linear 1 forwards;
 }
 
 .ha-ecg {
   stroke-dasharray: 2600;
   stroke-dashoffset: 2600;
-  animation: haDraw 4s ease-in-out infinite;
+  animation: haDraw 3.5s ease-in-out forwards;
 }
 
 @keyframes haFloat {
@@ -488,7 +494,7 @@
   box-shadow: 0 10px 22px rgba(37, 99, 235, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.6);
   color: var(--accent-strong);
   margin-bottom: 16px;
-  animation: floatSoft 3.8s ease-in-out infinite;
+  animation: floatSoft 3.8s ease-in-out 3;
 }
 
 /* per-card icon tints + matching top accent for a colourful, cohesive grid */
