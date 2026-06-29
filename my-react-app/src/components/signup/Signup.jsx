@@ -5,6 +5,7 @@ import axios from 'axios';
 import { track } from '@vercel/analytics';
 import Globals from '../../global.js';
 import Spinner from '../common/Spinner.jsx';
+import '../login/Login.css';
 import './Signup.css';
 
 const Signup = () => {
