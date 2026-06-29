@@ -25,19 +25,23 @@ apiClient.interceptors.request.use(
             const sessionToken = localStorage.getItem('sessionToken') || user.sessionToken;
 
             if (user.username && sessionToken) {
-                // Add session credentials to query params for GET requests
+                // Session token goes in the Authorization header so it never
+                // appears in the URL (which would leak into logs / history /
+                // Referer). Username is not secret and is used as request data by
+                // some routes, so it stays in the query params / body.
+                config.headers = {
+                    ...config.headers,
+                    Authorization: `Bearer ${sessionToken}`
+                };
                 if (config.method === 'get') {
                     config.params = {
                         ...config.params,
-                        username: user.username,
-                        sessionToken: sessionToken
+                        username: user.username
                     };
                 } else {
-                    // Add to body for other requests
                     config.data = {
                         ...config.data,
-                        username: user.username,
-                        sessionToken: sessionToken
+                        username: user.username
                     };
                 }
             }
