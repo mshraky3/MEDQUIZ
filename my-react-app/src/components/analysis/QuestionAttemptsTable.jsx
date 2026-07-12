@@ -31,7 +31,7 @@ const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz, isTria
         return map;
     }, [questions]);
 
-    const handleSeeMore = useCallback(async (attemptId, questionText, selectedAnswer, correctAnswer, event) => {
+    const handleSeeMore = useCallback(async (attemptId, questionText, selectedAnswer, correctAnswer) => {
         // Flip the card immediately
         setFlippedCards((prev) => ({ ...prev, [attemptId]: true }));
         setLoadingButtons((prev) => ({ ...prev, [attemptId]: true }));

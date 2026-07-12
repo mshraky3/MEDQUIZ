@@ -27,6 +27,13 @@ const TOOLS = [
 ];
 const COLORS = ['#2563eb', '#ef4444', '#16a34a', '#f59e0b', '#0f172a'];
 
+// Static catalog totals shown in the hub header (specialties · topics · questions).
+const TOTAL_TOPICS = SECTIONS.reduce((n, s) => n + s.subtopics.length, 0);
+const TOTAL_QUESTIONS = SECTIONS.reduce(
+    (n, s) => n + s.subtopics.reduce((m, t) => m + (t.questions?.length || 0), 0),
+    0,
+);
+
 // Each section/subtopic carries an Arabic `title` + English `title_en`. When the
 // title is already English (e.g. OB/GYN), keep it as the heading and use title_en
 // as a descriptive subtitle; otherwise show title_en as the (single) English name.
@@ -42,11 +49,15 @@ const SummariesPage = () => {
     const { slug } = useParams();
     const { user } = useContext(UserContext);
     const [activeSpecialty, setActiveSpecialty] = useState(SECTIONS[0]?.id || null);
+    const [query, setQuery] = useState('');        // topic search filter
     const [openSub, setOpenSub] = useState(null); // { section, subtopic }
     const [tab, setTab] = useState('summary');     // 'summary' | 'questions'
     const [tool, setTool] = useState('move');
     const [color, setColor] = useState(COLORS[0]);
     const [isFs, setIsFs] = useState(false);
+    // Study (annotation) toolbar starts collapsed so it never obstructs reading;
+    // the user expands it only when they want to draw/highlight.
+    const [toolsOpen, setToolsOpen] = useState(false);
 
     // Manual completion tracking — a map of { [subtopicId]: true }, persisted per
     // user in localStorage so finished topics stay marked across sessions/devices
@@ -74,6 +85,20 @@ const SummariesPage = () => {
         });
     };
     const doneCount = (section) => section.subtopics.reduce((n, t) => n + (done[t.id] ? 1 : 0), 0);
+    const globalDone = SECTIONS.reduce((n, s) => n + doneCount(s), 0);
+    const globalPct = TOTAL_TOPICS ? Math.round((globalDone / TOTAL_TOPICS) * 100) : 0;
+
+    // Topic search — matches a subtopic on its Arabic/English title or its parent
+    // specialty name. When searching, every specialty with a hit is force-expanded
+    // and only matching sub-cards render.
+    const q = query.trim().toLowerCase();
+    const searching = q.length > 0;
+    const subMatches = (section, t) =>
+        !searching ||
+        [t.title, t.title_en, section.title, section.title_en].some(
+            (v) => (v || '').toLowerCase().includes(q),
+        );
+    const anyMatch = SECTIONS.some((s) => s.subtopics.some((t) => subMatches(s, t)));
 
     const panelRef = useRef(null);
     const bodyRef = useRef(null);
@@ -83,7 +108,10 @@ const SummariesPage = () => {
         setOpenSub({ section, subtopic });
         setTab('summary');
         setTool('move');
+        setToolsOpen(false);
     };
+    // Collapsing the toolbar also returns to browse mode so the page scrolls/clicks.
+    const closeTools = () => { setToolsOpen(false); setTool('move'); };
     const closePanel = () => {
         if (document.fullscreenElement) document.exitFullscreen?.();
         setOpenSub(null);
@@ -120,6 +148,39 @@ const SummariesPage = () => {
         return () => document.removeEventListener('fullscreenchange', onChange);
     }, []);
 
+    // The summaries are table-dense; on narrow screens wide tables scroll
+    // horizontally. Wrap each in a scroll container (with a non-scrolling outer
+    // anchor for the edge shadow) and toggle `.can-scroll` while more is off-screen,
+    // so the horizontal scroll is discoverable. Re-runs when the summary re-injects.
+    useEffect(() => {
+        if (!openSub || tab !== 'summary') return undefined;
+        const root = bodyRef.current;
+        if (!root) return undefined;
+        const cleanups = [];
+        root.querySelectorAll('.sub-summary table').forEach((table) => {
+            if (table.closest('.table-scroll')) return;
+            const outer = document.createElement('div');
+            outer.className = 'table-scroll';
+            const inner = document.createElement('div');
+            inner.className = 'table-scroll-inner';
+            table.parentNode.insertBefore(outer, table);
+            inner.appendChild(table);
+            outer.appendChild(inner);
+            const update = () => {
+                const more = inner.scrollWidth - inner.clientWidth - inner.scrollLeft > 1;
+                outer.classList.toggle('can-scroll', more);
+            };
+            update();
+            inner.addEventListener('scroll', update, { passive: true });
+            window.addEventListener('resize', update);
+            cleanups.push(() => {
+                inner.removeEventListener('scroll', update);
+                window.removeEventListener('resize', update);
+            });
+        });
+        return () => cleanups.forEach((fn) => fn());
+    }, [openSub, tab]);
+
     const toggleFs = () => {
         if (!document.fullscreenElement) panelRef.current?.requestFullscreen?.();
         else document.exitFullscreen?.();
@@ -137,11 +198,49 @@ const SummariesPage = () => {
             <header className="hub-head">
                 <h1><Icon name="book-open" size={28} className="hub-head-icon" /> Summaries</h1>
                 <p>Pick a specialty to browse its topics, then open any topic full-screen to focus — with pen &amp; highlighter tools for active study.</p>
+
+                <div className="hub-stats">
+                    <span className="hub-stat"><Icon name="stethoscope" size={15} /> <b>{SECTIONS.length}</b> specialties</span>
+                    <span className="hub-stat"><Icon name="folder" size={15} /> <b>{TOTAL_TOPICS}</b> topics</span>
+                    <span className="hub-stat"><Icon name="target" size={15} /> <b>{TOTAL_QUESTIONS}</b> practice questions</span>
+                </div>
+
+                {/* overall study progress across every specialty */}
+                <div className="hub-progress" role="progressbar" aria-valuenow={globalPct} aria-valuemin={0} aria-valuemax={100}>
+                    <div className="hub-progress-bar">
+                        <div className="hub-progress-fill" style={{ width: `${globalPct}%` }} />
+                    </div>
+                    <span className="hub-progress-label">
+                        <Icon name="check" size={13} /> {globalDone}/{TOTAL_TOPICS} topics done · {globalPct}%
+                    </span>
+                </div>
+
+                {/* topic search */}
+                <div className="hub-search">
+                    <Icon name="search" size={18} className="hub-search-icon" />
+                    <input
+                        type="text"
+                        className="hub-search-input"
+                        placeholder="Search topics — e.g. asthma, DKA, breast cancer…"
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        aria-label="Search topics"
+                    />
+                    {query && (
+                        <button type="button" className="hub-search-clear" onClick={() => setQuery('')} aria-label="Clear search">
+                            <Icon name="x" size={16} />
+                        </button>
+                    )}
+                </div>
             </header>
 
             <div className="spec-cards">
                 {SECTIONS.map((s) => {
-                    const isActive = activeSpecialty === s.id;
+                    // While searching, only show specialties that contain a match and
+                    // render just the matching sub-cards; otherwise honor the accordion.
+                    const shownSubs = s.subtopics.filter((t) => subMatches(s, t));
+                    if (searching && shownSubs.length === 0) return null;
+                    const isActive = searching ? true : activeSpecialty === s.id;
                     const { primary, secondary } = enLabel(s);
                     const nDone = doneCount(s);
                     const nTotal = s.subtopics.length;
@@ -163,7 +262,9 @@ const SummariesPage = () => {
                                     <span className="spec-card-title">{primary}</span>
                                     {secondary && <span className="spec-card-en">{secondary}</span>}
                                 </span>
-                                {nDone > 0 ? (
+                                {searching ? (
+                                    <span className="spec-card-count">{shownSubs.length} match{shownSubs.length !== 1 ? 'es' : ''}</span>
+                                ) : nDone > 0 ? (
                                     <span className={`spec-card-progress ${allDone ? 'all-done' : ''}`}>
                                         <Icon name="check" size={13} /> {nDone}/{nTotal} done
                                     </span>
@@ -175,7 +276,8 @@ const SummariesPage = () => {
 
                             <div className={`subtopic-wrap ${isActive ? 'open' : ''}`}>
                                 <div className="subtopic-grid">
-                                    {s.subtopics.map((t, i) => {
+                                    {shownSubs.map((t) => {
+                                        const i = s.subtopics.indexOf(t);
                                         const tl = enLabel(t);
                                         const completed = isDone(t.id);
                                         return (
@@ -204,6 +306,14 @@ const SummariesPage = () => {
                         </div>
                     );
                 })}
+
+                {searching && !anyMatch && (
+                    <div className="hub-empty">
+                        <Icon name="search" size={30} />
+                        <p>No topics match “{query.trim()}”.</p>
+                        <button type="button" className="hub-empty-clear" onClick={() => setQuery('')}>Clear search</button>
+                    </div>
+                )}
             </div>
 
             {/* Level 3 — full-screen focused study modal */}
@@ -284,41 +394,59 @@ const SummariesPage = () => {
                         />
                     </div>
 
-                    {/* floating study toolbar */}
-                    <div className="summary-fab" dir="ltr">
-                        <div className="stb-group">
-                            {TOOLS.map((t) => (
-                                <button
-                                    key={t.id}
-                                    type="button"
-                                    className={`stb-btn ${tool === t.id ? 'on' : ''}`}
-                                    title={t.label}
-                                    aria-label={t.label}
-                                    aria-pressed={tool === t.id}
-                                    onClick={() => setTool(t.id)}
-                                ><Icon name={t.icon} size={18} /></button>
-                            ))}
+                    {/* floating study toolbar — collapsed to a compact trigger so it
+                        never obstructs reading; expands on demand for active annotation */}
+                    {!toolsOpen ? (
+                        <button
+                            type="button"
+                            className="summary-fab-toggle"
+                            onClick={() => setToolsOpen(true)}
+                            aria-label="Open study tools"
+                            aria-expanded="false"
+                            title="Study tools — pen, highlighter, full screen"
+                        >
+                            <Icon name="pen" size={17} />
+                            <span className="label">Study tools</span>
+                        </button>
+                    ) : (
+                        <div className="summary-fab" dir="ltr" role="toolbar" aria-label="Study tools">
+                            <div className="stb-group">
+                                {TOOLS.map((t) => (
+                                    <button
+                                        key={t.id}
+                                        type="button"
+                                        className={`stb-btn ${tool === t.id ? 'on' : ''}`}
+                                        title={t.label}
+                                        aria-label={t.label}
+                                        aria-pressed={tool === t.id}
+                                        onClick={() => setTool(t.id)}
+                                    ><Icon name={t.icon} size={18} /></button>
+                                ))}
+                            </div>
+                            <div className="stb-sep" />
+                            <div className="stb-group">
+                                {COLORS.map((c) => (
+                                    <button
+                                        key={c}
+                                        type="button"
+                                        className={`stb-color ${color === c ? 'on' : ''}`}
+                                        style={{ background: c }}
+                                        aria-label={`Color ${c}`}
+                                        aria-pressed={color === c}
+                                        onClick={() => pickColor(c)}
+                                    />
+                                ))}
+                            </div>
+                            <div className="stb-sep" />
+                            <div className="stb-group">
+                                <button type="button" className="stb-btn" title="Undo" aria-label="Undo" onClick={() => annotationRef.current?.undo()}><Icon name="undo" size={18} /></button>
+                                <button type="button" className="stb-btn" title="Clear all" aria-label="Clear all" onClick={() => annotationRef.current?.clear()}><Icon name="trash" size={18} /></button>
+                                <button type="button" className="stb-btn" title={isFs ? 'Exit full screen' : 'Full screen'} aria-label={isFs ? 'Exit full screen' : 'Full screen'} onClick={toggleFs}><Icon name="maximize" size={18} /></button>
+                            </div>
+                            <div className="stb-sep" />
+                            <button type="button" className="stb-btn stb-collapse" title="Hide tools" aria-label="Hide study tools" onClick={closeTools}><Icon name="x" size={18} /></button>
                         </div>
-                        <div className="stb-sep" />
-                        <div className="stb-group">
-                            {COLORS.map((c) => (
-                                <button
-                                    key={c}
-                                    type="button"
-                                    className={`stb-color ${color === c ? 'on' : ''}`}
-                                    style={{ background: c }}
-                                    aria-label={`Color ${c}`}
-                                    onClick={() => pickColor(c)}
-                                />
-                            ))}
-                        </div>
-                        <div className="stb-sep" />
-                        <div className="stb-group">
-                            <button type="button" className="stb-btn" title="Undo" aria-label="Undo" onClick={() => annotationRef.current?.undo()}><Icon name="undo" size={18} /></button>
-                            <button type="button" className="stb-btn" title="Clear all" aria-label="Clear all" onClick={() => annotationRef.current?.clear()}><Icon name="trash" size={18} /></button>
-                            <button type="button" className="stb-btn" title={isFs ? 'Exit full screen' : 'Full screen'} aria-label="Full screen" onClick={toggleFs}><Icon name="maximize" size={18} /></button>
-                        </div>
-                    </div>
+                    )}
                 </div>
             )}
         </div>

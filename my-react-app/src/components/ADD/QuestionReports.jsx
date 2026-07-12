@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Icon from '../common/Icon.jsx';
-import axios from 'axios';
+import axios from '../../utils/adminApi.js';
 import AdminNavbar from './AdminNavbar.jsx';
 import Globals from '../../global.js';
 

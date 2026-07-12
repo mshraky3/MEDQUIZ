@@ -687,7 +687,21 @@ const obgyn = {
                     </tbody>
                 </table>
                 <div class="sum-callout"><b>Cystocele workup</b>: measure post-void residual (PVR) to rule out bladder obstruction.</div>
-            `
+            `,
+            questions: [
+                {
+                    q: 'A 52-year-old multiparous woman leaks urine when she coughs, sneezes or lifts. There is no urgency and post-void residual is normal. After ruling out UTI, what is the best first-line management?',
+                    options: ['Pelvic floor (Kegel) exercises', 'Oxybutynin', 'Tension-free vaginal tape (TVT) sling', 'Indwelling catheter'],
+                    answer: 0,
+                    explanation: 'Leakage with raised intra-abdominal pressure is stress incontinence. First-line management is conservative — pelvic floor muscle training (Kegels). A mid-urethral sling (TVT) is the definitive surgical option if conservative measures fail. Anticholinergics (oxybutynin) treat urge incontinence.'
+                },
+                {
+                    q: 'A woman reports urgency with involuntary leakage; urodynamics show spontaneous detrusor contractions during bladder filling. Which medication class is first-line?',
+                    options: ['Anticholinergic (e.g., oxybutynin)', 'Alpha-blocker', 'Topical estrogen alone', 'Loop diuretic'],
+                    answer: 0,
+                    explanation: 'Urge incontinence (overactive bladder) is due to spontaneous detrusor contractions. After bladder training, anticholinergics such as oxybutynin (or a β3-agonist like mirabegron) are first-line. Always exclude a UTI first with urinalysis and culture.'
+                }
+            ]
         },
         {
             id: 'obgyn-infertility',

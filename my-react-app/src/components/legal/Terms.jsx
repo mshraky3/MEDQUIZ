@@ -109,7 +109,7 @@ const Terms = () => {
                         The Service operates on a paid annual subscription:
                     </p>
                     <ul>
-                        <li>New accounts are billed an annual subscription of <strong>100 SAR per year</strong>.</li>
+                        <li>New accounts are billed an annual subscription of <strong>99 SAR per year</strong>.</li>
                         <li>Users who registered before the paid rollout are grandfathered and retain free access.</li>
                         <li>Accounts created by administrators are exempt from subscription charges.</li>
                         <li>No free trials are offered.</li>

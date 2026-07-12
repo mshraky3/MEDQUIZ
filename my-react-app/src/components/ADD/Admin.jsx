@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Icon from '../common/Icon.jsx';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../../utils/adminApi.js';
 import './Admin.css';
 import AdminNavbar from './AdminNavbar.jsx';
 import Globals from '../../global.js';
@@ -329,12 +329,6 @@ const Admin = () => {
     if (!dateStr) return 'N/A';
     const date = new Date(dateStr);
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  };
-
-  const formatTime = (dateStr) => {
-    if (!dateStr) return 'N/A';
-    const date = new Date(dateStr);
-    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
   };
 
   const formatTimeAgo = (dateStr) => {

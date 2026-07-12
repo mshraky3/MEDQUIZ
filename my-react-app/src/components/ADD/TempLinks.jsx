@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from "react";
 import Icon from '../common/Icon.jsx';
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axios from "../../utils/adminApi.js";
 import "./add.css";
 import "./Admin.css";
 import AdminNavbar from "./AdminNavbar.jsx";
 
 const TempLinks = (props) => {
-    const navigate = useNavigate();
     const [links, setLinks] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");

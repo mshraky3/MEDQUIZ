@@ -6,10 +6,8 @@ const Result = ({
   totalQuestions,
   accuracy,
   duration,
-  answers,
   isFinalQuiz,
   onRetry,
-  onBackToQuizs,
   userId
 }) => {
   const navigate = useNavigate();

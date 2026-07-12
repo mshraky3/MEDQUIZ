@@ -732,11 +732,39 @@
 .sub-summary th + th, .sub-summary td + td { border-inline-start: 1px solid #d4deee; }
 .sub-summary tbody tr:nth-child(even) td { background: rgba(15, 23, 42, 0.04); }
 
-/* On phones, let wide medical tables scroll horizontally instead of overflowing.
-   display:block turns the table into its own scroll container; the rows still
-   form an anonymous table inside, so columns stay aligned. */
+/* Wide medical tables scroll horizontally on narrow screens. A JS effect wraps
+   each <table> in `.table-scroll > .table-scroll-inner`; the inner div is the
+   scroll container and the non-scrolling outer anchors an edge shadow so the
+   horizontal scroll is discoverable. `.can-scroll` is toggled while more of the
+   table is off-screen. The wrappers are inert on desktop (no overflow, no shadow). */
+.sub-summary .table-scroll { position: relative; margin: 16px 0; }
+.sub-summary .table-scroll > .table-scroll-inner > table { margin: 0; }
 @media (max-width: 720px) {
-    .sub-summary table {
+    .sub-summary .table-scroll-inner {
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+    }
+    .sub-summary .table-scroll-inner > table {
+        display: table;
+        width: max-content;
+        min-width: 100%;
+        white-space: nowrap;
+    }
+    .sub-summary .table-scroll::after {
+        content: '';
+        position: absolute;
+        top: 0; bottom: 0; inset-inline-end: 0;
+        width: 30px;
+        background: linear-gradient(to left, rgba(37, 99, 235, 0.20), transparent);
+        border-radius: 0 12px 12px 0;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+    .sub-summary .table-scroll.can-scroll::after { opacity: 1; }
+    /* fallback: any table not yet wrapped by JS still scrolls */
+    .sub-summary > table {
         display: block;
         overflow-x: auto;
         overflow-y: hidden;
@@ -799,7 +827,33 @@
     max-width: 94vw; background: rgba(255, 255, 255, 0.9); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
     border: 1px solid #d4deee; border-radius: 16px; padding: 8px 12px;
     box-shadow: 0 18px 44px rgba(37, 99, 235, 0.16); z-index: 60;
+    animation: fab-pop 0.18s ease;
 }
+@keyframes fab-pop { from { opacity: 0; transform: translateX(-50%) translateY(8px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
+/* collapsed trigger — a compact pill that opens the study toolbar on demand */
+.summary-fab-toggle {
+    position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+    display: inline-flex; align-items: center; gap: 8px;
+    height: 44px; padding: 0 18px;
+    background: rgba(255, 255, 255, 0.92); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+    border: 1px solid #d4deee; border-radius: 999px;
+    color: var(--accent); font-family: inherit; font-weight: 800; font-size: 0.85rem;
+    box-shadow: 0 12px 30px rgba(37, 99, 235, 0.18);
+    cursor: pointer; z-index: 60;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.summary-fab-toggle:hover { transform: translateX(-50%) translateY(-2px); box-shadow: 0 16px 36px rgba(37, 99, 235, 0.26); border-color: var(--accent); }
+.summary-fab-toggle:active { transform: translateX(-50%) scale(0.97); }
+.summary-fab-toggle .label { letter-spacing: 0.2px; }
+
+/* collapse (hide) button distinguishes itself on hover */
+.stb-collapse:hover:not(:disabled) { border-color: #f43f5e; color: #dc2626; }
+
+/* keyboard focus rings for every study control (a11y) */
+.summary-fab-toggle:focus-visible,
+.stb-btn:focus-visible,
+.stb-color:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* desktop: TOC becomes a sticky in-flow card so the layout stays centred */
 @media (min-width: 1024px) {
@@ -871,6 +925,71 @@
 }
 .hub-head-icon { color: #2563eb; flex: 0 0 auto; }
 .hub-head p { color: #475569; font-size: 0.95rem; margin: 0; line-height: 1.8; max-width: 660px; }
+
+/* header catalog stats */
+.hub-stats { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 16px; }
+.hub-stat {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-size: 0.82rem; font-weight: 700; color: #475569;
+}
+.hub-stat b { color: #0f1e3d; font-size: 0.95rem; font-weight: 900; }
+.hub-stat svg { color: #2563eb; }
+
+/* overall progress */
+.hub-progress { display: flex; align-items: center; gap: 14px; margin-top: 16px; max-width: 660px; }
+.hub-progress-bar { flex: 1; height: 9px; background: #e2e8f5; border-radius: 999px; overflow: hidden; }
+.hub-progress-fill {
+    height: 100%; border-radius: 999px;
+    background: linear-gradient(90deg, #16a34a, #22c55e);
+    transition: width 0.35s ease;
+}
+.hub-progress-label {
+    flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px;
+    font-size: 0.76rem; font-weight: 800; color: #15803d; white-space: nowrap;
+}
+
+/* topic search */
+.hub-search {
+    position: relative; display: flex; align-items: center;
+    margin-top: 20px; max-width: 520px;
+}
+.hub-search-icon { position: absolute; inset-inline-start: 14px; color: #94a3b8; pointer-events: none; }
+.hub-search-input {
+    width: 100%; box-sizing: border-box;
+    padding: 12px 42px 12px 44px;
+    background: #ffffff; border: 1px solid #d4deee; border-radius: 12px;
+    color: #0f1e3d; font-family: inherit; font-size: 0.95rem;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.hub-search-input::placeholder { color: #94a3b8; }
+.hub-search-input:focus {
+    outline: none; border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+.hub-search-clear {
+    position: absolute; inset-inline-end: 10px;
+    width: 26px; height: 26px; display: grid; place-items: center;
+    border: none; border-radius: 50%; cursor: pointer;
+    background: rgba(15, 23, 42, 0.06); color: #475569; font-family: inherit;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+.hub-search-clear:hover { background: rgba(220, 38, 38, 0.12); color: #dc2626; }
+
+/* no-results empty state */
+.hub-empty {
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    padding: 60px 20px; text-align: center; color: #64748b;
+}
+.hub-empty svg { color: #94a3b8; }
+.hub-empty p { margin: 0; font-size: 1rem; font-weight: 600; color: #475569; }
+.hub-empty-clear {
+    border: 1px solid #d4deee; background: #fff; color: #2563eb;
+    border-radius: 10px; padding: 9px 18px; font-family: inherit;
+    font-weight: 800; font-size: 0.88rem; cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+.hub-empty-clear:hover { border-color: #2563eb; background: rgba(37, 99, 235, 0.06); }
 
 /* ---- Level 1: specialty cards (accordion) ---- */
 .spec-cards { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }

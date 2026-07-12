@@ -8,7 +8,7 @@ import { UserContext } from '../../UserContext';
 import { safeGetItem } from '../../utils/safeStorage.js';
 
 const Login = () => {
-  const { setUser, user, sessionToken } = useContext(UserContext);
+  const { setUser, user } = useContext(UserContext);
   const [form, setForm] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
   const [showPopup, setShowPopup] = useState(false);
@@ -283,11 +283,6 @@ const Login = () => {
       setLoading(false);
       setError(copy.acceptTermsError);
     }
-  };
-
-  const handleContactClick = (e) => {
-    e.preventDefault();
-    navigate('/contact');
   };
 
   const handleClosePopup = () => {

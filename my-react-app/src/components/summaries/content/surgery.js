@@ -116,6 +116,18 @@ const surgery = {
                     </tbody>
                 </table>
                 <div class="sum-callout"><b>Note</b>: upper GI endoscopy is the most important step to guide the type of surgery.</div>
+
+                <h3>Post-Operative Complications</h3>
+                <table>
+                    <thead><tr><th>Timing</th><th>Complication</th><th>Key clue / management</th></tr></thead>
+                    <tbody>
+                        <tr><td>Early</td><td>Anastomotic/staple-line leak</td><td>Tachycardia + fever + abdominal pain on POD 1–5; tachycardia is the earliest sign → CT/contrast study, re-operation or drainage</td></tr>
+                        <tr><td>Early</td><td>VTE (PE)</td><td>Leading cause of post-op death — VTE prophylaxis, early mobilization</td></tr>
+                        <tr><td>Late</td><td>Dumping syndrome</td><td>Post-prandial cramps, diarrhea, flushing, palpitations after high-sugar meals → dietary modification (small, low-simple-sugar meals)</td></tr>
+                        <tr><td>Late</td><td>Nutritional deficiencies</td><td><b>Iron, B12, folate, calcium, vitamin D, thiamine (B1)</b> — lifelong supplementation and monitoring; thiamine deficiency → Wernicke encephalopathy</td></tr>
+                        <tr><td>Late</td><td>Internal hernia / marginal ulcer / gallstones</td><td>Bypass anatomy predisposes to internal hernia (obstruction) and marginal ulcers; rapid weight loss → gallstones</td></tr>
+                    </tbody>
+                </table>
             `,
             questions: [
                 {
@@ -1007,24 +1019,49 @@ const surgery = {
         {
             id: 'surg-gib',
             title: '17 — Upper & Lower GI Bleeding',
-            title_en: 'UGIB Causes & Management · Hemobilia · Fundal Varices',
+            title_en: 'UGIB & LGIB Causes & Management · Hemobilia · Fundal Varices',
             summaryHtml: `
+                <h3>Upper vs Lower GI Bleeding</h3>
+                <table>
+                    <thead><tr><th>Feature</th><th>Upper GI bleed (proximal to ligament of Treitz)</th><th>Lower GI bleed (distal to ligament of Treitz)</th></tr></thead>
+                    <tbody>
+                        <tr><td>Presentation</td><td>Hematemesis, "coffee-ground" vomit, melena</td><td>Hematochezia (bright red blood per rectum)</td></tr>
+                        <tr><td>Most common cause</td><td>Peptic ulcer disease</td><td>Diverticulosis (adults); angiodysplasia in elderly</td></tr>
+                        <tr><td>Blood test clue</td><td>↑ BUN:creatinine ratio (&gt;20–30:1)</td><td>Usually normal BUN:creatinine</td></tr>
+                        <tr><td>First-line scope</td><td>EGD within 24 h</td><td>Colonoscopy (after resuscitation ± prep)</td></tr>
+                    </tbody>
+                </table>
+
                 <h3>Upper GI Bleeding</h3>
                 <ul>
-                    <li>Causes: peptic ulcer disease (most common), varices (portal hypertension), Mallory-Weiss tear, malignancy</li>
+                    <li>Causes: peptic ulcer disease (most common), varices (portal hypertension), Mallory-Weiss tear, malignancy, <b>Dieulafoy lesion</b> (large tortuous submucosal artery → sudden massive painless bleed)</li>
                 </ul>
                 <div class="sum-callout">
                     <b>Management</b>
                     <ol>
-                        <li>Resuscitation (IV fluids, blood products if needed)</li>
+                        <li>Resuscitation (2 large-bore IVs, IV fluids, transfuse if needed) — stabilize first</li>
                         <li>EGD within 24 hours (diagnostic + therapeutic)</li>
-                        <li>Varices → band ligation (esophageal) / sclerotherapy (fundal)</li>
+                        <li>PUD → PPI infusion + endoscopic therapy; varices → band ligation (esophageal) / sclerotherapy (fundal), octreotide + prophylactic antibiotics</li>
+                    </ol>
+                </div>
+
+                <h3>Lower GI Bleeding</h3>
+                <ul>
+                    <li>Causes: <b>diverticulosis</b> (most common, painless brisk bleed), angiodysplasia, colorectal cancer/polyps, ischemic/infectious colitis, IBD, hemorrhoids (anorectal)</li>
+                    <li>Most LGIB stops spontaneously; exclude an anorectal source and a brisk upper source (NG lavage/EGD) when bleeding is massive</li>
+                </ul>
+                <div class="sum-callout">
+                    <b>Management</b>
+                    <ol>
+                        <li>Resuscitate and correct coagulopathy</li>
+                        <li>Hemodynamically stable → colonoscopy (diagnostic + therapeutic)</li>
+                        <li>Brisk/ongoing bleeding, unstable → CT angiography or tagged-RBC scan → angio-embolization; surgery if uncontrolled</li>
                     </ol>
                 </div>
 
                 <h3>Special Scenarios</h3>
                 <ul>
-                    <li><b>Hemobilia</b>: post-PTC/ERCP/liver trauma + upper GI bleeding (bleeding from the biliary tract into the duodenum); suspect in post-hepatic-intervention patients with melena/hematemesis</li>
+                    <li><b>Hemobilia</b>: post-PTC/ERCP/liver trauma + upper GI bleeding (bleeding from the biliary tract into the duodenum); classic triad = RUQ pain + jaundice + GI bleeding; suspect in post-hepatic-intervention patients with melena/hematemesis</li>
                     <li><b>Isolated fundal varices + splenic vein thrombosis</b>: normal portal vein + splenomegaly + thrombosed splenic vein + isolated fundal varices → <b>splenectomy</b> (not shunt surgery)</li>
                 </ul>
             `,
@@ -1040,6 +1077,12 @@ const surgery = {
                     options: ['Splenectomy', 'TIPS (portosystemic shunt)', 'Beta-blocker only', 'Liver transplantation'],
                     answer: 0,
                     explanation: 'Isolated fundal varices from splenic vein thrombosis (left-sided/sinistral portal hypertension) are cured by splenectomy, not a portosystemic shunt.'
+                },
+                {
+                    q: 'A hemodynamically stable 68-year-old passes a large volume of bright red blood per rectum. The bleeding has slowed. After resuscitation, what is the best diagnostic and potentially therapeutic step?',
+                    options: ['Colonoscopy', 'Immediate exploratory laparotomy', 'Barium enema', 'Repeat CBC and observe only'],
+                    answer: 0,
+                    explanation: 'In a stable patient with lower GI bleeding (most commonly diverticular), colonoscopy is both diagnostic and therapeutic. CT angiography or a tagged-RBC scan is reserved for brisk, ongoing bleeding in an unstable patient; surgery is a last resort.'
                 }
             ]
         },

@@ -1,14 +1,11 @@
 import React, { useState, useEffect, useMemo } from "react";
 import Icon from '../common/Icon.jsx';
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axios from "../../utils/adminApi.js";
 import "./add.css";
 import "./Admin.css";
 import AdminNavbar from "./AdminNavbar.jsx";
 
 const ADD = (props) => {
-    const navigate = useNavigate();
-
     // State for add account form
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
@@ -19,8 +16,8 @@ const ADD = (props) => {
     // State for dashboard data
     const [stats, setStats] = useState(null);
     const [users, setUsers] = useState([]);
-    const [loadingStats, setLoadingStats] = useState(true);
-    const [loadingUsers, setLoadingUsers] = useState(true);
+    const [, setLoadingStats] = useState(true);
+    const [, setLoadingUsers] = useState(true);
 
     // State for UI
     const [activeTab, setActiveTab] = useState('overview'); // overview, users, suspicious

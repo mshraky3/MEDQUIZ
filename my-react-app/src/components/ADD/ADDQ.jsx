@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import axios from '../../utils/adminApi.js';
 import './addq.css';
 import Globals from '../../global.js';
 

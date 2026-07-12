@@ -107,19 +107,6 @@ const FinalExams = ({ userId, username, sessionToken }) => {
         }
     };
 
-    // Toggle question flip
-    const toggleQuestionFlip = (questionId) => {
-        setFlippedQuestions(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(questionId)) {
-                newSet.delete(questionId);
-            } else {
-                newSet.add(questionId);
-            }
-            return newSet;
-        });
-    };
-
     // Handle See More button click for AI analysis
     const handleSeeMore = async (questionId, questionText, userAnswer, correctAnswer) => {
         // Flip the card immediately

@@ -14,7 +14,7 @@ const RefundPolicy = () => {
                 <section className="legal-section">
                     <h2>1. Subscription</h2>
                     <p>
-                        SMLE Question Bank offers a paid <strong>annual subscription of 100 SAR per year</strong> for
+                        SMLE Question Bank offers a paid <strong>annual subscription of 99 SAR per year</strong> for
                         new accounts. Users who registered before the paid rollout, and admin-created accounts, retain
                         free access and are not billed.
                     </p>

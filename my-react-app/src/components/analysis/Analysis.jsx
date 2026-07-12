@@ -293,14 +293,16 @@ const Analysis = () => {
     setErrors(prev => ({ ...prev, questions: null }));
     try {
       const timestamp = Date.now();
-      const res = await axios.get(`${Globals.URL}/api/all-questions?_=${timestamp}`);
+      // Session-authenticated: /api/all-questions now requires a valid
+      // (subscriber) session server-side.
+      const res = await protectedGet(`${Globals.URL}/api/all-questions?_=${timestamp}`);
       setData(prev => ({ ...prev, questions: res.data.questions || [] }));
     } catch (err) {
       setErrors(prev => ({ ...prev, questions: 'فشل في تحميل الأسئلة.' }));
     } finally {
       setLoading(prev => ({ ...prev, questions: false }));
     }
-  }, []);
+  }, [protectedGet]);
 
   const fetchLastQuizAttempts = useCallback(async (latestQuizId) => {
     if (!latestQuizId) {

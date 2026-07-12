@@ -7,7 +7,7 @@ import './Landing.css';
 
 const stats = [
   { label: 'سؤال', value: '11,000+' },
-  { label: 'الاشتراك السنوي', value: '100 ريال' },
+  { label: 'الاشتراك السنوي', value: '99 ريال' },
   { label: 'تدريب يومي', value: '24/7' },
   { label: 'مواضيع مغطاة', value: '40+' }
 ];
@@ -126,7 +126,7 @@ const Landing = () => {
               </button>
             </div>
             <ul className="hero-trust">
-              <li>اشتراك سنوي 100 ريال</li>
+              <li>اشتراك سنوي 99 ريال</li>
               <li>وصول كامل لمدة سنة</li>
               <li>شرح سريري لكل سؤال</li>
               <li>تحليلات فورية للأداء</li>

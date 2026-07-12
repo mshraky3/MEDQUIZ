@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Icon from '../common/Icon.jsx';
-import axios from "axios";
+import axios from "../../utils/adminApi.js";
 import "./Bank.css";
 import Globals from '../../global.js';
 import Spinner from '../common/Spinner.jsx';
@@ -128,7 +128,6 @@ const Bank = () => {
   };
 
   const currentQuestion = questions[currentIndex];
-  const nextQuestion = currentIndex < questions.length - 1 ? questions[currentIndex + 1] : null;
 
   return (
     <div className="app-container">

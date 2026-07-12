@@ -106,7 +106,7 @@ const QuizHistory = ({ userId, username, sessionToken }) => {
   };
 
   // Handle See More button click for flip cards
-  const handleSeeMore = useCallback(async (attemptId, questionText, selectedAnswer, correctAnswer, event) => {
+  const handleSeeMore = useCallback(async (attemptId, questionText, selectedAnswer, correctAnswer) => {
     // Flip the card immediately
     setFlippedCards(prev => ({ ...prev, [attemptId]: true }));
 

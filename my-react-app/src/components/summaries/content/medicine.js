@@ -7,43 +7,75 @@
 
 const medicine = {
     id: 'medicine',
-    title: 'الباطنة',
-    title_en: 'Internal Medicine',
+    title: 'Internal Medicine',
+    title_en: 'High-Yield SMLE Review — 8 Core Systems',
     icon: 'stethoscope',
     accent: '#22d3ee',
-    intro: 'أهم مواضيع الباطنة عالية العائد في SMLE: القلب · الصدر · الجهاز الهضمي والكبد · الغدد · الكلى · الدم والأورام · الأمراض المعدية · الروماتيزم والأعصاب — مع الخوارزميات والأسئلة التفاعلية.',
+    intro: 'Internal Medicine high-yield SMLE review — 8 core systems with algorithms, comparison tables and interactive MCQs: Cardiology · Pulmonology · Gastroenterology & Hepatology · Endocrinology · Nephrology & Electrolytes · Haematology & Oncology · Infectious Disease & Sepsis · Rheumatology & Neurology.',
     subtopics: [
         {
             id: 'med-cardiology',
-            title: 'أمراض القلب',
-            title_en: 'Cardiology',
+            title: '01 — Cardiology',
+            title_en: 'IHD & ACS · Heart Failure · Valves · Arrhythmias · Lipids',
             summaryHtml: `
-                <h4>Ischaemic heart disease &amp; ACS</h4>
+                <h3>Ischaemic Heart Disease &amp; ACS</h3>
                 <ul>
-                    <li>Stable angina, normal resting ECG/enzymes → <b>exercise stress ECG</b>; unable to exercise (e.g. OA knee, PAD) → <b>dobutamine stress echo</b> / vasodilator MPI; uninterpretable ECG (LBBB, paced) → imaging stress test</li>
-                    <li><b>ACS</b> = MONA-BASH (morphine, O2 if hypoxic, nitrates, aspirin, beta-blocker, ACEi, statin, heparin)</li>
-                    <li><b>STEMI</b> → primary PCI within 90 min (or thrombolysis if PCI unavailable &amp; &lt;12 h); <b>NSTEMI/UA</b> → dual antiplatelet + anticoagulation + GRACE risk → early angiography if high risk</li>
-                    <li>Inferior MI (II, III, aVF) + hypotension → suspect <b>RV infarct</b> → fluids, AVOID nitrates</li>
+                    <li><b>Stable angina</b>, normal resting ECG/enzymes → <b>exercise stress ECG</b>; unable to exercise (OA knee, PAD) → <b>dobutamine stress echo</b> / vasodilator MPI; uninterpretable ECG (LBBB, paced) → imaging stress test</li>
+                    <li><b>Anti-anginal</b>: beta-blocker (1st line) + GTN PRN; add CCB / long-acting nitrate; all get aspirin + statin</li>
+                    <li><b>ACS initial therapy</b> = MONA-BASH: Morphine, O₂ (only if SpO₂ &lt;90%), Nitrates, Aspirin 300 mg + 2nd antiplatelet, Beta-blocker, ACEi, Statin (high-intensity), Heparin</li>
+                    <li>Inferior MI (II, III, aVF) + hypotension → suspect <b>RV infarct</b> → IV fluids, <b>AVOID nitrates</b></li>
                 </ul>
-                <h4>Heart failure &amp; valves</h4>
+                <table>
+                    <thead><tr><th>Type</th><th>ECG</th><th>Troponin</th><th>Reperfusion / strategy</th></tr></thead>
+                    <tbody>
+                        <tr><td><b>STEMI</b></td><td>ST elevation / new LBBB</td><td>Raised</td><td><b>Primary PCI &lt;90 min</b> (thrombolysis if PCI &gt;120 min away &amp; onset &lt;12 h)</td></tr>
+                        <tr><td><b>NSTEMI</b></td><td>ST depression / T inversion</td><td>Raised</td><td>Antithrombotics + GRACE score → early angiography (&lt;24–72 h) if high risk</td></tr>
+                        <tr><td><b>Unstable angina</b></td><td>± ST depression</td><td>Normal</td><td>Antithrombotics + risk stratify</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>Heart Failure</h3>
                 <ul>
-                    <li><b>HFrEF</b> (EF ≤40%) mortality benefit: ACEi/ARB(or ARNI) + beta-blocker + MRA + <b>SGLT2 inhibitor</b>; loop diuretic for symptoms only</li>
-                    <li>Concentric LVH + normal EF + HF symptoms → <b>HFpEF</b> (treat HTN/volume + SGLT2i)</li>
-                    <li>Severe <b>aortic stenosis</b>: asymptomatic + normal EF → follow-up echo; symptomatic (syncope/angina/HF) → TAVR/SAVR</li>
+                    <li><b>HFrEF</b> (EF ≤40%) — four pillars with mortality benefit: <b>ARNI/ACEi/ARB + beta-blocker + MRA + SGLT2 inhibitor</b>; loop diuretic for congestion (symptoms only, no mortality benefit)</li>
+                    <li><b>HFpEF</b> (EF ≥50%, concentric LVH, diastolic dysfunction): treat HTN/volume + <b>SGLT2 inhibitor</b></li>
+                    <li><b>Acute pulmonary oedema</b>: sit up, O₂/CPAP, IV furosemide, nitrates (if not hypotensive); avoid fluids/IV beta-blocker</li>
+                    <li>Persistent EF ≤35% + NYHA II–III on optimal therapy → consider <b>ICD</b>; QRS &gt;150 ms LBBB → <b>CRT</b></li>
                 </ul>
-                <h4>Arrhythmia, lipids, anticoagulation</h4>
+
+                <h3>Valvular Disease</h3>
+                <table>
+                    <thead><tr><th>Lesion</th><th>Murmur</th><th>Key point / management</th></tr></thead>
+                    <tbody>
+                        <tr><td>Aortic stenosis</td><td>Ejection systolic → carotids; soft S2</td><td>Syncope/Angina/Dyspnoea = poor prognosis; symptomatic or EF &lt;50% → <b>SAVR/TAVR</b>; asymptomatic → serial echo</td></tr>
+                        <tr><td>Aortic regurgitation</td><td>Early diastolic; wide pulse pressure</td><td>Vasodilators; surgery if symptomatic or LV dilation</td></tr>
+                        <tr><td>Mitral stenosis</td><td>Mid-diastolic rumble, opening snap</td><td>Rheumatic; AF common → rate control + anticoagulate; balloon valvotomy</td></tr>
+                        <tr><td>Mitral regurgitation</td><td>Pansystolic → axilla</td><td>Surgery if symptomatic or EF 30–60%</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>Arrhythmias</h3>
                 <ul>
-                    <li><b>AF</b>: rate control (beta-blocker/CCB) + anticoagulate by <b>CHA₂DS₂-VASc</b>; unstable → synchronised cardioversion; suspect paroxysmal embolic source with normal resting ECG → <b>Holter monitor</b></li>
-                    <li>On max-dose statin, LDL still above target → add <b>Ezetimibe</b> → then PCSK9 inhibitor (Evolocumab)</li>
-                    <li><b>HIT</b>: platelets fall ~day 5–6 on heparin + new thrombosis → stop heparin, start <b>Argatroban</b> (NOT warfarin/platelets)</li>
+                    <li><b>Atrial fibrillation</b>: rate control (beta-blocker/CCB) + anticoagulate by <b>CHA₂DS₂-VASc</b> (≥2 men / ≥3 women → DOAC); unstable → synchronised DC cardioversion; occult paroxysmal AF with normal ECG → <b>Holter monitor</b></li>
+                    <li><b>SVT</b> (regular narrow-complex): vagal manoeuvres → IV adenosine; unstable → cardioversion</li>
+                    <li><b>VT</b>: unstable → synchronised cardioversion; pulseless VT/VF → defibrillate; stable monomorphic → amiodarone</li>
+                    <li><b>Bradycardia / complete heart block</b>: atropine → transcutaneous pacing → permanent pacemaker (Mobitz II / 3rd-degree)</li>
+                    <li><b>Torsades de pointes</b> (long QT): <b>IV magnesium</b>, stop QT-prolonging drugs</li>
+                </ul>
+
+                <h3>Lipids, Prevention &amp; Other</h3>
+                <ul>
+                    <li>On maximal statin, LDL above target → add <b>ezetimibe</b> → then <b>PCSK9 inhibitor</b> (evolocumab)</li>
+                    <li><b>HIT</b>: platelets fall ~day 5–10 on heparin + new thrombosis → stop heparin, start <b>argatroban/fondaparinux</b> (never warfarin or platelets acutely)</li>
+                    <li><b>Pericarditis</b>: pleuritic pain relieved sitting forward, diffuse saddle ST elevation, PR depression → NSAID + colchicine; large effusion → tamponade (Beck triad, pulsus paradoxus) → <b>pericardiocentesis</b></li>
+                    <li><b>Aortic dissection</b>: tearing chest→back pain, BP differential → CT angiography; type A → surgery, type B → control BP (labetalol)</li>
                 </ul>
                 <div class="sum-callout">
                     <b>Algorithm — chest pain / suspected ACS</b>
                     <ol>
-                        <li>ECG within 10 min + serial troponin</li>
-                        <li>ST elevation → <b>STEMI</b> → reperfusion (PCI &lt;90 min)</li>
-                        <li>ST depression / T inversion / +troponin → <b>NSTEMI</b> → antithrombotic + risk stratify</li>
-                        <li>Normal ECG + normal troponin + low risk → stress testing</li>
+                        <li>ECG within 10 min + serial high-sensitivity troponin</li>
+                        <li>ST elevation / new LBBB → <b>STEMI</b> → reperfusion (PCI &lt;90 min)</li>
+                        <li>ST depression / T inversion / +troponin → <b>NSTEMI</b> → antithrombotic + GRACE risk stratify</li>
+                        <li>Normal ECG + normal serial troponin + low risk → stress testing / CT coronary angiography</li>
                     </ol>
                 </div>
             `,
@@ -100,21 +132,50 @@ const medicine = {
         },
         {
             id: 'med-pulmonology',
-            title: 'أمراض الجهاز التنفسي',
-            title_en: 'Pulmonology',
+            title: '02 — Pulmonology',
+            title_en: 'Asthma · COPD · Pneumonia · PE · Pleural Disease',
             summaryHtml: `
+                <h3>Asthma</h3>
                 <ul>
-                    <li><b>Asthma</b> (reversible obstruction): start an <b>inhaled corticosteroid</b> controller (SABA alone no longer preferred). Step-up: ICS → ICS+LABA → ↑ICS → add-on (LAMA/LTRA/biologic). Acute: O2 + SABA + ipratropium + systemic steroids; severe → <b>IV magnesium sulfate</b></li>
-                    <li><b>Cough-variant asthma</b> on ICS with residual cough worse lying down + morning hoarseness → add <b>PPI</b> (GERD)</li>
-                    <li><b>COPD</b> on LABA/LAMA, progressive dyspnoea, emphysema, no exacerbations + chronic hypoxaemia → <b>long-term home oxygen</b> (the only therapy + smoking cessation that improves survival); add ICS only if frequent exacerbations/eosinophilia</li>
-                    <li><b>CAP</b>: CURB-65 for severity/disposition; ward → ceftriaxone + macrolide (or respiratory fluoroquinolone)</li>
-                    <li><b>PE</b>: pleuritic pain + dyspnoea + tachycardia; Wells score → D-dimer (low risk) or <b>CT pulmonary angiography</b>; stable → anticoagulate (DOAC/LMWH); massive/unstable → thrombolysis</li>
-                    <li><b>Pleural effusion</b>: Light's criteria distinguish exudate vs transudate; tap any new significant effusion</li>
+                    <li>Reversible airflow obstruction; diagnose with spirometry <b>FEV₁/FVC &lt;0.7</b> + bronchodilator reversibility (↑FEV₁ ≥12% &amp; 200 mL)</li>
+                    <li>Chronic step-up: <b>ICS-formoterol</b> (MART) — SABA-only no longer preferred → ICS+LABA → add LAMA/LTRA → biologic (anti-IgE omalizumab / anti-IL5) for severe eosinophilic</li>
+                    <li>Residual cough worse lying down + morning hoarseness on ICS → coexisting <b>GERD</b> → add PPI</li>
+                </ul>
+                <table>
+                    <thead><tr><th>Acute severity</th><th>Features</th></tr></thead>
+                    <tbody>
+                        <tr><td>Moderate</td><td>PEF 50–75%, talking normally</td></tr>
+                        <tr><td>Severe</td><td>PEF 33–50%, RR ≥25, HR ≥110, can't complete sentences</td></tr>
+                        <tr><td>Life-threatening</td><td>PEF &lt;33%, <b>silent chest</b>, cyanosis, exhaustion, <b>normal/rising CO₂</b>, bradycardia, hypotension</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>COPD</h3>
+                <ul>
+                    <li>Diagnosis: post-bronchodilator <b>FEV₁/FVC &lt;0.7</b> (non-reversible); smoking cessation is the single most important intervention</li>
+                    <li>Inhaled step-up: LABA + LAMA; add <b>ICS</b> only if frequent exacerbations or blood eosinophilia</li>
+                    <li>Chronic hypoxaemia (PaO₂ ≤55 mmHg, or ≤59 with cor pulmonale/polycythaemia) → <b>long-term oxygen therapy</b> — with smoking cessation, the only measures that improve survival</li>
+                    <li><b>Exacerbation</b>: controlled O₂ (target SpO₂ 88–92%), nebulised bronchodilators, oral prednisolone, antibiotics if purulent sputum; persistent respiratory acidosis → <b>NIV (BiPAP)</b></li>
+                </ul>
+
+                <h3>Pneumonia</h3>
+                <ul>
+                    <li><b>CURB-65</b> (Confusion, Urea &gt;7, RR ≥30, BP &lt;90/60, age ≥65): 0–1 home, 2 ward, ≥3 consider ICU</li>
+                    <li>CAP: outpatient amoxicillin; ward → <b>ceftriaxone + macrolide</b> (or respiratory fluoroquinolone)</li>
+                    <li>Atypicals: <i>Legionella</i> (hyponatraemia, diarrhoea, urinary antigen), <i>Mycoplasma</i> (young, cold agglutinins), <i>Pneumocystis</i> (HIV, exertional desaturation)</li>
+                </ul>
+
+                <h3>Pulmonary Embolism &amp; Pleural Disease</h3>
+                <ul>
+                    <li><b>PE</b>: pleuritic pain + dyspnoea + tachycardia; two-level <b>Wells</b> → likely: <b>CT pulmonary angiography</b>; unlikely: D-dimer to exclude</li>
+                    <li>Stable PE → anticoagulate (DOAC); massive/haemodynamically unstable → <b>thrombolysis</b>; anticoagulation contraindicated → IVC filter</li>
+                    <li><b>Pleural effusion — Light criteria</b> = exudate if pleural/serum protein &gt;0.5, pleural/serum LDH &gt;0.6, or pleural LDH &gt;⅔ upper serum limit</li>
+                    <li><b>Pneumothorax</b>: tension (deviated trachea, hypotension) → immediate needle decompression → chest drain</li>
                 </ul>
                 <div class="sum-callout">
                     <b>Algorithm — acute severe asthma</b>
                     <ol>
-                        <li>O2 to SpO2 94–98% + continuous/nebulised <b>SABA + ipratropium</b></li>
+                        <li>O₂ to SpO₂ 94–98% + continuous/nebulised <b>SABA + ipratropium</b></li>
                         <li>Systemic corticosteroids early (oral = IV)</li>
                         <li>Poor response → <b>IV magnesium sulfate</b></li>
                         <li>Exhaustion, rising CO₂, silent chest → ICU / ventilation</li>
@@ -168,22 +229,61 @@ const medicine = {
         },
         {
             id: 'med-gastro',
-            title: 'الجهاز الهضمي والكبد',
-            title_en: 'Gastroenterology & Hepatology',
+            title: '03 — Gastroenterology & Hepatology',
+            title_en: 'GI Bleed · Liver Disease · IBD · Pancreatitis · Biliary · GERD/PUD',
             summaryHtml: `
+                <h3>Upper GI Bleeding</h3>
                 <ul>
-                    <li><b>Variceal bleeding</b> in cirrhosis: octreotide + endoscopic band ligation, but the step with the greatest <b>mortality benefit</b> is prophylactic <b>IV ceftriaxone</b> (prevents SBP/sepsis)</li>
-                    <li><b>Acute liver failure</b>: the best <b>prognostic</b> marker is <b>PT/INR</b> (synthetic function), not the transaminase level</li>
-                    <li><b>Paracetamol overdose</b>: N-acetylcysteine (± activated charcoal if early); Rumack-Matthew nomogram at 4 h</li>
-                    <li><b>PUD / perforated duodenal ulcer</b> from chronic NSAIDs → most important prevention is <b>stop NSAIDs</b>; test &amp; treat H. pylori</li>
+                    <li>Resuscitate first (restrictive transfusion target Hb ~7–8 g/dL); risk-score with <b>Glasgow-Blatchford</b> (pre-endoscopy) / Rockall (post)</li>
+                    <li><b>Peptic ulcer bleed</b>: IV PPI + endoscopic haemostasis (adrenaline + clip/thermal); test &amp; treat <i>H. pylori</i></li>
+                    <li><b>Variceal bleed</b> in cirrhosis: the step with the greatest <b>mortality benefit</b> is prophylactic <b>IV ceftriaxone</b> (prevents SBP/sepsis) — plus terlipressin/octreotide + band ligation</li>
+                </ul>
+
+                <h3>Liver Disease</h3>
+                <ul>
+                    <li><b>Acute liver failure</b>: best <b>prognostic</b> marker is <b>PT/INR</b> (synthetic function), not the transaminase level; paracetamol → <b>N-acetylcysteine</b> (Rumack-Matthew nomogram at 4 h)</li>
+                    <li><b>Decompensated cirrhosis</b> complications: <b>SBP</b> (ascitic neutrophils ≥250 → cefotaxime + albumin), <b>hepatic encephalopathy</b> (lactulose + rifaximin, treat precipitant), <b>hepatorenal syndrome</b> (terlipressin + albumin), variceal bleeding</li>
+                </ul>
+                <table>
+                    <thead><tr><th>Serology</th><th>Interpretation</th></tr></thead>
+                    <tbody>
+                        <tr><td>HBsAg +</td><td>Active hepatitis B infection (acute or chronic)</td></tr>
+                        <tr><td>Anti-HBs +</td><td>Immunity (vaccination or cleared infection)</td></tr>
+                        <tr><td>Anti-HBc IgM +</td><td>Acute/recent infection</td></tr>
+                        <tr><td>Isolated anti-HBc</td><td>Past infection / window period / occult</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>Inflammatory Bowel Disease</h3>
+                <table>
+                    <thead><tr><th>Feature</th><th>Ulcerative colitis</th><th>Crohn disease</th></tr></thead>
+                    <tbody>
+                        <tr><td>Distribution</td><td>Continuous, rectum → colon</td><td>Skip lesions, mouth → anus</td></tr>
+                        <tr><td>Depth / histology</td><td>Mucosal; crypt abscesses</td><td>Transmural; non-caseating granulomas</td></tr>
+                        <tr><td>Complications</td><td>Toxic megacolon, ↑colorectal cancer</td><td>Fistulae, strictures, perianal disease</td></tr>
+                    </tbody>
+                </table>
+                <ul>
+                    <li><b>Acute severe UC</b> (≥6 bloody stools/day + systemic features, negative cultures) → <b>IV methylprednisolone</b>; rescue infliximab/ciclosporin if no response by day 3; colectomy for toxic megacolon/perforation</li>
+                </ul>
+
+                <h3>Pancreatico-Biliary</h3>
+                <ul>
+                    <li><b>Acute pancreatitis</b> (lipase &gt;3× ULN): cornerstone is <b>aggressive IV fluids</b> (Ringer lactate) + analgesia; antibiotics only for infected necrosis; gallstone + cholangitis → ERCP</li>
                     <li><b>Choledocholithiasis</b> (RUQ pain + jaundice + abnormal LFTs): best diagnostic = <b>MRCP</b>; therapeutic = ERCP</li>
-                    <li><b>Severe ulcerative colitis</b> (≥6 bloody stools/day, systemic features, negative cultures) → <b>IV methylprednisolone</b>; rescue infliximab/ciclosporin if no response by day 3</li>
-                    <li><b>GERD</b>: lifestyle + PPI; alarm features (dysphagia, weight loss, anaemia, age &gt;60) → endoscopy</li>
+                    <li><b>Ascending cholangitis</b> (Charcot triad: fever, jaundice, RUQ pain) → IV antibiotics + urgent biliary drainage (ERCP)</li>
+                </ul>
+
+                <h3>GERD &amp; PUD</h3>
+                <ul>
+                    <li><b>GERD</b>: lifestyle + PPI; <b>alarm features</b> (dysphagia, weight loss, anaemia, GI bleed, age &gt;55) → urgent endoscopy</li>
+                    <li>Failed PPI with confirmed oesophagitis → 24-h pH study before considering fundoplication; Barrett oesophagus → surveillance endoscopy</li>
+                    <li>Perforated/bleeding ulcer from chronic NSAIDs → most important prevention is <b>stop NSAIDs</b>; refractory PUD + diarrhoea + high gastrin → <b>Zollinger-Ellison</b></li>
                 </ul>
                 <div class="sum-callout">
                     <b>Algorithm — upper GI bleed in cirrhosis</b>
                     <ol>
-                        <li>Resuscitate (restrictive transfusion, target Hb ~7–8)</li>
+                        <li>Resuscitate (restrictive transfusion, target Hb ~7–8 g/dL)</li>
                         <li><b>IV ceftriaxone</b> prophylaxis + IV terlipressin/octreotide</li>
                         <li>Endoscopy &lt;12 h → band ligation</li>
                         <li>Uncontrolled → balloon tamponade → TIPS</li>
@@ -237,16 +337,47 @@ const medicine = {
         },
         {
             id: 'med-endocrine',
-            title: 'الغدد الصماء',
-            title_en: 'Endocrinology',
+            title: '04 — Endocrinology',
+            title_en: 'Diabetes & DKA · Thyroid · Adrenal · Pituitary · Bone',
             summaryHtml: `
+                <h3>Diabetes Mellitus</h3>
                 <ul>
-                    <li><b>DM diagnosis</b>: fasting ≥126, random ≥200 + symptoms, or HbA1c ≥6.5%; young + autoantibodies + low C-peptide → T1DM</li>
-                    <li><b>DKA</b>: IV fluids (0.9% NS) + insulin 0.1 IU/kg/hr; <b>delay insulin if K &lt;3.3</b> and replace potassium first; treat the precipitant</li>
-                    <li><b>Thyroid</b>: hyper → beta-blocker + antithyroid (Methimazole; PTU in 1st trimester); hypo → levothyroxine; pregnancy with high TSH → increase levothyroxine</li>
-                    <li><b>Cushing's</b>: ↑late-night salivary cortisol / failed dexamethasone suppression; ACTH-dependent (pituitary/ectopic) vs independent (adrenal)</li>
-                    <li><b>Adrenal insufficiency</b>: fatigue, hypotension, ↓Na, ↑K, hyperpigmentation (primary) → short Synacthen test → hydrocortisone (stress-dose in illness)</li>
-                    <li><b>Osteoporosis</b> risk: post-menopause, steroids, <b>alcohol</b>, smoking, low BMI; bisphosphonate first-line (obesity is protective)</li>
+                    <li><b>Diagnosis</b>: fasting ≥126 mg/dL (7.0 mmol/L), random ≥200 + symptoms, HbA1c ≥6.5%, or OGTT 2-h ≥200; young + autoantibodies + low C-peptide → T1DM</li>
+                    <li><b>T2DM management</b>: lifestyle + <b>metformin</b> first-line; add <b>SGLT2 inhibitor</b> (CV/renal disease, HF) or <b>GLP-1 agonist</b> (obesity, ASCVD); target HbA1c ~7%</li>
+                    <li><b>Complication screening</b>: annual retinopathy, nephropathy (ACR), foot/neuropathy; statin + ACEi for renoprotection</li>
+                </ul>
+                <table>
+                    <thead><tr><th>Feature</th><th>DKA</th><th>HHS</th></tr></thead>
+                    <tbody>
+                        <tr><td>Type</td><td>T1DM (usually)</td><td>T2DM (elderly)</td></tr>
+                        <tr><td>Glucose</td><td>&gt;250 mg/dL</td><td>&gt;600 mg/dL</td></tr>
+                        <tr><td>Ketones / acidosis</td><td>Present; pH &lt;7.3, HCO₃ &lt;18</td><td>Absent/minimal; pH &gt;7.3</td></tr>
+                        <tr><td>Osmolality</td><td>Variable</td><td>Markedly ↑ (&gt;320)</td></tr>
+                        <tr><td>Treatment</td><td colspan="2">IV fluids + fixed-rate insulin + K⁺ replacement; treat precipitant</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>Thyroid Disorders</h3>
+                <ul>
+                    <li><b>Hyperthyroidism</b> (Graves most common): beta-blocker (symptoms) + antithyroid (<b>carbimazole/methimazole</b>; <b>PTU in 1st trimester</b>); definitive radioiodine/surgery</li>
+                    <li><b>Thyroid storm</b>: beta-blocker → <b>PTU</b> → iodine (given <b>after</b> PTU) → hydrocortisone</li>
+                    <li><b>Hypothyroidism</b>: levothyroxine; <b>pregnancy</b> increases requirement → raise dose to keep TSH in trimester target</li>
+                    <li><b>Thyroid nodule</b>: TSH + ultrasound → <b>FNA</b> if suspicious features</li>
+                </ul>
+
+                <h3>Adrenal &amp; Pituitary</h3>
+                <ul>
+                    <li><b>Cushing syndrome</b>: ↑late-night salivary cortisol / failed low-dose dexamethasone suppression / ↑24-h urinary cortisol → then ACTH to localise (pituitary/ectopic vs adrenal)</li>
+                    <li><b>Adrenal insufficiency</b>: fatigue, hypotension, ↓Na, ↑K, hyperpigmentation (primary/Addison) → <b>short Synacthen test</b> → hydrocortisone + fludrocortisone; <b>stress-dose</b> in illness; crisis → IV hydrocortisone + fluids</li>
+                    <li><b>Primary hyperaldosteronism (Conn)</b>: resistant HTN + hypokalaemia → <b>aldosterone:renin ratio</b> → spironolactone/adrenalectomy</li>
+                    <li><b>Phaeochromocytoma</b>: episodic headache, palpitations, sweating → plasma/urine metanephrines → <b>alpha-block before beta-block</b></li>
+                    <li><b>Prolactinoma</b>: galactorrhoea, amenorrhoea → dopamine agonist (cabergoline); <b>Acromegaly</b> → IGF-1 + OGTT (fails to suppress GH)</li>
+                </ul>
+
+                <h3>Bone &amp; Calcium</h3>
+                <ul>
+                    <li><b>Osteoporosis</b> risk: post-menopause, steroids, <b>alcohol</b>, smoking, low BMI; DEXA T-score ≤−2.5 → <b>bisphosphonate</b> first-line (obesity is protective)</li>
+                    <li><b>Primary hyperparathyroidism</b>: ↑Ca + ↑PTH ("stones, bones, groans, psychiatric moans") → parathyroidectomy if symptomatic</li>
                 </ul>
                 <div class="sum-callout">
                     <b>Algorithm — DKA management</b>
@@ -305,21 +436,42 @@ const medicine = {
         },
         {
             id: 'med-nephrology',
-            title: 'الكلى والسوائل والكهارل',
-            title_en: 'Nephrology & Electrolytes',
+            title: '05 — Nephrology & Electrolytes',
+            title_en: 'AKI · CKD · Hyponatraemia · Hyperkalaemia · Acid–Base',
             summaryHtml: `
+                <h3>Acute Kidney Injury</h3>
                 <table>
-                    <thead><tr><th>Hyponatraemia</th><th>Volume</th><th>Example</th></tr></thead>
+                    <thead><tr><th>Category</th><th>Clue</th><th>Examples / action</th></tr></thead>
                     <tbody>
-                        <tr><td>Hypovolaemic</td><td>↓</td><td>vomiting/diarrhoea, diuretics</td></tr>
-                        <tr><td>Euvolaemic</td><td>normal</td><td>SIADH, hypothyroid</td></tr>
-                        <tr><td>Hypervolaemic</td><td>↑</td><td>HF, cirrhosis, hepatorenal syndrome</td></tr>
+                        <tr><td>Pre-renal</td><td>↑urea:creatinine, <b>FeNa &lt;1%</b>, bland urine</td><td>Hypovolaemia, sepsis, HF → restore perfusion</td></tr>
+                        <tr><td>Intrinsic (ATN)</td><td><b>Muddy-brown casts</b>, FeNa &gt;2%</td><td>Ischaemia, nephrotoxins (contrast, aminoglycosides)</td></tr>
+                        <tr><td>Post-renal</td><td>Hydronephrosis on US</td><td>Stones, BPH, tumour → relieve obstruction</td></tr>
                     </tbody>
                 </table>
                 <ul>
-                    <li><b>AKI</b>: pre-renal (↑urea:creatinine, FeNa &lt;1%) vs intrinsic (ATN, muddy-brown casts) vs post-renal (hydronephrosis → relieve obstruction)</li>
-                    <li><b>CKD + DM + HTN</b>: tight BP target (≈ &lt;130/80, individualised); <b>ACEi/ARB</b> renoprotective (accept ≤30% creatinine rise); add SGLT2i</li>
-                    <li>Correct hyponatraemia slowly (&lt;8–10 mmol/L per 24 h) to avoid osmotic demyelination</li>
+                    <li>Contrast-induced nephropathy: best prevention is peri-procedure <b>isotonic IV hydration</b></li>
+                    <li><b>Emergent dialysis (AEIOU)</b>: severe <b>A</b>cidosis · refractory <b>E</b>lectrolytes (hyperkalaemia) · <b>I</b>ntoxication · fluid <b>O</b>verload · <b>U</b>raemia (pericarditis/encephalopathy)</li>
+                </ul>
+
+                <h3>Chronic Kidney Disease</h3>
+                <ul>
+                    <li>Staged by eGFR + albuminuria; leading causes DM &amp; HTN</li>
+                    <li><b>ACEi/ARB</b> renoprotective (accept ≤30% creatinine rise) + <b>SGLT2 inhibitor</b>; BP target individualised (~&lt;130/80)</li>
+                    <li>Complications: anaemia (EPO + iron), renal bone disease (↑PO₄, ↓Ca, ↑PTH → phosphate binders + vit D), metabolic acidosis, hyperkalaemia</li>
+                </ul>
+
+                <h3>Sodium &amp; Potassium</h3>
+                <table>
+                    <thead><tr><th>Hyponatraemia by volume</th><th>Examples</th><th>Treatment</th></tr></thead>
+                    <tbody>
+                        <tr><td>Hypovolaemic</td><td>Vomiting/diarrhoea, diuretics</td><td>Isotonic (0.9%) saline</td></tr>
+                        <tr><td>Euvolaemic</td><td>SIADH, hypothyroid</td><td>Fluid restriction (treat cause)</td></tr>
+                        <tr><td>Hypervolaemic</td><td>HF, cirrhosis, nephrotic</td><td>Fluid + salt restriction</td></tr>
+                    </tbody>
+                </table>
+                <ul>
+                    <li>Correct hyponatraemia <b>slowly (&lt;8–10 mmol/L per 24 h)</b> to avoid osmotic demyelination; severe symptomatic (seizures) → 3% hypertonic saline</li>
+                    <li><b>Hypokalaemia</b>: weakness, U waves → replace K (+ Mg); <b>hyperkalaemia</b>: peaked T waves → see algorithm</li>
                 </ul>
                 <div class="sum-callout">
                     <b>Algorithm — severe hyperkalaemia</b>
@@ -378,15 +530,49 @@ const medicine = {
         },
         {
             id: 'med-heme-onc',
-            title: 'أمراض الدم والأورام',
-            title_en: 'Haematology & Oncology',
+            title: '06 — Haematology & Oncology',
+            title_en: 'Anaemias · TTP/HUS/DIC · Leukaemias · Oncologic Emergencies',
             summaryHtml: `
+                <h3>Anaemias</h3>
+                <table>
+                    <thead><tr><th>MCV</th><th>Causes</th><th>Key clue</th></tr></thead>
+                    <tbody>
+                        <tr><td>Microcytic</td><td>Iron deficiency, thalassaemia, ACD, sideroblastic</td><td>IDA: ↓ferritin, ↑TIBC, ↑RDW; β-thal trait: ↑HbA2, normal ferritin</td></tr>
+                        <tr><td>Normocytic</td><td>Acute bleed, haemolysis, ACD, CKD, marrow failure</td><td>↑reticulocytes = bleeding/haemolysis</td></tr>
+                        <tr><td>Macrocytic</td><td>B12/folate deficiency, alcohol, hypothyroid, myelodysplasia</td><td>B12: hypersegmented neutrophils + neuro signs</td></tr>
+                    </tbody>
+                </table>
                 <ul>
-                    <li><b>Microcytic</b> = IDA (↓ferritin) / thalassaemia; <b>macrocytic</b> = B12/folate; always find the source of IDA (age &gt;45 + IDA → colonoscopy)</li>
-                    <li><b>ITP</b> (post-viral, isolated thrombocytopenia) → steroids/IVIG; <b>TTP</b> (MAHA + thrombocytopenia + neuro/renal/fever) → urgent <b>plasma exchange</b>; <b>HUS</b> (E. coli O157, AKI) → supportive, no antibiotics; <b>DIC</b> → treat cause + FFP/platelets</li>
-                    <li><b>Tumour lysis syndrome</b> (bulky lymphoma post-chemo: ↑K, ↑PO4, ↑uric acid, ↓Ca, AKI) → prevent with <b>Rasburicase</b> (high risk) or allopurinol + hydration</li>
-                    <li><b>Sickle cell</b>: hydroxyurea (↑HbF) + prophylactic penicillin; vaso-occlusive crisis → analgesia + hydration + O2; acute chest → antibiotics + exchange transfusion</li>
-                    <li><b>Neutropenic sepsis</b>: fever + neutrophils &lt;0.5 → broad-spectrum antibiotics (piperacillin-tazobactam) within 1 h — a medical emergency</li>
+                    <li>Always find the source of IDA — age &gt;45–50 with IDA and no obvious cause → <b>upper + lower GI endoscopy</b> (occult malignancy)</li>
+                    <li><b>Sickle cell</b>: hydroxyurea (↑HbF) + prophylactic penicillin; vaso-occlusive crisis → analgesia + hydration + O₂; acute chest syndrome → antibiotics + exchange transfusion</li>
+                </ul>
+
+                <h3>Thrombocytopenia &amp; Microangiopathies</h3>
+                <table>
+                    <thead><tr><th>Condition</th><th>Features</th><th>Management</th></tr></thead>
+                    <tbody>
+                        <tr><td><b>ITP</b></td><td>Isolated ↓platelets, post-viral (children)</td><td>Observe / steroids / IVIG</td></tr>
+                        <tr><td><b>TTP</b></td><td>MAHA + ↓platelets + neuro + renal + fever (ADAMTS13 ↓)</td><td>Urgent <b>plasma exchange</b>; avoid platelets</td></tr>
+                        <tr><td><b>HUS</b></td><td>MAHA + ↓platelets + AKI (E. coli O157)</td><td>Supportive; avoid antibiotics</td></tr>
+                        <tr><td><b>DIC</b></td><td>↓platelets, ↑PT/APTT, ↑D-dimer, ↓fibrinogen</td><td>Treat cause + FFP/platelets/cryo</td></tr>
+                    </tbody>
+                </table>
+                <ul>
+                    <li>Warfarin major bleed → <b>PCC + IV vitamin K</b>; DOAC → idarucizumab (dabigatran) / andexanet</li>
+                </ul>
+
+                <h3>Haematological Malignancies</h3>
+                <ul>
+                    <li><b>ALL</b> — children, marrow failure; <b>AML</b> — adults, Auer rods; <b>CLL</b> — elderly, mature lymphocytosis + <b>smudge cells</b>; <b>CML</b> — ↑↑WBC, <b>Philadelphia t(9;22)</b> → imatinib</li>
+                    <li><b>Polycythaemia vera</b> (JAK2, aquagenic pruritus, splenomegaly) → venesection + aspirin; multiple myeloma → CRAB (hyperCalcaemia, Renal, Anaemia, Bone lesions) + paraprotein</li>
+                </ul>
+
+                <h3>Oncologic Emergencies</h3>
+                <ul>
+                    <li><b>Neutropenic sepsis</b>: fever + neutrophils &lt;0.5 → broad-spectrum antibiotics (piperacillin-tazobactam) within 1 h — an emergency</li>
+                    <li><b>Tumour lysis syndrome</b> (post-chemo: ↑K, ↑PO₄, ↑urate, ↓Ca, AKI) → hydration + <b>rasburicase</b> (high risk) / allopurinol</li>
+                    <li><b>Malignant spinal cord compression</b> → dexamethasone + urgent MRI + radiotherapy/surgery; <b>SVC obstruction</b> → dyspnoea, facial swelling → CT + treat tumour</li>
+                    <li><b>Hypercalcaemia of malignancy</b> → IV fluids then bisphosphonate</li>
                 </ul>
                 <div class="sum-callout">
                     <b>Algorithm — microcytic anaemia</b>
@@ -444,22 +630,56 @@ const medicine = {
         },
         {
             id: 'med-infectious',
-            title: 'الأمراض المعدية والإنتان',
-            title_en: 'Infectious Disease & Sepsis',
+            title: '07 — Infectious Disease & Sepsis',
+            title_en: 'Sepsis & Septic Shock · Meningitis · Endocarditis · TB · HIV',
             summaryHtml: `
+                <h3>Sepsis &amp; Septic Shock</h3>
                 <ul>
-                    <li><b>Sepsis-6 / surviving sepsis</b>: blood cultures + lactate, empirical antibiotics within 1 h, IV crystalloid 30 ml/kg; reassess</li>
-                    <li><b>Septic shock</b>: after fluids the MAP stays low → start <b>Norepinephrine</b> (first-line vasopressor); add vasopressin then hydrocortisone if refractory</li>
-                    <li><b>Meningitis</b>: LP (CT first only if focal deficit/↓GCS/papilloedema); empirical ceftriaxone + vancomycin + dexamethasone; add ampicillin if Listeria risk (elderly, immunosuppressed)</li>
-                    <li><b>Infective endocarditis</b>: fever + new murmur; Duke criteria; blood cultures ×3 + echo → prolonged IV antibiotics</li>
-                    <li>Needlestick transmission risk: <b>HBV ≫ HCV (~3%) ≫ HIV (~0.3%)</b></li>
-                    <li><b>Stewardship</b>: de-escalate / stop unnecessary antibiotics once culture-directed and stable</li>
+                    <li><b>Sepsis-6 (surviving sepsis)</b>: <i>take</i> blood cultures, lactate, urine output; <i>give</i> O₂, IV broad-spectrum antibiotics &lt;1 h, IV crystalloid 30 ml/kg</li>
+                    <li><b>Septic shock</b>: persistent hypotension after fluids (or lactate ≥4) → <b>norepinephrine</b> (first-line vasopressor) targeting MAP ≥65; add vasopressin then hydrocortisone if refractory</li>
+                    <li><b>Source control</b>: drain abscess, remove infected line/device</li>
+                </ul>
+
+                <h3>Meningitis</h3>
+                <table>
+                    <thead><tr><th>CSF</th><th>Bacterial</th><th>Viral</th><th>TB</th></tr></thead>
+                    <tbody>
+                        <tr><td>Appearance</td><td>Turbid</td><td>Clear</td><td>Fibrin web</td></tr>
+                        <tr><td>Cells</td><td>↑↑ neutrophils</td><td>↑ lymphocytes</td><td>↑ lymphocytes</td></tr>
+                        <tr><td>Glucose</td><td>Low</td><td>Normal</td><td>Very low</td></tr>
+                        <tr><td>Protein</td><td>High</td><td>Normal/↑</td><td>Very high</td></tr>
+                    </tbody>
+                </table>
+                <ul>
+                    <li>LP promptly (CT first only if focal deficit / ↓GCS / papilloedema / seizure); do <b>not</b> delay antibiotics for imaging</li>
+                    <li>Empirical: <b>ceftriaxone + vancomycin + dexamethasone</b>; add <b>ampicillin</b> for Listeria risk (elderly, immunosuppressed, neonates); meningococcal contacts → ciprofloxacin prophylaxis</li>
+                </ul>
+
+                <h3>Endocarditis, TB &amp; HIV</h3>
+                <ul>
+                    <li><b>Infective endocarditis</b>: fever + new murmur; <b>Duke criteria</b>; blood cultures ×3 + echo (TOE) → prolonged IV antibiotics; surgery for HF, abscess, large vegetation or resistant organism</li>
+                    <li><b>Tuberculosis</b>: <b>2 months RIPE</b> (rifampicin, isoniazid, pyrazinamide, ethambutol) → <b>4 months RI</b>; watch hepatotoxicity, isoniazid → give pyridoxine, ethambutol → optic neuritis</li>
+                </ul>
+                <table>
+                    <thead><tr><th>HIV CD4 count</th><th>Prophylaxis</th></tr></thead>
+                    <tbody>
+                        <tr><td>&lt;200</td><td>Co-trimoxazole — <i>Pneumocystis</i> (PCP)</td></tr>
+                        <tr><td>&lt;100</td><td>Co-trimoxazole also covers <i>Toxoplasma</i></td></tr>
+                        <tr><td>&lt;50</td><td>Azithromycin — <i>Mycobacterium avium</i> complex</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>Occupational &amp; Stewardship</h3>
+                <ul>
+                    <li>Needlestick transmission risk: <b>HBV (~30%) ≫ HCV (~3%) ≫ HIV (~0.3%)</b>; start HIV PEP within hours if source high-risk</li>
+                    <li><b>Necrotising fasciitis</b>: pain out of proportion, crepitus, systemic toxicity → <b>urgent surgical debridement</b> + broad-spectrum antibiotics</li>
+                    <li><b>Stewardship</b>: de-escalate / stop antibiotics once culture-directed and clinically stable</li>
                 </ul>
                 <div class="sum-callout">
                     <b>Algorithm — suspected sepsis</b>
                     <ol>
                         <li>Take: blood cultures, lactate, urine output</li>
-                        <li>Give: O2, IV broad-spectrum antibiotics &lt;1 h, IV fluids 30 ml/kg</li>
+                        <li>Give: O₂, IV broad-spectrum antibiotics &lt;1 h, IV fluids 30 ml/kg</li>
                         <li>Persistent hypotension/lactate ≥4 → vasopressors (<b>norepinephrine</b>) targeting MAP ≥65</li>
                         <li>Source control (drain abscess, remove line)</li>
                     </ol>
@@ -506,28 +726,45 @@ const medicine = {
         },
         {
             id: 'med-rheum-neuro',
-            title: 'الروماتيزم والأعصاب',
-            title_en: 'Rheumatology & Neurology',
+            title: '08 — Rheumatology & Neurology',
+            title_en: 'RA · SLE · Gout · GCA · Stroke · Intracranial Bleeds',
             summaryHtml: `
-                <h4>Rheumatology</h4>
+                <h3>Rheumatology</h3>
                 <ul>
-                    <li><b>RA</b> on methotrexate with persistent erosive disease → add a <b>biologic (anti-TNF, e.g. adalimumab)</b></li>
-                    <li><b>SLE</b> (arthritis, oral ulcers, low C3/C4, +ANA/anti-dsDNA): <b>Hydroxychloroquine</b> for all; immunosuppression for organ involvement</li>
-                    <li><b>Gout</b> (negatively birefringent needles) → NSAIDs/colchicine acute, urate-lowering (allopurinol) later; <b>Pseudogout</b> (positively birefringent rhomboids, CPPD)</li>
-                    <li><b>Giant cell arteritis</b>: headache + jaw claudication + ↑ESR → <b>high-dose steroids immediately</b>, then temporal artery biopsy</li>
+                    <li><b>Rheumatoid arthritis</b>: symmetric small-joint pain, morning stiffness, +anti-CCP/RF; <b>methotrexate</b> first-line DMARD → add a <b>biologic (anti-TNF, e.g. adalimumab)</b> if persistent erosive disease</li>
+                    <li><b>SLE</b> (arthritis, malar rash, oral ulcers, serositis, low C3/C4, +ANA/anti-dsDNA): <b>hydroxychloroquine</b> for all; immunosuppression for organ involvement; <b>antiphospholipid syndrome</b> (recurrent VTE/miscarriage) → anticoagulation</li>
+                    <li><b>Giant cell arteritis</b>: headache + jaw claudication + ↑ESR (vision threat) → <b>high-dose steroids immediately</b>, then temporal artery biopsy (stays positive for days)</li>
+                    <li><b>Septic arthritis</b> (can't-miss): hot swollen joint + fever → <b>aspirate</b> before antibiotics; IV antibiotics + washout</li>
+                    <li><b>Ankylosing spondylitis</b>: young man, inflammatory back pain, HLA-B27, bamboo spine → exercise + NSAIDs → anti-TNF</li>
                 </ul>
-                <h4>Neurology</h4>
                 <table>
-                    <thead><tr><th>Bleed</th><th>CT</th><th>Typical</th></tr></thead>
+                    <thead><tr><th>Crystal</th><th>Microscopy</th><th>Management</th></tr></thead>
                     <tbody>
-                        <tr><td>Epidural</td><td>biconvex lens, no suture crossing</td><td>lucid interval, middle meningeal artery</td></tr>
-                        <tr><td>Subdural</td><td><b>crescent</b>, crosses sutures</td><td>elderly/alcoholic, fall</td></tr>
-                        <tr><td>SAH</td><td>blood in basal cisterns</td><td>thunderclap "worst headache"</td></tr>
+                        <tr><td><b>Gout</b> (urate)</td><td>Negatively birefringent needles</td><td>Acute: NSAID/colchicine/steroid; later urate-lowering (allopurinol)</td></tr>
+                        <tr><td><b>Pseudogout</b> (CPPD)</td><td>Positively birefringent rhomboids</td><td>NSAID/colchicine/steroid; treat underlying cause</td></tr>
                     </tbody>
                 </table>
+
+                <h3>Neurology — Stroke &amp; Intracranial Bleeds</h3>
                 <ul>
-                    <li>Acute ischaemic stroke: CT to exclude bleed → <b>thrombolysis &lt;4.5 h</b> / thrombectomy for large-vessel occlusion</li>
-                    <li>Cord compression (back pain + sensory level + weakness + bladder) → urgent <b>MRI spine</b> + steroids</li>
+                    <li><b>Acute ischaemic stroke</b>: non-contrast CT to exclude bleed → <b>IV thrombolysis &lt;4.5 h</b> (no contraindication) ± <b>thrombectomy</b> for large-vessel occlusion &lt;6–24 h; then aspirin/clopidogrel, statin, manage risk factors</li>
+                    <li><b>TIA</b>: ABCD² risk, start antiplatelet + imaging carotids; <b>SAH</b> → CT then LP for xanthochromia if CT negative &gt;6–12 h → nimodipine + coiling</li>
+                </ul>
+                <table>
+                    <thead><tr><th>Bleed</th><th>CT appearance</th><th>Typical</th></tr></thead>
+                    <tbody>
+                        <tr><td>Epidural</td><td>Biconvex lens, no suture crossing</td><td>Lucid interval, middle meningeal artery</td></tr>
+                        <tr><td>Subdural</td><td><b>Crescent</b>, crosses sutures</td><td>Elderly/alcoholic/anticoagulated, fall</td></tr>
+                        <tr><td>Subarachnoid</td><td>Blood in basal cisterns</td><td>Thunderclap "worst headache", berry aneurysm</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>Neurology — Other Emergencies</h3>
+                <ul>
+                    <li><b>Status epilepticus</b>: ABC, glucose → IV lorazepam → IV levetiracetam/phenytoin → anaesthesia (RSI)</li>
+                    <li><b>Neuromuscular respiratory failure</b> (GBS, myasthenic crisis): monitor <b>forced vital capacity</b> — falling FVC (~15 mL/kg or 1 L) prompts elective intubation before SpO₂ drops; treat with IVIG/plasma exchange</li>
+                    <li><b>Malignant cord compression</b> (back pain + sensory level + weakness + bladder/bowel) → urgent <b>MRI spine</b> + dexamethasone</li>
+                    <li><b>Headache red flags</b>: thunderclap, morning/valsalva-worsened, focal deficit, papilloedema, age &gt;50 with ↑ESR → image</li>
                 </ul>
             `,
             questions: [

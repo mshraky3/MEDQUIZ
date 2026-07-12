@@ -344,7 +344,21 @@ const pediatrics = {
                     <li><b>Snake bite</b>: immobilize limb below heart level; do <b>NOT</b> cut, suck venom, tourniquet or ice; antivenom if envenomation</li>
                     <li><b>Scorpion sting</b>: supportive/analgesia; antivenom for severe systemic symptoms</li>
                 </ul>
-            `
+            `,
+            questions: [
+                {
+                    q: 'Parents of a healthy 2-month-old ask how to lower the risk of sudden infant death syndrome (SIDS). Which is the single most important advice?',
+                    options: ['Place the infant to sleep on the back on a firm surface', 'Put the infant to sleep prone so it does not choke', 'Use soft bedding and pillows for comfort', 'Have the infant co-sleep in the parents\' bed'],
+                    answer: 0,
+                    explanation: 'The "Back to Sleep" campaign — supine sleep on a firm, separate surface — is the most effective SIDS-prevention measure. Prone/side sleeping, soft bedding, overheating and bed-sharing all INCREASE risk. Peak incidence is 2–4 months.'
+                },
+                {
+                    q: 'A 6-year-old is bitten on the hand by a neighbour\'s dog with an unknown vaccination status. After irrigation and debridement, which antibiotic is the best prophylaxis?',
+                    options: ['Amoxicillin-clavulanate', 'Oral vancomycin', 'Ciprofloxacin monotherapy', 'No antibiotic — close the wound primarily'],
+                    answer: 0,
+                    explanation: 'Amoxicillin-clavulanate covers Pasteurella multocida plus skin flora and is first-line for mammalian bites. Non-facial bite wounds are generally left open (not primarily closed); give tetanus prophylaxis, and rabies prophylaxis for a stray/unknown animal.'
+                }
+            ]
         },
         {
             id: 'peds-genetics',
@@ -430,7 +444,21 @@ const pediatrics = {
                     <li><b>Wessel rule of 3s</b>: crying &gt;3 h/day, &gt;3 days/week, &gt;3 weeks; age 2 wk–4 mo; otherwise healthy</li>
                     <li>Management: reassurance (resolves by 3–4 mo), <b>5 S's</b> (Swaddling, Side/stomach, Shushing, Swinging, Sucking), probiotics (L. reuteri), simethicone</li>
                 </ul>
-            `
+            `,
+            questions: [
+                {
+                    q: 'A mother is worried that her 18-month-old is not yet speaking. Which finding is a genuine developmental red flag requiring referral?',
+                    options: ['No two-word phrases at 18 months', 'No pointing to objects by 18 months', 'Walking independently since 13 months', 'A vocabulary of about 10 words at 18 months'],
+                    answer: 1,
+                    explanation: 'Absent pointing (a joint-attention skill) by 18 months is a red flag, notably for autism spectrum disorder. Two-word phrases are expected by 24 months, and ~10 words at 18 months is normal — so those are not red flags.'
+                },
+                {
+                    q: 'On exam of a healthy 5-month-old, which primitive reflex would be abnormal if it were still ABSENT — i.e., is normally still present at this age?',
+                    options: ['Moro reflex', 'Plantar grasp reflex', 'Rooting reflex', 'Palmar grasp — should have just disappeared'],
+                    answer: 1,
+                    explanation: 'The plantar grasp persists until 9–12 months, so it is normally present at 5 months. The Moro and rooting reflexes disappear by 3–4 months, and the palmar grasp by 4–6 months. Persistence of primitive reflexes beyond their expected age suggests a CNS problem.'
+                }
+            ]
         },
         {
             id: 'peds-heme-onc',
@@ -499,8 +527,36 @@ const pediatrics = {
                     <li><b>SCID</b>: defective T &amp; B cells, infections in first months, FTT, chronic diarrhea, <b>no thymic shadow</b> ("bubble boy") → HSCT is the only cure; no live vaccines</li>
                     <li><b>Wiskott-Aldrich</b> (X-linked): triad of thrombocytopenia (small platelets) + eczema + recurrent infections</li>
                     <li><b>DiGeorge (22q11.2)</b>: CATCH-22 — Cardiac, Abnormal facies, Thymic hypoplasia (T-cell), Cleft palate, Hypocalcemia</li>
+                    <li><b>Chronic granulomatous disease (CGD)</b>: defective NADPH oxidase → recurrent infections with <b>catalase-positive</b> organisms (S. aureus, Serratia, Burkholderia, Aspergillus, Nocardia); abnormal <b>DHR flow cytometry / nitroblue-tetrazolium (NBT)</b> test → prophylactic TMP-SMX + itraconazole ± interferon-γ</li>
+                    <li><b>Leukocyte adhesion deficiency (LAD-1)</b>: delayed umbilical cord separation (&gt;30 days), no pus, marked leukocytosis, recurrent skin/mucosal infections</li>
                 </ul>
-            `
+
+                <h3>Complement Deficiencies</h3>
+                <ul>
+                    <li><b>Terminal complement (C5–C9) deficiency</b>: recurrent <b>Neisseria</b> (meningococcal/gonococcal) infections → meningococcal vaccination</li>
+                    <li><b>C1 esterase inhibitor deficiency</b>: hereditary angioedema — recurrent non-pruritic, non-urticarial swelling of face/airway/gut; C4 low → C1-INH concentrate / icatibant (bradykinin-mediated, does NOT respond to antihistamines/epinephrine)</li>
+                </ul>
+            `,
+            questions: [
+                {
+                    q: 'A boy has recurrent abscesses and pneumonia caused by Staphylococcus aureus, Serratia and Aspergillus. A dihydrorhodamine (DHR)/nitroblue-tetrazolium test is abnormal. Diagnosis?',
+                    options: ['Chronic granulomatous disease', 'X-linked agammaglobulinemia', 'Terminal complement deficiency', 'Wiskott-Aldrich syndrome'],
+                    answer: 0,
+                    explanation: 'CGD results from defective NADPH oxidase, so phagocytes cannot kill catalase-positive organisms (S. aureus, Serratia, Burkholderia, Aspergillus, Nocardia). The DHR/NBT test is diagnostic. Manage with prophylactic TMP-SMX, itraconazole and interferon-γ.'
+                },
+                {
+                    q: 'A 9-month-old boy has had recurrent sinopulmonary infections since about 6 months of age. Exam shows absent tonsils and no palpable lymph nodes; labs show very low immunoglobulins of all classes with absent B cells. Diagnosis?',
+                    options: ['X-linked (Bruton) agammaglobulinemia', 'Chronic granulomatous disease', 'DiGeorge syndrome', 'C1 esterase inhibitor deficiency'],
+                    answer: 0,
+                    explanation: 'Bruton agammaglobulinemia: a BTK defect halts B-cell maturation, so B cells and all immunoglobulins are absent and there is no lymphoid tissue (tonsils/nodes). Infections begin around 6 months as maternal IgG wanes. Live vaccines are contraindicated.'
+                },
+                {
+                    q: 'A male infant presents with the triad of eczema, recurrent infections, and easy bruising; the blood film shows small platelets with thrombocytopenia. Which X-linked disorder is most likely?',
+                    options: ['Wiskott-Aldrich syndrome', 'Severe combined immunodeficiency (SCID)', 'Common variable immunodeficiency', 'Ataxia-telangiectasia'],
+                    answer: 0,
+                    explanation: 'Wiskott-Aldrich syndrome (X-linked WAS gene) classically presents with the triad of thrombocytopenia with SMALL platelets, eczema, and recurrent infections. SCID presents in the first months with FTT, chronic diarrhea and an absent thymic shadow.'
+                }
+            ]
         },
         {
             id: 'peds-neonatology',
@@ -540,7 +596,21 @@ const pediatrics = {
                     <li><b>Meconium aspiration</b>: term/post-term, patchy infiltrates → suction if non-vigorous, NO for PPHN</li>
                     <li><b>Neonatal seizures</b>: most common cause HIE; 1st-line <b>phenobarbital</b>; treat glucose/calcium</li>
                 </ul>
-            `
+            `,
+            questions: [
+                {
+                    q: 'A 3-week-old premature infant on formula feeds develops abdominal distension, bloody stools, and lethargy. Abdominal X-ray shows pneumatosis intestinalis. What is the most appropriate initial management?',
+                    options: ['Make NPO, start NG decompression, IV fluids and broad-spectrum antibiotics', 'Continue feeds and give oral rehydration solution', 'Immediate laparotomy regardless of findings', 'Start a stool softener and observe'],
+                    answer: 0,
+                    explanation: 'This is necrotizing enterocolitis (NEC) — prematurity and formula feeding are the key risks and pneumatosis intestinalis is diagnostic. Initial care is bowel rest (NPO), NG decompression, IV fluids and antibiotics. Surgery is reserved for perforation (pneumoperitoneum) or clinical deterioration.'
+                },
+                {
+                    q: 'A term newborn develops visible jaundice at 12 hours of life with anemia and a positive direct Coombs test. Which statement is correct?',
+                    options: ['Jaundice within the first 24 hours is pathologic and needs urgent evaluation', 'This is physiologic jaundice and needs only reassurance', 'Phototherapy is contraindicated with a positive Coombs test', 'It is caused by breast-milk jaundice'],
+                    answer: 0,
+                    explanation: 'Jaundice appearing in the first 24 hours is always pathologic. A positive Coombs with anemia indicates isoimmune hemolysis (Rh/ABO incompatibility). Escalation is phototherapy → IVIG → exchange transfusion. Physiologic jaundice appears after 24 h and peaks on days 3–5.'
+                }
+            ]
         },
         {
             id: 'peds-nephrology',
@@ -616,7 +686,21 @@ const pediatrics = {
                     <li><b>Migraine</b>: pulsating, ± aura, nausea/photophobia; acute NSAIDs/triptans (&gt;6 y); prophylaxis cyproheptadine, propranolol, topiramate</li>
                 </ul>
                 <div class="sum-callout"><b>Headache red flags (image)</b>: thunderclap, morning headache with vomiting, wakes from sleep, progressive, neuro deficits, seizures, papilledema, age &lt;3 y.</div>
-            `
+            `,
+            questions: [
+                {
+                    q: 'A 4-year-old is brought in with progressive, symmetric, ascending weakness and absent deep-tendon reflexes about two weeks after a diarrheal illness. Lumbar puncture shows high protein with a normal cell count. What is the diagnosis and best treatment?',
+                    options: ['Guillain-Barré syndrome — IVIG or plasmapheresis', 'Myasthenia gravis — pyridostigmine', 'Botulism — antitoxin', 'Transverse myelitis — high-dose steroids'],
+                    answer: 0,
+                    explanation: 'Ascending symmetric paralysis with areflexia after infection (often Campylobacter) plus CSF albuminocytologic dissociation (high protein, normal cells) is Guillain-Barré syndrome. Treat with IVIG or plasmapheresis and monitor respiratory function closely.'
+                },
+                {
+                    q: 'A 6-month-old has clusters of sudden flexor "jackknife" spasms. EEG shows hypsarrhythmia. What is the diagnosis and first-line therapy?',
+                    options: ['Infantile spasms (West syndrome) — ACTH or vigabatrin', 'Simple febrile seizure — antipyretics only', 'Absence epilepsy — ethosuximide', 'Breath-holding spells — reassurance'],
+                    answer: 0,
+                    explanation: 'Salaam/jackknife spasms at 4–8 months with hypsarrhythmia on EEG define infantile spasms (West syndrome). First-line therapy is ACTH or vigabatrin (vigabatrin is preferred when associated with tuberous sclerosis).'
+                }
+            ]
         },
         {
             id: 'peds-pulmonology',
@@ -838,7 +922,27 @@ const pediatrics = {
                     <li><b>Lyme</b>: erythema migrans (bull's-eye) → doxycycline (&gt;8 y) or amoxicillin</li>
                     <li><b>RMSF</b>: rash starts wrists/ankles → centripetal; <b>doxycycline at any age</b>, treat empirically</li>
                 </ul>
-            `
+            `,
+            questions: [
+                {
+                    q: 'A 3-year-old has an abrupt high fever, drooling, and is sitting forward in a tripod position with muffled voice and no cough. Which action is most appropriate?',
+                    options: ['Keep the child calm and secure the airway in a controlled setting (OR) before any invasive procedure', 'Examine the throat immediately with a tongue depressor', 'Give nebulized epinephrine and discharge', 'Obtain a lateral neck X-ray before doing anything else'],
+                    answer: 0,
+                    explanation: 'Sudden fever, drooling and tripod positioning without a barking cough suggest epiglottitis (H. influenzae type B). Do NOT agitate the child or examine the throat — this can precipitate complete airway obstruction. Secure the airway in the OR, then give IV antibiotics.'
+                },
+                {
+                    q: 'A previously well 5-year-old presents with fever, headache and a rapidly spreading non-blanching purpuric rash and is becoming hypotensive. What is the immediate priority?',
+                    options: ['Immediate IV/IM ceftriaxone without delay', 'Wait for the lumbar puncture and culture results before antibiotics', 'Start oral amoxicillin and review in 24 hours', 'Give IVIG as first-line therapy'],
+                    answer: 0,
+                    explanation: 'A non-blanching purpuric rash with sepsis suggests meningococcemia. Antibiotics (ceftriaxone) must be given immediately — do not delay for LP. Watch for DIC and Waterhouse-Friderichsen syndrome, and give chemoprophylaxis to close contacts.'
+                },
+                {
+                    q: 'A child develops a rash after several days of high fever; the rash appears just as the fever breaks. Which organism is responsible?',
+                    options: ['Human herpesvirus 6 (roseola)', 'Measles virus', 'Parvovirus B19', 'Group A streptococcus'],
+                    answer: 0,
+                    explanation: 'Roseola infantum (HHV-6) causes 3–5 days of high fever followed by a rash that erupts as the fever resolves; it can trigger febrile seizures. Measles rash accompanies fever with Koplik spots; parvovirus B19 gives slapped-cheek rash; GAS causes scarlet fever.'
+                }
+            ]
         }
     ]
 };
