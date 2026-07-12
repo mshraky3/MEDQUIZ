@@ -15,7 +15,7 @@ const isLocalHost =
 const Globals = {
     URL: import.meta.env?.VITE_API_URL || (isLocalHost ? LOCAL_URL : PRODUCTION_URL),
 
-    // Payment enforcement ENABLED (test mode). Mirrors the backend
+    // Payment enforcement ENABLED (live). Mirrors the backend
     // PAYMENT_ENFORCEMENT_ENABLED flag — this is only a UI hint; the server
     // (GET /api/payment/config and the /login response) is the source of truth.
     PAYMENT_ENFORCEMENT_ENABLED: true
