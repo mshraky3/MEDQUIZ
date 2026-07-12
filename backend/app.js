@@ -10,6 +10,8 @@ import questionReportsRouter from './routes/question-reports.js';
 import emailCampaignsRouter from './routes/email-campaigns.js';
 import paymentRoutes from './routes/payment.js';
 import { checkSubscriptionAccess, isPaymentEnforcementEnabled } from './services/paymentService.js';
+import { adminAuth, isAdminRequest } from './middleware/adminAuth.js';
+import { subscriptionGuard } from './middleware/subscriptionGuard.js';
 import summariesRouter from './routes/summaries.js';
 import summaryContent from './content/summaryHtml/index.js';
 import { notifyBackendError } from './services/errorNotificationService.js';
@@ -90,11 +92,42 @@ function ensureSchema() {
                     UNIQUE(user_id, achievement_type, achievement_key)
                 )
             `);
+            // Columns that used to be ensured with ALTER TABLE on EVERY request in
+            // the hot paths (/quiz-sessions, /user-analysis, /api/all-questions,
+            // /get_all_users). Ensuring them once here removes 10-15 DDL round-trips
+            // per request.
+            await db.query(`
+                ALTER TABLE user_quiz_sessions
+                    ADD COLUMN IF NOT EXISTS source VARCHAR(50) DEFAULT 'general',
+                    ADD COLUMN IF NOT EXISTS duration INTEGER DEFAULT 0,
+                    ADD COLUMN IF NOT EXISTS avg_time_per_question DECIMAL(10, 2) DEFAULT 0,
+                    ADD COLUMN IF NOT EXISTS session_id UUID DEFAULT gen_random_uuid(),
+                    ADD COLUMN IF NOT EXISTS end_time TIMESTAMP DEFAULT NOW(),
+                    ADD COLUMN IF NOT EXISTS quiz_type VARCHAR(50) DEFAULT 'practice',
+                    ADD COLUMN IF NOT EXISTS difficulty_level VARCHAR(20) DEFAULT 'mixed',
+                    ADD COLUMN IF NOT EXISTS device_type VARCHAR(20) DEFAULT 'desktop',
+                    ADD COLUMN IF NOT EXISTS fastest_question_time INTEGER DEFAULT 0,
+                    ADD COLUMN IF NOT EXISTS slowest_question_time INTEGER DEFAULT 0,
+                    ADD COLUMN IF NOT EXISTS session_metadata JSONB DEFAULT '{}'
+            `);
+            await db.query(`ALTER TABLE questions ADD COLUMN IF NOT EXISTS source VARCHAR(50) DEFAULT 'general'`);
+            await db.query(`UPDATE questions SET source = 'general' WHERE source IS NULL`);
+            await db.query(`
+                ALTER TABLE accounts
+                    ADD COLUMN IF NOT EXISTS email VARCHAR(255),
+                    ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            `);
             // Performance indexes — these directly address the slow-request warnings.
             await db.query(`CREATE INDEX IF NOT EXISTS idx_user_question_progress_user_id ON user_question_progress(user_id)`);
             await db.query(`CREATE INDEX IF NOT EXISTS idx_user_question_progress_cardinality ON user_question_progress(user_id, question_type, source)`);
             await db.query(`CREATE INDEX IF NOT EXISTS idx_user_achievements_user_id ON user_achievements(user_id)`);
             await db.query(`CREATE INDEX IF NOT EXISTS idx_user_quiz_sessions_user_id ON user_quiz_sessions(user_id)`);
+            await db.query(`CREATE INDEX IF NOT EXISTS idx_uqs_user_start ON user_quiz_sessions(user_id, start_time DESC)`);
+            await db.query(`CREATE INDEX IF NOT EXISTS idx_uqa_user ON user_question_attempts(user_id)`);
+            await db.query(`CREATE INDEX IF NOT EXISTS idx_uqa_session ON user_question_attempts(quiz_session_id)`);
+            await db.query(`CREATE INDEX IF NOT EXISTS idx_uqa_user_wrong ON user_question_attempts(user_id) WHERE is_correct = false`);
+            await db.query(`CREATE INDEX IF NOT EXISTS idx_questions_type_source ON questions(question_type, source)`);
             logger.info('Schema bootstrap complete (tables + performance indexes ensured)');
         } catch (err) {
             _schemaReady = null; // allow a retry on a later invocation
@@ -266,6 +299,25 @@ app.use(cors({
 
 app.use(express.json());
 
+// ── Access-control helpers ─────────────────────────────────────────────
+// subscriberOnly: 402s unpaid accounts once PAYMENT_ENFORCEMENT_ENABLED=true
+// (transparent pass-through while the flag is off). Must run after
+// requireSession — it trusts the session username, not client-sent ids.
+const subscriberOnly = subscriptionGuard(db);
+
+// requireSession + subscriberOnly in one hop, for routes that had no
+// middleware before (e.g. GET /api/questions).
+function requireSubscriber(req, res, next) {
+    requireSession(req, res, () => subscriberOnly(req, res, next));
+}
+
+// Admin key OR a valid subscriber session. Used on endpoints shared by the
+// admin panel (Bank) and the student app (Analysis), like /api/all-questions.
+function adminOrSubscriber(req, res, next) {
+    if (isAdminRequest(req)) return next();
+    return requireSubscriber(req, res, next);
+}
+
 app.get('/', async (req, res) => {
     try {
         const resal = await db.query("SELECT * FROM test");
@@ -276,7 +328,7 @@ app.get('/', async (req, res) => {
     }
 });
 
-app.post('/add_account', async (req, res) => {
+app.post('/add_account', adminAuth, async (req, res) => {
     const { username, password } = req.body;
 
     if (!username || !password) {
@@ -347,46 +399,14 @@ This account has been activated and is ready for use.
     }
 });
 
-app.get('/get_all_users', async (req, res) => {
+app.get('/get_all_users', adminAuth, async (req, res) => {
     try {
-        // First, ensure accounts table has all necessary columns
-        try {
-            // Add missing columns if they don't exist
-            await db.query(`
-                ALTER TABLE accounts 
-                ADD COLUMN IF NOT EXISTS email VARCHAR(255),
-                ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            `);
-            console.log('✅ Ensured all necessary columns exist in accounts table');
-        } catch (alterErr) {
-            console.log('Note: Some columns might already exist:', alterErr.message);
-        }
-
-        // Check what columns actually exist in the accounts table
-        const columnCheck = await db.query(`
-            SELECT column_name 
-            FROM information_schema.columns 
-            WHERE table_name = 'accounts' AND table_schema = 'public'
-            ORDER BY ordinal_position
-        `);
-
-        const existingColumns = columnCheck.rows.map(row => row.column_name);
-        console.log('Available columns in accounts table:', existingColumns);
-
-        // Build the SELECT query with only necessary columns for admin interface
-        const availableColumns = existingColumns.filter(col =>
-            ['id', 'username', 'password', 'logged_date', 'isactive', 'terms_accepted', 'email', 'created_at'].includes(col)
+        // Columns (email, created_at, updated_at) are ensured once at startup by
+        // ensureSchema() — no per-request DDL or introspection needed.
+        const result = await db.query(
+            `SELECT id, username, password, logged_date, isactive, terms_accepted, email, created_at
+             FROM accounts`
         );
-
-        if (availableColumns.length === 0) {
-            return res.status(500).json({ message: "No valid columns found in accounts table" });
-        }
-
-        const selectQuery = `SELECT ${availableColumns.join(', ')} FROM accounts`;
-        console.log('Executing query:', selectQuery);
-
-        const result = await db.query(selectQuery);
         res.json({ users: result.rows });
     } catch (err) {
         console.error('Error fetching users:', err);
@@ -969,7 +989,7 @@ app.post('/logout', async (req, res) => {
 // ============================================
 
 // Get comprehensive admin statistics
-app.get('/admin/stats', async (req, res) => {
+app.get('/admin/stats', adminAuth, async (req, res) => {
     try {
         // Run all queries in parallel for performance
         const [
@@ -1228,7 +1248,7 @@ app.get('/admin/stats', async (req, res) => {
 });
 
 // Get detailed user info with activity
-app.get('/admin/users', async (req, res) => {
+app.get('/admin/users', adminAuth, async (req, res) => {
     try {
         const usersResult = await db.query(`
             SELECT 
@@ -1283,7 +1303,7 @@ app.get('/admin/users', async (req, res) => {
 });
 
 // Get login history for a specific user
-app.get('/admin/users/:userId/login-history', async (req, res) => {
+app.get('/admin/users/:userId/login-history', adminAuth, async (req, res) => {
     const { userId } = req.params;
     try {
         const result = await db.query(`
@@ -1301,7 +1321,7 @@ app.get('/admin/users/:userId/login-history', async (req, res) => {
 });
 
 // Clear suspicious flag for a user
-app.post('/admin/users/:userId/clear-suspicious', async (req, res) => {
+app.post('/admin/users/:userId/clear-suspicious', adminAuth, async (req, res) => {
     const { userId } = req.params;
     try {
         await db.query(`
@@ -1321,24 +1341,7 @@ app.post('/admin/users/:userId/clear-suspicious', async (req, res) => {
 app.get('/user-analysis/:userId', requireSession, async (req, res) => {
     const { userId } = req.params;
     try {
-        // First, ensure all required columns exist in user_quiz_sessions table
-        try {
-            await db.query(`
-                ALTER TABLE user_quiz_sessions 
-                ADD COLUMN IF NOT EXISTS source VARCHAR(50) DEFAULT 'general'
-            `);
-            await db.query(`
-                ALTER TABLE user_quiz_sessions 
-                ADD COLUMN IF NOT EXISTS duration INTEGER DEFAULT 0
-            `);
-            await db.query(`
-                ALTER TABLE user_quiz_sessions 
-                ADD COLUMN IF NOT EXISTS avg_time_per_question DECIMAL(10, 2) DEFAULT 0
-            `);
-        } catch (err) {
-            // Columns might already exist, ignore error
-            console.log('Column creation warning:', err.message);
-        }
+        // Columns are ensured once at startup by ensureSchema() — no per-request DDL.
 
         // Get overall stats, latest quiz, and last active
         const [statsRes, latestQuizRes, analysisRes, topicRes, durationRes, sourceRes] = await Promise.all([
@@ -1356,10 +1359,7 @@ app.get('/user-analysis/:userId', requireSession, async (req, res) => {
                 WHERE user_id = $1
                 ORDER BY start_time DESC
                 LIMIT 1;
-            `, [userId]).then(result => {
-                console.log('Latest Quiz Query Result:', result.rows[0]);
-                return result;
-            }),
+            `, [userId]),
             db.query(`SELECT last_active FROM user_analysis WHERE user_id = $1`, [userId]),
             db.query(`SELECT question_type, total_answered, total_correct, accuracy
                       FROM user_topic_analysis WHERE user_id = $1`, [userId]),
@@ -1597,27 +1597,16 @@ app.get('/wrong-questions/user/:userId', requireSession, async (req, res) => {
     }
 });
 
-app.get('/api/all-questions', async (req, res) => {
+app.get('/api/all-questions', adminOrSubscriber, async (req, res) => {
     try {
-        // Check cache first (disabled for now to ensure fresh data)
+        // Serve from cache when fresh — the cache is invalidated on every
+        // question add/update/delete, so it can never serve stale data.
         const now = Date.now();
-        // if (questionsCache.data && questionsCache.timestamp && (now - questionsCache.timestamp) < questionsCache.ttl) {
-        //     return res.json({ questions: questionsCache.data });
-        // }
-
-        // Ensure source column exists in questions table
-        try {
-            await db.query(`
-                ALTER TABLE questions 
-                ADD COLUMN IF NOT EXISTS source VARCHAR(50) DEFAULT 'general'
-            `);
-            // Update any NULL sources to 'general'
-            await db.query(`
-                UPDATE questions SET source = 'general' WHERE source IS NULL
-            `);
-        } catch (err) {
-            // Column might already exist, ignore error
+        if (questionsCache.data && questionsCache.timestamp && (now - questionsCache.timestamp) < questionsCache.ttl) {
+            return res.json({ questions: questionsCache.data });
         }
+
+        // questions.source is ensured/backfilled once at startup by ensureSchema().
 
         // Fetch all necessary fields for question library
         const result = await db.query("SELECT id, question_text, option1, option2, option3, option4, question_type, correct_option, source FROM questions");
@@ -1703,7 +1692,7 @@ app.get('/user-streaks/:user_id', requireSession, async (req, res) => {
     }
 });
 
-app.get('/api/questions', async (req, res) => {
+app.get('/api/questions', requireSubscriber, async (req, res) => {
 
     const limit = parseInt(req.query.limit) || 10;
     const typesParam = req.query.types; // e.g., 'mix' or 'medicine,surgery'
@@ -1839,6 +1828,11 @@ app.post('/topic-analysis', requireSession, async (req, res) => {
     if (!user_id || !question_type || typeof accuracy !== 'number') {
         return res.status(400).json({ message: "Invalid or missing topic analysis data" });
     }
+    // Reject 'general' BEFORE writing — previously this was checked after the
+    // insert, so invalid rows were stored and then a 400 was returned anyway.
+    if (question_type === 'general') {
+        return res.status(400).json({ message: "Invalid topic: 'general' not allowed" });
+    }
     try {
         const result = await db.query(
             `INSERT INTO user_topic_analysis 
@@ -1855,10 +1849,6 @@ app.post('/topic-analysis', requireSession, async (req, res) => {
             RETURNING *`,
             [user_id, question_type, total_answered, total_correct, accuracy, avg_time]
         );
-
-        if (question_type === 'general') {
-            return res.status(400).json({ message: "Invalid topic: 'general' not allowed" });
-        }
 
         res.status(201).json(result.rows[0]);
     } catch (err) {
@@ -1894,10 +1884,10 @@ app.post('/user-analysis', requireSession, async (req, res) => {
 
     try {
         const statsRes = await db.query(`
-      SELECT 
+      SELECT
         COUNT(*) AS total_quizzes,
         SUM(total_questions) AS total_questions_answered,
-        SUM(correct_options) AS total_correct_options
+        SUM(correct_answers) AS total_correct_answers
       FROM user_quiz_sessions
       WHERE user_id = $1;
     `, [user_id]);
@@ -1960,7 +1950,7 @@ app.post('/user-analysis', requireSession, async (req, res) => {
 });
 
 
-app.post('/quiz-sessions', requireSession, async (req, res) => {
+app.post('/quiz-sessions', requireSession, subscriberOnly, async (req, res) => {
     const {
         user_id,
         total_questions,
@@ -1985,62 +1975,8 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
     }
 
     try {
-        // First, ensure all required columns exist in the table
-        try {
-            await db.query(`
-                ALTER TABLE user_quiz_sessions 
-                ADD COLUMN IF NOT EXISTS source VARCHAR(50) DEFAULT 'general'
-            `);
-            await db.query(`
-                ALTER TABLE user_quiz_sessions 
-                ADD COLUMN IF NOT EXISTS duration INTEGER DEFAULT 0
-            `);
-            await db.query(`
-                ALTER TABLE user_quiz_sessions 
-                ADD COLUMN IF NOT EXISTS avg_time_per_question DECIMAL(10, 2) DEFAULT 0
-            `);
-            await db.query(`
-                ALTER TABLE user_quiz_sessions 
-                ADD COLUMN IF NOT EXISTS session_id UUID DEFAULT gen_random_uuid()
-            `);
-            await db.query(`
-                ALTER TABLE user_quiz_sessions 
-                ADD COLUMN IF NOT EXISTS end_time TIMESTAMP DEFAULT NOW()
-            `);
-            await db.query(`
-                ALTER TABLE user_quiz_sessions 
-                ADD COLUMN IF NOT EXISTS quiz_type VARCHAR(50) DEFAULT 'practice'
-            `);
-            await db.query(`
-                ALTER TABLE user_quiz_sessions 
-                ADD COLUMN IF NOT EXISTS difficulty_level VARCHAR(20) DEFAULT 'mixed'
-            `);
-            await db.query(`
-                ALTER TABLE user_quiz_sessions 
-                ADD COLUMN IF NOT EXISTS device_type VARCHAR(20) DEFAULT 'desktop'
-            `);
-            await db.query(`
-                ALTER TABLE user_quiz_sessions 
-                ADD COLUMN IF NOT EXISTS fastest_question_time INTEGER DEFAULT 0
-            `);
-            await db.query(`                                                                                                            
-                ALTER TABLE user_quiz_sessions 
-                ADD COLUMN IF NOT EXISTS slowest_question_time INTEGER DEFAULT 0
-            `);
-            await db.query(`
-                ALTER TABLE user_quiz_sessions 
-                ADD COLUMN IF NOT EXISTS session_metadata JSONB DEFAULT '{}'
-            `);
-            // Also add a check constraint for valid sources
-            await db.query(`
-                ALTER TABLE user_quiz_sessions 
-                ADD CONSTRAINT IF NOT EXISTS check_valid_quiz_source 
-                CHECK (source IN ('general', 'Midgard', 'GameBoy', 'October25', 'December25', 'November25', 'January25', 'FebMarApr25'))
-            `);
-        } catch (err) {
-            // Column might already exist, ignore error
-            console.log('Column creation warning:', err.message);
-        }
+        // Schema columns are ensured once at startup by ensureSchema() — no
+        // per-request DDL here anymore.
 
         // Determine the actual source based on the questions that were answered
         let actualSource = source || 'general';
@@ -2069,14 +2005,14 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
         logger.debug("Creating quiz session", {
             user_id,
             source: actualSource,
-            question_count: question_ids.length,
+            question_count: question_ids?.length ?? 0,
             topics_covered: typeof topics_covered,
             duration: typeof duration,
             avg_time_per_question: typeof avg_time_per_question
         });
 
         // Calculate end time based on start time and duration
-        const endTime = new Date(Date.now() + (duration * 1000));
+        const endTime = new Date(Date.now() + ((Number(duration) || 0) * 1000));
 
         const result = await db.query(
             `INSERT INTO user_quiz_sessions 
@@ -2495,7 +2431,7 @@ app.get('/quiz-sessions/stats/:userId', requireSession, async (req, res) => {
 
 
 
-app.post('/api/questions', async (req, res) => {
+app.post('/api/questions', adminAuth, async (req, res) => {
     const {
         question_text,
         option1,
@@ -2581,7 +2517,7 @@ app.post("/ai-analysis", async (req, res) => {
 
 
 
-app.get('/questions', async (req, res) => {
+app.get('/questions', adminAuth, async (req, res) => {
     try {
         const result = await db.query("SELECT * FROM questions ORDER BY id");
         res.json({ questions: result.rows });
@@ -2686,7 +2622,7 @@ app.post('/api/reset-progress', requireSession, async (req, res) => {
 // was removed.
 
 // Debug endpoint to check database schema
-app.get('/debug/schema', async (req, res) => {
+app.get('/debug/schema', adminAuth, async (req, res) => {
     try {
         const tables = ['user_quiz_sessions', 'questions'];
         const schema = {};
@@ -2709,7 +2645,7 @@ app.get('/debug/schema', async (req, res) => {
 });
 
 // Debug endpoint to check quiz sessions data
-app.get('/debug/quiz-sessions/:userId', async (req, res) => {
+app.get('/debug/quiz-sessions/:userId', adminAuth, async (req, res) => {
     try {
         const { userId } = req.params;
 
@@ -2741,7 +2677,7 @@ app.get('/debug/quiz-sessions/:userId', async (req, res) => {
     }
 });
 
-app.get('/questions/:id', async (req, res) => {
+app.get('/questions/:id', adminAuth, async (req, res) => {
     const { id } = req.params;
 
     if (isNaN(id)) {
@@ -2762,7 +2698,7 @@ app.get('/questions/:id', async (req, res) => {
     }
 });
 
-app.delete('/questions/:id', async (req, res) => {
+app.delete('/questions/:id', adminAuth, async (req, res) => {
     const { id } = req.params;
 
     if (isNaN(id)) {
@@ -2793,7 +2729,7 @@ app.delete('/questions/:id', async (req, res) => {
     }
 });
 
-app.put('/questions/:id', async (req, res) => {
+app.put('/questions/:id', adminAuth, async (req, res) => {
     const { id } = req.params;
     const {
         question_text,
@@ -2942,11 +2878,6 @@ app.get('/quiz-sessions/progress/:userId', requireSession, async (req, res) => {
     }
 });
 
-const PORT = process.env.PORT;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
-
 // Get user account/subscription status.
 // FUTURE SUBSCRIPTION CHECK POINT: when PAYMENT_ENFORCEMENT_ENABLED=true this
 // endpoint will surface real subscription state (status, expiry, days remaining).
@@ -3000,7 +2931,7 @@ app.get('/api/user-subscription/:userId', async (req, res) => {
     }
 });
 
-app.delete('/users/:userId', async (req, res) => {
+app.delete('/users/:userId', adminAuth, async (req, res) => {
     const { userId } = req.params;
 
     if (!userId) {
@@ -3160,7 +3091,7 @@ app.post('/accept-terms', async (req, res) => {
 // services/paymentService.js and middleware/subscriptionGuard.js.
 
 // Test email endpoint
-app.get('/api/test-email', async (req, res) => {
+app.get('/api/test-email', adminAuth, async (req, res) => {
     try {
         const emailSubject = '🧪 Test Email - MEDQIZE System';
         const emailText = `
@@ -3268,7 +3199,7 @@ Please respond to the user as soon as possible.
 // ===== SUGGESTIONS FEATURE =====
 
 // Initialize suggestions table
-app.post('/api/admin/init-suggestions-table', async (req, res) => {
+app.post('/api/admin/init-suggestions-table', adminAuth, async (req, res) => {
     try {
         await db.query(`
             CREATE TABLE IF NOT EXISTS suggestions (
@@ -3458,7 +3389,7 @@ app.post('/api/suggestions', async (req, res) => {
 });
 
 // Get all suggestions (admin)
-app.get('/api/admin/suggestions', async (req, res) => {
+app.get('/api/admin/suggestions', adminAuth, async (req, res) => {
     try {
         const { status, category, priority } = req.query;
 
@@ -3490,7 +3421,7 @@ app.get('/api/admin/suggestions', async (req, res) => {
 });
 
 // Update suggestion status (admin)
-app.put('/api/admin/suggestions/:id', async (req, res) => {
+app.put('/api/admin/suggestions/:id', adminAuth, async (req, res) => {
     try {
         const { id } = req.params;
         const { status, admin_notes } = req.body;
@@ -3516,7 +3447,7 @@ app.put('/api/admin/suggestions/:id', async (req, res) => {
 });
 
 // Delete suggestion (admin)
-app.delete('/api/admin/suggestions/:id', async (req, res) => {
+app.delete('/api/admin/suggestions/:id', adminAuth, async (req, res) => {
     try {
         const { id } = req.params;
         await db.query('DELETE FROM suggestions WHERE id = $1', [id]);
@@ -3528,7 +3459,7 @@ app.delete('/api/admin/suggestions/:id', async (req, res) => {
 });
 
 // Get suggestions stats (admin)
-app.get('/api/admin/suggestions/stats', async (req, res) => {
+app.get('/api/admin/suggestions/stats', adminAuth, async (req, res) => {
     try {
         const stats = await db.query(`
             SELECT 
@@ -3552,7 +3483,7 @@ app.get('/api/admin/suggestions/stats', async (req, res) => {
 // ===== TEMPORARY SIGNUP LINKS FEATURE =====
 
 // Create temporary signup links table
-app.post('/api/admin/init-temp-links-tables', async (req, res) => {
+app.post('/api/admin/init-temp-links-tables', adminAuth, async (req, res) => {
     try {
         // Create temporary_signup_links table
         await db.query(`
@@ -3595,7 +3526,7 @@ app.post('/api/admin/init-temp-links-tables', async (req, res) => {
 });
 
 // Generate temporary signup link
-app.post('/api/admin/generate-temp-link', async (req, res) => {
+app.post('/api/admin/generate-temp-link', adminAuth, async (req, res) => {
     try {
         const { maxUses, createdBy } = req.body;
 
@@ -3637,7 +3568,7 @@ app.post('/api/admin/generate-temp-link', async (req, res) => {
 });
 
 // Get all temporary links with statistics
-app.get('/api/admin/temp-links', async (req, res) => {
+app.get('/api/admin/temp-links', adminAuth, async (req, res) => {
     try {
         const result = await db.query(`
             SELECT 
@@ -4186,7 +4117,7 @@ app.post('/api/signup/temp-link', async (req, res) => {
 });
 
 // Deactivate temporary link manually
-app.post('/api/admin/deactivate-temp-link/:id', async (req, res) => {
+app.post('/api/admin/deactivate-temp-link/:id', adminAuth, async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -4245,7 +4176,7 @@ app.get('/final-quiz/questions-count', requireSession, async (req, res) => {
 });
 
 // Get all questions for final quiz (including previously answered ones)
-app.get('/final-quiz/questions', requireSession, async (req, res) => {
+app.get('/final-quiz/questions', requireSession, subscriberOnly, async (req, res) => {
     const { questionType, source } = req.query;
 
     try {
@@ -4293,7 +4224,7 @@ app.get('/final-quiz/questions', requireSession, async (req, res) => {
 });
 
 // Submit final quiz session
-app.post('/final-quiz/submit', requireSession, async (req, res) => {
+app.post('/final-quiz/submit', requireSession, subscriberOnly, async (req, res) => {
     const {
         userId,
         questionType,
@@ -4599,10 +4530,10 @@ app.get('/final-quiz/session/:sessionId/questions', requireSession, async (req, 
             queryParams = [sessionId];
         }
 
-        // First get the question_ids from the session
+        // First get the question_ids (and the numeric id) from the session
         const sessionResult = await db.query(`
-            SELECT question_ids 
-            FROM final_review_sessions 
+            SELECT id, question_ids
+            FROM final_review_sessions
             ${whereClause}
         `, queryParams);
 
@@ -4611,6 +4542,9 @@ app.get('/final-quiz/session/:sessionId/questions', requireSession, async (req, 
         }
 
         const questionIds = sessionResult.rows[0].question_ids;
+        // final_quiz_attempts.session_id references the numeric id — using the
+        // raw route param here broke lookups by UUID session_id.
+        const numericSessionId = sessionResult.rows[0].id;
 
         if (!questionIds || questionIds.length === 0) {
             return res.json({ questions: [] });
@@ -4618,7 +4552,7 @@ app.get('/final-quiz/session/:sessionId/questions', requireSession, async (req, 
 
         // Get the questions with user answers using JOIN
         const questionsResult = await db.query(`
-            SELECT 
+            SELECT
                 q.id,
                 q.question_text,
                 q.option1,
@@ -4635,7 +4569,7 @@ app.get('/final-quiz/session/:sessionId/questions', requireSession, async (req, 
             LEFT JOIN final_quiz_attempts fqa ON q.id = fqa.question_id AND fqa.session_id = $2
             WHERE q.id = ANY($1)
             ORDER BY array_position($1, q.id)
-        `, [questionIds, sessionId]);
+        `, [questionIds, numericSessionId]);
 
         logger.info('Questions with user answers fetched successfully for final quiz session', {
             sessionId,
@@ -4651,6 +4585,12 @@ app.get('/final-quiz/session/:sessionId/questions', requireSession, async (req, 
         });
         res.status(500).json({ message: 'Failed to fetch questions for final quiz session' });
     }
+});
+
+// Admin key probe — the admin panel's gate screen calls this to check the
+// key it holds before rendering any admin UI.
+app.get('/api/admin/verify-key', adminAuth, (req, res) => {
+    res.json({ success: true });
 });
 
 // Error Report Routes
@@ -4694,6 +4634,11 @@ app.use(async (err, req, res, next) => {
     });
 });
 
-app.listen(3000, () => {
-    console.log("Server is running on port 3000");
+// Single listen at the very end so every route/middleware above is registered
+// first. Previously the app listened TWICE (once mid-file on process.env.PORT,
+// once here on 3000) which crashes locally with EADDRINUSE when PORT=3000 and
+// otherwise binds a second random port.
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
 });

@@ -11,6 +11,8 @@ import {
     sendStreakReminderEmail,
     sendFeedbackEmail,
 } from '../services/userEmailService.js';
+import { maybeSendSubscriptionReport, sendSubscriptionReport } from '../services/subscriptionReportService.js';
+import { adminAuth } from '../middleware/adminAuth.js';
 
 const router = express.Router();
 
@@ -33,7 +35,7 @@ const cronAuth = (req, res, next) => {
 // ════════════════════════════════════════════════════════════
 
 // GET /api/email-test/welcome
-router.get('/api/email-test/welcome', async (req, res) => {
+router.get('/api/email-test/welcome', adminAuth, async (req, res) => {
     try {
         await sendWelcomeEmail(TEST_EMAIL, TEST_USERNAME);
         res.json({ success: true, message: `Welcome email sent to ${TEST_EMAIL}` });
@@ -44,7 +46,7 @@ router.get('/api/email-test/welcome', async (req, res) => {
 });
 
 // GET /api/email-test/inactivity
-router.get('/api/email-test/inactivity', async (req, res) => {
+router.get('/api/email-test/inactivity', adminAuth, async (req, res) => {
     try {
         await sendInactivityEmail(TEST_EMAIL, TEST_USERNAME);
         res.json({ success: true, message: `Inactivity email sent to ${TEST_EMAIL}` });
@@ -55,7 +57,7 @@ router.get('/api/email-test/inactivity', async (req, res) => {
 });
 
 // GET /api/email-test/streak
-router.get('/api/email-test/streak', async (req, res) => {
+router.get('/api/email-test/streak', adminAuth, async (req, res) => {
     const mockStreak = parseInt(req.query.streak) || 7;
     try {
         await sendStreakReminderEmail(TEST_EMAIL, TEST_USERNAME, mockStreak);
@@ -67,7 +69,7 @@ router.get('/api/email-test/streak', async (req, res) => {
 });
 
 // GET /api/email-test/feedback
-router.get('/api/email-test/feedback', async (req, res) => {
+router.get('/api/email-test/feedback', adminAuth, async (req, res) => {
     try {
         await sendFeedbackEmail(TEST_EMAIL, TEST_USERNAME);
         res.json({ success: true, message: `Feedback email sent to ${TEST_EMAIL}` });
@@ -220,7 +222,38 @@ router.get('/api/cron/daily-emails', cronAuth, async (req, res) => {
         results.errors.push({ job: 'feedback_query', error: err.message });
     }
 
+    // ── 4. Bi-daily subscription report ───────────────────────
+    // Runs on every daily invocation but only sends when the last report is
+    // ≥ 47h old — i.e. a PDF of new subscriptions every 2 days. Kept inside
+    // this cron so the project stays within Vercel's 2-cron (Hobby) limit.
+    try {
+        results.subscriptionReport = await maybeSendSubscriptionReport(db);
+    } catch (err) {
+        console.error('cron/daily-emails subscription report error:', err);
+        results.errors.push({ job: 'subscription_report', error: err.message });
+    }
+
     res.json({ success: true, ...results });
+});
+
+/**
+ * GET /api/email-test/subscription-report?days=2
+ * Force-sends the subscriptions PDF report immediately (admin only).
+ * Does NOT count as a scheduled send, so the 2-day cadence is unaffected.
+ */
+router.get('/api/email-test/subscription-report', adminAuth, async (req, res) => {
+    const days = Math.min(30, Math.max(1, parseInt(req.query.days) || 2));
+    try {
+        const result = await sendSubscriptionReport(req.db, {
+            periodStart: new Date(Date.now() - days * 24 * 3600 * 1000),
+            periodEnd: new Date(),
+            record: false,
+        });
+        res.json({ success: true, ...result });
+    } catch (err) {
+        console.error('email-test/subscription-report error:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
 });
 
 export default router;

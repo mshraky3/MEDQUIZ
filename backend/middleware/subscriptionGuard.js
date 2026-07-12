@@ -1,17 +1,18 @@
 /**
- * subscriptionGuard middleware (STUB / not yet applied)
+ * subscriptionGuard middleware
  * ------------------------------------------------------------------
  * Express middleware that enforces subscription access on protected
  * routes — but ONLY when PAYMENT_ENFORCEMENT_ENABLED === "true".
  *
  * While the flag is disabled (the default) it is a transparent pass-through,
- * preserving today's "free for all" behavior.
+ * preserving the "free for all" behavior.
  *
- * This middleware is intentionally NOT wired into any route yet. At
- * activation time, insert it into the chain after requireSession, e.g.:
+ * MUST run after requireSession. The account is resolved from the SESSION
+ * username (already validated against accounts.session_token), never from a
+ * client-supplied userId — otherwise an unpaid user could borrow another
+ * account's id to slip past the paywall.
  *
- *   app.get('/quiz-sessions/:userId', requireSession,
- *           subscriptionGuard(db), handler);
+ *   app.get('/api/questions', requireSession, subscriptionGuard(db), handler);
  *
  * @param {import('pg').Pool} db - the shared PostgreSQL pool
  */
@@ -23,16 +24,17 @@ export function subscriptionGuard(db) {
         if (!isPaymentEnforcementEnabled()) return next();
 
         try {
-            const userId = req.body?.userId || req.query?.userId || req.params?.userId;
-            if (!userId) {
-                return res.status(400).json({ message: 'User identification required for access check' });
+            // Same identity source requireSession validated.
+            const username = req.query.username || req.body?.username;
+            if (!username) {
+                return res.status(401).json({ message: 'Session credentials required for access check' });
             }
 
             const result = await db.query(
                 `SELECT id, subscription_status, subscription_expiry_date,
                         is_admin_created, grandfathered_at
-                 FROM accounts WHERE id = $1`,
-                [userId]
+                 FROM accounts WHERE username = $1`,
+                [username]
             );
             const account = result.rows[0];
 

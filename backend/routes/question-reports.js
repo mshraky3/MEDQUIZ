@@ -1,5 +1,6 @@
 import express from 'express';
 import nodemailer from 'nodemailer';
+import { adminAuth } from '../middleware/adminAuth.js';
 
 const router = express.Router();
 
@@ -103,7 +104,7 @@ router.post('/', async (req, res) => {
 });
 
 // GET /admin/question-reports — admin fetches all reports
-router.get('/', async (req, res) => {
+router.get('/', adminAuth, async (req, res) => {
     try {
         const result = await req.db.query(`
             SELECT
@@ -139,7 +140,7 @@ router.get('/', async (req, res) => {
 });
 
 // PUT /admin/question-reports/:id/resolve — admin resolves a report
-router.put('/:id/resolve', async (req, res) => {
+router.put('/:id/resolve', adminAuth, async (req, res) => {
     const { id } = req.params;
     const { action, new_correct_option, admin_note } = req.body;
 

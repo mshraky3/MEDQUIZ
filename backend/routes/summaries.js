@@ -12,6 +12,7 @@
  */
 import express from 'express';
 import { getObject, isR2Configured } from '../services/r2Service.js';
+import { isPaymentEnforcementEnabled, checkSubscriptionAccess } from '../services/paymentService.js';
 
 const router = express.Router();
 
@@ -44,6 +45,34 @@ async function requireSession(req, res, next) {
 }
 
 router.use(requireSession);
+
+// Paywall: summaries are paid content. No-op while PAYMENT_ENFORCEMENT_ENABLED
+// is off; once on, unpaid accounts get 402 (grandfathered/admin/active pass).
+// Uses req.userId, which requireSession derived from the validated session.
+router.use(async (req, res, next) => {
+    if (!isPaymentEnforcementEnabled()) return next();
+    try {
+        const r = await req.db.query(
+            `SELECT id, subscription_status, subscription_expiry_date,
+                    is_admin_created, grandfathered_at
+             FROM accounts WHERE id = $1`,
+            [req.userId]
+        );
+        const { allowed, reason } = checkSubscriptionAccess(r.rows[0]);
+        if (!allowed) {
+            return res.status(402).json({
+                success: false,
+                expired: reason === 'subscription_required',
+                reason,
+                message: 'An active subscription is required to access summaries.',
+            });
+        }
+        next();
+    } catch (err) {
+        console.error('[Summaries] subscription check failed:', err);
+        res.status(500).json({ message: 'Subscription check failed' });
+    }
+});
 
 const pad3 = (n) => String(n).padStart(3, '0');
 
