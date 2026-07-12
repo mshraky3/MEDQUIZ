@@ -269,6 +269,133 @@
     font-size: 0.87rem;
 }
 .sum-callout b { color: #236ded; }
+
+/* Table of contents — anchor links to each topic */
+.sum-toc {
+    background: #ffffff;
+    border: 1px solid #d4deee;
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin: 14px 0 18px;
+}
+.sum-toc h3 {
+    color: #0f1e3d;
+    font-size: 1.02rem;
+    margin: 0 0 10px;
+    border: none;
+    padding: 0;
+}
+.sum-toc ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+    gap: 4px 18px;
+    counter-reset: toc;
+}
+.sum-toc li { margin: 0; font-size: 0.86rem; counter-increment: toc; }
+.sum-toc a {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    color: #236ded;
+    text-decoration: none;
+    padding: 5px 6px;
+    border-radius: 7px;
+    transition: background 0.15s ease;
+}
+.sum-toc a::before {
+    content: counter(toc);
+    font-weight: 800;
+    color: #94a3b8;
+    min-width: 20px;
+    font-size: 0.78rem;
+}
+.sum-toc a:hover { background: rgba(35, 109, 237, 0.08); }
+
+/* Management algorithm box — numbered decision flow */
+.sum-algo {
+    background: linear-gradient(180deg, rgba(35, 109, 237, 0.06), rgba(35, 109, 237, 0.02));
+    border: 1px solid rgba(35, 109, 237, 0.24);
+    border-inline-start: 4px solid #236ded;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin: 12px 0;
+    font-size: 0.87rem;
+}
+.sum-algo .sum-algo-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-weight: 800;
+    color: #236ded;
+    font-size: 0.82rem;
+    letter-spacing: 0.3px;
+    margin-bottom: 6px;
+}
+.sum-algo .sum-algo-title::before { content: '⇢'; font-size: 1rem; }
+.sum-algo ol, .sum-algo ul { margin: 4px 0; padding-inline-start: 20px; }
+.sum-algo li { margin: 5px 0; }
+
+/* Exam key-points box — high-yield "what they ask" recall */
+.sum-key {
+    background: linear-gradient(180deg, rgba(16, 185, 129, 0.08), rgba(16, 185, 129, 0.02));
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    border-inline-start: 4px solid #10b981;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin: 12px 0 4px;
+    font-size: 0.87rem;
+}
+.sum-key .sum-key-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-weight: 800;
+    color: #047857;
+    font-size: 0.82rem;
+    letter-spacing: 0.3px;
+    margin-bottom: 6px;
+}
+.sum-key .sum-key-title::before { content: '★'; }
+.sum-key ul { margin: 4px 0; padding-inline-start: 20px; list-style: none; }
+.sum-key li { margin: 6px 0; padding-inline-start: 18px; position: relative; }
+.sum-key li::before {
+    content: '→';
+    position: absolute;
+    inset-inline-start: 0;
+    color: #10b981;
+    font-weight: 800;
+}
+.sum-key b { color: #047857; }
+
+/* Anchor offset so in-page TOC jumps aren't hidden under sticky headers */
+.sum-doc section.topic { scroll-margin-top: 80px; }
+
+/* Original anatomy / clinical diagrams (inline SVG) with a caption */
+.sum-fig {
+    margin: 14px 0;
+    padding: 14px;
+    background: #ffffff;
+    border: 1px solid #d4deee;
+    border-radius: 12px;
+    text-align: center;
+}
+.sum-fig svg {
+    width: 100%;
+    max-width: 460px;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+.sum-fig figcaption {
+    margin-top: 8px;
+    color: #64748b;
+    font-size: 0.8rem;
+    line-height: 1.5;
+}
+.sum-fig figcaption b { color: #236ded; }
 .sum-doc table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.8rem; }
 .sum-doc th, .sum-doc td {
     border: 1px solid #d4deee;

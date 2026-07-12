@@ -50,6 +50,34 @@ const steps = [
   }
 ];
 
+const included = [
+  'أكثر من 11,000 سؤال محدّث بنمط SMLE والبرومترك، مع تجميعات شهرية جديدة',
+  'شرح سريري واضح لكل سؤال — تفهم "لماذا" لا تحفظ فقط',
+  'ملخصات مركّزة للمواضيع عالية التكرار بدل تشتت الملفات والمصادر',
+  'اختبارات محاكية بتوقيت حقيقي تهيّئك لأجواء الاختبار الفعلي',
+  'لوحة تحليلات تكشف نقاط ضعفك وتعيد تدريبك عليها تلقائياً',
+  'مراجعة أسئلتك الخاطئة في أي وقت حتى تتقنها',
+  'يعمل على الجوال والكمبيوتر، وتقدّمك محفوظ ومتزامن دائماً'
+];
+
+const valuePoints = [
+  {
+    icon: 'award',
+    title: 'استثمار صغير، عائد كبير',
+    desc: 'رسوم دخول الاختبار وإعادته تتجاوز مئات الريالات، ودورات التحضير تكلف آلافاً. اشتراك SQB يكلف 99 ريالاً فقط للسنة كاملة — أقل من ريالين في الأسبوع.'
+  },
+  {
+    icon: 'check-circle',
+    title: 'دفع آمن وبدون التزامات',
+    desc: 'دفعة واحدة عبر بوابة ميسر السعودية المرخّصة (مدى، Visa، Mastercard). بدون تجديد تلقائي وبدون رسوم مخفية — سنة كاملة من الوصول غير المحدود.'
+  },
+  {
+    icon: 'refresh',
+    title: 'محتوى لا يتوقف عن التحديث',
+    desc: 'نضيف تجميعات شهرية جديدة تواكب أحدث نمط لأسئلة الهيئة السعودية، فتتدرب دائماً على الأقرب لما ستراه في اختبارك.'
+  }
+];
+
 const seoTopics = [
   {
     title: 'تحضير منظم لاختبار SMLE',
@@ -106,7 +134,9 @@ const Landing = () => {
 
   return (
     <>
-      <div className="landing-body">
+      {/* Explicit dir: index.css sets body{direction:ltr}, which would cancel
+          the documentElement dir for everything inside. */}
+      <div className="landing-body" dir="rtl" lang="ar">
         <div className="landing-shell">
 
           <section className="hero">
@@ -158,6 +188,50 @@ const Landing = () => {
                   <p>{feature.desc}</p>
                 </div>
               ))}
+            </div>
+          </section>
+
+          <section className="value-section" aria-label="الاشتراك والأسعار">
+            <div className="section-head">
+              <p className="pill subtle">لماذا الاشتراك؟</p>
+              <h2>كل تحضيرك لاختبار SMLE مقابل 99 ريالاً في السنة</h2>
+              <p>
+                نجاحك في الاختبار يفتح لك باب التدريب والوظيفة — والرسوب يكلفك رسوم إعادة، وشهوراً
+                من الانتظار، وضغطاً أنت في غنى عنه. صُممت SQB لتوصلك لدرجتك المستهدفة من أول محاولة.
+              </p>
+            </div>
+
+            <div className="value-grid">
+              <div className="value-points">
+                {valuePoints.map((point) => (
+                  <div key={point.title} className="value-point">
+                    <span className="feature-icon" aria-hidden="true"><Icon name={point.icon} size={24} /></span>
+                    <div>
+                      <h3>{point.title}</h3>
+                      <p>{point.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <aside className="price-card" aria-label="تفاصيل الاشتراك">
+                <p className="price-card-plan">اشتراك سنوي — دفعة واحدة</p>
+                <div className="price-card-amount">
+                  <span className="price-card-value">99</span>
+                  <span className="price-card-cur">ريال / سنة</span>
+                </div>
+                <ul className="price-card-list">
+                  {included.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+                <button className="btn primary price-card-cta" onClick={handleSignup}>
+                  اشترك الآن — 99 ريال
+                </button>
+                <p className="price-card-note">
+                  دفع آمن عبر ميسر · مدى / Visa / Mastercard · بدون تجديد تلقائي
+                </p>
+              </aside>
             </div>
           </section>
 

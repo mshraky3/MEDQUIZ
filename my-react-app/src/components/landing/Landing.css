@@ -142,6 +142,10 @@
   animation-delay: 0.3s;
 }
 
+.landing-shell>section:nth-of-type(7) {
+  animation-delay: 0.35s;
+}
+
 .pill {
   display: inline-flex;
   align-items: center;
@@ -532,6 +536,168 @@
   line-height: 1.65;
 }
 
+/* ── Value + pricing section ─────────────────────────────────────── */
+.value-grid {
+  margin-top: 36px;
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 28px;
+  align-items: start;
+}
+
+.value-points {
+  display: grid;
+  gap: 18px;
+}
+
+.value-point {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 18px;
+  align-items: start;
+  padding: 24px 22px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card-grad);
+  box-shadow: var(--card-shadow);
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.value-point:hover {
+  transform: translateY(-4px);
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 22px 48px rgba(59, 130, 246, 0.12);
+}
+
+.value-point .feature-icon {
+  margin-bottom: 0;
+  animation: none;
+}
+
+.value-point:nth-child(2) .feature-icon {
+  background: linear-gradient(150deg, rgba(16, 185, 129, 0.22), rgba(14, 165, 233, 0.16));
+  border-color: rgba(16, 185, 129, 0.30);
+  color: var(--accent-emerald);
+}
+
+.value-point:nth-child(3) .feature-icon {
+  background: linear-gradient(150deg, rgba(124, 58, 237, 0.22), rgba(99, 102, 241, 0.16));
+  border-color: rgba(124, 58, 237, 0.30);
+  color: var(--accent-violet);
+}
+
+.value-point h3 {
+  margin: 0 0 6px;
+  color: #0f1e3d;
+  font-size: 18px;
+}
+
+.value-point p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.75;
+}
+
+/* Pricing card — same family as the cta-band so it reads as "the offer". */
+.price-card {
+  position: sticky;
+  top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: clamp(26px, 3.5vw, 36px);
+  border: 1px solid rgba(37, 99, 235, 0.4);
+  border-radius: calc(var(--radius) + 6px);
+  background:
+    radial-gradient(ellipse at 85% 115%, rgba(124, 58, 237, 0.5) 0%, transparent 55%),
+    radial-gradient(ellipse at 0% 0%, rgba(14, 165, 233, 0.45) 0%, transparent 50%),
+    linear-gradient(135deg, #2563eb 0%, #1d4ed8 55%, #4f46e5 100%);
+  box-shadow: 0 30px 64px rgba(37, 99, 235, 0.30);
+  color: #ffffff;
+}
+
+.price-card-plan {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.price-card-amount {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.price-card-value {
+  font-size: clamp(52px, 6vw, 68px);
+  font-weight: 900;
+  line-height: 1;
+  text-shadow: 0 4px 24px rgba(2, 6, 23, 0.25);
+}
+
+.price-card-cur {
+  font-size: 17px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.price-card-list {
+  list-style: none;
+  margin: 0;
+  padding: 16px 0 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.22);
+  display: grid;
+  gap: 11px;
+}
+
+.price-card-list li {
+  position: relative;
+  padding-inline-start: 26px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.94);
+}
+
+.price-card-list li::before {
+  content: '✓';
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 900;
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.price-card-cta.btn.primary {
+  margin-top: 4px;
+  width: 100%;
+  background: #ffffff;
+  color: #1d4ed8;
+  box-shadow: 0 16px 34px rgba(2, 6, 23, 0.28);
+  font-size: 16px;
+  padding: 15px 22px;
+}
+
+.price-card-cta.btn.primary:hover {
+  background: #f5f8ff;
+  box-shadow: 0 22px 44px rgba(2, 6, 23, 0.34);
+}
+
+.price-card-note {
+  margin: 0;
+  text-align: center;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.78);
+}
+
 .seo-section,
 .resource-card,
 .faq-preview-card {
@@ -889,8 +1055,13 @@
 
   .flow-section,
   .resource-section,
-  .cta-band-content {
+  .cta-band-content,
+  .value-grid {
     grid-template-columns: 1fr;
+  }
+
+  .price-card {
+    position: static;
   }
 
   .feature-grid {
