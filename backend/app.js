@@ -318,14 +318,9 @@ function adminOrSubscriber(req, res, next) {
     return requireSubscriber(req, res, next);
 }
 
-app.get('/', async (req, res) => {
-    try {
-        const resal = await db.query("SELECT * FROM test");
-        res.send(resal.rows[0]?.test || "No data found in test table.");
-    } catch (err) {
-        console.error(err);
-        res.status(500).send("Server error");
-    }
+// Health check (previously read a scratch "test" table — no DB needed).
+app.get('/', (req, res) => {
+    res.json({ status: 'ok', service: 'SQB API' });
 });
 
 app.post('/add_account', adminAuth, async (req, res) => {
@@ -2878,10 +2873,8 @@ app.get('/quiz-sessions/progress/:userId', requireSession, async (req, res) => {
     }
 });
 
-// Get user account/subscription status.
-// FUTURE SUBSCRIPTION CHECK POINT: when PAYMENT_ENFORCEMENT_ENABLED=true this
-// endpoint will surface real subscription state (status, expiry, days remaining).
-// While the flag is disabled, all accounts are treated as free with full access.
+// Get user account/subscription status — surfaces real subscription state
+// (status, expiry, days remaining) while enforcement is enabled.
 app.get('/api/user-subscription/:userId', async (req, res) => {
     const { userId } = req.params;
 
@@ -3085,10 +3078,10 @@ app.post('/accept-terms', async (req, res) => {
 // Note: Migration endpoint removed - using accounts table only
 
 // ===== PAYMENT WORKFLOW =====
-// Legacy PayPal payment endpoints removed. Payment integration is now handled
-// by the Moyasar stub module at routes/payment.js, gated behind the
-// PAYMENT_ENFORCEMENT_ENABLED feature flag (defaults to disabled). See also
-// services/paymentService.js and middleware/subscriptionGuard.js.
+// Payments are LIVE via Moyasar: routes/payment.js (config/verify/webhook/status),
+// services/paymentService.js (verification + activation + owner notification),
+// middleware/subscriptionGuard.js (server-side paywall). All gated behind
+// PAYMENT_ENFORCEMENT_ENABLED.
 
 // Test email endpoint
 app.get('/api/test-email', adminAuth, async (req, res) => {
@@ -3944,14 +3937,10 @@ app.post('/api/signup/free', async (req, res) => {
                 console.error('Failed to send welcome email at signup:', welcomeErr);
             }
 
-            // Send email notification to admin
-            try {
-                const emailSubject = `✅ Free Account Created - ${lowerEmail}`;
-                const emailText = `New free account created:\nEmail: ${lowerEmail}\nUser ID: ${newUserId}\nCreated: ${new Date().toLocaleString()}`;
-                await sendEmail('muhmodalshraky3@gmail.com', emailSubject, emailText);
-            } catch (emailError) {
-                console.error('Failed to send free account creation email:', emailError);
-            }
+            // NOTE: the per-signup admin email was removed on purpose — the
+            // signal the owner cares about is PAYMENTS, not signups. A rich
+            // "payment received" email is sent from paymentService when a
+            // subscription is actually paid (webhook or /verify).
 
             res.status(201).json({
                 success: true,
@@ -4602,8 +4591,8 @@ app.use('/api/question-reports', (req, res, next) => { req.db = db; next(); }, q
 // Email Campaign Routes (test + cron)
 app.use('/', (req, res, next) => { req.db = db; next(); }, emailCampaignsRouter);
 
-// Payment Routes (Moyasar) — STUB, gated by PAYMENT_ENFORCEMENT_ENABLED.
-// Returns 503 "disabled" on every endpoint until the flag is set to "true".
+// Payment Routes (Moyasar) — LIVE. Gated by PAYMENT_ENFORCEMENT_ENABLED
+// (every endpoint returns 503 if the flag is ever turned off).
 app.use('/api/payment', (req, res, next) => { req.db = db; next(); }, paymentRoutes);
 
 // Topic Summaries Routes (slide decks + study questions + reading progress)

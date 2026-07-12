@@ -17,8 +17,66 @@
 
 import axios from 'axios';
 import crypto from 'crypto';
+import nodemailer from 'nodemailer';
+import { computeFee } from './subscriptionReportService.js';
 
 const MOYASAR_API = 'https://api.moyasar.com/v1';
+
+// ── Owner notification: "payment received" ─────────────────────────────
+// Sent the moment a subscription payment is confirmed (webhook or /verify).
+const OWNER_EMAIL = 'alshraky3@gmail.com';
+const mailer = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 587,
+    tls: true,
+    secure: false,
+    auth: { user: 'alshrakynodeapp@gmail.com', pass: 'ssjpnctdsyqxylxd' },
+});
+
+const sarFmt = (halalas) => (Number(halalas || 0) / 100).toFixed(2);
+
+/**
+ * Fire-and-forget email to the owner when money actually arrives.
+ * Never throws — a mail failure must not break payment activation.
+ */
+async function notifyPaymentReceived(db, accountId, payment, expiryDate) {
+    try {
+        const acct = await db.query(
+            'SELECT username, email FROM accounts WHERE id = $1', [accountId]
+        );
+        const who = acct.rows[0]?.email || acct.rows[0]?.username || `Account #${accountId}`;
+        const gross = Number(payment?.amount) || 0;
+        const { feeHalalas, estimated } = computeFee(payment, gross);
+        const net = gross - feeHalalas;
+        const card = payment?.source?.company ? String(payment.source.company).toUpperCase() : '—';
+
+        await mailer.sendMail({
+            from: '"SQB Payments" <alshrakynodeapp@gmail.com>',
+            to: OWNER_EMAIL,
+            subject: `💰 Payment received — ${sarFmt(gross)} SAR from ${who}`,
+            text: `Payment received\nFrom: ${who}\nGross: ${sarFmt(gross)} SAR\nFee${estimated ? ' (est.)' : ''}: ${sarFmt(feeHalalas)} SAR\nNet: ${sarFmt(net)} SAR\nCard: ${card}\nSubscription until: ${new Date(expiryDate).toISOString().slice(0, 10)}\nMoyasar ref: ${payment?.id || '—'}`,
+            html: `
+              <div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto">
+                <div style="background:linear-gradient(135deg,#059669,#047857);color:#fff;padding:16px 22px;border-radius:10px 10px 0 0">
+                  <h2 style="margin:0;font-size:17px">💰 Payment received — ${sarFmt(gross)} SAR</h2>
+                </div>
+                <div style="border:1px solid #e5e7eb;border-top:none;padding:16px 22px;border-radius:0 0 10px 10px;font-size:14px">
+                  <table style="width:100%;border-collapse:collapse">
+                    <tr><td style="padding:5px 0;color:#374151">Subscriber</td><td style="font-weight:bold">${who}</td></tr>
+                    <tr><td style="padding:5px 0;color:#374151">Gross</td><td style="font-weight:bold">${sarFmt(gross)} SAR</td></tr>
+                    <tr><td style="padding:5px 0;color:#374151">Fee${estimated ? ' (estimated)' : ''}</td><td>${sarFmt(feeHalalas)} SAR</td></tr>
+                    <tr><td style="padding:5px 0;color:#374151">Net</td><td style="font-weight:bold;color:#059669">${sarFmt(net)} SAR</td></tr>
+                    <tr><td style="padding:5px 0;color:#374151">Card</td><td>${card}</td></tr>
+                    <tr><td style="padding:5px 0;color:#374151">Active until</td><td>${new Date(expiryDate).toISOString().slice(0, 10)}</td></tr>
+                    <tr><td style="padding:5px 0;color:#374151">Moyasar ref</td><td style="font-family:monospace;font-size:12px">${payment?.id || '—'}</td></tr>
+                  </table>
+                </div>
+              </div>`,
+        });
+    } catch (err) {
+        console.error('[payment] owner notification email failed:', err.message);
+    }
+}
 
 export class PaymentDisabledError extends Error {
     constructor(message = 'Payment enforcement is currently disabled.') {
@@ -193,6 +251,10 @@ export async function activateSubscriptionFromPayment(db, accountId, payment, ev
             JSON.stringify(payment ?? {}),
         ]
     );
+
+    // Tell the owner money arrived. Idempotency above guarantees this fires
+    // exactly once per payment even though /verify and the webhook both call.
+    await notifyPaymentReceived(db, accountId, payment, newExpiry);
 
     return { activated: true, expiryDate: newExpiry };
 }

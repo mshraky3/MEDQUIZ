@@ -62,7 +62,7 @@ function ensureReportLog(db) {
 }
 
 /** Gateway fee in halalas: real when Moyasar provides it, estimated otherwise. */
-function computeFee(rawPayment, amountHalalas) {
+export function computeFee(rawPayment, amountHalalas) {
     const actual = Number(rawPayment?.fee);
     if (Number.isFinite(actual) && actual > 0) {
         return { feeHalalas: Math.round(actual), estimated: false };
