@@ -9,8 +9,8 @@ function App() {
     return (
         <div style={{ minHeight: '100vh', background: '#0b1021', margin: 0, padding: 0 }}>
             <RouteSEO />
-            {process.env.NODE_ENV === 'production' && <Analytics />}
-            {process.env.NODE_ENV === 'production' && <SpeedInsights />}
+            {import.meta.env.PROD && <Analytics />}
+            {import.meta.env.PROD && <SpeedInsights />}
             <Landing />
             <Footer />
         </div>

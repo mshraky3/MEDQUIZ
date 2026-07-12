@@ -10,6 +10,7 @@ import { createRoot } from 'react-dom/client';
 import ErrorBoundary from './components/common/ErrorBoundary.jsx';
 import Layout from './components/common/Layout.jsx';
 import RequireAuth from './components/common/RequireAuth.jsx';
+import AdminGate from './components/common/AdminGate.jsx';
 import CookieConsent from './components/common/CookieConsent.jsx';
 import Spinner from './components/common/Spinner.jsx';
 
@@ -73,7 +74,7 @@ const router = createBrowserRouter([
 
   {
     path: "/ADD_ACCOUNT",
-    element: lazyEl(<ADD host={getHostUrl} />),
+    element: <AdminGate>{lazyEl(<ADD host={getHostUrl} />)}</AdminGate>,
     errorElement: <ErrorBoundary />,
   },
   {
@@ -88,7 +89,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/ADDQ",
-    element: lazyEl(<ADDQ host={Globals.URL} />),
+    element: <AdminGate>{lazyEl(<ADDQ host={Globals.URL} />)}</AdminGate>,
     errorElement: <ErrorBoundary />,
   },
   {
@@ -113,22 +114,22 @@ const router = createBrowserRouter([
   },
   {
     path: "/admin",
-    element: lazyEl(<Admin />),
+    element: <AdminGate>{lazyEl(<Admin />)}</AdminGate>,
     errorElement: <ErrorBoundary />,
   },
   {
     path: "/Bank",
-    element: lazyEl(<Bank />),
+    element: <AdminGate>{lazyEl(<Bank />)}</AdminGate>,
     errorElement: <ErrorBoundary />,
   },
   {
     path: "/TEMP_LINKS",
-    element: lazyEl(<TempLinks host={Globals.URL} />),
+    element: <AdminGate>{lazyEl(<TempLinks host={Globals.URL} />)}</AdminGate>,
     errorElement: <ErrorBoundary />,
   },
   {
     path: "/question-reports",
-    element: lazyEl(<QuestionReports />),
+    element: <AdminGate>{lazyEl(<QuestionReports />)}</AdminGate>,
     errorElement: <ErrorBoundary />,
   },
   {
