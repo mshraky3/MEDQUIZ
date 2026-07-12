@@ -263,6 +263,9 @@ const Signup = () => {
                                     required
                                     style={{ textAlign: 'center', fontSize: '24px', letterSpacing: '8px' }}
                                 />
+                                <p className="form-hint" style={{ marginTop: 8, fontSize: '13px', color: 'var(--muted)', lineHeight: 1.6 }}>
+                                    ⚠️ إذا لم تجد الرمز في بريدك، تحقّق من مجلد <strong>الرسائل غير المرغوب فيها (Spam)</strong> أو <strong>المهملات</strong>.
+                                </p>
                             </div>
                             {error && <div className="alert-box error">{error}</div>}
                             <button type="submit" className="btn primary large" disabled={loading}>

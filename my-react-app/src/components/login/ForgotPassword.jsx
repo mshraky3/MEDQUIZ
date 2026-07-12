@@ -136,6 +136,9 @@ const ForgotPassword = () => {
                             <p style={{ fontSize: 13, color: '#64748b', marginBottom: 12 }}>
                                 تم إرسال الرمز إلى: <strong style={{ color: '#94a3b8' }}>{email}</strong>
                             </p>
+                            <p style={{ fontSize: 13, color: '#64748b', marginBottom: 12, lineHeight: 1.6 }}>
+                                ⚠️ إذا لم تجد الرمز، تحقّق من مجلد <strong>الرسائل غير المرغوب فيها (Spam)</strong> أو <strong>المهملات</strong>.
+                            </p>
                             {error && <div className="alert-box error">{error}</div>}
                             <button type="submit" className="btn primary large">التالي</button>
                             <div className="login-footer-text">

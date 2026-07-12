@@ -503,6 +503,9 @@ const Login = () => {
                       inputMode="numeric"
                       style={{ textAlign: 'center', fontSize: '28px', letterSpacing: '10px', marginBottom: 12 }}
                     />
+                    <p style={{ fontSize: 13, color: '#94a3b8', marginBottom: 12, lineHeight: 1.6 }}>
+                      ⚠️ إذا لم تجد الرمز، تحقّق من مجلد <strong>الرسائل غير المرغوب فيها (Spam)</strong> أو <strong>المهملات</strong>.
+                    </p>
                     {migrationError && <div className="alert-box error" style={{ marginBottom: 12 }}>{migrationError}</div>}
                     <div className="popup-buttons" style={{ flexDirection: 'column', gap: 8 }}>
                       <button
