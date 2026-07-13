@@ -3,19 +3,7 @@
  * Sends beautifully formatted HTML emails for critical errors
  */
 
-import nodemailer from 'nodemailer';
-
-// Email configuration
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  tls: true,
-  secure: false,
-  auth: {
-    user: "alshrakynodeapp@gmail.com",
-    pass: "ssjpnctdsyqxylxd"
-  }
-});
+import { sendMail } from './mailer.js';
 
 // Developer emails to notify
 const DEVELOPER_EMAILS = process.env.DEVELOPER_EMAILS?.split(',') || ['alshraky3@gmail.com'];
@@ -589,14 +577,12 @@ export async function sendErrorNotification(errorData) {
     const subject = generateSubject(errorData, severity, frequency);
 
     // Send email
-    const mailOptions = {
-      from: '"SQB" <alshrakynodeapp@gmail.com>',
+    await sendMail({
+      name: 'SQB',
       to: DEVELOPER_EMAILS.join(', '),
       subject: subject,
       html: htmlContent
-    };
-
-    await transporter.sendMail(mailOptions);
+    });
 
     // Update trackers
     updateTrackers(errorKey);

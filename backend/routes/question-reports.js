@@ -1,24 +1,14 @@
 import express from 'express';
-import nodemailer from 'nodemailer';
 import { adminAuth } from '../middleware/adminAuth.js';
+import { sendMail } from '../services/mailer.js';
 
 const router = express.Router();
-
-const Email = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
-    auth: {
-        user: 'alshrakynodeapp@gmail.com',
-        pass: 'ssjpnctdsyqxylxd',
-    },
-});
 
 const ADMIN_EMAIL = 'alshraky3@gmail.com';
 
 const sendEmail = async (to, subject, html) => {
-    await Email.sendMail({
-        from: '"MEDQIZE" <alshrakynodeapp@gmail.com>',
+    await sendMail({
+        name: 'MEDQIZE',
         to,
         subject,
         html,

@@ -20,7 +20,7 @@
  */
 import dotenv from 'dotenv';
 import pg from 'pg';
-import nodemailer from 'nodemailer';
+import { sendMail } from '../services/mailer.js';
 
 dotenv.config();
 
@@ -39,14 +39,6 @@ const db = new pg.Pool({
     port: process.env.DBPORT,
     ssl: { rejectUnauthorized: false },
     max: 3,
-});
-
-const mailer = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    tls: true,
-    secure: false,
-    auth: { user: 'alshrakynodeapp@gmail.com', pass: 'ssjpnctdsyqxylxd' },
 });
 
 const SUBJECT = '📢 انتهت الفترة المجانية — فعّل حسابك في بنك أسئلة SMLE';
@@ -158,8 +150,8 @@ async function main() {
     }
 
     if (mode === 'preview') {
-        await mailer.sendMail({
-            from: '"SQB — بنك أسئلة SMLE" <alshrakynodeapp@gmail.com>',
+        await sendMail({
+            name: 'SQB — بنك أسئلة SMLE',
             to: OWNER_EMAIL,
             subject: `[PREVIEW] ${SUBJECT}`,
             text: TEXT,
@@ -186,8 +178,8 @@ async function main() {
     let sent = 0; const failures = [];
     for (const t of emailable) {
         try {
-            await mailer.sendMail({
-                from: '"SQB — بنك أسئلة SMLE" <alshrakynodeapp@gmail.com>',
+            await sendMail({
+                name: 'SQB — بنك أسئلة SMLE',
                 to: t.email,
                 subject: SUBJECT,
                 text: TEXT,

@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import { Pool } from 'pg';
 import OpenAI from 'openai';
 import crypto from 'crypto';
-import nodemailer from 'nodemailer';
+import { sendMail } from './services/mailer.js';
 import errorReportRoutes from './routes/error-report.js';
 import questionReportsRouter from './routes/question-reports.js';
 import emailCampaignsRouter from './routes/email-campaigns.js';
@@ -237,23 +237,11 @@ function ensurePaymentSchema() {
 // Kick off at module load (after ensureSchema so accounts table exists).
 ensurePaymentSchema();
 
-// Email configuration
-const Email = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    tls: true,
-    secure: false,
-    auth: {
-        user: "alshrakynodeapp@gmail.com",
-        pass: "ssjpnctdsyqxylxd",
-    }
-});
-
-// Email notification functions
+// Email notification functions (shared transport — see services/mailer.js)
 const sendEmail = async (to, subject, text, html = null) => {
     try {
-        const result = await Email.sendMail({
-            from: '"SQB" <alshrakynodeapp@gmail.com>',
+        const result = await sendMail({
+            name: 'SQB',
             to: to,
             subject: subject,
             text: text,
@@ -507,6 +495,45 @@ const ensureEmailCampaignColumns = async () => {
     }
 };
 ensureEmailCampaignColumns();
+
+// Temporary signup links (admin-generated free-account invites). Created at
+// startup like every other table so the feature never depends on the manual
+// POST /api/admin/init-temp-links-tables call having been made.
+const ensureTempLinksTables = async () => {
+    try {
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS temporary_signup_links (
+                id SERIAL PRIMARY KEY,
+                token VARCHAR(255) UNIQUE NOT NULL,
+                max_uses INTEGER NOT NULL DEFAULT 1,
+                current_uses INTEGER NOT NULL DEFAULT 0,
+                is_active BOOLEAN NOT NULL DEFAULT true,
+                created_by VARCHAR(100) NOT NULL,
+                created_at TIMESTAMP DEFAULT NOW(),
+                expires_at TIMESTAMP,
+                last_used_at TIMESTAMP
+            )
+        `);
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS temp_link_accounts (
+                id SERIAL PRIMARY KEY,
+                link_id INTEGER NOT NULL REFERENCES temporary_signup_links(id) ON DELETE CASCADE,
+                user_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+                username VARCHAR(100) NOT NULL,
+                created_at TIMESTAMP DEFAULT NOW(),
+                UNIQUE(link_id, user_id)
+            )
+        `);
+        await db.query(`CREATE INDEX IF NOT EXISTS idx_temp_links_token ON temporary_signup_links(token)`);
+        await db.query(`CREATE INDEX IF NOT EXISTS idx_temp_links_active ON temporary_signup_links(is_active)`);
+        await db.query(`CREATE INDEX IF NOT EXISTS idx_temp_link_accounts_link_id ON temp_link_accounts(link_id)`);
+        await db.query(`CREATE INDEX IF NOT EXISTS idx_temp_link_accounts_user_id ON temp_link_accounts(user_id)`);
+        logger.info('Temporary signup links tables ensured');
+    } catch (err) {
+        logger.error('Error ensuring temp links tables', err);
+    }
+};
+ensureTempLinksTables();
 
 const ensureQuestionReportsTable = async () => {
     try {

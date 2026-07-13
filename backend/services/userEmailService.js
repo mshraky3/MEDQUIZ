@@ -3,22 +3,11 @@
  * Sends Arabic HTML emails: Welcome, Inactivity, Streak Reminder, Feedback
  */
 
-import nodemailer from 'nodemailer';
-
-const Email = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,
-  tls: true,
-  auth: {
-    user: 'alshrakynodeapp@gmail.com',
-    pass: 'ssjpnctdsyqxylxd',
-  },
-});
+import { sendMail } from './mailer.js';
 
 const sendEmail = async (to, subject, html, text) => {
-  await Email.sendMail({
-    from: '"SQB" <alshrakynodeapp@gmail.com>',
+  await sendMail({
+    name: 'SQB',
     to,
     subject,
     text: text || '',

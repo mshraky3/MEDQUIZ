@@ -17,7 +17,7 @@
 
 import axios from 'axios';
 import crypto from 'crypto';
-import nodemailer from 'nodemailer';
+import { sendMail } from './mailer.js';
 import { computeFee } from './subscriptionReportService.js';
 
 const MOYASAR_API = 'https://api.moyasar.com/v1';
@@ -25,13 +25,6 @@ const MOYASAR_API = 'https://api.moyasar.com/v1';
 // ── Owner notification: "payment received" ─────────────────────────────
 // Sent the moment a subscription payment is confirmed (webhook or /verify).
 const OWNER_EMAIL = 'alshraky3@gmail.com';
-const mailer = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    tls: true,
-    secure: false,
-    auth: { user: 'alshrakynodeapp@gmail.com', pass: 'ssjpnctdsyqxylxd' },
-});
 
 const sarFmt = (halalas) => (Number(halalas || 0) / 100).toFixed(2);
 
@@ -50,8 +43,8 @@ async function notifyPaymentReceived(db, accountId, payment, expiryDate) {
         const net = gross - feeHalalas;
         const card = payment?.source?.company ? String(payment.source.company).toUpperCase() : '—';
 
-        await mailer.sendMail({
-            from: '"SQB Payments" <alshrakynodeapp@gmail.com>',
+        await sendMail({
+            name: 'SQB Payments',
             to: OWNER_EMAIL,
             subject: `💰 Payment received — ${sarFmt(gross)} SAR from ${who}`,
             text: `Payment received\nFrom: ${who}\nGross: ${sarFmt(gross)} SAR\nFee${estimated ? ' (est.)' : ''}: ${sarFmt(feeHalalas)} SAR\nNet: ${sarFmt(net)} SAR\nCard: ${card}\nSubscription until: ${new Date(expiryDate).toISOString().slice(0, 10)}\nMoyasar ref: ${payment?.id || '—'}`,

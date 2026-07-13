@@ -21,23 +21,11 @@
  */
 
 import PDFDocument from 'pdfkit';
-import nodemailer from 'nodemailer';
+import { sendMail } from './mailer.js';
 
 const REPORT_RECIPIENT = 'alshraky3@gmail.com';
 const REPORT_INTERVAL_HOURS = 47; // "every 2 days" with 1h tolerance for cron jitter
 const DEFAULT_WINDOW_HOURS = 48;  // first run / fallback window
-
-// Same hardcoded Gmail transporter the rest of the backend uses.
-const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    tls: true,
-    secure: false,
-    auth: {
-        user: 'alshrakynodeapp@gmail.com',
-        pass: 'ssjpnctdsyqxylxd',
-    },
-});
 
 let _logTableReady = null;
 function ensureReportLog(db) {
@@ -235,8 +223,8 @@ export async function sendSubscriptionReport(db, opts = {}) {
           </div>
         </div>`;
 
-    await transporter.sendMail({
-        from: '"SQB Reports" <alshrakynodeapp@gmail.com>',
+    await sendMail({
+        name: 'SQB Reports',
         to: REPORT_RECIPIENT,
         subject: `📈 Subscriptions Report — ${rows.length} new (${sar(totals.net)} SAR net) — ${dateTag}`,
         text: `New subscriptions: ${rows.length}\nGross: ${sar(totals.gross)} SAR\nFees: ${sar(totals.fee)} SAR\nNet: ${sar(totals.net)} SAR\nPeriod: ${fmtDate(periodStart)} -> ${fmtDate(periodEnd)}`,
