@@ -3993,8 +3993,8 @@ app.post('/api/signup/temp-link', async (req, res) => {
     try {
         const { token, email, password, otp_code } = req.body;
 
-        if (!token || !email || !password || !otp_code) {
-            return res.status(400).json({ message: 'Token, email, password, and OTP are required' });
+        if (!token || !email || !password) {
+            return res.status(400).json({ message: 'Token, email, and password are required' });
         }
 
         // Validate email format
@@ -4010,16 +4010,25 @@ app.post('/api/signup/temp-link', async (req, res) => {
         const lowerEmail = email.toLowerCase().trim();
         const lowerPassword = password.toLowerCase();
 
-        // Verify OTP first
-        const otpResult = await db.query(
-            `SELECT id FROM signup_otps 
-             WHERE email = $1 AND otp_code = $2 AND used = FALSE AND expires_at > NOW()
-             ORDER BY created_at DESC LIMIT 1`,
-            [lowerEmail, otp_code]
-        );
+        // Email OTP is NOT required for temp/invite-link signups: the admin-
+        // generated, use-limited link is itself the trust anchor, so the invite
+        // feature keeps working even while transactional email is unavailable.
+        // If a caller still supplies an OTP we honor it; otherwise we proceed
+        // without it. (email_verified is still set true below so these admin-
+        // invited accounts are never swept by the grace-login cleanup.)
+        let otpRow = null;
+        if (otp_code) {
+            const otpResult = await db.query(
+                `SELECT id FROM signup_otps
+                 WHERE email = $1 AND otp_code = $2 AND used = FALSE AND expires_at > NOW()
+                 ORDER BY created_at DESC LIMIT 1`,
+                [lowerEmail, otp_code]
+            );
 
-        if (otpResult.rows.length === 0) {
-            return res.status(400).json({ message: 'Invalid or expired OTP' });
+            if (otpResult.rows.length === 0) {
+                return res.status(400).json({ message: 'Invalid or expired OTP' });
+            }
+            otpRow = otpResult.rows[0];
         }
 
         const client = await db.connect();
@@ -4060,8 +4069,10 @@ app.post('/api/signup/temp-link', async (req, res) => {
                 return res.status(400).json({ message: 'This email is already registered' });
             }
 
-            // Mark OTP used
-            await db.query('UPDATE signup_otps SET used = TRUE WHERE id = $1', [otpResult.rows[0].id]);
+            // Mark OTP used (only when one was actually supplied/verified)
+            if (otpRow) {
+                await db.query('UPDATE signup_otps SET used = TRUE WHERE id = $1', [otpRow.id]);
+            }
 
             // Create the account (username = email for backward compat).
             // Accounts created via admin temp links are flagged for future
