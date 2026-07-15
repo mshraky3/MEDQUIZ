@@ -1306,3 +1306,61 @@
         transition: none !important; animation: none !important;
     }
 }
+
+/* ===================================================================== */
+/* Study-deck enrichment — comparison tables · animated algorithms ·      */
+/* colour-coded clinical / diagnosis / management pearls.                 */
+/* ===================================================================== */
+.deck-enrich { position: relative; }
+.deck-enrich > h3 { color: #0b7285; border-bottom-color: #bfe6df; }
+.deck-enrich > h3::before { content: "\1F4D8"; margin-inline-end: 7px; }
+.deck-intro { color: #64748b; font-size: 0.83rem; margin: -4px 0 14px; }
+
+/* per-topic clinical / diagnosis / management cards */
+.deck-topic { color: #0f1e3d; font-size: 1rem; font-weight: 700; margin: 18px 0 8px; padding-top: 4px; }
+.deck-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; margin: 8px 0; }
+.deck-card { border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 13px; background: #fbfdff; }
+.deck-card-h { display: inline-block; font-size: 0.68rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; margin-bottom: 5px; padding: 2px 9px; border-radius: 999px; }
+.deck-card.clin { border-color: #bfe6df; } .deck-card.clin .deck-card-h { color: #0b7285; background: #e6f6f3; }
+.deck-card.diag { border-color: #c7d9f5; } .deck-card.diag .deck-card-h { color: #1d4ed8; background: #e8f0fe; }
+.deck-card.mgmt { border-color: #bfe3cd; } .deck-card.mgmt .deck-card-h { color: #15803d; background: #e7f7ee; }
+.deck-card ul { margin: 2px 0 0; padding-inline-start: 18px; }
+.deck-card li { font-size: 0.85rem; margin: 3px 0; color: #1e293b; }
+.deck-card ul.sub { margin: 3px 0 5px; padding-inline-start: 16px; list-style: circle; }
+.deck-card ul.sub li { font-size: 0.81rem; margin: 2px 0; color: #475569; }
+.deck-key { margin: 10px 0; padding: 9px 13px; border-radius: 12px; background: #fff8ec; border: 1px solid #f5d99a; }
+.deck-key-h { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: #b45309; }
+.deck-key ul { margin: 4px 0 0; padding-inline-start: 18px; } .deck-key li { font-size: 0.85rem; margin: 3px 0; }
+
+/* blocks: tables & notes */
+.deck-block { margin: 15px 0; }
+.deck-cap { font-weight: 700; color: #0f1e3d; font-size: 0.94rem; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.deck-subcap { color: #64748b; font-size: 0.8rem; font-style: italic; margin: -2px 0 8px; }
+.deck-tag { font-size: 0.63rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; padding: 3px 9px; border-radius: 999px; }
+.tag-tbl { color: #1d4ed8; background: #e8f0fe; } .tag-algo { color: #0b7285; background: #e6f6f3; } .tag-note { color: #b45309; background: #fff2dd; }
+.deck-tbl-notes { margin: 8px 0 0; padding-inline-start: 20px; } .deck-tbl-notes li { font-size: 0.83rem; margin: 3px 0; color: #334155; }
+.deck-notelist { margin: 4px 0; padding-inline-start: 20px; } .deck-notelist > li { font-size: 0.86rem; margin: 4px 0; }
+.deck-notelist ul.sub { margin: 2px 0 4px; padding-inline-start: 18px; } .deck-notelist ul.sub li { font-size: 0.83rem; color: #475569; margin: 2px 0; }
+
+/* animated algorithm flow */
+.algo-flow { margin: 16px 0; padding: 14px 14px 16px; border: 1px solid #d4e3ee; border-radius: 14px; background: linear-gradient(180deg, #f8fbfe, #f2f7fb); }
+.algo-flow figcaption { font-weight: 700; color: #0f1e3d; font-size: 0.94rem; margin: 0 0 10px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.algo-flow .deck-subcap { text-align: center; }
+.algo-row { display: flex; justify-content: center; }
+.algo-node { max-width: min(560px, 92%); text-align: center; padding: 9px 15px; border-radius: 11px; font-size: 0.85rem; line-height: 1.35; border: 1px solid #cbd5e1; background: #fff; color: #1e293b; box-shadow: 0 1px 2px rgba(15, 23, 42, .06); opacity: 0; animation: algo-pop .5s ease forwards; }
+.algo-node.start { background: var(--accent, #236ded); color: #fff; border-color: transparent; font-weight: 700; }
+.algo-node.dec { background: #fff6e6; border-color: #f2c879; color: #8a5a08; font-weight: 600; }
+.algo-node.proc { background: #eef5fb; border-color: #c7d9f5; }
+.algo-node.end { background: #e9f8ef; border-color: #a9dcbc; color: #15803d; font-weight: 600; }
+.algo-arrow { width: 2px; height: 18px; margin: 3px auto; background: #94a3b8; position: relative; opacity: 0; animation: algo-fade .4s ease forwards; }
+.algo-arrow::after { content: ""; position: absolute; left: 50%; bottom: -1px; width: 8px; height: 8px; border-right: 2px solid #94a3b8; border-bottom: 2px solid #94a3b8; transform: translateX(-50%) rotate(45deg); }
+.algo-arrow.mini { height: 12px; }
+.algo-fork { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 4px; }
+.algo-branch { flex: 1 1 210px; max-width: 330px; display: flex; flex-direction: column; align-items: stretch; gap: 4px; }
+.algo-branch .algo-node { max-width: none; }
+.algo-label { align-self: center; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; color: var(--accent, #236ded); background: #fff; border: 1px solid #d4e3ee; border-radius: 999px; padding: 2px 11px; margin-bottom: 2px; opacity: 0; animation: algo-fade .4s ease forwards; }
+@keyframes algo-pop { from { opacity: 0; transform: translateY(9px) scale(.97); } to { opacity: 1; transform: none; } }
+@keyframes algo-fade { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+    .algo-node, .algo-arrow, .algo-label { opacity: 1 !important; animation: none !important; }
+}

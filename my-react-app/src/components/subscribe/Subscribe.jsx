@@ -88,8 +88,13 @@ const Subscribe = () => {
                     description: `اشتراك سنوي — حساب ${user.id}`,
                     publishable_api_key: cfg.publishableKey,
                     callback_url: `${window.location.origin}/payment/callback`,
-                    methods: ['creditcard'],
+                    methods: ['creditcard', 'applepay'],
                     supported_networks: ['visa', 'mastercard', 'mada'],
+                    apple_pay: {
+                        country: 'SA',
+                        label: 'SMLE Question Bank',
+                        validate_merchant_url: 'https://api.moyasar.com/v1/applepay/initiate',
+                    },
                     metadata: { account_id: String(user.id), plan: 'annual' },
                 });
                 setStatus('ready');

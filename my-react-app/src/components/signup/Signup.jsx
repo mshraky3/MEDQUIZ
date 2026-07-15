@@ -81,41 +81,23 @@ const Signup = () => {
         return true;
     };
 
-    const handleSendOtp = async (e) => {
-        e.preventDefault();
-        setError('');
-
-        if (!validateCredentials()) return;
-
-        setLoading(true);
-        try {
-            await axios.post(`${Globals.URL}/api/auth/send-otp`, {
-                email: form.email.trim().toLowerCase(),
-                purpose: 'signup'
-            });
-            setStep('otp');
-        } catch (err) {
-            setError(err.response?.data?.message || 'فشل إرسال رمز التحقق. حاول مرة أخرى.');
-        } finally {
-            setLoading(false);
-        }
+    const sendOtp = async () => {
+        await axios.post(`${Globals.URL}/api/auth/send-otp`, {
+            email: form.email.trim().toLowerCase(),
+            purpose: 'signup'
+        });
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError('');
-
-        if (!otp || otp.length !== 4) {
-            setError('يرجى إدخال الرمز المكون من 4 أرقام');
-            return;
-        }
-
+    // Create the account. `otpCode` is null for temp/invite-link signups, which
+    // are OTP-free (the admin-generated invite link is the trust anchor), so the
+    // invite flow works even while transactional email is down.
+    const createAccount = async (otpCode) => {
         setLoading(true);
         try {
             const endpoint = isTempLink ? '/api/signup/temp-link' : '/api/signup/free';
             const payload = isTempLink
-                ? { token, email: form.email.trim().toLowerCase(), password: form.password, otp_code: otp }
-                : { email: form.email.trim().toLowerCase(), password: form.password, otp_code: otp };
+                ? { token, email: form.email.trim().toLowerCase(), password: form.password }
+                : { email: form.email.trim().toLowerCase(), password: form.password, otp_code: otpCode };
 
             const response = await axios.post(`${Globals.URL}${endpoint}`, payload);
 
@@ -143,6 +125,55 @@ const Signup = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    // Submit of the first (credentials) form. Temp/invite links skip the email
+    // OTP entirely and create the account directly; free signups send an OTP
+    // and advance to the verification step.
+    const handleCredentialsSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+
+        if (!validateCredentials()) return;
+
+        if (isTempLink) {
+            await createAccount(null);
+            return;
+        }
+
+        setLoading(true);
+        try {
+            await sendOtp();
+            setStep('otp');
+        } catch (err) {
+            setError(err.response?.data?.message || 'فشل إرسال رمز التحقق. حاول مرة أخرى.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleResendOtp = async () => {
+        setError('');
+        setLoading(true);
+        try {
+            await sendOtp();
+        } catch (err) {
+            setError(err.response?.data?.message || 'فشل إرسال رمز التحقق. حاول مرة أخرى.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+
+        if (!otp || otp.length !== 4) {
+            setError('يرجى إدخال الرمز المكون من 4 أرقام');
+            return;
+        }
+
+        await createAccount(otp);
     };
 
     if (success) {
@@ -189,7 +220,7 @@ const Signup = () => {
                     </div>
 
                     {step === 'credentials' ? (
-                        <form onSubmit={handleSendOtp} className="login-form">
+                        <form onSubmit={handleCredentialsSubmit} className="login-form">
                             <div className="form-group">
                                 <label className="form-label" htmlFor="email">البريد الإلكتروني</label>
                                 <input
@@ -236,8 +267,8 @@ const Signup = () => {
                                 disabled={loading}
                             >
                                 {loading ? (
-                                    <div className="loading-spinner"><Spinner size="sm" />جاري الإرسال...</div>
-                                ) : 'إرسال رمز التحقق'}
+                                    <div className="loading-spinner"><Spinner size="sm" />{isTempLink ? 'جاري إنشاء الحساب...' : 'جاري الإرسال...'}</div>
+                                ) : (isTempLink ? 'إنشاء الحساب' : 'إرسال رمز التحقق')}
                             </button>
                             <div className="login-footer-text">
                                 تواجه مشكلة؟{' '}
@@ -288,7 +319,7 @@ const Signup = () => {
                                     type="button"
                                     className="link-primary"
                                     style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-                                    onClick={handleSendOtp}
+                                    onClick={handleResendOtp}
                                     disabled={loading}
                                 >
                                     أعد الإرسال
