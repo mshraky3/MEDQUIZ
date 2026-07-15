@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect } from 'react';
 import { safeGetItem, safeSetItem, safeRemoveItem } from './utils/safeStorage.js';
+import { api } from './utils/apiClient.js';
 
 export const UserContext = createContext();
 
@@ -45,9 +46,27 @@ export const UserProvider = ({ children }) => {
     setSessionToken(token);
   };
 
+  // Clears the session everywhere: best-effort on the server (so the account
+  // isn't left marked "logged" and blocking login elsewhere), then always
+  // locally regardless of whether the server call succeeds — a user must be
+  // able to log out even when offline.
+  const logout = async () => {
+    const username = user?.username;
+    try {
+      if (username) {
+        await api.post('/logout', { username });
+      }
+    } catch (_) {
+      // Ignore — local logout below still proceeds.
+    } finally {
+      setUserState(null);
+      setSessionToken(null);
+    }
+  };
+
   return (
-    <UserContext.Provider value={{ user, setUser, sessionToken, authReady }}>
+    <UserContext.Provider value={{ user, setUser, sessionToken, authReady, logout }}>
       {children}
     </UserContext.Provider>
   );
-}; 
+};
