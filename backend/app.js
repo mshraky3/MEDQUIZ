@@ -991,12 +991,22 @@ app.post('/session-validate', async (req, res) => {
 // Add logout endpoint
 app.post('/logout', async (req, res) => {
     const { username } = req.body;
+    const { sessionToken } = getSessionCredentials(req);
     if (!username) {
         return res.status(400).json({ message: 'Username is required' });
     }
     try {
-        await db.query("UPDATE accounts SET logged = $1 WHERE username = $2", [false, username]);
-        invalidateSessionCache(username); // drop cached session so it can't be reused
+        // Only clear `logged` when the caller presents the account's current
+        // session token — otherwise anyone who knows a username could force-log
+        // that account out without ever being signed in as them. Always report
+        // success either way so the client can clear its local session freely.
+        if (sessionToken) {
+            await db.query(
+                "UPDATE accounts SET logged = false WHERE username = $1 AND session_token = $2",
+                [username, sessionToken]
+            );
+            invalidateSessionCache(username); // drop cached session so it can't be reused
+        }
         res.status(200).json({ message: 'Logout successful' });
     } catch (error) {
         console.error(error);
@@ -1718,7 +1728,14 @@ app.get('/api/questions', requireSubscriber, async (req, res) => {
     const typesParam = req.query.types; // e.g., 'mix' or 'medicine,surgery'
     const sourceParam = req.query.source; // e.g., 'general', 'Midgard', 'GameBoy'
     const userId = req.query.userId; // User ID to filter completed questions
-    let query = 'SELECT * FROM questions';
+
+    // Two-step random selection instead of ORDER BY RANDOM(): sorting the full
+    // matching row set (with all its text columns) by a random key is an
+    // O(n log n) full materialization that gets slower as the bank grows and
+    // starves the small DB instance under concurrent load. Selecting just the
+    // matching ids is a cheap index-friendly scan; the random pick then only
+    // needs to fetch the handful of rows actually returned.
+    let idQuery = 'SELECT id FROM questions';
     let values = [];
     let conditions = [];
 
@@ -1727,49 +1744,66 @@ app.get('/api/questions', requireSubscriber, async (req, res) => {
         // No filter – return all
     } else {
         const selectedTypes = typesParam.split(',');
-        conditions.push(`question_type = ANY($1::text[])`);
+        conditions.push(`question_type = ANY($${values.length + 1}::text[])`);
         values.push(selectedTypes);
     }
 
     // Handle source filtering
     if (sourceParam && sourceParam !== 'mix') {
-        const paramIndex = values.length + 1;
-        conditions.push(`source = $${paramIndex}`);
+        conditions.push(`source = $${values.length + 1}`);
         values.push(sourceParam);
     }
 
     // Handle user progress filtering - exclude completed questions
     if (userId) {
-        const paramIndex = values.length + 1;
         conditions.push(`id NOT IN (
-            SELECT DISTINCT question_id 
-            FROM user_question_progress 
-            WHERE user_id = $${paramIndex}
+            SELECT DISTINCT question_id
+            FROM user_question_progress
+            WHERE user_id = $${values.length + 1}
         )`);
         values.push(userId);
     }
 
     if (conditions.length > 0) {
-        query += ' WHERE ' + conditions.join(' AND ');
+        idQuery += ' WHERE ' + conditions.join(' AND ');
     }
 
-    query += ' ORDER BY RANDOM() LIMIT $' + (values.length + 1);
-
     try {
-        // Log query for debugging
-        logger.debug('Executing questions query', {
-            query: query.substring(0, 100) + '...',
-            paramCount: values.length + 1,
+        logger.debug('Executing questions id query', {
+            query: idQuery.substring(0, 100) + '...',
+            paramCount: values.length,
             limit
         });
 
         const startTime = Date.now();
-        const result = await db.query(query, [...values, limit]);
+        const idResult = await db.query(idQuery, values);
+        const allIds = idResult.rows.map(r => r.id);
+
+        if (allIds.length === 0) {
+            return res.json({ questions: [] });
+        }
+
+        // Fisher-Yates partial shuffle: pick up to `limit` random ids
+        const pickCount = Math.min(limit, allIds.length);
+        for (let i = allIds.length - 1; i >= allIds.length - pickCount && i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [allIds[i], allIds[j]] = [allIds[j], allIds[i]];
+        }
+        const pickedIds = allIds.slice(allIds.length - pickCount);
+
+        const result = await db.query('SELECT * FROM questions WHERE id = ANY($1::int[])', [pickedIds]);
+
+        // WHERE id = ANY(...) doesn't preserve array order, so shuffle again
+        const rows = result.rows;
+        for (let i = rows.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [rows[i], rows[j]] = [rows[j], rows[i]];
+        }
+
         const endTime = Date.now();
+        logger.debug(`Questions query executed in ${endTime - startTime}ms, returned ${rows.length} questions`);
 
-        logger.debug(`Questions query executed in ${endTime - startTime}ms, returned ${result.rows.length} questions`);
-
-        res.json({ questions: result.rows });
+        res.json({ questions: rows });
     } catch (err) {
         logger.error('Error fetching questions', err);
         res.status(500).json({ message: 'Server error' });
@@ -4212,8 +4246,12 @@ app.get('/final-quiz/questions', requireSession, subscriberOnly, async (req, res
             sessionToken: req.query.sessionToken ? 'present' : 'missing'
         });
 
+        // All matching rows are returned anyway (no LIMIT), so sort in JS
+        // instead of ORDER BY RANDOM() — that avoids making Postgres compute
+        // and sort by a random key for every row just to reorder a set it has
+        // to return in full regardless.
         const result = await db.query(`
-            SELECT 
+            SELECT
                 id,
                 question_text,
                 option1,
@@ -4223,12 +4261,15 @@ app.get('/final-quiz/questions', requireSession, subscriberOnly, async (req, res
                 correct_option,
                 question_type,
                 source
-            FROM questions 
+            FROM questions
             WHERE question_type = $1 AND source = $2
-            ORDER BY RANDOM()
         `, [questionType, source]);
 
         const questions = result.rows;
+        for (let i = questions.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [questions[i], questions[j]] = [questions[j], questions[i]];
+        }
 
         logger.info('Questions fetched successfully for final quiz', {
             questionType,
