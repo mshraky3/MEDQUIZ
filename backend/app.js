@@ -18,11 +18,9 @@ import { notifyBackendError } from './services/errorNotificationService.js';
 import { sendWelcomeEmail } from './services/userEmailService.js';
 
 dotenv.config();
-
 // Logging configuration
-const LOG_LEVEL = process.env.LOG_LEVEL || 'INFO'; // DEBUG, INFO, WARN, ERROR
+const LOG_LEVEL = process.env.LOG_LEVEL || 'INFO'; 
 const isProduction = process.env.NODE_ENV === 'production';
-
 const logger = {
     debug: (message, data = null) => {
         if (LOG_LEVEL === 'DEBUG' && !isProduction) {
