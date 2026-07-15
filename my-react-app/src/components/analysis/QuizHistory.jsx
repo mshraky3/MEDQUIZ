@@ -171,9 +171,12 @@ const QuizHistory = ({ userId, username, sessionToken }) => {
 
   const getSourceIcon = (source) => {
     switch (source) {
+      case 'MidgardGameBoy': return 'gamepad';
       case 'Midgard': return 'gamepad';
       case 'GameBoy': return 'gamepad';
       case 'October25': return 'calendar';
+      case 'May26': return 'calendar';
+      case 'June26': return 'calendar';
       default: return 'book-open';
     }
   };

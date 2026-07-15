@@ -79,14 +79,18 @@ const Progress = ({ userId, username, sessionToken }) => {
   } = progressData;
 
   const sources = [
-    { key: 'general', label: 'عام', color: '#3b82f6' },
-    { key: 'Midgard', label: 'Midgard', color: '#10b981' },
-    { key: 'GameBoy', label: 'GameBoy', color: '#f59e0b' },
+    { key: 'MidgardGameBoy', label: 'Midgard & GameBoy', color: '#10b981' },
     { key: 'October25', label: '2025 تجميعات اكتوبر', color: '#a855f7' },
     { key: 'November25', label: '2025 تجميعات نوفمبر', color: '#ec4899' },
     { key: 'December25', label: '2025 تجميعات ديسمبر', color: '#14b8a6' },
     { key: 'January25', label: '2026 تجميعات يناير', color: '#6366f1' },
-    { key: 'FebMarApr25', label: '2026 تجميعات فبراير-مارس-ابريل', color: '#f43f5e' }
+    { key: 'FebMarApr25', label: '2026 تجميعات فبراير-مارس-ابريل', color: '#f43f5e' },
+    { key: 'May26', label: '2026 تجميعات مايو', color: '#0ea5e9' },
+    { key: 'June26', label: '2026 تجميعات يونيو', color: '#22c55e' },
+    // legacy sources kept for historical sessions
+    { key: 'general', label: 'عام', color: '#3b82f6' },
+    { key: 'Midgard', label: 'Midgard', color: '#84cc16' },
+    { key: 'GameBoy', label: 'GameBoy', color: '#f59e0b' }
   ];
 
   const questionTypes = [

@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { track } from '@vercel/analytics';
 import Icon from '../common/Icon.jsx';
 import HeroArt from './HeroArt.jsx';
+import { UserContext } from '../../UserContext';
 import './Landing.css';
 
 const stats = [
@@ -103,8 +104,33 @@ const faqHighlights = [
   'كيف تساعدني التحليلات على رفع مستواي قبل اختبار SMLE؟'
 ];
 
+const newsItems = [
+  {
+    icon: 'target',
+    title: 'تحديث الأسئلة لنمط 2026 Midgard & Gameboy',
+    desc: 'تمت مراجعة بنك الأسئلة وتحديثه بالكامل ليواكب أحدث نمط اختبار 2026 (Midgard & Gameboy)، لتتدرب على الأقرب لما ستراه فعلياً في الاختبار.',
+    date: '15 يوليو 2026'
+  },
+  {
+    icon: 'calendar',
+    title: 'إضافة التجميعات الشهرية لشهري 5 و6',
+    desc: 'انضمت التجميعات الشهرية الجديدة لشهر مايو ويونيو إلى بنك الأسئلة، بعد مراجعة وتدقيق كامل لكل سؤال.',
+    date: '15 يوليو 2026'
+  },
+  {
+    icon: 'book-open',
+    title: 'تطوير وتحديث الملخصات',
+    desc: 'أعدنا صياغة الملخصات وحدّثنا محتواها لتكون أكثر وضوحاً وتركيزاً على النقاط عالية الأهمية.',
+    date: '15 يوليو 2026'
+  }
+];
+
 const Landing = () => {
   const navigate = useNavigate();
+  const { user, sessionToken, logout } = useContext(UserContext);
+
+  // Mirrors Navbar's definition so both agree on what counts as "logged in".
+  const isAuthenticated = !!(user && user.id && sessionToken);
 
   const safeTrack = (eventName, payload) => {
     try {
@@ -124,6 +150,16 @@ const Landing = () => {
     navigate('/login');
   };
 
+  const handleContinue = () => {
+    safeTrack('landing_cta_continue_click', { section: 'landing' });
+    navigate('/quizs');
+  };
+
+  const handleLogout = async () => {
+    safeTrack('landing_cta_logout_click', { section: 'landing' });
+    await logout();
+  };
+
   useEffect(() => {
     const originalDir = document.documentElement.dir;
     document.documentElement.dir = 'rtl';
@@ -141,26 +177,47 @@ const Landing = () => {
 
           <section className="hero">
             <HeroArt />
-            <span className="pill">منصة SMLE · أكثر من 11,000 سؤال محدّث</span>
-            <h1>تدرّب بذكاء، واجتَز اختبار SMLE بثقة</h1>
-            <p>
-              بنك أسئلة محدّث على نمط البرومترك، مع شرح سريري لكل إجابة وتحليل فوري يكشف نقاط ضعفك
-              ويرتّب أولويات مراجعتك — كل ما تحتاجه للوصول إلى درجتك المستهدفة في مكان واحد.
-            </p>
-            <div className="cta-row">
-              <button className="btn primary" onClick={handleSignup}>
-                ابدأ الآن
-              </button>
-              <button className="btn ghost" onClick={handleLogin}>
-                تسجيل الدخول
-              </button>
-            </div>
-            <ul className="hero-trust">
-              <li>اشتراك سنوي 99 ريال</li>
-              <li>وصول كامل لمدة سنة</li>
-              <li>شرح سريري لكل سؤال</li>
-              <li>تحليلات فورية للأداء</li>
-            </ul>
+            {isAuthenticated ? (
+              <>
+                <span className="pill">مرحباً بعودتك</span>
+                <h1>أهلاً بك من جديد{user?.username ? <>، <bdi>{user.username}</bdi></> : ''}</h1>
+                <p>
+                  حسابك محفوظ على هذا الجهاز — تابع تدريبك من حيث توقفت، أو راجع تحليلاتك وواصل
+                  التحضير لاختبار SMLE.
+                </p>
+                <div className="cta-row">
+                  <button className="btn primary" onClick={handleContinue}>
+                    متابعة إلى حسابي
+                  </button>
+                  <button className="btn ghost" onClick={handleLogout}>
+                    تسجيل الخروج
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <span className="pill">منصة SMLE · أكثر من 11,000 سؤال محدّث</span>
+                <h1>تدرّب بذكاء، واجتَز اختبار SMLE بثقة</h1>
+                <p>
+                  بنك أسئلة محدّث على نمط البرومترك، مع شرح سريري لكل إجابة وتحليل فوري يكشف نقاط ضعفك
+                  ويرتّب أولويات مراجعتك — كل ما تحتاجه للوصول إلى درجتك المستهدفة في مكان واحد.
+                </p>
+                <div className="cta-row">
+                  <button className="btn primary" onClick={handleSignup}>
+                    ابدأ الآن
+                  </button>
+                  <button className="btn ghost" onClick={handleLogin}>
+                    تسجيل الدخول
+                  </button>
+                </div>
+                <ul className="hero-trust">
+                  <li>اشتراك سنوي 99 ريال</li>
+                  <li>وصول كامل لمدة سنة</li>
+                  <li>شرح سريري لكل سؤال</li>
+                  <li>تحليلات فورية للأداء</li>
+                </ul>
+              </>
+            )}
           </section>
 
           <section className="stat-grid" aria-label="إحصائيات المنصة">
@@ -170,6 +227,28 @@ const Landing = () => {
                 <div className="stat-label">{item.label}</div>
               </article>
             ))}
+          </section>
+
+          <section className="news-section" aria-label="آخر التحديثات">
+            <div className="section-head">
+              <p className="pill subtle">جديد المنصة</p>
+              <h2>آخر التحديثات والإضافات</h2>
+              <p>نطوّر المنصة باستمرار — إليك آخر ما أضفناه وحدّثناه مؤخراً.</p>
+            </div>
+            <div className="news-list">
+              {newsItems.map((item) => (
+                <article key={item.title} className="news-item">
+                  <span className="news-item-icon" aria-hidden="true"><Icon name={item.icon} size={22} /></span>
+                  <div className="news-item-body">
+                    <div className="news-item-top">
+                      <h3>{item.title}</h3>
+                      <time className="news-item-date">{item.date}</time>
+                    </div>
+                    <p>{item.desc}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
           </section>
 
           <section className="feature-section">
@@ -320,31 +399,69 @@ const Landing = () => {
           <section className="cta-band">
             <div className="cta-band-content">
               <div>
-                <p className="pill subtle">جاهز للبدء؟</p>
-                <h2>ادخل وضع الاختبار اليوم</h2>
-                <p>
-                  أنشئ حسابك، اختر تخصصك، وابدأ جلسة تدريب خلال أقل من دقيقتين.
-                </p>
+                {isAuthenticated ? (
+                  <>
+                    <p className="pill subtle">جاهز لمتابعة التدريب؟</p>
+                    <h2>أكمل من حيث توقفت</h2>
+                    <p>
+                      حسابك متزامن وجاهز — عد إلى لوحتك وواصل التدريب أو راجع تحليلاتك.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="pill subtle">جاهز للبدء؟</p>
+                    <h2>ادخل وضع الاختبار اليوم</h2>
+                    <p>
+                      أنشئ حسابك، اختر تخصصك، وابدأ جلسة تدريب خلال أقل من دقيقتين.
+                    </p>
+                  </>
+                )}
               </div>
               <div className="cta-actions">
-                <button className="btn primary" onClick={handleSignup}>
-                  إنشاء حساب
-                </button>
-                <button className="btn outline" onClick={handleLogin}>
-                  تسجيل الدخول
-                </button>
+                {isAuthenticated ? (
+                  <>
+                    <button className="btn primary" onClick={handleContinue}>
+                      الذهاب إلى حسابي
+                    </button>
+                    <button className="btn outline" onClick={handleLogout}>
+                      تسجيل الخروج
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button className="btn primary" onClick={handleSignup}>
+                      إنشاء حساب
+                    </button>
+                    <button className="btn outline" onClick={handleLogin}>
+                      تسجيل الدخول
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </section>
         </div>
 
         <div className="mobile-cta">
-          <button className="btn primary" onClick={handleSignup}>
-            ابدأ الآن
-          </button>
-          <button className="btn outline" onClick={handleLogin}>
-            دخول
-          </button>
+          {isAuthenticated ? (
+            <>
+              <button className="btn primary" onClick={handleContinue}>
+                متابعة
+              </button>
+              <button className="btn outline" onClick={handleLogout}>
+                خروج
+              </button>
+            </>
+          ) : (
+            <>
+              <button className="btn primary" onClick={handleSignup}>
+                ابدأ الآن
+              </button>
+              <button className="btn outline" onClick={handleLogin}>
+                دخول
+              </button>
+            </>
+          )}
         </div>
       </div>
     </>

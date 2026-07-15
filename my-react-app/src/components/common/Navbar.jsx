@@ -1,10 +1,11 @@
 import React, { useContext, useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { UserContext } from '../../UserContext';
+import Icon from './Icon.jsx';
 import './Navbar.css';
 
 const Navbar = () => {
-  const { user, sessionToken } = useContext(UserContext);
+  const { user, sessionToken, logout } = useContext(UserContext);
   const navigate = useNavigate();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -26,6 +27,11 @@ const Navbar = () => {
     }
   };
 
+  const handleLogout = async () => {
+    await logout();
+    navigate('/', { replace: true });
+  };
+
   return (
     <nav className="navbar" dir="rtl">
       <div className="navbar-right">
@@ -39,6 +45,17 @@ const Navbar = () => {
             </svg>
             <span className="user-name">{user.username}</span>
           </span>
+        )}
+        {isAuthenticated && (
+          <button
+            onClick={handleLogout}
+            className="logout-button"
+            aria-label="تسجيل الخروج"
+            title="تسجيل الخروج"
+          >
+            <Icon name="log-out" size={17} />
+            <span className="logout-label">تسجيل الخروج</span>
+          </button>
         )}
       </div>
 

@@ -73,6 +73,7 @@ const PATHS = {
     monitor: <><rect x="3" y="4" width="18" height="12" rx="2" /><path d="M8 20h8M12 16v4" /></>,
     inbox: <><path d="M22 12h-6l-2 3h-4l-2-3H2" /><path d="M5 5h14l3 7v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-6z" /></>,
     hourglass: <><path d="M6 2h12M6 22h12" /><path d="M6 2c0 5 12 5 12 0M6 22c0-5 12-5 12 0" /></>,
+    'log-out': <><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></>,
 };
 
 const Icon = ({ name, size = 20, strokeWidth = 2, className = '', title, ...rest }) => {

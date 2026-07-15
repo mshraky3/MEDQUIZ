@@ -51,24 +51,24 @@ const QUIZS = () => {
         ],
         collections2026: [
             { id: 'January25', label: '2026 تجميعات يناير' },
-            { id: 'FebMarApr25', label: '2026 تجميعات فبراير-مارس-ابريل' }
+            { id: 'FebMarApr25', label: '2026 تجميعات فبراير-مارس-ابريل' },
+            { id: 'May26', label: '2026 تجميعات مايو' },
+            { id: 'June26', label: '2026 تجميعات يونيو' }
         ],
         other: [
-            { id: 'general', label: 'عام' },
-            { id: 'Midgard', label: 'Midgard' },
-            { id: 'GameBoy', label: 'GameBoy' }
+            { id: 'MidgardGameBoy', label: 'Midgard & GameBoy' }
         ]
     };
 
     const sourceLabels = {
-        general: 'عام',
-        Midgard: 'Midgard',
-        GameBoy: 'GameBoy',
+        MidgardGameBoy: 'Midgard & GameBoy',
         October25: '2025 تجميعات اكتوبر',
         November25: '2025 تجميعات نوفمبر',
         December25: '2025 تجميعات ديسمبر',
         January25: '2026 تجميعات يناير',
-        FebMarApr25: '2026 تجميعات فبراير-مارس-ابريل'
+        FebMarApr25: '2026 تجميعات فبراير-مارس-ابريل',
+        May26: '2026 تجميعات مايو',
+        June26: '2026 تجميعات يونيو'
     };
     const availableTypes = [
         'pediatric',
@@ -97,7 +97,7 @@ const QUIZS = () => {
         try {
             track('quiz_quick_start_click', {
                 questions: 10,
-                source: 'general',
+                source: 'MidgardGameBoy',
                 types: 'mix'
             });
         } catch (error) {
@@ -108,7 +108,7 @@ const QUIZS = () => {
             state: {
                 id: id,
                 types: 'mix',
-                source: 'general',
+                source: 'MidgardGameBoy',
                 timer: null
             }
         });
