@@ -629,6 +629,100 @@
   box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
 }
 
+/* ---- Redesigned source picker: newest collection first ---- */
+.source-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px 16px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  background: rgba(15, 23, 42, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease,
+    box-shadow 0.15s ease, background 0.15s ease;
+  text-align: center;
+}
+
+.source-card:hover {
+  border-color: rgba(59, 130, 246, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.18);
+}
+
+.source-card:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+
+.source-card:active {
+  transform: translateY(0);
+}
+
+/* Hero: the single latest collection — most prominent */
+.source-card--latest {
+  justify-content: space-between;
+  padding: 18px 20px;
+  font-size: 17px;
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  border-color: transparent;
+  box-shadow: 0 8px 22px rgba(59, 130, 246, 0.32);
+}
+
+.source-card--latest:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(59, 130, 246, 0.42);
+}
+
+.source-card-main {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.source-card-badge {
+  font-size: 12px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+  white-space: nowrap;
+}
+
+/* Grid of older months, newest-first */
+.collection-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.source-card--month {
+  font-size: 14px;
+  padding: 13px 12px;
+}
+
+/* Full question bank */
+.source-card--bank {
+  padding: 16px 20px;
+  font-size: 16px;
+}
+
+@media (max-width: 400px) {
+  .collection-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .source-info {
   background: rgba(59, 130, 246, 0.1);
   color: var(--accent);

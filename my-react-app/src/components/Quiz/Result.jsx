@@ -1,5 +1,14 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import Icon from '../common/Icon.jsx';
+import { getSourceLabel } from '../../utils/sourceLabels';
+
+const TYPE_AR = {
+  pediatric: 'الأطفال',
+  'obstetrics and gynecology': 'النساء والولادة',
+  medicine: 'الباطنة',
+  surgery: 'الجراحة'
+};
 
 const Result = ({
   correctAnswers,
@@ -8,7 +17,8 @@ const Result = ({
   duration,
   isFinalQuiz,
   onRetry,
-  userId
+  userId,
+  completedTopics = []
 }) => {
   const navigate = useNavigate();
 
@@ -24,6 +34,17 @@ const Result = ({
 
   return (
     <div className="quiz-result">
+      {completedTopics.length > 0 && (
+        <div className="result-completion-banner" dir="rtl">
+          <Icon name="trophy" size={20} />
+          <span>
+            🎉 مبروك! أنهيت جميع أسئلة{' '}
+            {completedTopics
+              .map(c => `${TYPE_AR[c.type] || c.type} · ${getSourceLabel(c.source)}`)
+              .join('، ')}
+          </span>
+        </div>
+      )}
       <h2>اكتمل الاختبار!</h2>
       <p>أجبت على <strong>{correctAnswers}</strong> من أصل <strong>{totalQuestions}</strong> بشكل صحيح.</p>
       <p>الدقة: <strong>{accuracy}%</strong></p>

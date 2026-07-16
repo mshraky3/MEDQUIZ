@@ -35,40 +35,84 @@ const QUIZS = () => {
     const [selectedFinalSource, setSelectedFinalSource] = useState('');
     const [finalQuizQuestionsCount, setFinalQuizQuestionsCount] = useState(0);
     const [finalQuizTimeLimit, setFinalQuizTimeLimit] = useState(30);
-    const [selectedCollections2025, setSelectedCollections2025] = useState('');
-    const [selectedCollections2026, setSelectedCollections2026] = useState('');
-    const [selectedFinalCollections2025, setSelectedFinalCollections2025] = useState('');
-    const [selectedFinalCollections2026, setSelectedFinalCollections2026] = useState('');
 
     const quizOptions = [10, 50, 'custom'];
 
-    // Source configuration with categories
-    const sourceConfig = {
-        collections2025: [
-            { id: 'October25', label: '2025 تجميعات اكتوبر' },
-            { id: 'November25', label: '2025 تجميعات نوفمبر' },
-            { id: 'December25', label: '2025 تجميعات ديسمبر' }
-        ],
-        collections2026: [
-            { id: 'January25', label: '2026 تجميعات يناير' },
-            { id: 'FebMarApr25', label: '2026 تجميعات فبراير-مارس-ابريل' },
-            { id: 'May26', label: '2026 تجميعات مايو' },
-            { id: 'June26', label: '2026 تجميعات يونيو' }
-        ],
-        other: [
-            { id: 'MidgardGameBoy', label: 'Midgard & GameBoy' }
-        ]
-    };
+    // Monthly collections ordered NEWEST-FIRST — the latest recalls are the
+    // most important, so they surface at the top of the picker.
+    const monthlyCollections = [
+        { id: 'June26', label: 'يونيو 2026' },
+        { id: 'May26', label: 'مايو 2026' },
+        { id: 'FebMarApr25', label: 'فبراير – مارس – أبريل 2026' },
+        { id: 'January25', label: 'يناير 2026' },
+        { id: 'December25', label: 'ديسمبر 2025' },
+        { id: 'November25', label: 'نوفمبر 2025' },
+        { id: 'October25', label: 'أكتوبر 2025' }
+    ];
+    // The comprehensive question bank (shown as its own section).
+    const mainBanks = [
+        { id: 'MidgardGameBoy', label: 'Midgard & GameBoy' }
+    ];
 
     const sourceLabels = {
         MidgardGameBoy: 'Midgard & GameBoy',
-        October25: '2025 تجميعات اكتوبر',
-        November25: '2025 تجميعات نوفمبر',
-        December25: '2025 تجميعات ديسمبر',
-        January25: '2026 تجميعات يناير',
-        FebMarApr25: '2026 تجميعات فبراير-مارس-ابريل',
-        May26: '2026 تجميعات مايو',
-        June26: '2026 تجميعات يونيو'
+        October25: 'أكتوبر 2025',
+        November25: 'نوفمبر 2025',
+        December25: 'ديسمبر 2025',
+        January25: 'يناير 2026',
+        FebMarApr25: 'فبراير – مارس – أبريل 2026',
+        May26: 'مايو 2026',
+        June26: 'يونيو 2026'
+    };
+
+    // Shared picker body: latest collection as a highlighted hero, the rest in a
+    // newest-first grid, then the full bank. `onSelect` differs per modal.
+    const renderSourcePicker = (onSelect) => {
+        const [latest, ...olderMonths] = monthlyCollections;
+        return (
+            <>
+                <div className="source-section">
+                    <h3 className="section-title">التجميعات الشهرية · الأحدث أولاً</h3>
+                    <button
+                        onClick={() => onSelect(latest.id)}
+                        className="source-card source-card--latest"
+                    >
+                        <span className="source-card-main">
+                            <Icon name="calendar" size={18} />
+                            <span>{latest.label}</span>
+                        </span>
+                        <span className="source-card-badge">الأحدث</span>
+                    </button>
+                    <div className="collection-grid">
+                        {olderMonths.map((c) => (
+                            <button
+                                key={c.id}
+                                onClick={() => onSelect(c.id)}
+                                className="source-card source-card--month"
+                            >
+                                {c.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="source-section-divider"></div>
+
+                <div className="source-section">
+                    <h3 className="section-title">بنك الأسئلة الشامل</h3>
+                    {mainBanks.map((b) => (
+                        <button
+                            key={b.id}
+                            onClick={() => onSelect(b.id)}
+                            className="source-card source-card--bank"
+                        >
+                            <Icon name="book-open" size={18} />
+                            <span>{b.label}</span>
+                        </button>
+                    ))}
+                </div>
+            </>
+        );
     };
     const availableTypes = [
         'pediatric',
@@ -117,8 +161,6 @@ const QUIZS = () => {
     const handleSourceSelect = async (source) => {
         setSelectedSource(source);
         setShowSourceSelector(false);
-        setSelectedCollections2025('');
-        setSelectedCollections2026('');
         setShowTypeSelector(true);
 
         // Check if user has completed this source for any type
@@ -196,8 +238,6 @@ const QUIZS = () => {
 
     const handleFinalSourceSelect = async (source) => {
         setSelectedFinalSource(source);
-        setSelectedFinalCollections2025('');
-        setSelectedFinalCollections2026('');
 
         // Check authentication before making API call
         if (!user || !sessionToken) {
@@ -539,84 +579,11 @@ const QUIZS = () => {
                         <div className="custom-modal-content">
                             <h2>اختر مصدر الأسئلة</h2>
 
-                            {/* Collections Section */}
-                            <div className="source-section">
-                                <h3 className="section-title">تجميعات</h3>
-                                <div className="collection-dropdown-group">
-                                    <label className="collection-dropdown-label" htmlFor="collections-2025-select">
-                                        تجميعات 2025
-                                    </label>
-                                    <select
-                                        id="collections-2025-select"
-                                        value={selectedCollections2025}
-                                        onChange={(e) => {
-                                            const value = e.target.value;
-                                            setSelectedCollections2025(value);
-                                            if (value) {
-                                                handleSourceSelect(value);
-                                            }
-                                        }}
-                                        className="collection-select"
-                                    >
-                                        <option value="">اختر تجميعات 2025</option>
-                                        {sourceConfig.collections2025.map((source) => (
-                                            <option key={source.id} value={source.id}>
-                                                {source.label}
-                                            </option>
-                                        ))}
-                                    </select>
-
-                                    <label className="collection-dropdown-label" htmlFor="collections-2026-select">
-                                        تجميعات 2026
-                                    </label>
-                                    <select
-                                        id="collections-2026-select"
-                                        value={selectedCollections2026}
-                                        onChange={(e) => {
-                                            const value = e.target.value;
-                                            setSelectedCollections2026(value);
-                                            if (value) {
-                                                handleSourceSelect(value);
-                                            }
-                                        }}
-                                        className="collection-select"
-                                    >
-                                        <option value="">اختر تجميعات 2026</option>
-                                        {sourceConfig.collections2026.map((source) => (
-                                            <option key={source.id} value={source.id}>
-                                                {source.label}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
-
-                            {/* Visual Separator */}
-                            <div className="source-section-divider"></div>
-
-                            {/* Other Sources Section */}
-                            <div className="source-section">
-                                <h3 className="section-title">مصادر أخرى</h3>
-                                <div className="custom-source-buttons">
-                                    {sourceConfig.other.map((source) => (
-                                        <button
-                                            key={source.id}
-                                            onClick={() => handleSourceSelect(source.id)}
-                                            className="custom-source-btn"
-                                        >
-                                            {source.label}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
+                            {renderSourcePicker(handleSourceSelect)}
 
                             <div className="custom-modal-buttons">
                                 <button
-                                    onClick={() => {
-                                        setShowSourceSelector(false);
-                                        setSelectedCollections2025('');
-                                        setSelectedCollections2026('');
-                                    }}
+                                    onClick={() => setShowSourceSelector(false)}
                                     className="custom-cancel-btn"
                                 >
                                     إلغاء
@@ -874,74 +841,12 @@ const QUIZS = () => {
                             <p className="final-quiz-description">
                                 اختر مصدر أسئلة {selectedFinalType}
                             </p>
-                            <div className="custom-source-buttons">
-                                {sourceConfig.other.map((source) => (
-                                    <button
-                                        key={source.id}
-                                        onClick={() => handleFinalSourceSelect(source.id)}
-                                        className="custom-source-btn"
-                                    >
-                                        {source.label}
-                                    </button>
-                                ))}
-                            </div>
-                            <div className="source-section">
-                                <h3 className="section-title">تجميعات</h3>
-                                <div className="collection-dropdown-group">
-                                    <label className="collection-dropdown-label" htmlFor="final-collections-2025-select">
-                                        تجميعات 2025
-                                    </label>
-                                    <select
-                                        id="final-collections-2025-select"
-                                        value={selectedFinalCollections2025}
-                                        onChange={(e) => {
-                                            const value = e.target.value;
-                                            setSelectedFinalCollections2025(value);
-                                            if (value) {
-                                                handleFinalSourceSelect(value);
-                                            }
-                                        }}
-                                        className="collection-select"
-                                    >
-                                        <option value="">اختر تجميعات 2025</option>
-                                        {sourceConfig.collections2025.map((source) => (
-                                            <option key={source.id} value={source.id}>
-                                                {source.label}
-                                            </option>
-                                        ))}
-                                    </select>
 
-                                    <label className="collection-dropdown-label" htmlFor="final-collections-2026-select">
-                                        تجميعات 2026
-                                    </label>
-                                    <select
-                                        id="final-collections-2026-select"
-                                        value={selectedFinalCollections2026}
-                                        onChange={(e) => {
-                                            const value = e.target.value;
-                                            setSelectedFinalCollections2026(value);
-                                            if (value) {
-                                                handleFinalSourceSelect(value);
-                                            }
-                                        }}
-                                        className="collection-select"
-                                    >
-                                        <option value="">اختر تجميعات 2026</option>
-                                        {sourceConfig.collections2026.map((source) => (
-                                            <option key={source.id} value={source.id}>
-                                                {source.label}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
+                            {renderSourcePicker(handleFinalSourceSelect)}
+
                             <div className="custom-modal-buttons">
                                 <button
-                                    onClick={() => {
-                                        setShowFinalQuizSource(false);
-                                        setSelectedFinalCollections2025('');
-                                        setSelectedFinalCollections2026('');
-                                    }}
+                                    onClick={() => setShowFinalQuizSource(false)}
                                     className="custom-cancel-btn"
                                 >
                                     إلغاء

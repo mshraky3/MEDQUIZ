@@ -429,6 +429,23 @@ body {
   text-shadow: 0 0 30px rgba(59, 130, 246, 0.4);
 }
 
+/* Topic-completed banner on the results screen */
+.result-completion-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 24px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  color: #16a34a;
+  background: rgba(34, 197, 94, 0.10);
+  border: 1px solid rgba(34, 197, 94, 0.28);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
 .quiz-result p {
   font-size: 1.3rem;
   color: #1e293b;

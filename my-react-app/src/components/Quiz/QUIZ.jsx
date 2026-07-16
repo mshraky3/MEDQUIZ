@@ -9,7 +9,9 @@ import './Loading.css';
 import './ErrorScreen.css';
 import Result from './Result';
 import Question from './Question';
+import QuizComplete from './QuizComplete';
 import Globals from '../../global.js';
+import { getSourceLabel } from '../../utils/sourceLabels';
 import { UserContext } from '../../UserContext';
 
 const isValidQuestion = (question) => {
@@ -34,6 +36,11 @@ const QUIZ = () => {
   const [error, setError] = useState(null);
   const [dataSent, setDataSent] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  // Category completion: the selected type+source has no unseen questions left.
+  const [categoryDone, setCategoryDone] = useState(null);
+  const [resettingCategory, setResettingCategory] = useState(false);
+  // (type,source) categories finished by the quiz just submitted.
+  const [completedTopics, setCompletedTopics] = useState([]);
   const quizStartTimeRef = useRef(Date.now());
   const types = location.state?.types || 'mix';
   const source = location.state?.source || 'mix';
@@ -106,6 +113,7 @@ const QUIZ = () => {
       try {
         setLoading(true);
         setError(null);
+        setCategoryDone(null);
 
         // Add userId to params for non-trial users to filter completed questions
         const params = {
@@ -154,6 +162,10 @@ const QUIZ = () => {
           } else {
             setError("تعذر تحميل الأسئلة بسبب بيانات غير صالحة.");
           }
+        } else if (response.data.completed) {
+          // No unseen questions left because the whole category is finished —
+          // show the completion screen instead of an error.
+          setCategoryDone({ total: response.data.totalInCategory || 0 });
         } else {
           setError("لم يتم إرجاع أي أسئلة.");
         }
@@ -172,6 +184,32 @@ const QUIZ = () => {
   const handleRetry = () => {
     setError(null);
     setRetryCount(prev => prev + 1);
+  };
+
+  // Clear this category's progress so the user can practise it again from scratch.
+  const handleResetCategory = async () => {
+    if (!user || !sessionToken) {
+      navigate('/quizs', { state: { id } });
+      return;
+    }
+    setResettingCategory(true);
+    try {
+      const typesArr = (!types || types === 'mix') ? [] : types.split(',');
+      await protectedPost(`${Globals.URL}/api/reset-progress`, {
+        userId: id,
+        source,
+        types: typesArr
+      });
+      setCategoryDone(null);
+      setError(null);
+      setRetryCount(prev => prev + 1); // refetch — questions are available again
+    } catch (err) {
+      console.error('Error resetting category progress:', err);
+      setError('تعذر إعادة تعيين القسم. حاول مرة أخرى.');
+      setCategoryDone(null);
+    } finally {
+      setResettingCategory(false);
+    }
   };
 
   const handleSelectOption = (option) => {
@@ -338,6 +376,12 @@ const QUIZ = () => {
         const sessionRes = await protectedPost(`${Globals.URL}${endpoint}`, sessionData);
         const quiz_session_id = sessionRes.data.id;
 
+        // The server tells us which (type, source) topics this quiz just
+        // completed, so the results screen can congratulate the user.
+        if (Array.isArray(sessionRes.data.completedCategories) && sessionRes.data.completedCategories.length > 0) {
+          setCompletedTopics(sessionRes.data.completedCategories);
+        }
+
         // Send individual question attempts (skip for final quiz)
         if (!isFinalQuiz) {
           const attemptPromises = finalAnswers.map((answer, index) => {
@@ -390,6 +434,18 @@ const QUIZ = () => {
     return <Loading />;
   }
 
+  if (categoryDone) {
+    return (
+      <QuizComplete
+        sourceLabel={getSourceLabel(source)}
+        total={categoryDone.total}
+        resetting={resettingCategory}
+        onRestart={handleResetCategory}
+        onBack={() => navigate('/quizs', { state: { id } })}
+      />
+    );
+  }
+
   if (error) {
     return (
       <ErrorScreen
@@ -430,6 +486,7 @@ const QUIZ = () => {
         answers={finalAnswers}
         isFinalQuiz={isFinalQuiz}
         userId={id}
+        completedTopics={completedTopics}
         onRetry={() => {
           setCurrentQuestionIndex(0);
           setSelectedAnswer(null);
