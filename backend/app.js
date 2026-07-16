@@ -1735,26 +1735,31 @@ app.get('/api/questions', requireSubscriber, async (req, res) => {
     // starves the small DB instance under concurrent load. Selecting just the
     // matching ids is a cheap index-friendly scan; the random pick then only
     // needs to fetch the handful of rows actually returned.
-    let idQuery = 'SELECT id FROM questions';
-    let values = [];
-    let conditions = [];
 
-    // Handle question type filtering
+    // Category conditions (type + source) are kept separate from the "exclude
+    // already-seen" filter so we can tell an exhausted category (all questions
+    // already answered) apart from a genuinely empty one, and report it.
+    const categoryConditions = [];
+    const categoryValues = [];
+
     if (!typesParam || typesParam === 'mix') {
-        // No filter – return all
+        // No type filter – return all types
     } else {
         const selectedTypes = typesParam.split(',');
-        conditions.push(`question_type = ANY($${values.length + 1}::text[])`);
-        values.push(selectedTypes);
+        categoryConditions.push(`question_type = ANY($${categoryValues.length + 1}::text[])`);
+        categoryValues.push(selectedTypes);
     }
 
-    // Handle source filtering
     if (sourceParam && sourceParam !== 'mix') {
-        conditions.push(`source = $${values.length + 1}`);
-        values.push(sourceParam);
+        categoryConditions.push(`source = $${categoryValues.length + 1}`);
+        categoryValues.push(sourceParam);
     }
 
-    // Handle user progress filtering - exclude completed questions
+    const conditions = [...categoryConditions];
+    const values = [...categoryValues];
+
+    // Exclude questions the user has already been shown: a question appears once
+    // and won't reappear until the whole category has been completed and reset.
     if (userId) {
         conditions.push(`id NOT IN (
             SELECT DISTINCT question_id
@@ -1764,6 +1769,7 @@ app.get('/api/questions', requireSubscriber, async (req, res) => {
         values.push(userId);
     }
 
+    let idQuery = 'SELECT id FROM questions';
     if (conditions.length > 0) {
         idQuery += ' WHERE ' + conditions.join(' AND ');
     }
@@ -1780,7 +1786,21 @@ app.get('/api/questions', requireSubscriber, async (req, res) => {
         const allIds = idResult.rows.map(r => r.id);
 
         if (allIds.length === 0) {
-            return res.json({ questions: [] });
+            // Nothing left to show. If the user has answered before, work out
+            // whether the category is fully completed (so the client can show a
+            // "you finished this topic" notice) vs. simply empty.
+            let completed = false;
+            let totalInCategory = 0;
+            if (userId) {
+                let countQuery = 'SELECT COUNT(*)::int AS total FROM questions';
+                if (categoryConditions.length > 0) {
+                    countQuery += ' WHERE ' + categoryConditions.join(' AND ');
+                }
+                const countRes = await db.query(countQuery, categoryValues);
+                totalInCategory = countRes.rows[0].total;
+                completed = totalInCategory > 0;
+            }
+            return res.json({ questions: [], completed, totalInCategory });
         }
 
         // Fisher-Yates partial shuffle: pick up to `limit` random ids
@@ -2097,10 +2117,11 @@ app.post('/quiz-sessions', requireSession, subscriberOnly, async (req, res) => {
         });
 
         // Record question progress for each answered question (parallelized)
+        let touchedCardinalities = [];
         if (question_ids && question_ids.length > 0) {
             const questionDetails = await db.query(`
-                SELECT id, question_type, source 
-                FROM questions 
+                SELECT id, question_type, source
+                FROM questions
                 WHERE id = ANY($1)
             `, [question_ids]);
 
@@ -2114,6 +2135,17 @@ app.post('/quiz-sessions', requireSession, subscriberOnly, async (req, res) => {
             );
 
             await Promise.all(progressPromises);
+
+            // Distinct (type, source) cardinalities this quiz touched — used
+            // below to tell the client which topics are now fully answered.
+            const seen = new Set();
+            for (const q of questionDetails.rows) {
+                seen.add(`${q.question_type} ${q.source || 'general'}`);
+            }
+            touchedCardinalities = [...seen].map(key => {
+                const [type, source] = key.split(' ');
+                return { type, source };
+            });
         }
 
         // Record detailed question attempts if provided (parallelized)
