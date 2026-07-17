@@ -56,12 +56,35 @@ apiClient.interceptors.request.use(
     }
 );
 
+// 402 = subscription required / trial ended (see subscriptionGuard on the
+// backend). Route the user to the paywall from wherever the request fired,
+// since components don't handle 402 individually. A client-side timer is
+// only cosmetic — this is the real enforcement point.
+function handleSubscriptionExpired(error) {
+    if (error.response?.status !== 402) return;
+    if (typeof window === 'undefined') return;
+
+    const path = window.location.pathname;
+    if (path.startsWith('/subscribe') || path.startsWith('/payment')) return;
+
+    try {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        localStorage.setItem('user', JSON.stringify({ ...user, accessAllowed: false }));
+    } catch (e) {
+        // Ignore localStorage errors
+    }
+
+    const reason = error.response.data?.reason || 'subscription_required';
+    window.location.assign(`/subscribe?reason=${encodeURIComponent(reason)}`);
+}
+
 // Add response interceptor for error tracking
 apiClient.interceptors.response.use(
     (response) => response,
     (error) => {
         // Report the error to the error tracking system
         reportApiError(error, error.config, error.response);
+        handleSubscriptionExpired(error);
 
         // Re-throw to let the application handle it
         return Promise.reject(error);
@@ -71,6 +94,13 @@ apiClient.interceptors.response.use(
 // Also set up the interceptor on the default axios instance
 // This catches errors from components using axios directly
 setupAxiosInterceptor(axios);
+axios.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        handleSubscriptionExpired(error);
+        return Promise.reject(error);
+    }
+);
 
 export default apiClient;
 
