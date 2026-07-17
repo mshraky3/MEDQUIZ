@@ -42,9 +42,11 @@ export function subscriptionGuard(db) {
             if (!allowed) {
                 return res.status(402).json({
                     success: false,
-                    expired: reason === 'subscription_required',
+                    expired: reason === 'subscription_required' || reason === 'trial_expired',
                     reason,
-                    message: 'An active subscription is required to access this feature.',
+                    message: reason === 'trial_expired'
+                        ? 'Your free trial has ended. Subscribe to keep going.'
+                        : 'An active subscription is required to access this feature.',
                 });
             }
             return next();

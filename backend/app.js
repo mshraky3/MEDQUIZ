@@ -195,6 +195,18 @@ function ensurePaymentSchema() {
             await db.query(`CREATE INDEX IF NOT EXISTS idx_payment_events_account  ON payment_events(account_id)`);
             await db.query(`CREATE INDEX IF NOT EXISTS idx_payment_events_received ON payment_events(received_at)`);
 
+            // One free trial per email, ever — survives account deletion
+            // (account_id goes NULL) so a re-signup can't re-trial.
+            await db.query(`
+                CREATE TABLE IF NOT EXISTS trial_grants (
+                  id         SERIAL PRIMARY KEY,
+                  email      VARCHAR(255) UNIQUE NOT NULL,
+                  account_id INT REFERENCES accounts(id) ON DELETE SET NULL,
+                  granted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                  expires_at TIMESTAMPTZ NOT NULL
+                )
+            `);
+
             // Grandfather pre-rollout accounts EXACTLY ONCE.
             await db.query(`CREATE TABLE IF NOT EXISTS schema_migrations (name TEXT PRIMARY KEY, applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
             const applied = await db.query(`SELECT 1 FROM schema_migrations WHERE name = '001_grandfather_existing'`);
@@ -898,6 +910,8 @@ app.post('/login', async (req, res) => {
             active: true,
             expiryDate: null,
             daysRemaining: null,
+            minutesRemaining: null,
+            trial: false,
             reason: 'enforcement_disabled',
         };
         try {
@@ -905,9 +919,11 @@ app.post('/login', async (req, res) => {
             if (columnsReady && isPaymentEnforcementEnabled()) {
                 const { allowed, reason } = checkSubscriptionAccess(userRow);
                 let daysRemaining = null;
+                let minutesRemaining = null;
                 if (userRow.subscription_expiry_date) {
                     const ms = new Date(userRow.subscription_expiry_date).getTime() - Date.now();
                     daysRemaining = Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
+                    minutesRemaining = Math.max(0, Math.ceil(ms / (1000 * 60)));
                 }
                 subscription = {
                     enforced: true,
@@ -915,6 +931,8 @@ app.post('/login', async (req, res) => {
                     active: allowed,
                     expiryDate: userRow.subscription_expiry_date || null,
                     daysRemaining,
+                    minutesRemaining,
+                    trial: userRow.subscription_status === 'trial',
                     reason,
                 };
             }
@@ -931,11 +949,17 @@ app.post('/login', async (req, res) => {
             // Persisted client-side and read by the route guard. Undefined on
             // legacy stored sessions is treated as allowed (no mid-session lockout).
             accessAllowed: subscription.active,
+            // While enforcement is off, hide the raw stored status/expiry (e.g. a
+            // stamped 'trial') from the client so UI like the trial countdown
+            // banner never appears when nothing is actually being gated.
+            subscription_status: subscription.enforced ? userRow.subscription_status : 'free',
+            subscription_expiry_date: subscription.enforced ? userRow.subscription_expiry_date : null,
         };
 
         return res.status(200).json({
             message: 'Login successful',
-            expired: subscription.enforced && !subscription.active && subscription.reason === 'subscription_required',
+            expired: subscription.enforced && !subscription.active &&
+                (subscription.reason === 'subscription_required' || subscription.reason === 'trial_expired'),
             subscription,
             user: updatedUser,
             sessionToken,
@@ -1049,7 +1073,11 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
             loginsByHourRes,
             quizCompletionRateRes,
             streakLeadersRes,
-            accuracyDistributionRes
+            accuracyDistributionRes,
+            subscriptionBreakdownRes,
+            trialFunnelRes,
+            revenueRes,
+            recentPaymentsRes
         ] = await Promise.all([
             // Total users
             db.query('SELECT COUNT(*) as count FROM accounts'),
@@ -1223,7 +1251,44 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
                 ) sub
                 GROUP BY range
                 ORDER BY range
-            `)
+            `),
+            // Accounts by subscription status (active/trial/free/grandfathered/admin-created)
+            db.query(`
+                SELECT
+                    COUNT(*) FILTER (WHERE subscription_status = 'active' AND subscription_expiry_date > NOW()) as active_subscribers,
+                    COUNT(*) FILTER (WHERE subscription_status = 'trial' AND subscription_expiry_date > NOW()) as trial_active,
+                    COUNT(*) FILTER (WHERE subscription_status = 'trial' AND subscription_expiry_date <= NOW()) as trial_expired_unconverted,
+                    COUNT(*) FILTER (WHERE subscription_status = 'free') as free_no_trial,
+                    COUNT(*) FILTER (WHERE grandfathered_at IS NOT NULL) as grandfathered,
+                    COUNT(*) FILTER (WHERE is_admin_created = true) as admin_created
+                FROM accounts
+            `).catch(() => ({ rows: [{}] })),
+            // Trial funnel: how many trials were ever granted vs how many of those
+            // accounts are now paying (the number that matters for the free-trial bet).
+            db.query(`
+                SELECT
+                    (SELECT COUNT(*) FROM trial_grants) as total_trials_granted,
+                    (SELECT COUNT(*) FROM trial_grants tg
+                       JOIN accounts a ON a.id = tg.account_id
+                      WHERE a.subscription_status = 'active') as trial_to_paid
+            `).catch(() => ({ rows: [{ total_trials_granted: 0, trial_to_paid: 0 }] })),
+            // Revenue from confirmed Moyasar payments
+            db.query(`
+                SELECT COUNT(*) as payment_count, COALESCE(SUM(amount_halalas), 0) as total_halalas
+                FROM payment_events WHERE status = 'paid'
+            `).catch(() => ({ rows: [{ payment_count: 0, total_halalas: 0 }] })),
+            // Last 10 confirmed payments for a quick recent-activity table.
+            // LEFT JOIN on purpose: payment_events.account_id is ON DELETE SET
+            // NULL, so a payment whose account was later deleted must still
+            // show up here — the money happened even if the account didn't survive.
+            db.query(`
+                SELECT pe.received_at, pe.amount_halalas, pe.currency, a.username, a.email
+                FROM payment_events pe
+                LEFT JOIN accounts a ON a.id = pe.account_id
+                WHERE pe.status = 'paid'
+                ORDER BY pe.received_at DESC
+                LIMIT 10
+            `).catch(() => ({ rows: [] }))
         ]);
 
         // Calculate derived metrics
@@ -1236,6 +1301,15 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
         const completionRate = completionData.total_started > 0
             ? Math.round((completionData.completed / completionData.total_started) * 100)
             : 0;
+
+        const subBreakdown = subscriptionBreakdownRes.rows[0] || {};
+        const funnel = trialFunnelRes.rows[0] || {};
+        const totalTrialsGranted = parseInt(funnel.total_trials_granted) || 0;
+        const trialToPaid = parseInt(funnel.trial_to_paid) || 0;
+        const trialConversionRate = totalTrialsGranted > 0
+            ? Math.round((trialToPaid / totalTrialsGranted) * 100)
+            : 0;
+        const revenue = revenueRes.rows[0] || {};
 
         res.json({
             overview: {
@@ -1253,6 +1327,26 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
                 retentionRate: retentionRate,
                 completionRate: completionRate,
                 suspiciousCount: suspiciousUsersRes.rows.length
+            },
+            subscriptions: {
+                activeSubscribers: parseInt(subBreakdown.active_subscribers) || 0,
+                trialActive: parseInt(subBreakdown.trial_active) || 0,
+                trialExpiredUnconverted: parseInt(subBreakdown.trial_expired_unconverted) || 0,
+                freeNoTrial: parseInt(subBreakdown.free_no_trial) || 0,
+                grandfathered: parseInt(subBreakdown.grandfathered) || 0,
+                adminCreated: parseInt(subBreakdown.admin_created) || 0,
+                totalTrialsGranted,
+                trialToPaid,
+                trialConversionRate,
+                paymentCount: parseInt(revenue.payment_count) || 0,
+                totalRevenueSar: (parseInt(revenue.total_halalas) || 0) / 100,
+                recentPayments: recentPaymentsRes.rows.map(p => ({
+                    receivedAt: p.received_at,
+                    amountSar: (parseInt(p.amount_halalas) || 0) / 100,
+                    currency: p.currency,
+                    username: p.username,
+                    email: p.email
+                }))
             },
             charts: {
                 loginsByDay: loginsByDayRes.rows,
@@ -2138,14 +2232,14 @@ app.post('/quiz-sessions', requireSession, subscriberOnly, async (req, res) => {
 
             // Distinct (type, source) cardinalities this quiz touched — used
             // below to tell the client which topics are now fully answered.
-            const seen = new Set();
+            const seen = new Map();
             for (const q of questionDetails.rows) {
-                seen.add(`${q.question_type} ${q.source || 'general'}`);
+                const type = q.question_type;
+                const src = q.source || 'general';
+                // Map key avoids any string delimiter: type/source contain spaces.
+                seen.set(JSON.stringify([type, src]), { type, source: src });
             }
-            touchedCardinalities = [...seen].map(key => {
-                const [type, source] = key.split(' ');
-                return { type, source };
-            });
+            touchedCardinalities = [...seen.values()];
         }
 
         // Record detailed question attempts if provided (parallelized)
@@ -2191,9 +2285,40 @@ app.post('/quiz-sessions', requireSession, subscriberOnly, async (req, res) => {
             });
         }
 
+        // Which (type, source) topics did this quiz just finish off? A question
+        // never repeats until its whole category is done, so hitting the total
+        // means the user has now covered that topic end to end.
+        let completedCategories = [];
+        if (touchedCardinalities.length > 0) {
+            const checks = await Promise.all(touchedCardinalities.map(async ({ type, source }) => {
+                try {
+                    const [totalRes, doneRes] = await Promise.all([
+                        db.query(
+                            `SELECT COUNT(*)::int AS c FROM questions WHERE question_type = $1 AND source = $2`,
+                            [type, source]
+                        ),
+                        db.query(
+                            `SELECT COUNT(*)::int AS c FROM user_question_progress
+                             WHERE user_id = $1 AND question_type = $2 AND source = $3`,
+                            [user_id, type, source]
+                        )
+                    ]);
+                    const total = totalRes.rows[0].c;
+                    return { type, source, complete: total > 0 && doneRes.rows[0].c >= total };
+                } catch (e) {
+                    logger.warn('Completion check failed', { type, source, error: e.message });
+                    return { type, source, complete: false };
+                }
+            }));
+            completedCategories = checks
+                .filter(c => c.complete)
+                .map(({ type, source }) => ({ type, source }));
+        }
+
         res.status(201).json({
             id: result.rows[0].id,
             session_id: result.rows[0].session_id,
+            completedCategories,
             message: 'Quiz session created successfully'
         });
     } catch (err) {
@@ -2686,17 +2811,43 @@ app.get('/api/user-achievements/:userId', requireSession, async (req, res) => {
     }
 });
 
-// Reset user progress for a specific cardinality
+// Reset user progress so a finished category can be practised again.
+// Accepts either a single `type` (legacy) or a `types` array (the whole
+// selection the user was quizzing on). An empty/omitted types list resets
+// every type for that source.
 app.post('/api/reset-progress', requireSession, async (req, res) => {
-    const { userId, type, source } = req.body;
+    const { userId, type, types, source } = req.body;
+
+    if (!userId) {
+        return res.status(400).json({ message: 'userId is required' });
+    }
+
+    // Normalise to a list; `type` kept for older clients.
+    let typeList = [];
+    if (Array.isArray(types)) typeList = types.filter(Boolean);
+    else if (type) typeList = [type];
+
+    // 'mix' (or no source) means the quiz spanned every source, so reset them all.
+    const allSources = !source || source === 'mix';
+
+    const conditions = ['user_id = $1'];
+    const values = [userId];
+    if (!allSources) {
+        conditions.push(`source = $${values.length + 1}`);
+        values.push(source);
+    }
+    if (typeList.length > 0) {
+        conditions.push(`question_type = ANY($${values.length + 1}::text[])`);
+        values.push(typeList);
+    }
 
     try {
-        await db.query(`
-            DELETE FROM user_question_progress 
-            WHERE user_id = $1 AND question_type = $2 AND source = $3
-        `, [userId, type, source]);
+        const del = await db.query(
+            `DELETE FROM user_question_progress WHERE ${conditions.join(' AND ')}`,
+            values
+        );
 
-        res.json({ success: true, message: 'Progress reset successfully' });
+        res.json({ success: true, cleared: del.rowCount, message: 'Progress reset successfully' });
     } catch (err) {
         console.error('Error resetting progress:', err);
         res.status(500).json({ message: 'Failed to reset progress' });
@@ -2994,9 +3145,11 @@ app.get('/api/user-subscription/:userId', async (req, res) => {
 
         // Enforcement disabled => everyone is free with unlimited access.
         let daysRemaining = null;
+        let minutesRemaining = null;
         if (enforcementEnabled && user.subscription_expiry_date) {
             const ms = new Date(user.subscription_expiry_date).getTime() - Date.now();
             daysRemaining = Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
+            minutesRemaining = Math.max(0, Math.ceil(ms / (1000 * 60)));
         }
 
         res.json({
@@ -3006,7 +3159,8 @@ app.get('/api/user-subscription/:userId', async (req, res) => {
                 isactive: user.isactive,
                 // While enforcement is off, report free access regardless of stored status.
                 subscription_status: enforcementEnabled ? user.subscription_status : 'free',
-                daysRemaining
+                daysRemaining,
+                minutesRemaining
             }
         });
     } catch (error) {
@@ -4033,10 +4187,38 @@ app.post('/api/signup/free', async (req, res) => {
             // "payment received" email is sent from paymentService when a
             // subscription is actually paid (webhook or /verify).
 
+            // One-hour free trial, bound to email — a `trial_grants` row is
+            // never deleted with the account, so a deleted+re-signed-up email
+            // can't claim a second trial.
+            let trial = { granted: false, expiresAt: null };
+            try {
+                const columnsReady = await hasPaymentColumns();
+                if (columnsReady) {
+                    const grantResult = await client.query(
+                        `INSERT INTO trial_grants (email, account_id, expires_at)
+                         VALUES ($1, $2, NOW() + interval '1 hour')
+                         ON CONFLICT (email) DO NOTHING
+                         RETURNING expires_at`,
+                        [lowerEmail, newUserId]
+                    );
+                    if (grantResult.rows.length > 0) {
+                        const expiresAt = grantResult.rows[0].expires_at;
+                        await client.query(
+                            `UPDATE accounts SET subscription_status = 'trial', subscription_expiry_date = $1 WHERE id = $2`,
+                            [expiresAt, newUserId]
+                        );
+                        trial = { granted: true, expiresAt };
+                    }
+                }
+            } catch (trialErr) {
+                console.error('Failed to grant free trial at signup:', trialErr);
+            }
+
             res.status(201).json({
                 success: true,
                 message: 'Account created successfully',
-                userId: newUserId
+                userId: newUserId,
+                trial
             });
 
         } finally {

@@ -101,7 +101,8 @@ export function getCurrency() {
  *   - allow if is_admin_created (admin-exempt)
  *   - allow if grandfathered_at is set (pre-rollout users)
  *   - allow if subscription_status='active' AND expiry in the future
- *   - otherwise deny (subscription_required)
+ *   - allow if subscription_status='trial' AND expiry in the future
+ *   - otherwise deny (trial_expired if a trial ran out, else subscription_required)
  *
  * @param {object} account - row from the accounts table
  * @returns {{ allowed: boolean, reason: string }}
@@ -119,12 +120,18 @@ export function checkSubscriptionAccess(account) {
     if (account.grandfathered_at) {
         return { allowed: true, reason: 'grandfathered' };
     }
-    const active = account.subscription_status === 'active';
+    const status = account.subscription_status;
     const notExpired = account.subscription_expiry_date
         ? new Date(account.subscription_expiry_date).getTime() > Date.now()
         : false;
-    if (active && notExpired) {
+    if (status === 'active' && notExpired) {
         return { allowed: true, reason: 'active_subscription' };
+    }
+    if (status === 'trial' && notExpired) {
+        return { allowed: true, reason: 'trial_active' };
+    }
+    if (status === 'trial') {
+        return { allowed: false, reason: 'trial_expired' };
     }
     return { allowed: false, reason: 'subscription_required' };
 }

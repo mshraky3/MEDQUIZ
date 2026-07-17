@@ -144,15 +144,18 @@ router.get('/status/:userId', requirePaymentEnabled, requireOwnSession, async (r
         }
         const a = r.rows[0];
         let daysRemaining = null;
+        let minutesRemaining = null;
         if (a.subscription_expiry_date) {
             const ms = new Date(a.subscription_expiry_date).getTime() - Date.now();
             daysRemaining = Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
+            minutesRemaining = Math.max(0, Math.ceil(ms / (1000 * 60)));
         }
         return res.json({
             success: true,
             status: a.subscription_status,
             expiryDate: a.subscription_expiry_date,
             daysRemaining,
+            minutesRemaining,
             isAdminCreated: a.is_admin_created,
             grandfathered: !!a.grandfathered_at,
         });
