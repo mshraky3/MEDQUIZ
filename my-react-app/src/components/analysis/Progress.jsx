@@ -139,8 +139,12 @@ const Progress = ({ userId, username, sessionToken }) => {
       <div className="progress-section">
         <h3 className="section-title"><Icon name="book-open" size={15} /> التقدم حسب المصدر</h3>
         <div className="breakdown-grid">
-          {sources.map(source => {
-            const sourceData = sourceBreakdown[source.key] || { answered: 0, total: 0 };
+          {/* Only show sources that still have questions — this hides the
+              retired general/Midgard/GameBoy sources (0 questions after the
+              2026 bank swap) while keeping their labels available above for
+              rendering historical quiz sessions. */}
+          {sources.filter(source => (sourceBreakdown[source.key]?.total || 0) > 0).map(source => {
+            const sourceData = sourceBreakdown[source.key];
             const percentage = sourceData.total > 0 ? (sourceData.answered / sourceData.total) * 100 : 0;
 
             return (

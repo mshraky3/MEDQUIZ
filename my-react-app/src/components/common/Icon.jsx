@@ -74,6 +74,7 @@ const PATHS = {
     inbox: <><path d="M22 12h-6l-2 3h-4l-2-3H2" /><path d="M5 5h14l3 7v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-6z" /></>,
     hourglass: <><path d="M6 2h12M6 22h12" /><path d="M6 2c0 5 12 5 12 0M6 22c0-5 12-5 12 0" /></>,
     'log-out': <><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></>,
+    'shield-check': <><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5z" /><path d="m8.5 11.5 2.5 2.5 4.5-4.5" /></>,
 };
 
 const Icon = ({ name, size = 20, strokeWidth = 2, className = '', title, ...rest }) => {

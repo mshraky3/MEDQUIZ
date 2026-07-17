@@ -3,6 +3,7 @@ import Icon from '../common/Icon.jsx';
 import axios from 'axios';
 import Globals from '../../global.js';
 import Spinner from '../common/Spinner.jsx';
+import { getSourceLabel } from '../../utils/sourceLabels';
 import './analysis.css';
 
 const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz, isTrial }) => {
@@ -91,7 +92,7 @@ const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz, isTria
                             const questionRow = questionsMap.get(attempt.question_id);
                             const questionText = questionRow?.question_text || 'Unknown question';
                             const correctAnswer = questionRow?.correct_option || 'N/A';
-                            const questionSource = questionRow?.source || 'general';
+                            const questionSource = getSourceLabel(questionRow?.source);
                             const questionType = questionRow?.question_type || 'General';
                             const isCorrect = attempt.is_correct;
                             return (

@@ -1,5 +1,6 @@
 import React from 'react';
 import Icon from '../common/Icon.jsx';
+import { getSourceLabel } from '../../utils/sourceLabels';
 import './analysis.css';
 
 const OverallStats = ({ userAnalysis }) => {
@@ -87,7 +88,7 @@ const OverallStats = ({ userAnalysis }) => {
                                 <div className="question-header">
                                     <div className="question-meta">
                                         <span className="source-badge">
-                                            <Icon name="book-open" size={15} /> {source.source}
+                                            <Icon name="book-open" size={15} /> {getSourceLabel(source.source)}
                                         </span>
                                         <span className="accuracy-badge" style={{
                                             background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
@@ -101,7 +102,7 @@ const OverallStats = ({ userAnalysis }) => {
                                 <div className="question-content">
                                     <div className="topic-performance-text">
                                         <h4>الأداء حسب المصدر</h4>
-                                        <p>أداؤك في أسئلة {source.source}:</p>
+                                        <p>أداؤك في أسئلة {getSourceLabel(source.source)}:</p>
                                     </div>
 
                                     <div className="answers-section">

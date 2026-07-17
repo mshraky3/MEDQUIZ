@@ -3,6 +3,7 @@ import Icon from '../common/Icon.jsx';
 import axios from 'axios';
 import Globals from '../../global.js';
 import Spinner from '../common/Spinner.jsx';
+import { getSourceLabel } from '../../utils/sourceLabels';
 import './QuizHistory.css';
 
 const QuizHistory = ({ userId, username, sessionToken }) => {
@@ -222,7 +223,7 @@ const QuizHistory = ({ userId, username, sessionToken }) => {
                 <div className="session-info">
                   <span className="session-date">{formatDate(session.start_time)}</span>
                   <span className="session-source">
-                    <Icon name={getSourceIcon(session.source)} size={15} /> {session.source}
+                    <Icon name={getSourceIcon(session.source)} size={15} /> {getSourceLabel(session.source)}
                   </span>
                 </div>
                 <div className="session-accuracy" style={{ color: getAccuracyColor(session.quiz_accuracy) }}>
@@ -297,7 +298,7 @@ const QuizHistory = ({ userId, username, sessionToken }) => {
                                       <Icon name="book" size={15} /> {attempt.question_type}
                                     </span>
                                     <span className="source-badge">
-                                      <Icon name="book-open" size={15} /> {attempt.source || 'general'}
+                                      <Icon name="book-open" size={15} /> {getSourceLabel(attempt.source)}
                                     </span>
                                     <span className={`result-badge ${attempt.is_correct ? 'correct' : 'wrong'}`}>
                                       {attempt.is_correct ? <><Icon name="check-circle" size={13} /> صحيح</> : <><Icon name="x-circle" size={13} /> خطأ</>}

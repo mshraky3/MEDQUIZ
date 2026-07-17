@@ -5,6 +5,7 @@ import axios from 'axios';
 import './analysis.css';
 import Globals from '../../global.js';
 import Spinner from '../common/Spinner.jsx';
+import { getSourceLabel } from '../../utils/sourceLabels';
 import { useContext } from 'react';
 import { UserContext } from '../../UserContext';
 
@@ -180,7 +181,7 @@ const WrongQuestions = () => {
                                                             <Icon name="book" size={15} /> {question.question_type}
                                                         </span>
                                                         <span className="source-badge">
-                                                            <Icon name="book-open" size={15} /> {question.source || 'general'}
+                                                            <Icon name="book-open" size={15} /> {getSourceLabel(question.source)}
                                                         </span>
                                                         <span className="date-badge">
                                                             <Icon name="calendar" size={15} /> {new Date(question.attempted_at).toLocaleDateString()}

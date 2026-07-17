@@ -2,6 +2,7 @@ import React, { useContext } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { UserContext } from '../../UserContext';
 import Spinner from './Spinner.jsx';
+import TrialBanner from './TrialBanner.jsx';
 
 /**
  * Route guard for authenticated-only pages.
@@ -53,7 +54,12 @@ const RequireAuth = ({ children }) => {
     return <Navigate to="/subscribe" replace />;
   }
 
-  return children;
+  return (
+    <>
+      <TrialBanner />
+      {children}
+    </>
+  );
 };
 
 export default RequireAuth;

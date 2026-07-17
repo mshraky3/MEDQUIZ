@@ -478,6 +478,7 @@ const Admin = () => {
   }
 
   const overview = stats?.overview || {};
+  const sub = stats?.subscriptions || {};
 
   return (
     <div className="admin-page-wrapper">
@@ -602,6 +603,86 @@ const Admin = () => {
             </div>
           </div>
         </div>
+
+        {/* Subscriptions & Free Trial */}
+        <div className="stats-grid-main">
+          <div className="stat-card-large primary">
+            <div className="stat-card-header">
+              <span className="stat-icon"><Icon name="award" size={16} /></span>
+              <span className="stat-label">Revenue (Paid Subscriptions)</span>
+            </div>
+            <div className="stat-value-large">
+              <AnimatedNumber value={sub.totalRevenueSar ?? 0} suffix=" SAR" />
+            </div>
+            <div className="stat-meta">
+              <span className="stat-badge positive">{sub.paymentCount ?? 0} payments</span>
+              <span className="stat-badge neutral">{sub.activeSubscribers ?? 0} active now</span>
+            </div>
+          </div>
+
+          <div className="stat-card-large secondary">
+            <div className="stat-card-header">
+              <span className="stat-icon"><Icon name="clock" size={16} /></span>
+              <span className="stat-label">Trial Users (Active Now)</span>
+            </div>
+            <div className="stat-value-large">
+              <AnimatedNumber value={sub.trialActive ?? 0} />
+            </div>
+            <div className="stat-meta">
+              <span className="stat-badge neutral">{sub.trialExpiredUnconverted ?? 0} expired, unconverted</span>
+            </div>
+          </div>
+
+          <div className="stat-card-large tertiary">
+            <div className="stat-card-header">
+              <span className="stat-icon"><Icon name="trending-up" size={16} /></span>
+              <span className="stat-label">Trial → Paid Conversion</span>
+            </div>
+            <div className="stat-value-large">
+              <AnimatedNumber value={sub.trialConversionRate ?? 0} suffix="%" />
+            </div>
+            <div className="stat-meta">
+              <span className="stat-badge neutral">{sub.trialToPaid ?? 0} of {sub.totalTrialsGranted ?? 0} trials paid</span>
+            </div>
+          </div>
+
+          <div className="stat-card-large highlight">
+            <div className="stat-card-header">
+              <span className="stat-icon"><Icon name="users" size={16} /></span>
+              <span className="stat-label">Exempt Accounts</span>
+            </div>
+            <div className="stat-value-large">
+              <AnimatedNumber value={(sub.grandfathered ?? 0) + (sub.adminCreated ?? 0)} />
+            </div>
+            <div className="stat-meta">
+              <span className="stat-badge neutral">{sub.grandfathered ?? 0} grandfathered</span>
+              <span className="stat-badge neutral">{sub.adminCreated ?? 0} admin-created</span>
+            </div>
+          </div>
+        </div>
+
+        {stats?.subscriptions?.recentPayments?.length > 0 && (
+          <div className="tables-section">
+            <div className="table-card">
+              <div className="table-header">
+                <h3><Icon name="check-circle" size={16} /> Recent Payments</h3>
+              </div>
+              <div className="mini-table">
+                {stats.subscriptions.recentPayments.map((p, idx) => (
+                  <div key={idx} className="mini-table-row">
+                    <span className="rank-badge">{idx + 1}</span>
+                    <div className="user-info-mini">
+                      <span className="username">{p.username || p.email || '(deleted account)'}</span>
+                      <span className="user-stats">
+                        {p.amountSar} {p.currency} • {new Date(p.receivedAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Charts Section */}
         <div className="charts-section">

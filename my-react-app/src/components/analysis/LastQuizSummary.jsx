@@ -1,5 +1,6 @@
 import React from 'react';
 import Icon from '../common/Icon.jsx';
+import { getSourceLabel } from '../../utils/sourceLabels';
 import './analysis.css';
 
 const LastQuizSummary = ({ latest_quiz }) => {
@@ -15,7 +16,7 @@ const LastQuizSummary = ({ latest_quiz }) => {
                                     <Icon name="bar-chart" size={15} /> ملخص الاختبار
                                 </span>
                                 <span className="source-badge">
-                                    <Icon name="book-open" size={15} /> {latest_quiz.source || 'general'}
+                                    <Icon name="book-open" size={15} /> {getSourceLabel(latest_quiz.source)}
                                 </span>
                                 <span className="date-badge">
                                     <Icon name="calendar" size={15} /> آخر اختبار
