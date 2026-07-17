@@ -19,7 +19,7 @@ const QuizComplete = ({ sourceLabel, total, onRestart, onBack, resetting }) => (
 
             {total > 0 && (
                 <div className="quiz-complete-stat">
-                    <span className="quiz-complete-stat-num">{total.toLocaleString('ar-EG')}</span>
+                    <span className="quiz-complete-stat-num">{total.toLocaleString()}</span>
                     <span className="quiz-complete-stat-label">سؤال مكتمل</span>
                 </div>
             )}

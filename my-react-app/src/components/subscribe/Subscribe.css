@@ -30,6 +30,39 @@
     color: var(--muted, #64748b);
 }
 
+.subscribe-perks {
+    list-style: none;
+    margin: 0 0 14px;
+    padding: 0;
+    display: grid;
+    gap: 8px;
+}
+
+.subscribe-perks li {
+    position: relative;
+    padding-inline-start: 24px;
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: var(--text-dark, #0f1e3d);
+    text-align: start;
+}
+
+.subscribe-perks li::before {
+    content: '✓';
+    position: absolute;
+    inset-inline-start: 0;
+    top: 0;
+    width: 17px;
+    height: 17px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 10px;
+    font-weight: 900;
+    background: rgba(37, 99, 235, 0.12);
+    color: var(--primary-color, #2563eb);
+}
+
 .subscribe-loading {
     display: flex;
     flex-direction: column;

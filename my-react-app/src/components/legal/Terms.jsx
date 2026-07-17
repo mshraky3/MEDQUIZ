@@ -26,7 +26,7 @@ const Terms = () => {
                         students prepare for the Saudi Medical Licensing Examination (SMLE). Our Service provides:
                     </p>
                     <ul>
-                        <li>Access to a comprehensive question bank with 11,000+ practice questions</li>
+                        <li>Access to a comprehensive, regularly updated question bank</li>
                         <li>Quiz and practice test functionality</li>
                         <li>Performance analytics and progress tracking</li>
                         <li>Study resources organized by medical specialty</li>
@@ -112,7 +112,7 @@ const Terms = () => {
                         <li>New accounts are billed an annual subscription of <strong>99 SAR per year</strong>.</li>
                         <li>Users who registered before the paid rollout are grandfathered and retain free access.</li>
                         <li>Accounts created by administrators are exempt from subscription charges.</li>
-                        <li>No free trials are offered.</li>
+                        <li>New accounts receive a one-time <strong>1-hour free trial</strong> with full access, starting once the account's email is verified. Each email address is eligible for one free trial only.</li>
                         <li>Refunds, where applicable, are governed by our <Link to="/refund-policy">Refund Policy</Link>.</li>
                     </ul>
                     <p>

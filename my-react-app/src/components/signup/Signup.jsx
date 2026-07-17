@@ -19,6 +19,7 @@ const Signup = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
+    const [trialGranted, setTrialGranted] = useState(false);
     const [tempLinkInfo, setTempLinkInfo] = useState(null);
     const [isTempLink, setIsTempLink] = useState(false);
     const navigate = useNavigate();
@@ -108,6 +109,7 @@ const Signup = () => {
                     console.debug('Analytics track skipped:', trackError);
                 }
 
+                setTrialGranted(!!response.data.trial?.granted);
                 setSuccess(true);
                 setTimeout(() => {
                     navigate('/login', {
@@ -183,6 +185,11 @@ const Signup = () => {
                     <div className="login-card signup-short" style={{ textAlign: 'center' }}>
                         <div className="success-icon" style={{ fontSize: 60, marginBottom: 20 }}><Icon name="check-circle" size={56} /></div>
                         <h2 style={{ color: '#f8fafc', fontWeight: 700, marginBottom: 12 }}>تم إنشاء الحساب بنجاح!</h2>
+                        {trialGranted && (
+                            <p style={{ color: '#f8fafc', fontWeight: 600, marginBottom: 8 }}>
+                                لديك الآن ساعة وصول كامل مجاناً لكل الأسئلة والملخصات والتحليلات 🎉
+                            </p>
+                        )}
                         <p style={{ color: 'var(--muted)' }}>جاري التحويل لتسجيل الدخول...</p>
                     </div>
                 </div>
@@ -214,7 +221,9 @@ const Signup = () => {
                         <div className="login-title">أنشئ حسابك</div>
                         <div className="login-subtitle">
                             {step === 'credentials'
-                                ? 'أنشئ حسابك المجاني ثم ابدأ اختباراً سريعاً من 10 أسئلة'
+                                ? (isTempLink
+                                    ? 'أنشئ حسابك المجاني ثم ابدأ اختباراً سريعاً من 10 أسئلة'
+                                    : 'أنشئ حسابك واحصل على ساعة وصول كامل مجاناً لكل شيء بعد تأكيد بريدك الإلكتروني')
                                 : `أدخل رمز التحقق المرسل إلى ${form.email}`}
                         </div>
                     </div>

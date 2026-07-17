@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import axios from 'axios';
 import Globals from '../../global.js';
 import { UserContext } from '../../UserContext';
@@ -43,6 +43,7 @@ function loadMoyasarAssets() {
 const Subscribe = () => {
     const { user, sessionToken } = useContext(UserContext);
     const navigate = useNavigate();
+    const location = useLocation();
     const [status, setStatus] = useState('loading'); // loading | ready | error
     const [error, setError] = useState('');
     const [priceHalalas, setPriceHalalas] = useState(null);
@@ -110,6 +111,8 @@ const Subscribe = () => {
     }, [user, sessionToken, navigate]);
 
     const riyals = priceHalalas != null ? priceHalalas / 100 : null;
+    const trialEnded = new URLSearchParams(location.search).get('reason') === 'trial_expired'
+        || user?.subscription_status === 'trial';
 
     return (
         <div className="login-body" dir="rtl">
@@ -117,10 +120,21 @@ const Subscribe = () => {
                 <div className="login-card subscribe-card">
                     <div className="login-header">
                         <span className="pill">اشتراك المنصة</span>
-                        <h1 className="login-title">فعّل اشتراكك السنوي</h1>
-                        <p className="login-subtitle">
-                            وصول كامل لجميع الأسئلة والملخصات والتحليلات لمدة سنة كاملة.
-                        </p>
+                        {trialEnded ? (
+                            <>
+                                <h1 className="login-title">انتهت تجربتك المجانية</h1>
+                                <p className="login-subtitle">
+                                    اشترك الآن للمتابعة والاستفادة من وصول كامل لجميع الأسئلة والملخصات والتحليلات.
+                                </p>
+                            </>
+                        ) : (
+                            <>
+                                <h1 className="login-title">فعّل اشتراكك السنوي</h1>
+                                <p className="login-subtitle">
+                                    وصول كامل لجميع الأسئلة والملخصات والتحليلات لمدة سنة كاملة.
+                                </p>
+                            </>
+                        )}
                     </div>
 
                     <div className="subscribe-price">
@@ -128,6 +142,12 @@ const Subscribe = () => {
                         <span className="subscribe-price-cur">ريال</span>
                         <span className="subscribe-price-period">/ سنة</span>
                     </div>
+
+                    <ul className="subscribe-perks">
+                        <li>بنك أسئلة محدّث بالكامل لنمط 2026 مع شرح سريري</li>
+                        <li>تجميعات شهرية جديدة تُضاف طوال مدة اشتراكك</li>
+                        <li>تحليلات أداء تكشف نقاط ضعفك وتعيد تدريبك عليها</li>
+                    </ul>
 
                     {isTestMode && (
                         <div className="subscribe-test-banner">

@@ -7,10 +7,10 @@ import { UserContext } from '../../UserContext';
 import './Landing.css';
 
 const stats = [
-  { label: 'سؤال', value: '11,000+' },
-  { label: 'الاشتراك السنوي', value: '99 ريال' },
-  { label: 'تدريب يومي', value: '24/7' },
-  { label: 'مواضيع مغطاة', value: '40+' }
+  { label: 'محدّث لنمط الاختبار', value: '2026' },
+  { label: 'تغطية لمواضيع الاختبار', value: '100%' },
+  { label: 'من الطلاب بدرجات عالية', value: 'مئات' },
+  { label: 'السنة كاملة', value: '99 ريال' }
 ];
 
 const features = [
@@ -38,8 +38,8 @@ const features = [
 
 const steps = [
   {
-    label: 'أنشئ حسابك',
-    hint: 'سجّل خلال ثوانٍ وكل شيء يبقى متزامناً.'
+    label: 'أنشئ حسابك وأكّد بريدك',
+    hint: 'تحصل فوراً على ساعة وصول كامل مجاناً لتجربة كل شيء.'
   },
   {
     label: 'تمرن بدقة',
@@ -52,7 +52,7 @@ const steps = [
 ];
 
 const included = [
-  'أكثر من 11,000 سؤال محدّث بنمط SMLE والبرومترك، مع تجميعات شهرية جديدة',
+  'بنك أسئلة شامل محدّث بنمط SMLE والبرومترك، مع تجميعات شهرية جديدة',
   'شرح سريري واضح لكل سؤال — تفهم "لماذا" لا تحفظ فقط',
   'ملخصات مركّزة للمواضيع عالية التكرار بدل تشتت الملفات والمصادر',
   'اختبارات محاكية بتوقيت حقيقي تهيّئك لأجواء الاختبار الفعلي',
@@ -76,6 +76,11 @@ const valuePoints = [
     icon: 'refresh',
     title: 'محتوى لا يتوقف عن التحديث',
     desc: 'نضيف تجميعات شهرية جديدة تواكب أحدث نمط لأسئلة الهيئة السعودية، فتتدرب دائماً على الأقرب لما ستراه في اختبارك.'
+  },
+  {
+    icon: 'users',
+    title: 'انضم إلى مئات الناجحين',
+    desc: 'مئات الطلاب تدرّبوا على المنصة واجتازوا اختبار SMLE بدرجات عالية. تدرّب على نفس الأسئلة التي صنعت نتائجهم.'
   }
 ];
 
@@ -94,14 +99,60 @@ const seoTopics = [
   },
   {
     title: 'تجميعات SMLE شهرية محدّثة',
-    desc: 'بنك أسئلة يتجاوز 11,000 سؤال مع تجميعات شهرية محدّثة تواكب أحدث نمط أسئلة اختبار الهيئة السعودية والبرومترك.'
+    desc: 'بنك أسئلة شامل مع تجميعات شهرية محدّثة تواكب أحدث نمط أسئلة اختبار الهيئة السعودية والبرومترك.'
   }
 ];
 
-const faqHighlights = [
-  'ما الفرق بين الجلسة السريعة والجلسة الطويلة داخل المنصة؟',
-  'هل تعمل SQB على الهاتف والأجهزة اللوحية؟',
-  'كيف تساعدني التحليلات على رفع مستواي قبل اختبار SMLE؟'
+const purchaseFaq = [
+  {
+    q: 'كيف تعمل التجربة المجانية؟',
+    a: 'أنشئ حسابك وأكّد بريدك لتحصل فوراً على ساعة وصول كامل لكل الأسئلة والتحليلات — بدون بطاقة دفع.'
+  },
+  {
+    q: 'هل يوجد تجديد تلقائي أو رسوم خفية؟',
+    a: 'لا. تدفع 99 ريالاً مرة واحدة وتحصل على سنة كاملة — لن يُخصم منك أي مبلغ آخر تلقائياً.'
+  },
+  {
+    q: 'كيف أدفع؟ وهل الدفع آمن؟',
+    a: 'الدفع عبر بوابة ميسر السعودية المرخّصة، ويدعم مدى وVisa وMastercard وApple Pay — لا نخزّن بيانات بطاقتك إطلاقاً.'
+  },
+  {
+    q: 'هل الأسئلة محدّثة لنمط اختبار 2026؟',
+    a: 'نعم — البنك محدّث بالكامل لنمط Midgard & Gameboy 2026، وتُضاف تجميعات شهرية جديدة باستمرار.'
+  }
+];
+
+const compareRows = [
+  {
+    label: 'التكلفة',
+    sqb: '99 ريالاً للسنة كاملة',
+    files: 'مجانية لكن مبعثرة وغير موثوقة',
+    courses: 'آلاف الريالات'
+  },
+  {
+    label: 'تحديث المحتوى',
+    sqb: 'تجميعات شهرية مدقّقة',
+    files: 'غير منتظم وبدون تدقيق',
+    courses: 'ينتهي بانتهاء الدورة'
+  },
+  {
+    label: 'شرح الإجابات',
+    sqb: 'شرح سريري لكل سؤال',
+    files: 'إجابات بلا شرح غالباً',
+    courses: 'يعتمد على المحاضر'
+  },
+  {
+    label: 'تحليل الأداء والأخطاء',
+    sqb: 'تحليلات تلقائية بعد كل جلسة',
+    files: 'يدوي — إن وُجد',
+    courses: 'غير متوفر غالباً'
+  },
+  {
+    label: 'مدة الوصول',
+    sqb: 'سنة كاملة، من أي جهاز',
+    files: 'روابط تنتهي وملفات تضيع',
+    courses: 'فترة محدودة'
+  }
 ];
 
 const newsItems = [
@@ -173,9 +224,20 @@ const Landing = () => {
       {/* Explicit dir: index.css sets body{direction:ltr}, which would cancel
           the documentElement dir for everything inside. */}
       <div className="landing-body" dir="rtl" lang="ar">
-        <div className="landing-shell">
+        <header className="landing-topbar">
+          <span className="landing-brand">SQB</span>
+          {isAuthenticated ? (
+            <button className="btn ghost topbar-btn" onClick={handleContinue}>
+              حسابي
+            </button>
+          ) : (
+            <button className="btn ghost topbar-btn" onClick={handleLogin}>
+              تسجيل الدخول
+            </button>
+          )}
+        </header>
 
-          <section className="hero">
+        <section className="hero">
             <HeroArt />
             {isAuthenticated ? (
               <>
@@ -196,7 +258,7 @@ const Landing = () => {
               </>
             ) : (
               <>
-                <span className="pill">منصة SMLE · أكثر من 11,000 سؤال محدّث</span>
+                <span className="pill">منصة SMLE · جرّب كل شيء مجاناً لمدة ساعة</span>
                 <h1>تدرّب بذكاء، واجتَز اختبار SMLE بثقة</h1>
                 <p>
                   بنك أسئلة محدّث على نمط البرومترك، مع شرح سريري لكل إجابة وتحليل فوري يكشف نقاط ضعفك
@@ -204,21 +266,24 @@ const Landing = () => {
                 </p>
                 <div className="cta-row">
                   <button className="btn primary" onClick={handleSignup}>
-                    ابدأ الآن
+                    سجّل وجرّب مجاناً لمدة ساعة
                   </button>
                   <button className="btn ghost" onClick={handleLogin}>
                     تسجيل الدخول
                   </button>
                 </div>
                 <ul className="hero-trust">
-                  <li>اشتراك سنوي 99 ريال</li>
-                  <li>وصول كامل لمدة سنة</li>
+                  <li>ساعة وصول كامل مجاناً بعد تأكيد بريدك</li>
+                  <li>99 ريال للسنة كاملة بعد التجربة</li>
+                  <li>تغطية كاملة لمواضيع الاختبار</li>
                   <li>شرح سريري لكل سؤال</li>
-                  <li>تحليلات فورية للأداء</li>
+                  <li>بدون تجديد تلقائي</li>
                 </ul>
               </>
             )}
-          </section>
+        </section>
+
+        <div className="landing-shell">
 
           <section className="stat-grid" aria-label="إحصائيات المنصة">
             {stats.map((item) => (
@@ -229,34 +294,12 @@ const Landing = () => {
             ))}
           </section>
 
-          <section className="news-section" aria-label="آخر التحديثات">
-            <div className="section-head">
-              <p className="pill subtle">جديد المنصة</p>
-              <h2>آخر التحديثات والإضافات</h2>
-              <p>نطوّر المنصة باستمرار — إليك آخر ما أضفناه وحدّثناه مؤخراً.</p>
-            </div>
-            <div className="news-list">
-              {newsItems.map((item) => (
-                <article key={item.title} className="news-item">
-                  <span className="news-item-icon" aria-hidden="true"><Icon name={item.icon} size={22} /></span>
-                  <div className="news-item-body">
-                    <div className="news-item-top">
-                      <h3>{item.title}</h3>
-                      <time className="news-item-date">{item.date}</time>
-                    </div>
-                    <p>{item.desc}</p>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </section>
-
           <section className="feature-section">
             <div className="section-head">
-              <p className="pill subtle">منظم - حديث - واضح</p>
-              <h2>كل ما تحتاجه في صفحة واحدة أنيقة</h2>
+              <p className="pill subtle">كل الأدوات في مكان واحد</p>
+              <h2>كل ما تحتاجه لاجتياز الاختبار من أول محاولة</h2>
               <p>
-                صممنا الواجهة لتبقى بسيطاً في التنقل وغنياً في المحتوى — خطوات أقل، تركيز أعلى.
+                أسئلة محدّثة، شرح سريري، وتحليلات ذكية — مصممة لتوصلك لدرجتك المستهدفة بأقل وقت وجهد.
               </p>
             </div>
             <div className="feature-grid">
@@ -268,6 +311,42 @@ const Landing = () => {
                 </div>
               ))}
             </div>
+          </section>
+
+          <section className="compare-section" aria-label="مقارنة طرق التحضير">
+            <div className="section-head">
+              <p className="pill subtle">قارن بنفسك</p>
+              <h2>لماذا SQB بدل الملفات المتناثرة والدورات المكلفة؟</h2>
+              <p>
+                معظم المتقدمين يجمعون تجميعات من مصادر متفرقة أو يدفعون آلاف الريالات لدورات تحضيرية.
+                إليك المقارنة الصريحة.
+              </p>
+            </div>
+            <div className="compare-scroll" role="region" aria-label="جدول المقارنة" tabIndex="0">
+              <table className="compare-table">
+                <thead>
+                  <tr>
+                    <th scope="col">وجه المقارنة</th>
+                    <th scope="col" className="compare-sqb-col">
+                      منصة SQB <span className="compare-badge">الخيار الذكي</span>
+                    </th>
+                    <th scope="col">ملفات وتجميعات متناثرة</th>
+                    <th scope="col">الدورات التحضيرية</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {compareRows.map((row) => (
+                    <tr key={row.label}>
+                      <th scope="row">{row.label}</th>
+                      <td className="compare-sqb-col"><Icon name="check-circle" size={16} aria-hidden="true" /> {row.sqb}</td>
+                      <td>{row.files}</td>
+                      <td>{row.courses}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="compare-hint" aria-hidden="true">اسحب الجدول جانبياً لعرض المقارنة كاملة</p>
           </section>
 
           <section className="value-section" aria-label="الاشتراك والأسعار">
@@ -299,38 +378,37 @@ const Landing = () => {
                   <span className="price-card-value">99</span>
                   <span className="price-card-cur">ريال / سنة</span>
                 </div>
+                <p className="price-card-permonth">أي أقل من ريالين في الأسبوع — أرخص من كوب قهوة</p>
                 <ul className="price-card-list">
                   {included.map((item) => (
                     <li key={item}>{item}</li>
                   ))}
                 </ul>
                 <button className="btn primary price-card-cta" onClick={handleSignup}>
-                  اشترك الآن — 99 ريال
+                  ابدأ بساعة مجانية
                 </button>
                 <p className="price-card-note">
-                  دفع آمن عبر ميسر · مدى / Visa / Mastercard · بدون تجديد تلقائي
+                  ساعة تجربة مجانية أولاً · دفع آمن عبر ميسر · مدى / Visa / Mastercard / Apple Pay · بدون تجديد تلقائي
                 </p>
               </aside>
             </div>
           </section>
 
-          <section className="seo-section">
+          <section className="faq-section" aria-label="أسئلة قبل الاشتراك">
             <div className="section-head">
-              <p className="pill subtle">SMLE • برومترك • السعودية</p>
-              <h2>محتوى موجّه لما يبحث عنه طلاب الطب والأطباء فعلاً</h2>
-              <p>
-                إذا كنت تبحث عن بنك أسئلة لاختبار الهيئة السعودية للتخصصات الصحية أو طريقة عملية للتحضير لاختبار البرومترك،
-                فهذه المنصة تجمع بين الأسئلة، التدرج في التدريب، والتحليل بعد كل جلسة.
-              </p>
+              <p className="pill subtle">قبل أن تشترك</p>
+              <h2>أسئلة تُطرح قبل الاشتراك</h2>
+              <p>إجابات مباشرة على أكثر ما يسأل عنه الطلاب قبل البدء.</p>
             </div>
-            <div className="seo-grid">
-              {seoTopics.map((topic) => (
-                <article key={topic.title} className="seo-card">
-                  <h3>{topic.title}</h3>
-                  <p>{topic.desc}</p>
+            <div className="purchase-faq-grid">
+              {purchaseFaq.map((item) => (
+                <article key={item.q} className="purchase-faq-card">
+                  <h3>{item.q}</h3>
+                  <p>{item.a}</p>
                 </article>
               ))}
             </div>
+            <Link to="/faq" className="faq-preview-link">عرض كل الأسئلة الشائعة</Link>
           </section>
 
           <section className="flow-section">
@@ -353,6 +431,28 @@ const Landing = () => {
                   </div>
                 ))}
               </div>
+            </div>
+          </section>
+
+          <section className="news-section" aria-label="آخر التحديثات">
+            <div className="section-head">
+              <p className="pill subtle">جديد المنصة</p>
+              <h2>آخر التحديثات والإضافات</h2>
+              <p>نطوّر المنصة باستمرار — إليك آخر ما أضفناه وحدّثناه مؤخراً.</p>
+            </div>
+            <div className="news-list">
+              {newsItems.map((item) => (
+                <article key={item.title} className="news-item">
+                  <span className="news-item-icon" aria-hidden="true"><Icon name={item.icon} size={22} /></span>
+                  <div className="news-item-body">
+                    <div className="news-item-top">
+                      <h3>{item.title}</h3>
+                      <time className="news-item-date">{item.date}</time>
+                    </div>
+                    <p>{item.desc}</p>
+                  </div>
+                </article>
+              ))}
             </div>
           </section>
 
@@ -385,15 +485,25 @@ const Landing = () => {
                 </Link>
               </div>
             </div>
-            <aside className="faq-preview-card">
-              <h3>أسئلة يبحث عنها المستخدمون كثيراً</h3>
-              <ul>
-                {faqHighlights.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-              <Link to="/faq" className="faq-preview-link">عرض صفحة الأسئلة الشائعة</Link>
-            </aside>
+          </section>
+
+          <section className="seo-section">
+            <div className="section-head">
+              <p className="pill subtle">SMLE • برومترك • السعودية</p>
+              <h2>محتوى موجّه لما يبحث عنه طلاب الطب والأطباء فعلاً</h2>
+              <p>
+                إذا كنت تبحث عن بنك أسئلة لاختبار الهيئة السعودية للتخصصات الصحية أو طريقة عملية للتحضير لاختبار البرومترك،
+                فهذه المنصة تجمع بين الأسئلة، التدرج في التدريب، والتحليل بعد كل جلسة.
+              </p>
+            </div>
+            <div className="seo-grid">
+              {seoTopics.map((topic) => (
+                <article key={topic.title} className="seo-card">
+                  <h3>{topic.title}</h3>
+                  <p>{topic.desc}</p>
+                </article>
+              ))}
+            </div>
           </section>
 
           <section className="cta-band">
@@ -410,9 +520,10 @@ const Landing = () => {
                 ) : (
                   <>
                     <p className="pill subtle">جاهز للبدء؟</p>
-                    <h2>ادخل وضع الاختبار اليوم</h2>
+                    <h2>كل يوم تأجيل هو يوم تدريب يخسره منافسوك لصالحهم</h2>
                     <p>
-                      أنشئ حسابك، اختر تخصصك، وابدأ جلسة تدريب خلال أقل من دقيقتين.
+                      أنشئ حسابك، أكّد بريدك، واحصل فوراً على ساعة وصول كامل مجاناً — انضم إلى
+                      مئات الطلاب الذين اجتازوا اختبارهم بعد التدريب هنا.
                     </p>
                   </>
                 )}
@@ -435,6 +546,9 @@ const Landing = () => {
                     <button className="btn outline" onClick={handleLogin}>
                       تسجيل الدخول
                     </button>
+                    <p className="cta-band-note">
+                      ساعة تجربة مجانية · ثم 99 ريال للسنة كاملة · دفع آمن عبر ميسر · بدون تجديد تلقائي
+                    </p>
                   </>
                 )}
               </div>
@@ -455,7 +569,7 @@ const Landing = () => {
           ) : (
             <>
               <button className="btn primary" onClick={handleSignup}>
-                ابدأ الآن
+                جرّب مجاناً لمدة ساعة
               </button>
               <button className="btn outline" onClick={handleLogin}>
                 دخول
@@ -468,4 +582,4 @@ const Landing = () => {
   );
 };
 
-export default Landing; 
+export default Landing;
