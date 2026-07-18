@@ -1,19 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import Icon from '../common/Icon.jsx';
-import { useNavigate, useLocation, useParams } from 'react-router-dom';
+import { useNavigate, useLocation, useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { track } from '@vercel/analytics';
 import Globals from '../../global.js';
 import Spinner from '../common/Spinner.jsx';
+import { UserContext } from '../../UserContext';
 import '../login/Login.css';
 import './Signup.css';
 
 const Signup = () => {
+    const { setUser } = useContext(UserContext);
     const [form, setForm] = useState({
         email: '',
         password: '',
         confirmPassword: ''
     });
+    const [termsAgreed, setTermsAgreed] = useState(false);
     const [otp, setOtp] = useState('');
     const [step, setStep] = useState('credentials'); // 'credentials' | 'otp'
     const [loading, setLoading] = useState(false);
@@ -79,7 +82,51 @@ const Signup = () => {
             return false;
         }
 
+        if (!termsAgreed) {
+            setError('يجب الموافقة على شروط الاستخدام للمتابعة');
+            return false;
+        }
+
         return true;
+    };
+
+    // Sign the freshly created account in directly — no bouncing to /login to
+    // re-type credentials while the free-trial hour is already counting down.
+    // Terms were accepted on the signup form, so the post-login terms popup is
+    // recorded silently. Falls back to the manual login page if anything fails.
+    const autoLogin = async () => {
+        const username = form.email.trim().toLowerCase();
+        try {
+            const loginRes = await axios.post(`${Globals.URL}/login`, {
+                username,
+                password: form.password,
+                deviceId: 'placeholder-device-id',
+            });
+
+            if (loginRes.data.showTerms) {
+                await axios.post(`${Globals.URL}/accept-terms`, { username }).catch(() => {});
+            }
+
+            setUser(loginRes.data.user || { username }, loginRes.data.sessionToken);
+
+            const sub = loginRes.data.subscription;
+            setTimeout(() => {
+                if (sub && sub.enforced && !sub.active) {
+                    navigate('/subscribe', { replace: true });
+                } else {
+                    navigate('/quizs', { replace: true, state: loginRes.data });
+                }
+            }, 1200);
+        } catch (err) {
+            setTimeout(() => {
+                navigate('/login', {
+                    state: {
+                        message: 'تم إنشاء الحساب بنجاح! يمكنك تسجيل الدخول الآن.',
+                        username
+                    }
+                });
+            }, 1500);
+        }
     };
 
     const sendOtp = async () => {
@@ -111,14 +158,7 @@ const Signup = () => {
 
                 setTrialGranted(!!response.data.trial?.granted);
                 setSuccess(true);
-                setTimeout(() => {
-                    navigate('/login', {
-                        state: {
-                            message: 'تم إنشاء الحساب بنجاح! يمكنك تسجيل الدخول الآن.',
-                            username: form.email.trim().toLowerCase()
-                        }
-                    });
-                }, 2000);
+                await autoLogin();
             } else {
                 throw new Error(response.data.message || 'فشل في إنشاء الحساب');
             }
@@ -190,7 +230,7 @@ const Signup = () => {
                                 لديك الآن ساعة وصول كامل مجاناً لكل الأسئلة والملخصات والتحليلات 🎉
                             </p>
                         )}
-                        <p style={{ color: 'var(--muted)' }}>جاري التحويل لتسجيل الدخول...</p>
+                        <p style={{ color: 'var(--muted)' }}>جاري تسجيل دخولك وتحويلك للمنصة...</p>
                     </div>
                 </div>
             </div>
@@ -217,16 +257,30 @@ const Signup = () => {
             <div className="login-wrapper signup-wide">
                 <div className="login-card signup-short">
                     <div className="login-header">
-                        <div className="pill">إنشاء حساب</div>
-                        <div className="login-title">أنشئ حسابك</div>
+                        <div className="pill">{isTempLink ? 'إنشاء حساب' : '🎁 تجربة مجانية — ساعة كاملة'}</div>
+                        <div className="login-title">
+                            {isTempLink ? 'أنشئ حسابك' : 'ابدأ تجربتك المجانية'}
+                        </div>
                         <div className="login-subtitle">
                             {step === 'credentials'
                                 ? (isTempLink
                                     ? 'أنشئ حسابك المجاني ثم ابدأ اختباراً سريعاً من 10 أسئلة'
-                                    : 'أنشئ حسابك واحصل على ساعة وصول كامل مجاناً لكل شيء بعد تأكيد بريدك الإلكتروني')
-                                : `أدخل رمز التحقق المرسل إلى ${form.email}`}
+                                    : 'أنشئ حسابك وأكّد بريدك لتبدأ فوراً ساعة وصول كامل مجاناً')
+                                : (isTempLink
+                                    ? `أدخل رمز التحقق المرسل إلى ${form.email}`
+                                    : `أدخل الرمز المرسل إلى ${form.email} — وبتأكيده تبدأ ساعتك المجانية`)}
                         </div>
                     </div>
+
+                    {!isTempLink && (
+                        <div className="trial-callout">
+                            <span className="trial-callout-icon" aria-hidden="true"><Icon name="clock" size={20} /></span>
+                            <div className="trial-callout-body">
+                                <strong>ساعة كاملة مجاناً بعد تأكيد بريدك</strong>
+                                <span>وصول كامل لكل الأسئلة والتحليلات — بدون بطاقة دفع، وبدون التزام.</span>
+                            </div>
+                        </div>
+                    )}
 
                     {step === 'credentials' ? (
                         <form onSubmit={handleCredentialsSubmit} className="login-form">
@@ -269,6 +323,19 @@ const Signup = () => {
                                     required
                                 />
                             </div>
+                            <label className="terms-agree-row">
+                                <input
+                                    type="checkbox"
+                                    checked={termsAgreed}
+                                    onChange={(e) => setTermsAgreed(e.target.checked)}
+                                />
+                                <span>
+                                    أوافق على{' '}
+                                    <Link to="/terms" target="_blank" rel="noopener" className="link-primary">شروط الاستخدام</Link>
+                                    {' '}و{' '}
+                                    <Link to="/privacy" target="_blank" rel="noopener" className="link-primary">سياسة الخصوصية</Link>
+                                </span>
+                            </label>
                             {error && <div className="alert-box error">{error}</div>}
                             <button
                                 type="submit"
@@ -279,6 +346,10 @@ const Signup = () => {
                                     <div className="loading-spinner"><Spinner size="sm" />{isTempLink ? 'جاري إنشاء الحساب...' : 'جاري الإرسال...'}</div>
                                 ) : (isTempLink ? 'إنشاء الحساب' : 'إرسال رمز التحقق')}
                             </button>
+                            <div className="login-footer-text">
+                                لديك حساب بالفعل؟{' '}
+                                <Link to="/login" className="link-primary">تسجيل الدخول</Link>
+                            </div>
                             <div className="login-footer-text">
                                 تواجه مشكلة؟{' '}
                                 <a className="link-primary" href="mailto:alshraky3@gmail.com?subject=Account Support">
@@ -311,7 +382,7 @@ const Signup = () => {
                             <button type="submit" className="btn primary large" disabled={loading}>
                                 {loading ? (
                                     <div className="loading-spinner"><Spinner size="sm" />جاري إنشاء الحساب...</div>
-                                ) : 'إنشاء الحساب'}
+                                ) : 'تأكيد وبدء التجربة المجانية'}
                             </button>
                             <button
                                 type="button"

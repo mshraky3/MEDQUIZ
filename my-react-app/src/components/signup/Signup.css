@@ -9,3 +9,72 @@
 }
 
 /* Signup now uses login/landing styles for full glassmorphism redesign */
+
+/* Free-trial callout — makes it unmistakable that signup = 1 free hour */
+.trial-callout {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin: 4px 0 20px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    border: 1px solid rgba(37, 99, 235, 0.28);
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(99, 102, 241, 0.10));
+    text-align: start;
+}
+
+.trial-callout-icon {
+    flex-shrink: 0;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(135deg, #2563eb, #4f46e5);
+    color: #ffffff;
+}
+
+.trial-callout-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.trial-callout-body strong {
+    font-size: 14.5px;
+    color: var(--text-dark, #0f1e3d);
+    font-weight: 800;
+}
+
+.trial-callout-body span {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--muted, #64748b);
+}
+
+/* Terms agreement checkbox — replaces the post-login terms popup */
+.terms-agree-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 2px 0 6px;
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--muted, #64748b);
+    text-align: start;
+    cursor: pointer;
+}
+
+.terms-agree-row input[type="checkbox"] {
+    width: 17px;
+    height: 17px;
+    margin-top: 3px;
+    flex-shrink: 0;
+    accent-color: #2563eb;
+    cursor: pointer;
+}
+
+.terms-agree-row input[type="checkbox"]:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
