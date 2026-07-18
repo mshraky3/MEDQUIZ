@@ -50,7 +50,15 @@ import Globals from './global.js';
 import { UserProvider } from './UserContext.jsx';
 
 import { initErrorTracking } from './utils/errorTracking.js';
+import { reloadOnceForStaleChunk } from './utils/staleChunkReload.js';
 initErrorTracking();
+
+// After a deploy, users holding the previous entry script fail to lazy-load
+// route chunks ("Unable to preload CSS for ..."). Vite signals this exact
+// case; one reload picks up the new asset hashes transparently.
+window.addEventListener('vite:preloadError', (event) => {
+  if (reloadOnceForStaleChunk()) event.preventDefault();
+});
 
 const getHostUrl = Globals.URL;
 
