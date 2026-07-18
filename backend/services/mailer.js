@@ -9,7 +9,7 @@
  *   SMTP_USER          e.g. resend            (default: legacy Gmail account)
  *   SMTP_PASS          provider API key / app password
  *   MAIL_FROM_ADDRESS  e.g. noreply@smle-question-bank.com
- *   MAIL_FROM_NAME     default display name (default: MEDQIZE)
+ *   MAIL_FROM_NAME     default display name (default: SQB)
  *
  * While the env vars are unset everything falls back to the legacy Gmail
  * sender, so deploys are safe in any order. Once a domain-verified provider
@@ -43,7 +43,7 @@ function getTransporter() {
 /** From header with a per-email display name over the single configured address. */
 export function fromWithName(name) {
     const address = process.env.MAIL_FROM_ADDRESS || 'alshrakynodeapp@gmail.com';
-    const display = name || process.env.MAIL_FROM_NAME || 'MEDQIZE';
+    const display = name || process.env.MAIL_FROM_NAME || 'SQB';
     return `"${display}" <${address}>`;
 }
 

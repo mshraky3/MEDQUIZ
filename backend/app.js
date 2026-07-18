@@ -2,7 +2,6 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { Pool } from 'pg';
-import OpenAI from 'openai';
 import crypto from 'crypto';
 import { sendMail } from './services/mailer.js';
 import errorReportRoutes from './routes/error-report.js';
@@ -1077,6 +1076,7 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
             subscriptionBreakdownRes,
             trialFunnelRes,
             revenueRes,
+            paidButInactiveRes,
             recentPaymentsRes
         ] = await Promise.all([
             // Total users
@@ -1272,11 +1272,35 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
                        JOIN accounts a ON a.id = tg.account_id
                       WHERE a.subscription_status = 'active') as trial_to_paid
             `).catch(() => ({ rows: [{ total_trials_granted: 0, trial_to_paid: 0 }] })),
-            // Revenue from confirmed Moyasar payments
+            // Revenue from confirmed Moyasar payments. Three DIFFERENT numbers,
+            // kept separate so the dashboard can't conflate them:
+            //   payment_count       = raw paid events (includes renewals + a
+            //                         pre-launch test row + payments whose
+            //                         account was later deleted)
+            //   distinct_payers     = distinct still-present accounts that paid
+            //                         (the real "how many customers paid" count)
+            //   total_halalas       = actual money received (sum of all paid rows)
             db.query(`
-                SELECT COUNT(*) as payment_count, COALESCE(SUM(amount_halalas), 0) as total_halalas
+                SELECT
+                    COUNT(*) as payment_count,
+                    COUNT(DISTINCT account_id) FILTER (WHERE account_id IS NOT NULL) as distinct_payers,
+                    COALESCE(SUM(amount_halalas), 0) as total_halalas
                 FROM payment_events WHERE status = 'paid'
-            `).catch(() => ({ rows: [{ payment_count: 0, total_halalas: 0 }] })),
+            `).catch(() => ({ rows: [{ payment_count: 0, distinct_payers: 0, total_halalas: 0 }] })),
+            // Money/access-at-risk: accounts that HAVE a confirmed payment but do
+            // NOT currently have access (not active-unexpired, not grandfathered,
+            // not admin). These are the soft-launch payers whose payment recorded
+            // before activation logic was wired — they paid but hit the paywall.
+            db.query(`
+                SELECT COUNT(*) as n FROM accounts a
+                WHERE EXISTS (SELECT 1 FROM payment_events pe
+                              WHERE pe.account_id = a.id AND pe.status = 'paid')
+                  AND NOT (
+                        (a.subscription_status = 'active' AND a.subscription_expiry_date > NOW())
+                        OR a.grandfathered_at IS NOT NULL
+                        OR a.is_admin_created = true
+                  )
+            `).catch(() => ({ rows: [{ n: 0 }] })),
             // Last 10 confirmed payments for a quick recent-activity table.
             // LEFT JOIN on purpose: payment_events.account_id is ON DELETE SET
             // NULL, so a payment whose account was later deleted must still
@@ -1339,6 +1363,8 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
                 trialToPaid,
                 trialConversionRate,
                 paymentCount: parseInt(revenue.payment_count) || 0,
+                distinctPayers: parseInt(revenue.distinct_payers) || 0,
+                paidButInactive: parseInt(paidButInactiveRes.rows[0]?.n) || 0,
                 totalRevenueSar: (parseInt(revenue.total_halalas) || 0) / 100,
                 recentPayments: recentPaymentsRes.rows.map(p => ({
                     receivedAt: p.received_at,
@@ -2675,59 +2701,6 @@ app.post('/api/questions', adminAuth, async (req, res) => {
 
 
 
-app.post("/ai-analysis", async (req, res) => {
-    const { question, selected_answer, correct_option } = req.body;
-
-    if (!question || !selected_answer || !correct_option) {
-        return res.status(400).json({ error: "Missing required fields." });
-    }
-
-    try {
-        // Use API key strictly from environment
-        const apiKey = process.env.APIKEY;
-        if (!apiKey) {
-            console.error("APIKEY environment variable is not set");
-            return res.status(500).json({ error: "AI service configuration error." });
-        }
-
-        const isProd = process.env.NODE_ENV === 'production';
-        const referer = isProd ? "https://medquiz.vercel.app" : (process.env.DEV_REFERER || "http://localhost:5173");
-
-        const openai = new OpenAI({
-            apiKey,
-            baseURL: "https://openrouter.ai/api/v1",
-        });
-
-        const model = process.env.OPENROUTER_MODEL || "qwen/qwen3-next-80b-a3b-instruct:free";
-
-        const completion = await openai.chat.completions.create({
-            model,
-            messages: [
-                {
-                    role: "user",
-                    content: `Here's a multiple-choice question:\n\nQuestion: ${question}\nUser's Answer: ${selected_answer}\nCorrect Answer: ${correct_option}\n\nWhich one is more accurate and why? in no longer than 40 words. if the words are less than 40 . dont say the number of words . and ne style needed just text `
-                }
-            ]
-        });
-
-        const aiAnswer = completion.choices?.[0]?.message?.content;
-
-        if (!aiAnswer) {
-            console.error("OpenRouter API responded with no choices.", JSON.stringify(completion));
-            return res.status(500).json({ error: "Invalid AI response format." });
-        }
-
-        res.json({ answer: aiAnswer });
-
-    } catch (error) {
-        console.error("AI analysis error:", error);
-        res.status(500).json({ error: "Failed to fetch AI analysis. Please try again later." });
-    }
-});
-
-
-
-
 app.get('/questions', adminAuth, async (req, res) => {
     try {
         const result = await db.query("SELECT * FROM questions ORDER BY id");
@@ -3331,9 +3304,9 @@ app.post('/accept-terms', async (req, res) => {
 // Test email endpoint
 app.get('/api/test-email', adminAuth, async (req, res) => {
     try {
-        const emailSubject = '🧪 Test Email - MEDQIZE System';
+        const emailSubject = '🧪 Test Email - SQB System';
         const emailText = `
-This is a test email from the MEDQIZE system.
+This is a test email from the SQB system.
 
 System Status: ✅ Email system is working properly
 Timestamp: ${new Date().toLocaleString()}
@@ -3344,7 +3317,7 @@ If you receive this email, the notification system is working correctly.
         `;
 
         const emailHtml = `
-            <h2>🧪 Test Email - MEDQIZE System</h2>
+            <h2>🧪 Test Email - SQB System</h2>
             <p><strong>System Status:</strong> ✅ Email system is working properly</p>
             <p><strong>Timestamp:</strong> ${new Date().toLocaleString()}</p>
             <p><strong>Server:</strong> Backend API</p>
@@ -3387,7 +3360,7 @@ app.post('/api/contact', async (req, res) => {
         try {
             const emailSubject = `📞 Contact Form - ${subject || 'General Inquiry'}`;
             const emailText = `
-New contact form submission from MEDQIZE:
+New contact form submission from SQB:
 
 Name: ${name}
 Mobile: ${mobile}
@@ -3513,7 +3486,7 @@ app.post('/api/suggestions', async (req, res) => {
             <td style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 50%, #6d28d9 100%); padding: 40px; text-align: center;">
               <div style="font-size: 50px; margin-bottom: 16px;">💡</div>
               <h1 style="margin: 0; color: white; font-size: 24px; font-weight: 800;">New Suggestion Received</h1>
-              <p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.8); font-size: 14px;">MEDQIZE Feedback System</p>
+              <p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.8); font-size: 14px;">SQB Feedback System</p>
             </td>
           </tr>
           
@@ -3586,7 +3559,7 @@ app.post('/api/suggestions', async (req, res) => {
           <tr>
             <td style="background: #1e293b; padding: 24px 32px; text-align: center;">
               <p style="margin: 0; color: rgba(255,255,255,0.6); font-size: 12px;">
-                Auto-generated by MEDQIZE Feedback System
+                Auto-generated by SQB Feedback System
               </p>
             </td>
           </tr>
@@ -3956,37 +3929,47 @@ app.post('/api/auth/send-otp', async (req, res) => {
             [lowerEmail, otp, expiresAt]
         );
 
-        // Send OTP email
-        const subject = 'رمز التحقق — MEDQIZE';
+        // Send OTP email. Copy is context-aware: a signup code opens the
+        // 1-hour free trial, a reset code just verifies identity.
+        const isSignup = purpose === 'signup';
+        const subject = isSignup
+            ? 'رمز تفعيل حسابك — SQB'
+            : 'رمز إعادة تعيين كلمة المرور — SQB';
+        const heading = isSignup ? 'فعِّل حسابك وابدأ تجربتك المجانية' : 'رمز التحقق الخاص بك';
+        const intro = isSignup
+            ? 'أدخل الرمز أدناه لتأكيد بريدك — وبمجرد التأكيد تبدأ فوراً <strong style="color:#0f1e3d;">ساعة تجربة مجانية كاملة</strong> لكل الأسئلة والتحليلات.'
+            : 'أدخل الرمز أدناه لإعادة تعيين كلمة المرور الخاصة بك.';
         const html = `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#0b1021;font-family:'Segoe UI',Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0b1021;padding:40px 0;">
+<body style="margin:0;padding:0;background:#f4f7fb;font-family:'Segoe UI',Tahoma,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f7fb;padding:40px 16px;">
     <tr><td align="center">
-      <table width="480" cellpadding="0" cellspacing="0" style="background:#111827;border-radius:16px;overflow:hidden;border:1px solid #1e293b;">
+      <table width="440" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e5eaf3;max-width:440px;width:100%;box-shadow:0 8px 30px rgba(37,99,235,0.08);">
         <!-- Header -->
         <tr>
-          <td align="center" style="padding:32px 40px 24px;background:#111827;border-bottom:1px solid #1e293b;">
-            <span style="font-size:28px;font-weight:800;color:#22d3ee;letter-spacing:2px;">MEDQIZE</span>
+          <td align="center" style="padding:28px 40px;background:linear-gradient(135deg,#2563eb,#4f46e5);">
+            <span style="font-size:26px;font-weight:800;color:#ffffff;letter-spacing:2px;">SQB</span>
           </td>
         </tr>
         <!-- Body -->
         <tr>
-          <td align="center" style="padding:36px 40px 16px;">
-            <p style="margin:0 0 8px;font-size:18px;color:#94a3b8;">رمز التحقق الخاص بك</p>
-            <p style="margin:0 0 28px;font-size:13px;color:#475569;">أدخل الرمز أدناه للمتابعة. صالح لمدة <strong style="color:#f8fafc;">5 دقائق</strong>.</p>
+          <td align="center" style="padding:36px 40px 8px;">
+            <h1 style="margin:0 0 10px;font-size:19px;font-weight:800;color:#0f1e3d;">${heading}</h1>
+            <p style="margin:0 0 28px;font-size:14px;color:#64748b;line-height:1.7;">${intro}</p>
             <!-- OTP Box -->
-            <div style="background:#0b1021;border:2px solid #22d3ee;border-radius:12px;padding:24px 48px;display:inline-block;margin-bottom:28px;">
-              <span style="font-size:48px;font-weight:800;color:#22d3ee;letter-spacing:16px;">${otp}</span>
+            <div style="background:#f4f7fb;border:1px solid #dbe4f3;border-radius:12px;padding:20px 40px;display:inline-block;margin-bottom:12px;">
+              <span style="font-size:42px;font-weight:800;color:#2563eb;letter-spacing:14px;">${otp}</span>
             </div>
-            <p style="margin:0;font-size:13px;color:#475569;">إذا لم تطلب هذا الرمز، يمكنك تجاهل هذا البريد.</p>
+            <p style="margin:0 0 24px;font-size:12.5px;color:#94a3b8;">صالح لمدة <strong style="color:#0f1e3d;">5 دقائق</strong></p>
+            <p style="margin:0;font-size:12.5px;color:#94a3b8;line-height:1.7;">إذا لم تطلب هذا الرمز، يمكنك تجاهل هذا البريد بأمان.</p>
           </td>
         </tr>
         <!-- Footer -->
         <tr>
-          <td align="center" style="padding:20px 40px 28px;border-top:1px solid #1e293b;">
-            <p style="margin:0;font-size:12px;color:#334155;">© 2026 MEDQIZE · جميع الحقوق محفوظة</p>
+          <td align="center" style="padding:22px 40px 26px;border-top:1px solid #eef2f8;">
+            <p style="margin:0 0 4px;font-size:12px;color:#94a3b8;">© 2026 SQB · بنك أسئلة SMLE والبرومترك</p>
+            <p style="margin:0;font-size:11px;color:#cbd5e1;">هذا البريد تلقائي، يُرجى عدم الرد عليه مباشرةً.</p>
           </td>
         </tr>
       </table>
@@ -3994,7 +3977,9 @@ app.post('/api/auth/send-otp', async (req, res) => {
   </table>
 </body>
 </html>`;
-        const text = `رمز التحقق الخاص بك هو: ${otp} — صالح لمدة 5 دقائق.`;
+        const text = isSignup
+            ? `رمز تفعيل حسابك في SQB هو: ${otp} — صالح لمدة 5 دقائق. بعد التأكيد تبدأ ساعة تجربتك المجانية.`
+            : `رمز إعادة تعيين كلمة المرور في SQB هو: ${otp} — صالح لمدة 5 دقائق.`;
 
         await sendEmail(lowerEmail, subject, text, html);
 

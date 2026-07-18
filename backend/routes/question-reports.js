@@ -8,7 +8,7 @@ const ADMIN_EMAIL = 'alshraky3@gmail.com';
 
 const sendEmail = async (to, subject, html) => {
     await sendMail({
-        name: 'MEDQIZE',
+        name: 'SQB',
         to,
         subject,
         html,
@@ -51,7 +51,7 @@ router.post('/', async (req, res) => {
       <table width="500" cellpadding="0" cellspacing="0" style="background:#111827;border-radius:12px;overflow:hidden;border:1px solid #1e293b;">
         <tr>
           <td style="padding:24px 32px 20px;background:#111827;border-bottom:1px solid #1e293b;">
-            <span style="font-size:22px;font-weight:800;color:#22d3ee;">MEDQIZE</span>
+            <span style="font-size:22px;font-weight:800;color:#22d3ee;">SQB</span>
             <span style="font-size:13px;color:#64748b;margin-left:12px;">Admin Alert</span>
           </td>
         </tr>
@@ -72,7 +72,7 @@ router.post('/', async (req, res) => {
         </tr>
         <tr>
           <td style="padding:16px 32px 24px;border-top:1px solid #1e293b;">
-            <p style="margin:0;font-size:11px;color:#334155;">MEDQIZE · Question Reports System</p>
+            <p style="margin:0;font-size:11px;color:#334155;">SQB · Question Reports System</p>
           </td>
         </tr>
       </table>
@@ -233,7 +233,7 @@ router.put('/:id/resolve', adminAuth, async (req, res) => {
                     </div>
                     <p>After review, the question and its answer are confirmed to be correct. We appreciate you taking the time to help maintain quality.</p>
                     ${admin_note ? `<p style="color:#64748b;font-size:13px;">Admin note: ${admin_note}</p>` : ''}
-                    <p style="color:#94a3b8;font-size:12px;margin-top:24px;">— The MEDQIZE Team</p>
+                    <p style="color:#94a3b8;font-size:12px;margin-top:24px;">— The SQB Team</p>
                 </div>
                 `
             );
