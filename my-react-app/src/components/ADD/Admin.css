@@ -1243,6 +1243,11 @@
   background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%);
 }
 
+.stat-card-large.warning {
+  border-color: rgba(248, 113, 113, 0.4);
+  background: linear-gradient(135deg, rgba(248, 113, 113, 0.12) 0%, rgba(239, 68, 68, 0.05) 100%);
+}
+
 .stat-card-header {
   display: flex;
   align-items: center;

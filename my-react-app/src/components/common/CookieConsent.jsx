@@ -30,31 +30,22 @@ const CookieConsent = () => {
     if (!showBanner) return null;
 
     return (
-        <div className="cookie-consent-overlay">
-            <div className="cookie-consent-banner">
-                <div className="cookie-consent-content">
-                    <div className="cookie-consent-icon"><Icon name="cookie" size={28} /></div>
-                    <div className="cookie-consent-text">
-                        <h3>نستخدم ملفات تعريف الارتباط | We use cookies</h3>
-                        <p>
-                            نستخدم ملفات تعريف الارتباط (الكوكيز) لتحسين تجربتك على موقعنا وعرض إعلانات مخصصة عبر Google AdSense.
-                            بالنقر على "قبول الكل"، فإنك توافق على استخدام جميع ملفات تعريف الارتباط.
-                        </p>
-                        <p>
-                            We use cookies to improve your experience and display personalized ads through Google AdSense.
-                            By clicking "Accept All", you consent to the use of all cookies.
-                        </p>
-                        <a href="/privacy" className="cookie-consent-link">
-                            سياسة الخصوصية | Privacy Policy
-                        </a>
-                    </div>
+        <div className="cookie-consent-overlay" role="dialog" aria-label="ملفات تعريف الارتباط | Cookies">
+            <div className="cookie-consent-banner" dir="rtl">
+                <div className="cookie-consent-text">
+                    <span className="cookie-consent-icon" aria-hidden="true"><Icon name="cookie" size={18} /></span>
+                    <p>
+                        نستخدم الكوكيز لتحسين تجربتك وعرض إعلانات مخصصة.
+                        {' '}<bdi>We use cookies to improve your experience.</bdi>{' '}
+                        <a href="/privacy" className="cookie-consent-link">سياسة الخصوصية</a>
+                    </p>
                 </div>
                 <div className="cookie-consent-actions">
                     <button onClick={acceptNecessary} className="cookie-btn cookie-btn-necessary">
-                        الضرورية فقط | Necessary Only
+                        الضرورية فقط
                     </button>
                     <button onClick={acceptAll} className="cookie-btn cookie-btn-accept">
-                        قبول الكل | Accept All
+                        قبول الكل
                     </button>
                 </div>
             </div>

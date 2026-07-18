@@ -13,6 +13,7 @@ import Progress from './Progress';
 import FinalExams from './FinalExams';
 import Spinner from '../common/Spinner.jsx';
 import { UserContext } from '../../UserContext';
+import { getTypeLabel } from '../../utils/typeLabels';
 
 const BestWorstTopic = ({ best, worst }) => (
   <section className="streak-section">
@@ -45,7 +46,7 @@ const BestWorstTopic = ({ best, worst }) => (
           <div className="answers-section">
             <div className="answer-row">
               <span className="answer-label correct">الموضوع:</span>
-              <span className="answer-text correct">{best?.question_type || 'لا توجد بيانات'}</span>
+              <span className="answer-text correct">{best ? getTypeLabel(best.question_type) : 'لا توجد بيانات'}</span>
             </div>
 
             <div className="answer-row">
@@ -88,7 +89,7 @@ const BestWorstTopic = ({ best, worst }) => (
           <div className="answers-section">
             <div className="answer-row">
               <span className="answer-label wrong">الموضوع:</span>
-              <span className="answer-text wrong">{worst?.question_type || 'لا توجد بيانات'}</span>
+              <span className="answer-text wrong">{worst ? getTypeLabel(worst.question_type) : 'لا توجد بيانات'}</span>
             </div>
 
             <div className="answer-row">

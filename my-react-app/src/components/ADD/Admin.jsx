@@ -609,54 +609,58 @@ const Admin = () => {
           <div className="stat-card-large primary">
             <div className="stat-card-header">
               <span className="stat-icon"><Icon name="award" size={16} /></span>
-              <span className="stat-label">Revenue (Paid Subscriptions)</span>
+              <span className="stat-label">Total Revenue Received</span>
             </div>
             <div className="stat-value-large">
               <AnimatedNumber value={sub.totalRevenueSar ?? 0} suffix=" SAR" />
             </div>
             <div className="stat-meta">
-              <span className="stat-badge positive">{sub.paymentCount ?? 0} payments</span>
-              <span className="stat-badge neutral">{sub.activeSubscribers ?? 0} active now</span>
+              <span className="stat-badge neutral">{sub.paymentCount ?? 0} confirmed payments</span>
+              <span className="stat-badge positive">{sub.distinctPayers ?? 0} paying accounts</span>
             </div>
           </div>
 
           <div className="stat-card-large secondary">
             <div className="stat-card-header">
-              <span className="stat-icon"><Icon name="clock" size={16} /></span>
-              <span className="stat-label">Trial Users (Active Now)</span>
+              <span className="stat-icon"><Icon name="check-circle" size={16} /></span>
+              <span className="stat-label">Active Subscribers</span>
             </div>
             <div className="stat-value-large">
-              <AnimatedNumber value={sub.trialActive ?? 0} />
+              <AnimatedNumber value={sub.activeSubscribers ?? 0} />
             </div>
             <div className="stat-meta">
-              <span className="stat-badge neutral">{sub.trialExpiredUnconverted ?? 0} expired, unconverted</span>
+              <span className="stat-badge neutral">paid access, not expired</span>
             </div>
           </div>
 
           <div className="stat-card-large tertiary">
             <div className="stat-card-header">
-              <span className="stat-icon"><Icon name="trending-up" size={16} /></span>
-              <span className="stat-label">Trial → Paid Conversion</span>
+              <span className="stat-icon"><Icon name="clock" size={16} /></span>
+              <span className="stat-label">Trials & Conversion</span>
             </div>
             <div className="stat-value-large">
-              <AnimatedNumber value={sub.trialConversionRate ?? 0} suffix="%" />
+              <AnimatedNumber value={sub.trialActive ?? 0} />
             </div>
             <div className="stat-meta">
-              <span className="stat-badge neutral">{sub.trialToPaid ?? 0} of {sub.totalTrialsGranted ?? 0} trials paid</span>
+              <span className="stat-badge neutral">{sub.trialActive ?? 0} active now</span>
+              <span className="stat-badge neutral">{sub.trialConversionRate ?? 0}% → paid ({sub.trialToPaid ?? 0}/{sub.totalTrialsGranted ?? 0})</span>
             </div>
           </div>
 
-          <div className="stat-card-large highlight">
+          <div className={`stat-card-large ${(sub.paidButInactive ?? 0) > 0 ? 'warning' : 'highlight'}`}>
             <div className="stat-card-header">
-              <span className="stat-icon"><Icon name="users" size={16} /></span>
-              <span className="stat-label">Exempt Accounts</span>
+              <span className="stat-icon"><Icon name="alert-triangle" size={16} /></span>
+              <span className="stat-label">Paid — No Active Access</span>
             </div>
             <div className="stat-value-large">
-              <AnimatedNumber value={(sub.grandfathered ?? 0) + (sub.adminCreated ?? 0)} />
+              <AnimatedNumber value={sub.paidButInactive ?? 0} />
             </div>
             <div className="stat-meta">
-              <span className="stat-badge neutral">{sub.grandfathered ?? 0} grandfathered</span>
-              <span className="stat-badge neutral">{sub.adminCreated ?? 0} admin-created</span>
+              {(sub.paidButInactive ?? 0) > 0 ? (
+                <span className="stat-badge negative">accounts paid but locked out — needs fixing</span>
+              ) : (
+                <span className="stat-badge positive">all payers have access</span>
+              )}
             </div>
           </div>
         </div>

@@ -1,16 +1,10 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import Icon from '../common/Icon.jsx';
-import axios from 'axios';
-import Globals from '../../global.js';
-import Spinner from '../common/Spinner.jsx';
 import { getSourceLabel } from '../../utils/sourceLabels';
 import './analysis.css';
 
-const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz, isTrial }) => {
+const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz }) => {
     const [showAll, setShowAll] = useState(false);
-    const [aiAnalysis, setAiAnalysis] = useState({});
-    const [loadingButtons, setLoadingButtons] = useState({});
-    const [flippedCards, setFlippedCards] = useState({});
 
     // Memoize expensive filtering and sorting operations
     const lastQuizAttempts = useMemo(() => {
@@ -32,51 +26,6 @@ const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz, isTria
         return map;
     }, [questions]);
 
-    const handleSeeMore = useCallback(async (attemptId, questionText, selectedAnswer, correctAnswer) => {
-        // Flip the card immediately
-        setFlippedCards((prev) => ({ ...prev, [attemptId]: true }));
-        setLoadingButtons((prev) => ({ ...prev, [attemptId]: true }));
-
-        // If analysis already exists for this question, don't fetch again
-        if (aiAnalysis[attemptId]) {
-            setLoadingButtons((prev) => ({ ...prev, [attemptId]: false }));
-            return;
-        }
-
-        if (isTrial) {
-            // For trial users, show a message about AI analysis being available with full access
-            setAiAnalysis((prev) => ({
-                ...prev,
-                [attemptId]: 'تحليل الأسئلة بالذكاء الاصطناعي متاح مع الوصول الكامل. تواصل معنا لتفعيل هذه الميزة!'
-            }));
-            setLoadingButtons((prev) => ({ ...prev, [attemptId]: false }));
-            return;
-        }
-
-        try {
-            const response = await axios.post(`${Globals.URL}/ai-analysis`, {
-                question: questionText,
-                selected_answer: selectedAnswer,
-                correct_option: correctAnswer,
-            });
-            setAiAnalysis((prev) => ({
-                ...prev,
-                [attemptId]: response.data.answer || 'لم يتم استلام تحليل.'
-            }));
-        } catch (error) {
-            setAiAnalysis((prev) => ({
-                ...prev,
-                [attemptId]: 'فشل في الحصول على تحليل الذكاء الاصطناعي.'
-            }));
-        } finally {
-            setLoadingButtons((prev) => ({ ...prev, [attemptId]: false }));
-        }
-    }, [isTrial, aiAnalysis]);
-
-    const handleFlipBack = useCallback((attemptId) => {
-        setFlippedCards((prev) => ({ ...prev, [attemptId]: false }));
-    }, []);
-
     const toggleShowAll = useCallback(() => {
         setShowAll(prev => !prev);
     }, []);
@@ -96,91 +45,36 @@ const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz, isTria
                             const questionType = questionRow?.question_type || 'General';
                             const isCorrect = attempt.is_correct;
                             return (
-                                <div
-                                    key={attempt.id || index}
-                                    className={`question-card ${flippedCards[attempt.id] ? 'flipped' : ''}`}
-                                >
-                                    <div className="question-card-inner">
-                                        {/* Front of Card */}
-                                        <div className="question-card-front">
-                                            <div className="question-header">
-                                                <div className="question-meta">
-                                                    <span className="type-badge">
-                                                        <Icon name="book" size={15} /> {questionType}
-                                                    </span>
-                                                    <span className="source-badge">
-                                                        <Icon name="book-open" size={15} /> {questionSource}
-                                                    </span>
-                                                    <span className={`result-badge ${isCorrect ? 'correct' : 'wrong'}`}>
-                                                        {isCorrect ? <><Icon name="check-circle" size={13} /> صحيح</> : <><Icon name="x-circle" size={13} /> خطأ</>}
-                                                    </span>
-                                                </div>
-                                            </div>
+                                <div key={attempt.id || index} className="question-card">
+                                    <div className="question-header">
+                                        <div className="question-meta">
+                                            <span className="type-badge">
+                                                <Icon name="book" size={15} /> {questionType}
+                                            </span>
+                                            <span className="source-badge">
+                                                <Icon name="book-open" size={15} /> {questionSource}
+                                            </span>
+                                            <span className={`result-badge ${isCorrect ? 'correct' : 'wrong'}`}>
+                                                {isCorrect ? <><Icon name="check-circle" size={13} /> صحيح</> : <><Icon name="x-circle" size={13} /> خطأ</>}
+                                            </span>
+                                        </div>
+                                    </div>
 
-                                            <div className="question-content">
-                                                <div className="question-text">
-                                                    {questionText}
-                                                </div>
-
-                                                <div className="answers-section">
-                                                    <div className="answer-row">
-                                                        <span className="answer-label wrong">إجابتك:</span>
-                                                        <span className={`answer-text ${isCorrect ? 'correct' : 'wrong'}`}>
-                                                            {attempt.selected_option}
-                                                        </span>
-                                                    </div>
-                                                    <div className="answer-row">
-                                                        <span className="answer-label correct">الإجابة الصحيحة:</span>
-                                                        <span className="answer-text correct">{correctAnswer}</span>
-                                                    </div>
-                                                </div>
-
-                                                <div className="question-actions">
-                                                    <button
-                                                        onClick={(e) =>
-                                                            handleSeeMore(
-                                                                attempt.id,
-                                                                questionText,
-                                                                attempt.selected_option,
-                                                                correctAnswer,
-                                                                e
-                                                            )
-                                                        }
-                                                        className="see-more-button"
-                                                        disabled={loadingButtons[attempt.id]}
-                                                    >
-                                                        {loadingButtons[attempt.id] ? 'جاري التحميل...' : <><Icon name="search" size={13} /> عرض المزيد</>}
-                                                    </button>
-                                                </div>
-                                            </div>
+                                    <div className="question-content">
+                                        <div className="question-text">
+                                            {questionText}
                                         </div>
 
-                                        {/* Back of Card */}
-                                        <div className="question-card-back">
-                                            <div className="ai-analysis-back">
-                                                <div className="ai-analysis-header">
-                                                    <h3><Icon name="brain" size={15} /> تحليل الذكاء الاصطناعي</h3>
-                                                </div>
-
-                                                {loadingButtons[attempt.id] ? (
-                                                    <div className="ai-analysis-loading">
-                                                        <p>جاري تحليل السؤال...</p>
-                                                        <Spinner size="sm" />
-                                                        <p className="loading-subtext">يرجى الانتظار...</p>
-                                                    </div>
-                                                ) : (
-                                                    <div className="ai-analysis-content">
-                                                        <p>{aiAnalysis[attempt.id] || 'لا يوجد تحليل متاح.'}</p>
-                                                    </div>
-                                                )}
-
-                                                <button
-                                                    className="back-to-question-btn"
-                                                    onClick={() => handleFlipBack(attempt.id)}
-                                                    disabled={loadingButtons[attempt.id]}
-                                                >
-                                                    الرجوع للسؤال ←
-                                                </button>
+                                        <div className="answers-section">
+                                            <div className="answer-row">
+                                                <span className="answer-label wrong">إجابتك:</span>
+                                                <span className={`answer-text ${isCorrect ? 'correct' : 'wrong'}`}>
+                                                    {attempt.selected_option}
+                                                </span>
+                                            </div>
+                                            <div className="answer-row">
+                                                <span className="answer-label correct">الإجابة الصحيحة:</span>
+                                                <span className="answer-text correct">{correctAnswer}</span>
                                             </div>
                                         </div>
                                     </div>
