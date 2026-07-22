@@ -1,8 +1,0 @@
-User-agent: *
-Allow: /
-
-Disallow: /admin
-Disallow: /ADD_ACCOUNT
-Disallow: /ADDQ
-Disallow: /Bank
-Sitemap: https://www.smle-question-bank.com/sitemap.xml
