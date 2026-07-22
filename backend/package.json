@@ -20,6 +20,7 @@
     "express": "^5.1.0",
     "nodemailer": "^7.0.6",
     "nodemon": "^3.1.10",
+    "openai": "^4.60.0",
     "pdfjs-dist": "^6.0.227",
     "pdfkit": "^0.19.1",
     "pg": "^8.16.0"

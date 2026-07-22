@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { Pool } from 'pg';
+import OpenAI from 'openai';
 import crypto from 'crypto';
 import { sendMail } from './services/mailer.js';
 import errorReportRoutes from './routes/error-report.js';
@@ -2698,6 +2699,59 @@ app.post('/api/questions', adminAuth, async (req, res) => {
         res.status(500).json({ message: "Server error" });
     }
 });
+
+
+
+app.post("/ai-analysis", async (req, res) => {
+    const { question, selected_answer, correct_option } = req.body;
+
+    if (!question || !selected_answer || !correct_option) {
+        return res.status(400).json({ error: "Missing required fields." });
+    }
+
+    try {
+        // Use API key strictly from environment
+        const apiKey = process.env.APIKEY;
+        if (!apiKey) {
+            console.error("APIKEY environment variable is not set");
+            return res.status(500).json({ error: "AI service configuration error." });
+        }
+
+        const isProd = process.env.NODE_ENV === 'production';
+        const referer = isProd ? "https://medquiz.vercel.app" : (process.env.DEV_REFERER || "http://localhost:5173");
+
+        const openai = new OpenAI({
+            apiKey,
+            baseURL: "https://openrouter.ai/api/v1",
+        });
+
+        const model = process.env.OPENROUTER_MODEL || "qwen/qwen3-next-80b-a3b-instruct:free";
+
+        const completion = await openai.chat.completions.create({
+            model,
+            messages: [
+                {
+                    role: "user",
+                    content: `Here's a multiple-choice question:\n\nQuestion: ${question}\nUser's Answer: ${selected_answer}\nCorrect Answer: ${correct_option}\n\nWhich one is more accurate and why? in no longer than 40 words. if the words are less than 40 . dont say the number of words . and ne style needed just text `
+                }
+            ]
+        });
+
+        const aiAnswer = completion.choices?.[0]?.message?.content;
+
+        if (!aiAnswer) {
+            console.error("OpenRouter API responded with no choices.", JSON.stringify(completion));
+            return res.status(500).json({ error: "Invalid AI response format." });
+        }
+
+        res.json({ answer: aiAnswer });
+
+    } catch (error) {
+        console.error("AI analysis error:", error);
+        res.status(500).json({ error: "Failed to fetch AI analysis. Please try again later." });
+    }
+});
+
 
 
 
