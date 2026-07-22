@@ -3,8 +3,6 @@
  * Captures and reports errors to backend for email notifications
  */
 
-import { isStaleChunkError } from './staleChunkReload.js';
-
 const ERROR_REPORT_ENDPOINT = '/api/error-report';
 const BATCH_ENDPOINT = '/api/error-report/batch';
 
@@ -367,15 +365,6 @@ export function reportApiError(error, config = {}, response = null) {
  * @param {Object} errorInfo - React error info with componentStack
  */
 export function reportRenderError(error, errorInfo = {}) {
-    // Stale-chunk errors after a deploy self-heal with a page reload
-    // (see staleChunkReload.js) — not a system fault, don't page the admin.
-    if (isStaleChunkError(error?.message)) {
-        if (CONFIG.enableConsoleLog) {
-            console.log('[ErrorTracking] Skipping stale-chunk error (self-healing)');
-        }
-        return Promise.resolve({ success: false, message: 'Skipped: stale chunk' });
-    }
-
     const userInfo = getUserInfo();
 
     const errorData = {
@@ -407,7 +396,6 @@ export function reportUnhandledRejection(event) {
     _isReportingError = true;
     try {
         const error = event.reason;
-        if (isStaleChunkError(error?.message)) return;
         const userInfo = getUserInfo();
 
         const errorData = {
@@ -441,7 +429,6 @@ export function reportGlobalError(event) {
     if (_isReportingError) return;
     _isReportingError = true;
     try {
-        if (isStaleChunkError(event.message)) return;
         const userInfo = getUserInfo();
 
         const errorData = {
