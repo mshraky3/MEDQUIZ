@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">SQB - بنك أسئلة SMLE وبرومترك</title>
+  <desc id="desc">منصة عربية للتحضير لاختبار الهيئة السعودية للتخصصات الصحية وبرومترك.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#081121" />
+      <stop offset="55%" stop-color="#0f1f3a" />
+      <stop offset="100%" stop-color="#0b766e" />
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#67e8f9" />
+      <stop offset="100%" stop-color="#22d3ee" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)" rx="36" />
+  <circle cx="1040" cy="120" r="120" fill="rgba(255,255,255,0.08)" />
+  <circle cx="180" cy="540" r="180" fill="rgba(103,232,249,0.08)" />
+  <g transform="translate(110 110)">
+    <rect x="0" y="0" width="980" height="410" rx="28" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.14)" />
+    <text x="70" y="110" fill="#67e8f9" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="700">SQB</text>
+    <text x="70" y="200" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif" font-size="68" font-weight="800">بنك أسئلة SMLE وبرومترك</text>
+    <text x="70" y="280" fill="#dbeafe" font-family="Segoe UI, Arial, sans-serif" font-size="34">منصة عربية للتحضير لاختبارات الهيئة السعودية للتخصصات الصحية</text>
+    <text x="70" y="340" fill="#dbeafe" font-family="Segoe UI, Arial, sans-serif" font-size="28">أسئلة تدريبية • تحليلات أداء • مراجعة ذكية • تجربة مناسبة للجوال</text>
+    <rect x="70" y="382" width="250" height="64" rx="20" fill="url(#accent)" />
+    <text x="112" y="424" fill="#083344" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="800">smle-question-bank.com</text>
+  </g>
+</svg>
