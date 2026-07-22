@@ -540,10 +540,10 @@ const QUIZ = () => {
       {/* Unanswered Questions Popup */}
       {showUnansweredPopup && (
         <div className="unanswered-popup-overlay">
-          <div className="unanswered-popup" dir="rtl">
-            <h3><Icon name="alert-triangle" size={18} /> لديك {unansweredCount} أسئلة بدون إجابة</h3>
+          <div className="unanswered-popup">
+            <h3><Icon name="alert-triangle" size={18} /> {unansweredCount} Unanswered Questions</h3>
             <p className="redirect-message">
-              سننقلك لأول سؤال غير مُجاب خلال <span className="countdown">{countdown}</span>...
+              Going to first unanswered question in <span className="countdown">{countdown}</span>...
             </p>
           </div>
         </div>

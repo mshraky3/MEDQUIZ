@@ -9,7 +9,6 @@ import AchievementBadges from '../common/AchievementBadges.jsx';
 import CongratulationsPopup from '../common/CongratulationsPopup.jsx';
 import Icon from '../common/Icon.jsx';
 import { UserContext } from '../../UserContext';
-import { getTypeLabel } from '../../utils/typeLabels';
 
 const QUIZS = () => {
     const { user, setUser, sessionToken } = useContext(UserContext);
@@ -217,10 +216,11 @@ const QUIZS = () => {
     };
 
     const handleCustomQuestionsConfirm = () => {
-        // Typing can bypass the input's min/max, so clamp instead of alerting.
-        const clamped = Math.min(500, Math.max(1, customQuestionsCount || 25));
-        setCustomQuestionsCount(clamped);
-        setNumQuestions(clamped);
+        if (customQuestionsCount < 1 || customQuestionsCount > 500) {
+            alert('Please enter a number between 1 and 500');
+            return;
+        }
+        setNumQuestions(customQuestionsCount);
         setShowCustomQuestions(false);
         setShowSourceSelector(true);
     };
@@ -279,9 +279,10 @@ const QUIZS = () => {
     };
 
     const handleFinalTimeConfirm = () => {
-        // Typing can bypass the input's min, so clamp instead of alerting.
-        const timeLimit = Math.min(300, Math.max(30, finalQuizTimeLimit || 30));
-        setFinalQuizTimeLimit(timeLimit);
+        if (finalQuizTimeLimit < 30) {
+            alert('Time limit must be at least 30 minutes');
+            return;
+        }
 
         setShowFinalQuizTime(false);
 
@@ -291,7 +292,7 @@ const QUIZS = () => {
                 id: id,
                 types: selectedFinalType,
                 source: selectedFinalSource,
-                timer: timeLimit,
+                timer: finalQuizTimeLimit,
                 isFinalQuiz: true
             }
         });
@@ -350,8 +351,8 @@ const QUIZS = () => {
 
         try {
             const achievementKey = `${type}_${source}`;
-            const achievementName = `متمكن في ${getTypeLabel(type)} من ${sourceLabels[source] || source}`;
-            const achievementDescription = `أكملت جميع أسئلة ${getTypeLabel(type)} من مصدر ${sourceLabels[source] || source}`;
+            const achievementName = `Master of ${type} from ${source}`;
+            const achievementDescription = `Completed all ${type} questions from ${source} source`;
 
             await protectedPost(`${Globals.URL}/api/award-achievement`, {
                 userId: id,
@@ -608,7 +609,7 @@ const QUIZS = () => {
                                             checked={selectedTypes.includes(type)}
                                             onChange={() => handleCheckboxChange(type)}
                                         />
-                                        {getTypeLabel(type)}
+                                        {type}
                                     </label>
                                 ))}
                             </div>
@@ -816,7 +817,7 @@ const QUIZS = () => {
                                         onClick={() => handleFinalTypeSelect(type)}
                                         className="custom-source-btn"
                                     >
-                                        {getTypeLabel(type)}
+                                        {type}
                                     </button>
                                 ))}
                             </div>
@@ -838,7 +839,7 @@ const QUIZS = () => {
                         <div className="custom-modal-content">
                             <h2><Icon name="target" size={20} /> اختبار نهائي - اختر المصدر</h2>
                             <p className="final-quiz-description">
-                                اختر مصدر أسئلة {getTypeLabel(selectedFinalType)}
+                                اختر مصدر أسئلة {selectedFinalType}
                             </p>
 
                             {renderSourcePicker(handleFinalSourceSelect)}
@@ -861,7 +862,7 @@ const QUIZS = () => {
                         <div className="custom-modal-content">
                             <h2><Icon name="target" size={20} /> اختبار نهائي - ضبط الوقت</h2>
                             <p className="final-quiz-description">
-                                {finalQuizQuestionsCount} سؤال متاح من {getTypeLabel(selectedFinalType)} - {sourceLabels[selectedFinalSource] || selectedFinalSource}
+                                {finalQuizQuestionsCount} سؤال متاح من {selectedFinalType} - {selectedFinalSource}
                             </p>
                             <p className="final-quiz-note">
                                 سيشمل جميع الأسئلة، حتى التي أجبت عليها سابقاً.
@@ -934,8 +935,8 @@ const QUIZS = () => {
                     isOpen={showCongratulations}
                     onClose={handleCloseCongratulations}
                     onRestart={handleRestart}
-                    achievementName={congratulationsData ? `متمكن في ${getTypeLabel(congratulationsData.type)} من ${sourceLabels[congratulationsData.source] || congratulationsData.source}` : ''}
-                    achievementDescription={congratulationsData ? `أكملت جميع أسئلة ${getTypeLabel(congratulationsData.type)} من مصدر ${sourceLabels[congratulationsData.source] || congratulationsData.source}!` : ''}
+                    achievementName={congratulationsData ? `متمكن في ${congratulationsData.type} من ${congratulationsData.source}` : ''}
+                    achievementDescription={congratulationsData ? `أكملت جميع أسئلة ${congratulationsData.type} من مصدر ${congratulationsData.source}!` : ''}
                     type={congratulationsData?.type || ''}
                     source={congratulationsData?.source || ''}
                 />
