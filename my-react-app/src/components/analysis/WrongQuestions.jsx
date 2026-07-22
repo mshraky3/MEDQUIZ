@@ -6,7 +6,6 @@ import './analysis.css';
 import Globals from '../../global.js';
 import Spinner from '../common/Spinner.jsx';
 import { getSourceLabel } from '../../utils/sourceLabels';
-import { getTypeLabel } from '../../utils/typeLabels';
 import { useContext } from 'react';
 import { UserContext } from '../../UserContext';
 
@@ -16,6 +15,9 @@ const WrongQuestions = () => {
     const [wrongQuestions, setWrongQuestions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [aiAnalysis, setAiAnalysis] = useState({});
+    const [loadingButtons, setLoadingButtons] = useState({});
+    const [flippedCards, setFlippedCards] = useState({});
     const [currentPage, setCurrentPage] = useState(0);
     const [totalQuestions, setTotalQuestions] = useState(0);
     const [hasMore, setHasMore] = useState(true);
@@ -61,7 +63,7 @@ const WrongQuestions = () => {
 
         } catch (err) {
             console.error('Error fetching wrong questions:', err);
-            setError('تعذر تحميل الأسئلة الخاطئة');
+            setError('Failed to load wrong questions');
         } finally {
             setLoading(false);
         }
@@ -70,6 +72,41 @@ const WrongQuestions = () => {
     useEffect(() => {
         fetchWrongQuestions(0, false);
     }, [fetchWrongQuestions]);
+
+    const handleSeeMore = useCallback(async (questionText, selectedAnswer, correctAnswer, attemptId) => {
+        // Flip the card immediately
+        setFlippedCards((prev) => ({ ...prev, [attemptId]: true }));
+        setLoadingButtons((prev) => ({ ...prev, [attemptId]: true }));
+
+        // If analysis already exists for this question, don't fetch again
+        if (aiAnalysis[attemptId]) {
+            setLoadingButtons((prev) => ({ ...prev, [attemptId]: false }));
+            return;
+        }
+
+        try {
+            const response = await axios.post(`${Globals.URL}/ai-analysis`, {
+                question: questionText,
+                selected_answer: selectedAnswer,
+                correct_option: correctAnswer,
+            });
+            setAiAnalysis((prev) => ({
+                ...prev,
+                [attemptId]: response.data.answer || 'No explanation received.'
+            }));
+        } catch (error) {
+            setAiAnalysis((prev) => ({
+                ...prev,
+                [attemptId]: 'Failed to get AI analysis.'
+            }));
+        } finally {
+            setLoadingButtons((prev) => ({ ...prev, [attemptId]: false }));
+        }
+    }, [aiAnalysis]);
+
+    const handleFlipBack = useCallback((attemptId) => {
+        setFlippedCards((prev) => ({ ...prev, [attemptId]: false }));
+    }, []);
 
     const loadMoreQuestions = useCallback(() => {
         if (hasMore && !loading) {
@@ -83,7 +120,7 @@ const WrongQuestions = () => {
 
                     <h2 className="screen-title">مراجعة الأسئلة الخاطئة</h2>
                     <p className="screen-subtitle">
-                        راجع أخطاءك وتعلم منها
+                        راجع أخطاءك وتعلم منها بمساعدة الذكاء الاصطناعي
                     </p>
                 </div>
 
@@ -131,34 +168,88 @@ const WrongQuestions = () => {
 
                             <div className="questions-grid">
                                 {wrongQuestions.map((question, index) => (
-                                    <div key={question.id || index} className="question-card">
-                                        <div className="question-header">
-                                            <div className="question-meta">
-                                                <span className="type-badge">
-                                                    <Icon name="book" size={15} /> {getTypeLabel(question.question_type)}
-                                                </span>
-                                                <span className="source-badge">
-                                                    <Icon name="book-open" size={15} /> {getSourceLabel(question.source)}
-                                                </span>
-                                                <span className="date-badge">
-                                                    <Icon name="calendar" size={15} /> {new Date(question.attempted_at).toLocaleDateString()}
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        <div className="question-content">
-                                            <div className="question-text">
-                                                {question.question_text}
-                                            </div>
-
-                                            <div className="answers-section">
-                                                <div className="answer-row">
-                                                    <span className="answer-label wrong">إجابتك:</span>
-                                                    <span className="answer-text wrong">{question.selected_option}</span>
+                                    <div
+                                        key={question.id || index}
+                                        className={`question-card ${flippedCards[question.id] ? 'flipped' : ''}`}
+                                    >
+                                        <div className="question-card-inner">
+                                            {/* Front of Card */}
+                                            <div className="question-card-front">
+                                                <div className="question-header">
+                                                    <div className="question-meta">
+                                                        <span className="type-badge">
+                                                            <Icon name="book" size={15} /> {question.question_type}
+                                                        </span>
+                                                        <span className="source-badge">
+                                                            <Icon name="book-open" size={15} /> {getSourceLabel(question.source)}
+                                                        </span>
+                                                        <span className="date-badge">
+                                                            <Icon name="calendar" size={15} /> {new Date(question.attempted_at).toLocaleDateString()}
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                                <div className="answer-row">
-                                                    <span className="answer-label correct">الإجابة الصحيحة:</span>
-                                                    <span className="answer-text correct">{question.correct_option}</span>
+
+                                                <div className="question-content">
+                                                    <div className="question-text">
+                                                        {question.question_text}
+                                                    </div>
+
+                                                    <div className="answers-section">
+                                                        <div className="answer-row">
+                                                            <span className="answer-label wrong">إجابتك:</span>
+                                                            <span className="answer-text wrong">{question.selected_option}</span>
+                                                        </div>
+                                                        <div className="answer-row">
+                                                            <span className="answer-label correct">الإجابة الصحيحة:</span>
+                                                            <span className="answer-text correct">{question.correct_option}</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="question-actions">
+                                                        <button
+                                                            onClick={() =>
+                                                                handleSeeMore(
+                                                                    question.question_text,
+                                                                    question.selected_option,
+                                                                    question.correct_option,
+                                                                    question.id
+                                                                )
+                                                            }
+                                                            className="see-more-button"
+                                                            disabled={loadingButtons[question.id]}
+                                                        >
+                                                            {loadingButtons[question.id] ? 'جاري التحميل...' : <><Icon name="search" size={13} /> اعرف أكثر</>}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Back of Card */}
+                                            <div className="question-card-back">
+                                                <div className="ai-analysis-back">
+                                                    <div className="ai-analysis-header">
+                                                        <h3><Icon name="brain" size={15} /> تحليل الذكاء الاصطناعي</h3>
+                                                    </div>
+
+                                                    {loadingButtons[question.id] ? (
+                                                        <div className="ai-analysis-loading">
+                                                            <p>جاري تحليل السؤال...</p>
+                                                            <Spinner size="sm" />
+                                                            <p className="loading-subtext">يرجى الانتظار...</p>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="ai-analysis-content">
+                                                            <p>{aiAnalysis[question.id] || 'لا يوجد تحليل متاح.'}</p>
+                                                        </div>
+                                                    )}
+
+                                                    <button
+                                                        className="back-to-question-btn"
+                                                        onClick={() => handleFlipBack(question.id)}
+                                                        disabled={loadingButtons[question.id]}
+                                                    >
+                                                        العودة للسؤال ←
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>

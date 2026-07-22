@@ -17,10 +17,6 @@ const TrialBanner = () => {
 
   const isTrial = user?.subscription_status === 'trial' && user?.subscription_expiry_date;
   const onPaywall = location.pathname.startsWith('/subscribe') || location.pathname.startsWith('/payment');
-  // Mid-quiz expiry grace: never yank the user off an in-progress quiz — they
-  // finish it (and see their results) first; the paywall catches them on the
-  // next navigation. The server stays the real gate for API access.
-  const onQuiz = location.pathname.startsWith('/quiz/');
 
   useEffect(() => {
     if (!isTrial) return undefined;
@@ -33,30 +29,14 @@ const TrialBanner = () => {
   }, [isTrial, user?.subscription_expiry_date]);
 
   useEffect(() => {
-    if (msLeft === 0 && !onPaywall && !onQuiz) {
+    if (msLeft === 0 && !onPaywall) {
       setUser({ ...user, accessAllowed: false }, localStorage.getItem('sessionToken'));
       navigate('/subscribe?reason=trial_expired', { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [msLeft, onPaywall, onQuiz]);
+  }, [msLeft, onPaywall]);
 
-  if (!isTrial || msLeft === null || onPaywall) return null;
-
-  // Expired mid-quiz: stay visible with a grace message instead of vanishing.
-  if (msLeft <= 0) {
-    if (!onQuiz) return null;
-    return (
-      <div className="trial-banner trial-banner-urgent" dir="rtl" role="status">
-        <span className="trial-banner-text">
-          <Icon name="clock" size={16} />
-          انتهت تجربتك المجانية — أكمل اختبارك الحالي وشاهد نتيجتك
-        </span>
-        <button type="button" className="trial-banner-cta" onClick={() => navigate('/subscribe')}>
-          اشترك الآن
-        </button>
-      </div>
-    );
-  }
+  if (!isTrial || msLeft === null || msLeft <= 0 || onPaywall) return null;
 
   const totalSeconds = Math.floor(msLeft / 1000);
   const minutes = Math.floor(totalSeconds / 60);

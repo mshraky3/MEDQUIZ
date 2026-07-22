@@ -44,11 +44,6 @@ const Navbar = () => {
               <ellipse cx="12" cy="17" rx="6.5" ry="4.5" fill="#2563eb" opacity="0.18" />
             </svg>
             <span className="user-name">{user.username}</span>
-            {user.subscription_status === 'active' && user.subscription_expiry_date && (
-              <span className="sub-badge" title="تاريخ انتهاء اشتراكك">
-                الاشتراك حتى {new Date(user.subscription_expiry_date).toLocaleDateString('ar-SA')}
-              </span>
-            )}
           </span>
         )}
         {isAuthenticated && (
@@ -66,24 +61,16 @@ const Navbar = () => {
 
       <div className="navbar-center">
         <div className={`navbar-nav-links ${menuOpen ? 'nav-links-open' : ''}`}>
-          {isAuthenticated ? (
-            // Inside the app the nav is about studying, not marketing —
-            // the marketing pages stay reachable from the footer.
-            <>
-              <Link to={homePath} className="nav-link" onClick={() => setMenuOpen(false)}>الرئيسية</Link>
-              <Link to="/analysis" className="nav-link" onClick={() => setMenuOpen(false)}>التحليل</Link>
-              <Link to="/wrong-questions" className="nav-link" onClick={() => setMenuOpen(false)}>أسئلتي الخاطئة</Link>
-              <Link to="/summaries" className="nav-link" onClick={() => setMenuOpen(false)}>الملخصات</Link>
-              <Link to="/contact" className="nav-link" onClick={() => setMenuOpen(false)}>تواصل معنا</Link>
-            </>
-          ) : (
-            <>
-              <Link to="/guides" className="nav-link" onClick={() => setMenuOpen(false)}>أدلة التحضير</Link>
-              <Link to="/about" className="nav-link" onClick={() => setMenuOpen(false)}>من نحن</Link>
-              <Link to="/faq" className="nav-link" onClick={() => setMenuOpen(false)}>الأسئلة الشائعة</Link>
-              <Link to="/contact" className="nav-link" onClick={() => setMenuOpen(false)}>تواصل معنا</Link>
-            </>
+          {isAuthenticated && (
+            <Link to={homePath} className="nav-link" onClick={() => setMenuOpen(false)}>الرئيسية</Link>
           )}
+          {isAuthenticated && (
+            <Link to="/summaries" className="nav-link" onClick={() => setMenuOpen(false)}>الملخصات</Link>
+          )}
+          <Link to="/guides" className="nav-link" onClick={() => setMenuOpen(false)}>أدلة التحضير</Link>
+          <Link to="/about" className="nav-link" onClick={() => setMenuOpen(false)}>من نحن</Link>
+          <Link to="/faq" className="nav-link" onClick={() => setMenuOpen(false)}>الأسئلة الشائعة</Link>
+          <Link to="/contact" className="nav-link" onClick={() => setMenuOpen(false)}>تواصل معنا</Link>
         </div>
       </div>
 

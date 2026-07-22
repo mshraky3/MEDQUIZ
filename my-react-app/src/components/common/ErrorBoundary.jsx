@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import { useRouteError, useNavigate } from 'react-router-dom';
 import { reportRenderError } from '../../utils/errorTracking';
-import { isStaleChunkError, reloadOnceForStaleChunk } from '../../utils/staleChunkReload';
 
 // Class-based Error Boundary for catching render errors
 class RenderErrorBoundary extends Component {
@@ -97,42 +96,19 @@ const RouteErrorBoundary = () => {
   const error = useRouteError();
   const navigate = useNavigate();
 
-  // Stale chunk after a deploy: reload once to pick up the new asset hashes
-  // instead of showing the error card. Only report when the reload cooldown
-  // says this is a persistent failure, not a routine post-deploy blip.
-  const staleChunk = !!error && isStaleChunkError(error?.message);
-  const [reloading] = React.useState(() => staleChunk && reloadOnceForStaleChunk());
-
   // Report route error
   React.useEffect(() => {
-    if (error && !reloading) {
+    if (error) {
       console.error('Routing error:', error);
       reportRenderError(
         error instanceof Error ? error : new Error(String(error)),
         { componentStack: 'RouteErrorBoundary' }
       );
     }
-  }, [error, reloading]);
+  }, [error]);
 
   // If no error, render nothing (let the route render normally)
   if (!error) return null;
-
-  if (reloading) {
-    return (
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '100vh',
-        background: '#eef2fb',
-        color: '#475569',
-        fontSize: '1.1rem',
-        fontWeight: 600
-      }} dir="rtl">
-        جاري تحديث الصفحة...
-      </div>
-    );
-  }
 
   return (
     <div style={{
