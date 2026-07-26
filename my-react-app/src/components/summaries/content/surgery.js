@@ -21,6 +21,28 @@ const surgery = {
             title_en: 'Hemorrhoids · Anal Fissure · Abscess & Fistula · Anal/Rectal Cancer',
             summaryHtml: `
                 <h3>Hemorrhoids</h3>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> The anal canal clock — who sits where</div>
+                <svg viewBox="0 0 700 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Internal haemorrhoids sit at the 3, 7 and 11 o'clock positions of the anal canal and cause painless bright red bleeding after defecation. An anal fissure sits in the anterior or posterior midline, 12 and 6 o'clock, and causes sharp severe pain during defecation. An external haemorrhoid is a tender purplish mass with severe perianal pain.">
+                <g font-family="system-ui,Arial">
+                <circle cx="180" cy="124" r="80" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/><circle cx="180" cy="124" r="34" fill="#f1f5f9" stroke="#e2e8f0"/>
+                <circle cx="180" cy="44" r="13" fill="#ef4444"/><text x="180" y="49" text-anchor="middle" font-size="11" font-weight="800" fill="#fff">12</text>
+                <circle cx="220" cy="55" r="13" fill="#e2e8f0"/><text x="220" y="59" text-anchor="middle" font-size="11" fill="#94a3b8">1</text>
+                <circle cx="249" cy="84" r="13" fill="#e2e8f0"/><text x="249" y="88" text-anchor="middle" font-size="11" fill="#94a3b8">2</text>
+                <circle cx="260" cy="124" r="13" fill="#3b82f6"/><text x="260" y="128" text-anchor="middle" font-size="11" font-weight="800" fill="#fff">3</text>
+                <circle cx="249" cy="164" r="13" fill="#e2e8f0"/><text x="249" y="168" text-anchor="middle" font-size="11" fill="#94a3b8">4</text>
+                <circle cx="220" cy="193" r="13" fill="#e2e8f0"/><text x="220" y="197" text-anchor="middle" font-size="11" fill="#94a3b8">5</text>
+                <circle cx="180" cy="204" r="13" fill="#ef4444"/><text x="180" y="208" text-anchor="middle" font-size="11" font-weight="800" fill="#fff">6</text>
+                <circle cx="140" cy="193" r="13" fill="#3b82f6"/><text x="140" y="197" text-anchor="middle" font-size="11" font-weight="800" fill="#fff">7</text>
+                <circle cx="111" cy="164" r="13" fill="#e2e8f0"/><text x="111" y="168" text-anchor="middle" font-size="11" fill="#94a3b8">8</text>
+                <circle cx="100" cy="124" r="13" fill="#e2e8f0"/><text x="100" y="128" text-anchor="middle" font-size="11" fill="#94a3b8">9</text>
+                <circle cx="111" cy="84" r="13" fill="#e2e8f0"/><text x="111" y="88" text-anchor="middle" font-size="11" fill="#94a3b8">10</text>
+                <circle cx="140" cy="55" r="13" fill="#3b82f6"/><text x="140" y="59" text-anchor="middle" font-size="11" font-weight="800" fill="#fff">11</text>
+                <text x="180" y="236" text-anchor="middle" font-size="10.5" font-weight="700" fill="#64748b">anal canal — clock positions</text>
+                <rect x="330" y="24" width="354" height="62" rx="9" fill="#eff6ff" stroke="#3b82f6"/><circle cx="352" cy="46" r="8" fill="#3b82f6"/><text x="368" y="50" font-size="12.5" font-weight="800" fill="#1d4ed8">Internal haemorrhoids — 3, 7, 11</text><text x="346" y="72" font-size="10.5" fill="#334155">painless bright-red bleeding after defecation</text>
+                <rect x="330" y="96" width="354" height="62" rx="9" fill="#fef2f2" stroke="#ef4444"/><circle cx="352" cy="118" r="8" fill="#ef4444"/><text x="368" y="122" font-size="12.5" font-weight="800" fill="#b91c1c">Anal fissure — midline, 12 &amp; 6</text><text x="346" y="144" font-size="10.5" fill="#334155">sharp severe pain during defecation + bright-red blood</text>
+                <rect x="330" y="168" width="354" height="62" rx="9" fill="#f8fafc" stroke="#94a3b8"/><circle cx="352" cy="190" r="8" fill="#94a3b8"/><text x="368" y="194" font-size="12.5" font-weight="800" fill="#475569">External haemorrhoid — no clock position</text><text x="346" y="216" font-size="10.5" fill="#334155">severe perianal PAIN + tender purplish mass</text>
+                </g></svg>
+                <figcaption>Pain is the divider: <b>painless bleeding = internal haemorrhoid</b> (3, 7, 11 o'clock); <b>severe pain on defecation = fissure</b> in the anterior or posterior midline.</figcaption></figure>
                 <ul>
                     <li><b>Internal</b>: painless bright-red bleeding after defecation; perianal mass at <b>3, 7, 11 o'clock</b>, pruritus, discharge</li>
                     <li><b>External</b>: severe perianal pain with a tender purplish mucosal mass</li>
@@ -83,6 +105,18 @@ const surgery = {
             `,
             questions: [
                 {
+                    q: 'A 52-year-old is found to have internal haemorrhoids on anoscopy after presenting with rectal bleeding. Which additional investigation should be considered?',
+                    options: ['CT angiography of the mesenteric vessels', 'Colonoscopy', 'Barium swallow', 'No further investigation is required'],
+                    answer: 1,
+                    explanation: 'Colonoscopy is indicated when a patient with haemorrhoids is over 45, has risk factors, or has red flags for colon cancer — haemorrhoids must not be assumed to be the only source of rectal bleeding.'
+                },
+                {
+                    q: 'A patient has a painful, tender perianal swelling with fever and a leukocytosis. What is the management?',
+                    options: ['Incision and drainage', 'Conservative management with analgesia alone', 'Fistulotomy', 'Infliximab'],
+                    answer: 0,
+                    explanation: 'Fever with a leukocytosis and a painful tender perianal swelling indicates an anal abscess, treated by incision and drainage. An anal haematoma is painful but the patient is vitally stable with no leukocytosis, and a simple fistula is treated by fistulotomy.'
+                },
+                {
                     q: 'A 30-year-old has PR bleeding and swelling at the 3 and 7 o\'clock positions. Sclerosing therapy is planned. It is most indicated for which type of hemorrhoid?',
                     options: ['External hemorrhoids', 'Internal hemorrhoids', 'Prolapsed hemorrhoids', 'Thrombosed hemorrhoids'],
                     answer: 1,
@@ -108,6 +142,15 @@ const surgery = {
             title_en: 'Indications · Pre-Operative Workup · Procedure Selection',
             summaryHtml: `
                 <h3>Indications</h3>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Choosing the operation — sleeve vs Roux-en-Y</div>
+                <svg viewBox="0 0 700 264" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Bariatric surgery indications are BMI 40 or above, BMI 35 or above with comorbidities such as diabetes, hypertension or obstructive sleep apnoea, or failed medical weight-loss therapy. Essential workup is upper GI endoscopy, which decides the operation, plus CBC, LFT, HbA1c, TSH and psychiatric evaluation. Severe GERD or a large hiatal hernia leads to Roux-en-Y gastric bypass; no reflux or a preference for a less invasive procedure leads to a gastric sleeve.">
+                <g font-family="system-ui,Arial">
+                <rect x="16" y="12" width="668" height="72" rx="10" fill="#f8fafc" stroke="#cbd5e1"/><text x="32" y="32" font-size="12.5" font-weight="800" fill="#0f172a">1 · Indications (any one)</text><rect x="32" y="42" width="200" height="30" rx="7" fill="#fff" stroke="#cbd5e1"/><text x="132" y="62" text-anchor="middle" font-size="11" fill="#334155">BMI ≥ 40</text><rect x="244" y="42" width="212" height="30" rx="7" fill="#fff" stroke="#cbd5e1"/><text x="350" y="62" text-anchor="middle" font-size="11" fill="#334155">BMI ≥ 35 + DM / HTN / OSA</text><rect x="468" y="42" width="200" height="30" rx="7" fill="#fff" stroke="#cbd5e1"/><text x="568" y="62" text-anchor="middle" font-size="11" fill="#334155">failed medical therapy</text>
+                <rect x="16" y="94" width="668" height="62" rx="10" fill="#f5f3ff" stroke="#8b5cf6"/><text x="32" y="114" font-size="12.5" font-weight="800" fill="#6d28d9">2 · Essential workup</text><rect x="32" y="122" width="320" height="28" rx="7" fill="#ede9fe" stroke="#8b5cf6"/><text x="192" y="141" text-anchor="middle" font-size="11" font-weight="800" fill="#4c1d95">UPPER GI ENDOSCOPY — decides the operation</text><rect x="364" y="122" width="304" height="28" rx="7" fill="#fff" stroke="#c4b5fd"/><text x="516" y="141" text-anchor="middle" font-size="10.5" fill="#334155">CBC · LFT · HbA1c · TSH · psychiatric eval</text>
+                <rect x="16" y="166" width="330" height="86" rx="10" fill="#fffbeb" stroke="#f59e0b"/><text x="181" y="190" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">severe GERD or large hiatal hernia</text><text x="181" y="210" text-anchor="middle" font-size="12" fill="#94a3b8">▼</text><rect x="40" y="216" width="282" height="28" rx="7" fill="#f59e0b"/><text x="181" y="235" text-anchor="middle" font-size="12.5" font-weight="800" fill="#fff">Roux-en-Y gastric bypass</text>
+                <rect x="354" y="166" width="330" height="86" rx="10" fill="#f0fdf4" stroke="#22c55e"/><text x="519" y="190" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">no reflux / less invasive preferred</text><text x="519" y="210" text-anchor="middle" font-size="12" fill="#94a3b8">▼</text><rect x="378" y="216" width="282" height="28" rx="7" fill="#22c55e"/><text x="519" y="235" text-anchor="middle" font-size="12.5" font-weight="800" fill="#fff">Gastric sleeve</text>
+                </g></svg>
+                <figcaption>The endoscopy is the decision point — it detects reflux, hernia and ulcers, and <b>severe GERD or a large hiatal hernia sends the patient to bypass rather than sleeve</b>.</figcaption></figure>
                 <ul>
                     <li>BMI ≥40</li>
                     <li>BMI ≥35 with comorbidities (DM, HTN, OSA)</li>
@@ -154,6 +197,25 @@ const surgery = {
                     answer: 0,
                     explanation: 'Upper GI endoscopy detects reflux, hiatal hernia and ulcers and is the most important step in selecting the procedure (e.g. Roux-en-Y for severe GERD/large hiatal hernia vs sleeve otherwise).'
                 }
+                ,
+                {
+                    q: 'Which preoperative investigation is most important in guiding the choice of bariatric procedure?',
+                    options: ['Upper GI endoscopy', 'Abdominal ultrasound', 'Chest X-ray', 'Colonoscopy'],
+                    answer: 0,
+                    explanation: 'Upper GI endoscopy detects reflux, hiatal hernia and ulcers, which determine whether a sleeve or a bypass is appropriate.'
+                },
+                {
+                    q: 'A patient with a BMI of 42 has severe GERD and a large hiatal hernia. Which operation is preferred?',
+                    options: ['Roux-en-Y gastric bypass', 'Gastric sleeve', 'Intragastric balloon only', 'Adjustable band'],
+                    answer: 0,
+                    explanation: 'A sleeve gastrectomy can worsen reflux, so severe GERD or a large hiatal hernia favours Roux-en-Y gastric bypass.'
+                },
+                {
+                    q: 'On post-operative day 2 after bariatric surgery a patient develops tachycardia, fever and abdominal pain. What is the earliest sign and the most likely diagnosis?',
+                    options: ['Tachycardia — anastomotic/staple-line leak', 'Fever — wound infection', 'Bradycardia — vagal reaction', 'Hypertension — pain response'],
+                    answer: 0,
+                    explanation: 'Tachycardia is the earliest sign of an anastomotic or staple-line leak (POD 1–5). Confirm with CT/contrast study and treat with re-operation or drainage. VTE/PE remains the leading cause of post-operative death.'
+                }
             ]
         },
         {
@@ -182,6 +244,23 @@ const surgery = {
                 </table>
 
                 <h3>Breast Cancer</h3>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Breast quadrants &amp; triple assessment</div>
+                <svg viewBox="0 0 706 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Most breast cancers arise in the upper outer quadrant. Triple assessment comprises clinical examination, imaging with ultrasound or mammography, and biopsy.">
+                <g font-family="system-ui,Arial">
+                <circle cx="150" cy="130" r="98" fill="#ffffff" stroke="#334155" stroke-width="2"/>
+                <line x1="52" y1="130" x2="248" y2="130" stroke="#cbd5e1"/><line x1="150" y1="32" x2="150" y2="228" stroke="#cbd5e1"/>
+                <path d="M150,130 L150,32 A98,98 0 0,0 52,130 Z" fill="#ef4444" opacity="0.28"/>
+                <circle cx="150" cy="130" r="11" fill="#fecdd3" stroke="#334155"/>
+                <text x="100" y="80" text-anchor="middle" font-size="12" font-weight="800" fill="#b91c1c">UOQ ~50%</text>
+                <text x="200" y="80" text-anchor="middle" font-size="11" fill="#64748b">UIQ</text><text x="100" y="190" text-anchor="middle" font-size="11" fill="#64748b">LOQ</text><text x="200" y="190" text-anchor="middle" font-size="11" fill="#64748b">LIQ</text>
+                <text x="150" y="248" text-anchor="middle" font-size="10.5" fill="#475569">(right breast, patient's view)</text>
+                <text x="286" y="44" font-size="13.5" font-weight="800" fill="#0f1e3d">Triple assessment</text>
+                <rect x="286" y="58" width="386" height="42" rx="9" fill="#dbeafe" stroke="#3b82f6"/><text x="300" y="79" font-size="11.5" fill="#334155"><tspan font-weight="700">1 · Clinical</tspan> — hard, immobile, irregular lump;</text><text x="300" y="93" font-size="11.5" fill="#334155">skin tethering, peau d'orange</text>
+                <rect x="286" y="108" width="386" height="42" rx="9" fill="#dcfce7" stroke="#22c55e"/><text x="300" y="135" font-size="12" fill="#334155"><tspan font-weight="700">2 · Imaging</tspan> — US if &lt;35 y or pregnant; mammogram if ≥35 y</text>
+                <rect x="286" y="158" width="386" height="42" rx="9" fill="#ede9fe" stroke="#8b5cf6"/><text x="300" y="185" font-size="12" fill="#334155"><tspan font-weight="700">3 · Biopsy</tspan> — core needle biopsy for histology + receptors</text>
+                <text x="286" y="226" font-size="11" fill="#b91c1c" font-weight="700">Red flags: bloody nipple discharge · nipple retraction · fixed axillary nodes</text>
+                </g></svg>
+                <figcaption>The <b>upper outer quadrant</b> holds the most breast tissue and hosts roughly half of cancers. Any suspicious lump needs the full <b>triple assessment</b> — clinical, imaging and biopsy — never imaging alone.</figcaption></figure>
                 <ul>
                     <li><b>Lump</b>: hard, immobile, irregular, upper outer quadrant</li>
                     <li><b>Skin</b>: tethering, peau d'orange, ulceration · <b>Nipple</b>: retraction, bloody spontaneous unilateral discharge · palpable axillary nodes</li>
@@ -212,6 +291,18 @@ const surgery = {
                 </section>
             `,
             questions: [
+                {
+                    q: 'A breastfeeding woman with mastitis now has a single fluctuant 3 cm breast mass. The overlying skin is intact and not necrotic. What is the appropriate management?',
+                    options: ['Incision and drainage', 'Simple mastectomy', 'Aspiration', 'Observation alone'],
+                    answer: 2,
+                    explanation: 'A breast abscess is drained by incision and drainage when there are multiple abscesses, it is 5 cm or larger, or the overlying skin is thinned, ischaemic or necrotic. Otherwise aspiration is appropriate.'
+                },
+                {
+                    q: 'A 26-year-old with no family history of breast cancer has a discrete breast lump. Which imaging should be arranged first?',
+                    options: ['Mammogram alone', 'MRI of the breast', 'CT chest, abdomen and pelvis', 'Ultrasound'],
+                    answer: 3,
+                    explanation: 'Under the age of 30 the initial imaging is ultrasound. A mammogram (with or without ultrasound) is used from age 30, or earlier if a first-degree relative had breast cancer 10 years younger.'
+                },
                 {
                     q: 'A 55-year-old woman has a hard, irregular, immobile breast lump with overlying skin dimpling. What is the most appropriate biopsy?',
                     options: ['Fine-needle aspiration', 'Core needle biopsy', 'Excisional biopsy first', 'Repeat exam in 3 months'],
@@ -250,6 +341,21 @@ const surgery = {
                 </table>
 
                 <h3>Acute Limb Ischemia — the 6 Ps</h3>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Acute limb ischaemia — the 6 Ps</div>
+                <svg viewBox="0 0 700 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The six Ps of acute limb ischaemia are pain, pallor, paraesthesia, pulselessness, perishing cold and paralysis. Paraesthesia and paralysis are late signs indicating a threatened limb.">
+                <g font-family="system-ui,Arial">
+                <rect x="14" y="20" width="212" height="52" rx="9" fill="#fef3c7" stroke="#f59e0b"/><text x="34" y="52" font-size="20" font-weight="800" fill="#b45309">P</text><text x="56" y="52" font-size="13" fill="#334155">ain — first symptom</text>
+                <rect x="240" y="20" width="212" height="52" rx="9" fill="#fef3c7" stroke="#f59e0b"/><text x="260" y="52" font-size="20" font-weight="800" fill="#b45309">P</text><text x="282" y="52" font-size="13" fill="#334155">allor</text>
+                <rect x="466" y="20" width="220" height="52" rx="9" fill="#fef3c7" stroke="#f59e0b"/><text x="486" y="52" font-size="20" font-weight="800" fill="#b45309">P</text><text x="508" y="52" font-size="13" fill="#334155">ulselessness</text>
+                <rect x="14" y="82" width="212" height="52" rx="9" fill="#fee2e2" stroke="#ef4444"/><text x="34" y="114" font-size="20" font-weight="800" fill="#b91c1c">P</text><text x="56" y="114" font-size="13" fill="#334155">erishing cold</text>
+                <rect x="240" y="82" width="212" height="52" rx="9" fill="#fee2e2" stroke="#ef4444"/><text x="260" y="114" font-size="20" font-weight="800" fill="#b91c1c">P</text><text x="282" y="114" font-size="13" font-weight="700" fill="#b91c1c">araesthesia — LATE</text>
+                <rect x="466" y="82" width="220" height="52" rx="9" fill="#fee2e2" stroke="#ef4444"/><text x="486" y="114" font-size="20" font-weight="800" fill="#b91c1c">P</text><text x="508" y="114" font-size="13" font-weight="700" fill="#b91c1c">aralysis — LATEST</text>
+                <rect x="14" y="146" width="672" height="70" rx="10" fill="#dbeafe" stroke="#3b82f6"/>
+                <text x="350" y="170" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">Immediate heparin · US initial · CT-angio is gold standard</text>
+                <text x="350" y="192" text-anchor="middle" font-size="11.5" fill="#334155">AF/cardiac source → embolectomy · thrombosis → catheter thrombolysis</text>
+                <text x="350" y="210" text-anchor="middle" font-size="11.5" font-weight="700" fill="#b91c1c">Skip imaging if the limb is already paralysed — go straight to intervention</text>
+                </g></svg>
+                <figcaption><b>Paraesthesia and paralysis are late</b> — their presence means a threatened or non-salvageable limb. A paralysed limb with ABI &lt;0.3 and irreversible changes may require amputation.</figcaption></figure>
                 <p><b>P</b>ain · <b>P</b>allor · <b>P</b>aresthesia · <b>P</b>ulselessness · <b>P</b>erishing cold · <b>P</b>aralysis</p>
                 <div class="sum-callout">
                     <b>Approach</b>
@@ -288,6 +394,18 @@ const surgery = {
             `,
             questions: [
                 {
+                    q: 'A patient has an acutely ischaemic limb that is already paralysed. What is the correct next step?',
+                    options: ['Proceed to urgent intervention without waiting for imaging', 'Arrange an outpatient CT angiogram', 'Start supervised exercise therapy', 'Repeat the ankle-brachial index in 24 hours'],
+                    answer: 0,
+                    explanation: 'Imaging is skipped once the limb is paralysed — that signals urgent intervention is needed. An ABI below 0.3 with an irreversibly paralysed limb means amputation; a cardiac/embolic cause needs embolectomy and arterial thrombosis needs catheter thrombolysis.'
+                },
+                {
+                    q: 'A leg ulcer is pale and punched-out and painful, and the distal pulses are absent. Which ulcer is it and which imaging is appropriate?',
+                    options: ['Venous ulcer — venous ultrasound', 'Venous ulcer — arterial ultrasound', 'Arterial ulcer — arterial ultrasound', 'Arterial ulcer — venous ultrasound'],
+                    answer: 2,
+                    explanation: 'Arterial ulcers are pale, punched-out and painful with absent pulses, and are investigated with arterial ultrasound. Venous ulcers are superficial and painless with dark discolouration and intact pulses, investigated with venous ultrasound.'
+                },
+                {
                     q: 'An asymptomatic AAA is found in a man. At what maximum diameter is elective repair generally indicated?',
                     options: ['5.5 cm or greater', '3.0 cm', '4.0 cm', '8.0 cm'],
                     answer: 0,
@@ -322,6 +440,24 @@ const surgery = {
                         <tr><td>Constipation/distension</td><td>Late</td><td>Early &amp; significant</td></tr>
                     </tbody>
                 </table>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> SBO vs LBO on abdominal X-ray</div>
+                <svg viewBox="0 0 680 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Small bowel obstruction: central loops with valvulae conniventes crossing the full lumen. Large bowel obstruction: peripheral loops framing the abdomen with partial haustra.">
+                <rect x="20" y="30" width="300" height="240" rx="10" fill="#ffffff" stroke="#d9d0f2"/><text x="170" y="55" text-anchor="middle" font-size="15" font-weight="700" fill="#0f1e3d">Small bowel (SBO)</text>
+                <rect x="90" y="80" width="160" height="34" rx="14" fill="#fde2e4" stroke="#ef4444"/><rect x="90" y="128" width="160" height="34" rx="14" fill="#fde2e4" stroke="#ef4444"/><rect x="90" y="176" width="160" height="34" rx="14" fill="#fde2e4" stroke="#ef4444"/>
+                <g stroke="#b91c1c" stroke-width="1.4"><line x1="90" y1="97" x2="250" y2="97"/><line x1="90" y1="145" x2="250" y2="145"/><line x1="90" y1="193" x2="250" y2="193"/></g>
+                <text x="170" y="238" text-anchor="middle" font-size="12" fill="#b91c1c" font-weight="700">Central · valvulae conniventes</text><text x="170" y="256" text-anchor="middle" font-size="11" fill="#475569">cross full lumen · dilated &gt;3 cm</text>
+                <rect x="360" y="30" width="300" height="240" rx="10" fill="#ffffff" stroke="#d9d0f2"/><text x="510" y="55" text-anchor="middle" font-size="15" font-weight="700" fill="#0f1e3d">Large bowel (LBO)</text>
+                <path d="M400,80 H620 V210 H400 Z" fill="none" stroke="#2563eb" stroke-width="18" opacity="0.22" stroke-linejoin="round"/><path d="M400,80 H620 V210 H400 Z" fill="none" stroke="#2563eb" stroke-width="2"/>
+                <g stroke="#1d4ed8" stroke-width="1.4"><line x1="450" y1="71" x2="450" y2="89"/><line x1="510" y1="71" x2="510" y2="89"/><line x1="570" y1="71" x2="570" y2="89"/><line x1="611" y1="130" x2="629" y2="130"/><line x1="611" y1="165" x2="629" y2="165"/></g>
+                <text x="510" y="238" text-anchor="middle" font-size="12" fill="#1d4ed8" font-weight="700">Peripheral · haustra (partial)</text><text x="510" y="256" text-anchor="middle" font-size="11" fill="#475569">frames abdomen · caecum &gt;9 cm</text>
+                </svg>
+                <div class="deck-imgcell" style="max-width:340px;margin:12px auto 0">
+                    <img class="deck-img" src="/summaries/bowel-obstruction-axr.jpg" width="964" height="1200" loading="lazy" decoding="async"
+                         alt="Upright plain abdominal radiograph showing several dilated, gas-filled bowel loops with multiple horizontal air-fluid levels stacked across the abdomen." />
+                    <p class="deck-imgcap">A real obstructed abdomen: dilated gas-filled loops with multiple <b>air-fluid levels</b> on the upright film</p>
+                </div>
+                <figcaption><b>SBO</b>: central loops, <b>valvulae conniventes</b> cross the whole lumen. <b>LBO</b>: peripheral loops, <b>haustra</b> only partly cross. Early vomiting → SBO; early distension → LBO. The photograph shows the finding that puts obstruction on the table in the first place — <b>stacked air-fluid levels on an upright film</b>; the schematic above is what you then use to decide small vs large.</figcaption>
+                <p class="deck-credit">Abdominal radiograph: <a href="https://commons.wikimedia.org/wiki/File:Upright_abdominal_X-ray_demonstrating_a_bowel_obstruction.jpg" target="_blank" rel="noopener noreferrer">James Heilman, MD</a>, <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 3.0</a>. Resized for web; content unmodified.</p></figure>
                 <div class="sum-callout">
                     <b>Management</b>
                     <ol>
@@ -335,6 +471,19 @@ const surgery = {
                 <p><b>Paralytic ileus</b>: impaired peristalsis w/o mechanical obstruction (post-op/hypokalemia); X-ray dilated small &amp; large bowel, air-fluid levels, no transition point → supportive. <b>Ogilvie syndrome</b>: acute colonic pseudo-obstruction; cecum &gt;10 cm (perforation risk) → supportive, neostigmine, colonoscopic decompression.</p>
 
                 <h3>Hernia</h3>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Inguinal hernia — direct vs indirect</div>
+                <svg viewBox="0 0 680 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Indirect inguinal hernia passes lateral to the inferior epigastric vessels through the deep ring toward the scrotum; direct hernia bulges medial to the vessels through Hesselbach triangle.">
+                <line x1="345" y1="55" x2="315" y2="235" stroke="#7c3aed" stroke-width="5"/><text x="352" y="52" font-size="12" font-weight="700" fill="#7c3aed">inferior epigastric vessels</text>
+                <text x="500" y="34" text-anchor="middle" font-size="13.5" font-weight="700" fill="#ef4444">Lateral → INDIRECT</text>
+                <circle cx="470" cy="120" r="28" fill="none" stroke="#ef4444" stroke-width="2.5"/><text x="470" y="124" text-anchor="middle" font-size="10.5" fill="#b91c1c" font-weight="700">deep ring</text>
+                <path d="M470,148 Q512,200 496,246" fill="none" stroke="#ef4444" stroke-width="9" opacity="0.3"/><path d="M470,148 Q512,200 496,246" fill="none" stroke="#ef4444" stroke-width="2"/>
+                <text x="500" y="266" text-anchor="middle" font-size="11" fill="#475569">via canal → may reach scrotum · congenital</text>
+                <text x="175" y="34" text-anchor="middle" font-size="13.5" font-weight="700" fill="#2563eb">Medial → DIRECT</text>
+                <path d="M110,150 L245,120 L245,180 Z" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/><text x="180" y="157" text-anchor="middle" font-size="10.5" fill="#1d4ed8" font-weight="700">Hesselbach</text>
+                <text x="175" y="266" text-anchor="middle" font-size="11" fill="#475569">through weak canal floor · acquired</text>
+                <rect x="196" y="66" width="276" height="24" rx="12" fill="#f1f5f9"/><text x="334" y="83" text-anchor="middle" font-size="11" font-weight="700" fill="#334155">MDs don't LIe — Medial=Direct, Lateral=Indirect</text>
+                </svg>
+                <figcaption><b>Indirect</b> (lateral to the vessels, via the deep ring) is congenital and can reach the scrotum; <b>direct</b> (medial, through Hesselbach's triangle) is acquired.</figcaption></figure>
                 <ul>
                     <li><b>Indirect inguinal</b>: through deep ring, <b>lateral</b> to inferior epigastric vessels</li>
                     <li><b>Direct inguinal</b>: <b>medial</b> to inferior epigastric vessels (Hesselbach triangle)</li>
@@ -343,6 +492,17 @@ const surgery = {
                 </ul>
 
                 <h3>Appendicitis</h3>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Appendicitis — McBurney's point &amp; signs</div>
+                <svg viewBox="0 0 680 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="McBurney's point lies two-thirds from the umbilicus toward the right anterior superior iliac spine; Rovsing, psoas and obturator signs support the diagnosis.">
+                <rect x="360" y="24" width="290" height="200" rx="34" fill="#ffffff" stroke="#334155" stroke-width="2"/>
+                <circle cx="500" cy="86" r="5" fill="#334155"/><text x="500" y="76" text-anchor="middle" font-size="10" fill="#475569">umbilicus</text>
+                <circle cx="596" cy="168" r="5" fill="#334155"/><text x="600" y="188" font-size="10" fill="#475569">ASIS</text>
+                <line x1="500" y1="86" x2="596" y2="168" stroke="#94a3b8" stroke-dasharray="4 3"/>
+                <circle cx="564" cy="141" r="12" fill="#ef4444"/><text x="564" y="145" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">MB</text><text x="520" y="122" text-anchor="middle" font-size="10.5" fill="#b91c1c" font-weight="700">McBurney (⅔ to ASIS)</text>
+                <g font-size="12" fill="#334155"><text x="24" y="52" font-weight="700" fill="#0f1e3d">Supporting signs</text>
+                <text x="24" y="82">Rovsing — LLQ press → RLQ pain</text><text x="24" y="110">Psoas — pain on hip extension</text><text x="24" y="138">Obturator — pain on internal rotation</text><text x="24" y="166">Rebound / guarding (peritonism)</text><text x="24" y="200" font-size="11" fill="#b91c1c" font-weight="700">migrates periumbilical → RLQ</text></g>
+                </svg>
+                <figcaption>Pain migrates <b>periumbilical → RLQ</b> (McBurney's point). Supportive: Rovsing, psoas, obturator, rebound. Diagnosis is clinical (± US in children/pregnancy, CT in adults) → appendicectomy.</figcaption></figure>
                 <ul>
                     <li>RLQ pain (starts periumbilical, migrates), nausea/vomiting/anorexia, low-grade fever, rebound at McBurney's</li>
                     <li>Diagnosis: US (pediatric/pregnant), CT abdomen (best sensitivity); uncomplicated → laparoscopic appendectomy; abscess → percutaneous drainage + IV antibiotics + interval appendectomy; phlegmon → conservative IV antibiotics</li>
@@ -435,6 +595,17 @@ const surgery = {
                     </tbody>
                 </table>
                 <p><b>Normal urine output</b>: adults &gt;0.5 mL/kg/hr (assume 70 kg if not stated); pediatrics &gt;1 mL/kg/hr.</p>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Hyperkalaemia with ECG changes — stabilise, shift, remove</div>
+                <svg viewBox="0 0 700 236" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Hyperkalaemia with ECG changes is treated in three phases. Stabilise: IV calcium gluconate first, which stabilises the cardiac membrane. Shift potassium into cells: insulin with dextrose, sodium bicarbonate if acidotic, and beta-agonists. Remove potassium: loop diuretics or Kayexalate, and haemodialysis as the definitive treatment for severe or refractory cases. On ECG hyperkalaemia gives a peaked T-wave and hypokalaemia gives a flattened T-wave.">
+                <g font-family="system-ui,Arial">
+                <rect x="16" y="18" width="214" height="150" rx="10" fill="#fef2f2" stroke="#ef4444"/><rect x="16" y="18" width="214" height="34" rx="10" fill="#ef4444"/><text x="123" y="41" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">1 · STABILISE</text><text x="123" y="80" text-anchor="middle" font-size="12" font-weight="800" fill="#b91c1c">IV calcium gluconate</text><text x="123" y="104" text-anchor="middle" font-size="10.5" fill="#334155">stabilises the cardiac</text><text x="123" y="120" text-anchor="middle" font-size="10.5" fill="#334155">membrane</text><rect x="40" y="134" width="166" height="24" rx="6" fill="#fff" stroke="#ef4444"/><text x="123" y="150" text-anchor="middle" font-size="10.5" font-weight="800" fill="#b91c1c">ALWAYS FIRST</text>
+                <rect x="240" y="18" width="214" height="150" rx="10" fill="#fffbeb" stroke="#f59e0b"/><rect x="240" y="18" width="214" height="34" rx="10" fill="#f59e0b"/><text x="347" y="41" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">2 · SHIFT INTO CELLS</text><text x="347" y="76" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">insulin + dextrose</text><text x="347" y="100" text-anchor="middle" font-size="10.5" fill="#334155">sodium bicarbonate</text><text x="347" y="116" text-anchor="middle" font-size="10.5" fill="#334155">(if acidotic)</text><text x="347" y="140" text-anchor="middle" font-size="10.5" fill="#334155">beta-agonists</text>
+                <rect x="464" y="18" width="220" height="150" rx="10" fill="#f0fdf4" stroke="#22c55e"/><rect x="464" y="18" width="220" height="34" rx="10" fill="#22c55e"/><text x="574" y="41" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">3 · REMOVE</text><text x="574" y="76" text-anchor="middle" font-size="11" fill="#334155">loop diuretics /</text><text x="574" y="92" text-anchor="middle" font-size="11" fill="#334155">Kayexalate</text><text x="574" y="120" text-anchor="middle" font-size="11.5" font-weight="800" fill="#15803d">haemodialysis</text><text x="574" y="140" text-anchor="middle" font-size="10" fill="#334155">definitive — severe / refractory</text>
+                <rect x="16" y="180" width="668" height="46" rx="9" fill="#f8fafc" stroke="#cbd5e1"/>
+                <text x="34" y="209" font-size="11" font-weight="800" fill="#b91c1c">Hyperkalaemia — peaked T</text><polyline points="200,212 216,212 222,200 228,220 234,212 250,212 262,186 274,212 320,212" fill="none" stroke="#b91c1c" stroke-width="2"/>
+                <text x="368" y="209" font-size="11" font-weight="800" fill="#1d4ed8">Hypokalaemia — flattened T</text><polyline points="536,212 552,212 558,200 564,220 570,212 586,212 598,207 610,212 656,212" fill="none" stroke="#1d4ed8" stroke-width="2"/>
+                </g></svg>
+                <figcaption><b>Calcium first</b> — it changes nothing about the potassium level but protects the heart while the shifting and removing agents work.</figcaption></figure>
                 <div class="sum-callout">
                     <b>Hyperkalemia with ECG changes</b>
                     <ol>
@@ -476,6 +647,25 @@ const surgery = {
                     answer: 0,
                     explanation: 'Severe vomiting causes a hypochloremic, hypokalemic metabolic alkalosis with paradoxical aciduria; it is corrected with normal saline.'
                 }
+                ,
+                {
+                    q: 'A patient has a potassium of 7.2 mEq/L with peaked T-waves on ECG. What is the FIRST drug to give?',
+                    options: ['IV calcium gluconate', 'Insulin with dextrose', 'Sodium bicarbonate', 'Kayexalate'],
+                    answer: 0,
+                    explanation: 'IV calcium gluconate is given first to stabilise the cardiac membrane. Insulin + dextrose, bicarbonate and beta-agonists then shift K+ intracellularly, and loop diuretics/Kayexalate or dialysis remove it.'
+                },
+                {
+                    q: 'A patient with several days of severe vomiting has which acid-base and electrolyte picture, and which fluid is preferred?',
+                    options: ['Hypochloremic, hypokalemic metabolic alkalosis — normal saline', 'Hypokalemic metabolic acidosis — Ringer lactate', 'Respiratory alkalosis — dextrose 5%', 'Hyperchloremic acidosis — sodium bicarbonate'],
+                    answer: 0,
+                    explanation: 'Vomiting loses HCl → hypochloremic, hypokalemic metabolic alkalosis with paradoxical aciduria; treat with normal saline. Severe diarrhoea instead causes hypokalemic metabolic acidosis (HCO3 loss) treated with Ringer lactate.'
+                },
+                {
+                    q: 'After extensive terminal ileal resection, which deficiency should be anticipated long term?',
+                    options: ['Vitamin B12', 'Iron', 'Folic acid', 'Vitamin C'],
+                    answer: 0,
+                    explanation: 'Vitamin B12 and bile salts are absorbed in the terminal ileum. Iron is absorbed in the duodenum and folic acid in the jejunum.'
+                }
             ]
         },
         {
@@ -484,6 +674,19 @@ const surgery = {
             title_en: 'Thyroid (Bethesda, Complications) · Parathyroid · Adrenal',
             summaryHtml: `
                 <h3>Thyroid &amp; Neck Mass</h3>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Solitary thyroid nodule — workup</div>
+                <svg viewBox="0 0 700 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="First check TSH. Low TSH leads to a radionuclide scan where hot nodules are usually benign; normal or high TSH leads to ultrasound and fine-needle aspiration.">
+                <g font-family="system-ui,Arial">
+                <rect x="270" y="18" width="160" height="40" rx="10" fill="#e0e7ff" stroke="#6366f1"/><text x="350" y="43" text-anchor="middle" font-size="12.5" font-weight="700" fill="#4338ca">Solitary thyroid nodule</text>
+                <rect x="300" y="76" width="100" height="34" rx="10" fill="#fff7ed" stroke="#f59e0b"/><text x="350" y="98" text-anchor="middle" font-size="12" font-weight="700" fill="#b45309">check TSH</text>
+                <line x1="350" y1="58" x2="350" y2="76" stroke="#94a3b8" stroke-width="2"/>
+                <line x1="350" y1="110" x2="160" y2="140" stroke="#94a3b8" stroke-width="2"/><line x1="350" y1="110" x2="540" y2="140" stroke="#94a3b8" stroke-width="2"/>
+                <rect x="60" y="140" width="200" height="34" rx="10" fill="#fee2e2" stroke="#ef4444"/><text x="160" y="162" text-anchor="middle" font-size="11.5" font-weight="700" fill="#b91c1c">Low TSH → uptake scan</text>
+                <rect x="440" y="140" width="200" height="34" rx="10" fill="#dbeafe" stroke="#3b82f6"/><text x="540" y="162" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">Normal/high → US + FNA</text>
+                <line x1="160" y1="174" x2="160" y2="196" stroke="#94a3b8" stroke-width="2"/><rect x="40" y="196" width="240" height="40" rx="10" fill="#f1f5f9" stroke="#cbd5e1"/><text x="160" y="221" text-anchor="middle" font-size="11" fill="#334155">hot = usually benign · cold → FNA</text>
+                <line x1="540" y1="174" x2="540" y2="196" stroke="#94a3b8" stroke-width="2"/><rect x="420" y="196" width="240" height="40" rx="10" fill="#f1f5f9" stroke="#cbd5e1"/><text x="540" y="221" text-anchor="middle" font-size="11" fill="#334155">Bethesda category → surgery if malignant</text>
+                </g></svg>
+                <figcaption>First step is <b>TSH</b>. Low → radionuclide scan (<b>hot</b> nodules are rarely malignant). Normal/high → <b>ultrasound + FNA</b> (Bethesda) to characterise.</figcaption></figure>
                 <table>
                     <thead><tr><th>Condition</th><th>Key features</th><th>Management</th></tr></thead>
                     <tbody>
@@ -531,6 +734,18 @@ const surgery = {
             `,
             questions: [
                 {
+                    q: 'Fine-needle aspiration of a thyroid nodule returns Bethesda category IV (follicular neoplasm). What is the appropriate management?',
+                    options: ['Repeat the FNA', 'Hemithyroidectomy', 'Follow up with ultrasound', 'Near-total thyroidectomy'],
+                    answer: 1,
+                    explanation: 'Bethesda IV (follicular neoplasm) is managed by hemithyroidectomy. Categories I and III are repeated, II is followed up with ultrasound, and VI (malignant) needs near-total thyroidectomy.'
+                },
+                {
+                    q: 'The day after a total thyroidectomy a patient develops perioral tingling, muscle spasms and carpopedal tetany. What is the cause and the treatment?',
+                    options: ['Recurrent laryngeal nerve injury — observe', 'Superior laryngeal nerve injury — speech therapy', 'Neck haematoma — bedside exploration', 'Hypocalcaemia — calcium replacement'],
+                    answer: 3,
+                    explanation: 'Post-thyroidectomy spasms and tetany indicate hypocalcaemia and are treated with calcium replacement. Hoarseness suggests recurrent laryngeal nerve injury, a high-pitched voice suggests superior laryngeal nerve injury, and a painful neck swelling within hours of surgery is a haematoma needing bedside exploration.'
+                },
+                {
                     q: 'A 33-year-old with papillary thyroid cancer is planned for total thyroidectomy and has mitral valve prolapse with mild regurgitation. What antibiotic prophylaxis is indicated?',
                     options: ['Amoxicillin to prevent endocarditis', 'Cefazolin to prevent wound infection', 'No indication for antibiotic prophylaxis', 'Both cefazolin and amoxicillin'],
                     answer: 2,
@@ -564,6 +779,19 @@ const surgery = {
                 </ul>
 
                 <h3>Esophageal Cancer</h3>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Oesophageal cancer — location tells you the type</div>
+                <svg viewBox="0 0 700 310" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Squamous cell carcinoma arises in the upper oesophagus and its risk factors are achalasia, smoking and alcohol. Adenocarcinoma arises in the lower oesophagus and its risk factors are Barrett's oesophagus, GERD, male sex and age 50 to 60. Progressive dysphagia with weight loss is investigated by EGD with biopsy then CT of the chest and abdomen for staging.">
+                <g font-family="system-ui,Arial">
+                <rect x="118" y="20" width="52" height="90" rx="12" fill="#fee2e2" stroke="#ef4444"/><text x="144" y="70" text-anchor="middle" font-size="10" font-weight="800" fill="#b91c1c">UPPER</text>
+                <rect x="118" y="108" width="52" height="94" rx="12" fill="#dbeafe" stroke="#3b82f6"/><text x="144" y="160" text-anchor="middle" font-size="10" font-weight="800" fill="#1d4ed8">LOWER</text>
+                <line x1="104" y1="204" x2="184" y2="204" stroke="#64748b" stroke-width="1.5" stroke-dasharray="4 3"/><text x="190" y="199" font-size="9.5" fill="#64748b">GE junction</text>
+                <ellipse cx="144" cy="234" rx="52" ry="26" fill="#f1f5f9" stroke="#cbd5e1"/><text x="144" y="238" text-anchor="middle" font-size="10" fill="#64748b">stomach</text>
+                <line x1="170" y1="66" x2="250" y2="66" stroke="#fca5a5" stroke-width="2"/><line x1="170" y1="158" x2="250" y2="158" stroke="#93c5fd" stroke-width="2"/>
+                <rect x="250" y="28" width="434" height="84" rx="10" fill="#fef2f2" stroke="#ef4444"/><text x="270" y="56" font-size="13.5" font-weight="800" fill="#b91c1c">Squamous cell carcinoma</text><text x="270" y="78" font-size="11.5" font-weight="800" fill="#0f172a">UPPER oesophagus</text><text x="270" y="99" font-size="10.5" fill="#334155">risk: achalasia · smoking · alcohol</text>
+                <rect x="250" y="124" width="434" height="84" rx="10" fill="#eff6ff" stroke="#3b82f6"/><text x="270" y="152" font-size="13.5" font-weight="800" fill="#1d4ed8">Adenocarcinoma</text><text x="270" y="174" font-size="11.5" font-weight="800" fill="#0f172a">LOWER oesophagus</text><text x="270" y="195" font-size="10.5" fill="#334155">risk: Barrett's · GERD · male · 50–60</text>
+                <rect x="16" y="262" width="668" height="36" rx="8" fill="#f8fafc" stroke="#cbd5e1"/><text x="350" y="285" text-anchor="middle" font-size="11.5" fill="#334155">progressive dysphagia + weight loss → <tspan font-weight="800" fill="#0f172a">EGD with biopsy</tspan> → CT chest/abdomen for staging</text>
+                </g></svg>
+                <figcaption>Location is the shortcut: <b>upper = squamous</b> (achalasia, smoking, alcohol), <b>lower = adenocarcinoma</b> (Barrett's, GERD).</figcaption></figure>
                 <table>
                     <thead><tr><th>Type</th><th>Location</th><th>Risk factors</th></tr></thead>
                     <tbody>
@@ -588,6 +816,12 @@ const surgery = {
                 </section>
             `,
             questions: [
+                {
+                    q: 'After forceful vomiting a patient has retrosternal chest pain and subcutaneous emphysema; the chest X-ray shows a widened mediastinum with pneumomediastinum. What is the diagnosis and the confirmatory test?',
+                    options: ['Mallory-Weiss tear — EGD', 'Boerhaave perforation — contrast oesophagography', 'Gastric cancer — EGD with biopsy', 'Peptic ulcer perforation — erect chest X-ray'],
+                    answer: 1,
+                    explanation: 'The Mackler triad — vomiting, retrosternal chest pain and subcutaneous or mediastinal emphysema — with a widened mediastinum indicates a Boerhaave transmural perforation. Contrast oesophagography demonstrates the leak, and treatment is surgical or endoscopic repair. A Mallory-Weiss tear is only mucosal and is diagnosed at EGD.'
+                },
                 {
                     q: 'A 47-year-old vomits repeatedly after food poisoning and now vomits fresh blood; there is mild epigastric tenderness and the NG tube drains bloody fluid. What is the diagnosis?',
                     options: ['Gastritis', 'Dieulafoy lesion', 'Peptic ulcer disease', 'Mallory-Weiss syndrome'],
@@ -628,6 +862,21 @@ const surgery = {
                 <div class="sum-callout"><b>CBD transection post-cholecystectomy</b>: above the cystic duct → hepatico-jejunostomy; below the cystic duct → choledocho-jejunostomy.</div>
 
                 <h3>Ascending Cholangitis</h3>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Charcot triad → Reynolds pentad</div>
+                <svg viewBox="0 0 700 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Charcot triad is fever, right upper quadrant pain and jaundice. Reynolds pentad adds hypotension and altered mental status, indicating severe suppurative cholangitis.">
+                <g font-family="system-ui,Arial">
+                <rect x="16" y="20" width="330" height="130" rx="12" fill="#fef3c7" stroke="#f59e0b"/><text x="181" y="46" text-anchor="middle" font-size="14" font-weight="800" fill="#b45309">Charcot TRIAD</text>
+                <circle cx="60" cy="76" r="13" fill="#f59e0b"/><text x="60" y="81" text-anchor="middle" font-size="12" font-weight="800" fill="#fff">1</text><text x="84" y="81" font-size="12.5" fill="#334155">Fever</text>
+                <circle cx="60" cy="106" r="13" fill="#f59e0b"/><text x="60" y="111" text-anchor="middle" font-size="12" font-weight="800" fill="#fff">2</text><text x="84" y="111" font-size="12.5" fill="#334155">RUQ pain</text>
+                <circle cx="60" cy="136" r="13" fill="#f59e0b"/><text x="60" y="141" text-anchor="middle" font-size="12" font-weight="800" fill="#fff">3</text><text x="84" y="141" font-size="12.5" fill="#334155">Jaundice</text>
+                <text x="330" y="88" text-anchor="end" font-size="24" fill="#94a3b8">→</text>
+                <rect x="360" y="20" width="324" height="130" rx="12" fill="#fee2e2" stroke="#ef4444"/><text x="522" y="46" text-anchor="middle" font-size="14" font-weight="800" fill="#b91c1c">Reynolds PENTAD</text>
+                <text x="382" y="76" font-size="12" fill="#475569">Charcot triad PLUS:</text>
+                <circle cx="400" cy="106" r="13" fill="#ef4444"/><text x="400" y="111" text-anchor="middle" font-size="12" font-weight="800" fill="#fff">4</text><text x="424" y="111" font-size="12.5" font-weight="700" fill="#b91c1c">Hypotension</text>
+                <circle cx="400" cy="136" r="13" fill="#ef4444"/><text x="400" y="141" text-anchor="middle" font-size="12" font-weight="800" fill="#fff">5</text><text x="424" y="141" font-size="12.5" font-weight="700" fill="#b91c1c">Altered mental status</text>
+                <rect x="16" y="164" width="668" height="50" rx="9" fill="#dbeafe" stroke="#3b82f6"/><text x="350" y="184" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">Labs: leukocytosis · ↑bilirubin · ↑ALP/GGT — Ultrasound FIRST, then ERCP</text><text x="350" y="204" text-anchor="middle" font-size="11.5" fill="#334155">ERCP is both diagnostic and therapeutic — it decompresses the obstructed duct</text>
+                </g></svg>
+                <figcaption>Reynolds pentad signals <b>suppurative cholangitis</b> — a septic emergency needing resuscitation, antibiotics and urgent biliary decompression by <b>ERCP</b>.</figcaption></figure>
                 <ul>
                     <li><b>Charcot triad</b>: fever + RUQ pain + jaundice · <b>Reynolds pentad</b> adds hypotension + altered mental status</li>
                     <li>Labs: leukocytosis, hyperbilirubinemia, ↑ALP/GGT; US first → <b>ERCP</b> (therapeutic decompression + diagnostic)</li>
@@ -665,6 +914,12 @@ const surgery = {
             `,
             questions: [
                 {
+                    q: 'A patient with acute gallstone pancreatitis is admitted. Which statement about initial management is correct?',
+                    options: ['IV Ringer lactate is the preferred fluid, and antibiotics are not given unless an infected source is identified', 'Prophylactic antibiotics should be started in every patient', 'Normal saline is preferred and cholecystectomy should be deferred for 6 months', 'CT is the initial imaging of choice in every case'],
+                    answer: 0,
+                    explanation: 'IV Ringer lactate is the preferred fluid and antibiotics are NOT used unless an infected source is identified. Ultrasound is the initial imaging (CT if unclear or severe), and biliary pancreatitis needs ERCP plus cholecystectomy before discharge.'
+                },
+                {
                     q: 'After a cholecystectomy, the common bile duct is transected above the cystic duct. What is the appropriate reconstruction?',
                     options: ['Hepatico-jejunostomy', 'Hepatico-duodenostomy', 'Choledocho-jejunostomy', 'Choledocho-duodenostomy'],
                     answer: 0,
@@ -696,6 +951,27 @@ const surgery = {
             title_en: 'Epidural vs Subdural · Skull Base Foramina · Glasgow Coma Scale',
             summaryHtml: `
                 <h3>Head Injury — Hematomas</h3>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Epidural vs subdural haematoma on CT</div>
+                <div class="deck-imgrow deck-imgrow--scan">
+                    <div class="deck-imgcell">
+                        <img class="deck-img" src="/summaries/epidural-haematoma-ct.jpg" width="784" height="963" loading="lazy" decoding="async"
+                             alt="Axial head CT. An arrow points to a bright, lens-shaped biconvex collection pressed against the inner skull on the patient's left, bulging inward and pushing the brain away." />
+                        <p class="deck-imgcap"><b>EPIDURAL</b> (extradural) — <b>LENS-shaped, biconvex</b>
+                        <br>middle meningeal <b>ARTERY</b> · LUCID INTERVAL then deterioration
+                        <br>temporal fracture common · ipsilateral dilated pupil
+                        <br><span class="deck-hi deck-hi--red">arterial — urgent evacuation</span></p>
+                    </div>
+                    <div class="deck-imgcell">
+                        <img class="deck-img" src="/summaries/subdural-haematoma-ct.jpg" width="344" height="410" loading="lazy" decoding="async"
+                             alt="Axial head CT. Arrows point to a bright crescent-shaped collection that hugs and follows the curve of the inner skull over a long distance, rather than bulging inward." />
+                        <p class="deck-imgcap"><b>SUBDURAL</b> — <b>CRESCENT-shaped</b>, follows the skull
+                        <br>bridging <b>VEINS</b> · GRADUAL deterioration
+                        <br>skull fracture less common · pupil variable
+                        <br><span class="deck-hi deck-hi--blue">venous — slower onset</span></p>
+                    </div>
+                </div>
+                <figcaption>The <b>shape</b> settles it on CT: an epidural bleed is stopped by the skull sutures so it bulges inward as a <b>lens</b>; a subdural bleed spreads under the dura and drapes along the skull as a <b>crescent</b>. Head trauma + <b>lucid interval</b> + deteriorating consciousness + a unilateral dilated pupil + temporal fracture = <b>epidural haematoma</b>, an arterial bleed needing urgent evacuation.</figcaption>
+                <p class="deck-credit">Epidural CT: <a href="https://commons.wikimedia.org/wiki/File:EpiduralHematoma.jpg" target="_blank" rel="noopener noreferrer">James Heilman, MD</a>, <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 4.0</a>. Subdural CT: <a href="https://commons.wikimedia.org/wiki/File:Ct-scan_of_the_brain_with_an_subdural_hematoma.jpg" target="_blank" rel="noopener noreferrer">Lucien Monfils</a>, <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 3.0</a>. Both resized for web; content unmodified.</p></figure>
                 <table>
                     <thead><tr><th>Feature</th><th>Epidural</th><th>Subdural</th></tr></thead>
                     <tbody>
@@ -726,6 +1002,18 @@ const surgery = {
                 <p>Example: incomprehensible sounds (V2) + eyes to pain (E2) + flexion to pain (M3) = <b>GCS 7</b>.</p>
             `,
             questions: [
+                {
+                    q: 'A head CT shows a crescent-shaped extra-axial collection in a patient who has deteriorated gradually. Which vessels have bled?',
+                    options: ['Bridging veins', 'The middle meningeal artery', 'The anterior communicating artery', 'The vertebral artery'],
+                    answer: 0,
+                    explanation: 'A crescent-shaped collection with gradual deterioration is a subdural haematoma from torn bridging veins. An epidural haematoma is lens-shaped (biconvex), arises from the middle meningeal artery and classically follows a lucid interval with a temporal fracture.'
+                },
+                {
+                    q: 'A skull base fracture passes through the optic canal. Which deficit is expected?',
+                    options: ['Ipsilateral vocal cord paralysis', 'Ipsilateral facial droop', 'Vision loss', 'Loss of hearing'],
+                    answer: 2,
+                    explanation: 'The optic canal transmits cranial nerve II and the ophthalmic artery, so injury causes vision loss. The jugular foramen transmits cranial nerves IX, X and XI with the jugular vein, and injury there causes ipsilateral vocal cord paralysis.'
+                },
                 {
                     q: 'A 31-year-old after a road accident has GCS 15 initially, then a period of unresponsiveness, then loses consciousness with a dilated left pupil; CT shows a temporal fracture. What is the diagnosis?',
                     options: ['Ruptured AVM', 'Subdural hematoma', 'Epidural hematoma', 'Basal skull fracture'],
@@ -772,6 +1060,20 @@ const surgery = {
                 </ul>
 
                 <h3>Nerve Palsy</h3>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Nerve palsies — deformity &amp; site</div>
+                <svg viewBox="0 0 700 235" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Radial nerve injury at the spiral groove causes wrist drop. Median nerve injury at the carpal tunnel causes ape hand. Common peroneal nerve injury at the fibular neck causes foot drop.">
+                <g font-family="system-ui,Arial">
+                <rect x="14" y="20" width="220" height="196" rx="11" fill="#fee2e2" stroke="#ef4444"/><text x="124" y="46" text-anchor="middle" font-size="13.5" font-weight="800" fill="#b91c1c">Radial</text>
+                <path d="M60,74 L60,120 L104,120" fill="none" stroke="#b91c1c" stroke-width="4" stroke-linecap="round"/><path d="M104,120 Q124,124 122,150" fill="none" stroke="#b91c1c" stroke-width="4" stroke-linecap="round"/>
+                <text x="124" y="176" text-anchor="middle" font-size="12.5" font-weight="700" fill="#b91c1c">WRIST DROP</text><text x="124" y="200" text-anchor="middle" font-size="11.5" fill="#475569">spiral groove of humerus</text>
+                <rect x="244" y="20" width="220" height="196" rx="11" fill="#dbeafe" stroke="#3b82f6"/><text x="354" y="46" text-anchor="middle" font-size="13.5" font-weight="800" fill="#1d4ed8">Median</text>
+                <path d="M300,80 L300,132" fill="none" stroke="#1d4ed8" stroke-width="4" stroke-linecap="round"/><path d="M300,132 L340,132 M300,120 L338,116 M300,144 L336,148" fill="none" stroke="#1d4ed8" stroke-width="3.5" stroke-linecap="round"/>
+                <text x="354" y="176" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">APE HAND</text><text x="354" y="200" text-anchor="middle" font-size="11.5" fill="#475569">carpal tunnel</text>
+                <rect x="474" y="20" width="212" height="196" rx="11" fill="#dcfce7" stroke="#22c55e"/><text x="580" y="46" text-anchor="middle" font-size="13.5" font-weight="800" fill="#15803d">Common peroneal</text>
+                <path d="M556,72 L556,128" fill="none" stroke="#15803d" stroke-width="4" stroke-linecap="round"/><path d="M556,128 Q560,152 578,158" fill="none" stroke="#15803d" stroke-width="4" stroke-linecap="round"/>
+                <text x="580" y="180" text-anchor="middle" font-size="12.5" font-weight="700" fill="#15803d">FOOT DROP</text><text x="580" y="202" text-anchor="middle" font-size="11.5" fill="#475569">fibular neck</text>
+                </g></svg>
+                <figcaption>Match the <b>deformity to the site</b>: wrist drop → radial at the spiral groove (classic with a humeral shaft fracture); ape hand → median at the carpal tunnel; foot drop → common peroneal at the fibular neck.</figcaption></figure>
                 <table>
                     <thead><tr><th>Nerve</th><th>Deformity</th><th>Site</th></tr></thead>
                     <tbody>
@@ -791,6 +1093,12 @@ const surgery = {
                 </section>
             `,
             questions: [
+                {
+                    q: 'A patient has a wrist drop after a humeral shaft fracture. Which nerve is injured, and where?',
+                    options: ['Radial nerve at the spiral groove of the humerus', 'Ulnar nerve in the medial arm', 'Axillary nerve at the surgical neck', 'Median nerve in the carpal tunnel'],
+                    answer: 0,
+                    explanation: 'Wrist drop is a radial nerve palsy at the spiral groove of the humerus. Claw hand is ulnar (medial arm), ape hand is median (carpal tunnel), loss of abduction is axillary (surgical neck) and foot drop is common peroneal (fibular neck).'
+                },
                 {
                     q: 'A 13-year-old boy has a knee flexion contracture and recurrent hemarthrosis. What is the most likely underlying disorder?',
                     options: ['Hemophilia', 'Aplastic anemia', 'Wilson disease', 'Henoch-Schönlein purpura'],
@@ -822,6 +1130,17 @@ const surgery = {
             title: '12 — Pediatric Surgery',
             title_en: 'Pediatric Hernias · Pyloric Stenosis · Wilms · Undescended Testis',
             summaryHtml: `
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Paediatric hernias — inguinal vs umbilical</div>
+                <svg viewBox="0 0 700 216" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A paediatric inguinal hernia is a groin swelling extending to the scrotum that becomes prominent with crying or coughing and is treated by herniotomy. An umbilical hernia is an umbilical mass covered by skin that reduces when supine and is managed conservatively because 90 percent close by age 2, with surgery only if it has not closed by 4 to 5 years or is larger than 2 centimetres.">
+                <g font-family="system-ui,Arial">
+                <rect x="16" y="18" width="330" height="182" rx="10" fill="#eff6ff" stroke="#3b82f6"/><rect x="16" y="18" width="330" height="32" rx="10" fill="#3b82f6"/><text x="181" y="40" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">Inguinal hernia</text>
+                <rect x="36" y="64" width="74" height="104" rx="14" fill="#fff" stroke="#cbd5e1"/><circle cx="58" cy="144" r="9" fill="#3b82f6"/><ellipse cx="58" cy="166" rx="9" ry="7" fill="#bfdbfe" stroke="#3b82f6"/><text x="73" y="186" text-anchor="middle" font-size="8.5" fill="#64748b">groin → scrotum</text>
+                <text x="124" y="88" font-size="10.5" fill="#334155">• groin swelling extending</text><text x="124" y="104" font-size="10.5" fill="#334155">&#160;&#160;to the scrotum</text><text x="124" y="126" font-size="10.5" fill="#334155">• prominent with crying</text><text x="124" y="142" font-size="10.5" fill="#334155">&#160;&#160;or coughing</text><rect x="124" y="156" width="206" height="30" rx="7" fill="#3b82f6"/><text x="227" y="176" text-anchor="middle" font-size="12.5" font-weight="800" fill="#fff">Herniotomy</text>
+                <rect x="354" y="18" width="330" height="182" rx="10" fill="#f0fdf4" stroke="#22c55e"/><rect x="354" y="18" width="330" height="32" rx="10" fill="#22c55e"/><text x="519" y="40" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">Umbilical hernia</text>
+                <rect x="374" y="64" width="74" height="104" rx="14" fill="#fff" stroke="#cbd5e1"/><circle cx="411" cy="112" r="11" fill="#22c55e"/><text x="411" y="186" text-anchor="middle" font-size="8.5" fill="#64748b">umbilicus</text>
+                <text x="462" y="88" font-size="10.5" fill="#334155">• umbilical mass covered</text><text x="462" y="104" font-size="10.5" fill="#334155">&#160;&#160;by skin</text><text x="462" y="126" font-size="10.5" fill="#334155">• reduces when supine</text><rect x="462" y="140" width="206" height="46" rx="7" fill="#22c55e"/><text x="565" y="159" text-anchor="middle" font-size="11" font-weight="800" fill="#fff">Conservative — 90% close by 2 y</text><text x="565" y="176" text-anchor="middle" font-size="10" font-weight="700" fill="#dcfce7">surgery if open at 4–5 y or &gt;2 cm</text>
+                </g></svg>
+                <figcaption>Inguinal hernias are <b>always repaired</b>; umbilical hernias are <b>watched</b> — most close on their own by age 2.</figcaption></figure>
                 <table>
                     <thead><tr><th>Type</th><th>Features</th><th>Management</th></tr></thead>
                     <tbody>
@@ -859,6 +1178,25 @@ const surgery = {
                     answer: 0,
                     explanation: 'Most umbilical hernias close spontaneously by age 2; surgery is reserved for no closure by 4–5 years or a defect >2 cm.'
                 }
+                ,
+                {
+                    q: 'A healthy 1-year-old has a 1 cm umbilical hernia that reduces when supine. What is the correct management?',
+                    options: ['Conservative observation — most close by age 2', 'Immediate herniotomy', 'Urgent laparotomy', 'Truss application'],
+                    answer: 0,
+                    explanation: 'About 90% of umbilical hernias close spontaneously by age 2. Surgery is reserved for failure to close by 4–5 years or a defect >2 cm. In contrast, an inguinal hernia in a child requires herniotomy.'
+                },
+                {
+                    q: 'A 1-year-old boy has a non-palpable undescended testis. What is the next step?',
+                    options: ['Diagnostic laparoscopy', 'Immediate scrotal orchidopexy', 'Observation until puberty', 'Hormonal therapy only'],
+                    answer: 0,
+                    explanation: 'A palpable undescended testis is treated with orchidopexy; a NON-palpable testis requires diagnostic laparoscopy to locate it.'
+                },
+                {
+                    q: 'A 3-year-old has a large abdominal mass arising from the kidney, and imaging shows pulmonary metastases. Most likely diagnosis and management?',
+                    options: ['Wilms tumour — nephrectomy plus chemotherapy/radiation', 'Neuroblastoma — observation alone', 'Renal cyst — aspiration', 'Hydronephrosis — stenting'],
+                    answer: 0,
+                    explanation: 'Wilms tumour presents as a large mass arising from the kidney, and lung metastases are the commonest site of spread. Treatment is nephrectomy with chemotherapy ± radiotherapy.'
+                }
             ]
         },
         {
@@ -867,6 +1205,17 @@ const surgery = {
             title_en: 'Burns & Inhalation Injury · Skin Tumors · Skin Infections · Wound Closure',
             summaryHtml: `
                 <h3>Burns &amp; Inhalational Injury</h3>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Rule of Nines — adult %TBSA</div>
+                <svg viewBox="0 0 360 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Adult rule of nines: head 9 percent, each arm 9 percent, anterior torso 18 percent, posterior torso 18 percent, each leg 18 percent, perineum 1 percent.">
+                <circle cx="180" cy="42" r="24" fill="#fee2e2" stroke="#ef4444"/><text x="180" y="47" text-anchor="middle" font-size="12" font-weight="700" fill="#b91c1c">9%</text><text x="180" y="16" text-anchor="middle" font-size="10.5" fill="#475569">head</text>
+                <rect x="150" y="72" width="60" height="108" rx="10" fill="#fee2e2" stroke="#ef4444"/><text x="180" y="112" text-anchor="middle" font-size="12" font-weight="700" fill="#b91c1c">18%</text><text x="180" y="130" text-anchor="middle" font-size="9.5" fill="#475569">front</text><text x="302" y="120" text-anchor="middle" font-size="9" fill="#475569">back also 18%</text>
+                <rect x="112" y="74" width="30" height="98" rx="10" fill="#ffedd5" stroke="#f97316"/><text x="127" y="126" text-anchor="middle" font-size="11" font-weight="700" fill="#c2410c">9%</text>
+                <rect x="218" y="74" width="30" height="98" rx="10" fill="#ffedd5" stroke="#f97316"/><text x="233" y="126" text-anchor="middle" font-size="11" font-weight="700" fill="#c2410c">9%</text>
+                <rect x="150" y="186" width="26" height="104" rx="10" fill="#dbeafe" stroke="#3b82f6"/><text x="163" y="242" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">18%</text>
+                <rect x="184" y="186" width="26" height="104" rx="10" fill="#dbeafe" stroke="#3b82f6"/><text x="197" y="242" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">18%</text>
+                <text x="270" y="185" text-anchor="middle" font-size="10" fill="#7c3aed" font-weight="700">perineum 1%</text>
+                </svg>
+                <figcaption>Adult: head <b>9</b>, each arm <b>9</b>, front torso <b>18</b>, back <b>18</b>, each leg <b>18</b>, perineum <b>1</b>. Children have relatively larger heads — use a Lund–Browder chart.</figcaption></figure>
                 <p><b>Intubation indications</b>: facial burn · airway swelling/edema · respiratory failure · soot/carbonaceous material in airway · extensive burns · GCS &lt;8.</p>
                 <div class="sum-callout"><b>Parkland formula</b> = 4 mL × weight (kg) × %TBSA. Half in the first 8 hours, half over the next 16. Example: 70 kg, both lower limbs (~36%) = 4 × 70 × 36 = 10,080 mL → ~5 L in 8 h + ~5 L over 16 h.</div>
 
@@ -902,6 +1251,18 @@ const surgery = {
             `,
             questions: [
                 {
+                    q: 'Which finding in a burns patient is an indication for immediate intubation?',
+                    options: ['A blistering burn to the hand', 'Soot or carbonaceous material in the airway', 'Pain requiring opioid analgesia', 'A 5% TBSA burn to one forearm'],
+                    answer: 1,
+                    explanation: 'Indications for intubation include facial burns, airway swelling or oedema, respiratory failure, soot or carbonaceous material in the airway, extensive burns, and a GCS below 8.'
+                },
+                {
+                    q: 'An elderly patient has a slowly growing pearly papule with overlying telangiectasia on the nose. What is the most likely diagnosis?',
+                    options: ['Basal cell carcinoma', 'Melanoma', 'Liposarcoma', 'Hidradenitis suppurativa'],
+                    answer: 0,
+                    explanation: 'A pearly papule with telangiectasia on the face is the classic description of basal cell carcinoma; the diagnosis is confirmed by biopsy.'
+                },
+                {
                     q: 'An 18-year-old has second-degree burns to both lower limbs and weighs 70 kg. Using the Parkland formula, what fluid regimen is correct?',
                     options: ['LR 200 mL/hr for 24 hours', 'NS 1 L bolus then 120 mL/hr', 'LR 5 L over the first 8 hrs then 5 L over the next 16 hrs', 'LR 2.5 L over the first 8 hrs then 2.5 L over the next 16 hrs'],
                     answer: 2,
@@ -931,6 +1292,16 @@ const surgery = {
                 <p><b>Heparin-induced thrombocytopenia (HIT)</b>: 1) stop heparin; 2) start lepirudin, fondaparinux, or a DOAC.</p>
 
                 <h3>Post-Operative Infections</h3>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Intra-abdominal collection — escalation by size and stability</div>
+                <svg viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A small intra-abdominal collection is treated with antibiotics. A collection of 4 by 4 centimetres or more needs percutaneous drainage. Multiple collections need laparoscopy. An unstable patient needs laparotomy.">
+                <g font-family="system-ui,Arial">
+                <text x="16" y="18" font-size="10.5" font-weight="700" fill="#94a3b8">more invasive ▲</text>
+                <rect x="16" y="112" width="158" height="112" rx="10" fill="#f0fdf4" stroke="#22c55e"/><circle cx="95" cy="136" r="14" fill="#22c55e"/><text x="95" y="141" text-anchor="middle" font-size="14" font-weight="800" fill="#fff">1</text><text x="95" y="171" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f172a">collection (small)</text><line x1="36" y1="188" x2="154" y2="188" stroke="#bbf7d0" stroke-width="1.5"/><text x="95" y="209" text-anchor="middle" font-size="11" font-weight="800" fill="#15803d">ANTIBIOTICS</text>
+                <rect x="186" y="84" width="158" height="112" rx="10" fill="#eff6ff" stroke="#3b82f6"/><circle cx="265" cy="108" r="14" fill="#3b82f6"/><text x="265" y="113" text-anchor="middle" font-size="14" font-weight="800" fill="#fff">2</text><text x="265" y="143" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f172a">collection ≥ 4 × 4</text><line x1="206" y1="160" x2="324" y2="160" stroke="#bfdbfe" stroke-width="1.5"/><text x="265" y="178" text-anchor="middle" font-size="11" font-weight="800" fill="#1d4ed8">PERCUTANEOUS</text><text x="265" y="192" text-anchor="middle" font-size="11" font-weight="800" fill="#1d4ed8">DRAINAGE</text>
+                <rect x="356" y="56" width="158" height="112" rx="10" fill="#fffbeb" stroke="#f59e0b"/><circle cx="435" cy="80" r="14" fill="#f59e0b"/><text x="435" y="85" text-anchor="middle" font-size="14" font-weight="800" fill="#fff">3</text><text x="435" y="109" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f172a">multiple</text><text x="435" y="125" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f172a">collections</text><line x1="376" y1="136" x2="494" y2="136" stroke="#fde68a" stroke-width="1.5"/><text x="435" y="155" text-anchor="middle" font-size="11" font-weight="800" fill="#b45309">LAPAROSCOPY</text>
+                <rect x="526" y="28" width="158" height="112" rx="10" fill="#fef2f2" stroke="#ef4444"/><circle cx="605" cy="52" r="14" fill="#ef4444"/><text x="605" y="57" text-anchor="middle" font-size="14" font-weight="800" fill="#fff">4</text><text x="605" y="81" text-anchor="middle" font-size="10.5" font-weight="800" fill="#b91c1c">UNSTABLE</text><text x="605" y="97" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f172a">patient</text><line x1="546" y1="108" x2="664" y2="108" stroke="#fecaca" stroke-width="1.5"/><text x="605" y="127" text-anchor="middle" font-size="11" font-weight="800" fill="#b91c1c">LAPAROTOMY</text>
+                </g></svg>
+                <figcaption>Size and stability choose the rung. <b>Haemodynamic instability skips straight to laparotomy</b>, whatever the imaging shows.</figcaption></figure>
                 <table>
                     <thead><tr><th>Type</th><th>Management</th></tr></thead>
                     <tbody>
@@ -959,6 +1330,18 @@ const surgery = {
             `,
             questions: [
                 {
+                    q: 'A stable post-operative patient has a single 5 × 5 cm intra-abdominal collection on CT. What is the appropriate management?',
+                    options: ['Antibiotics alone', 'Laparoscopy', 'Percutaneous drainage', 'Laparotomy'],
+                    answer: 2,
+                    explanation: 'A small collection is treated with antibiotics; a collection of 4 × 4 cm or larger needs percutaneous drainage. Multiple collections need laparoscopy, and an unstable patient needs laparotomy.'
+                },
+                {
+                    q: 'A post-operative patient on heparin develops thrombocytopenia consistent with heparin-induced thrombocytopenia. What is the correct management?',
+                    options: ['Continue heparin at a lower dose', 'Stop heparin and start lepirudin, fondaparinux or a DOAC', 'Stop heparin and give a platelet transfusion', 'Switch to a higher dose of unfractionated heparin'],
+                    answer: 1,
+                    explanation: 'In HIT the heparin must be stopped and an alternative anticoagulant started — lepirudin, fondaparinux or a DOAC.'
+                },
+                {
                     q: 'A 46-year-old develops extensive surgical emphysema of the abdomen, chest and neck after ERCP. What is the most likely injury?',
                     options: ['Gastric perforation', 'Tracheal injury', 'Duodenal perforation', 'Esophageal perforation'],
                     answer: 2,
@@ -984,6 +1367,15 @@ const surgery = {
             title_en: 'Types of Shock · Cardiac Tamponade · SvO2 · Sepsis Definitions',
             summaryHtml: `
                 <h3>Types of Shock</h3>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Shock types — CO, SVR &amp; skin</div>
+                <svg viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Hypovolaemic, cardiogenic and obstructive shock: low cardiac output, high SVR, cold skin. Septic distributive shock: high cardiac output, low SVR, warm skin.">
+                <g font-family="system-ui,Arial">
+                <rect x="18" y="24" width="158" height="150" rx="10" fill="#eff6ff" stroke="#bfdbfe"/><text x="97" y="48" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">Hypovolaemic</text><text x="97" y="80" text-anchor="middle" font-size="12" fill="#334155">CO ↓↓ · SVR ↑</text><text x="97" y="104" text-anchor="middle" font-size="12" fill="#334155">CVP ↓</text><text x="97" y="150" text-anchor="middle" font-size="11" font-weight="700" fill="#2563eb">cold · haemorrhage</text>
+                <rect x="184" y="24" width="158" height="150" rx="10" fill="#eff6ff" stroke="#bfdbfe"/><text x="263" y="48" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">Cardiogenic</text><text x="263" y="80" text-anchor="middle" font-size="12" fill="#334155">CO ↓↓ · SVR ↑</text><text x="263" y="104" text-anchor="middle" font-size="12" fill="#334155">CVP ↑</text><text x="263" y="150" text-anchor="middle" font-size="11" font-weight="700" fill="#2563eb">cold · pump failure</text>
+                <rect x="350" y="24" width="158" height="150" rx="10" fill="#fef2f2" stroke="#fecaca"/><text x="429" y="48" text-anchor="middle" font-size="13" font-weight="700" fill="#b91c1c">Distributive (septic)</text><text x="429" y="80" text-anchor="middle" font-size="12" fill="#334155">CO ↑ · SVR ↓↓</text><text x="429" y="104" text-anchor="middle" font-size="12" fill="#334155">CVP ↓</text><text x="429" y="150" text-anchor="middle" font-size="11" font-weight="700" fill="#dc2626">warm · vasodilation</text>
+                <rect x="516" y="24" width="166" height="150" rx="10" fill="#eff6ff" stroke="#bfdbfe"/><text x="599" y="48" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">Obstructive</text><text x="599" y="80" text-anchor="middle" font-size="12" fill="#334155">CO ↓ · SVR ↑</text><text x="599" y="104" text-anchor="middle" font-size="12" fill="#334155">JVP ↑↑</text><text x="599" y="150" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2563eb">PE · tamponade · tension PTX</text>
+                </g></svg>
+                <figcaption>Only <b>distributive/septic</b> shock is <b>warm</b> with <b>high CO / low SVR</b>; the others are cold with low CO and high SVR. Obstructive → look for ↑JVP.</figcaption></figure>
                 <table>
                     <thead><tr><th>Type</th><th>Mechanism</th><th>Key features</th></tr></thead>
                     <tbody>
@@ -1015,6 +1407,18 @@ const surgery = {
                 </section>
             `,
             questions: [
+                {
+                    q: 'A hypotensive patient has warm extremities, a high cardiac output and a reflex tachycardia. Which type of shock is this?',
+                    options: ['Hypovolaemic shock', 'Septic (distributive) shock', 'Cardiogenic shock', 'Obstructive shock'],
+                    answer: 1,
+                    explanation: 'Septic shock is distributive: vasodilation lowers systemic resistance, giving warm extremities, hypotension with a reflex tachycardia and a high output. Hypovolaemic and cardiogenic shock both produce a low output with cold, clammy skin; neurogenic shock also gives warm extremities but WITHOUT a reflex tachycardia.'
+                },
+                {
+                    q: 'A patient has sepsis and remains hypotensive despite adequate fluid resuscitation. Which term describes this state?',
+                    options: ['SIRS', 'Sepsis', 'Severe sepsis', 'Septic shock'],
+                    answer: 3,
+                    explanation: 'SIRS is the systemic inflammatory response; sepsis is SIRS plus a suspected source of infection; severe sepsis adds organ dysfunction; septic shock is sepsis with hypotension that persists despite fluid resuscitation.'
+                },
                 {
                     q: 'A 45-year-old after CBD exploration has chills and rigors; BP 110/70, HR 80, RR 18, Temp 38 °C, WBC 9. What best describes this state?',
                     options: ['Sepsis', 'Bacteremia', 'Severe sepsis', 'SIRS'],
@@ -1049,6 +1453,14 @@ const surgery = {
                 </ul>
 
                 <h3>Neck Trauma — Zones</h3>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Penetrating neck trauma — zones</div>
+                <svg viewBox="0 0 480 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Zone I from clavicle to cricoid, zone II from cricoid to angle of mandible, zone III from angle of mandible to skull base.">
+                <rect x="70" y="30" width="150" height="56" fill="#ede9fe" stroke="#c4b5fd"/><text x="145" y="63" text-anchor="middle" font-size="15" font-weight="800" fill="#6d28d9">III</text><text x="240" y="55" font-size="12" font-weight="700" fill="#6d28d9">Zone III</text><text x="240" y="72" font-size="10.5" fill="#475569">mandible angle → skull base</text>
+                <rect x="70" y="86" width="150" height="82" fill="#dcfce7" stroke="#86efac"/><text x="145" y="133" text-anchor="middle" font-size="15" font-weight="800" fill="#15803d">II</text><text x="240" y="123" font-size="12" font-weight="700" fill="#15803d">Zone II</text><text x="240" y="140" font-size="10.5" fill="#475569">cricoid → mandible (most common)</text>
+                <rect x="70" y="168" width="150" height="56" fill="#fee2e2" stroke="#fca5a5"/><text x="145" y="201" text-anchor="middle" font-size="15" font-weight="800" fill="#b91c1c">I</text><text x="240" y="193" font-size="12" font-weight="700" fill="#b91c1c">Zone I</text><text x="240" y="210" font-size="10.5" fill="#475569">clavicle → cricoid</text>
+                <text x="145" y="22" text-anchor="middle" font-size="10.5" fill="#64748b">↑ skull base</text><text x="145" y="240" text-anchor="middle" font-size="10.5" fill="#64748b">↓ clavicle</text>
+                </svg>
+                <figcaption><b>Zone II</b> (cricoid → mandible angle) is most common and surgically accessible. Stable zone I/III → CT angiography; unstable or hard signs → surgical exploration.</figcaption></figure>
                 <table>
                     <thead><tr><th>Zone</th><th>Boundaries</th><th>Management</th></tr></thead>
                     <tbody>
@@ -1087,6 +1499,18 @@ const surgery = {
             `,
             questions: [
                 {
+                    q: 'A haemodynamically unstable patient after blunt abdominal trauma has a negative FAST scan. What is the next step?',
+                    options: ['CT of the abdomen', 'Immediate laparotomy', 'Diagnostic peritoneal lavage', 'Routine examination and observation'],
+                    answer: 2,
+                    explanation: 'Unstable with a positive FAST means laparotomy; unstable with a negative FAST means diagnostic peritoneal lavage. A stable patient goes to CT.'
+                },
+                {
+                    q: 'A chest tube inserted for a traumatic haemothorax drains 1,800 mL immediately. What does this indicate?',
+                    options: ['Emergency thoracotomy is indicated', 'The tube should be clamped and the patient observed', 'A second chest tube should be inserted', 'The patient can be managed with analgesia alone'],
+                    answer: 0,
+                    explanation: 'Emergency thoracotomy is indicated for an initial chest tube output above 1,500 mL, an ongoing output of 200–300 mL/hr for 4 hours, or decompensation after initial stabilisation.'
+                },
+                {
                     q: 'A 36-year-old has a knife stab to the left neck below the cricoid (Zone I) with diffuse subcutaneous emphysema but is hemodynamically stable. What is the next step?',
                     options: ['Neck exploration', 'Close observation', 'CT of the neck and chest', 'Interventional-radiology embolization'],
                     answer: 2,
@@ -1112,6 +1536,17 @@ const surgery = {
             title_en: 'UGIB & LGIB Causes & Management · Hemobilia · Fundal Varices',
             summaryHtml: `
                 <h3>Upper vs Lower GI Bleeding</h3>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> The ligament of Treitz divides upper from lower</div>
+                <svg viewBox="0 0 700 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Upper GI bleeding is proximal to the ligament of Treitz causing haematemesis and melena with a raised BUN to creatinine ratio, investigated by EGD. Lower GI bleeding is distal, causing haematochezia with a normal BUN to creatinine ratio, investigated by colonoscopy.">
+                <g font-family="system-ui,Arial">
+                <line x1="350" y1="20" x2="350" y2="236" stroke="#8b5cf6" stroke-width="4" stroke-dasharray="8 5"/>
+                <rect x="238" y="112" width="224" height="30" rx="8" fill="#ede9fe" stroke="#8b5cf6"/><text x="350" y="132" text-anchor="middle" font-size="12" font-weight="800" fill="#6d28d9">Ligament of Treitz</text>
+                <rect x="14" y="24" width="316" height="76" rx="10" fill="#fee2e2" stroke="#ef4444"/><text x="172" y="48" text-anchor="middle" font-size="13.5" font-weight="800" fill="#b91c1c">UPPER GI bleed (proximal)</text><text x="172" y="70" text-anchor="middle" font-size="11.5" fill="#334155">haematemesis · coffee-ground · melena</text><text x="172" y="90" text-anchor="middle" font-size="11.5" font-weight="700" fill="#b91c1c">↑ BUN:creatinine &gt;20–30:1</text>
+                <rect x="14" y="154" width="316" height="82" rx="10" fill="#fef2f2" stroke="#fca5a5"/><text x="172" y="176" text-anchor="middle" font-size="11.5" font-weight="700" fill="#b91c1c">Commonest: peptic ulcer disease</text><text x="172" y="196" text-anchor="middle" font-size="11" fill="#475569">varices · Mallory-Weiss · Dieulafoy</text><text x="172" y="222" text-anchor="middle" font-size="11.5" font-weight="700" fill="#334155">EGD within 24 h</text>
+                <rect x="370" y="24" width="316" height="76" rx="10" fill="#dbeafe" stroke="#3b82f6"/><text x="528" y="48" text-anchor="middle" font-size="13.5" font-weight="800" fill="#1d4ed8">LOWER GI bleed (distal)</text><text x="528" y="70" text-anchor="middle" font-size="11.5" fill="#334155">haematochezia (bright red PR)</text><text x="528" y="90" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">BUN:creatinine usually normal</text>
+                <rect x="370" y="154" width="316" height="82" rx="10" fill="#eff6ff" stroke="#93c5fd"/><text x="528" y="176" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">Commonest: diverticulosis</text><text x="528" y="196" text-anchor="middle" font-size="11" fill="#475569">angiodysplasia in the elderly</text><text x="528" y="222" text-anchor="middle" font-size="11.5" font-weight="700" fill="#334155">colonoscopy after resuscitation</text>
+                </g></svg>
+                <figcaption>A raised <b>BUN:creatinine ratio</b> betrays an upper source — digested blood is absorbed protein. Resuscitate first; scope second.</figcaption></figure>
                 <table>
                     <thead><tr><th>Feature</th><th>Upper GI bleed (proximal to ligament of Treitz)</th><th>Lower GI bleed (distal to ligament of Treitz)</th></tr></thead>
                     <tbody>
@@ -1157,6 +1592,18 @@ const surgery = {
             `,
             questions: [
                 {
+                    q: 'A patient presents with melena and a BUN-to-creatinine ratio above 30:1. Where is the bleeding, and what is the most common cause?',
+                    options: ['Distal to the ligament of Treitz — diverticulosis', 'Proximal to the ligament of Treitz — peptic ulcer disease', 'Distal to the ligament of Treitz — angiodysplasia', 'Proximal to the ligament of Treitz — Mallory-Weiss tear'],
+                    answer: 1,
+                    explanation: 'A raised BUN:creatinine ratio with melena indicates an upper GI bleed, which by definition is proximal to the ligament of Treitz; peptic ulcer disease is the most common cause. Lower GI bleeding presents with haematochezia, a usually normal BUN:creatinine ratio, and is most often diverticular.'
+                },
+                {
+                    q: 'A patient with portal hypertension has bleeding oesophageal varices confirmed at endoscopy. Which management is appropriate?',
+                    options: ['PPI infusion alone', 'Sclerotherapy plus warfarin', 'Band ligation with octreotide and prophylactic antibiotics', 'Immediate splenectomy'],
+                    answer: 2,
+                    explanation: 'Bleeding oesophageal varices are treated with band ligation (fundal varices with sclerotherapy), together with octreotide and prophylactic antibiotics. A PPI infusion plus endoscopic therapy is the treatment for a bleeding peptic ulcer.'
+                },
+                {
                     q: 'A 73-year-old develops upper GI bleeding 24 hours after percutaneous transhepatic cholangiography for obstructive jaundice. What is the most appropriate next step?',
                     options: ['CT scan', 'Endoscopy', 'Ultrasound', 'Angiography'],
                     answer: 1,
@@ -1182,6 +1629,15 @@ const surgery = {
             title_en: 'Testicular Torsion · Renal Stones · Urethral Injury · BPH & Prostate Cancer',
             summaryHtml: `
                 <h3>Testicular Conditions</h3>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> The acute scrotum — three causes</div>
+                <svg viewBox="0 0 700 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Testicular torsion shows a high-riding horizontal testis with absent cremasteric reflex and absent Doppler flow, requiring immediate surgery. Appendage torsion shows a blue-dot sign treated conservatively. Epididymo-orchitis shows increased Doppler vascularity treated with antibiotics.">
+                <g font-family="system-ui,Arial">
+                <rect x="14" y="20" width="220" height="150" rx="11" fill="#fee2e2" stroke="#ef4444"/><text x="124" y="46" text-anchor="middle" font-size="13.5" font-weight="800" fill="#b91c1c">Torsion</text><text x="124" y="72" text-anchor="middle" font-size="11.5" fill="#334155">sudden SEVERE pain</text><text x="124" y="94" text-anchor="middle" font-size="11.5" fill="#334155">high-riding, horizontal</text><text x="124" y="116" text-anchor="middle" font-size="11.5" font-weight="700" fill="#b91c1c">absent cremasteric reflex</text><text x="124" y="138" text-anchor="middle" font-size="11.5" font-weight="700" fill="#b91c1c">Doppler: NO flow</text><text x="124" y="160" text-anchor="middle" font-size="11" font-weight="700" fill="#b91c1c">→ THEATRE, no imaging delay</text>
+                <rect x="244" y="20" width="212" height="150" rx="11" fill="#dbeafe" stroke="#3b82f6"/><text x="350" y="46" text-anchor="middle" font-size="13.5" font-weight="800" fill="#1d4ed8">Appendage torsion</text><text x="350" y="76" text-anchor="middle" font-size="11.5" fill="#334155">pain &lt;1 day, UPPER pole</text><circle cx="350" cy="104" r="11" fill="#1d4ed8"/><text x="350" y="130" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">"BLUE DOT" sign</text><text x="350" y="158" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">→ conservative (NSAID)</text>
+                <rect x="466" y="20" width="220" height="150" rx="11" fill="#dcfce7" stroke="#22c55e"/><text x="576" y="46" text-anchor="middle" font-size="13.5" font-weight="800" fill="#15803d">Epididymo-orchitis</text><text x="576" y="76" text-anchor="middle" font-size="11.5" fill="#334155">pain &lt;1 day, oedematous</text><text x="576" y="100" text-anchor="middle" font-size="11.5" fill="#334155">cremasteric reflex present</text><text x="576" y="126" text-anchor="middle" font-size="11.5" font-weight="700" fill="#15803d">Doppler: ↑ vascularity</text><text x="576" y="158" text-anchor="middle" font-size="11" font-weight="700" fill="#15803d">→ antibiotics + NSAID</text>
+                <rect x="14" y="182" width="672" height="30" rx="8" fill="#fef3c7" stroke="#f59e0b"/><text x="350" y="202" text-anchor="middle" font-size="11.5" font-weight="700" fill="#b45309">Doppler flow is the discriminator — but never delay surgery for imaging when torsion is suspected</text>
+                </g></svg>
+                <figcaption>Absent flow and an absent cremasteric reflex mean <b>torsion</b> — explore immediately (salvage &gt;90% within 6 hours). Increased flow points to infection.</figcaption></figure>
                 <table>
                     <thead><tr><th>Condition</th><th>Features</th><th>Management</th></tr></thead>
                     <tbody>
@@ -1211,6 +1667,18 @@ const surgery = {
                 </section>
             `,
             questions: [
+                {
+                    q: 'A patient has severe unilateral colicky flank pain with haematuria and cannot sit still. What is the first-line investigation?',
+                    options: ['Ultrasound of the kidneys', 'CT of the abdomen and pelvis WITHOUT contrast', 'CT urogram with contrast', 'Plain abdominal X-ray'],
+                    answer: 1,
+                    explanation: 'Renal colic is investigated first with a non-contrast CT of the abdomen and pelvis. Uric acid stones are radiolucent on plain X-ray but cast an acoustic shadow on ultrasound, unlike tumours, clots or a sloughed papilla.'
+                },
+                {
+                    q: 'A man with lower urinary tract symptoms from benign prostatic hyperplasia has failed conservative measures. What is the initial medical treatment and the definitive option?',
+                    options: ['Alpha-blocker initially; TURP definitively', 'Antibiotics initially; TURP definitively', 'Alpha-blocker initially; radical prostatectomy definitively', 'Foley catheter initially; radiotherapy definitively'],
+                    answer: 0,
+                    explanation: 'An alpha-blocker is the initial medical treatment for BPH and TURP is the definitive procedure. Acute retention is managed with a Foley catheter plus a urine culture; diagnosis is by ultrasound.'
+                },
                 {
                     q: 'A 70-year-old man has urinary incontinence with a distended bladder after voiding and hesitancy. What type of incontinence is this?',
                     options: ['Urge', 'Stress', 'Reflex', 'Overflow'],

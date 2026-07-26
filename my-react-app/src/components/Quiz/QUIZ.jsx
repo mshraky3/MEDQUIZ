@@ -43,7 +43,9 @@ const QUIZ = () => {
   const [completedTopics, setCompletedTopics] = useState([]);
   const quizStartTimeRef = useRef(Date.now());
   const types = location.state?.types || 'mix';
-  const source = location.state?.source || 'mix';
+  // Default to the unified bank sentinel (a valid session source) so a stateless
+  // direct navigation to /quiz/:n still fetches and submits with a legal source.
+  const source = location.state?.source || 'MidgardGameBoy';
   const timerMinutes = location.state?.timer || null;
   const isFinalQuiz = location.state?.isFinalQuiz || false;
   const { user, setUser, sessionToken } = useContext(UserContext);
@@ -540,10 +542,10 @@ const QUIZ = () => {
       {/* Unanswered Questions Popup */}
       {showUnansweredPopup && (
         <div className="unanswered-popup-overlay">
-          <div className="unanswered-popup">
-            <h3><Icon name="alert-triangle" size={18} /> {unansweredCount} Unanswered Questions</h3>
+          <div className="unanswered-popup" dir="rtl">
+            <h3><Icon name="alert-triangle" size={18} /> لديك {unansweredCount} أسئلة بدون إجابة</h3>
             <p className="redirect-message">
-              Going to first unanswered question in <span className="countdown">{countdown}</span>...
+              سننقلك لأول سؤال غير مُجاب خلال <span className="countdown">{countdown}</span>...
             </p>
           </div>
         </div>

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { track } from '@vercel/analytics';
 import Icon from '../common/Icon.jsx';
 import HeroArt from './HeroArt.jsx';
+import InstallPrompt, { InstallGuideSection } from '../common/InstallPrompt.jsx';
 import { UserContext } from '../../UserContext';
 import './Landing.css';
 
@@ -156,6 +157,18 @@ const compareRows = [
 ];
 
 const newsItems = [
+  {
+    icon: 'sparkles',
+    title: 'صور طبية حقيقية داخل الملخصات',
+    desc: 'الملخصات صارت مصوّرة بأشعة وصور مجهرية ورسوم تشريحية حقيقية — علامة الـSteeple في الخانوق، وعلامة الإبهام في التهاب لسان المزمار، والنزف فوق وتحت الجافية على الأشعة المقطعية، وبلورات النقرس تحت الضوء المستقطب. مع مخططات جديدة في كل تخصص وأسئلة تفاعلية أكثر بعد كل ملخص.',
+    date: '25 يوليو 2026'
+  },
+  {
+    icon: 'phone',
+    title: 'اختصار SQB على شاشة جوالك',
+    desc: 'ثبّت SQB على الشاشة الرئيسية لجوالك وافتحه بضغطة واحدة كأي تطبيق — بدون متجر تطبيقات وبدون تحميل. الخطوات كاملة للآيفون والأندرويد في القسم التالي.',
+    date: '25 يوليو 2026'
+  },
   {
     icon: 'target',
     title: 'تحديث الأسئلة لنمط 2026 Midgard & Gameboy',
@@ -456,6 +469,8 @@ const Landing = () => {
             </div>
           </section>
 
+          <InstallGuideSection />
+
           <section className="resource-section">
             <div className="resource-card">
               <div className="section-head">
@@ -577,6 +592,9 @@ const Landing = () => {
             </>
           )}
         </div>
+
+        {/* Floating, dismissible install banner (mobile only) */}
+        <InstallPrompt />
       </div>
     </>
   );

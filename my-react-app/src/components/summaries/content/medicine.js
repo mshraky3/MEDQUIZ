@@ -33,7 +33,7 @@ const medicine = {
 <path d="M150,150 L221,221 A100,100 0 0,1 79,221 Z" fill="#3b82f6"/><path d="M150,150 L79,221 A100,100 0 0,1 79,79 Z" fill="#22c55e"/>
 <circle cx="150" cy="150" r="27" fill="#ffffff"/><text x="150" y="155" text-anchor="middle" font-size="14" font-weight="700" fill="#0f1e3d">LV</text>
 <text x="150" y="106" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">Anterior</text><text x="196" y="155" text-anchor="middle" font-size="11" font-weight="700" fill="#ffffff">Septal</text>
-<text x="150" y="205" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">Inferior</text><text x="104" y="155" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">Lateral</text>
+<text x="150" y="205" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">Inferior</text><text x="100" y="155" text-anchor="middle" font-size="11" font-weight="700" fill="#ffffff">Lateral</text>
 <g font-size="14.5" fill="#1e293b" font-family="system-ui,Arial">
 <rect x="320" y="58" width="17" height="17" rx="3" fill="#ef4444"/><text x="348" y="71"><tspan font-weight="700">LAD</tspan> — anterior + septal → V1–V4</text>
 <rect x="320" y="110" width="17" height="17" rx="3" fill="#3b82f6"/><text x="348" y="123"><tspan font-weight="700">RCA</tspan> — inferior → II, III, aVF</text>
@@ -85,7 +85,7 @@ const medicine = {
 <h4 class="deck-topic">Valvular heart diseases</h4><div class="deck-cards"><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Trans-thoracic echo (TTE) First step to evaluate new murmur</li><li>Trans-esophageal echo (TEE) The best modality to evaluate new murmur</li></ul></div><div class="deck-card mgmt"><span class="deck-card-h">Management</span><ul><li>Asymptomatic Follow-up, medical treatment</li><li>Symptomatic Valve replacement (except MVP, MS, HOCM valvuloplasty)</li><li>Indications of Aortic valve replacement:<ul class="sub"><li>Symptomatic aortic stenosis (angina, SOB, syncope)</li><li>Asymptomatic patient with Left ventricular ejection fraction &lt;50%</li><li>Patient with severe aortic stenosis going for other cardiac surgery</li><li>Patient with very severe aortic stenosis</li></ul></li></ul></div></div></section>
 <section class="topic" id="card-peri"><h3>Pericardial Disease, Tamponade &amp; Aortic Dissection</h3>
 <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> JVP waveform &amp; what abnormal waves mean</div>
-<svg viewBox="0 0 680 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Jugular venous pressure waveform with clinical correlates">
+<svg viewBox="0 0 728 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Jugular venous pressure waveform with clinical correlates">
 <line x1="30" y1="205" x2="430" y2="205" stroke="#cbd5e1" stroke-width="1.5"/>
 <polyline points="40,150 95,66 135,120 165,96 250,168 330,74 400,160 440,120" fill="none" stroke="#0b7285" stroke-width="3"/>
 <g font-size="14" font-weight="700" fill="#0f1e3d"><text x="95" y="54" text-anchor="middle">a</text><text x="171" y="88" text-anchor="middle">c</text><text x="330" y="62" text-anchor="middle">v</text></g>
@@ -166,6 +166,14 @@ const medicine = {
             title_en: 'Asthma · COPD · Pneumonia · PE · Pleural Disease',
             summaryHtml: `
                 <h3>Asthma</h3>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Acute asthma — severity ladder</div>
+                <svg viewBox="0 0 700 215" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Moderate asthma has PEF 50 to 75 percent with normal speech; severe has PEF 33 to 50 percent, respiratory rate 25 or more, heart rate 110 or more and inability to complete sentences; life-threatening has PEF under 33 percent with silent chest, cyanosis, exhaustion, a normal or rising carbon dioxide, bradycardia and hypotension.">
+                <g font-family="system-ui,Arial">
+                <rect x="16" y="26" width="216" height="164" rx="10" fill="#dcfce7" stroke="#22c55e"/><text x="124" y="52" text-anchor="middle" font-size="13.5" font-weight="800" fill="#15803d">Moderate</text><text x="124" y="82" text-anchor="middle" font-size="12.5" font-weight="700" fill="#334155">PEF 50–75%</text><text x="124" y="110" text-anchor="middle" font-size="11.5" fill="#475569">talking normally</text><text x="124" y="166" text-anchor="middle" font-size="11" font-weight="700" fill="#15803d">SABA + steroids</text>
+                <rect x="242" y="26" width="216" height="164" rx="10" fill="#fef3c7" stroke="#f59e0b"/><text x="350" y="52" text-anchor="middle" font-size="13.5" font-weight="800" fill="#b45309">Severe</text><text x="350" y="82" text-anchor="middle" font-size="12.5" font-weight="700" fill="#334155">PEF 33–50%</text><text x="350" y="108" text-anchor="middle" font-size="11.5" fill="#475569">RR ≥25 · HR ≥110</text><text x="350" y="130" text-anchor="middle" font-size="11.5" fill="#475569">cannot complete sentences</text><text x="350" y="166" text-anchor="middle" font-size="11" font-weight="700" fill="#b45309">add ipratropium</text>
+                <rect x="468" y="26" width="216" height="164" rx="10" fill="#fee2e2" stroke="#ef4444"/><text x="576" y="52" text-anchor="middle" font-size="13.5" font-weight="800" fill="#b91c1c">Life-threatening</text><text x="576" y="82" text-anchor="middle" font-size="12.5" font-weight="700" fill="#334155">PEF &lt;33%</text><text x="576" y="106" text-anchor="middle" font-size="11.5" fill="#475569">SILENT chest · cyanosis</text><text x="576" y="128" text-anchor="middle" font-size="11.5" fill="#b91c1c" font-weight="700">normal/rising CO₂</text><text x="576" y="150" text-anchor="middle" font-size="11.5" fill="#475569">bradycardia · hypotension</text><text x="576" y="176" text-anchor="middle" font-size="11" font-weight="700" fill="#b91c1c">ICU · senior help</text>
+                </g></svg>
+                <figcaption>A <b>silent chest</b> and a <b>normal or rising CO₂</b> are ominous — the patient is tiring, not improving. Escalate immediately rather than reassuring on a "better-sounding" chest.</figcaption></figure>
                 <ul>
                     <li>Reversible airflow obstruction; diagnose with spirometry <b>FEV₁/FVC &lt;0.7</b> + bronchodilator reversibility (↑FEV₁ ≥12% &amp; 200 mL)</li>
                     <li>Chronic step-up: <b>ICS-formoterol</b> (MART) — SABA-only no longer preferred → ICS+LABA → add LAMA/LTRA → biologic (anti-IgE omalizumab / anti-IL5) for severe eosinophilic</li>
@@ -276,6 +284,16 @@ const medicine = {
                 </ul>
 
                 <h3>Liver Disease</h3>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Hepatitis B serology — reading the panel</div>
+                <svg viewBox="0 0 700 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="HBsAg positive means active infection. Anti-HBs positive alone means immunity. Anti-HBc IgM positive indicates acute or recent infection. Anti-HBs with anti-HBc indicates cleared past infection; anti-HBs alone indicates vaccination.">
+                <g font-family="system-ui,Arial">
+                <rect x="16" y="22" width="212" height="96" rx="10" fill="#fee2e2" stroke="#ef4444"/><text x="122" y="48" text-anchor="middle" font-size="13.5" font-weight="800" fill="#b91c1c">HBsAg +</text><text x="122" y="74" text-anchor="middle" font-size="12" fill="#334155">ACTIVE infection</text><text x="122" y="98" text-anchor="middle" font-size="11" fill="#475569">acute or chronic</text>
+                <rect x="244" y="22" width="212" height="96" rx="10" fill="#fef3c7" stroke="#f59e0b"/><text x="350" y="48" text-anchor="middle" font-size="13.5" font-weight="800" fill="#b45309">Anti-HBc IgM +</text><text x="350" y="74" text-anchor="middle" font-size="12" fill="#334155">ACUTE / recent</text><text x="350" y="98" text-anchor="middle" font-size="11" fill="#475569">also the window period</text>
+                <rect x="472" y="22" width="212" height="96" rx="10" fill="#dcfce7" stroke="#22c55e"/><text x="578" y="48" text-anchor="middle" font-size="13.5" font-weight="800" fill="#15803d">Anti-HBs +</text><text x="578" y="74" text-anchor="middle" font-size="12" fill="#334155">IMMUNE</text><text x="578" y="98" text-anchor="middle" font-size="11" fill="#475569">vaccine or cleared</text>
+                <rect x="16" y="136" width="668" height="46" rx="9" fill="#dbeafe" stroke="#3b82f6"/><text x="350" y="164" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">Anti-HBs + anti-HBc together = CLEARED past infection · anti-HBs alone = VACCINATED</text>
+                <rect x="16" y="194" width="668" height="42" rx="9" fill="#f1f5f9" stroke="#cbd5e1"/><text x="350" y="220" text-anchor="middle" font-size="12" fill="#334155">HBeAg = high replication / infectivity · acute liver failure prognosis is judged by PT/INR, not transaminases</text>
+                </g></svg>
+                <figcaption>Start with <b>HBsAg</b> (is there virus?), then <b>anti-HBc</b> (has this person ever been infected?). Anti-HBs alone means <b>vaccinated</b>; anti-HBs plus anti-HBc means <b>past cleared infection</b>.</figcaption></figure>
                 <ul>
                     <li><b>Acute liver failure</b>: best <b>prognostic</b> marker is <b>PT/INR</b> (synthetic function), not the transaminase level; paracetamol → <b>N-acetylcysteine</b> (Rumack-Matthew nomogram at 4 h)</li>
                     <li><b>Decompensated cirrhosis</b> complications: <b>SBP</b> (ascitic neutrophils ≥250 → cefotaxime + albumin), <b>hepatic encephalopathy</b> (lactulose + rifaximin, treat precipitant), <b>hepatorenal syndrome</b> (terlipressin + albumin), variceal bleeding</li>
@@ -383,6 +401,15 @@ const medicine = {
             title_en: 'Diabetes & DKA · Thyroid · Adrenal · Pituitary · Bone',
             summaryHtml: `
                 <h3>Diabetes Mellitus</h3>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> DKA vs HHS — telling them apart</div>
+                <svg viewBox="0 0 680 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="DKA occurs in type 1 diabetes with glucose over 250, ketones present and pH under 7.3. HHS occurs in elderly type 2 diabetes with glucose over 600, minimal ketones, pH over 7.3 and osmolality over 320.">
+                <g font-family="system-ui,Arial">
+                <rect x="18" y="24" width="310" height="182" rx="12" fill="#fee2e2" stroke="#ef4444"/><text x="173" y="52" text-anchor="middle" font-size="15" font-weight="800" fill="#b91c1c">DKA</text>
+                <text x="40" y="82" font-size="12.5" fill="#334155">Type 1 diabetes (usually)</text><text x="40" y="108" font-size="12.5" fill="#334155">Glucose &gt;250 mg/dL</text><text x="40" y="134" font-size="12.5" font-weight="700" fill="#b91c1c">Ketones PRESENT · pH &lt;7.3</text><text x="40" y="160" font-size="12.5" fill="#334155">HCO₃ &lt;18 · Kussmaul breathing</text><text x="40" y="188" font-size="11.5" fill="#475569">hours · younger patient</text>
+                <rect x="344" y="24" width="318" height="182" rx="12" fill="#ede9fe" stroke="#8b5cf6"/><text x="503" y="52" text-anchor="middle" font-size="15" font-weight="800" fill="#6d28d9">HHS</text>
+                <text x="366" y="82" font-size="12.5" fill="#334155">Type 2 diabetes (elderly)</text><text x="366" y="108" font-size="12.5" fill="#334155">Glucose &gt;600 mg/dL</text><text x="366" y="134" font-size="12.5" font-weight="700" fill="#6d28d9">Ketones minimal · pH &gt;7.3</text><text x="366" y="160" font-size="12.5" fill="#334155">Osmolality &gt;320 (markedly ↑)</text><text x="366" y="188" font-size="11.5" fill="#475569">days · profound dehydration</text>
+                </g></svg>
+                <figcaption>Both need <b>IV fluids + insulin + potassium replacement</b> and treatment of the precipitant. The discriminator is <b>ketoacidosis</b> (DKA) versus <b>extreme hyperosmolality without acidosis</b> (HHS).</figcaption></figure>
                 <ul>
                     <li><b>Diagnosis</b>: fasting ≥126 mg/dL (7.0 mmol/L), random ≥200 + symptoms, HbA1c ≥6.5%, or OGTT 2-h ≥200; young + autoantibodies + low C-peptide → T1DM</li>
                     <li><b>T2DM management</b>: lifestyle + <b>metformin</b> first-line; add <b>SGLT2 inhibitor</b> (CV/renal disease, HF) or <b>GLP-1 agonist</b> (obesity, ASCVD); target HbA1c ~7%</li>
@@ -488,6 +515,15 @@ const medicine = {
             title_en: 'AKI · CKD · Hyponatraemia · Hyperkalaemia · Acid–Base',
             summaryHtml: `
                 <h3>Acute Kidney Injury</h3>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> AKI — localising the lesion</div>
+                <svg viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pre-renal AKI shows a raised urea to creatinine ratio, FeNa under 1 percent and bland urine. Intrinsic ATN shows muddy-brown casts and FeNa over 2 percent. Post-renal AKI shows hydronephrosis on ultrasound.">
+                <g font-family="system-ui,Arial">
+                <rect x="14" y="24" width="216" height="150" rx="10" fill="#dbeafe" stroke="#3b82f6"/><text x="122" y="50" text-anchor="middle" font-size="13.5" font-weight="800" fill="#1d4ed8">PRE-renal</text><text x="122" y="78" text-anchor="middle" font-size="12" font-weight="700" fill="#334155">FeNa &lt;1%</text><text x="122" y="102" text-anchor="middle" font-size="11.5" fill="#475569">↑ urea:creatinine</text><text x="122" y="124" text-anchor="middle" font-size="11.5" fill="#475569">bland urine</text><text x="122" y="152" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">restore perfusion</text>
+                <rect x="242" y="24" width="216" height="150" rx="10" fill="#fef3c7" stroke="#f59e0b"/><text x="350" y="50" text-anchor="middle" font-size="13.5" font-weight="800" fill="#b45309">INTRINSIC (ATN)</text><text x="350" y="78" text-anchor="middle" font-size="12" font-weight="700" fill="#334155">FeNa &gt;2%</text><text x="350" y="102" text-anchor="middle" font-size="11.5" fill="#b45309">muddy-brown casts</text><text x="350" y="124" text-anchor="middle" font-size="11.5" fill="#475569">ischaemia · nephrotoxins</text><text x="350" y="152" text-anchor="middle" font-size="11" font-weight="700" fill="#b45309">stop the insult</text>
+                <rect x="470" y="24" width="216" height="150" rx="10" fill="#dcfce7" stroke="#22c55e"/><text x="578" y="50" text-anchor="middle" font-size="13.5" font-weight="800" fill="#15803d">POST-renal</text><text x="578" y="78" text-anchor="middle" font-size="12" font-weight="700" fill="#334155">hydronephrosis on US</text><text x="578" y="102" text-anchor="middle" font-size="11.5" fill="#475569">stones · BPH · tumour</text><text x="578" y="124" text-anchor="middle" font-size="11.5" fill="#475569">obstruction</text><text x="578" y="152" text-anchor="middle" font-size="11" font-weight="700" fill="#15803d">relieve obstruction</text>
+                <rect x="14" y="192" width="672" height="34" rx="9" fill="#f1f5f9" stroke="#cbd5e1"/><text x="350" y="214" text-anchor="middle" font-size="12" font-weight="700" fill="#334155">Emergent dialysis — AEIOU: Acidosis · Electrolytes (K⁺) · Intoxication · Overload · Uraemia</text>
+                </g></svg>
+                <figcaption><b>FeNa</b> and the <b>urine sediment</b> separate pre-renal from ATN; an ultrasound rules out obstruction. Contrast nephropathy is best prevented with peri-procedure isotonic IV hydration.</figcaption></figure>
                 <table>
                     <thead><tr><th>Category</th><th>Clue</th><th>Examples / action</th></tr></thead>
                     <tbody>
@@ -588,6 +624,17 @@ const medicine = {
             title_en: 'Anaemias · TTP/HUS/DIC · Leukaemias · Oncologic Emergencies',
             summaryHtml: `
                 <h3>Anaemias</h3>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Anaemia — classify by MCV first</div>
+                <svg viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Anaemia is classified by MCV: microcytic under 80 from iron deficiency, thalassaemia, anaemia of chronic disease or sideroblastic; normocytic 80 to 100 from bleeding, haemolysis, chronic disease, CKD or marrow failure; macrocytic over 100 from B12 or folate deficiency, alcohol, hypothyroidism or myelodysplasia.">
+                <g font-family="system-ui,Arial">
+                <rect x="270" y="14" width="160" height="34" rx="9" fill="#e0e7ff" stroke="#6366f1"/><text x="350" y="37" text-anchor="middle" font-size="13" font-weight="800" fill="#4338ca">Anaemia → check MCV</text>
+                <line x1="350" y1="48" x2="120" y2="72" stroke="#94a3b8" stroke-width="2"/><line x1="350" y1="48" x2="350" y2="72" stroke="#94a3b8" stroke-width="2"/><line x1="350" y1="48" x2="580" y2="72" stroke="#94a3b8" stroke-width="2"/>
+                <rect x="14" y="72" width="212" height="130" rx="10" fill="#fee2e2" stroke="#ef4444"/><text x="120" y="96" text-anchor="middle" font-size="13" font-weight="800" fill="#b91c1c">Microcytic &lt;80</text><text x="120" y="122" text-anchor="middle" font-size="11.5" fill="#334155">iron deficiency · thalassaemia</text><text x="120" y="142" text-anchor="middle" font-size="11.5" fill="#334155">chronic disease · sideroblastic</text><text x="120" y="170" text-anchor="middle" font-size="11" font-weight="700" fill="#b91c1c">IDA: ↓ferritin ↑TIBC ↑RDW</text><text x="120" y="190" text-anchor="middle" font-size="10.5" fill="#475569">β-thal trait: ↑HbA2, normal ferritin</text>
+                <rect x="244" y="72" width="212" height="130" rx="10" fill="#fef3c7" stroke="#f59e0b"/><text x="350" y="96" text-anchor="middle" font-size="13" font-weight="800" fill="#b45309">Normocytic 80–100</text><text x="350" y="122" text-anchor="middle" font-size="11.5" fill="#334155">bleeding · haemolysis</text><text x="350" y="142" text-anchor="middle" font-size="11.5" fill="#334155">chronic disease · CKD · marrow</text><text x="350" y="172" text-anchor="middle" font-size="11" font-weight="700" fill="#b45309">↑reticulocytes → bleed/haemolysis</text>
+                <rect x="474" y="72" width="212" height="130" rx="10" fill="#ede9fe" stroke="#8b5cf6"/><text x="580" y="96" text-anchor="middle" font-size="13" font-weight="800" fill="#6d28d9">Macrocytic &gt;100</text><text x="580" y="122" text-anchor="middle" font-size="11.5" fill="#334155">B12 / folate deficiency</text><text x="580" y="142" text-anchor="middle" font-size="11.5" fill="#334155">alcohol · hypothyroid · MDS</text><text x="580" y="172" text-anchor="middle" font-size="11" font-weight="700" fill="#6d28d9">B12: hypersegmented + neuro signs</text>
+                <rect x="14" y="214" width="672" height="34" rx="9" fill="#f1f5f9" stroke="#cbd5e1"/><text x="350" y="236" text-anchor="middle" font-size="12" font-weight="700" fill="#334155">Age &gt;45–50 with unexplained iron deficiency → upper AND lower GI endoscopy (occult malignancy)</text>
+                </g></svg>
+                <figcaption>MCV splits the differential in one step; the <b>reticulocyte count</b> then separates a productive marrow (bleeding/haemolysis) from an underproductive one.</figcaption></figure>
                 <table>
                     <thead><tr><th>MCV</th><th>Causes</th><th>Key clue</th></tr></thead>
                     <tbody>
@@ -701,6 +748,18 @@ const medicine = {
                 </ul>
 
                 <h3>Meningitis</h3>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Meningitis — reading the CSF</div>
+                <svg viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Bacterial CSF is turbid with high neutrophils, low glucose and high protein. Viral CSF is clear with lymphocytes, normal glucose and normal or raised protein. TB CSF shows a fibrin web with lymphocytes, very low glucose and very high protein.">
+                <g font-family="system-ui,Arial">
+                <rect x="14" y="20" width="220" height="158" rx="10" fill="#fee2e2" stroke="#ef4444"/><text x="124" y="46" text-anchor="middle" font-size="13.5" font-weight="800" fill="#b91c1c">Bacterial</text>
+                <text x="30" y="74" font-size="11.5" fill="#334155">Turbid</text><text x="30" y="98" font-size="11.5" font-weight="700" fill="#b91c1c">↑↑ neutrophils</text><text x="30" y="122" font-size="11.5" fill="#334155">Glucose LOW</text><text x="30" y="146" font-size="11.5" fill="#334155">Protein HIGH</text>
+                <rect x="242" y="20" width="220" height="158" rx="10" fill="#dcfce7" stroke="#22c55e"/><text x="352" y="46" text-anchor="middle" font-size="13.5" font-weight="800" fill="#15803d">Viral</text>
+                <text x="258" y="74" font-size="11.5" fill="#334155">Clear</text><text x="258" y="98" font-size="11.5" font-weight="700" fill="#15803d">↑ lymphocytes</text><text x="258" y="122" font-size="11.5" fill="#334155">Glucose NORMAL</text><text x="258" y="146" font-size="11.5" fill="#334155">Protein normal/↑</text>
+                <rect x="470" y="20" width="216" height="158" rx="10" fill="#ede9fe" stroke="#8b5cf6"/><text x="578" y="46" text-anchor="middle" font-size="13.5" font-weight="800" fill="#6d28d9">Tuberculous</text>
+                <text x="486" y="74" font-size="11.5" fill="#334155">Fibrin web</text><text x="486" y="98" font-size="11.5" font-weight="700" fill="#6d28d9">↑ lymphocytes</text><text x="486" y="122" font-size="11.5" fill="#334155">Glucose VERY low</text><text x="486" y="146" font-size="11.5" fill="#334155">Protein VERY high</text>
+                <rect x="14" y="190" width="672" height="38" rx="9" fill="#f1f5f9" stroke="#cbd5e1"/><text x="350" y="214" text-anchor="middle" font-size="11.5" font-weight="700" fill="#334155">Never delay antibiotics for imaging · CT before LP only if focal deficit, ↓GCS, papilloedema or seizure</text>
+                </g></svg>
+                <figcaption><b>Glucose</b> is the fastest discriminator: low in bacterial, very low in TB, normal in viral. Empirical therapy is <b>ceftriaxone + vancomycin + dexamethasone</b>, adding ampicillin where Listeria is a risk.</figcaption></figure>
                 <table>
                     <thead><tr><th>CSF</th><th>Bacterial</th><th>Viral</th><th>TB</th></tr></thead>
                     <tbody>
@@ -796,6 +855,26 @@ const medicine = {
             title_en: 'RA · SLE · Gout · GCA · Stroke · Intracranial Bleeds',
             summaryHtml: `
                 <h3>Rheumatology</h3>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Gout vs pseudogout — crystal microscopy</div>
+                <div class="deck-imgrow">
+                    <div class="deck-imgcell">
+                        <img class="deck-img" src="/summaries/gout-msu-crystals.jpg" width="1200" height="900" loading="lazy" decoding="async"
+                             alt="Synovial fluid under polarised light with a red compensator. Long, thin needle-shaped crystals lie among neutrophils, some glowing yellow and others blue depending on their orientation." />
+                        <p class="deck-imgcap"><b>Gout</b> — monosodium urate
+                        <br><b>NEEDLE-shaped</b> · <b>NEGATIVELY</b> birefringent · 1st MTP joint (podagra)
+                        <br><span class="deck-hi deck-hi--red">acute: NSAID / colchicine / steroid → later allopurinol</span></p>
+                    </div>
+                    <div class="deck-imgcell">
+                        <img class="deck-img" src="/summaries/pseudogout-cppd-crystals.jpg" width="900" height="1200" loading="lazy" decoding="async"
+                             alt="Synovial fluid under polarised light. Short, blunt rhomboid and rectangular crystals appear scattered through the field, glowing orange-yellow and blue." />
+                        <p class="deck-imgcap"><b>Pseudogout</b> — calcium pyrophosphate (CPPD)
+                        <br><b>RHOMBOID</b> · <b>POSITIVELY</b> birefringent · knee · chondrocalcinosis
+                        <br><span class="deck-hi deck-hi--blue">weakly birefringent — easy to miss</span></p>
+                    </div>
+                </div>
+                <div class="deck-warn">Can't-miss: a hot swollen joint with fever is septic arthritis until proven otherwise — aspirate BEFORE antibiotics</div>
+                <figcaption>Memory hook: <b>N</b>eedles are <b>N</b>egative (gout); rhomboids are positive (pseudogout). Note how much easier the urate needles are to spot — CPPD is only <b>weakly</b> birefringent, so a negative-looking sample does not exclude it. Always exclude <b>septic arthritis</b> first in any acutely hot joint.</figcaption>
+                <p class="deck-credit">Urate crystals: <a href="https://commons.wikimedia.org/wiki/File:Gout_-_monosodium_urate_crystals_(20X,_polarized,_red_compensator).jpg" target="_blank" rel="noopener noreferrer">Gabriel Caponetti</a>, <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 3.0</a>. CPPD crystals: <a href="https://commons.wikimedia.org/wiki/File:Birefringence_microscopy_of_pseudogout.jpg" target="_blank" rel="noopener noreferrer">Mikael Häggström, M.D.</a>, <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener noreferrer">CC0 1.0</a>. Both resized for web; content unmodified.</p></figure>
                 <ul>
                     <li><b>Rheumatoid arthritis</b>: symmetric small-joint pain, morning stiffness, +anti-CCP/RF; <b>methotrexate</b> first-line DMARD → add a <b>biologic (anti-TNF, e.g. adalimumab)</b> if persistent erosive disease</li>
                     <li><b>SLE</b> (arthritis, malar rash, oral ulcers, serositis, low C3/C4, +ANA/anti-dsDNA): <b>hydroxychloroquine</b> for all; immunosuppression for organ involvement; <b>antiphospholipid syndrome</b> (recurrent VTE/miscarriage) → anticoagulation</li>

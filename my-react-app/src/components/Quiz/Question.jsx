@@ -31,7 +31,7 @@ const Question = ({
     return '#28a745'; // Green
   };
 
-  const safeQuestionText = question?.question_text || 'Question content is unavailable.';
+  const safeQuestionText = question?.question_text || 'محتوى السؤال غير متوفر.';
   const optionKeys = ['option1', 'option2', 'option3', 'option4'];
 
   return (
@@ -63,7 +63,7 @@ const Question = ({
                   onClick={() => question?.[optKey] && onSelectOption(question[optKey])}
                   disabled={!question?.[optKey]}
                 >
-                  {question?.[optKey] || 'Option unavailable'}
+                  {question?.[optKey] || 'الخيار غير متوفر'}
                 </button>
               ))}
             </div>
@@ -72,7 +72,7 @@ const Question = ({
             {userId && userEmail && (
               <div style={{ textAlign: 'right' }}>
                 <button className="report-question-btn" onClick={() => setShowReport(true)}>
-                  <Icon name="flag" size={15} /> Report
+                  <Icon name="flag" size={15} /> الإبلاغ عن خطأ
                 </button>
               </div>
             )}

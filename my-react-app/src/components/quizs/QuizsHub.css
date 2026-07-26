@@ -1,0 +1,571 @@
+/*
+ * /quizs — study dashboard.
+ *
+ * Replaces the old 3-card hub, which read as empty: it was three big navigation
+ * targets and nothing else, and it buried the primary action behind a card tap.
+ * Everything here uses the design tokens from src/index.css and logical
+ * properties throughout, so RTL works without per-element overrides. Mobile
+ * first: one column up to 720px, two-column dashboard above it.
+ *
+ * NOTE ON SPECIFICITY: the shared .quiz-selection class (QUIZS.css) centres its
+ * children, sets text-align:center, and restyles bare h1/p. Selectors here are
+ * deliberately written as .quiz-selection.hubx / .hubx <child> so they win
+ * without needing !important.
+ *
+ * Spacing scale used: 4 · 8 · 12 · 16 · 24 · 32px
+ */
+
+.quiz-selection.hubx {
+    --hubx-line: var(--border-light, #e6ecf7);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 18px;
+    width: 100%;
+    /* Was 1080px, which left very wide empty gutters on a normal desktop. */
+    max-width: 1400px;
+    margin-inline: auto;
+    padding: 20px 14px 88px;
+    text-align: start;
+}
+
+/* ---------------------------------------------------------------- header -- */
+
+.hubx .hubx-top {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 22px;
+    border-radius: var(--radius-lg, 16px);
+    background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 55%, #3b82f6 100%);
+    box-shadow: var(--shadow-md);
+}
+
+.hubx .hubx-greet h1 {
+    margin: 0 0 6px;
+    font-size: clamp(1.35rem, 1.1rem + 1.1vw, 1.9rem);
+    line-height: 1.3;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: 0;
+    animation: none;
+}
+
+.hubx .hubx-greet p {
+    margin: 0;
+    max-width: 46ch;
+    font-size: var(--text-sm, 0.875rem);
+    line-height: 1.7;
+    color: rgba(255, 255, 255, 0.87);
+    animation: none;
+}
+
+.hubx .hubx-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.hubx .hubx-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    min-height: 48px;
+    padding: 10px 18px;
+    border: 0;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: var(--text-base, 1rem);
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
+}
+
+.hubx .hubx-btn small {
+    font-size: var(--text-xs, 0.75rem);
+    font-weight: 600;
+    opacity: 0.72;
+}
+
+.hubx .hubx-btn--primary {
+    background: #fff;
+    color: var(--primary-dark, #1d4ed8);
+    box-shadow: 0 6px 18px rgba(2, 20, 66, 0.24);
+}
+
+.hubx .hubx-btn--ghost {
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+    box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.5);
+}
+
+.hubx .hubx-btn:hover { transform: translateY(-1px); }
+.hubx .hubx-btn--primary:hover { box-shadow: 0 10px 24px rgba(2, 20, 66, 0.3); }
+.hubx .hubx-btn--ghost:hover { background: rgba(255, 255, 255, 0.24); }
+.hubx .hubx-btn:active { transform: translateY(0); }
+
+.hubx .hubx-btn:focus-visible {
+    outline: 3px solid #fff;
+    outline-offset: 3px;
+}
+
+/* ------------------------------------------------------- KPI strip ------- */
+/* Lives INSIDE the performance panel now. Previously these were four separate
+   bordered cards in their own section, which said the same thing as the
+   specialty rings directly underneath — two boxes telling one story. */
+
+.hubx .hubx-kpis {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2px;
+    margin-bottom: 16px;
+    padding: 4px;
+    border-radius: var(--radius-md, 12px);
+    background: var(--bg-light, #eef2fb);
+    overflow: hidden;
+}
+
+.hubx .hubx-kpi {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 12px 8px;
+    background: var(--surface, #fff);
+    border-radius: 9px;
+}
+
+.hubx .hubx-kpi-icon { color: var(--primary-color, #2563eb); line-height: 0; }
+
+.hubx .hubx-kpi-value {
+    min-height: 26px;
+    font-size: 1.35rem;
+    font-weight: 800;
+    line-height: 1.2;
+    color: var(--text-dark, #0f1e3d);
+    font-variant-numeric: tabular-nums;
+}
+
+.hubx .hubx-kpi-label { font-size: var(--text-xs, 0.75rem); font-weight: 600; color: var(--text-light, #64748b); }
+
+.hubx .hubx-kpi.is-loading .hubx-kpi-value::after {
+    content: '';
+    display: block;
+    width: 42px;
+    height: 20px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #eef2fb 25%, #dfe7f6 37%, #eef2fb 63%);
+    background-size: 400% 100%;
+    animation: hubx-shimmer 1.3s ease-in-out infinite;
+}
+
+@keyframes hubx-shimmer {
+    0% { background-position: 100% 50%; }
+    100% { background-position: 0 50%; }
+}
+
+/* -------------------------------------------------------------- panels --- */
+
+.hubx .hubx-mastery {
+    background: var(--surface, #fff);
+    border: 1px solid var(--hubx-line);
+    border-radius: var(--radius-lg, 16px);
+    box-shadow: var(--shadow-sm);
+}
+
+.hubx .hubx-mastery { padding: 18px; }
+
+.hubx .hubx-sec-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.hubx .hubx-sec-head h2 {
+    margin: 0;
+    font-size: var(--text-lg, 1.125rem);
+    font-weight: 800;
+    color: var(--text-dark, #0f1e3d);
+}
+
+.hubx .hubx-sec-note {
+    font-size: var(--text-xs, 0.75rem);
+    font-weight: 600;
+    color: var(--text-light, #64748b);
+}
+
+/* Specialty cards. Previously a list of thin bars, which read as dead space
+   for a new user (four empty grey lines) and wasted the horizontal room. A
+   ring carries a percentage legibly at small size, and the card gives the
+   empty state somewhere to live: the icon fills the ring and the button says
+   "ابدأ" instead of "تدرّب". */
+.hubx .hubx-specs {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.hubx .hubx-spec {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 16px 10px 14px;
+    border: 1.5px solid var(--hubx-line);
+    border-radius: var(--radius-md, 12px);
+    background: var(--surface, #fff);
+    text-align: center;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.hubx .hubx-spec:hover { border-color: var(--primary-light, #3b82f6); box-shadow: var(--shadow-sm); }
+
+.hubx .hubx-spec-ring { position: relative; display: block; width: 64px; height: 64px; }
+.hubx .hubx-spec-ring svg { width: 64px; height: 64px; transform: rotate(-90deg); }
+.hubx .hubx-ring-bg { fill: none; stroke: var(--bg-light, #eef2fb); stroke-width: 7; }
+.hubx .hubx-ring-fg {
+    fill: none;
+    stroke: var(--primary-color, #2563eb);
+    stroke-width: 7;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hubx .hubx-spec-pct {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--text-dark, #0f1e3d);
+    font-variant-numeric: tabular-nums;
+}
+
+.hubx .hubx-spec.is-empty .hubx-spec-pct { color: var(--text-light, #94a3b8); }
+
+.hubx .hubx-spec-name {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: var(--text-sm, 0.875rem);
+    font-weight: 700;
+    color: var(--text-dark, #0f1e3d);
+    line-height: 1.4;
+}
+
+.hubx .hubx-spec-name svg { color: var(--primary-color, #2563eb); flex-shrink: 0; }
+.hubx .hubx-spec-sub { font-size: var(--text-xs, 0.75rem); font-weight: 600; color: var(--text-light, #64748b); }
+
+/* Weakest specialty: amber ring + badge. Emphasis only — the others stay
+   equally usable. */
+.hubx .hubx-spec.is-weak { border-color: #f59e0b; }
+.hubx .hubx-spec.is-weak .hubx-ring-fg { stroke: #d97706; }
+
+.hubx .hubx-tag {
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #fef3c7;
+    color: #92400e;
+    font-size: 0.68rem;
+    font-style: normal;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.hubx .hubx-skel {
+    display: inline-block;
+    width: 44px;
+    height: 12px;
+    border-radius: 5px;
+    background: linear-gradient(90deg, #eef2fb 25%, #dfe7f6 37%, #eef2fb 63%);
+    background-size: 400% 100%;
+    animation: hubx-shimmer 1.3s ease-in-out infinite;
+}
+
+.hubx .hubx-practise {
+    margin-top: 4px;
+    min-height: 40px;
+    padding: 6px 20px;
+    border: 1.5px solid var(--border-color, #d4deee);
+    border-radius: 999px;
+    background: var(--surface, #fff);
+    color: var(--primary-dark, #1d4ed8);
+    font-family: inherit;
+    font-size: var(--text-xs, 0.75rem);
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.hubx .hubx-practise:hover {
+    background: var(--primary-color, #2563eb);
+    border-color: var(--primary-color, #2563eb);
+    color: #fff;
+}
+
+.hubx .hubx-spec.is-weak .hubx-practise { border-color: #d97706; color: #92400e; }
+.hubx .hubx-spec.is-weak .hubx-practise:hover { background: #d97706; border-color: #d97706; color: #fff; }
+
+.hubx .hubx-practise:focus-visible,
+.hubx .hubx-link:focus-visible,
+.hubx .hubx-retry:focus-visible {
+    outline: 3px solid var(--primary-light, #3b82f6);
+    outline-offset: 2px;
+}
+
+.hubx .hubx-empty {
+    margin: 14px 0 0;
+    padding: 12px 14px;
+    border-radius: var(--radius-sm, 8px);
+    background: var(--bg-light, #eef2fb);
+    font-size: var(--text-sm, 0.875rem);
+    line-height: 1.7;
+    color: var(--text-medium, #475569);
+    animation: none;
+}
+
+.hubx .hubx-inline-error {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 14px;
+    border-radius: var(--radius-sm, 8px);
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+}
+
+.hubx .hubx-inline-error p {
+    margin: 0;
+    font-size: var(--text-sm, 0.875rem);
+    font-weight: 600;
+    color: #b91c1c;
+    animation: none;
+}
+
+.hubx .hubx-retry {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 36px;
+    padding: 6px 14px;
+    border: 1.5px solid #b91c1c;
+    border-radius: 999px;
+    background: transparent;
+    color: #b91c1c;
+    font-family: inherit;
+    font-size: var(--text-xs, 0.75rem);
+    font-weight: 700;
+    cursor: pointer;
+    transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.hubx .hubx-retry:hover { background: #b91c1c; color: #fff; }
+
+/* -------------------------------------------------------------- journey -- */
+/* Understand -> practise -> measure. All three are always visible and equally
+   clickable; the "journey" is the ordering plus a suggested entry point, not a
+   wizard that hides steps. Mobile stacks them with the arrows rotated to point
+   down, so the sequence still reads correctly. */
+
+.hubx .hubx-journey {
+    background: var(--surface, #fff);
+    border: 1px solid var(--hubx-line);
+    border-radius: var(--radius-lg, 16px);
+    box-shadow: var(--shadow-sm);
+    padding: 18px;
+}
+
+.hubx .hubx-steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    align-items: stretch;
+}
+
+.hubx .hubx-step { display: flex; }
+.hubx .hubx-step-btn { height: 100%; }
+
+.hubx .hubx-step-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 7px;
+    width: 100%;
+    padding: 16px;
+    border: 1.5px solid var(--hubx-line);
+    border-radius: var(--radius-md, 12px);
+    background: var(--surface, #fff);
+    font-family: inherit;
+    text-align: start;
+    cursor: pointer;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+}
+
+.hubx .hubx-step-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.hubx .hubx-step-btn:active { transform: translateY(0); }
+.hubx .hubx-step-btn:focus-visible { outline: 3px solid var(--primary-light, #3b82f6); outline-offset: 2px; }
+
+.hubx .hubx-step-top { display: flex; align-items: center; gap: 8px; width: 100%; }
+
+.hubx .hubx-step-n {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--bg-light, #eef2fb);
+    color: var(--text-medium, #475569);
+    font-size: 0.78rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+}
+
+.hubx .hubx-step-kicker {
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: .04em;
+    color: var(--text-light, #64748b);
+}
+
+.hubx .hubx-step-flag {
+    margin-inline-start: auto;
+    padding: 2px 9px;
+    border-radius: 999px;
+    background: #fef3c7;
+    color: #92400e;
+    font-size: 0.68rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.hubx .hubx-step-icon {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    margin-top: 2px;
+    border-radius: var(--radius-sm, 8px);
+}
+
+.hubx .hubx-step-title { font-size: var(--text-lg, 1.125rem); font-weight: 800; color: var(--text-dark, #0f1e3d); }
+.hubx .hubx-step-desc { font-size: var(--text-xs, 0.75rem); line-height: 1.7; color: var(--text-light, #64748b); }
+
+.hubx .hubx-step-stat {
+    margin-top: 2px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-medium, #475569);
+}
+
+.hubx .hubx-step-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    /* auto pushes it to the card bottom so all three buttons line up even when
+       the descriptions wrap to different heights */
+    margin-top: auto;
+    min-height: 46px;
+    padding: 11px 16px;
+    border-radius: 999px;
+    font-size: var(--text-sm, 0.875rem);
+    font-weight: 800;
+    color: #fff;
+    transition: filter var(--transition-fast);
+}
+
+.hubx .hubx-step-btn:hover .hubx-step-cta { filter: brightness(1.08); }
+
+/* Per-step accent — the same three colours used elsewhere for these areas. */
+.hubx .hubx-step--sum  .hubx-step-icon { background: #dcfce7; color: #15803d; }
+.hubx .hubx-step--sum  .hubx-step-cta  { background: #16a34a; }
+.hubx .hubx-step--sum  .hubx-step-btn:hover { border-color: #22c55e; }
+.hubx .hubx-step--quiz .hubx-step-icon { background: #dbeafe; color: #1d4ed8; }
+.hubx .hubx-step--quiz .hubx-step-cta  { background: #2563eb; }
+.hubx .hubx-step--quiz .hubx-step-btn:hover { border-color: #3b82f6; }
+.hubx .hubx-step--ana  .hubx-step-icon { background: #ede9fe; color: #6d28d9; }
+.hubx .hubx-step--ana  .hubx-step-cta  { background: #7c3aed; }
+.hubx .hubx-step--ana  .hubx-step-btn:hover { border-color: #8b5cf6; }
+
+/* Suggested entry point. Emphasis only — every step stays clickable. */
+.hubx .hubx-step.is-next .hubx-step-btn { border-color: #f59e0b; box-shadow: 0 0 0 3px rgba(245, 158, 11, .15); }
+.hubx .hubx-step.is-next .hubx-step-n { background: #f59e0b; color: #fff; }
+
+/* Connector. Points down when stacked, along the reading direction when in a
+   row; the icon itself is a left chevron, correct for RTL flow. */
+/* Rotate the ICON, never the <li>. The list item stretches to the full column
+   width, so transforming it turned a 305x20 box into 20x305 and the connector
+   spilled ~140px over the cards above and below it. */
+.hubx .hubx-step-arrow {
+    display: grid;
+    place-items: center;
+    height: 20px;
+    color: var(--border-color, #cbd5e1);
+}
+
+.hubx .hubx-step-arrow svg { transform: rotate(-90deg); }
+
+/* ----------------------------------------------------------- responsive -- */
+
+@media (min-width: 560px) {
+    .hubx .hubx-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+    .hubx .hubx-specs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+@media (min-width: 720px) {
+    /* Single full-width column on purpose. The journey is the centrepiece, so
+       it must not be squeezed into a sidebar — an earlier two-column version
+       put it in a ~400px column where the three steps could only stack. */
+    .quiz-selection.hubx { padding: 26px 24px 88px; }
+
+    .hubx .hubx-top {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        padding: 26px 28px;
+    }
+
+    .hubx .hubx-actions { flex-shrink: 0; }
+    .hubx .hubx-mastery { padding: 22px; }
+    .hubx .hubx-journey { padding: 22px; }
+}
+
+/* Three across, connected by arrows. Needs ~900px: 3 cards + 2 connectors do
+   not fit legibly below that, so they stay stacked with the arrows pointing
+   down instead. */
+@media (min-width: 900px) {
+    .hubx .hubx-steps {
+        grid-template-columns: 1fr auto 1fr auto 1fr;
+        gap: 12px;
+    }
+    .hubx .hubx-step-arrow { height: auto; }
+    .hubx .hubx-step-arrow svg { transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hubx .hubx-btn,
+    .hubx .hubx-ring-fg,
+    .hubx .hubx-practise,
+    .hubx .hubx-link { transition: none; }
+
+    .hubx .hubx-kpi.is-loading .hubx-kpi-value::after,
+    .hubx .hubx-skel { animation: none; }
+}

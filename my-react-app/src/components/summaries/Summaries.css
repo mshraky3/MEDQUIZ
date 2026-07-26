@@ -1345,6 +1345,40 @@
 .deck-fig svg { max-width: 100%; height: auto; display: block; margin: 0 auto; }
 .deck-fig figcaption { font-size: 0.82rem; color: #475569; margin-top: 9px; line-height: 1.5; }
 .deck-fig figcaption b { color: #334155; }
+
+/* Raster figures/photos inside summaries — public (/summaries/…) or gated
+   (<img data-figure-key>) tiers both use .deck-img. */
+.deck-img { max-width: 100%; height: auto; display: block; margin: 8px auto 0; border-radius: 10px; }
+.deck-img.deck-img-loading { min-height: 120px; background: repeating-linear-gradient(90deg, #f1eefb, #f1eefb 12px, #e8e2f7 12px, #e8e2f7 24px); }
+.deck-img.deck-img-error { min-height: 60px; background: #fdecec; }
+
+/* Side-by-side illustration pairs (e.g. previa vs abruption). Stacks on narrow
+   screens so neither image drops below a legible size. */
+.deck-imgrow { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 6px; }
+@media (min-width: 640px) { .deck-imgrow { grid-template-columns: 1fr 1fr; align-items: start; } }
+.deck-imgcell { display: flex; flex-direction: column; }
+.deck-imgcell .deck-img { margin-top: 0; border: 1px solid #e6e0f7; background: #fff; }
+.deck-imgcap { margin: 8px 0 0; font-size: 0.82rem; line-height: 1.6; color: #475569; }
+.deck-imgcap b { color: #0f1e3d; }
+.deck-hi { display: inline-block; margin-top: 5px; padding: 2px 9px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; }
+.deck-hi--red { background: #fee2e2; color: #b91c1c; }
+.deck-hi--amber { background: #fef3c7; color: #92400e; }
+.deck-hi--green { background: #dcfce7; color: #15803d; }
+.deck-hi--blue { background: #dbeafe; color: #1d4ed8; }
+
+/* Radiology/microscopy pairs: source images have wildly different aspect ratios
+   (a 426x429 AP neck next to a 400x628 lateral), so lock a common display
+   height and letterbox — otherwise one panel dwarfs the other. */
+.deck-imgrow--scan .deck-img { height: 240px; width: auto; max-width: 100%; object-fit: contain; margin-inline: auto; background: #0b1220; }
+@media (max-width: 639px) { .deck-imgrow--scan .deck-img { height: 200px; } }
+
+/* Warning strip under a figure (e.g. do-not-examine-the-throat). */
+.deck-warn { margin: 12px 0 0; padding: 9px 12px; border-radius: 9px; background: #fef3c7; border: 1px solid #f59e0b; color: #92400e; font-size: 0.8rem; font-weight: 700; line-height: 1.55; }
+
+/* Attribution line for open-licensed imagery. REQUIRED by CC BY — removing it
+   breaks the licence terms. Keep it with the image it credits. */
+.deck-credit { margin: 10px 0 0; font-size: 0.7rem; line-height: 1.6; color: #94a3b8; }
+.deck-credit a { color: #64748b; text-decoration: underline; }
 .deck-tbl-notes { margin: 8px 0 0; padding-inline-start: 20px; } .deck-tbl-notes li { font-size: 0.83rem; margin: 3px 0; color: #334155; }
 .deck-notelist { margin: 4px 0; padding-inline-start: 20px; } .deck-notelist > li { font-size: 0.86rem; margin: 4px 0; }
 .deck-notelist ul.sub { margin: 2px 0 4px; padding-inline-start: 18px; } .deck-notelist ul.sub li { font-size: 0.83rem; color: #475569; margin: 2px 0; }

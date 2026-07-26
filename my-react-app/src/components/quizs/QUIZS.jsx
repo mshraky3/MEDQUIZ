@@ -3,945 +3,297 @@ import axios from 'axios';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { track } from '@vercel/analytics';
 import './QUIZS.css';
+import './QuizsHub.css';
 import Globals from '../../global.js';
 
 import AchievementBadges from '../common/AchievementBadges.jsx';
-import CongratulationsPopup from '../common/CongratulationsPopup.jsx';
 import Icon from '../common/Icon.jsx';
+import QuizLauncher from './QuizLauncher.jsx';
 import { UserContext } from '../../UserContext';
+import { getTypeLabel } from '../../utils/typeLabels';
 
+// Single unified bank — see QuizLauncher.jsx.
+const SOURCE = 'MidgardGameBoy';
+
+// Order matters: this is the display order of the mastery rows.
+const SPECIALTIES = [
+    { key: 'medicine', icon: 'stethoscope' },
+    { key: 'surgery', icon: 'scalpel' },
+    { key: 'pediatric', icon: 'baby' },
+    { key: 'obstetrics and gynecology', icon: 'venus' }
+];
+
+/**
+ * The post-login home, built as a study dashboard rather than a menu of cards.
+ *
+ * The previous version was three big navigation cards, which read as empty and
+ * buried the primary action (start a quiz) behind a card tap. This version puts
+ * the quick-start in the header, then fills the page with the user's own data —
+ * headline stats and per-specialty mastery — so the page earns its space and
+ * doubles as a reason to come back. Summaries and analysis become slim links
+ * rather than equal-weight cards, because they are secondary to practising.
+ *
+ * All three requests run through Promise.allSettled: a stats failure must never
+ * stop someone starting a quiz, so the header actions render regardless.
+ */
 const QUIZS = () => {
-    const { user, setUser, sessionToken } = useContext(UserContext);
+    const { user, sessionToken } = useContext(UserContext);
     const navigate = useNavigate();
     const location = useLocation();
+    // Resolve id from context first so a hard refresh (no router state) still works.
     const id = user?.id || location.state?.id || location.state?.user?.id;
-    const [currentStreak, setCurrentStreak] = useState(0);
-    const [showSourceSelector, setShowSourceSelector] = useState(false);
-    const [showTypeSelector, setShowTypeSelector] = useState(false);
-    const [selectedSource, setSelectedSource] = useState('');
-    const [selectedTypes, setSelectedTypes] = useState([]);
-    const [numQuestions, setNumQuestions] = useState(10);
-    const [showCongratulations, setShowCongratulations] = useState(false);
-    const [congratulationsData, setCongratulationsData] = useState(null);
-    const [showTimerSelector, setShowTimerSelector] = useState(false);
-    const [selectedTimer, setSelectedTimer] = useState(null);
-    const [customTimerMinutes, setCustomTimerMinutes] = useState(15);
-    const [showCustomQuestions, setShowCustomQuestions] = useState(false);
-    const [customQuestionsCount, setCustomQuestionsCount] = useState(25);
-    const [showFinalQuizType, setShowFinalQuizType] = useState(false);
-    const [showFinalQuizSource, setShowFinalQuizSource] = useState(false);
-    const [showFinalQuizTime, setShowFinalQuizTime] = useState(false);
-    const [selectedFinalType, setSelectedFinalType] = useState('');
-    const [selectedFinalSource, setSelectedFinalSource] = useState('');
-    const [finalQuizQuestionsCount, setFinalQuizQuestionsCount] = useState(0);
-    const [finalQuizTimeLimit, setFinalQuizTimeLimit] = useState(30);
 
-    const quizOptions = [10, 50, 'custom'];
+    const [view, setView] = useState('hub'); // 'hub' | 'launcher'
+    const [stats, setStats] = useState(null);
+    const [topics, setTopics] = useState([]);
+    const [streak, setStreak] = useState(null);
+    const [state, setState] = useState('loading'); // loading | ready | error
 
-    // Monthly collections ordered NEWEST-FIRST — the latest recalls are the
-    // most important, so they surface at the top of the picker.
-    const monthlyCollections = [
-        { id: 'June26', label: 'يونيو 2026' },
-        { id: 'May26', label: 'مايو 2026' },
-        { id: 'FebMarApr25', label: 'فبراير – مارس – أبريل 2026' },
-        { id: 'January25', label: 'يناير 2026' },
-        { id: 'December25', label: 'ديسمبر 2025' },
-        { id: 'November25', label: 'نوفمبر 2025' },
-        { id: 'October25', label: 'أكتوبر 2025' }
-    ];
-    // The comprehensive question bank (shown as its own section).
-    const mainBanks = [
-        { id: 'MidgardGameBoy', label: 'Midgard & GameBoy' }
-    ];
-
-    const sourceLabels = {
-        MidgardGameBoy: 'Midgard & GameBoy',
-        October25: 'أكتوبر 2025',
-        November25: 'نوفمبر 2025',
-        December25: 'ديسمبر 2025',
-        January25: 'يناير 2026',
-        FebMarApr25: 'فبراير – مارس – أبريل 2026',
-        May26: 'مايو 2026',
-        June26: 'يونيو 2026'
+    const protectedGet = async (url) => {
+        if (!user || !sessionToken) throw new Error('Not authenticated');
+        const urlWithUser = url + (url.includes('?') ? '&' : '?') + `username=${encodeURIComponent(user.username)}`;
+        return axios.get(urlWithUser, { headers: { Authorization: `Bearer ${sessionToken}` } });
     };
 
-    // Shared picker body: latest collection as a highlighted hero, the rest in a
-    // newest-first grid, then the full bank. `onSelect` differs per modal.
-    const renderSourcePicker = (onSelect) => {
-        const [latest, ...olderMonths] = monthlyCollections;
+    // Tracks whether this instance is still mounted, so a slow response that
+    // lands after navigating away cannot setState on an unmounted component.
+    // MUST be set back to true on mount: React StrictMode runs effects
+    // mount → cleanup → mount on the same instance, so without this the flag
+    // stays false after the double-invoke and every load() bails out early,
+    // leaving the page stuck on its loading skeletons forever.
+    const aliveRef = React.useRef(true);
+    useEffect(() => {
+        aliveRef.current = true;
+        return () => { aliveRef.current = false; };
+    }, []);
+
+    const load = React.useCallback(async () => {
+        if (!id || !user || !sessionToken) { setState('error'); return; }
+        setState('loading');
+        const [analysisRes, streakRes, topicRes] = await Promise.allSettled([
+            protectedGet(`${Globals.URL}/user-analysis/${id}`),
+            protectedGet(`${Globals.URL}/user-streaks/${id}`),
+            protectedGet(`${Globals.URL}/topic-analysis/user/${id}`)
+        ]);
+        if (!aliveRef.current) return;
+        if (analysisRes.status === 'fulfilled') {
+            const d = analysisRes.value.data;
+            setStats({
+                total_quizzes: d.total_quizzes || 0,
+                total_questions_answered: d.total_questions_answered || 0,
+                avg_accuracy: d.avg_accuracy || 0
+            });
+        }
+        if (streakRes.status === 'fulfilled') setStreak(streakRes.value.data.current_streak || 0);
+        if (topicRes.status === 'fulfilled' && Array.isArray(topicRes.value.data)) setTopics(topicRes.value.data);
+        setState(analysisRes.status === 'fulfilled' ? 'ready' : 'error');
+    }, [id, user, sessionToken]);
+
+    useEffect(() => { load(); }, [load]);
+
+    const startQuiz = (types) => {
+        try { track('hub_start_quiz', { types, source: SOURCE }); } catch (e) { /* analytics is best-effort */ }
+        navigate('/quiz/10', { state: { id, types, source: SOURCE, timer: null } });
+    };
+
+    if (view === 'launcher') {
         return (
-            <>
-                <div className="source-section">
-                    <h3 className="section-title">التجميعات الشهرية · الأحدث أولاً</h3>
-                    <button
-                        onClick={() => onSelect(latest.id)}
-                        className="source-card source-card--latest"
-                    >
-                        <span className="source-card-main">
-                            <Icon name="calendar" size={18} />
-                            <span>{latest.label}</span>
-                        </span>
-                        <span className="source-card-badge">الأحدث</span>
-                    </button>
-                    <div className="collection-grid">
-                        {olderMonths.map((c) => (
-                            <button
-                                key={c.id}
-                                onClick={() => onSelect(c.id)}
-                                className="source-card source-card--month"
-                            >
-                                {c.label}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                <div className="source-section-divider"></div>
-
-                <div className="source-section">
-                    <h3 className="section-title">بنك الأسئلة الشامل</h3>
-                    {mainBanks.map((b) => (
-                        <button
-                            key={b.id}
-                            onClick={() => onSelect(b.id)}
-                            className="source-card source-card--bank"
-                        >
-                            <Icon name="book-open" size={18} />
-                            <span>{b.label}</span>
-                        </button>
-                    ))}
-                </div>
-            </>
+            <div className="quiz-selection">
+                <QuizLauncher id={id} onBack={() => setView('hub')} />
+            </div>
         );
-    };
-    const availableTypes = [
-        'pediatric',
-        'obstetrics and gynecology',
-        'medicine',
-        'surgery'
+    }
+
+    // Usernames are often full email addresses. Take the local part first,
+    // otherwise the greeting reads "أهلاً alshraky3@gmail" and swamps the header.
+    const firstName = user?.username
+        ? String(user.username).split('@')[0].split(/[ _.]/).filter(Boolean)[0] || ''
+        : '';
+    const hasHistory = !!stats && stats.total_quizzes > 0;
+    const loading = state === 'loading';
+
+    // Per-specialty rows, always all four so the section never looks half-built.
+    const rows = SPECIALTIES.map(({ key, icon }) => {
+        const hit = topics.find((t) => t.question_type === key);
+        const answered = hit ? parseInt(hit.total_answered, 10) || 0 : 0;
+        const accuracy = hit ? Math.round(parseFloat(hit.accuracy) || 0) : 0;
+        return { key, icon, label: getTypeLabel(key), answered, accuracy };
+    });
+    const attempted = rows.filter((r) => r.answered > 0);
+    const weakestKey = attempted.length >= 2
+        ? attempted.reduce((a, b) => (a.accuracy <= b.accuracy ? a : b)).key
+        : null;
+
+    const fmt = (n) => new Intl.NumberFormat('en-US').format(n);
+
+    /**
+     * The three destinations, framed as one loop: understand → practise →
+     * measure → back again. They stay equal-weight and always visible; the
+     * "journey" is the ordering and the suggested entry point, not a wizard
+     * that hides steps behind each other.
+     */
+    const steps = [
+        {
+            key: 'summaries', tone: 'sum', icon: 'book-open', kicker: 'افهم',
+            title: 'الملخصات',
+            desc: 'ملخصات مصوّرة بأشعة وصور طبية حقيقية لكل التخصصات.',
+            stat: 'الباطنة · الجراحة · الأطفال · النساء',
+            cta: 'تصفّح الملخصات',
+            onClick: () => navigate('/summaries')
+        },
+        {
+            key: 'quiz', tone: 'quiz', icon: 'clipboard', kicker: 'ثبّت',
+            title: 'الأسئلة',
+            desc: 'اختبارات تدريبية ونهائية من بنك Midgard & GameBoy2026.',
+            stat: hasHistory ? `${fmt(stats.total_quizzes)} اختبار مكتمل` : 'لم تبدأ بعد',
+            cta: 'ابدأ اختبار',
+            onClick: () => startQuiz('mix')
+        },
+        {
+            key: 'analysis', tone: 'ana', icon: 'bar-chart', kicker: 'قِس',
+            title: 'تحليل الأداء',
+            desc: 'دقتك، وأقوى وأضعف المواضيع لديك، وتقدّمك أسبوعاً بأسبوع.',
+            stat: hasHistory ? `${Math.round(stats.avg_accuracy)}% دقة حالياً` : 'يظهر بعد أول اختبار',
+            cta: 'افتح التقرير',
+            onClick: () => navigate('/analysis', { state: { id } })
+        }
     ];
-    const timerOptions = [
-        { label: '5 دقائق', value: 5 },
-        { label: '10 دقائق', value: 10 },
-        { label: '30 دقيقة', value: 30 },
-        { label: 'ساعة', value: 60 },
-        { label: 'مخصص', value: 'custom' }
+
+    // Where to point someone next: a new user starts by reading; once there is
+    // history, a weak specialty is the highest-value place to practise;
+    // otherwise send them to review the numbers.
+    const nextStep = !hasHistory ? 'summaries' : (weakestKey ? 'quiz' : 'analysis');
+
+    const tiles = [
+        { k: 'acc', icon: 'target', value: hasHistory ? `${Math.round(stats.avg_accuracy)}%` : '—', label: 'الدقة' },
+        { k: 'quiz', icon: 'clipboard', value: hasHistory ? fmt(stats.total_quizzes) : '—', label: 'اختبار' },
+        { k: 'q', icon: 'check-circle', value: hasHistory ? fmt(stats.total_questions_answered) : '—', label: 'سؤال' },
+        { k: 'streak', icon: 'flame', value: streak != null && streak > 0 ? fmt(streak) : '—', label: 'يوم متتالٍ' }
     ];
-
-    const handleOptionClick = (num) => {
-        if (num === 'custom') {
-            setShowCustomQuestions(true);
-        } else {
-            setNumQuestions(num);
-            setShowSourceSelector(true);
-        }
-    };
-
-    const handleQuickStart = () => {
-        try {
-            track('quiz_quick_start_click', {
-                questions: 10,
-                source: 'MidgardGameBoy',
-                types: 'mix'
-            });
-        } catch (error) {
-            console.debug('Analytics track skipped:', error);
-        }
-
-        navigate('/quiz/10', {
-            state: {
-                id: id,
-                types: 'mix',
-                source: 'MidgardGameBoy',
-                timer: null
-            }
-        });
-    };
-
-    const handleSourceSelect = async (source) => {
-        setSelectedSource(source);
-        setShowSourceSelector(false);
-        setShowTypeSelector(true);
-
-        // Check if user has completed this source for any type
-        if (id) {
-            await checkCompletionForSource(source);
-        }
-    };
-
-    const handleCheckboxChange = (type) => {
-        setSelectedTypes((prev) =>
-            prev.includes(type)
-                ? prev.filter((t) => t !== type)
-                : [...prev, type]
-        );
-    };
-
-    const handleStartQuiz = () => {
-        if (selectedTypes.length === 0) return;
-        setShowTypeSelector(false);
-        setShowTimerSelector(true);
-    };
-
-    const handleTimerSelect = (timer) => {
-        setSelectedTimer(timer);
-    };
-
-    const handleTimerConfirm = () => {
-        if (selectedTimer === undefined) {
-            return;
-        }
-
-        // Handle the case where user came from "Mix All Types"
-        const typesStr = selectedTypes.length > 0 ? selectedTypes.join(',') : 'mix';
-        let timerMinutes = selectedTimer === 'custom' ? customTimerMinutes : selectedTimer;
-
-        setShowTimerSelector(false);
-
-        const quizRoute = `/quiz/${numQuestions}`;
-
-        navigate(quizRoute, {
-            state: {
-                id: id,
-                types: typesStr,
-                source: selectedSource,
-                timer: timerMinutes
-            }
-        });
-    };
-
-    const handleMixAll = () => {
-        setShowTypeSelector(false);
-        setShowTimerSelector(true);
-    };
-
-    const handleCustomQuestionsConfirm = () => {
-        if (customQuestionsCount < 1 || customQuestionsCount > 500) {
-            alert('Please enter a number between 1 and 500');
-            return;
-        }
-        setNumQuestions(customQuestionsCount);
-        setShowCustomQuestions(false);
-        setShowSourceSelector(true);
-    };
-
-    // Final Quiz handlers
-    const handleFinalQuizClick = () => {
-        setShowFinalQuizType(true);
-    };
-
-    const handleFinalTypeSelect = (type) => {
-        setSelectedFinalType(type);
-        setShowFinalQuizType(false);
-        setShowFinalQuizSource(true);
-    };
-
-    const handleFinalSourceSelect = async (source) => {
-        setSelectedFinalSource(source);
-
-        // Check authentication before making API call
-        if (!user || !sessionToken) {
-            console.error('Not authenticated for final source select');
-            setFinalQuizQuestionsCount(0);
-            setShowFinalQuizSource(false);
-            return;
-        }
-
-        // Fetch questions count for the selected criteria
-        try {
-            const response = await protectedGet(
-                `${Globals.URL}/final-quiz/questions-count?questionType=${encodeURIComponent(selectedFinalType)}&source=${encodeURIComponent(source)}`
-            );
-            setFinalQuizQuestionsCount(response.data.totalQuestions);
-        } catch (error) {
-            console.error('Error fetching questions count:', error);
-            setFinalQuizQuestionsCount(0);
-        }
-
-        setShowFinalQuizSource(false);
-        setShowFinalQuizTime(true);
-    };
-
-    const handleFinalTimeSelect = (timeLimit) => {
-        setFinalQuizTimeLimit(timeLimit);
-        setShowFinalQuizTime(false);
-
-        // Navigate to regular quiz with final quiz parameters
-        navigate(`/quiz/${finalQuizQuestionsCount}`, {
-            state: {
-                id: id,
-                types: selectedFinalType,
-                source: selectedFinalSource,
-                timer: timeLimit,
-                isFinalQuiz: true
-            }
-        });
-    };
-
-    const handleFinalTimeConfirm = () => {
-        if (finalQuizTimeLimit < 30) {
-            alert('Time limit must be at least 30 minutes');
-            return;
-        }
-
-        setShowFinalQuizTime(false);
-
-        // Navigate to regular quiz with final quiz parameters
-        navigate(`/quiz/${finalQuizQuestionsCount}`, {
-            state: {
-                id: id,
-                types: selectedFinalType,
-                source: selectedFinalSource,
-                timer: finalQuizTimeLimit,
-                isFinalQuiz: true
-            }
-        });
-    };
-
-    // Check completion for a specific source and type combination
-    const checkCompletion = async (type, source) => {
-        // Check authentication before making API call
-        if (!user || !sessionToken) {
-            console.error('Not authenticated for check completion');
-            return;
-        }
-
-        try {
-            const response = await protectedGet(`${Globals.URL}/api/check-completion/${id}?type=${encodeURIComponent(type)}&source=${encodeURIComponent(source)}`);
-            const { isCompleted, total, completed } = response.data;
-
-            if (isCompleted && total > 0) {
-                // Award achievement if not already awarded
-                await awardAchievement(type, source);
-
-                // Show congratulations popup
-                setCongratulationsData({
-                    type,
-                    source,
-                    total,
-                    completed
-                });
-                setShowCongratulations(true);
-                return true;
-            }
-            return false;
-        } catch (error) {
-            console.error('Error checking completion:', error);
-            return false;
-        }
-    };
-
-    // Check completion for all types in a source
-    const checkCompletionForSource = async (source) => {
-        for (const type of availableTypes) {
-            const isCompleted = await checkCompletion(type, source);
-            if (isCompleted) {
-                break; // Only show one popup at a time
-            }
-        }
-    };
-
-    // Award achievement for completing a cardinality
-    const awardAchievement = async (type, source) => {
-        // Check authentication before making API call
-        if (!user || !sessionToken) {
-            console.error('Not authenticated for award achievement');
-            return;
-        }
-
-        try {
-            const achievementKey = `${type}_${source}`;
-            const achievementName = `Master of ${type} from ${source}`;
-            const achievementDescription = `Completed all ${type} questions from ${source} source`;
-
-            await protectedPost(`${Globals.URL}/api/award-achievement`, {
-                userId: id,
-                achievementType: 'cardinality_completion',
-                achievementKey,
-                achievementName,
-                achievementDescription
-            });
-        } catch (error) {
-            console.error('Error awarding achievement:', error);
-        }
-    };
-
-    // Handle restart and reset progress
-    const handleRestart = async () => {
-        if (!congratulationsData) return;
-
-        // Check authentication before making API call
-        if (!user || !sessionToken) {
-            console.error('Not authenticated for reset progress');
-            return;
-        }
-
-        try {
-            await protectedPost(`${Globals.URL}/api/reset-progress`, {
-                userId: id,
-                type: congratulationsData.type,
-                source: congratulationsData.source
-            });
-
-            setShowCongratulations(false);
-            setCongratulationsData(null);
-
-            // Refresh the page or component to show updated state
-            window.location.reload();
-        } catch (error) {
-            console.error('Error resetting progress:', error);
-        }
-    };
-
-    // Handle close congratulations popup
-    const handleCloseCongratulations = () => {
-        setShowCongratulations(false);
-        setCongratulationsData(null);
-    };
-
-    useEffect(() => {
-        if (!showTypeSelector) return;
-
-        const listeners = [];
-        const labels = document.querySelectorAll('.custom-checkbox-group label');
-        labels.forEach(label => {
-            let checkbox = label.querySelector('input[type="checkbox"]');
-            if (!checkbox) return;
-
-            let customBox = label.querySelector('.checkbox-custom');
-            if (!customBox) {
-                customBox = document.createElement('span');
-                customBox.classList.add('checkbox-custom');
-                label.insertBefore(customBox, checkbox);
-            }
-
-            // Set initial state
-            if (checkbox.checked) {
-                customBox.classList.add('checked');
-            } else {
-                customBox.classList.remove('checked');
-            }
-
-            // Update on change
-            const handler = () => {
-                if (checkbox.checked) {
-                    customBox.classList.add('checked');
-                } else {
-                    customBox.classList.remove('checked');
-                }
-            };
-            checkbox.addEventListener('change', handler);
-            listeners.push({ checkbox, handler });
-        });
-
-        return () => {
-            listeners.forEach(({ checkbox, handler }) => {
-                checkbox.removeEventListener('change', handler);
-            });
-        };
-    }, [showTypeSelector, selectedTypes]);
-
-    // Helper for protected GET
-    const protectedGet = async (url, config = {}) => {
-        if (!user || !sessionToken) throw new Error('Not authenticated');
-        const urlWithUser = url + (url.includes('?') ? '&' : '?') + `username=${encodeURIComponent(user.username)}`;
-        try {
-            return await axios.get(urlWithUser, { ...config, headers: { ...(config.headers || {}), Authorization: `Bearer ${sessionToken}` } });
-        } catch (err) {
-            if (err.response && err.response.status === 401) {
-                setUser(null, null);
-                localStorage.removeItem('user'); localStorage.removeItem('sessionToken');
-                window.location.href = '/login?session=expired';
-                return;
-            }
-            throw err;
-        }
-    };
-
-    // Helper for protected POST
-    const protectedPost = async (url, data, config = {}) => {
-        if (!user || !sessionToken) throw new Error('Not authenticated');
-        const urlWithUser = url + (url.includes('?') ? '&' : '?') + `username=${encodeURIComponent(user.username)}`;
-        try {
-            return await axios.post(urlWithUser, data, { ...config, headers: { ...(config.headers || {}), Authorization: `Bearer ${sessionToken}` } });
-        } catch (err) {
-            if (err.response && err.response.status === 401) {
-                setUser(null, null);
-                localStorage.removeItem('user'); localStorage.removeItem('sessionToken');
-                window.location.href = '/login?session=expired';
-                return;
-            }
-            throw err;
-        }
-    };
-
-    useEffect(() => {
-        const fetchStreaks = async () => {
-            if (!id) return;
-            if (!user || !sessionToken) return; // Don't fetch if not authenticated
-            try {
-                const response = await protectedGet(`${Globals.URL}/user-streaks/${id}`);
-                setCurrentStreak(response.data.current_streak || 0);
-            } catch (error) {
-                console.error("Error fetching streak", error);
-            }
-        };
-        fetchStreaks();
-    }, [id, user, sessionToken, setUser]);
-
-    // When any selector/popup is open, gently dim + recede the button cluster
-    // behind it for a clean "in/out" transition.
-    const anyModalOpen = showSourceSelector || showTypeSelector || showTimerSelector ||
-        showCustomQuestions || showFinalQuizType || showFinalQuizSource ||
-        showFinalQuizTime || showCongratulations;
 
     return (
-        <>
-            <div className="quiz-selection">
-                {/* Streak Badge */}
-                {id && (
-                    <div className="streak-badge">
-                        <span className="streak-emoji"><Icon name="flame" size={18} /></span>
-                        <span className="streak-count">{currentStreak}</span>
-                    </div>
-                )}
-
-                {/* Achievement Badges */}
-                {id && <AchievementBadges userId={id} />}
-
-                <div className={`quiz-main${anyModalOpen ? ' is-dimmed' : ''}`}>
-                    <h1>اختر اختبارك</h1>
-                    <p className="quiz-subtitle">ابدأ سريعاً الآن أو خصص الاختبار كما تريد.</p>
-
-                    <button
-                        className="quick-start-btn"
-                        onClick={handleQuickStart}
-                    >
-                        ابدأ سريعاً: 10 أسئلة مختلطة
+        <div className="quiz-selection hubx" dir="rtl">
+            <header className="hubx-top">
+                <div className="hubx-greet">
+                    <h1>{firstName ? <>أهلاً <bdi>{firstName}</bdi> 👋</> : 'أهلاً بك 👋'}</h1>
+                    <p>جاهز لجلسة اليوم؟ ابدأ فوراً أو اختر تخصصاً تريد تقويته.</p>
+                </div>
+                <div className="hubx-actions">
+                    <button type="button" className="hubx-btn hubx-btn--primary" onClick={() => startQuiz('mix')}>
+                        <Icon name="rocket" size={19} />
+                        <span>ابدأ اختبار سريع</span>
+                        <small>١٠ أسئلة مختلطة</small>
                     </button>
+                    <button type="button" className="hubx-btn hubx-btn--ghost" onClick={() => setView('launcher')}>
+                        <Icon name="settings" size={17} />
+                        <span>خصّص الاختبار</span>
+                    </button>
+                </div>
+            </header>
 
-                    <div className="options-container">
-                        {quizOptions.map((num, i) => (
-                            <button
-                                key={num}
-                                className="quiz-option-btn"
-                                style={{ animationDelay: `${0.28 + i * 0.08}s` }}
-                                onClick={() => handleOptionClick(num)}
-                            >
-                                {num === 'custom' ? 'عدد مخصص' : `${num} سؤال`}
-                            </button>
-                        ))}
-                        {user && sessionToken && (
-                            <button
-                                className="quiz-option-btn final-quiz-btn"
-                                style={{ animationDelay: `${0.28 + quizOptions.length * 0.08}s` }}
-                                onClick={handleFinalQuizClick}
-                            >
-                                <Icon name="target" size={18} /> اختبار نهائي
-                            </button>
-                        )}
-                    </div>
+            <nav className="hubx-journey" aria-labelledby="hubx-journey-h">
+                <div className="hubx-sec-head">
+                    <h2 id="hubx-journey-h">رحلة المذاكرة</h2>
+                    <span className="hubx-sec-note">افهم ← ثبّت ← قِس، ثم كرّر</span>
+                </div>
+                <ol className="hubx-steps">
+                    {steps.map((s, i) => (
+                        <React.Fragment key={s.key}>
+                            <li className={`hubx-step hubx-step--${s.tone}${s.key === nextStep ? ' is-next' : ''}`}>
+                                <button type="button" className="hubx-step-btn" onClick={s.onClick}>
+                                    <span className="hubx-step-top">
+                                        <span className="hubx-step-n">{i + 1}</span>
+                                        <span className="hubx-step-kicker">{s.kicker}</span>
+                                        {s.key === nextStep && <span className="hubx-step-flag">ابدأ من هنا</span>}
+                                    </span>
+                                    <span className="hubx-step-icon"><Icon name={s.icon} size={24} /></span>
+                                    <strong className="hubx-step-title">{s.title}</strong>
+                                    <span className="hubx-step-desc">{s.desc}</span>
+                                    <span className="hubx-step-stat">{s.stat}</span>
+                                    <span className="hubx-step-cta">{s.cta} <Icon name="chevron-left" size={15} /></span>
+                                </button>
+                            </li>
+                            {i < steps.length - 1 && (
+                                <li className="hubx-step-arrow" aria-hidden="true"><Icon name="chevron-left" size={20} /></li>
+                            )}
+                        </React.Fragment>
+                    ))}
+                </ol>
+            </nav>
 
-                    {/* Secondary navigation actions */}
-                    <div className="secondary-actions">
-                        {id && (
-                            <button
-                                className="secondary-btn"
-                                onClick={() => navigate('/analysis', { state: { id: id } })}
-                            >
-                                <span className="secondary-btn-icon"><Icon name="bar-chart" size={18} /></span>
-                                <span>الذهاب للتحليل</span>
-                            </button>
-                        )}
-                        <button
-                            className="secondary-btn"
-                            onClick={() => navigate('/summaries')}
-                        >
-                            <span className="secondary-btn-icon"><Icon name="book-open" size={18} /></span>
-                            <span>الملخصات</span>
-                        </button>
-                    </div>
+            {/* One performance panel: headline numbers on top, per-specialty
+                rings below. These used to be two separate boxes that both
+                showed the same story in different shapes. */}
+            <section className="hubx-mastery" aria-labelledby="hubx-mastery-h">
+                <div className="hubx-sec-head">
+                    <h2 id="hubx-mastery-h">أداؤك</h2>
+                    {weakestKey && <span className="hubx-sec-note">ابدأ بأضعف تخصص لأكبر أثر</span>}
                 </div>
 
-                {/* Suggestions Button (floating) */}
-                <button
-                    className="suggestions-btn"
-                    onClick={() => navigate('/suggestions')}
-                >
-                    <span className="suggestions-icon"><Icon name="lightbulb" size={18} /></span>
-                    <span>الاقتراحات</span>
-                </button>
-
-
-                {/* Source Selector Modal */}
-                {showSourceSelector && (
-                    <div className="custom-source-selector-modal">
-                        <div className="custom-modal-content">
-                            <h2>اختر مصدر الأسئلة</h2>
-
-                            {renderSourcePicker(handleSourceSelect)}
-
-                            <div className="custom-modal-buttons">
-                                <button
-                                    onClick={() => setShowSourceSelector(false)}
-                                    className="custom-cancel-btn"
-                                >
-                                    إلغاء
-                                </button>
-                            </div>
+                <div className="hubx-kpis" aria-label="ملخص أدائك">
+                    {tiles.map((t) => (
+                        <div className={`hubx-kpi${loading ? ' is-loading' : ''}`} key={t.k}>
+                            <span className="hubx-kpi-icon"><Icon name={t.icon} size={15} /></span>
+                            <span className="hubx-kpi-value"><bdi>{loading ? '' : t.value}</bdi></span>
+                            <span className="hubx-kpi-label">{t.label}</span>
                         </div>
-                    </div>
-                )}
+                    ))}
+                </div>
 
-                {/* Type Selector Modal */}
-                {showTypeSelector && (
-                    <div className="custom-type-selector-modal">
-                        <div className="custom-modal-content">
-                            <h2>اختر نوع الأسئلة</h2>
-                            <p className="source-info">
-                                <Icon name="book-open" size={16} /> المصدر: <strong>{sourceLabels[selectedSource] || selectedSource}</strong>
-                            </p>
-                            <div className="custom-checkbox-group">
-                                {availableTypes.map((type) => (
-                                    <label key={type}>
-                                        <input
-                                            type="checkbox"
-                                            checked={selectedTypes.includes(type)}
-                                            onChange={() => handleCheckboxChange(type)}
-                                        />
-                                        {type}
-                                    </label>
-                                ))}
-                            </div>
-                            <div className="custom-modal-buttons">
-                                <button
-                                    onClick={handleStartQuiz}
-                                    disabled={selectedTypes.length === 0}
-                                    className="custom-start-btn"
-                                >
-                                    ابدأ الاختبار
-                                </button>
-                                <button onClick={handleMixAll} className="custom-mix-btn">
-                                    خلط جميع الأنواع
-                                </button>
-                                <button onClick={() => setShowTypeSelector(false)} className="custom-cancel-btn">
-                                    العودة للمصدر
-                                </button>
-                            </div>
-                        </div>
+                {state === 'error' ? (
+                    <div className="hubx-inline-error">
+                        <p>تعذّر تحميل بياناتك.</p>
+                        <button type="button" className="hubx-retry" onClick={load}>
+                            <Icon name="refresh" size={15} /> إعادة المحاولة
+                        </button>
                     </div>
-                )}
-
-                {/* Timer Selector Modal */}
-                {showTimerSelector && (
-                    <div className="custom-timer-selector-modal">
-                        <div className="custom-modal-content">
-                            <h2>ضبط المؤقت</h2>
-                            <p className="timer-info">
-                                <Icon name="clock" size={16} /> اختر مدة المؤقت أو "بدون مؤقت" لوقت غير محدود
-                            </p>
-                            <div className="timer-options">
-                                <button
-                                    className={`timer-option-btn ${selectedTimer === null ? 'selected' : ''}`}
-                                    onClick={() => handleTimerSelect(null)}
-                                >
-                                    بدون مؤقت
-                                </button>
-                                {timerOptions.map((timer) => (
-                                    <button
-                                        key={timer.value}
-                                        className={`timer-option-btn ${selectedTimer === timer.value ? 'selected' : ''}`}
-                                        onClick={() => handleTimerSelect(timer.value)}
-                                    >
-                                        {timer.label}
+                ) : (
+                    <ul className="hubx-specs">
+                        {rows.map((r) => {
+                            const isWeak = r.key === weakestKey;
+                            const started = r.answered > 0;
+                            const C = 163.36; // 2πr for r=26
+                            return (
+                                <li className={`hubx-spec${isWeak ? ' is-weak' : ''}${started ? '' : ' is-empty'}`} key={r.key}>
+                                    <span className="hubx-spec-ring" role="img"
+                                        aria-label={started ? `${r.label}: دقة ${r.accuracy} بالمئة من ${r.answered} سؤال` : `${r.label}: لم تبدأ بعد`}>
+                                        <svg viewBox="0 0 64 64" aria-hidden="true">
+                                            <circle className="hubx-ring-bg" cx="32" cy="32" r="26" />
+                                            <circle className="hubx-ring-fg" cx="32" cy="32" r="26"
+                                                style={{ strokeDasharray: C, strokeDashoffset: loading || !started ? C : C * (1 - r.accuracy / 100) }} />
+                                        </svg>
+                                        <span className="hubx-spec-pct">
+                                            {loading ? '' : started ? <bdi>{r.accuracy}%</bdi> : <Icon name={r.icon} size={20} />}
+                                        </span>
+                                    </span>
+                                    <span className="hubx-spec-name">
+                                        <Icon name={r.icon} size={15} /> {r.label}
+                                    </span>
+                                    <span className="hubx-spec-sub">
+                                        {loading ? <span className="hubx-skel" /> : started ? <><bdi>{fmt(r.answered)}</bdi> سؤال</> : 'لم تبدأ بعد'}
+                                    </span>
+                                    {isWeak && <span className="hubx-tag">أضعف تخصص</span>}
+                                    <button type="button" className="hubx-practise" onClick={() => startQuiz(r.key)}>
+                                        {started ? 'تدرّب' : 'ابدأ'}
                                     </button>
-                                ))}
-                            </div>
-                            {selectedTimer === 'custom' && (
-                                <div className="custom-timer-input">
-                                    <label htmlFor="customMinutes">مدة مخصصة (دقائق):</label>
-                                    <input
-                                        id="customMinutes"
-                                        type="number"
-                                        min="1"
-                                        max="180"
-                                        value={customTimerMinutes}
-                                        onChange={(e) => setCustomTimerMinutes(parseInt(e.target.value) || 15)}
-                                        className="custom-timer-number-input"
-                                    />
-                                </div>
-                            )}
-                            <div className="custom-modal-buttons">
-                                <button
-                                    onClick={handleTimerConfirm}
-                                    className="custom-start-btn"
-                                >
-                                    ابدأ الاختبار
-                                </button>
-                                <button onClick={() => setShowTimerSelector(false)} className="custom-cancel-btn">
-                                    العودة للأنواع
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                                </li>
+                            );
+                        })}
+                    </ul>
                 )}
 
-                {/* Custom Questions Modal */}
-                {showCustomQuestions && (
-                    <div className="custom-questions-modal">
-                        <div className="custom-modal-content">
-                            <h2>عدد أسئلة مخصص</h2>
-                            <p className="questions-info">
-                                <Icon name="pen" size={16} /> أدخل عدد الأسئلة المطلوب (1-500)
-                            </p>
-
-                            {/* Mobile-friendly input with preset buttons */}
-                            <div className="custom-questions-input">
-                                <label htmlFor="customQuestions">عدد الأسئلة:</label>
-
-                                {/* Quick preset buttons for mobile */}
-                                <div className="quick-preset-buttons">
-                                    <button
-                                        type="button"
-                                        className="preset-btn"
-                                        onClick={() => setCustomQuestionsCount(15)}
-                                    >
-                                        15
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className="preset-btn"
-                                        onClick={() => setCustomQuestionsCount(25)}
-                                    >
-                                        25
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className="preset-btn"
-                                        onClick={() => setCustomQuestionsCount(50)}
-                                    >
-                                        50
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className="preset-btn"
-                                        onClick={() => setCustomQuestionsCount(75)}
-                                    >
-                                        75
-                                    </button>
-                                </div>
-
-                                <div className="input-container">
-                                    <input
-                                        id="customQuestions"
-                                        type="number"
-                                        min="1"
-                                        max="500"
-                                        value={customQuestionsCount}
-                                        onChange={(e) => setCustomQuestionsCount(parseInt(e.target.value) || 25)}
-                                        className="custom-questions-number-input"
-                                        placeholder="Enter number"
-                                        inputMode="numeric"
-                                        pattern="[0-9]*"
-                                    />
-                                    <div className="input-controls">
-                                        <button
-                                            type="button"
-                                            className="control-btn minus"
-                                            onClick={() => setCustomQuestionsCount(Math.max(1, customQuestionsCount - 1))}
-                                        >
-                                            −
-                                        </button>
-                                        <button
-                                            type="button"
-                                            className="control-btn plus"
-                                            onClick={() => setCustomQuestionsCount(Math.min(500, customQuestionsCount + 1))}
-                                        >
-                                            +
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* Range slider for mobile */}
-                                <div className="range-slider-container">
-                                    <label htmlFor="questionsRange">أو استخدم الشريط:</label>
-                                    <input
-                                        id="questionsRange"
-                                        type="range"
-                                        min="1"
-                                        max="500"
-                                        value={customQuestionsCount}
-                                        onChange={(e) => setCustomQuestionsCount(parseInt(e.target.value))}
-                                        className="questions-range-slider"
-                                    />
-                                    <div className="range-labels">
-                                        <span>1</span>
-                                        <span>250</span>
-                                        <span>500</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="custom-modal-buttons">
-                                <button
-                                    onClick={handleCustomQuestionsConfirm}
-                                    className="custom-start-btn"
-                                >
-                                    متابعة
-                                </button>
-                                <button
-                                    onClick={() => setShowCustomQuestions(false)}
-                                    className="custom-cancel-btn"
-                                >
-                                    إلغاء
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                {!loading && state !== 'error' && !hasHistory && (
+                    <p className="hubx-empty">لم تبدأ أي اختبار بعد — أول اختبار يملأ هذه اللوحة ببياناتك.</p>
                 )}
+            </section>
 
-                <div className="quiz-footer" />
+            {id && <AchievementBadges userId={id} />}
 
-                {/* Final Quiz Type Selection Modal */}
-                {showFinalQuizType && (
-                    <div className="custom-source-selector-modal">
-                        <div className="custom-modal-content">
-                            <h2><Icon name="target" size={20} /> اختبار نهائي - اختر النوع</h2>
-                            <p className="final-quiz-description">
-                                مراجعة شاملة لجميع الأسئلة من المعايير المختارة
-                            </p>
-                            <div className="custom-source-buttons">
-                                {availableTypes.map((type) => (
-                                    <button
-                                        key={type}
-                                        onClick={() => handleFinalTypeSelect(type)}
-                                        className="custom-source-btn"
-                                    >
-                                        {type}
-                                    </button>
-                                ))}
-                            </div>
-                            <div className="custom-modal-buttons">
-                                <button
-                                    onClick={() => setShowFinalQuizType(false)}
-                                    className="custom-cancel-btn"
-                                >
-                                    إلغاء
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Final Quiz Source Selection Modal */}
-                {showFinalQuizSource && (
-                    <div className="custom-source-selector-modal">
-                        <div className="custom-modal-content">
-                            <h2><Icon name="target" size={20} /> اختبار نهائي - اختر المصدر</h2>
-                            <p className="final-quiz-description">
-                                اختر مصدر أسئلة {selectedFinalType}
-                            </p>
-
-                            {renderSourcePicker(handleFinalSourceSelect)}
-
-                            <div className="custom-modal-buttons">
-                                <button
-                                    onClick={() => setShowFinalQuizSource(false)}
-                                    className="custom-cancel-btn"
-                                >
-                                    إلغاء
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Final Quiz Time Selection Modal */}
-                {showFinalQuizTime && (
-                    <div className="custom-timer-selector-modal">
-                        <div className="custom-modal-content">
-                            <h2><Icon name="target" size={20} /> اختبار نهائي - ضبط الوقت</h2>
-                            <p className="final-quiz-description">
-                                {finalQuizQuestionsCount} سؤال متاح من {selectedFinalType} - {selectedFinalSource}
-                            </p>
-                            <p className="final-quiz-note">
-                                سيشمل جميع الأسئلة، حتى التي أجبت عليها سابقاً.
-                            </p>
-
-                            <div className="timer-options">
-                                <button
-                                    onClick={() => handleFinalTimeSelect(30)}
-                                    className="timer-option-btn"
-                                >
-                                    30 دقيقة
-                                </button>
-                                <button
-                                    onClick={() => handleFinalTimeSelect(60)}
-                                    className="timer-option-btn"
-                                >
-                                    ساعة
-                                </button>
-                                <button
-                                    onClick={() => handleFinalTimeSelect(90)}
-                                    className="timer-option-btn"
-                                >
-                                    ساعة ونص
-                                </button>
-                                <button
-                                    onClick={() => handleFinalTimeSelect(120)}
-                                    className="timer-option-btn"
-                                >
-                                    ساعتان
-                                </button>
-                            </div>
-
-                            <div className="custom-timer-input">
-                                <label htmlFor="finalQuizTime">أو حدد وقت مخصص (30 دقيقة كحد أدنى):</label>
-                                <div className="timer-input-container">
-                                    <input
-                                        id="finalQuizTime"
-                                        type="number"
-                                        min="30"
-                                        max="300"
-                                        value={finalQuizTimeLimit}
-                                        onChange={(e) => setFinalQuizTimeLimit(parseInt(e.target.value) || 30)}
-                                        className="custom-timer-number-input"
-                                        placeholder="Enter minutes"
-                                    />
-                                    <span className="time-unit">دقيقة</span>
-                                </div>
-                            </div>
-
-                            <div className="custom-modal-buttons">
-                                <button
-                                    onClick={handleFinalTimeConfirm}
-                                    className="custom-start-btn"
-                                >
-                                    ابدأ الاختبار النهائي
-                                </button>
-                                <button
-                                    onClick={() => setShowFinalQuizTime(false)}
-                                    className="custom-cancel-btn"
-                                >
-                                    إلغاء
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Congratulations Popup */}
-                <CongratulationsPopup
-                    isOpen={showCongratulations}
-                    onClose={handleCloseCongratulations}
-                    onRestart={handleRestart}
-                    achievementName={congratulationsData ? `متمكن في ${congratulationsData.type} من ${congratulationsData.source}` : ''}
-                    achievementDescription={congratulationsData ? `أكملت جميع أسئلة ${congratulationsData.type} من مصدر ${congratulationsData.source}!` : ''}
-                    type={congratulationsData?.type || ''}
-                    source={congratulationsData?.source || ''}
-                />
-            </div>
-        </>
+            <button className="suggestions-btn" onClick={() => navigate('/suggestions')}>
+                <span className="suggestions-icon"><Icon name="lightbulb" size={18} /></span>
+                <span>الاقتراحات</span>
+            </button>
+        </div>
     );
 };
 

@@ -55,6 +55,23 @@ const obgyn = {
                 </table>
 
                 <h3>1.3 Antepartum Hemorrhage</h3>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Placenta previa vs abruption</div>
+                <div class="deck-imgrow">
+                    <div class="deck-imgcell">
+                        <img class="deck-img" src="/summaries/placenta-previa-openstax.jpg" width="1200" height="763" loading="lazy" decoding="async"
+                             alt="Two cross-sections of a pregnant uterus. On the left the placenta lies along the upper uterine wall and the cervix is not obstructed. On the right the placenta lies over the internal os, covering the cervix." />
+                        <p class="deck-imgcap"><b>Placenta previa</b> — the placenta covers the internal os
+                        <br><span class="deck-hi deck-hi--red">PAINLESS · bright red · NO vaginal exam</span></p>
+                    </div>
+                    <div class="deck-imgcell">
+                        <img class="deck-img" src="/summaries/placental-abruption-blausen.jpg" width="954" height="665" loading="lazy" decoding="async"
+                             alt="Two cross-sections of a pregnant uterus with placental abruption. On the left the placenta has separated near the cervix and blood escapes externally; on the right the separation is high on the uterine wall and the blood is trapped behind the placenta as concealed internal bleeding." />
+                        <p class="deck-imgcap"><b>Placental abruption</b> — premature separation from the uterine wall
+                        <br><span class="deck-hi deck-hi--amber">PAINFUL · dark · may be CONCEALED</span></p>
+                    </div>
+                </div>
+                <figcaption><b>Previa</b> = placenta over the os → <b>painless</b> bright-red bleeding (no digital vaginal exam; confirm with ultrasound). <b>Abruption</b> = premature separation → <b>painful</b> dark bleeding, tender rigid uterus. Note the right-hand abruption panel: if the separation is high, the blood stays trapped and the loss is <b>concealed</b> — the bleeding you see can badly understate the loss.</figcaption>
+                <p class="deck-credit">Previa illustration: <a href="https://commons.wikimedia.org/wiki/File:2906_Placenta_Previa-02.jpg" target="_blank" rel="noopener noreferrer">OpenStax College</a>, <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener noreferrer">CC BY 3.0</a>. Abruption illustration: <a href="https://commons.wikimedia.org/wiki/File:Blausen_0737_PlacentalAbruption.png" target="_blank" rel="noopener noreferrer">Blausen Medical 2014</a>, <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener noreferrer">CC BY 3.0</a>. Both resized for web; content unmodified.</p></figure>
                 <h4>Placenta Previa</h4>
                 <ul>
                     <li><b>Definition</b>: Placenta covering the internal OS</li>
@@ -99,6 +116,15 @@ const obgyn = {
                 </ul>
 
                 <h3>1.4 Postpartum Hemorrhage (PPH)</h3>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Postpartum haemorrhage — the 4 T's</div>
+                <svg viewBox="0 0 700 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The four T's of postpartum haemorrhage: Tone (uterine atony, most common), Trauma (lacerations), Tissue (retained placenta), Thrombin (coagulopathy).">
+                <g font-family="system-ui,Arial">
+                <rect x="14" y="24" width="162" height="106" rx="10" fill="#fee2e2" stroke="#ef4444"/><text x="95" y="50" text-anchor="middle" font-size="14" font-weight="800" fill="#b91c1c">Tone</text><text x="95" y="76" text-anchor="middle" font-size="11" fill="#334155">uterine atony</text><text x="95" y="98" text-anchor="middle" font-size="11" fill="#334155">~70% · commonest</text><text x="95" y="118" text-anchor="middle" font-size="10" fill="#b91c1c" font-weight="700">massage + oxytocin</text>
+                <rect x="184" y="24" width="162" height="106" rx="10" fill="#fef3c7" stroke="#f59e0b"/><text x="265" y="50" text-anchor="middle" font-size="14" font-weight="800" fill="#b45309">Trauma</text><text x="265" y="76" text-anchor="middle" font-size="11" fill="#334155">lacerations</text><text x="265" y="98" text-anchor="middle" font-size="11" fill="#334155">cervix / vagina / uterus</text><text x="265" y="118" text-anchor="middle" font-size="10" fill="#b45309" font-weight="700">repair</text>
+                <rect x="354" y="24" width="162" height="106" rx="10" fill="#dbeafe" stroke="#3b82f6"/><text x="435" y="50" text-anchor="middle" font-size="14" font-weight="800" fill="#1d4ed8">Tissue</text><text x="435" y="76" text-anchor="middle" font-size="11" fill="#334155">retained placenta</text><text x="435" y="98" text-anchor="middle" font-size="11" fill="#334155">± accreta</text><text x="435" y="118" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">manual removal</text>
+                <rect x="524" y="24" width="162" height="106" rx="10" fill="#ede9fe" stroke="#8b5cf6"/><text x="605" y="50" text-anchor="middle" font-size="14" font-weight="800" fill="#6d28d9">Thrombin</text><text x="605" y="76" text-anchor="middle" font-size="11" fill="#334155">coagulopathy</text><text x="605" y="98" text-anchor="middle" font-size="11" fill="#334155">DIC · inherited</text><text x="605" y="118" text-anchor="middle" font-size="10" fill="#6d28d9" font-weight="700">correct factors</text>
+                </g></svg>
+                <figcaption><b>Tone</b> (atony) is the commonest cause — first-line uterine massage + oxytocin/uterotonics. Then check <b>Trauma</b>, <b>Tissue</b> (retained products) and <b>Thrombin</b> (coagulopathy).</figcaption></figure>
                 <ul>
                     <li><b>Primary PPH</b>: Bleeding within 24 hours of delivery</li>
                     <li><b>Secondary PPH</b>: Bleeding 24 hours – 12 weeks after delivery</li>
@@ -142,6 +168,18 @@ const obgyn = {
             `,
             questions: [
                 {
+                    q: 'A 32-year-old at 34 weeks has painless vaginal bleeding with a non-tender abdomen and no rupture of membranes. Ultrasound shows the placenta covering the internal os. Which action is contraindicated?',
+                    options: ['Cardiotocography for fetal heart rate', 'Digital vaginal examination', 'Administration of antenatal steroids', 'Admission for observation'],
+                    answer: 1,
+                    explanation: 'In placenta praevia a vaginal examination can disrupt the placenta and cause severe bleeding, so it must be avoided. Diagnosis is by transvaginal ultrasound to localise the placenta, and delivery is by caesarean section only.'
+                },
+                {
+                    q: 'A woman with a soft, boggy uterus has primary postpartum haemorrhage. She has a history of bronchial asthma. Which uterotonic is contraindicated?',
+                    options: ['Oxytocin', 'Methylergometrine (Methergine)', 'Carboprost (Hemabate)', 'Misoprostol'],
+                    answer: 2,
+                    explanation: 'Carboprost is contraindicated in bronchial asthma and methylergometrine is contraindicated in hypertension. Oxytocin 10–40 units is the first-line uterotonic. Uterine atony is the most common cause of primary PPH, so the first step is always to check uterine tone.'
+                },
+                {
                     q: 'A 20-year-old woman has 3 first-trimester abortions + prior pulmonary embolism. Labs: PT 11 s, APTT 69 s (↑), Platelets 320, Lupus anticoagulant positive. Most likely diagnosis?',
                     options: ['Factor V Leiden', 'Factor V deficiency', 'Protein C deficiency', 'Antiphospholipid syndrome'],
                     answer: 3,
@@ -167,6 +205,16 @@ const obgyn = {
             title_en: 'Stages · CTG · Cord Prolapse · Bishop Score · Episiotomy',
             summaryHtml: `
                 <h3>2.1 Normal Delivery — Stages</h3>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> The four stages of labour</div>
+                <svg viewBox="0 0 700 190" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Stage 1 onset to full dilation with latent and active phases; stage 2 full dilation to delivery of the baby; stage 3 delivery of the placenta; stage 4 first one to two hours postpartum.">
+                <g font-family="system-ui,Arial">
+                <rect x="20" y="50" width="300" height="46" rx="8" fill="#dbeafe" stroke="#3b82f6"/><text x="170" y="70" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">Stage 1</text><text x="170" y="88" text-anchor="middle" font-size="10" fill="#475569">onset → 10 cm (latent 0–6 · active 6–10)</text>
+                <rect x="326" y="50" width="150" height="46" rx="8" fill="#dcfce7" stroke="#22c55e"/><text x="401" y="70" text-anchor="middle" font-size="13" font-weight="700" fill="#15803d">Stage 2</text><text x="401" y="88" text-anchor="middle" font-size="10" fill="#475569">full dilation → baby</text>
+                <rect x="482" y="50" width="110" height="46" rx="8" fill="#fef3c7" stroke="#f59e0b"/><text x="537" y="70" text-anchor="middle" font-size="13" font-weight="700" fill="#b45309">Stage 3</text><text x="537" y="88" text-anchor="middle" font-size="10" fill="#475569">placenta</text>
+                <rect x="598" y="50" width="84" height="46" rx="8" fill="#ede9fe" stroke="#8b5cf6"/><text x="640" y="70" text-anchor="middle" font-size="13" font-weight="700" fill="#6d28d9">Stage 4</text><text x="640" y="88" text-anchor="middle" font-size="10" fill="#475569">1–2 h</text>
+                <line x1="20" y1="120" x2="682" y2="120" stroke="#94a3b8" stroke-width="2"/><text x="20" y="140" font-size="10.5" fill="#64748b">onset of regular contractions</text><text x="682" y="140" text-anchor="end" font-size="10.5" fill="#64748b">recovery</text>
+                </g></svg>
+                <figcaption><b>1</b> = cervix to full dilation (longest); <b>2</b> = pushing → delivery; <b>3</b> = placenta (active management: oxytocin + controlled cord traction); <b>4</b> = watch for postpartum haemorrhage.</figcaption></figure>
                 <table>
                     <thead><tr><th>Stage</th><th>Phase</th><th>Time Limit</th><th>Action if exceeded</th></tr></thead>
                     <tbody>
@@ -198,6 +246,21 @@ const obgyn = {
                         <tr><td>Late</td><td>Uteroplacental insufficiency</td><td>Starts after peak of contraction</td></tr>
                     </tbody>
                 </table>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Decelerations — timing vs the contraction</div>
+                <svg viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Early decelerations mirror the contraction; variable are abrupt V-shaped drops; late begin after the contraction peak.">
+                <g font-family="system-ui,Arial">
+                <text x="120" y="24" text-anchor="middle" font-size="13" font-weight="700" fill="#16a34a">Early — head compression</text>
+                <path d="M40,150 Q120,72 200,150" fill="none" stroke="#94a3b8" stroke-width="2.5"/><line x1="40" y1="95" x2="200" y2="95" stroke="#cbd5e1"/><path d="M40,95 Q120,150 200,95" fill="none" stroke="#16a34a" stroke-width="2.8"/>
+                <text x="120" y="180" text-anchor="middle" font-size="10.5" fill="#475569">nadir = contraction peak</text>
+                <text x="350" y="24" text-anchor="middle" font-size="13" font-weight="700" fill="#d97706">Variable — cord compression</text>
+                <path d="M270,150 Q350,72 430,150" fill="none" stroke="#94a3b8" stroke-width="2.5"/><line x1="270" y1="95" x2="430" y2="95" stroke="#cbd5e1"/><path d="M270,95 H334 L348,150 L362,95 H430" fill="none" stroke="#d97706" stroke-width="2.8"/>
+                <text x="350" y="180" text-anchor="middle" font-size="10.5" fill="#475569">abrupt V-shape · variable timing</text>
+                <text x="580" y="24" text-anchor="middle" font-size="13" font-weight="700" fill="#dc2626">Late — placental insufficiency</text>
+                <path d="M500,150 Q580,72 660,150" fill="none" stroke="#94a3b8" stroke-width="2.5"/><line x1="500" y1="95" x2="660" y2="95" stroke="#cbd5e1"/><path d="M500,95 H572 Q620,152 665,95" fill="none" stroke="#dc2626" stroke-width="2.8"/>
+                <text x="580" y="180" text-anchor="middle" font-size="10.5" fill="#475569">nadir AFTER the peak</text>
+                <rect x="250" y="205" width="16" height="4" fill="#94a3b8"/><text x="272" y="213" font-size="11" fill="#475569">contraction</text><rect x="400" y="205" width="16" height="4" fill="#dc2626"/><text x="422" y="213" font-size="11" fill="#475569">fetal heart rate</text>
+                </g></svg>
+                <figcaption><b>Early</b> mirrors the contraction (benign, head compression). <b>Variable</b> = abrupt V-shaped drops, any timing (cord). <b>Late</b> starts after the peak — worrying (uteroplacental insufficiency).</figcaption></figure>
                 <p><b>Drug Effects on CTG:</b></p>
                 <ul>
                     <li>MgSO4 → Minimal or reduced variability</li>
@@ -290,6 +353,18 @@ const obgyn = {
             title_en: 'Pre-eclampsia · GDM · DM · Multiple Gestation · Immunization',
             summaryHtml: `
                 <h3>3.1 Pre-eclampsia / Eclampsia / Gestational Hypertension</h3>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Hypertension in pregnancy — the 20-week line</div>
+                <svg viewBox="0 0 700 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Hypertension before 20 weeks is chronic hypertension. After 20 weeks without proteinuria it is gestational hypertension; with proteinuria or end-organ dysfunction it is pre-eclampsia; with seizures it is eclampsia.">
+                <g font-family="system-ui,Arial">
+                <line x1="330" y1="18" x2="330" y2="176" stroke="#8b5cf6" stroke-width="4" stroke-dasharray="8 5"/>
+                <rect x="266" y="182" width="128" height="28" rx="8" fill="#ede9fe" stroke="#8b5cf6"/><text x="330" y="201" text-anchor="middle" font-size="12" font-weight="800" fill="#6d28d9">20 weeks</text>
+                <rect x="14" y="60" width="300" height="76" rx="10" fill="#dbeafe" stroke="#3b82f6"/><text x="164" y="88" text-anchor="middle" font-size="13.5" font-weight="800" fill="#1d4ed8">CHRONIC hypertension</text><text x="164" y="112" text-anchor="middle" font-size="11.5" fill="#334155">present before 20 wk or pre-pregnancy</text>
+                <rect x="346" y="24" width="340" height="48" rx="10" fill="#dcfce7" stroke="#22c55e"/><text x="516" y="44" text-anchor="middle" font-size="12.5" font-weight="800" fill="#15803d">GESTATIONAL hypertension</text><text x="516" y="63" text-anchor="middle" font-size="11" fill="#334155">no proteinuria, no end-organ damage</text>
+                <rect x="346" y="80" width="340" height="48" rx="10" fill="#fef3c7" stroke="#f59e0b"/><text x="516" y="100" text-anchor="middle" font-size="12.5" font-weight="800" fill="#b45309">PRE-ECLAMPSIA</text><text x="516" y="119" text-anchor="middle" font-size="11" fill="#334155">+ proteinuria OR end-organ dysfunction</text>
+                <rect x="346" y="136" width="340" height="48" rx="10" fill="#fee2e2" stroke="#ef4444"/><text x="516" y="156" text-anchor="middle" font-size="12.5" font-weight="800" fill="#b91c1c">ECLAMPSIA</text><text x="516" y="175" text-anchor="middle" font-size="11" fill="#334155">severe pre-eclampsia + SEIZURES</text>
+                <rect x="14" y="216" width="672" height="30" rx="8" fill="#f1f5f9" stroke="#cbd5e1"/><text x="350" y="236" text-anchor="middle" font-size="11.5" font-weight="700" fill="#334155">Severe features: BP &gt;160/110 · headache/visual change · Cr &gt;1.1 · AST/ALT &gt;2× · platelets &lt;100,000 · pulmonary oedema</text>
+                </g></svg>
+                <figcaption>The <b>20-week line</b> separates chronic from pregnancy-induced hypertension; <b>proteinuria or end-organ damage</b> then upgrades gestational hypertension to pre-eclampsia.</figcaption></figure>
                 <ul>
                     <li><b>Chronic HTN</b>: Hypertension before 20 weeks / before pregnancy</li>
                     <li><b>Gestational HTN</b>: HTN ≥20 weeks, no proteinuria/end-organ damage</li>
@@ -403,10 +478,35 @@ const obgyn = {
             `,
             questions: [
                 {
+                    q: 'An Rh-negative woman is pregnant with an Rh-positive fetus. When should anti-D immunoglobulin be given?',
+                    options: ['At 28 weeks, and again within 72 hours of delivery if the newborn is Rh positive', 'Only at delivery', 'Only in the first trimester', 'Every month throughout the pregnancy'],
+                    answer: 0,
+                    explanation: 'Anti-D immunoglobulin 300 µg is given at 28 weeks of gestation, within 72 hours postpartum if the newborn is Rh positive, and after fetomaternal haemorrhage events such as trauma, amniocentesis or vaginal bleeding. One 300 µg dose covers up to 30 mL of fetal whole blood.'
+                },
+                {
                     q: 'A 39-year-old primigravida at 39 wks — cervix 2 cm, 90% effaced, 0 station. BP 140/90. Urine dipstick positive for protein. Most appropriate management?',
                     options: ['Induction of labor', 'Immediate C-section', 'Admission for observation', 'Outpatient observation till 40 wks'],
                     answer: 0,
                     explanation: 'Mild pre-eclampsia at ≥37 wks → IOL.'
+                }
+                ,
+                {
+                    q: 'A woman at 30 weeks has BP 168/114, a severe persistent headache and platelets of 80,000. What is the correct management package?',
+                    options: ['Admit; give MgSO4, IV labetalol and antenatal steroids', 'Discharge on oral methyldopa with weekly follow-up', 'Immediate caesarean without stabilisation', 'Observe only until 37 weeks'],
+                    answer: 0,
+                    explanation: 'This is severe pre-eclampsia (BP >160/110 plus CNS symptoms and thrombocytopenia <100,000). At <34 weeks: admit, give MgSO4 for seizure prophylaxis, IV labetalol for BP control and steroids (<32 weeks) for fetal lung maturity.'
+                },
+                {
+                    q: 'A woman receiving magnesium sulphate for eclampsia develops loss of deep tendon reflexes and respiratory depression. What is the immediate management?',
+                    options: ['Stop MgSO4 and give calcium gluconate', 'Increase the MgSO4 infusion rate', 'Give IV labetalol', 'Give furosemide'],
+                    answer: 0,
+                    explanation: 'Loss of reflexes and respiratory depression signal magnesium toxicity — stop the infusion and give calcium gluconate as the antidote, then proceed to delivery.'
+                },
+                {
+                    q: 'In eclampsia, what is magnesium sulphate given for?',
+                    options: ['To control and prevent seizures', 'To lower blood pressure as first-line', 'To induce labour', 'To mature the fetal lungs'],
+                    answer: 0,
+                    explanation: 'MgSO4 controls and prevents eclamptic seizures — it is not an antihypertensive. Blood pressure is controlled with IV labetalol (or hydralazine); definitive treatment of eclampsia is delivery.'
                 }
             ]
         },
@@ -416,6 +516,21 @@ const obgyn = {
             title_en: 'Prenatal Care · Fetal Medicine · Physiological Changes',
             summaryHtml: `
                 <h3>4.1 Prenatal Care</h3>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Antenatal timeline — visits &amp; scans</div>
+                <svg viewBox="0 0 700 235" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dating scan at 10 to 11 weeks by crown-rump length; anomaly scan at 18 to 22 weeks; visits every 4 weeks until 28 weeks, then every 2 weeks until 36 weeks, then weekly until delivery.">
+                <g font-family="system-ui,Arial">
+                <line x1="40" y1="120" x2="660" y2="120" stroke="#94a3b8" stroke-width="3"/>
+                <circle cx="112" cy="120" r="8" fill="#8b5cf6"/><text x="112" y="100" text-anchor="middle" font-size="11.5" font-weight="700" fill="#6d28d9">10–11 wk</text><text x="112" y="146" text-anchor="middle" font-size="10.5" fill="#475569">dating scan (CRL)</text>
+                <circle cx="268" cy="120" r="8" fill="#2563eb"/><text x="268" y="100" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">18–22 wk</text><text x="268" y="146" text-anchor="middle" font-size="10.5" fill="#475569">anomaly scan</text>
+                <circle cx="432" cy="120" r="8" fill="#16a34a"/><text x="432" y="100" text-anchor="middle" font-size="11.5" font-weight="700" fill="#15803d">28 wk</text><text x="432" y="146" text-anchor="middle" font-size="10.5" fill="#475569">visits → every 2 wk</text>
+                <circle cx="560" cy="120" r="8" fill="#f59e0b"/><text x="560" y="100" text-anchor="middle" font-size="11.5" font-weight="700" fill="#b45309">36 wk</text><text x="560" y="146" text-anchor="middle" font-size="10.5" fill="#475569">visits → weekly</text>
+                <circle cx="648" cy="120" r="8" fill="#ef4444"/><text x="648" y="100" text-anchor="middle" font-size="11.5" font-weight="700" fill="#b91c1c">40 wk</text>
+                <rect x="40" y="24" width="286" height="34" rx="9" fill="#f1f5f9" stroke="#cbd5e1"/><text x="183" y="46" text-anchor="middle" font-size="11.5" font-weight="700" fill="#334155">every 4 weeks until 28 wk</text>
+                <rect x="336" y="24" width="164" height="34" rx="9" fill="#f1f5f9" stroke="#cbd5e1"/><text x="418" y="46" text-anchor="middle" font-size="11.5" font-weight="700" fill="#334155">every 2 wk → 36</text>
+                <rect x="510" y="24" width="150" height="34" rx="9" fill="#f1f5f9" stroke="#cbd5e1"/><text x="585" y="46" text-anchor="middle" font-size="11.5" font-weight="700" fill="#334155">weekly → delivery</text>
+                <rect x="40" y="176" width="620" height="44" rx="10" fill="#dcfce7" stroke="#22c55e"/><text x="350" y="196" text-anchor="middle" font-size="12" font-weight="700" fill="#15803d">Folic acid: 400 µg daily (average risk) · 4 mg daily (previous NTD)</text><text x="350" y="214" text-anchor="middle" font-size="11" fill="#334155">Screen urine culture for asymptomatic bacteriuria — treat if positive regardless of symptoms</text>
+                </g></svg>
+                <figcaption>Two scans anchor the pregnancy: <b>dating at 10–11 weeks</b> (CRL) and the <b>anomaly scan at 18–22 weeks</b>. Visit frequency then steps up at 28 and 36 weeks.</figcaption></figure>
                 <ul>
                     <li><b>Expected delivery date (EDD)</b>: LMP day +7 / month +9 / year +1 or 0. Example: LMP 18/5/2020 → EDD 25/2/2021</li>
                     <li><b>Visit Schedule</b>: Every 4 weeks until 28 weeks; Every 2 weeks until 36 weeks; Weekly thereafter</li>
@@ -485,6 +600,25 @@ const obgyn = {
                     answer: 0,
                     explanation: 'Anencephaly → lack of swallowing reflex → failure to swallow amniotic fluid → polyhydramnios.'
                 }
+                ,
+                {
+                    q: 'A woman planning pregnancy has a previous child with a neural tube defect. What daily dose of folic acid is recommended?',
+                    options: ['4 mg daily', '400 µg (0.4 mg) daily', '40 µg daily', 'None is needed'],
+                    answer: 0,
+                    explanation: 'High-risk women (prior NTD-affected pregnancy) need 4 mg daily; average-risk women need 400 µg (0.4 mg) daily.'
+                },
+                {
+                    q: 'At what gestational age is the anomaly scan performed?',
+                    options: ['18–22 weeks', '10–11 weeks', '28–30 weeks', '36–38 weeks'],
+                    answer: 0,
+                    explanation: 'The anomaly (structural) scan is done at 18–22 weeks. The first ultrasound at 10–11 weeks confirms gestational age using crown-rump length.'
+                },
+                {
+                    q: 'A woman at 9 weeks has persistent vomiting with dehydration. Which finding is diagnostic of hyperemesis gravidarum?',
+                    options: ['Ketonuria', 'Glycosuria', 'Proteinuria', 'Leukocyturia'],
+                    answer: 0,
+                    explanation: 'Persistent vomiting → dehydration → glycogen depletion → lipolysis → ketonemia and ketonuria, which is the diagnostic finding. High hCG stimulates the vomiting centre and TSH receptors.'
+                }
             ]
         },
         {
@@ -513,6 +647,25 @@ const obgyn = {
                 </table>
 
                 <h3>5.2 Ectopic Pregnancy</h3>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Ectopic pregnancy — implantation sites</div>
+                <svg viewBox="0 0 680 312" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Most ectopic pregnancies implant in the fallopian tube ampulla (about 70 percent); others in isthmus, fimbria, interstitial or cornual region, ovary, cervix, or abdomen.">
+                <path d="M300,150 L380,150 L340,235 Z" fill="#fde68a" stroke="#d97706" stroke-width="2"/><text x="340" y="200" text-anchor="middle" font-size="10" fill="#92400e">uterus</text>
+                <path d="M300,150 Q210,110 150,140 Q120,155 130,175" fill="none" stroke="#f472b6" stroke-width="9" stroke-linecap="round"/>
+                <path d="M380,150 Q470,110 530,140 Q560,155 550,175" fill="none" stroke="#f472b6" stroke-width="9" stroke-linecap="round"/>
+                <circle cx="470" cy="118" r="9" fill="#dc2626"/><text x="470" y="100" text-anchor="middle" font-size="11" font-weight="700" fill="#b91c1c">ampulla ~70%</text>
+                <circle cx="405" cy="138" r="7" fill="#f97316"/>
+                <circle cx="545" cy="160" r="7" fill="#f59e0b"/>
+                <circle cx="372" cy="150" r="7" fill="#7c3aed"/>
+                <circle cx="560" cy="180" r="7" fill="#0891b2"/>
+                <circle cx="340" cy="232" r="7" fill="#334155"/>
+                <line x1="30" y1="252" x2="650" y2="252" stroke="#e2e8f0" stroke-width="1.5"/>
+                <circle cx="48" cy="270" r="6" fill="#f97316"/><text x="63" y="274" font-size="11" fill="#c2410c">isthmus ~12%</text>
+                <circle cx="268" cy="270" r="6" fill="#f59e0b"/><text x="283" y="274" font-size="11" fill="#b45309">fimbrial ~11%</text>
+                <circle cx="488" cy="270" r="6" fill="#7c3aed"/><text x="503" y="274" font-size="11" fill="#6d28d9">interstitial ~2%</text>
+                <circle cx="48" cy="294" r="6" fill="#0891b2"/><text x="63" y="298" font-size="11" fill="#155e75">ovarian ~3%</text>
+                <circle cx="268" cy="294" r="6" fill="#334155"/><text x="283" y="298" font-size="11" fill="#334155">cervical &lt;1%</text>
+                </svg>
+                <figcaption>Most implant in the <b>tubal ampulla (~70%)</b>. Classic triad: amenorrhoea + <b>lower abdominal pain</b> + vaginal bleeding; β-hCG that fails to double + no intrauterine sac on TVUS. <b>Interstitial/cornual</b> ruptures late and bleeds massively.</figcaption></figure>
                 <ul>
                     <li><b>Definition</b>: Implantation of fertilized ovum outside the uterus</li>
                     <li><b>Risk Factors</b>: Previous ectopic pregnancy (most significant RF), PID, Previous abdominal/pelvic surgery, IVF</li>
@@ -669,10 +822,35 @@ const obgyn = {
             `,
             questions: [
                 {
+                    q: 'A 34-year-old woman is due for cervical cancer screening. Which schedule is appropriate?',
+                    options: ['Co-testing (PAP + HPV) every 5 years, or a PAP smear alone every 3 years', 'A PAP smear every year', 'No screening is required until age 40', 'HPV testing every 10 years'],
+                    answer: 0,
+                    explanation: 'From 30 to 65 the options are co-testing (PAP + HPV) every 5 years or a PAP smear alone every 3 years. Ages 21–29 have a PAP smear every 3 years, and screening stops after 65.'
+                },
+                {
                     q: 'A 33-year-old with 1-year amenorrhea following D&C for AUB. No response to progesterone or combined E+P withdrawal. FSH normal. Most likely diagnosis?',
                     options: ['Kallmann syndrome', 'Sheehan syndrome', 'Asherman syndrome', 'PCOS'],
                     answer: 2,
                     explanation: 'Post-D&C amenorrhea + no hormonal withdrawal bleed + normal FSH = intrauterine adhesions (Asherman).'
+                }
+                ,
+                {
+                    q: 'A 26-year-old has oligomenorrhoea, hirsutism and acanthosis nigricans. How many Rotterdam criteria are required to diagnose PCOS?',
+                    options: ['2 of 3', 'All 3', '1 of 3', 'Ultrasound findings alone'],
+                    answer: 0,
+                    explanation: 'PCOS requires 2 of 3 Rotterdam criteria: oligo/anovulation, clinical or biochemical hyperandrogenism, and polycystic ovaries on ultrasound. The LH:FSH ratio is classically about 3:1.'
+                },
+                {
+                    q: 'A woman with PCOS wants to conceive. After lifestyle modification, what is the first-line treatment for her infertility?',
+                    options: ['Clomiphene', 'Combined oral contraceptive pill', 'Metformin alone', 'Immediate IVF'],
+                    answer: 0,
+                    explanation: 'Lifestyle modification is first-line for all PCOS. Then treat by problem: infertility → clomiphene; menstrual irregularity → OCP; insulin resistance → metformin.'
+                },
+                {
+                    q: 'A haemodynamically stable woman has an unruptured ectopic pregnancy, β-hCG 3000 IU/L, no fetal cardiac activity and a 3 cm adnexal mass. What treatment is appropriate?',
+                    options: ['Methotrexate', 'Emergency laparotomy', 'Expectant management with no follow-up', 'Immediate hysterectomy'],
+                    answer: 0,
+                    explanation: 'Methotrexate is appropriate when ALL criteria are met: haemodynamically stable/unruptured, β-hCG ≤5000 IU/L, no fetal cardiac activity, mass <4 cm and reliable access to hospital follow-up. Instability or rupture mandates surgery.'
                 }
             ]
         },
@@ -693,6 +871,20 @@ const obgyn = {
                 <div class="sum-callout"><b>Step 1 for all incontinence</b>: Urinalysis + culture to rule out UTI.</div>
 
                 <h3>6.2 Pelvic Organ Prolapse</h3>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Prolapse by compartment</div>
+                <svg viewBox="-62 0 824 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cystocele is the upper anterior vaginal wall containing bladder; urethrocele is the lower anterior wall; enterocele is the upper posterior vagina containing small bowel; rectocele is the posterior vaginal wall containing rectum; vault prolapse is at the vaginal apex.">
+                <g font-family="system-ui,Arial">
+                <path d="M330,30 L330,220" stroke="#334155" stroke-width="3"/><text x="336" y="24" font-size="11" fill="#64748b">vagina</text>
+                <text x="200" y="24" text-anchor="middle" font-size="12.5" font-weight="800" fill="#b91c1c">ANTERIOR wall</text>
+                <rect x="64" y="42" width="252" height="52" rx="9" fill="#fee2e2" stroke="#ef4444"/><text x="80" y="66" font-size="12.5" font-weight="700" fill="#b91c1c">Cystocele</text><text x="80" y="86" font-size="11.5" fill="#334155">upper anterior — BLADDER</text>
+                <rect x="64" y="104" width="252" height="52" rx="9" fill="#ffe4e6" stroke="#fb7185"/><text x="80" y="128" font-size="12.5" font-weight="700" fill="#be123c">Urethrocele</text><text x="80" y="148" font-size="11.5" fill="#334155">lower anterior — URETHRA</text>
+                <text x="510" y="24" text-anchor="middle" font-size="12.5" font-weight="800" fill="#1d4ed8">POSTERIOR wall</text>
+                <rect x="344" y="42" width="252" height="52" rx="9" fill="#dbeafe" stroke="#3b82f6"/><text x="360" y="66" font-size="12.5" font-weight="700" fill="#1d4ed8">Enterocele</text><text x="360" y="86" font-size="11.5" fill="#334155">upper posterior — SMALL BOWEL</text>
+                <rect x="344" y="104" width="252" height="52" rx="9" fill="#e0f2fe" stroke="#38bdf8"/><text x="360" y="128" font-size="12.5" font-weight="700" fill="#0369a1">Rectocele</text><text x="360" y="148" font-size="11.5" fill="#334155">posterior — RECTUM</text>
+                <rect x="64" y="168" width="532" height="42" rx="9" fill="#ede9fe" stroke="#8b5cf6"/><text x="330" y="194" text-anchor="middle" font-size="12" font-weight="700" fill="#6d28d9">Vaginal vault prolapse — the apex, often after hysterectomy</text>
+                <text x="330" y="234" text-anchor="middle" font-size="11.5" fill="#475569">Conservative: pessary + pelvic floor exercises · Surgery: anterior colporrhaphy (cystocele), posterior colporrhaphy (rectocele), sacrospinous fixation (vault)</text>
+                </g></svg>
+                <figcaption>Name the prolapse by <b>which wall bulges and what sits behind it</b>. Always measure the <b>post-void residual</b> in a cystocele to exclude bladder outlet obstruction.</figcaption></figure>
                 <table>
                     <thead><tr><th>Type</th><th>Herniation</th></tr></thead>
                     <tbody>
@@ -737,6 +929,25 @@ const obgyn = {
                     answer: 0,
                     explanation: 'Urge incontinence (overactive bladder) is due to spontaneous detrusor contractions. After bladder training, anticholinergics such as oxybutynin (or a β3-agonist like mirabegron) are first-line. Always exclude a UTI first with urinalysis and culture.'
                 }
+                ,
+                {
+                    q: 'What is the first step in evaluating any woman presenting with urinary incontinence?',
+                    options: ['Urinalysis and culture to exclude UTI', 'Urodynamic studies', 'Immediate TVT surgery', 'Start anticholinergics empirically'],
+                    answer: 0,
+                    explanation: 'A urinalysis and culture to rule out infection is step 1 for all incontinence, because a UTI can cause or mimic incontinence.'
+                },
+                {
+                    q: 'A woman leaks urine when she coughs or sneezes and has a positive cough stress test. What is first-line management?',
+                    options: ['Kegel (pelvic floor) exercises', 'Oxybutynin', 'Immediate sling surgery', 'Indwelling catheter'],
+                    answer: 0,
+                    explanation: 'Stress incontinence is due to raised intra-abdominal pressure; first-line is pelvic floor (Kegel) exercises, with tension-free vaginal tape (TVT) surgery as the definitive option.'
+                },
+                {
+                    q: 'A woman has urgency followed by leakage, and urodynamics show spontaneous detrusor contractions at small filling volumes. Which treatment is indicated?',
+                    options: ['Anticholinergics such as oxybutynin', 'Anterior colporrhaphy', 'Pessary insertion', 'Alpha-blocker'],
+                    answer: 0,
+                    explanation: 'Urge incontinence results from spontaneous detrusor contraction and is treated with anticholinergics (e.g. oxybutynin). Overflow incontinence is instead assessed with post-void residual and treated by relieving the obstruction.'
+                }
             ]
         },
         {
@@ -745,6 +956,15 @@ const obgyn = {
             title_en: 'Infertility · Contraception · Menopause · GTD · Infections',
             summaryHtml: `
                 <h3>7.1 Infertility</h3>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Infertility workup — the order of investigation</div>
+                <svg viewBox="0 0 700 306" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Infertility workup in order: step 1 history and examination confirming at least 12 months of regular unprotected sex; step 2 semen analysis of the male partner — if abnormal do a hormonal profile of FSH, LH and testosterone, if normal proceed to female investigations; step 3 ovulatory assessment with regular cycles plus FSH, LH, prolactin and mid-luteal progesterone; step 4 tubal patency by HSG as the initial test — unilateral blockage is confirmed by laparoscopy and dye test then treated with clomiphene, bilateral blockage is confirmed by laparoscopy and dye test then treated with IVF.">
+                <g font-family="system-ui,Arial">
+                <rect x="16" y="16" width="668" height="48" rx="10" fill="#f8fafc" stroke="#cbd5e1"/><circle cx="44" cy="40" r="15" fill="#64748b"/><text x="44" y="45" text-anchor="middle" font-size="14" font-weight="800" fill="#fff">1</text><text x="70" y="45" font-size="12.5" font-weight="700" fill="#0f172a">History &amp; examination</text><rect x="300" y="26" width="372" height="28" rx="7" fill="#fff" stroke="#cbd5e1"/><text x="314" y="45" font-size="11" fill="#334155">confirm ≥12 months of regular unprotected sex</text>
+                <rect x="16" y="72" width="668" height="76" rx="10" fill="#eff6ff" stroke="#3b82f6"/><circle cx="44" cy="110" r="15" fill="#3b82f6"/><text x="44" y="115" text-anchor="middle" font-size="14" font-weight="800" fill="#fff">2</text><text x="70" y="106" font-size="12.5" font-weight="700" fill="#1d4ed8">Semen analysis</text><text x="70" y="124" font-size="10.5" fill="#475569">male partner FIRST</text><rect x="300" y="80" width="372" height="30" rx="7" fill="#fffbeb" stroke="#f59e0b"/><text x="314" y="100" font-size="11" fill="#334155">abnormal → hormonal profile: FSH · LH · testosterone</text><rect x="300" y="116" width="372" height="30" rx="7" fill="#f0fdf4" stroke="#22c55e"/><text x="314" y="136" font-size="11" fill="#334155">normal → proceed to female investigations</text>
+                <rect x="16" y="156" width="668" height="48" rx="10" fill="#f5f3ff" stroke="#8b5cf6"/><circle cx="44" cy="180" r="15" fill="#8b5cf6"/><text x="44" y="185" text-anchor="middle" font-size="14" font-weight="800" fill="#fff">3</text><text x="70" y="185" font-size="12.5" font-weight="700" fill="#6d28d9">Ovulatory assessment</text><rect x="300" y="166" width="372" height="28" rx="7" fill="#fff" stroke="#c4b5fd"/><text x="314" y="185" font-size="10.5" fill="#334155">regular cycles + FSH · LH · prolactin · mid-luteal progesterone</text>
+                <rect x="16" y="212" width="668" height="76" rx="10" fill="#fef2f2" stroke="#ef4444"/><circle cx="44" cy="250" r="15" fill="#ef4444"/><text x="44" y="255" text-anchor="middle" font-size="14" font-weight="800" fill="#fff">4</text><text x="70" y="246" font-size="12.5" font-weight="700" fill="#b91c1c">Tubal patency</text><text x="70" y="264" font-size="10.5" fill="#475569">HSG = initial test</text><rect x="300" y="220" width="372" height="30" rx="7" fill="#fff" stroke="#fca5a5"/><text x="314" y="240" font-size="11" fill="#334155">unilateral block → laparoscopy + dye → clomiphene</text><rect x="300" y="256" width="372" height="30" rx="7" fill="#fff" stroke="#fca5a5"/><text x="314" y="276" font-size="11" fill="#334155">bilateral block → laparoscopy + dye → IVF</text>
+                </g></svg>
+                <figcaption>Investigate the <b>male partner first</b> — a semen analysis is cheap and non-invasive. The tubal result decides the endpoint: <b>unilateral → clomiphene, bilateral → IVF</b>.</figcaption></figure>
                 <ul>
                     <li><b>Definition</b>: Failure to conceive after 12 months of regular unprotected sex</li>
                     <li><b>RF</b>: Advanced maternal age (&gt;35), smoking</li>

@@ -6,6 +6,7 @@ import SummaryAnnotation from './SummaryAnnotation.jsx';
 import Icon from '../common/Icon.jsx';
 import { UserContext } from '../../UserContext';
 import { safeGetItem, safeSetItem } from '../../utils/safeStorage.js';
+import Globals from '../../global.js';
 import './Summaries.css';
 
 /**
@@ -47,7 +48,7 @@ const enLabel = (item) => {
 
 const SummariesPage = () => {
     const { slug } = useParams();
-    const { user } = useContext(UserContext);
+    const { user, sessionToken } = useContext(UserContext);
     const [activeSpecialty, setActiveSpecialty] = useState(SECTIONS[0]?.id || null);
     const [query, setQuery] = useState('');        // topic search filter
     const [openSub, setOpenSub] = useState(null); // { section, subtopic }
@@ -180,6 +181,47 @@ const SummariesPage = () => {
         });
         return () => cleanups.forEach((fn) => fn());
     }, [openSub, tab]);
+
+    // Gated raster figures are embedded as <img data-figure-key="name.webp"> with
+    // no src. A plain src can't send the Authorization header, so fetch each from
+    // the gated endpoint as a blob and swap in an object URL; revoke on cleanup so
+    // switching topics doesn't leak memory.
+    useEffect(() => {
+        if (!openSub || tab !== 'summary') return undefined;
+        const root = bodyRef.current;
+        if (!root || !user || !sessionToken) return undefined;
+        const imgs = root.querySelectorAll('img[data-figure-key]:not([data-figure-loaded])');
+        if (!imgs.length) return undefined;
+        const urls = [];
+        let cancelled = false;
+        imgs.forEach((img) => {
+            const key = img.getAttribute('data-figure-key');
+            if (!key) return;
+            img.setAttribute('data-figure-loaded', '1');
+            img.classList.add('deck-img-loading');
+            fetch(
+                `${Globals.URL}/api/summaries/figure/${encodeURIComponent(key)}?username=${encodeURIComponent(user.username)}`,
+                { headers: { Authorization: `Bearer ${sessionToken}` } }
+            )
+                .then((r) => (r.ok ? r.blob() : Promise.reject(new Error(String(r.status)))))
+                .then((blob) => {
+                    if (cancelled) return;
+                    const url = URL.createObjectURL(blob);
+                    urls.push(url);
+                    img.src = url;
+                    img.classList.remove('deck-img-loading');
+                })
+                .catch(() => {
+                    if (cancelled) return;
+                    img.classList.remove('deck-img-loading');
+                    img.classList.add('deck-img-error');
+                });
+        });
+        return () => {
+            cancelled = true;
+            urls.forEach((u) => URL.revokeObjectURL(u));
+        };
+    }, [openSub, tab, user, sessionToken]);
 
     const toggleFs = () => {
         if (!document.fullscreenElement) panelRef.current?.requestFullscreen?.();
