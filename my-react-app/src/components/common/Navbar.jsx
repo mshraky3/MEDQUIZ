@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { UserContext } from '../../UserContext';
 import Icon from './Icon.jsx';
@@ -9,6 +9,26 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef(null);
+
+  // Close the user dropdown on an outside click, on Escape, or when the
+  // route changes — otherwise it stays open floating over the new page.
+  useEffect(() => {
+    if (!userMenuOpen) return;
+    const handlePointerDown = (e) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) setUserMenuOpen(false);
+    };
+    const handleKeyDown = (e) => { if (e.key === 'Escape') setUserMenuOpen(false); };
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [userMenuOpen]);
+
+  useEffect(() => { setUserMenuOpen(false); }, [location.pathname]);
 
   // A visitor is only "home" inside the app once they hold a valid session.
   const isAuthenticated = !!(user && user.id && sessionToken);
@@ -37,30 +57,46 @@ const Navbar = () => {
       <div className="navbar-right">
         <Link to={homePath} className="navbar-brand">SQB</Link>
         {user && user.username && (
-          <span className="user-info">
-            <svg className="user-icon" width="22" height="22" fill="none" viewBox="0 0 24 24">
-              <circle cx="12" cy="8" r="4" fill="#2563eb" opacity="0.18" />
-              <circle cx="12" cy="8" r="2.5" fill="#2563eb" />
-              <ellipse cx="12" cy="17" rx="6.5" ry="4.5" fill="#2563eb" opacity="0.18" />
-            </svg>
-            <span className="user-name">{user.username}</span>
-            {user.subscription_status === 'active' && user.subscription_expiry_date && (
-              <span className="sub-badge" title="تاريخ انتهاء اشتراكك">
-                الاشتراك حتى {new Date(user.subscription_expiry_date).toLocaleDateString('ar-SA')}
-              </span>
+          <div className={`user-menu${userMenuOpen ? ' user-menu-open' : ''}`} ref={userMenuRef}>
+            <button
+              type="button"
+              className="user-info user-menu-trigger"
+              onClick={() => setUserMenuOpen((v) => !v)}
+              aria-haspopup="menu"
+              aria-expanded={userMenuOpen}
+            >
+              <svg className="user-icon" width="22" height="22" fill="none" viewBox="0 0 24 24">
+                <circle cx="12" cy="8" r="4" fill="#2563eb" opacity="0.18" />
+                <circle cx="12" cy="8" r="2.5" fill="#2563eb" />
+                <ellipse cx="12" cy="17" rx="6.5" ry="4.5" fill="#2563eb" opacity="0.18" />
+              </svg>
+              <span className="user-name">{user.username}</span>
+              {isAuthenticated && (
+                <svg className="user-menu-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              )}
+            </button>
+            {isAuthenticated && userMenuOpen && (
+              <div className="user-menu-dropdown" role="menu">
+                <span className="user-menu-email">{user.username}</span>
+                {user.subscription_status === 'active' && user.subscription_expiry_date && (
+                  <span className="sub-badge" title="تاريخ انتهاء اشتراكك">
+                    الاشتراك حتى {new Date(user.subscription_expiry_date).toLocaleDateString('ar-SA')}
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="logout-button"
+                  role="menuitem"
+                >
+                  <Icon name="log-out" size={17} />
+                  <span>تسجيل الخروج</span>
+                </button>
+              </div>
             )}
-          </span>
-        )}
-        {isAuthenticated && (
-          <button
-            onClick={handleLogout}
-            className="logout-button"
-            aria-label="تسجيل الخروج"
-            title="تسجيل الخروج"
-          >
-            <Icon name="log-out" size={17} />
-            <span className="logout-label">تسجيل الخروج</span>
-          </button>
+          </div>
         )}
       </div>
 
