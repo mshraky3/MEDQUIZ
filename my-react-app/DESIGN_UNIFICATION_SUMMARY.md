@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document summarizes the design unification changes made to the MEDQIZE React application to create a consistent, modern design system across all components.
+This document summarizes the design unification changes made to the SQB React application to create a consistent, modern design system across all components.
 
 ## Changes Made
 

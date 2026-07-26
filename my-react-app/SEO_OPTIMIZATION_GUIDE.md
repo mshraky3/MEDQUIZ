@@ -1,7 +1,7 @@
-# MEDQIZE SEO Optimization Guide
+# SQB SEO Optimization Guide
 
 ## Overview
-This guide outlines the comprehensive SEO improvements implemented for the MEDQIZE SMLE preparation platform.
+This guide outlines the comprehensive SEO improvements implemented for the SQB SMLE preparation platform.
 
 ## Implemented SEO Improvements
 
@@ -38,7 +38,7 @@ This guide outlines the comprehensive SEO improvements implemented for the MEDQI
 ## Page-Specific SEO
 
 ### Landing Page (/)
-- **Title**: "MEDQIZE - Ultimate SMLE Prep Platform"
+- **Title**: "SQB - Ultimate SMLE Prep Platform"
 - **Description**: Comprehensive description highlighting 5,000+ questions and features
 - **Keywords**: SMLE, medical exam preparation, Saudi medical license
 - **Structured Data**: EducationalService with pricing and features
@@ -191,4 +191,4 @@ The platform now features curated monthly question collections:
 
 ## Conclusion
 
-The MEDQIZE platform now has comprehensive SEO optimization that will help improve search engine visibility, user experience, and overall performance. Regular monitoring and updates will ensure continued SEO success. 
+The SQB platform now has comprehensive SEO optimization that will help improve search engine visibility, user experience, and overall performance. Regular monitoring and updates will ensure continued SEO success. 

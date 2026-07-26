@@ -1,7 +1,7 @@
-# MEDQIZE Landing Page
+# SQB Landing Page
 
 ## Overview
-The MEDQIZE landing page is a modern, SEO-friendly introduction to the SMLE (Saudi Medical Licensing Examination) question bank application.
+The SQB landing page is a modern, SEO-friendly introduction to the SMLE (Saudi Medical Licensing Examination) question bank application.
 
 ## Features
 
@@ -80,7 +80,7 @@ index.html               # Updated with SEO meta tags
 - Gradient backgrounds and shadows
 
 ## SEO Features
-- Title: "MEDQIZE - Ultimate SMLE Question Bank | 5,000+ Medical Questions + Monthly Collections"
+- Title: "SQB - Ultimate SMLE Question Bank | 5,000+ Medical Questions + Monthly Collections"
 - Meta description highlighting monthly collections (November, December, October 2025)
 - Keywords targeting: SMLE, Prometric, تجميعات (Collections), medical exam preparation
 - Open Graph tags for social media sharing with collection highlights
