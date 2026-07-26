@@ -155,8 +155,7 @@ async function hasPaymentColumns() {
         _paymentColumnsExist = false;
     }
     return _paymentColumnsExist;
-}
-
+} 
 // One-time, idempotent payment/subscription schema bootstrap. Migration 001 is
 // folded into boot so it self-applies (no manual psql step). Adds the
 // subscription columns + payment_events table, and grandfathers every
@@ -4789,7 +4788,6 @@ app.post('/final-quiz/submit', requireSession, subscriberOnly, async (req, res) 
             timeTaken,
             timeLimit
         });
-
         const result = await db.query(`
             INSERT INTO final_review_sessions (
                 user_id, 
