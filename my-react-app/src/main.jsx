@@ -25,6 +25,7 @@ const ADDQ = lazy(() => import('./components/ADD/ADDQ.jsx'));
 const Analysis = lazy(() => import('./components/analysis/Analysis.jsx'));
 const WrongQuestions = lazy(() => import('./components/analysis/WrongQuestions.jsx'));
 const Admin = lazy(() => import('./components/ADD/Admin.jsx'));
+const AdminBroadcast = lazy(() => import('./components/ADD/AdminBroadcast.jsx'));
 const Bank = lazy(() => import('./components/ADD/Bank.jsx'));
 const Signup = lazy(() => import('./components/signup/Signup.jsx'));
 const Contact = lazy(() => import('./components/contact/Contact.jsx'));
@@ -50,7 +51,15 @@ import Globals from './global.js';
 import { UserProvider } from './UserContext.jsx';
 
 import { initErrorTracking } from './utils/errorTracking.js';
+import { reloadOnceForStaleChunk } from './utils/staleChunkReload.js';
 initErrorTracking();
+
+// After a deploy, users holding the previous entry script fail to lazy-load
+// route chunks ("Unable to preload CSS for ..."). Vite signals this exact
+// case; one reload picks up the new asset hashes transparently.
+window.addEventListener('vite:preloadError', (event) => {
+  if (reloadOnceForStaleChunk()) event.preventDefault();
+});
 
 const getHostUrl = Globals.URL;
 
@@ -115,6 +124,11 @@ const router = createBrowserRouter([
   {
     path: "/admin",
     element: <AdminGate>{lazyEl(<Admin />)}</AdminGate>,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/admin/email",
+    element: <AdminGate>{lazyEl(<AdminBroadcast />)}</AdminGate>,
     errorElement: <ErrorBoundary />,
   },
   {
@@ -231,3 +245,13 @@ createRoot(document.getElementById('root')).render(
     </UserProvider>
   </StrictMode>,
 )
+
+// Register the minimal service worker so the app is installable ("Add to Home
+// Screen"). It caches nothing — see public/sw.js.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      // Non-fatal: install prompt simply won't be offered.
+    });
+  });
+}
