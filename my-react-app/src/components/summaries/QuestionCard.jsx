@@ -7,16 +7,23 @@ const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
  * Interactive single-best-answer MCQ. Clicking an option reveals the correct
  * answer (green), marks a wrong pick (red) and shows the explanation. Local
  * state only — no network.
+ *
+ * `onAnswer(isCorrect)` fires once, on the first pick, so callers such as the
+ * path checkpoints can score a small set of questions. Optional.
  */
-const QuestionCard = ({ question, number }) => {
+const QuestionCard = ({ question, number, onAnswer, className = '' }) => {
     const [selected, setSelected] = useState(null);
     const revealed = selected !== null;
     const { q, options, answer, explanation, source } = question;
 
-    const choose = (i) => { if (!revealed) setSelected(i); };
+    const choose = (i) => {
+        if (revealed) return;
+        setSelected(i);
+        onAnswer?.(i === answer);
+    };
 
     return (
-        <div className={`sq-card ${revealed ? 'is-revealed' : ''}`} dir="ltr">
+        <div className={`sq-card ${revealed ? 'is-revealed' : ''} ${className}`.trim()} dir="ltr">
             <p className="sq-stem">
                 <span className="sq-num">Q{number}</span>{q}
             </p>

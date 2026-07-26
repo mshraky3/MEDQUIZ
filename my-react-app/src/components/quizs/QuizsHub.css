@@ -229,7 +229,12 @@
 .hubx .hubx-spec:hover { border-color: var(--primary-light, #3b82f6); box-shadow: var(--shadow-sm); }
 
 .hubx .hubx-spec-ring { position: relative; display: block; width: 64px; height: 64px; }
-.hubx .hubx-spec-ring svg { width: 64px; height: 64px; transform: rotate(-90deg); }
+/* Direct child only: the ring's own progress <svg> needs the -90deg spin so
+   its stroke starts at 12 o'clock. Using a descendant selector here also hit
+   the specialty Icon's <svg>, which sits two levels deeper inside
+   .hubx-spec-pct — that unintentionally forced it to 64px and rotated it
+   90deg off, making stethoscope/scalpel/baby/venus unrecognizable. */
+.hubx .hubx-spec-ring > svg { width: 64px; height: 64px; transform: rotate(-90deg); }
 .hubx .hubx-ring-bg { fill: none; stroke: var(--bg-light, #eef2fb); stroke-width: 7; }
 .hubx .hubx-ring-fg {
     fill: none;

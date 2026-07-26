@@ -1,7 +1,16 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import SECTIONS, { findSubtopic } from './content/index.js';
+import { findSubtopic } from './content/index.js';
+import MILESTONES, {
+    STEPS,
+    STEP_BY_ID,
+    TOTAL_STEPS,
+    TOTAL_MINUTES,
+    TOTAL_QUESTIONS,
+    formatMinutes,
+} from './pathMeta.js';
 import QuestionCard from './QuestionCard.jsx';
+import PathCheckpoint from './PathCheckpoint.jsx';
 import SummaryAnnotation from './SummaryAnnotation.jsx';
 import Icon from '../common/Icon.jsx';
 import { UserContext } from '../../UserContext';
@@ -10,15 +19,21 @@ import Globals from '../../global.js';
 import './Summaries.css';
 
 /**
- * Cards-in-cards summaries hub (English UI).
+ * Guided summaries learning path (English UI).
  *
- *  Level 1 — specialty cards (accordion, one open at a time)
- *  Level 2 — sub-topic cards revealed inside the open specialty
- *  Level 3 — a FULL-SCREEN focused study modal (summary + interactive questions)
- *            with drawing tools (pen / highlighter / eraser) for active study.
+ *  The path — ordered milestones (specialties) made of numbered steps
+ *             (sub-topics), each with a checkpoint at the end. Every step shows
+ *             its state (done / current / upcoming) and a one-line reason to
+ *             read it. Nothing is ever locked: "upcoming" is guidance about
+ *             order, not a gate — any step can be opened at any time.
+ *  The study modal — a FULL-SCREEN focused view (summary + interactive
+ *             questions) with drawing tools (pen / highlighter / eraser).
  *
- * Deep links (/summaries/:slug) open the matching specialty and, when the slug
- * is a sub-topic, its modal directly.
+ * Progress and the resume point live in localStorage per user, so returning
+ * students land on "continue where you left off".
+ *
+ * Deep links (/summaries/:slug) open the matching milestone and, when the slug
+ * is a sub-topic, its study modal directly.
  */
 const TOOLS = [
     { id: 'move', icon: 'cursor', label: 'Browse' },
@@ -28,12 +43,24 @@ const TOOLS = [
 ];
 const COLORS = ['#2563eb', '#ef4444', '#16a34a', '#f59e0b', '#0f172a'];
 
-// Static catalog totals shown in the hub header (specialties · topics · questions).
-const TOTAL_TOPICS = SECTIONS.reduce((n, s) => n + s.subtopics.length, 0);
-const TOTAL_QUESTIONS = SECTIONS.reduce(
-    (n, s) => n + s.subtopics.reduce((m, t) => m + (t.questions?.length || 0), 0),
-    0,
-);
+// Milestone boundaries as percentages along the header progress bar.
+const TRACK_TICKS = (() => {
+    const out = [];
+    let acc = 0;
+    MILESTONES.forEach((m, i) => {
+        acc += m.steps.length;
+        if (i < MILESTONES.length - 1) out.push({ id: m.id, pos: (acc / TOTAL_STEPS) * 100 });
+    });
+    return out;
+})();
+
+const EMPTY_PATH = { lastStepId: null, lastAt: 0, checkpoints: {} };
+
+const cx = (...parts) => parts.filter(Boolean).join(' ');
+
+const prefersReducedMotion = () =>
+    typeof window !== 'undefined' &&
+    window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
 // Each section/subtopic carries an Arabic `title` + English `title_en`. When the
 // title is already English (e.g. OB/GYN), keep it as the heading and use title_en
@@ -49,8 +76,7 @@ const enLabel = (item) => {
 const SummariesPage = () => {
     const { slug } = useParams();
     const { user, sessionToken } = useContext(UserContext);
-    const [activeSpecialty, setActiveSpecialty] = useState(SECTIONS[0]?.id || null);
-    const [query, setQuery] = useState('');        // topic search filter
+    const [query, setQuery] = useState('');        // step search filter
     const [openSub, setOpenSub] = useState(null); // { section, subtopic }
     const [tab, setTab] = useState('summary');     // 'summary' | 'questions'
     const [tool, setTool] = useState('move');
@@ -60,23 +86,55 @@ const SummariesPage = () => {
     // the user expands it only when they want to draw/highlight.
     const [toolsOpen, setToolsOpen] = useState(false);
 
-    // Manual completion tracking — a map of { [subtopicId]: true }, persisted per
-    // user in localStorage so finished topics stay marked across sessions/devices
-    // (same browser). Toggled from the study modal; reflected on the hub cards.
-    const progressKey = `summaries.progress.${user?.username || user?.email || 'guest'}`;
+    // ---- path state -------------------------------------------------------
+    // `done` is the long-standing per-topic completion map ({ [subtopicId]: true }).
+    // `path` adds the resume point and the passed checkpoints. Both persist per
+    // user in localStorage so the path picks up where the student left it.
+    const who = user?.username || user?.email || 'guest';
+    const progressKey = `summaries.progress.${who}`;
+    const pathKey = `summaries.path.${who}`;
     const [done, setDone] = useState({});
+    const [path, setPath] = useState(EMPTY_PATH);
+    const [openMs, setOpenMs] = useState(() => new Set([MILESTONES[0]?.id]));
+    const [celebrate, setCelebrate] = useState(null); // step id that just got ticked
+    const [scrollTo, setScrollTo] = useState(null);   // dom id to bring into view
+    const celebrateTimer = useRef(null);
 
+    // Load stored progress, then open the milestone the student is currently in.
     useEffect(() => {
+        let storedDone = {};
         try {
             const raw = safeGetItem(progressKey);
-            setDone(raw ? JSON.parse(raw) : {});
+            storedDone = raw ? JSON.parse(raw) : {};
         } catch (_) {
-            setDone({});
+            storedDone = {};
         }
-    }, [progressKey]);
+        let storedPath = EMPTY_PATH;
+        try {
+            const raw = safeGetItem(pathKey);
+            if (raw) storedPath = { ...EMPTY_PATH, ...JSON.parse(raw) };
+        } catch (_) {
+            storedPath = EMPTY_PATH;
+        }
+        setDone(storedDone);
+        setPath(storedPath);
+
+        const last = storedPath.lastStepId ? STEP_BY_ID[storedPath.lastStepId] : null;
+        const focus = (last && !storedDone[last.id]) ? last : STEPS.find((s) => !storedDone[s.id]);
+        setOpenMs(new Set([(focus || STEPS[0])?.milestoneId]));
+    }, [progressKey, pathKey]);
+
+    useEffect(() => () => clearTimeout(celebrateTimer.current), []);
+
+    const savePath = (updater) => setPath((prev) => {
+        const next = typeof updater === 'function' ? updater(prev) : updater;
+        safeSetItem(pathKey, JSON.stringify(next));
+        return next;
+    });
 
     const isDone = (subId) => !!done[subId];
     const toggleDone = (subId) => {
+        const marking = !done[subId];
         setDone((prev) => {
             const next = { ...prev };
             if (next[subId]) delete next[subId];
@@ -84,22 +142,44 @@ const SummariesPage = () => {
             safeSetItem(progressKey, JSON.stringify(next));
             return next;
         });
+        // brief celebration on the path card so completing a step feels like progress
+        if (marking) {
+            clearTimeout(celebrateTimer.current);
+            setCelebrate(subId);
+            celebrateTimer.current = setTimeout(() => setCelebrate(null), 1500);
+        }
     };
-    const doneCount = (section) => section.subtopics.reduce((n, t) => n + (done[t.id] ? 1 : 0), 0);
-    const globalDone = SECTIONS.reduce((n, s) => n + doneCount(s), 0);
-    const globalPct = TOTAL_TOPICS ? Math.round((globalDone / TOTAL_TOPICS) * 100) : 0;
 
-    // Topic search — matches a subtopic on its Arabic/English title or its parent
-    // specialty name. When searching, every specialty with a hit is force-expanded
-    // and only matching sub-cards render.
+    // ---- derived path position -------------------------------------------
+    const doneTotal = STEPS.reduce((n, s) => n + (done[s.id] ? 1 : 0), 0);
+    const pct = TOTAL_STEPS ? Math.round((doneTotal / TOTAL_STEPS) * 100) : 0;
+    const currentIdx = STEPS.findIndex((s) => !done[s.id]);
+    const finished = currentIdx === -1;
+    const currentStep = finished ? null : STEPS[currentIdx];
+    const position = finished ? TOTAL_STEPS : currentIdx + 1;
+
+    const lastStep = path.lastStepId ? STEP_BY_ID[path.lastStepId] : null;
+    const resuming = !!(lastStep && !done[lastStep.id]);
+    const resumeStep = resuming ? lastStep : currentStep;
+    const freshStart = !resuming && doneTotal === 0;
+
+    const stepState = (step) => {
+        if (done[step.id]) return 'done';
+        if (currentStep && step.id === currentStep.id) return 'current';
+        return 'upcoming';
+    };
+
+    const msDoneCount = (m) => m.steps.reduce((n, s) => n + (done[s.id] ? 1 : 0), 0);
+
+    // ---- step search ------------------------------------------------------
+    // Matches a step on its title, the topics it covers, or its milestone name.
+    // Results render as a flat list so a searched topic is one click away.
     const q = query.trim().toLowerCase();
     const searching = q.length > 0;
-    const subMatches = (section, t) =>
-        !searching ||
-        [t.title, t.title_en, section.title, section.title_en].some(
-            (v) => (v || '').toLowerCase().includes(q),
-        );
-    const anyMatch = SECTIONS.some((s) => s.subtopics.some((t) => subMatches(s, t)));
+    const results = searching
+        ? STEPS.filter((s) => [s.title, s.covers, s.section.title, s.section.title_en]
+            .some((v) => (v || '').toLowerCase().includes(q)))
+        : [];
 
     const panelRef = useRef(null);
     const bodyRef = useRef(null);
@@ -110,7 +190,51 @@ const SummariesPage = () => {
         setTab('summary');
         setTool('move');
         setToolsOpen(false);
+        // remember the resume point for the next visit
+        savePath((p) => ({ ...p, lastStepId: subtopic.id, lastAt: Date.now() }));
     };
+    const openStep = (step) => openSubtopic(step.section, step.subtopic);
+
+    const toggleMilestone = (id) => setOpenMs((prev) => {
+        const next = new Set(prev);
+        if (next.has(id)) next.delete(id);
+        else next.add(id);
+        return next;
+    });
+
+    // Expand the milestone that holds a target and bring it into view. The scroll
+    // waits out the expand transition so it lands on the settled position.
+    const revealStep = (step) => {
+        setOpenMs((prev) => new Set(prev).add(step.milestoneId));
+        setScrollTo(`step-${step.id}`);
+    };
+
+    useEffect(() => {
+        if (!scrollTo) return undefined;
+        const id = scrollTo;
+        setScrollTo(null);
+        const t = setTimeout(() => {
+            document.getElementById(id)?.scrollIntoView({
+                behavior: prefersReducedMotion() ? 'auto' : 'smooth',
+                block: 'center',
+            });
+        }, 380);
+        return () => clearTimeout(t);
+    }, [scrollTo]);
+
+    const passCheckpoint = (milestone, next) => {
+        savePath((p) => ({ ...p, checkpoints: { ...p.checkpoints, [milestone.id]: true } }));
+        if (next) {
+            setOpenMs((prev) => new Set(prev).add(next.id));
+            setScrollTo(`ms-${next.id}`);
+        }
+    };
+    const redoCheckpoint = (milestone) => savePath((p) => {
+        const checkpoints = { ...p.checkpoints };
+        delete checkpoints[milestone.id];
+        return { ...p, checkpoints };
+    });
+
     // Collapsing the toolbar also returns to browse mode so the page scrolls/clicks.
     const closeTools = () => { setToolsOpen(false); setTool('move'); };
     const closePanel = () => {
@@ -120,12 +244,12 @@ const SummariesPage = () => {
     // Switching tab resets to the browse tool so questions are clickable by default.
     const changeTab = (t) => { setTab(t); setTool('move'); };
 
-    // Deep link → open the right specialty + sub-topic modal.
+    // Deep link → open the right milestone + sub-topic modal.
     useEffect(() => {
         if (!slug) return;
         const hit = findSubtopic(slug);
         if (!hit) return;
-        setActiveSpecialty(hit.section.id);
+        setOpenMs((prev) => new Set(prev).add(hit.section.id));
         if (hit.subtopic) openSubtopic(hit.section, hit.subtopic);
     }, [slug]);
 
@@ -235,38 +359,198 @@ const SummariesPage = () => {
 
     const questions = openSub?.subtopic.questions || [];
 
-    return (
-        <div className="summaries-hub" dir="ltr">
-            <header className="hub-head">
-                <h1><Icon name="book-open" size={28} className="hub-head-icon" /> Summaries</h1>
-                <p>Pick a specialty to browse its topics, then open any topic full-screen to focus — with pen &amp; highlighter tools for active study.</p>
-
-                <div className="hub-stats">
-                    <span className="hub-stat"><Icon name="stethoscope" size={15} /> <b>{SECTIONS.length}</b> specialties</span>
-                    <span className="hub-stat"><Icon name="folder" size={15} /> <b>{TOTAL_TOPICS}</b> topics</span>
-                    <span className="hub-stat"><Icon name="target" size={15} /> <b>{TOTAL_QUESTIONS}</b> practice questions</span>
-                </div>
-
-                {/* overall study progress across every specialty */}
-                <div className="hub-progress" role="progressbar" aria-valuenow={globalPct} aria-valuemin={0} aria-valuemax={100}>
-                    <div className="hub-progress-bar">
-                        <div className="hub-progress-fill" style={{ width: `${globalPct}%` }} />
-                    </div>
-                    <span className="hub-progress-label">
-                        <Icon name="check" size={13} /> {globalDone}/{TOTAL_TOPICS} topics done · {globalPct}%
+    /* ------------------------------------------------------------------ */
+    /* One step on the path                                                */
+    /* ------------------------------------------------------------------ */
+    const renderStep = (step) => {
+        const state = stepState(step);
+        const isResumePoint = resuming && step.id === lastStep.id;
+        return (
+            <li
+                key={step.id}
+                id={`step-${step.id}`}
+                className={cx(
+                    'path-row path-step',
+                    `is-${state}`,
+                    isResumePoint && 'is-resume',
+                    celebrate === step.id && 'is-celebrating',
+                )}
+            >
+                <div className="path-rail">
+                    <span className="path-node step-node" aria-hidden="true">
+                        {state === 'done' ? <Icon name="check" size={14} /> : step.no}
                     </span>
                 </div>
 
-                {/* topic search */}
+                <div className="step-card">
+                    <div className="step-main">
+                        <div className="step-tags">
+                            <span className="step-no">Step {step.no}</span>
+                            {state === 'done' && (
+                                <span className="step-state is-done"><Icon name="check" size={12} /> Completed</span>
+                            )}
+                            {state === 'current' && (
+                                <span className="step-state is-current"><Icon name="zap" size={12} /> You are here</span>
+                            )}
+                            {state === 'upcoming' && (
+                                <span className="step-state is-upcoming">Upcoming</span>
+                            )}
+                            {isResumePoint && (
+                                <span className="step-state is-resume"><Icon name="clock" size={12} /> Left off here</span>
+                            )}
+                        </div>
+
+                        <h4 className="step-title">{step.title}</h4>
+                        <p className="step-why">{step.why}</p>
+                        {step.covers && (
+                            <p className="step-covers">
+                                <span className="step-covers-label">You&rsquo;ll learn</span> {step.covers}
+                            </p>
+                        )}
+
+                        <div className="step-meta">
+                            <span><Icon name="clock" size={13} /> ~{step.minutes} min read</span>
+                            {step.questionCount > 0 && (
+                                <span><Icon name="target" size={13} /> {step.questionCount} practice questions</span>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="step-actions">
+                        <button type="button" className="step-cta" onClick={() => openStep(step)}>
+                            {state === 'done' ? 'Review' : state === 'current' ? 'Continue' : 'Open'}
+                            <Icon name="chevron-right" size={16} />
+                        </button>
+                        <button
+                            type="button"
+                            className={`step-tick ${state === 'done' ? 'on' : ''}`}
+                            onClick={() => toggleDone(step.id)}
+                            aria-pressed={state === 'done'}
+                            title={state === 'done' ? 'Marked as done — click to undo' : 'Mark this step as done'}
+                        >
+                            <Icon name={state === 'done' ? 'check' : 'circle'} size={13} />
+                            {state === 'done' ? 'Done' : 'Mark done'}
+                        </button>
+                    </div>
+                </div>
+            </li>
+        );
+    };
+
+    return (
+        <div className="summaries-hub" dir="ltr">
+            {/* ---------------- header: what this path is, and where you are ------ */}
+            <header className="hub-head">
+                <span className="hub-eyebrow"><Icon name="rocket" size={14} /> Guided study path</span>
+                <h1>Summaries, in the order to study them</h1>
+                <p className="hub-lead">
+                    Every high-yield SMLE topic laid out as one path: <b>{MILESTONES.length} milestones</b>,{' '}
+                    <b>{TOTAL_STEPS} steps</b>, a checkpoint after each milestone. Read a step, test yourself,
+                    tick it off — and the path remembers where you stopped. No prior knowledge needed: start at
+                    Step 1 and follow the line.
+                </p>
+
+                <div className="hub-facts">
+                    <span className="hub-fact"><Icon name="flag" size={15} /><b>{MILESTONES.length}</b> milestones</span>
+                    <span className="hub-fact"><Icon name="book-open" size={15} /><b>{TOTAL_STEPS}</b> steps</span>
+                    <span className="hub-fact"><Icon name="clock" size={15} />≈<b>{formatMinutes(TOTAL_MINUTES)}</b> of reading</span>
+                    <span className="hub-fact"><Icon name="target" size={15} /><b>{TOTAL_QUESTIONS}</b> practice questions</span>
+                </div>
+
+                {/* position on the path */}
+                <div className="hub-track">
+                    <div className="hub-track-top">
+                        <span className="hub-track-pos">
+                            {finished ? 'Path complete' : <>Step <b>{position}</b> of {TOTAL_STEPS}</>}
+                        </span>
+                        <span className="hub-track-sep" aria-hidden="true">·</span>
+                        <span className="hub-track-pct"><b>{pct}%</b> complete</span>
+                        <span className="hub-track-done"><Icon name="check" size={12} /> {doneTotal} step{doneTotal !== 1 ? 's' : ''} done</span>
+                    </div>
+                    <div
+                        className="hub-track-bar"
+                        role="progressbar"
+                        aria-valuenow={pct}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-label="Learning path progress"
+                    >
+                        <div className="hub-track-fill" style={{ width: `${pct}%` }} />
+                        {TRACK_TICKS.map((t) => (
+                            <span key={t.id} className="hub-track-tick" style={{ insetInlineStart: `${t.pos}%` }} />
+                        ))}
+                    </div>
+                    <div className="hub-track-legend">
+                        {MILESTONES.map((m) => {
+                            const nDone = msDoneCount(m);
+                            return (
+                                <button
+                                    type="button"
+                                    key={m.id}
+                                    className={`hub-leg ${nDone === m.steps.length ? 'is-complete' : ''}`}
+                                    style={{ '--accent': m.accent }}
+                                    onClick={() => {
+                                        setOpenMs((prev) => new Set(prev).add(m.id));
+                                        setScrollTo(`ms-${m.id}`);
+                                    }}
+                                >
+                                    <i aria-hidden="true" />{m.title} <b>{nDone}/{m.steps.length}</b>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* start / continue */}
+                {finished ? (
+                    <div className="hub-resume is-finished">
+                        <span className="hub-resume-node"><Icon name="trophy" size={22} /></span>
+                        <div className="hub-resume-text">
+                            <span className="hub-resume-kicker">Path complete</span>
+                            <strong className="hub-resume-title">All {TOTAL_STEPS} steps done</strong>
+                            <span className="hub-resume-why">Go back over any step below — everything stays open for revision.</span>
+                        </div>
+                    </div>
+                ) : resumeStep && (
+                    <div className={`hub-resume ${resuming ? 'is-resuming' : ''}`}>
+                        <span className="hub-resume-node">
+                            <Icon name={resuming ? 'clock' : freshStart ? 'flag' : 'zap'} size={20} />
+                        </span>
+                        <div className="hub-resume-text">
+                            <span className="hub-resume-kicker">
+                                {resuming ? 'Continue where you left off' : freshStart ? 'Start here' : 'Up next'}
+                            </span>
+                            <strong className="hub-resume-title">
+                                Step {resumeStep.no} · {resumeStep.title}
+                            </strong>
+                            <span className="hub-resume-why">{resumeStep.why}</span>
+                            <span className="hub-resume-meta">
+                                {resumeStep.section.title} · ~{resumeStep.minutes} min
+                                {resumeStep.questionCount > 0 ? ` · ${resumeStep.questionCount} questions` : ''}
+                            </span>
+                        </div>
+                        <div className="hub-resume-actions">
+                            <button type="button" className="hub-resume-cta" onClick={() => openStep(resumeStep)}>
+                                {resuming ? 'Continue' : freshStart ? 'Start Step 1' : 'Continue'}
+                                <Icon name="chevron-right" size={17} />
+                            </button>
+                            <button type="button" className="hub-resume-link" onClick={() => revealStep(resumeStep)}>
+                                Show it on the path
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* jump straight to a topic */}
                 <div className="hub-search">
                     <Icon name="search" size={18} className="hub-search-icon" />
                     <input
                         type="text"
                         className="hub-search-input"
-                        placeholder="Search topics — e.g. asthma, DKA, breast cancer…"
+                        placeholder="Jump to a topic — e.g. asthma, DKA, breast cancer…"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
-                        aria-label="Search topics"
+                        aria-label="Search steps"
                     />
                     {query && (
                         <button type="button" className="hub-search-clear" onClick={() => setQuery('')} aria-label="Clear search">
@@ -276,89 +560,147 @@ const SummariesPage = () => {
                 </div>
             </header>
 
-            <div className="spec-cards">
-                {SECTIONS.map((s) => {
-                    // While searching, only show specialties that contain a match and
-                    // render just the matching sub-cards; otherwise honor the accordion.
-                    const shownSubs = s.subtopics.filter((t) => subMatches(s, t));
-                    if (searching && shownSubs.length === 0) return null;
-                    const isActive = searching ? true : activeSpecialty === s.id;
-                    const { primary, secondary } = enLabel(s);
-                    const nDone = doneCount(s);
-                    const nTotal = s.subtopics.length;
-                    const allDone = nDone === nTotal && nTotal > 0;
-                    return (
-                        <div
-                            key={s.id}
-                            className={`spec-card ${isActive ? 'is-active' : ''}`}
-                            style={s.accent ? { '--accent': s.accent } : undefined}
-                        >
-                            <button
-                                type="button"
-                                className="spec-card-head"
-                                aria-expanded={isActive}
-                                onClick={() => setActiveSpecialty(isActive ? null : s.id)}
-                            >
-                                <span className="spec-card-icon" aria-hidden="true"><Icon name={s.icon} size={24} /></span>
-                                <span className="spec-card-text">
-                                    <span className="spec-card-title">{primary}</span>
-                                    {secondary && <span className="spec-card-en">{secondary}</span>}
-                                </span>
-                                {searching ? (
-                                    <span className="spec-card-count">{shownSubs.length} match{shownSubs.length !== 1 ? 'es' : ''}</span>
-                                ) : nDone > 0 ? (
-                                    <span className={`spec-card-progress ${allDone ? 'all-done' : ''}`}>
-                                        <Icon name="check" size={13} /> {nDone}/{nTotal} done
-                                    </span>
-                                ) : (
-                                    <span className="spec-card-count">{nTotal} topic{nTotal !== 1 ? 's' : ''}</span>
-                                )}
-                                <span className={`spec-card-chev ${isActive ? 'open' : ''}`} aria-hidden="true">▾</span>
-                            </button>
-
-                            <div className={`subtopic-wrap ${isActive ? 'open' : ''}`}>
-                                <div className="subtopic-grid">
-                                    {shownSubs.map((t) => {
-                                        const i = s.subtopics.indexOf(t);
-                                        const tl = enLabel(t);
-                                        const completed = isDone(t.id);
-                                        return (
-                                            <button
-                                                key={t.id}
-                                                type="button"
-                                                className={`sub-card ${completed ? 'is-done' : ''}`}
-                                                onClick={() => openSubtopic(s, t)}
-                                            >
-                                                {completed && (
-                                                    <span className="sub-card-done" aria-label="Completed">
-                                                        <Icon name="check" size={13} />
-                                                    </span>
-                                                )}
-                                                <span className="sub-card-index">{String(i + 1).padStart(2, '0')}</span>
-                                                <span className="sub-card-title">{tl.primary}</span>
-                                                {tl.secondary && <span className="sub-card-en">{tl.secondary}</span>}
-                                                {t.questions?.length > 0 && (
-                                                    <span className="sub-card-q">{t.questions.length} question{t.questions.length !== 1 ? 's' : ''}</span>
-                                                )}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </div>
+            {/* ---------------- search results ----------------------------------- */}
+            {searching ? (
+                <div className="path-search">
+                    <p className="path-search-head">
+                        {results.length} step{results.length !== 1 ? 's' : ''} match &ldquo;{query.trim()}&rdquo;
+                        <button type="button" className="path-search-back" onClick={() => setQuery('')}>
+                            <Icon name="x" size={14} /> Back to the path
+                        </button>
+                    </p>
+                    {results.length === 0 ? (
+                        <div className="hub-empty">
+                            <Icon name="search" size={30} />
+                            <p>No steps match &ldquo;{query.trim()}&rdquo;.</p>
+                            <button type="button" className="hub-empty-clear" onClick={() => setQuery('')}>Clear search</button>
                         </div>
-                    );
-                })}
+                    ) : (
+                        <ul className="path-search-list">
+                            {results.map((step) => {
+                                const state = stepState(step);
+                                return (
+                                    <li key={step.id}>
+                                        <button
+                                            type="button"
+                                            className={`search-step is-${state}`}
+                                            style={{ '--accent': step.section.accent }}
+                                            onClick={() => openStep(step)}
+                                        >
+                                            <span className="search-step-node">
+                                                {state === 'done' ? <Icon name="check" size={13} /> : step.no}
+                                            </span>
+                                            <span className="search-step-text">
+                                                <span className="search-step-title">{step.title}</span>
+                                                <span className="search-step-covers">{step.covers}</span>
+                                            </span>
+                                            <span className="search-step-spec">
+                                                <Icon name={step.section.icon} size={13} /> {step.section.title}
+                                            </span>
+                                            <Icon name="chevron-right" size={16} className="search-step-chev" />
+                                        </button>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    )}
+                </div>
+            ) : (
+                /* ---------------- the path ------------------------------------- */
+                <ol className="path">
+                    {MILESTONES.map((m, mi) => {
+                        const nDone = msDoneCount(m);
+                        const nTotal = m.steps.length;
+                        const msPct = nTotal ? Math.round((nDone / nTotal) * 100) : 0;
+                        const complete = nDone === nTotal;
+                        const isOpen = openMs.has(m.id);
+                        const isCurrent = !!currentStep && currentStep.milestoneId === m.id;
+                        const next = MILESTONES[mi + 1] || null;
+                        return (
+                            <li
+                                key={m.id}
+                                id={`ms-${m.id}`}
+                                className={cx('milestone', complete && 'is-complete', isCurrent && 'is-current')}
+                                style={{ '--accent': m.accent }}
+                            >
+                                <div className="path-row ms-head-row">
+                                    <div className="path-rail">
+                                        <span className="path-node ms-node" aria-hidden="true">
+                                            {complete ? <Icon name="check" size={18} /> : m.order}
+                                        </span>
+                                    </div>
 
-                {searching && !anyMatch && (
-                    <div className="hub-empty">
-                        <Icon name="search" size={30} />
-                        <p>No topics match “{query.trim()}”.</p>
-                        <button type="button" className="hub-empty-clear" onClick={() => setQuery('')}>Clear search</button>
-                    </div>
-                )}
-            </div>
+                                    <button
+                                        type="button"
+                                        className="ms-head"
+                                        aria-expanded={isOpen}
+                                        aria-controls={`ms-body-${m.id}`}
+                                        onClick={() => toggleMilestone(m.id)}
+                                    >
+                                        <span className="ms-head-main">
+                                            <span className="ms-kicker">
+                                                Milestone {m.order} of {MILESTONES.length} · {m.tagline}
+                                                {isCurrent && <em className="ms-here">You are here</em>}
+                                            </span>
+                                            <span className="ms-title">
+                                                <span className="ms-icon"><Icon name={m.icon} size={22} /></span>
+                                                {m.title}
+                                            </span>
+                                            <span className="ms-goal">{m.goal}</span>
+                                            <span className="ms-meta">
+                                                <span><Icon name="book-open" size={13} /> {nTotal} steps</span>
+                                                <span><Icon name="clock" size={13} /> ≈{formatMinutes(m.minutes)}</span>
+                                                <span><Icon name="target" size={13} /> {m.questionCount} questions</span>
+                                            </span>
+                                        </span>
 
-            {/* Level 3 — full-screen focused study modal */}
+                                        <span className="ms-side">
+                                            <span className="ms-ring" style={{ '--p': msPct }}>
+                                                <i>{msPct}%</i>
+                                            </span>
+                                            <span className="ms-count">{nDone}/{nTotal} done</span>
+                                            <span className={`ms-chev ${isOpen ? 'open' : ''}`} aria-hidden="true">▾</span>
+                                        </span>
+                                    </button>
+                                </div>
+
+                                <div className={`ms-body ${isOpen ? 'open' : ''}`} id={`ms-body-${m.id}`}>
+                                    <div className="ms-body-inner">
+                                        <ol className="ms-steps">
+                                            {m.steps.map(renderStep)}
+                                        </ol>
+
+                                        <PathCheckpoint
+                                            milestone={m}
+                                            nextMilestone={next}
+                                            passed={!!path.checkpoints?.[m.id]}
+                                            doneCount={nDone}
+                                            onPass={() => passCheckpoint(m, next)}
+                                            onRedo={() => redoCheckpoint(m)}
+                                        />
+                                    </div>
+                                </div>
+                            </li>
+                        );
+                    })}
+
+                    <li className={cx('path-row path-end', finished && 'is-reached')}>
+                        <div className="path-rail">
+                            <span className="path-node end-node" aria-hidden="true"><Icon name="trophy" size={18} /></span>
+                        </div>
+                        <div className="end-card">
+                            <h3>{finished ? 'You finished the path' : 'The finish line'}</h3>
+                            <p>
+                                {finished
+                                    ? `All ${TOTAL_STEPS} steps and ${MILESTONES.length} checkpoints are behind you. Come back to any step for revision — nothing closes.`
+                                    : `${TOTAL_STEPS - doneTotal} step${TOTAL_STEPS - doneTotal !== 1 ? 's' : ''} left. Keep going one step at a time — every step you tick moves the line.`}
+                            </p>
+                        </div>
+                    </li>
+                </ol>
+            )}
+
+            {/* ---------------- full-screen focused study modal ------------------- */}
             {openSub && (
                 <div
                     className="summary-panel"
@@ -370,6 +712,9 @@ const SummariesPage = () => {
                         <div className="panel-head-text">
                             <span className="panel-spec">
                                 <Icon name={openSub.section.icon} size={18} /> {enLabel(openSub.section).primary}
+                                {STEP_BY_ID[openSub.subtopic.id] && (
+                                    <em className="panel-step">Step {STEP_BY_ID[openSub.subtopic.id].no} of {TOTAL_STEPS}</em>
+                                )}
                             </span>
                             <h2 className="panel-title">{enLabel(openSub.subtopic).primary}</h2>
                             {enLabel(openSub.subtopic).secondary && (
@@ -403,10 +748,10 @@ const SummariesPage = () => {
                             className={`panel-done-btn ${isDone(openSub.subtopic.id) ? 'on' : ''}`}
                             onClick={() => toggleDone(openSub.subtopic.id)}
                             aria-pressed={isDone(openSub.subtopic.id)}
-                            title={isDone(openSub.subtopic.id) ? 'Marked as done — click to undo' : 'Mark this topic as done'}
+                            title={isDone(openSub.subtopic.id) ? 'Marked as done — click to undo' : 'Mark this step as done'}
                         >
                             <Icon name={isDone(openSub.subtopic.id) ? 'check' : 'circle'} size={16} />
-                            <span className="label">{isDone(openSub.subtopic.id) ? 'Done' : 'Mark as done'}</span>
+                            <span className="label">{isDone(openSub.subtopic.id) ? 'Step done' : 'Mark step done'}</span>
                         </button>
                     </div>
 

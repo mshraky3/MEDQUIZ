@@ -43,7 +43,12 @@ const QUIZS = () => {
     // Resolve id from context first so a hard refresh (no router state) still works.
     const id = user?.id || location.state?.id || location.state?.user?.id;
 
-    const [view, setView] = useState('hub'); // 'hub' | 'launcher'
+    // The custom-quiz launcher is a URL state (?view=custom), not local
+    // component state — both screens live at /quizs, so a Navbar "back" click
+    // (which navigates to /quizs) only actually changes anything, and can
+    // hand control back to the hub, if the launcher's URL differs from it.
+    const view = new URLSearchParams(location.search).get('view') === 'custom' ? 'launcher' : 'hub';
+    const openLauncher = () => navigate({ pathname: '/quizs', search: '?view=custom' });
     const [stats, setStats] = useState(null);
     const [topics, setTopics] = useState([]);
     const [streak, setStreak] = useState(null);
@@ -99,7 +104,7 @@ const QUIZS = () => {
     if (view === 'launcher') {
         return (
             <div className="quiz-selection">
-                <QuizLauncher id={id} onBack={() => setView('hub')} />
+                <QuizLauncher id={id} />
             </div>
         );
     }
@@ -147,7 +152,7 @@ const QUIZS = () => {
             desc: 'اختبارات تدريبية ونهائية من بنك Midgard & GameBoy2026.',
             stat: hasHistory ? `${fmt(stats.total_quizzes)} اختبار مكتمل` : 'لم تبدأ بعد',
             cta: 'ابدأ اختبار',
-            onClick: () => startQuiz('mix')
+            onClick: openLauncher
         },
         {
             key: 'analysis', tone: 'ana', icon: 'bar-chart', kicker: 'قِس',
@@ -184,7 +189,7 @@ const QUIZS = () => {
                         <span>ابدأ اختبار سريع</span>
                         <small>١٠ أسئلة مختلطة</small>
                     </button>
-                    <button type="button" className="hubx-btn hubx-btn--ghost" onClick={() => setView('launcher')}>
+                    <button type="button" className="hubx-btn hubx-btn--ghost" onClick={openLauncher}>
                         <Icon name="settings" size={17} />
                         <span>خصّص الاختبار</span>
                     </button>

@@ -38,7 +38,7 @@ const timerOptions = [
  * original it drops the source-selection modal entirely — the bank is unified —
  * so the flow is simply: size → type → timer (and final quiz: type → time).
  */
-const QuizLauncher = ({ id, onBack }) => {
+const QuizLauncher = ({ id }) => {
     const { user, setUser, sessionToken } = useContext(UserContext);
     const navigate = useNavigate();
 
@@ -296,10 +296,6 @@ const QuizLauncher = ({ id, onBack }) => {
 
     return (
         <div dir="rtl" className={`quiz-main${anyModalOpen ? ' is-dimmed' : ''}`}>
-            <button type="button" className="launcher-back-btn" onClick={onBack}>
-                <Icon name="undo" size={16} /> رجوع للرئيسية
-            </button>
-
             <h1>اختر اختبارك</h1>
             <p className="quiz-subtitle">ابدأ سريعاً الآن أو خصّص الاختبار كما تريد — من بنك <bdi>Midgard &amp; GameBoy2026</bdi>.</p>
 

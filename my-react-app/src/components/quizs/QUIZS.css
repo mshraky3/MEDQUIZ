@@ -80,44 +80,6 @@
   pointer-events: none;
 }
 
-/* Back-to-hub control on the launcher. This had NO styles at all, so it
-   rendered as a raw browser button (grey box, default border) in the middle of
-   the page. align-self overrides .quiz-main's align-items:center so it sits on
-   the start edge — the right-hand side under dir="rtl". */
-.launcher-back-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  align-self: flex-start;
-  min-height: 44px;
-  margin-block-end: 20px;
-  padding: 10px 18px;
-  border: 1.5px solid var(--border-color, #d4deee);
-  border-radius: 999px;
-  background: var(--surface, #fff);
-  color: var(--text-medium, #475569);
-  font-family: inherit;
-  font-size: var(--text-sm, 0.875rem);
-  font-weight: 700;
-  line-height: 1;
-  cursor: pointer;
-  box-shadow: var(--shadow-sm);
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
-}
-
-.launcher-back-btn:hover {
-  background: var(--bg-light, #eef2fb);
-  border-color: var(--primary-light, #3b82f6);
-  color: var(--primary-dark, #1d4ed8);
-}
-
-.launcher-back-btn:active { transform: scale(0.98); }
-
-.launcher-back-btn:focus-visible {
-  outline: 3px solid var(--primary-light, #3b82f6);
-  outline-offset: 2px;
-}
-
 .quiz-selection h1 {
   font-size: clamp(32px, 5vw, 48px);
   font-weight: 800;
