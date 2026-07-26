@@ -2,12 +2,12 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { Pool } from 'pg';
-import OpenAI from 'openai';
 import crypto from 'crypto';
 import { sendMail } from './services/mailer.js';
 import errorReportRoutes from './routes/error-report.js';
 import questionReportsRouter from './routes/question-reports.js';
 import emailCampaignsRouter from './routes/email-campaigns.js';
+import adminBroadcastRouter, { unsubToken } from './routes/admin-broadcast.js';
 import paymentRoutes from './routes/payment.js';
 import { checkSubscriptionAccess, isPaymentEnforcementEnabled } from './services/paymentService.js';
 import { adminAuth, isAdminRequest } from './middleware/adminAuth.js';
@@ -1398,6 +1398,166 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
     }
 });
 
+// ==================== EXPANDED ADMIN ANALYTICS ====================
+// On-demand (not on the 2-min /admin/stats auto-refresh) so its heavier
+// time-series queries don't load the DB continuously. Accepts ?from=&to=
+// (ISO dates) applied to the trend charts; snapshot metrics (account mix,
+// active users, engagement) are always "now".
+//
+// Day buckets use `login_time + INTERVAL '3 hours'` because login_time/created_at
+// are stored as TZ-less UTC and Riyadh is a fixed UTC+3 (no DST) — so this gives
+// the correct Saudi calendar day without depending on the server session TZ.
+app.get('/admin/analytics', adminAuth, async (req, res) => {
+    const MS_DAY = 86400000;
+    const toISO = (d) => d.toISOString().slice(0, 10);
+    const parseDate = (v, fallback) => {
+        if (!v) return fallback;
+        const d = new Date(v);
+        return isNaN(d.getTime()) ? fallback : toISO(d);
+    };
+
+    const now = new Date();
+    let to = parseDate(req.query.to, toISO(now));
+    let from = parseDate(req.query.from, toISO(new Date(now.getTime() - 90 * MS_DAY)));
+    if (from > to) [from, to] = [to, from];
+    // Clamp the window to one year so a bad request can't scan everything.
+    if ((new Date(to) - new Date(from)) / MS_DAY > 365) {
+        from = toISO(new Date(new Date(to).getTime() - 365 * MS_DAY));
+    }
+
+    // Each query is independent; allSettled means one failure (e.g. a table not
+    // present in some environment) degrades that section instead of 500-ing all.
+    const q = (text, params) => db.query(text, params);
+    const rowsOf = (settled, def = []) => settled.status === 'fulfilled' ? settled.value.rows : def;
+    const firstOf = (settled, def = {}) => settled.status === 'fulfilled' ? (settled.value.rows[0] || def) : def;
+
+    try {
+        const [
+            mixRes, activeRes, loginsRes, signupsRes, growthRes,
+            specialtyRes, sessionRes, summaryRes, conversionRes
+        ] = await Promise.allSettled([
+            q(`SELECT
+                    COUNT(*) FILTER (WHERE grandfathered_at IS NOT NULL OR subscription_status = 'grandfathered')::int AS legacy,
+                    COUNT(*) FILTER (WHERE grandfathered_at IS NULL AND subscription_status = 'active')::int AS paid,
+                    COUNT(*) FILTER (WHERE grandfathered_at IS NULL AND subscription_status = 'trial')::int AS trial,
+                    COUNT(*)::int AS total
+                FROM accounts`),
+            q(`SELECT
+                    COUNT(DISTINCT user_id) FILTER (WHERE login_time > NOW() - INTERVAL '1 day')::int AS dau,
+                    COUNT(DISTINCT user_id) FILTER (WHERE login_time > NOW() - INTERVAL '7 days')::int AS wau,
+                    COUNT(DISTINCT user_id) FILTER (WHERE login_time > NOW() - INTERVAL '30 days')::int AS mau
+                FROM login_history`),
+            q(`WITH days AS (SELECT generate_series($1::date, $2::date, '1 day')::date AS d),
+                    l AS (
+                        SELECT (login_time + INTERVAL '3 hours')::date AS d,
+                               COUNT(*)::int AS logins,
+                               COUNT(DISTINCT user_id)::int AS users
+                        FROM login_history
+                        WHERE (login_time + INTERVAL '3 hours')::date BETWEEN $1::date AND $2::date
+                        GROUP BY 1
+                    )
+                SELECT to_char(days.d, 'YYYY-MM-DD') AS date,
+                       COALESCE(l.logins, 0) AS logins,
+                       COALESCE(l.users, 0) AS active_users
+                FROM days LEFT JOIN l ON l.d = days.d
+                ORDER BY days.d`, [from, to]),
+            q(`WITH days AS (SELECT generate_series($1::date, $2::date, '1 day')::date AS d),
+                    s AS (
+                        SELECT (created_at + INTERVAL '3 hours')::date AS d, COUNT(*)::int AS n
+                        FROM accounts
+                        WHERE created_at IS NOT NULL
+                          AND (created_at + INTERVAL '3 hours')::date BETWEEN $1::date AND $2::date
+                        GROUP BY 1
+                    )
+                SELECT to_char(days.d, 'YYYY-MM-DD') AS date, COALESCE(s.n, 0) AS signups
+                FROM days LEFT JOIN s ON s.d = days.d ORDER BY days.d`, [from, to]),
+            q(`WITH days AS (SELECT generate_series($1::date, $2::date, '1 day')::date AS d),
+                    daily AS (
+                        SELECT DISTINCT user_id, (login_time + INTERVAL '3 hours')::date AS d
+                        FROM login_history
+                        WHERE user_id IS NOT NULL
+                          AND (login_time + INTERVAL '3 hours')::date BETWEEN $1::date AND $2::date
+                    ),
+                    first_login AS (
+                        SELECT user_id, MIN((login_time + INTERVAL '3 hours')::date) AS first_day
+                        FROM login_history WHERE user_id IS NOT NULL GROUP BY user_id
+                    ),
+                    g AS (
+                        SELECT daily.d,
+                               COUNT(*) FILTER (WHERE fl.first_day = daily.d)::int AS new_users,
+                               COUNT(*) FILTER (WHERE fl.first_day < daily.d)::int AS returning_users
+                        FROM daily JOIN first_login fl ON fl.user_id = daily.user_id
+                        GROUP BY daily.d
+                    )
+                SELECT to_char(days.d, 'YYYY-MM-DD') AS date,
+                       COALESCE(g.new_users, 0) AS new_users,
+                       COALESCE(g.returning_users, 0) AS returning_users
+                FROM days LEFT JOIN g ON g.d = days.d ORDER BY days.d`, [from, to]),
+            // Specialty usage comes from user_topic_analysis.question_type — the
+            // medical specialty. (user_quiz_sessions.quiz_type is the quiz MODE,
+            // e.g. 'practice'/'final', not the subject.)
+            q(`SELECT question_type AS type, SUM(total_answered)::int AS answered
+                FROM user_topic_analysis
+                WHERE question_type IS NOT NULL AND question_type <> ''
+                GROUP BY question_type ORDER BY answered DESC LIMIT 8`),
+            q(`SELECT COUNT(*)::int AS total_sessions,
+                       COALESCE(ROUND(AVG(duration) FILTER (WHERE duration > 0)), 0)::int AS avg_session_seconds
+                FROM user_quiz_sessions`),
+            q(`SELECT COUNT(*)::int AS total_views, COUNT(DISTINCT user_id)::int AS distinct_users
+                FROM summary_progress`),
+            q(`SELECT
+                    (SELECT COUNT(*) FROM trial_grants)::int AS trials_ever,
+                    (SELECT COUNT(DISTINCT account_id) FROM payment_events WHERE status = 'paid' AND account_id IS NOT NULL)::int AS payers`)
+        ]);
+
+        const mix = firstOf(mixRes, { legacy: 0, paid: 0, trial: 0, total: 0 });
+        const free = Math.max(0, (mix.total || 0) - (mix.legacy || 0) - (mix.paid || 0) - (mix.trial || 0));
+        const accountMix = [
+            { key: 'paid', label: 'مدفوع', value: mix.paid || 0 },
+            { key: 'trial', label: 'تجريبي', value: mix.trial || 0 },
+            { key: 'free', label: 'مجاني', value: free },
+            { key: 'legacy', label: 'قديم (Legacy)', value: mix.legacy || 0 }
+        ];
+
+        const conv = firstOf(conversionRes, { trials_ever: 0, payers: 0 });
+        const trialToPaidRate = conv.trials_ever > 0
+            ? Math.round((conv.payers / conv.trials_ever) * 1000) / 10
+            : 0;
+
+        const sess = firstOf(sessionRes, { total_sessions: 0, avg_session_seconds: 0 });
+        const summary = firstOf(summaryRes, { total_views: 0, distinct_users: 0 });
+
+        res.json({
+            range: { from, to },
+            accountMix,
+            totals: {
+                totalAccounts: mix.total || 0,
+                paid: mix.paid || 0,
+                trial: mix.trial || 0,
+                legacy: mix.legacy || 0,
+                free,
+                trialsEver: conv.trials_ever || 0,
+                payers: conv.payers || 0,
+                trialToPaidRate
+            },
+            activeUsers: firstOf(activeRes, { dau: 0, wau: 0, mau: 0 }),
+            logins: rowsOf(loginsRes),
+            signups: rowsOf(signupsRes),
+            growth: rowsOf(growthRes),
+            engagement: {
+                bySpecialty: rowsOf(specialtyRes),
+                totalSessions: sess.total_sessions || 0,
+                avgSessionSeconds: sess.avg_session_seconds || 0,
+                summariesViews: summary.total_views || 0,
+                summariesUsers: summary.distinct_users || 0
+            }
+        });
+    } catch (err) {
+        logger.error('Error fetching admin analytics', err);
+        res.status(500).json({ message: 'Server error fetching admin analytics' });
+    }
+});
+
 // Get detailed user info with activity
 app.get('/admin/users', adminAuth, async (req, res) => {
     try {
@@ -1671,6 +1831,66 @@ app.get('/user-analysis/:userId', requireSession, async (req, res) => {
 });
 
 
+/**
+ * Wipe one user's performance history so they can start over.
+ *
+ * DESTRUCTIVE AND IRREVERSIBLE — there is no undo and no backup taken.
+ *
+ * SECURITY: requireSession only proves the caller holds a valid session for
+ * SOME account; it does not attach that account's id to the request. Without
+ * the ownership check below, any logged-in user could wipe anyone else's data
+ * just by putting their id in the URL. Do not remove it.
+ *
+ * Achievements are deliberately KEPT — they are earned badges, not analytics,
+ * and silently deleting them would feel like data loss rather than a reset.
+ * The UI states this explicitly.
+ */
+app.post('/user-analysis/:userId/reset', requireSession, async (req, res) => {
+    const { userId } = req.params;
+    const { username } = getSessionCredentials(req);
+
+    const TABLES = [
+        'user_question_attempts',
+        'user_quiz_sessions',
+        'user_topic_analysis',
+        'user_question_progress',
+        'user_streaks',
+        'user_analysis',
+    ];
+
+    const client = await db.connect();
+    try {
+        const owner = await client.query('SELECT id FROM accounts WHERE username = $1', [username]);
+        if (!owner.rows.length || String(owner.rows[0].id) !== String(userId)) {
+            logger.warn('Blocked cross-account analytics reset', { username, targetUserId: userId });
+            return res.status(403).json({ success: false, message: 'You can only reset your own data.' });
+        }
+
+        await client.query('BEGIN');
+        const deleted = {};
+        for (const t of TABLES) {
+            try {
+                const r = await client.query(`DELETE FROM ${t} WHERE user_id = $1`, [userId]);
+                deleted[t] = r.rowCount;
+            } catch (e) {
+                // A table that does not exist on this deployment must not abort
+                // the whole reset — record it and carry on.
+                if (e.code === '42P01') { deleted[t] = null; continue; }
+                throw e;
+            }
+        }
+        await client.query('COMMIT');
+        logger.info('Analytics reset', { userId, deleted });
+        res.json({ success: true, deleted });
+    } catch (err) {
+        await client.query('ROLLBACK').catch(() => {});
+        logger.error('Analytics reset failed', err);
+        res.status(500).json({ success: false, message: 'Reset failed. Nothing was deleted.' });
+    } finally {
+        client.release();
+    }
+});
+
 app.get('/topic-analysis/user/:userId', requireSession, async (req, res) => {
     const { userId } = req.params;
     try {
@@ -1843,6 +2063,40 @@ app.get('/user-streaks/:user_id', requireSession, async (req, res) => {
     }
 });
 
+// ==================== UNIFIED QUESTION BANK ("Midgard & GameBoy2026") ====================
+// After the 2025 cleanup these are the only sources we ever serve. A request for
+// a removed 2025 collection or the unified-bank sentinel resolves to this whole
+// allowlist, so deleted content can never leak — even before the DB deletion
+// script has been run in a given environment.
+const KEPT_SOURCES = ['MidgardGameBoy', 'January25', 'FebMarApr25', 'May26', 'June26'];
+const UNIFIED_BANK = 'MidgardGameBoy'; // sentinel the client sends for "the bank"
+
+// Resolve a requested `source` query param to the set of sources to query.
+// A specific, still-valid collection is honored alone; the sentinel, 'mix',
+// absent, or any removed/unknown source resolves to the full kept allowlist.
+function resolveSources(sourceParam) {
+    if (sourceParam && sourceParam !== 'mix' && sourceParam !== UNIFIED_BANK
+        && KEPT_SOURCES.includes(sourceParam)) {
+        return [sourceParam];
+    }
+    return KEPT_SOURCES;
+}
+
+// De-duplicate rows by normalized question text. The same recall can exist under
+// both the main bank and a monthly collection; unioning sources would otherwise
+// surface it twice in one quiz.
+function dedupeByText(rows) {
+    const seen = new Set();
+    const out = [];
+    for (const r of rows) {
+        const key = (r.question_text || '').trim().toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        out.push(r);
+    }
+    return out;
+}
+
 app.get('/api/questions', requireSubscriber, async (req, res) => {
 
     const limit = parseInt(req.query.limit) || 10;
@@ -1871,9 +2125,12 @@ app.get('/api/questions', requireSubscriber, async (req, res) => {
         categoryValues.push(selectedTypes);
     }
 
-    if (sourceParam && sourceParam !== 'mix') {
-        categoryConditions.push(`source = $${categoryValues.length + 1}`);
-        categoryValues.push(sourceParam);
+    // Always constrain to the kept unified bank so removed 2025 sources never
+    // leak. A specific still-valid collection narrows further; anything else
+    // (sentinel / 'mix' / absent / deleted) spans the whole allowlist.
+    {
+        categoryConditions.push(`source = ANY($${categoryValues.length + 1}::text[])`);
+        categoryValues.push(resolveSources(sourceParam));
     }
 
     const conditions = [...categoryConditions];
@@ -1944,7 +2201,7 @@ app.get('/api/questions', requireSubscriber, async (req, res) => {
         const endTime = Date.now();
         logger.debug(`Questions query executed in ${endTime - startTime}ms, returned ${rows.length} questions`);
 
-        res.json({ questions: rows });
+        res.json({ questions: dedupeByText(rows) });
     } catch (err) {
         logger.error('Error fetching questions', err);
         res.status(500).json({ message: 'Server error' });
@@ -2699,59 +2956,6 @@ app.post('/api/questions', adminAuth, async (req, res) => {
         res.status(500).json({ message: "Server error" });
     }
 });
-
-
-
-app.post("/ai-analysis", async (req, res) => {
-    const { question, selected_answer, correct_option } = req.body;
-
-    if (!question || !selected_answer || !correct_option) {
-        return res.status(400).json({ error: "Missing required fields." });
-    }
-
-    try {
-        // Use API key strictly from environment
-        const apiKey = process.env.APIKEY;
-        if (!apiKey) {
-            console.error("APIKEY environment variable is not set");
-            return res.status(500).json({ error: "AI service configuration error." });
-        }
-
-        const isProd = process.env.NODE_ENV === 'production';
-        const referer = isProd ? "https://medquiz.vercel.app" : (process.env.DEV_REFERER || "http://localhost:5173");
-
-        const openai = new OpenAI({
-            apiKey,
-            baseURL: "https://openrouter.ai/api/v1",
-        });
-
-        const model = process.env.OPENROUTER_MODEL || "qwen/qwen3-next-80b-a3b-instruct:free";
-
-        const completion = await openai.chat.completions.create({
-            model,
-            messages: [
-                {
-                    role: "user",
-                    content: `Here's a multiple-choice question:\n\nQuestion: ${question}\nUser's Answer: ${selected_answer}\nCorrect Answer: ${correct_option}\n\nWhich one is more accurate and why? in no longer than 40 words. if the words are less than 40 . dont say the number of words . and ne style needed just text `
-                }
-            ]
-        });
-
-        const aiAnswer = completion.choices?.[0]?.message?.content;
-
-        if (!aiAnswer) {
-            console.error("OpenRouter API responded with no choices.", JSON.stringify(completion));
-            return res.status(500).json({ error: "Invalid AI response format." });
-        }
-
-        res.json({ answer: aiAnswer });
-
-    } catch (error) {
-        console.error("AI analysis error:", error);
-        res.status(500).json({ error: "Failed to fetch AI analysis. Please try again later." });
-    }
-});
-
 
 
 
@@ -4003,7 +4207,8 @@ app.post('/api/auth/send-otp', async (req, res) => {
         <!-- Header -->
         <tr>
           <td align="center" style="padding:28px 40px;background:linear-gradient(135deg,#2563eb,#4f46e5);">
-            <span style="font-size:26px;font-weight:800;color:#ffffff;letter-spacing:2px;">SQB</span>
+            <img src="https://www.smle-question-bank.com/tab_logo.png" width="34" height="34" alt="SQB" style="vertical-align:middle;border-radius:8px;margin-right:10px;">
+            <span style="font-size:26px;font-weight:800;color:#ffffff;letter-spacing:2px;vertical-align:middle;">SQB</span>
           </td>
         </tr>
         <!-- Body -->
@@ -4462,10 +4667,10 @@ app.get('/final-quiz/questions-count', requireSession, async (req, res) => {
         logger.debug('Fetching questions count for final quiz', { questionType, source });
 
         const result = await db.query(`
-            SELECT COUNT(*) as total_questions
-            FROM questions 
-            WHERE question_type = $1 AND source = $2
-        `, [questionType, source]);
+            SELECT COUNT(DISTINCT LOWER(TRIM(question_text)))::int AS total_questions
+            FROM questions
+            WHERE question_type = $1 AND source = ANY($2::text[])
+        `, [questionType, resolveSources(source)]);
 
         const totalQuestions = parseInt(result.rows[0].total_questions);
 
@@ -4515,10 +4720,12 @@ app.get('/final-quiz/questions', requireSession, subscriberOnly, async (req, res
                 question_type,
                 source
             FROM questions
-            WHERE question_type = $1 AND source = $2
-        `, [questionType, source]);
+            WHERE question_type = $1 AND source = ANY($2::text[])
+        `, [questionType, resolveSources(source)]);
 
-        const questions = result.rows;
+        // The union of kept sources can contain the same recall twice; collapse
+        // to one per normalized question text before shuffling.
+        const questions = dedupeByText(result.rows);
         for (let i = questions.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [questions[i], questions[j]] = [questions[j], questions[i]];
@@ -4927,6 +5134,37 @@ app.use('/api/payment', (req, res, next) => { req.db = db; next(); }, paymentRou
 
 // Topic Summaries Routes (slide decks + study questions + reading progress)
 app.use('/api/summaries', (req, res, next) => { req.db = db; next(); }, summariesRouter);
+
+// Admin broadcast — compose one email and drip it to every user in small,
+// resumable batches. See routes/admin-broadcast.js for why it is queue-based.
+app.use('/admin/broadcast', (req, res, next) => { req.db = db; next(); }, adminBroadcastRouter);
+
+/**
+ * Public unsubscribe link used by broadcast emails. Deliberately GET and
+ * unauthenticated — it is opened straight from a mail client — but the token
+ * is an HMAC of the account id, so it cannot be guessed or enumerated.
+ */
+app.get('/api/unsubscribe', async (req, res) => {
+    const { u, t } = req.query;
+    const page = (title, msg, ok) => `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title></head>
+<body style="margin:0;background:#eef2fb;font-family:system-ui,Arial,sans-serif;display:flex;min-height:100vh;align-items:center;justify-content:center">
+<div style="max-width:420px;background:#fff;border-radius:14px;padding:28px;text-align:center;box-shadow:0 10px 30px rgba(15,23,42,.12)">
+<div style="font-size:34px;margin-bottom:8px">${ok ? '✅' : '⚠️'}</div>
+<h1 style="margin:0 0 8px;font-size:19px;color:#0f1e3d">${title}</h1>
+<p style="margin:0;color:#475569;font-size:14px;line-height:1.8">${msg}</p></div></body></html>`;
+    try {
+        if (!u || !t || t !== unsubToken(u)) {
+            return res.status(400).send(page('رابط غير صالح', 'رابط إلغاء الاشتراك غير صحيح أو منتهي. تواصل معنا إذا استمرت المشكلة.', false));
+        }
+        await db.query(`ALTER TABLE accounts ADD COLUMN IF NOT EXISTS email_opt_out BOOLEAN DEFAULT FALSE`);
+        await db.query(`UPDATE accounts SET email_opt_out = TRUE WHERE id = $1`, [u]);
+        res.send(page('تم إلغاء الاشتراك', 'لن تصلك رسائل جماعية من SQB بعد الآن. رسائل حسابك الضرورية (مثل استعادة كلمة المرور) ستستمر.', true));
+    } catch (err) {
+        logger.error('unsubscribe failed', err);
+        res.status(500).send(page('حدث خطأ', 'تعذّر تنفيذ الطلب الآن. حاول مرة أخرى لاحقاً.', false));
+    }
+});
 
 // Global Error Handling Middleware - catches all unhandled errors
 app.use(async (err, req, res, next) => {

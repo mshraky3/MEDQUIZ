@@ -4,17 +4,16 @@
  * Configured entirely by env vars so switching provider is a redeploy,
  * not a code change:
  *
- *   SMTP_HOST          e.g. smtp.resend.com   (default: smtp.gmail.com)
+ *   SMTP_HOST          e.g. smtp.resend.com
  *   SMTP_PORT          e.g. 465               (default: 587)
- *   SMTP_USER          e.g. resend            (default: legacy Gmail account)
+ *   SMTP_USER          e.g. resend
  *   SMTP_PASS          provider API key / app password
  *   MAIL_FROM_ADDRESS  e.g. noreply@smle-question-bank.com
  *   MAIL_FROM_NAME     default display name (default: SQB)
  *
- * While the env vars are unset everything falls back to the legacy Gmail
- * sender, so deploys are safe in any order. Once a domain-verified provider
- * is configured (SPF + DKIM on smle-question-bank.com), mail is sent from
- * the domain and lands in the inbox instead of spam.
+ * All required — no hardcoded fallback credentials (a real password used
+ * to live here as a "safe default"; that's a secret sitting in source
+ * control the moment this repo is pushed anywhere, so it throws instead).
  *
  * The transporter is created lazily on first send (not at import time)
  * because app.js calls dotenv.config() AFTER imports are evaluated — a
@@ -26,14 +25,17 @@ import nodemailer from 'nodemailer';
 let _transporter = null;
 function getTransporter() {
     if (!_transporter) {
+        if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+            throw new Error('Mailer is not configured — set SMTP_HOST, SMTP_USER and SMTP_PASS.');
+        }
         const port = Number(process.env.SMTP_PORT || 587);
         _transporter = nodemailer.createTransport({
-            host: process.env.SMTP_HOST || 'smtp.gmail.com',
+            host: process.env.SMTP_HOST,
             port,
             secure: port === 465,
             auth: {
-                user: process.env.SMTP_USER || 'alshrakynodeapp@gmail.com',
-                pass: process.env.SMTP_PASS || 'ssjpnctdsyqxylxd',
+                user: process.env.SMTP_USER,
+                pass: process.env.SMTP_PASS,
             },
         });
     }
@@ -42,9 +44,11 @@ function getTransporter() {
 
 /** From header with a per-email display name over the single configured address. */
 export function fromWithName(name) {
-    const address = process.env.MAIL_FROM_ADDRESS || 'alshrakynodeapp@gmail.com';
+    if (!process.env.MAIL_FROM_ADDRESS) {
+        throw new Error('Mailer is not configured — set MAIL_FROM_ADDRESS.');
+    }
     const display = name || process.env.MAIL_FROM_NAME || 'SQB';
-    return `"${display}" <${address}>`;
+    return `"${display}" <${process.env.MAIL_FROM_ADDRESS}>`;
 }
 
 /**

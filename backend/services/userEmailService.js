@@ -27,7 +27,8 @@ const wrapLayout = (bodyContent) => `<!DOCTYPE html>
         <!-- Logo Header -->
         <tr>
           <td align="center" style="padding:28px 40px 22px;background:#111827;border-bottom:1px solid #1e293b;">
-            <span style="font-size:26px;font-weight:800;color:#22d3ee;letter-spacing:2px;">SQB</span>
+            <img src="https://www.smle-question-bank.com/tab_logo.png" width="36" height="36" alt="SQB" style="vertical-align:middle;border-radius:8px;margin-right:10px;">
+            <span style="font-size:26px;font-weight:800;color:#22d3ee;letter-spacing:2px;vertical-align:middle;">SQB</span>
           </td>
         </tr>
         <!-- Body -->

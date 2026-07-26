@@ -76,6 +76,50 @@ router.use(async (req, res, next) => {
 
 const pad3 = (n) => String(n).padStart(3, '0');
 
+const FIGURE_TYPES = {
+    webp: 'image/webp', png: 'image/png', jpg: 'image/jpeg',
+    jpeg: 'image/jpeg', svg: 'image/svg+xml'
+};
+
+// GET /api/summaries/figure/:name — stream a gated summary figure from private R2
+// storage (kept undownloadable, same as slide pages). Referenced from summary
+// HTML as <img data-figure-key="name.webp">, fetched with auth via a blob URL
+// (browser <img> can't send the Authorization header). Defined before /:slug so
+// the two-segment path is unambiguous.
+router.get('/figure/:name', async (req, res) => {
+    const name = req.params.name;
+    // Flat, safe filenames only — no path traversal, fixed figures/ prefix.
+    const m = /^([a-zA-Z0-9_-]+)\.(webp|png|jpg|jpeg|svg)$/.exec(name);
+    if (!m) return res.status(400).json({ message: 'Invalid figure name' });
+    if (!isR2Configured()) return res.status(503).json({ message: 'Content storage not configured' });
+
+    try {
+        const obj = await getObject(`figures/${name}`);
+        res.setHeader('Content-Type', obj.ContentType || FIGURE_TYPES[m[2]] || 'application/octet-stream');
+        res.setHeader('Cache-Control', 'private, max-age=86400');
+        res.setHeader('Content-Disposition', 'inline');
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+
+        const body = obj.Body;
+        if (body && typeof body.pipe === 'function') {
+            body.on('error', (streamErr) => {
+                console.error('[Summaries] figure stream error:', streamErr);
+                if (!res.headersSent) res.status(500).end(); else res.end();
+            });
+            body.pipe(res);
+        } else {
+            const bytes = await obj.Body.transformToByteArray();
+            res.end(Buffer.from(bytes));
+        }
+    } catch (err) {
+        if (err?.name === 'NoSuchKey' || err?.$metadata?.httpStatusCode === 404) {
+            return res.status(404).json({ message: 'Figure not found' });
+        }
+        console.error('[Summaries] figure fetch failed:', err);
+        res.status(500).json({ message: 'Failed to load figure' });
+    }
+});
+
 // GET /api/summaries — published decks + this user's progress + topic question counts
 router.get('/', async (req, res) => {
     try {

@@ -278,6 +278,7 @@ function generateEmailHtml(errorData, severity, errorId, frequency) {
                       System Error Detected
                     </h1>
                     <p style="margin: 0 0 24px 0; color: rgba(255,255,255,0.8); font-size: 15px; font-weight: 500;">
+                      <img src="https://www.smle-question-bank.com/tab_logo.png" width="18" height="18" alt="" style="vertical-align:middle;border-radius:4px;margin-right:6px;">
                       SQB Monitoring System
                     </p>
                     

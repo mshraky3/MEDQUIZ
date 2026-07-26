@@ -1,12 +1,29 @@
 import pg from 'pg';
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
 const { Pool } = pg;
 
+// Credentials come from backend/.env — NEVER hardcode them here. This file used
+// to carry the live host/user/password as string literals, which would have put
+// the production database password into git history on the first push.
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
+
+for (const v of ['DBHOST', 'DBNAME', 'DBUSER', 'DBPASSWORD']) {
+    if (!process.env[v]) {
+        console.error(`Missing ${v}. Set it in backend/.env before running this script.`);
+        process.exit(1);
+    }
+}
+
 const pool = new Pool({
-    host: 'ep-calm-silence-a4k4dxgb.us-east-1.pg.koyeb.app',
-    port: 5432,
-    database: 'koyebdb',
-    user: 'koyeb-adm',
-    password: 'npg_lvpKWf1E6GQm',
+    host: process.env.DBHOST,
+    port: process.env.DBPORT || 5432,
+    database: process.env.DBNAME,
+    user: process.env.DBUSER,
+    password: process.env.DBPASSWORD,
     ssl: { rejectUnauthorized: false },
 });
 

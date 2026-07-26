@@ -51,8 +51,9 @@ router.post('/', async (req, res) => {
       <table width="500" cellpadding="0" cellspacing="0" style="background:#111827;border-radius:12px;overflow:hidden;border:1px solid #1e293b;">
         <tr>
           <td style="padding:24px 32px 20px;background:#111827;border-bottom:1px solid #1e293b;">
-            <span style="font-size:22px;font-weight:800;color:#22d3ee;">SQB</span>
-            <span style="font-size:13px;color:#64748b;margin-left:12px;">Admin Alert</span>
+            <img src="https://www.smle-question-bank.com/tab_logo.png" width="28" height="28" alt="SQB" style="vertical-align:middle;border-radius:6px;margin-right:8px;">
+            <span style="font-size:22px;font-weight:800;color:#22d3ee;vertical-align:middle;">SQB</span>
+            <span style="font-size:13px;color:#64748b;margin-left:12px;vertical-align:middle;">Admin Alert</span>
           </td>
         </tr>
         <tr>
@@ -188,16 +189,19 @@ router.put('/:id/resolve', adminAuth, async (req, res) => {
                         <p style="color:#64748b;font-size:13px;margin:0 0 8px 0;">Question</p>
                         <p style="margin:0;font-weight:600;">${report.question_text}</p>
                     </div>
-                    <div style="display:flex;gap:12px;margin:16px 0;">
-                        <div style="flex:1;background:#fee2e2;border-radius:6px;padding:12px;">
-                            <p style="color:#dc2626;font-size:12px;margin:0 0 4px 0;">Old Answer</p>
-                            <p style="margin:0;font-weight:600;">${report.current_correct}</p>
-                        </div>
-                        <div style="flex:1;background:#dcfce7;border-radius:6px;padding:12px;">
-                            <p style="color:#16a34a;font-size:12px;margin:0 0 4px 0;">New Correct Answer</p>
-                            <p style="margin:0;font-weight:600;">${new_correct_option}</p>
-                        </div>
-                    </div>
+                    <table width="100%" cellpadding="0" cellspacing="0" style="margin:16px 0;">
+                        <tr>
+                            <td width="50%" style="background:#fee2e2;border-radius:6px;padding:12px;">
+                                <p style="color:#dc2626;font-size:12px;margin:0 0 4px 0;">Old Answer</p>
+                                <p style="margin:0;font-weight:600;">${report.current_correct}</p>
+                            </td>
+                            <td width="8"></td>
+                            <td width="50%" style="background:#dcfce7;border-radius:6px;padding:12px;">
+                                <p style="color:#16a34a;font-size:12px;margin:0 0 4px 0;">New Correct Answer</p>
+                                <p style="margin:0;font-weight:600;">${new_correct_option}</p>
+                            </td>
+                        </tr>
+                    </table>
                     ${admin_note ? `<p style="color:#64748b;font-size:13px;">Admin note: ${admin_note}</p>` : ''}
                     <p style="margin-top:20px;">Thank you for helping us improve the platform. Your contribution keeps the question bank accurate for everyone.</p>
                     <p style="color:#94a3b8;font-size:12px;margin-top:24px;">— The SQB Team</p>
