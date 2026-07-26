@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from '../../utils/adminApi.js';
 import './Admin.css';
 import AdminNavbar from './AdminNavbar.jsx';
+import AdminAnalytics from './AdminAnalytics.jsx';
 import Globals from '../../global.js';
 import Spinner from '../common/Spinner.jsx';
 
@@ -376,6 +377,13 @@ const Admin = () => {
 
   const adminCards = [
     {
+      icon: 'send',
+      title: 'Bulk Email',
+      description: 'Compose one email and drip it to every user, rate-limited',
+      buttonText: 'Send Email',
+      path: '/admin/email'
+    },
+    {
       icon: 'user',
       title: 'User Management',
       description: 'Add new user accounts and manage existing users',
@@ -505,6 +513,9 @@ const Admin = () => {
             <span className="quick-action-label">Refresh</span>
           </button>
         </div>
+
+        {/* Expanded analytics (account mix, active-login trends, growth, engagement) */}
+        <AdminAnalytics />
 
         {/* Main Stats Grid */}
         <div className="stats-grid-main">

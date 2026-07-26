@@ -13,6 +13,7 @@ import Progress from './Progress';
 import FinalExams from './FinalExams';
 import Spinner from '../common/Spinner.jsx';
 import { UserContext } from '../../UserContext';
+import { getTypeLabel } from '../../utils/typeLabels';
 
 const BestWorstTopic = ({ best, worst }) => (
   <section className="streak-section">
@@ -45,7 +46,7 @@ const BestWorstTopic = ({ best, worst }) => (
           <div className="answers-section">
             <div className="answer-row">
               <span className="answer-label correct">الموضوع:</span>
-              <span className="answer-text correct">{best?.question_type || 'لا توجد بيانات'}</span>
+              <span className="answer-text correct">{best ? getTypeLabel(best.question_type) : 'لا توجد بيانات'}</span>
             </div>
 
             <div className="answer-row">
@@ -88,7 +89,7 @@ const BestWorstTopic = ({ best, worst }) => (
           <div className="answers-section">
             <div className="answer-row">
               <span className="answer-label wrong">الموضوع:</span>
-              <span className="answer-text wrong">{worst?.question_type || 'لا توجد بيانات'}</span>
+              <span className="answer-text wrong">{worst ? getTypeLabel(worst.question_type) : 'لا توجد بيانات'}</span>
             </div>
 
             <div className="answer-row">
@@ -142,6 +143,10 @@ const FloatingStreakBadge = ({ streakData, loading: streakLoading }) => {
 
 const Analysis = () => {
   const { user, setUser, sessionToken } = useContext(UserContext);
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [resetConfirm, setResetConfirm] = useState('');
+  const [resetting, setResetting] = useState(false);
+  const [resetError, setResetError] = useState('');
   const location = useLocation();
   const id = user?.id || location.state?.id;
   const navigate = useNavigate();
@@ -220,6 +225,42 @@ const Analysis = () => {
         return;
       }
       throw err;
+    }
+  };
+
+  // Helper to handle protected POST requests
+  const protectedPost = async (url, body = {}, config = {}) => {
+    if (!user || !sessionToken) throw new Error('Not authenticated');
+    const urlWithUser = url + (url.includes('?') ? '&' : '?') + `username=${encodeURIComponent(user.username)}`;
+    try {
+      return await axios.post(urlWithUser, body, { ...config, headers: { ...(config.headers || {}), Authorization: `Bearer ${sessionToken}` } });
+    } catch (err) {
+      if (err.response && err.response.status === 401) {
+        setUser(null, null);
+        localStorage.removeItem('user'); localStorage.removeItem('sessionToken');
+        window.location.href = '/login?session=expired';
+        return;
+      }
+      throw err;
+    }
+  };
+
+  /**
+   * Wipe every performance record and start over. Irreversible, so it is gated
+   * behind a modal that requires typing the word حذف — a plain "are you sure"
+   * is too easy to click through for something with no undo.
+   */
+  const handleResetAnalytics = async () => {
+    setResetting(true);
+    setResetError('');
+    try {
+      await protectedPost(`${Globals.URL}/user-analysis/${id}/reset`);
+      setShowResetModal(false);
+      setResetConfirm('');
+      window.location.reload(); // simplest way to guarantee every panel re-reads
+    } catch (err) {
+      setResetError(err?.response?.data?.message || 'تعذّر تنفيذ إعادة التعيين. لم يُحذف شيء.');
+      setResetting(false);
     }
   };
 
@@ -603,6 +644,61 @@ const Analysis = () => {
             ابدأ اختبار جديد
           </button>
         </div>
+
+        {/* Danger zone — irreversible, so it sits apart from the normal actions */}
+        <div className="danger-zone">
+          <div className="danger-zone-text">
+            <strong>إعادة تعيين التحليل</strong>
+            <span>حذف كل سجلّ أدائك والبدء من الصفر. لا يمكن التراجع.</span>
+          </div>
+          <button type="button" className="danger-button" onClick={() => { setResetError(''); setResetConfirm(''); setShowResetModal(true); }}>
+            <Icon name="trash" size={15} /> إعادة تعيين
+          </button>
+        </div>
+
+        {showResetModal && (
+          <div className="reset-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="reset-modal-title">
+            <div className="reset-modal">
+              <h2 id="reset-modal-title"><Icon name="alert-triangle" size={19} /> إعادة تعيين التحليل</h2>
+              <p className="reset-modal-lead">سيُحذف نهائياً، ولا يمكن استرجاعه:</p>
+              <ul className="reset-modal-list">
+                <li>كل الاختبارات السابقة وسجلّ إجاباتك</li>
+                <li>الدقة والإحصائيات وتحليل التخصصات</li>
+                <li>تقدّمك في الأسئلة (ستعود الأسئلة التي حللتها للظهور)</li>
+                <li>سلسلة الأيام المتتالية</li>
+              </ul>
+              <p className="reset-modal-keep"><Icon name="check-circle" size={14} /> إنجازاتك المكتسبة ستبقى محفوظة.</p>
+
+              <label className="reset-modal-label" htmlFor="reset-confirm">
+                اكتب <b>حذف</b> للتأكيد
+              </label>
+              <input
+                id="reset-confirm"
+                className="reset-modal-input"
+                value={resetConfirm}
+                onChange={(e) => setResetConfirm(e.target.value)}
+                autoComplete="off"
+                disabled={resetting}
+              />
+
+              {resetError && <p className="reset-modal-error">{resetError}</p>}
+
+              <div className="reset-modal-actions">
+                <button type="button" className="secondary-button" onClick={() => setShowResetModal(false)} disabled={resetting}>
+                  إلغاء
+                </button>
+                <button
+                  type="button"
+                  className="danger-button"
+                  onClick={handleResetAnalytics}
+                  disabled={resetConfirm.trim() !== 'حذف' || resetting}
+                >
+                  {resetting ? 'جارٍ الحذف…' : 'احذف كل شيء'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
     </div>
   );
 };

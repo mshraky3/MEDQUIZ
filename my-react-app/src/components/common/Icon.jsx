@@ -75,6 +75,9 @@ const PATHS = {
     hourglass: <><path d="M6 2h12M6 22h12" /><path d="M6 2c0 5 12 5 12 0M6 22c0-5 12-5 12 0" /></>,
     'log-out': <><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></>,
     'shield-check': <><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5z" /><path d="m8.5 11.5 2.5 2.5 4.5-4.5" /></>,
+    // Directional — mirror these when the surrounding text direction flips.
+    'chevron-left': <><path d="m15 6-6 6 6 6" /></>,
+    'chevron-right': <><path d="m9 6 6 6-6 6" /></>,
 };
 
 const Icon = ({ name, size = 20, strokeWidth = 2, className = '', title, ...rest }) => {

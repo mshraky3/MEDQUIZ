@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import Icon from '../common/Icon.jsx';
 import axios from 'axios';
 import Globals from '../../global.js';
 import Spinner from '../common/Spinner.jsx';
 import { getSourceLabel } from '../../utils/sourceLabels';
+import { getTypeLabel } from '../../utils/typeLabels';
 import './QuizHistory.css';
 
 const QuizHistory = ({ userId, username, sessionToken }) => {
@@ -16,9 +17,6 @@ const QuizHistory = ({ userId, username, sessionToken }) => {
   });
   const [expandedSessionId, setExpandedSessionId] = useState(null);
   const [sessionDetails, setSessionDetails] = useState({});
-  const [flippedCards, setFlippedCards] = useState({});
-  const [aiAnalysis, setAiAnalysis] = useState({});
-  const [loadingButtons, setLoadingButtons] = useState({});
 
   // Fetch quiz sessions
   const fetchSessions = async () => {
@@ -105,47 +103,6 @@ const QuizHistory = ({ userId, username, sessionToken }) => {
       page: newPage
     }));
   };
-
-  // Handle See More button click for flip cards
-  const handleSeeMore = useCallback(async (attemptId, questionText, selectedAnswer, correctAnswer) => {
-    // Flip the card immediately
-    setFlippedCards(prev => ({ ...prev, [attemptId]: true }));
-
-    // If analysis already exists for this question, don't fetch again
-    if (aiAnalysis[attemptId]) {
-      return;
-    }
-
-    // Set loading state
-    setLoadingButtons(prev => ({ ...prev, [attemptId]: true }));
-
-    try {
-      // Call AI analysis API (aligned with backend contract)
-      const response = await axios.post(`${Globals.URL}/ai-analysis`, {
-        question: questionText,
-        selected_answer: selectedAnswer,
-        correct_option: correctAnswer
-      });
-
-      setAiAnalysis(prev => ({
-        ...prev,
-        [attemptId]: response.data.answer || 'No explanation received.'
-      }));
-    } catch (error) {
-      const backendMsg = error?.response?.data?.answer || error?.response?.data?.error || error?.response?.data?.details;
-      console.error('Error fetching AI analysis:', error?.response?.data || error);
-      setAiAnalysis(prev => ({
-        ...prev,
-        [attemptId]: backendMsg || 'تعذر إنشاء التحليل حالياً.'
-      }));
-    } finally {
-      setLoadingButtons(prev => ({ ...prev, [attemptId]: false }));
-    }
-  }, [username, sessionToken, aiAnalysis]);
-
-  const handleFlipBack = useCallback((attemptId) => {
-    setFlippedCards(prev => ({ ...prev, [attemptId]: false }));
-  }, []);
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('ar-EG', {
@@ -285,96 +242,43 @@ const QuizHistory = ({ userId, username, sessionToken }) => {
                     ) : (
                       <div className="questions-grid">
                         {sessionDetails[session.id].question_attempts.map((attempt, index) => (
-                          <div
-                            key={attempt.id}
-                            className={`question-card ${flippedCards[attempt.id] ? 'flipped' : ''}`}
-                          >
+                          <div key={attempt.id} className="question-card">
                             <div className="question-card-inner">
-                              {/* Front of Card */}
-                              <div className="question-card-front">
-                                <div className="question-header">
-                                  <div className="question-meta">
-                                    <span className="type-badge">
-                                      <Icon name="book" size={15} /> {attempt.question_type}
-                                    </span>
-                                    <span className="source-badge">
-                                      <Icon name="book-open" size={15} /> {getSourceLabel(attempt.source)}
-                                    </span>
-                                    <span className={`result-badge ${attempt.is_correct ? 'correct' : 'wrong'}`}>
-                                      {attempt.is_correct ? <><Icon name="check-circle" size={13} /> صحيح</> : <><Icon name="x-circle" size={13} /> خطأ</>}
-                                    </span>
-                                  </div>
-                                </div>
-
-                                <div className="question-content">
-                                  <div className="question-text">
-                                    {attempt.question_text}
-                                  </div>
-
-                                  <div className="answers-section">
-                                    <div className="answer-row">
-                                      <span className="answer-label wrong">إجابتك:</span>
-                                      <span className={`answer-text ${attempt.is_correct ? 'correct' : 'wrong'}`}>
-                                        {attempt.selected_option}
-                                      </span>
-                                    </div>
-                                    <div className="answer-row">
-                                      <span className="answer-label correct">الإجابة الصحيحة:</span>
-                                      <span className="answer-text correct">{attempt.correct_option}</span>
-                                    </div>
-                                  </div>
-
-                                  <div className="question-actions">
-                                    <button
-                                      onClick={(e) =>
-                                        handleSeeMore(
-                                          attempt.id,
-                                          attempt.question_text,
-                                          attempt.selected_option,
-                                          attempt.correct_option,
-                                          e
-                                        )
-                                      }
-                                      className="see-more-button"
-                                      disabled={loadingButtons[attempt.id]}
-                                    >
-                                      {loadingButtons[attempt.id] ? 'جاري التحميل...' : <><Icon name="search" size={13} /> اعرف أكثر</>}
-                                    </button>
-                                  </div>
-
-                                  <div className="question-meta">
-                                    <span className="time-taken"><Icon name="clock" size={15} /> {attempt.time_taken}s</span>
-                                    <span className="question-number">سؤال {index + 1}</span>
-                                  </div>
+                              <div className="question-header">
+                                <div className="question-meta">
+                                  <span className="type-badge">
+                                    <Icon name="book" size={15} /> {getTypeLabel(attempt.question_type)}
+                                  </span>
+                                  <span className="source-badge">
+                                    <Icon name="book-open" size={15} /> {getSourceLabel(attempt.source)}
+                                  </span>
+                                  <span className={`result-badge ${attempt.is_correct ? 'correct' : 'wrong'}`}>
+                                    {attempt.is_correct ? <><Icon name="check-circle" size={13} /> صحيح</> : <><Icon name="x-circle" size={13} /> خطأ</>}
+                                  </span>
                                 </div>
                               </div>
 
-                              {/* Back of Card */}
-                              <div className="question-card-back">
-                                <div className="ai-analysis-back">
-                                  <div className="ai-analysis-header">
-                                    <h3><Icon name="brain" size={15} /> تحليل الذكاء الاصطناعي</h3>
+                              <div className="question-content">
+                                <div className="question-text">
+                                  {attempt.question_text}
+                                </div>
+
+                                <div className="answers-section">
+                                  <div className="answer-row">
+                                    <span className="answer-label wrong">إجابتك:</span>
+                                    <span className={`answer-text ${attempt.is_correct ? 'correct' : 'wrong'}`}>
+                                      {attempt.selected_option}
+                                    </span>
                                   </div>
+                                  <div className="answer-row">
+                                    <span className="answer-label correct">الإجابة الصحيحة:</span>
+                                    <span className="answer-text correct">{attempt.correct_option}</span>
+                                  </div>
+                                </div>
 
-                                  {loadingButtons[attempt.id] ? (
-                                    <div className="ai-analysis-loading">
-                                      <p>جاري تحليل السؤال...</p>
-                                      <Spinner size="sm" />
-                                      <p className="loading-subtext">يرجى الانتظار...</p>
-                                    </div>
-                                  ) : (
-                                    <div className="ai-analysis-content">
-                                      <p>{aiAnalysis[attempt.id] || 'لا يوجد تحليل متاح.'}</p>
-                                    </div>
-                                  )}
-
-                                  <button
-                                    className="back-to-question-btn"
-                                    onClick={() => handleFlipBack(attempt.id)}
-                                    disabled={loadingButtons[attempt.id]}
-                                  >
-                                    العودة للسؤال ←
-                                  </button>
+                                <div className="question-meta">
+                                  <span className="time-taken"><Icon name="clock" size={15} /> {attempt.time_taken}s</span>
+                                  <span className="question-number">سؤال {index + 1}</span>
                                 </div>
                               </div>
                             </div>

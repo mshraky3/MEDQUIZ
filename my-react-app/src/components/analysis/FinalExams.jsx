@@ -3,6 +3,8 @@ import Icon from '../common/Icon.jsx';
 import axios from 'axios';
 import Globals from '../../global.js';
 import Spinner from '../common/Spinner.jsx';
+import { getSourceLabel } from '../../utils/sourceLabels';
+import { getTypeLabel } from '../../utils/typeLabels';
 import './FinalExams.css';
 
 const FinalExams = ({ userId, username, sessionToken }) => {
@@ -18,9 +20,6 @@ const FinalExams = ({ userId, username, sessionToken }) => {
     const [expandedSessionId, setExpandedSessionId] = useState(null);
     const [sessionDetails, setSessionDetails] = useState({});
     const [sessionQuestions, setSessionQuestions] = useState({});
-    const [flippedQuestions, setFlippedQuestions] = useState(new Set());
-    const [aiAnalysis, setAiAnalysis] = useState({});
-    const [loadingButtons, setLoadingButtons] = useState({});
 
     // Fetch final quiz sessions
     const fetchSessions = async (page = 1, limit = 10) => {
@@ -105,51 +104,6 @@ const FinalExams = ({ userId, username, sessionToken }) => {
                 fetchSessionQuestions(sessionId);
             }
         }
-    };
-
-    // Handle See More button click for AI analysis
-    const handleSeeMore = async (questionId, questionText, userAnswer, correctAnswer) => {
-        // Flip the card immediately
-        setFlippedQuestions(prev => new Set([...prev, questionId]));
-
-        // If analysis already exists for this question, don't fetch again
-        if (aiAnalysis[questionId]) {
-            return;
-        }
-
-        // Set loading state
-        setLoadingButtons(prev => ({ ...prev, [questionId]: true }));
-
-        try {
-            // Call AI analysis API (aligned with backend contract)
-            const response = await axios.post(`${Globals.URL}/ai-analysis`, {
-                question: questionText,
-                selected_answer: userAnswer,
-                correct_option: correctAnswer
-            });
-
-            setAiAnalysis(prev => ({
-                ...prev,
-                [questionId]: response.data.answer || 'No analysis available.'
-            }));
-        } catch (error) {
-            const backendMsg = error?.response?.data?.answer || error?.response?.data?.error || error?.response?.data?.details;
-            console.error('Error fetching AI analysis:', error?.response?.data || error);
-            setAiAnalysis(prev => ({
-                ...prev,
-                [questionId]: backendMsg || 'Unable to generate analysis at this time.'
-            }));
-        } finally {
-            setLoadingButtons(prev => ({ ...prev, [questionId]: false }));
-        }
-    };
-
-    const handleFlipBack = (questionId) => {
-        setFlippedQuestions(prev => {
-            const newSet = new Set(prev);
-            newSet.delete(questionId);
-            return newSet;
-        });
     };
 
     // Format date
@@ -256,7 +210,7 @@ const FinalExams = ({ userId, username, sessionToken }) => {
                         <div className="session-header">
                             <div className="session-info">
                                 <h3 className="session-title">
-                                    {session.question_type} - {session.source}
+                                    {getTypeLabel(session.question_type)} - {getSourceLabel(session.source)}
                                 </h3>
                                 <p className="session-date">
                                     {formatDate(session.start_time)}
@@ -348,86 +302,39 @@ const FinalExams = ({ userId, username, sessionToken }) => {
                                                 {sessionQuestions[session.id] && sessionQuestions[session.id].length > 0 ? (
                                                     <div className="questions-grid">
                                                         {sessionQuestions[session.id].map((question, index) => (
-                                                            <div key={question.id} className={`question-card ${flippedQuestions.has(question.id) ? 'flipped' : ''}`}>
+                                                            <div key={question.id} className="question-card">
                                                                 <div className="question-card-inner">
-                                                                    {/* Front of Card */}
-                                                                    <div className="question-card-front">
-                                                                        <div className="question-header">
-                                                                            <div className="question-meta">
-                                                                                <span className="type-badge">
-                                                                                    <Icon name="book" size={15} /> {question.question_type}
-                                                                                </span>
-                                                                                <span className={`result-badge ${question.is_correct ? 'correct' : 'wrong'}`}>
-                                                                                    {question.is_correct ? <><Icon name="check-circle" size={13} /> صحيح</> : <><Icon name="x-circle" size={13} /> خطأ</>}
-                                                                                </span>
-                                                                            </div>
-                                                                        </div>
-
-                                                                        <div className="question-content">
-                                                                            <div className="question-text">
-                                                                                {question.question_text}
-                                                                            </div>
-
-                                                                            <div className="answers-section">
-                                                                                <div className="answer-row">
-                                                                                    <span className="answer-label wrong">إجابتك:</span>
-                                                                                    <span className={`answer-text ${question.is_correct ? 'correct' : 'wrong'}`}>
-                                                                                        {question.user_answer || 'لم تجب'}
-                                                                                    </span>
-                                                                                </div>
-                                                                                <div className="answer-row">
-                                                                                    <span className="answer-label correct">الإجابة الصحيحة:</span>
-                                                                                    <span className="answer-text correct">{question.correct_option}</span>
-                                                                                </div>
-                                                                            </div>
-
-                                                                            <div className="question-actions">
-                                                                                <button
-                                                                                    onClick={() => handleSeeMore(
-                                                                                        question.id,
-                                                                                        question.question_text,
-                                                                                        question.user_answer || 'لم تجب',
-                                                                                        question.correct_option
-                                                                                    )}
-                                                                                    className="see-more-button"
-                                                                                    disabled={loadingButtons[question.id]}
-                                                                                >
-                                                                                    {loadingButtons[question.id] ? 'جاري التحميل...' : <><Icon name="search" size={13} /> اعرف أكثر</>}
-                                                                                </button>
-                                                                            </div>
-
-                                                                            <div className="question-meta">
-                                                                                <span className="question-number">سؤال {index + 1}</span>
-                                                                            </div>
+                                                                    <div className="question-header">
+                                                                        <div className="question-meta">
+                                                                            <span className="type-badge">
+                                                                                <Icon name="book" size={15} /> {getTypeLabel(question.question_type)}
+                                                                            </span>
+                                                                            <span className={`result-badge ${question.is_correct ? 'correct' : 'wrong'}`}>
+                                                                                {question.is_correct ? <><Icon name="check-circle" size={13} /> صحيح</> : <><Icon name="x-circle" size={13} /> خطأ</>}
+                                                                            </span>
                                                                         </div>
                                                                     </div>
 
-                                                                    {/* Back of Card */}
-                                                                    <div className="question-card-back">
-                                                                        <div className="ai-analysis-back">
-                                                                            <div className="ai-analysis-header">
-                                                                                <h3><Icon name="brain" size={15} /> تحليل الذكاء الاصطناعي</h3>
+                                                                    <div className="question-content">
+                                                                        <div className="question-text">
+                                                                            {question.question_text}
+                                                                        </div>
+
+                                                                        <div className="answers-section">
+                                                                            <div className="answer-row">
+                                                                                <span className="answer-label wrong">إجابتك:</span>
+                                                                                <span className={`answer-text ${question.is_correct ? 'correct' : 'wrong'}`}>
+                                                                                    {question.user_answer || 'لم تجب'}
+                                                                                </span>
                                                                             </div>
+                                                                            <div className="answer-row">
+                                                                                <span className="answer-label correct">الإجابة الصحيحة:</span>
+                                                                                <span className="answer-text correct">{question.correct_option}</span>
+                                                                            </div>
+                                                                        </div>
 
-                                                                            {loadingButtons[question.id] ? (
-                                                                                <div className="ai-analysis-loading">
-                                                                                    <p>جاري تحليل السؤال...</p>
-                                                                                    <Spinner size="sm" />
-                                                                                    <p className="loading-subtext">يرجى الانتظار...</p>
-                                                                                </div>
-                                                                            ) : (
-                                                                                <div className="ai-analysis-content">
-                                                                                    <p>{aiAnalysis[question.id] || 'لا يوجد تحليل متاح.'}</p>
-                                                                                </div>
-                                                                            )}
-
-                                                                            <button
-                                                                                className="back-to-question-btn"
-                                                                                onClick={() => handleFlipBack(question.id)}
-                                                                                disabled={loadingButtons[question.id]}
-                                                                            >
-                                                                                العودة للسؤال ←
-                                                                            </button>
+                                                                        <div className="question-meta">
+                                                                            <span className="question-number">سؤال {index + 1}</span>
                                                                         </div>
                                                                     </div>
                                                                 </div>

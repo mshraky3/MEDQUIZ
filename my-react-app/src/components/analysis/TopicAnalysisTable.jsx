@@ -1,5 +1,6 @@
 import React from 'react';
 import Icon from '../common/Icon.jsx';
+import { getTypeLabel } from '../../utils/typeLabels';
 import './analysis.css';
 
 const TopicAnalysisTable = ({ topicAnalysis, topics }) => {
@@ -29,7 +30,7 @@ const TopicAnalysisTable = ({ topicAnalysis, topics }) => {
               <div className="question-header">
                 <div className="question-meta">
                   <span className="type-badge">
-                    <Icon name="book" size={15} /> {topic.question_type}
+                    <Icon name="book" size={15} /> {getTypeLabel(topic.question_type)}
                   </span>
                   <span className="accuracy-badge" style={{
                     background: accuracy >= 80 ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' :
@@ -45,7 +46,7 @@ const TopicAnalysisTable = ({ topicAnalysis, topics }) => {
               <div className="question-content">
                 <div className="topic-performance-text">
                   <h4>نظرة عامة على الأداء</h4>
-                  <p>أداؤك في أسئلة {topic.question_type}:</p>
+                  <p>أداؤك في أسئلة {getTypeLabel(topic.question_type)}:</p>
                 </div>
 
                 <div className="answers-section">

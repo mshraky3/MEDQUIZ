@@ -1068,15 +1068,8 @@
         margin-bottom: 15px;
     }
 
-    .back-button {
-        margin-right: 15px;
-        padding: 10px 16px;
-        font-size: 13px;
-    }
-
-    .back-button:hover {
-        transform: translateY(-1px);
-    }
+    /* Removed: an unused generic `.back-button` rule that leaked onto the
+       shared navbar button. Scope any future one to this page. */
 
     .admin-title {
         font-size: 20px;
