@@ -295,34 +295,36 @@ const QuizLauncher = ({ id }) => {
         showFinalQuizType || showFinalQuizTime || showCongratulations;
 
     return (
-        <div dir="rtl" className={`quiz-main${anyModalOpen ? ' is-dimmed' : ''}`}>
-            <h1>اختر اختبارك</h1>
-            <p className="quiz-subtitle">ابدأ سريعاً الآن أو خصّص الاختبار كما تريد — من بنك <bdi>Midgard &amp; GameBoy2026</bdi>.</p>
+        <div dir="rtl">
+            <div className={`quiz-main${anyModalOpen ? ' is-dimmed' : ''}`}>
+                <h1>اختر اختبارك</h1>
+                <p className="quiz-subtitle">ابدأ سريعاً الآن أو خصّص الاختبار كما تريد — من بنك <bdi>Midgard &amp; GameBoy2026</bdi>.</p>
 
-            <button className="quick-start-btn" onClick={handleQuickStart}>
-                ابدأ سريعاً: 10 أسئلة مختلطة
-            </button>
+                <button className="quick-start-btn" onClick={handleQuickStart}>
+                    ابدأ سريعاً: 10 أسئلة مختلطة
+                </button>
 
-            <div className="options-container">
-                {quizOptions.map((num, i) => (
-                    <button
-                        key={num}
-                        className="quiz-option-btn"
-                        style={{ animationDelay: `${0.28 + i * 0.08}s` }}
-                        onClick={() => handleOptionClick(num)}
-                    >
-                        {num === 'custom' ? 'عدد مخصص' : `${num} سؤال`}
-                    </button>
-                ))}
-                {user && sessionToken && (
-                    <button
-                        className="quiz-option-btn final-quiz-btn"
-                        style={{ animationDelay: `${0.28 + quizOptions.length * 0.08}s` }}
-                        onClick={handleFinalQuizClick}
-                    >
-                        <Icon name="target" size={18} /> اختبار نهائي
-                    </button>
-                )}
+                <div className="options-container">
+                    {quizOptions.map((num, i) => (
+                        <button
+                            key={num}
+                            className="quiz-option-btn"
+                            style={{ animationDelay: `${0.28 + i * 0.08}s` }}
+                            onClick={() => handleOptionClick(num)}
+                        >
+                            {num === 'custom' ? 'عدد مخصص' : `${num} سؤال`}
+                        </button>
+                    ))}
+                    {user && sessionToken && (
+                        <button
+                            className="quiz-option-btn final-quiz-btn"
+                            style={{ animationDelay: `${0.28 + quizOptions.length * 0.08}s` }}
+                            onClick={handleFinalQuizClick}
+                        >
+                            <Icon name="target" size={18} /> اختبار نهائي
+                        </button>
+                    )}
+                </div>
             </div>
 
             {/* Type Selector Modal */}
