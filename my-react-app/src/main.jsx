@@ -27,6 +27,7 @@ const WrongQuestions = lazy(() => import('./components/analysis/WrongQuestions.j
 const Admin = lazy(() => import('./components/ADD/Admin.jsx'));
 const AdminBroadcast = lazy(() => import('./components/ADD/AdminBroadcast.jsx'));
 const Bank = lazy(() => import('./components/ADD/Bank.jsx'));
+const Accounting = lazy(() => import('./components/ADD/Accounting.jsx'));
 const Signup = lazy(() => import('./components/signup/Signup.jsx'));
 const Contact = lazy(() => import('./components/contact/Contact.jsx'));
 const Privacy = lazy(() => import('./components/legal/Privacy.jsx'));
@@ -134,6 +135,11 @@ const router = createBrowserRouter([
   {
     path: "/Bank",
     element: <AdminGate>{lazyEl(<Bank />)}</AdminGate>,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/admin/accounting",
+    element: <AdminGate>{lazyEl(<Accounting />)}</AdminGate>,
     errorElement: <ErrorBoundary />,
   },
   {
