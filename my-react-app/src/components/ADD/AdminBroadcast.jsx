@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from '../../utils/adminApi.js';
 import Globals from '../../global.js';
 import Icon from '../common/Icon.jsx';
+import { TRACKS, TRACK_KEYS } from '../../utils/tracks.js';
 import './AdminBroadcast.css';
 
 const API = `${Globals.URL}/admin/broadcast`;
@@ -12,8 +13,27 @@ const AUDIENCE_LABELS = {
     paid: 'المشتركون المدفوعون',
     trial: 'التجريبيون',
     legacy: 'الحسابات القديمة',
-    free: 'المجانيون'
+    free: 'المجانيون',
+    // Track-targeted: most announcements only concern one student population.
+    ...TRACK_KEYS.reduce((acc, t) => {
+        acc[`track:${t}`] = `مسار ${TRACKS[t].labelAr}`;
+        return acc;
+    }, {}),
 };
+
+/**
+ * How long to spread a campaign over. The backend paces sending against this
+ * window, so a big list trickles out instead of bursting past the daily mail
+ * allowance. 0 = as fast as the cap safely permits.
+ */
+const SPREAD_OPTIONS = [
+    { value: 0, label: 'بأسرع ما يسمح به الحد اليومي' },
+    { value: 2, label: 'موزّعة على ساعتين' },
+    { value: 6, label: 'موزّعة على 6 ساعات' },
+    { value: 12, label: 'موزّعة على 12 ساعة' },
+    { value: 24, label: 'موزّعة على يوم كامل' },
+    { value: 48, label: 'موزّعة على يومين (الأقصى)' },
+];
 
 const STATUS_LABELS = {
     draft: 'مسودة', sending: 'يُرسل الآن', paused: 'متوقف مؤقتاً', done: 'اكتمل', cancelled: 'ملغى'
@@ -46,6 +66,7 @@ const AdminBroadcast = () => {
     const [subject, setSubject] = useState('');
     const [body, setBody] = useState('');
     const [audience, setAudience] = useState('all');
+    const [spreadHours, setSpreadHours] = useState(0);
     const [testTo, setTestTo] = useState('');
     const [confirmed, setConfirmed] = useState(false);
     const [busy, setBusy] = useState('');             // which action is in flight
@@ -75,7 +96,9 @@ const AdminBroadcast = () => {
     const createCampaign = async () => {
         setError(''); setNotice(''); setBusy('create');
         try {
-            const { data } = await axios.post(`${API}/campaigns`, { subject, bodyHtml: body, audience });
+            const { data } = await axios.post(`${API}/campaigns`, {
+                subject, bodyHtml: body, audience, spreadHours,
+            });
             setNotice(`تم إنشاء الحملة — ${data.recipients} مستلم.`);
             setConfirmed(false);
             await loadMeta();
@@ -107,6 +130,19 @@ const AdminBroadcast = () => {
                 if (data.quotaExhausted) { setNotice(data.reason); break; }
                 if (data.stopped) { setNotice(data.reason); break; }
                 if (data.done) { setNotice('اكتمل الإرسال.'); break; }
+                if (data.waiting) {
+                    // The campaign is paced: the server says nothing is due yet.
+                    // Wait until the next recipient comes up rather than
+                    // hammering the endpoint. Progress is in the database, so
+                    // closing the tab here loses nothing.
+                    const waitMs = Math.max(
+                        5000,
+                        Math.min(5 * 60 * 1000, new Date(data.nextEligibleAt) - Date.now()),
+                    );
+                    setNotice(data.reason);
+                    await new Promise((r) => setTimeout(r, waitMs));
+                    continue;
+                }
                 await new Promise((r) => setTimeout(r, 400)); // breathe between batches
             }
         } catch (e) {
@@ -172,6 +208,18 @@ const AdminBroadcast = () => {
                             return <option key={k} value={k} disabled={n === null}>{label}{n != null ? ` — ${n}` : ' — غير متاح'}</option>;
                         })}
                     </select>
+
+                    <label className="bc-label" htmlFor="bc-spread">مدة توزيع الإرسال</label>
+                    <select id="bc-spread" className="bc-input" value={spreadHours}
+                        onChange={(e) => setSpreadHours(Number(e.target.value))}>
+                        {SPREAD_OPTIONS.map((o) => (
+                            <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
+                    </select>
+                    <p className="bc-hint">
+                        التوزيع يمنع إرسال كل الرسائل دفعة واحدة، فلا تتجاوز الحد اليومي للخطة المجانية.
+                        التقدّم محفوظ في قاعدة البيانات — يمكنك إغلاق الصفحة والعودة لاحقاً لإكمال الإرسال.
+                    </p>
 
                     <label className="bc-label" htmlFor="bc-subj">عنوان الرسالة</label>
                     <input id="bc-subj" className="bc-input" value={subject} maxLength={200}

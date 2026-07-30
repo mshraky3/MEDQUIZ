@@ -1,0 +1,366 @@
+/* Accounting page — money view, deliberately plainer than the growth
+   dashboard. Numbers are tabular-figure aligned so columns compare by eye. */
+
+.acc-loading,
+.acc-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 70px 20px;
+    color: var(--admin-muted, #64748b);
+}
+
+.acc-error { color: #b91c1c; }
+
+.acc-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+}
+
+.acc-head h1 {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 0 0 6px;
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--admin-text, #0f172a);
+}
+
+.acc-head p {
+    margin: 0;
+    max-width: 60ch;
+    font-size: 0.85rem;
+    line-height: 1.7;
+    color: var(--admin-muted, #64748b);
+}
+
+.acc-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.acc-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 16px;
+    border: 1px solid #2563eb;
+    border-radius: 9px;
+    background: #2563eb;
+    color: #fff;
+    font: inherit;
+    font-size: 0.84rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .15s ease;
+}
+
+.acc-btn:hover:not(:disabled) { background: #1d4ed8; }
+.acc-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+.acc-btn.ghost {
+    background: transparent;
+    color: #2563eb;
+}
+
+.acc-btn.ghost:hover { background: rgba(37, 99, 235, 0.09); }
+.acc-btn.sm { padding: 6px 12px; font-size: 0.78rem; }
+
+.acc-filters {
+    display: flex;
+    align-items: flex-end;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+    padding: 14px 16px;
+    border: 1px solid var(--admin-border, #e2e8f0);
+    border-radius: 12px;
+    background: var(--admin-surface, #fff);
+}
+
+.acc-filters label {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--admin-muted, #64748b);
+}
+
+.acc-filters input {
+    padding: 8px 10px;
+    border: 1px solid var(--admin-border, #e2e8f0);
+    border-radius: 8px;
+    font: inherit;
+    font-size: 0.85rem;
+    color: var(--admin-text, #0f172a);
+}
+
+.acc-filter-note {
+    margin-inline-start: auto;
+    font-size: 0.8rem;
+    color: var(--admin-muted, #64748b);
+}
+
+.acc-inline-error {
+    margin-bottom: 16px;
+    padding: 10px 14px;
+    border-radius: 9px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #b91c1c;
+    font-size: 0.84rem;
+}
+
+/* ── KPI row ── */
+.acc-kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 14px;
+    margin-bottom: 16px;
+}
+
+.acc-kpi {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 18px 20px;
+    border: 1px solid var(--admin-border, #e2e8f0);
+    border-radius: 13px;
+    background: var(--admin-surface, #fff);
+}
+
+.acc-kpi.is-net {
+    border-color: rgba(5, 150, 105, 0.4);
+    background: linear-gradient(160deg, #f0fdf4, #ffffff);
+}
+
+.acc-kpi-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--admin-muted, #64748b);
+}
+
+.acc-kpi-value {
+    font-size: 1.6rem;
+    font-weight: 800;
+    line-height: 1.2;
+    color: var(--admin-text, #0f172a);
+    font-variant-numeric: tabular-nums;
+}
+
+.acc-kpi-value small {
+    margin-inline-start: 5px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--admin-muted, #64748b);
+}
+
+.acc-kpi.is-cost .acc-kpi-value { color: #b91c1c; }
+.acc-kpi.is-net .acc-kpi-value { color: #047857; }
+
+.acc-kpi-sub {
+    font-size: 0.74rem;
+    color: var(--admin-muted, #64748b);
+}
+
+/* ── Explanatory notes ── */
+.acc-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 16px;
+    padding: 12px 15px;
+    border-radius: 11px;
+    border: 1px solid #bfdbfe;
+    background: #eff6ff;
+    font-size: 0.82rem;
+    line-height: 1.75;
+    color: #1e40af;
+}
+
+.acc-note.subtle {
+    border-color: var(--admin-border, #e2e8f0);
+    background: var(--admin-bg, #f8fafc);
+    color: var(--admin-muted, #64748b);
+}
+
+.acc-note code {
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: rgba(15, 23, 42, 0.07);
+    font-size: 0.94em;
+}
+
+.acc-est-marker {
+    display: inline-block;
+    margin-inline-start: 5px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: rgba(245, 158, 11, 0.18);
+    color: #92400e;
+    font-size: 0.66rem;
+    font-weight: 700;
+    vertical-align: middle;
+}
+
+/* ── Panels & tables ── */
+.acc-panel {
+    margin-bottom: 20px;
+    padding: 18px 20px;
+    border: 1px solid var(--admin-border, #e2e8f0);
+    border-radius: 13px;
+    background: var(--admin-surface, #fff);
+}
+
+.acc-panel h2 {
+    margin: 0 0 4px;
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--admin-text, #0f172a);
+}
+
+.acc-panel-sub {
+    margin: 0 0 14px;
+    font-size: 0.8rem;
+    color: var(--admin-muted, #64748b);
+}
+
+/* Tables scroll inside their own box so the page never scrolls sideways. */
+.acc-table-wrap { overflow-x: auto; }
+
+.acc-table {
+    width: 100%;
+    min-width: 560px;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.acc-table th,
+.acc-table td {
+    padding: 9px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--admin-border, #e2e8f0);
+    white-space: nowrap;
+}
+
+.acc-table th {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--admin-muted, #64748b);
+    border-bottom-width: 2px;
+}
+
+.acc-table td.num,
+.acc-table th.num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.acc-table tbody tr:last-child td { border-bottom: none; }
+.acc-table tbody tr:hover { background: var(--admin-bg, #f8fafc); }
+
+.acc-table .cost { color: #b91c1c; }
+.acc-table .net { color: #047857; font-weight: 700; }
+.acc-table .acc-dim { color: var(--admin-muted, #94a3b8); font-weight: 400; }
+
+.acc-table tr.is-refunded { background: #fff7ed; }
+
+.acc-sub-cell {
+    max-width: 230px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.acc-empty {
+    padding: 22px 12px !important;
+    text-align: center !important;
+    color: var(--admin-muted, #94a3b8);
+}
+
+.acc-invoice-link {
+    padding: 0;
+    border: none;
+    background: none;
+    font: inherit;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.78rem;
+    color: #2563eb;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+}
+
+.acc-invoice-link:hover { color: #1d4ed8; }
+
+.acc-tag {
+    display: inline-block;
+    margin-inline-start: 6px;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.08);
+    font-size: 0.66rem;
+    font-weight: 700;
+    color: var(--admin-muted, #475569);
+}
+
+/* ── Scheme cards ── */
+.acc-scheme-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 12px;
+}
+
+.acc-scheme {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 14px 16px;
+    border: 1px solid var(--admin-border, #e2e8f0);
+    border-radius: 11px;
+    background: var(--admin-bg, #f8fafc);
+}
+
+.acc-scheme-name {
+    font-size: 0.92rem;
+    font-weight: 800;
+    text-transform: capitalize;
+    color: var(--admin-text, #0f172a);
+}
+
+.acc-scheme-count {
+    font-size: 0.74rem;
+    color: var(--admin-muted, #64748b);
+}
+
+.acc-scheme-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 8px;
+    font-size: 0.8rem;
+    color: var(--admin-muted, #64748b);
+    font-variant-numeric: tabular-nums;
+}
+
+.acc-scheme-rows b { color: var(--admin-text, #0f172a); }
+.acc-scheme-rows b.cost { color: #b91c1c; }
+.acc-scheme-rows b.net { color: #047857; }
+
+.acc-scheme-rate {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--admin-border, #e2e8f0);
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: var(--admin-muted, #64748b);
+}

@@ -4,11 +4,16 @@ import axios from "../../utils/adminApi.js";
 import "./add.css";
 import "./Admin.css";
 import AdminNavbar from "./AdminNavbar.jsx";
+import { TRACKS, TRACK_KEYS, MEDICAL, normalizeTrack } from '../../utils/tracks.js';
 
 const ADD = (props) => {
     // State for add account form
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+    // Study track for the account being created, and for a user being moved
+    // between tracks — a change only an admin can make.
+    const [newUserTrack, setNewUserTrack] = useState(MEDICAL);
+    const [changingTrack, setChangingTrack] = useState(null);
     const [error, setError] = useState("");
     const [message, setMessage] = useState("");
     const [loading, setLoading] = useState(false);
@@ -105,6 +110,7 @@ const ADD = (props) => {
             const response = await axios.post(`${props.host}/add_account`, {
                 username,
                 password,
+                track: newUserTrack,
             });
 
             setMessage(`${response.data.message}`);
@@ -117,6 +123,34 @@ const ADD = (props) => {
             setMessage("");
         } finally {
             setLoading(false);
+        }
+    };
+
+    /**
+     * Move an account to the other study track. Students cannot do this
+     * themselves — one subscription must not unlock both banks — so this is
+     * the only path between tracks. History is preserved either way; the
+     * dashboard simply starts reporting against the new bank.
+     */
+    const handleChangeTrack = async (user) => {
+        const current = normalizeTrack(user.track);
+        const next = TRACK_KEYS.find((k) => k !== current) || current;
+        if (!window.confirm(
+            `Move "${user.username}" from ${TRACKS[current].labelEn} to ${TRACKS[next].labelEn}?\n\n`
+            + `They will immediately see the ${TRACKS[next].labelEn} question bank and summaries. `
+            + `Their existing history is kept but stops being counted, since it belongs to the other bank.`
+        )) return;
+
+        setChangingTrack(user.id);
+        setError("");
+        try {
+            await axios.post(`${props.host}/admin/users/${user.id}/track`, { track: next });
+            setMessage(`Moved ${user.username} to the ${TRACKS[next].labelEn} track.`);
+            fetchUsers();
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to change track.');
+        } finally {
+            setChangingTrack(null);
         }
     };
 
@@ -436,7 +470,12 @@ const ADD = (props) => {
                                                     </span>
                                                     <div>
                                                         <div className="user-name">{user.username}</div>
-                                                        <div className="user-id">ID: {user.id}</div>
+                                                        <div className="user-id">
+                                                            ID: {user.id}
+                                                            <span className={`track-chip track-chip--${normalizeTrack(user.track)}`}>
+                                                                {TRACKS[normalizeTrack(user.track)].labelEn}
+                                                            </span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </td>
@@ -492,6 +531,14 @@ const ADD = (props) => {
                                                         <Icon name="check" size={16} />
                                                     </button>
                                                 )}
+                                                <button
+                                                    className="action-btn track-btn"
+                                                    onClick={() => handleChangeTrack(user)}
+                                                    disabled={changingTrack === user.id}
+                                                    title="Change study track"
+                                                >
+                                                    <Icon name="refresh" size={16} />
+                                                </button>
                                                 <button
                                                     className="action-btn delete-btn"
                                                     onClick={() => handleDeleteUser(user.id, user.username)}
@@ -620,6 +667,24 @@ const ADD = (props) => {
                                         onChange={(e) => setPassword(e.target.value)}
                                         className="form-input"
                                     />
+                                </div>
+                                <div className="form-group">
+                                    <label htmlFor="newUserTrack">Study Track</label>
+                                    <select
+                                        id="newUserTrack"
+                                        value={newUserTrack}
+                                        onChange={(e) => setNewUserTrack(e.target.value)}
+                                        className="form-input"
+                                    >
+                                        {TRACK_KEYS.map((key) => (
+                                            <option key={key} value={key}>
+                                                {TRACKS[key].labelEn} ({TRACKS[key].labelAr})
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <small className="form-hint">
+                                        Decides which question bank and summaries this account sees.
+                                    </small>
                                 </div>
                                 <button type="submit" className="btn-primary" disabled={loading}>
                                     {loading ? <><Icon name="hourglass" size={14} /> Creating...</> : <><Icon name="plus" size={14} /> Create Account</>}

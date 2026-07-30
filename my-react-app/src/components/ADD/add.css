@@ -1144,3 +1144,34 @@
     transform: translateY(0);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+/* ── Track chip on the user rows ──────────────────────────────────────────
+   Which question bank an account belongs to. Shown inline with the user id
+   because it changes how every other number in the row should be read. */
+.track-chip {
+    display: inline-block;
+    margin-inline-start: 8px;
+    padding: 1px 8px;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    vertical-align: middle;
+}
+
+.track-chip--medical {
+    background: rgba(37, 99, 235, 0.14);
+    color: #1d4ed8;
+}
+
+.track-chip--nursing {
+    background: rgba(13, 148, 136, 0.16);
+    color: #0f766e;
+}
+
+.action-btn.track-btn {
+    color: #7c3aed;
+}
+
+.action-btn.track-btn:hover:not(:disabled) {
+    background: rgba(124, 58, 237, 0.12);
+}

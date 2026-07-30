@@ -6,6 +6,7 @@ import {
     ResponsiveContainer, LineChart, Line, BarChart, Bar,
     PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend
 } from 'recharts';
+import { TRACKS, TRACK_KEYS } from '../../utils/tracks.js';
 import './AdminAnalytics.css';
 
 const API = Globals.URL;
@@ -16,12 +17,12 @@ const AXIS = '#64748b';
 const GRID = 'rgba(15, 23, 42, 0.08)';
 const TOOLTIP = { background: '#fff', border: '1px solid #d4deee', borderRadius: 10, fontSize: 12, color: '#0f1e3d' };
 
-const SPECIALTY_LABELS = {
-    pediatric: 'أطفال',
-    'obstetrics and gynecology': 'نساء وولادة',
-    medicine: 'باطنة',
-    surgery: 'جراحة'
-};
+// Derived from the track config so a specialty added to either track is
+// labelled here automatically, instead of falling back to its raw db value.
+const SPECIALTY_LABELS = TRACK_KEYS.reduce((acc, key) => {
+    TRACKS[key].specialties.forEach((sp) => { acc[sp.key] = sp.labelAr; });
+    return acc;
+}, {});
 
 const daysAgoISO = (n) => new Date(Date.now() - n * 86400000).toISOString().slice(0, 10);
 const todayISO = () => new Date().toISOString().slice(0, 10);

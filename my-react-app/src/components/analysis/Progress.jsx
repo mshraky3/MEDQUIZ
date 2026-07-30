@@ -3,9 +3,13 @@ import Icon from '../common/Icon.jsx';
 import axios from 'axios';
 import Globals from '../../global.js';
 import Spinner from '../common/Spinner.jsx';
+import { specialtiesOf } from '../../utils/tracks.js';
 import './Progress.css';
 
-const Progress = ({ userId, username, sessionToken }) => {
+// Series colours, applied by position so any track's specialty list is covered.
+const TYPE_COLORS = ['#8b5cf6', '#06b6d4', '#f97316', '#ef4444', '#16a34a', '#eab308'];
+
+const Progress = ({ userId, username, sessionToken, track }) => {
   const [progressData, setProgressData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -93,12 +97,13 @@ const Progress = ({ userId, username, sessionToken }) => {
     { key: 'GameBoy', label: 'GameBoy', color: '#f59e0b' }
   ];
 
-  const questionTypes = [
-    { key: 'pediatric', label: 'Pediatric', color: '#8b5cf6' },
-    { key: 'obstetrics and gynecology', label: 'OB/GYN', color: '#06b6d4' },
-    { key: 'medicine', label: 'Internal Medicine', color: '#f97316' },
-    { key: 'surgery', label: 'Surgery', color: '#ef4444' },
-  ];
+  // The breakdown covers this student's own specialties. The backend already
+  // scopes the totals to their track, so the two always line up.
+  const questionTypes = specialtiesOf(track).map((sp, i) => ({
+    key: sp.key,
+    label: sp.labelAr,
+    color: TYPE_COLORS[i % TYPE_COLORS.length],
+  }));
 
   return (
     <div className="progress-container">

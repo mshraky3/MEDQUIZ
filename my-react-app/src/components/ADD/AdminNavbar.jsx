@@ -21,6 +21,7 @@ const AdminNavbar = () => {
     { path: '/ADD_ACCOUNT', label: 'Users', icon: 'user' },
     { path: '/ADDQ', label: 'Add Questions', icon: 'plus' },
     { path: '/Bank', label: 'Question Bank', icon: 'book-open' },
+    { path: '/admin/accounting', label: 'Accounting', icon: 'bar-chart' },
     { path: '/question-reports', label: 'Reports', icon: 'flag' },
     { path: '/TEMP_LINKS', label: 'Temp Links', icon: 'link' },
   ];

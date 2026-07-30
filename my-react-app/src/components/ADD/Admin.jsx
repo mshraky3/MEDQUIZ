@@ -487,6 +487,9 @@ const Admin = () => {
 
   const overview = stats?.overview || {};
   const sub = stats?.subscriptions || {};
+  // Every headline number on this page blends both student populations, so the
+  // split has to be stated explicitly rather than inferred.
+  const byTrack = stats?.byTrack || [];
 
   return (
     <div className="admin-page-wrapper">
@@ -513,6 +516,42 @@ const Admin = () => {
             <span className="quick-action-label">Refresh</span>
           </button>
         </div>
+
+        {/* Per-track split. Sits above everything else because every number
+            below it is a blend of both tracks — you need to know the mix
+            before reading the totals. */}
+        {byTrack.length > 0 && (
+          <section className="track-panel">
+            <div className="track-panel-head">
+              <h2>By study track</h2>
+              <span>Users, activity and content, split by the bank they belong to</span>
+            </div>
+            <div className="track-panel-grid">
+              {byTrack.map((t) => (
+                <div key={t.track} className={`track-card${t.contentReady ? '' : ' is-empty'}`}>
+                  <div className="track-card-head">
+                    <span className="track-card-name">{t.label}</span>
+                    <span className="track-card-key">{t.track}</span>
+                    {!t.contentReady && <span className="track-card-flag">No content yet</span>}
+                  </div>
+                  <div className="track-card-metrics">
+                    <div><b>{t.users}</b><span>users</span></div>
+                    <div><b>{t.activeUsers}</b><span>active 7d</span></div>
+                    <div><b>+{t.newUsersWeek}</b><span>new 7d</span></div>
+                    <div><b>{t.activeSubscribers}</b><span>subscribed</span></div>
+                    <div><b>{t.quizzes}</b><span>quizzes</span></div>
+                    <div><b>{t.avgAccuracy}%</b><span>accuracy</span></div>
+                  </div>
+                  <div className="track-card-content">
+                    <span><Icon name="clipboard" size={13} /> {t.questions} questions</span>
+                    <span><Icon name="book-open" size={13} /> {t.summaries} summaries</span>
+                    <span><Icon name="folder" size={13} /> {t.specialties.length} specialties</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Expanded analytics (account mix, active-login trends, growth, engagement) */}
         <AdminAnalytics />

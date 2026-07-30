@@ -14,6 +14,7 @@ import FinalExams from './FinalExams';
 import Spinner from '../common/Spinner.jsx';
 import { UserContext } from '../../UserContext';
 import { getTypeLabel } from '../../utils/typeLabels';
+import { userTrack } from '../../utils/tracks.js';
 
 const BestWorstTopic = ({ best, worst }) => (
   <section className="streak-section">
@@ -572,6 +573,7 @@ const Analysis = () => {
             userId={id}
             username={user?.username}
             sessionToken={sessionToken}
+            track={userTrack(user)}
           />
         );
 

@@ -4,6 +4,7 @@ import axios from "../../utils/adminApi.js";
 import "./add.css";
 import "./Admin.css";
 import AdminNavbar from "./AdminNavbar.jsx";
+import { TRACKS, TRACK_KEYS, MEDICAL, normalizeTrack } from '../../utils/tracks.js';
 
 const TempLinks = (props) => {
     const [links, setLinks] = useState([]);
@@ -12,6 +13,10 @@ const TempLinks = (props) => {
     const [message, setMessage] = useState("");
     const [showGenerateForm, setShowGenerateForm] = useState(false);
     const [generateForm, setGenerateForm] = useState({
+        // Every account created through this link lands on this track. The
+        // server takes the track from the link, not from the signup form, so
+        // an invited cohort can't end up on the wrong bank.
+        track: MEDICAL,
         maxUses: 1,
         createdBy: "admin"
     });
@@ -42,6 +47,7 @@ const TempLinks = (props) => {
 
         try {
             const response = await axios.post(`${props.host}/api/admin/generate-temp-link`, {
+                track: generateForm.track,
                 maxUses: parseInt(generateForm.maxUses),
                 createdBy: generateForm.createdBy
             });
@@ -49,7 +55,7 @@ const TempLinks = (props) => {
             if (response.data.success) {
                 setGeneratedLink(response.data.link);
                 setMessage(`Temporary link generated successfully!`);
-                setGenerateForm({ maxUses: 1, createdBy: "admin" });
+                setGenerateForm({ track: MEDICAL, maxUses: 1, createdBy: "admin" });
                 setShowGenerateForm(false);
                 fetchLinks(); // Refresh the list
             } else {
@@ -204,6 +210,26 @@ const TempLinks = (props) => {
                             </div>
 
                             <div className="form-group">
+                                <label htmlFor="linkTrack">Study Track:</label>
+                                <select
+                                    id="linkTrack"
+                                    value={generateForm.track}
+                                    onChange={(e) => setGenerateForm(prev => ({
+                                        ...prev,
+                                        track: e.target.value
+                                    }))}
+                                    className="input"
+                                >
+                                    {TRACK_KEYS.map((key) => (
+                                        <option key={key} value={key}>
+                                            {TRACKS[key].labelEn} ({TRACKS[key].labelAr})
+                                        </option>
+                                    ))}
+                                </select>
+                                <small>Everyone who signs up with this link gets this track — they are not asked to choose.</small>
+                            </div>
+
+                            <div className="form-group">
                                 <label htmlFor="createdBy">Created By:</label>
                                 <input
                                     type="text"
@@ -250,6 +276,7 @@ const TempLinks = (props) => {
                                 <div className="link-details">
                                     <p><strong>Token:</strong> {generatedLink.token}</p>
                                     <p><strong>Max Uses:</strong> {generatedLink.maxUses}</p>
+                                    <p><strong>Track:</strong> {TRACKS[normalizeTrack(generatedLink.track)].labelEn}</p>
                                     <p><strong>Status:</strong> <span className="status active"><Icon name="check-circle" size={16} /> Active</span></p>
                                 </div>
                             </div>
@@ -317,6 +344,9 @@ const TempLinks = (props) => {
                                                 <strong>Token:</strong> {link.token}
                                             </div>
                                             <div className="stat-item">
+                                                <strong>Track:</strong> {TRACKS[normalizeTrack(link.track)].labelEn}
+                                            </div>
+                                            <div>
                                                 <strong>Usage:</strong> {link.currentUses}/{link.maxUses}
                                             </div>
                                             <div className="stat-item">

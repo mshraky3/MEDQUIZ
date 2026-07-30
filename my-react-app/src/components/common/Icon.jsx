@@ -19,6 +19,7 @@ const PATHS = {
     venus: <><circle cx="12" cy="8" r="5" /><path d="M12 13v8" /><path d="M9 18h6" /></>,
     stethoscope: <><path d="M4.5 3v5a4 4 0 0 0 8 0V3" /><path d="M4.5 3H3m9.5 0H14" /><path d="M8.5 17a5.5 5.5 0 0 0 11 0v-2.5" /><circle cx="19.5" cy="11" r="2.2" /></>,
     scalpel: <><path d="M14 4l6 6-9 9H5v-6z" /><path d="M11 7l3 3" /></>,
+    pill: <><path d="M10.5 20.5a5 5 0 0 1-7-7l6-6a5 5 0 0 1 7 7z" /><path d="m8.5 8.5 7 7" /></>,
     cursor: <><path d="m3 3 7.5 18 2.6-7.9L21 10.5z" /></>,
     pen: <><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z" /></>,
     highlighter: <><path d="m9 11-6 6v3h9l3-3" /><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4" /></>,

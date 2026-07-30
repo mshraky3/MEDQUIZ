@@ -202,3 +202,55 @@ input::placeholder {
   width: 100%;
   max-width: 600px;
 }
+/* ── Bank (track) switcher ────────────────────────────────────────────────
+   Medical and nursing are separate question banks. Only one is loaded at a
+   time so an edit can never land on the wrong bank. */
+.bank-track-switch {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin: 0 auto 22px;
+    padding: 5px;
+    border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    background: rgba(148, 163, 184, 0.10);
+    width: fit-content;
+    max-width: 100%;
+    flex-wrap: wrap;
+}
+
+.bank-track-btn {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 7px;
+    padding: 9px 20px;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: inherit;
+    opacity: 0.65;
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .15s ease, opacity .15s ease;
+}
+
+.bank-track-btn small {
+    font-size: 0.76rem;
+    font-weight: 500;
+    opacity: 0.75;
+}
+
+.bank-track-btn:hover { opacity: 0.9; }
+
+.bank-track-btn.is-active {
+    background: #2563eb;
+    color: #fff;
+    opacity: 1;
+}
+
+.bank-track-btn:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}

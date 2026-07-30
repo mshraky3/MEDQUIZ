@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from '../../utils/adminApi.js';
 import './addq.css';
 import Globals from '../../global.js';
+import { TRACKS, TRACK_KEYS, MEDICAL, specialtiesOf } from '../../utils/tracks.js';
 
 const ADDQ = () => {
     const [questionText, setQuestionText] = useState('');
@@ -10,18 +11,23 @@ const ADDQ = () => {
     const [option3, setOption3] = useState('');
     const [option4, setOption4] = useState('');
     const [correctAnswer, setCorrectAnswer] = useState('');
-    const [questionType, setQuestionType] = useState('pediatric');
+    // Which bank this question goes into. The specialty list below is derived
+    // from it, and the server files the row by specialty — so picking the wrong
+    // track here is impossible to submit, not just discouraged.
+    const [questionTrack, setQuestionTrack] = useState(MEDICAL);
+    const [questionType, setQuestionType] = useState(specialtiesOf(MEDICAL)[0].key);
     const [source, setSource] = useState('');
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
 
-    const questionTypes = [
-        'pediatric',
-        'obstetrics and gynecology',
-        'medicine',
-        'surgery',
-        "ethics"
-    ];
+    const questionTypes = specialtiesOf(questionTrack);
+
+    const handleTrackChange = (nextTrack) => {
+        setQuestionTrack(nextTrack);
+        // The current specialty belongs to the old track; reset to the new
+        // track's first one rather than submitting a mismatched pair.
+        setQuestionType(specialtiesOf(nextTrack)[0].key);
+    };
 
     const options = [
         { label: 'Option 1', value: option1 },
@@ -38,7 +44,7 @@ const ADDQ = () => {
             return;
         }
 
-        if (!questionTypes.includes(questionType)) {
+        if (!questionTypes.some((t) => t.key === questionType)) {
             setError("Please select a valid question type.");
             return;
         }
@@ -51,7 +57,8 @@ const ADDQ = () => {
             option4,
             question_type: questionType,
             correct_option: correctAnswer,
-            source
+            source,
+            track: questionTrack
         };
         try {
             const response = await axios.post(`${Globals.URL}/api/questions`, newQuestion);
@@ -63,7 +70,7 @@ const ADDQ = () => {
             setOption3('');
             setOption4('');
             setCorrectAnswer('');
-            setQuestionType('pediatric');
+            setQuestionType(specialtiesOf(questionTrack)[0].key);
             setSource('');
         } catch {
             setError("Failed to add question. Please try again.");
@@ -163,15 +170,30 @@ const ADDQ = () => {
                 </label>
 
                 <label>
+                    Study Track:
+                    <select
+                        value={questionTrack}
+                        onChange={(e) => handleTrackChange(e.target.value)}
+                        autoComplete="off"
+                    >
+                        {TRACK_KEYS.map((key) => (
+                            <option key={key} value={key}>
+                                {TRACKS[key].labelEn} ({TRACKS[key].labelAr})
+                            </option>
+                        ))}
+                    </select>
+                </label>
+
+                <label>
                     Question Type:
                     <select
                         value={questionType}
                         onChange={(e) => setQuestionType(e.target.value)}
                         autoComplete="off"
                     >
-                        {questionTypes.map((type, index) => (
-                            <option key={index} value={type}>
-                                {type.charAt(0).toUpperCase() + type.slice(1)}
+                        {questionTypes.map((type) => (
+                            <option key={type.key} value={type.key}>
+                                {type.labelAr} — {type.key}
                             </option>
                         ))}
                     </select>

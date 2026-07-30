@@ -4,6 +4,7 @@ import axios from "../../utils/adminApi.js";
 import "./Bank.css";
 import Globals from '../../global.js';
 import Spinner from '../common/Spinner.jsx';
+import { TRACKS, TRACK_KEYS, MEDICAL, specialtiesOf } from '../../utils/tracks.js';
 
 const Bank = () => {
   const [questions, setQuestions] = useState([]);
@@ -23,21 +24,23 @@ const Bank = () => {
   const [loading, setLoading] = useState(true);
   const [successMessage, setSuccessMessage] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0); // Track current question index
+  // Which bank is being browsed. /api/all-questions serves one track per
+  // request, so switching this refetches rather than filtering client-side —
+  // the two banks are never loaded into the same list.
+  const [activeTrack, setActiveTrack] = useState(MEDICAL);
 
-  const questionTypes = [
-    "pediatric",
-    "obstetrics and gynecology",
-    "medicine",
-    "surgery"
-  ];
+  // The specialties offered when editing are the ones belonging to the bank
+  // being browsed; the server re-files the row by whichever is chosen.
+  const questionTypes = specialtiesOf(activeTrack);
 
   useEffect(() => {
-    fetchQuestions();
-  }, []);
+    fetchQuestions(activeTrack);
+  }, [activeTrack]);
 
-  const fetchQuestions = async () => {
+  const fetchQuestions = async (track) => {
+    setLoading(true);
     try {
-      const response = await axios.get(`${Globals.URL}/api/all-questions`);
+      const response = await axios.get(`${Globals.URL}/api/all-questions?track=${encodeURIComponent(track)}`);
       setQuestions(response.data.questions);
       setAllQuestions(response.data.questions);
       setLoading(false);
@@ -132,6 +135,30 @@ const Bank = () => {
   return (
     <div className="app-container">
       <h1 className="title">Question Bank</h1>
+
+      {/* Bank switcher — the two tracks are separate question banks, browsed
+          one at a time so an edit can never be applied to the wrong one. */}
+      <div className="bank-track-switch" role="tablist" aria-label="Study track">
+        {TRACK_KEYS.map((key) => (
+          <button
+            key={key}
+            type="button"
+            role="tab"
+            aria-selected={activeTrack === key}
+            className={`bank-track-btn${activeTrack === key ? ' is-active' : ''}`}
+            onClick={() => {
+              if (activeTrack === key) return;
+              cancelEditing();
+              setSearchTerm('');
+              setCurrentIndex(0);
+              setActiveTrack(key);
+            }}
+          >
+            {TRACKS[key].labelEn} <small>{TRACKS[key].labelAr}</small>
+          </button>
+        ))}
+      </div>
+
       {loading ? (
         <div className="loading-screen">
           <Spinner size="lg" />
@@ -154,7 +181,11 @@ const Bank = () => {
 
           <div className="question-list">
             {questions.length === 0 ? (
-              <p>No questions found.</p>
+              <p>
+                {searchTerm.trim()
+                  ? 'No questions match your search.'
+                  : `The ${TRACKS[activeTrack].labelEn} bank has no questions yet. Add them from "Add Question".`}
+              </p>
             ) : (
               <div className="card-wrapper">
                 {/* Main Question Card */}
@@ -201,9 +232,9 @@ const Bank = () => {
                           onChange={handleInputChange}
                         >
                           <option value="">Select Type</option>
-                          {questionTypes.map((type, idx) => (
-                            <option key={idx} value={type}>
-                              {type}
+                          {questionTypes.map((type) => (
+                            <option key={type.key} value={type.key}>
+                              {type.key} — {type.labelAr}
                             </option>
                           ))}
                         </select>
