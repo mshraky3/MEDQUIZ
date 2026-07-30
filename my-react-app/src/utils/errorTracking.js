@@ -23,6 +23,23 @@ const SEVERITY = {
     LOW: 'LOW'
 };
 
+// Browser notices that surface as window 'error' events but are not faults.
+// "ResizeObserver loop ..." is fired when a ResizeObserver callback changes
+// layout and the browser defers the remaining notifications to the next frame —
+// nothing breaks, the user sees nothing, and there is no stack to act on
+// (lineno/colno are always 0). Reporting them stamps a fake 500 and pages the
+// admin, so drop them before they reach the queue.
+const IGNORED_ERROR_PATTERNS = [
+    'resizeobserver loop completed with undelivered notifications',
+    'resizeobserver loop limit exceeded',
+];
+
+function isIgnorableBrowserError(message) {
+    if (!message) return false;
+    const msg = String(message).toLowerCase();
+    return IGNORED_ERROR_PATTERNS.some((p) => msg.includes(p));
+}
+
 // Track sent errors for client-side rate limiting
 const errorCooldowns = new Map();
 
@@ -442,6 +459,12 @@ export function reportGlobalError(event) {
     _isReportingError = true;
     try {
         if (isStaleChunkError(event.message)) return;
+        if (isIgnorableBrowserError(event.message)) {
+            if (CONFIG.enableConsoleLog) {
+                console.log('[ErrorTracking] Skipping benign browser notice:', event.message);
+            }
+            return;
+        }
         const userInfo = getUserInfo();
 
         const errorData = {
