@@ -4,6 +4,19 @@
  */
 
 import { sendMail } from './mailer.js';
+import { TRACKS, normalizeTrack } from '../config/tracks.js';
+
+// Per-track wording. The platform is shared, but "the exam" is not the same
+// exam for a nursing student, and a welcome email that talks about the medical
+// licensing exam reads as if they signed up for the wrong product.
+const copyFor = (track) => {
+    const t = TRACKS[normalizeTrack(track)];
+    return {
+        exam: t.examAr,
+        trackLabel: t.labelAr,
+        specialties: t.specialties.map((sp) => sp.labelAr).join(' · '),
+    };
+};
 
 const sendEmail = async (to, subject, html, text) => {
   await sendMail({
@@ -47,7 +60,8 @@ const wrapLayout = (bodyContent) => `<!DOCTYPE html>
 </html>`;
 
 // ─── 1. WELCOME EMAIL ──────────────────────────────────────────────────────
-export const sendWelcomeEmail = async (to, username) => {
+export const sendWelcomeEmail = async (to, username, track) => {
+  const c = copyFor(track);
   const html = wrapLayout(`
         <tr>
           <td align="center" style="padding:36px 40px 32px;">
@@ -57,14 +71,17 @@ export const sendWelcomeEmail = async (to, username) => {
             </h1>
             <p style="margin:0 0 24px;font-size:14px;color:#94a3b8;line-height:1.7;">
               يسعدنا انضمامك إلى <strong style="color:#22d3ee;">SQB</strong> —
-              المنصة المصممة خصيصًا لمساعدتك على الاستعداد لاختبار الترخيص الطبي
+              المنصة المصممة خصيصًا لمساعدتك على الاستعداد لـ<strong style="color:#f8fafc;">${c.exam}</strong>
               بأسلوب منظّم وفعّال.
+            </p>
+            <p style="margin:-12px 0 22px;font-size:13px;color:#64748b;">
+              مسارك: <strong style="color:#22d3ee;">${c.trackLabel}</strong>
             </p>
             <table cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:28px;">
               <tr>
                 <td style="background:#0b1021;border-radius:12px;padding:20px 24px;border:1px solid #1e293b;">
                   <p style="margin:0 0 10px;font-size:13px;font-weight:700;color:#22d3ee;">ماذا تجد في المنصة؟</p>
-                  <p style="margin:0 0 8px;font-size:13px;color:#94a3b8;">✅ &nbsp;أسئلة مصنّفة حسب التخصص والمستوى</p>
+                  <p style="margin:0 0 8px;font-size:13px;color:#94a3b8;">✅ &nbsp;أسئلة مصنّفة حسب التخصص: ${c.specialties}</p>
                   <p style="margin:0 0 8px;font-size:13px;color:#94a3b8;">📊 &nbsp;تحليل أدائك وتتبّع نقاط ضعفك</p>
                   <p style="margin:0 0 8px;font-size:13px;color:#94a3b8;">🔥 &nbsp;نظام السلاسل اليومية للحفاظ على المداومة</p>
                   <p style="margin:0;font-size:13px;color:#94a3b8;">🏆 &nbsp;اختبارات نهائية شاملة</p>
@@ -79,7 +96,7 @@ export const sendWelcomeEmail = async (to, username) => {
           </td>
         </tr>
     `);
-  await sendEmail(to, '🎉 أهلًا بك في SQB!', html, `أهلًا يا ${username}! يسعدنا انضمامك إلى SQB.`);
+  await sendEmail(to, '🎉 أهلًا بك في SQB!', html, `أهلًا يا ${username}! يسعدنا انضمامك إلى SQB — مسار ${c.trackLabel}.`);
 };
 
 // ─── 2. INACTIVITY EMAIL ───────────────────────────────────────────────────
@@ -87,7 +104,8 @@ const MOTIVATIONAL_QUOTES = [
   { text: 'النجاح ليس صدفة، بل هو تعب واجتهاد مستمر', attr: '' },
 ];
 
-export const sendInactivityEmail = async (to, username) => {
+export const sendInactivityEmail = async (to, username, track) => {
+  const c = copyFor(track);
   const quotesHtml = MOTIVATIONAL_QUOTES.map(q => `
         <tr>
           <td style="padding:6px 0;">
@@ -107,7 +125,7 @@ export const sendInactivityEmail = async (to, username) => {
               نفتقدك يا ${username}!
             </h1>
             <p style="margin:0 0 24px;font-size:14px;color:#94a3b8;line-height:1.7;">
-              لم تزرنا منذ بضعة أيام — والاختبار لا ينتظر!
+              لم تزرنا منذ بضعة أيام — و${c.exam} لا ينتظر!
               كل يوم يمرّ بدون مراجعة هو يوم يُضعف استعدادك.
               لا بأس، يمكنك العودة الآن والبدء من حيث توقفت.
             </p>
@@ -135,7 +153,7 @@ export const sendInactivityEmail = async (to, username) => {
 };
 
 // ─── 3. STREAK REMINDER EMAIL ──────────────────────────────────────────────
-export const sendStreakReminderEmail = async (to, username, currentStreak) => {
+export const sendStreakReminderEmail = async (to, username, currentStreak, track) => {
   const html = wrapLayout(`
         <tr>
           <td align="center" style="padding:36px 40px 32px;">
@@ -180,7 +198,8 @@ export const sendStreakReminderEmail = async (to, username, currentStreak) => {
 };
 
 // ─── 4. FEEDBACK EMAIL ─────────────────────────────────────────────────────
-export const sendFeedbackEmail = async (to, username) => {
+export const sendFeedbackEmail = async (to, username, track) => {
+  const c = copyFor(track);
   const html = wrapLayout(`
         <tr>
           <td align="center" style="padding:36px 40px 32px;">
@@ -211,5 +230,5 @@ export const sendFeedbackEmail = async (to, username) => {
           </td>
         </tr>
     `);
-  await sendEmail(to, '💬 رأيك يهمّنا — SQB', html, `يا ${username}، رأيك يساعدنا على تحسين منصتنا. شاركنا اقتراحاتك!`);
+  await sendEmail(to, `💬 رأيك يهمّنا — SQB ${c.trackLabel}`, html, `يا ${username}، رأيك يساعدنا على تحسين منصتنا. شاركنا اقتراحاتك!`);
 };

@@ -1,7 +1,7 @@
 /**
  * Subscription Report Service
  * ------------------------------------------------------------------
- * Every 2 days, emails alshraky3@gmail.com a PDF listing the new paid
+ * Every 2 days, emails the owner a PDF listing the new paid
  * subscriptions: subscriber name/email, gross amount, Moyasar fee, and
  * the net amount after the fee.
  *
@@ -11,19 +11,19 @@
  * is ≥ 47 hours old, i.e. every second day. This avoids adding a third
  * Vercel cron entry (the Hobby plan allows only two per project).
  *
- * Fees: when Moyasar's payment object includes a real `fee` (halalas)
- * it is used as-is. Otherwise the fee is ESTIMATED from the card
- * scheme — mada vs visa/mastercard — plus VAT, all env-overridable:
- *   MOYASAR_MADA_FEE_PERCENT  (default 1.00)
- *   MOYASAR_CARD_FEE_PERCENT  (default 2.75)
- *   MOYASAR_FEE_VAT_PERCENT   (default 15)
- * Estimated rows are marked with * in the PDF.
+ * Fees, refunds and net are computed by services/accountingService.js —
+ * the single source of truth shared with the admin accounting page, the
+ * dashboard and customer invoices, so no two screens can disagree.
+ * Estimated rows (Moyasar hadn't reported a fee yet) are marked * in the PDF.
  */
 
 import PDFDocument from 'pdfkit';
 import { sendMail } from './mailer.js';
+import { TRACK_KEYS, trackLabelAr } from '../config/tracks.js';
+import { OWNER_EMAIL } from '../config/recipients.js';
+import { fetchPaidEvents, summarize, sar } from './accountingService.js';
 
-const REPORT_RECIPIENT = 'alshraky3@gmail.com';
+const REPORT_RECIPIENT = OWNER_EMAIL;
 const REPORT_INTERVAL_HOURS = 47; // "every 2 days" with 1h tolerance for cron jitter
 const DEFAULT_WINDOW_HOURS = 48;  // first run / fallback window
 
@@ -49,23 +49,6 @@ function ensureReportLog(db) {
     return _logTableReady;
 }
 
-/** Gateway fee in halalas: real when Moyasar provides it, estimated otherwise. */
-export function computeFee(rawPayment, amountHalalas) {
-    const actual = Number(rawPayment?.fee);
-    if (Number.isFinite(actual) && actual > 0) {
-        return { feeHalalas: Math.round(actual), estimated: false };
-    }
-    const company = String(rawPayment?.source?.company || '').toLowerCase();
-    const madaPct = Number(process.env.MOYASAR_MADA_FEE_PERCENT || 1.0);
-    const cardPct = Number(process.env.MOYASAR_CARD_FEE_PERCENT || 2.75);
-    const vatPct = Number(process.env.MOYASAR_FEE_VAT_PERCENT || 15);
-    const pct = company === 'mada' ? madaPct : cardPct;
-    const feeHalalas = Math.round(amountHalalas * (pct / 100) * (1 + vatPct / 100));
-    return { feeHalalas, estimated: true };
-}
-
-const sar = (halalas) => (halalas / 100).toFixed(2);
-
 function fmtDate(d) {
     return new Date(d).toISOString().replace('T', ' ').slice(0, 16) + ' UTC';
 }
@@ -81,14 +64,15 @@ function buildReportPdf(rows, totals, periodStart, periodEnd) {
 
         const left = doc.page.margins.left;
         const usable = doc.page.width - left - doc.page.margins.right; // 515
-        // #, Date, Subscriber, Gross, Fee, Net
-        const colW = [28, 92, 205, 65, 60, 65];
+        // #, Date, Subscriber, Track, Gross, Fee, Net
+        const colW = [26, 88, 156, 55, 62, 58, 70];
         const colX = colW.reduce((acc, w, i) => { acc.push(i === 0 ? left : acc[i - 1] + colW[i - 1]); return acc; }, []);
-        const money = { width: null, align: 'right' };
+        // Money columns are right-aligned; everything before them is left.
+        const FIRST_MONEY_COL = 4;
 
         // ── Header ──
         doc.font('Helvetica-Bold').fontSize(18).fillColor('#0e7490')
-            .text('SMLE Question Bank', { align: 'left' });
+            .text('SQB', { align: 'left' });
         doc.font('Helvetica-Bold').fontSize(13).fillColor('#111827')
             .text('New Subscriptions Report', { align: 'left' });
         doc.moveDown(0.3);
@@ -102,9 +86,9 @@ function buildReportPdf(rows, totals, periodStart, periodEnd) {
             const y = doc.y;
             doc.rect(left, y - 3, usable, 18).fill('#0e7490');
             doc.font('Helvetica-Bold').fontSize(9).fillColor('#ffffff');
-            const labels = ['#', 'Date', 'Subscriber', 'Gross', 'Fee', 'Net'];
+            const labels = ['#', 'Date', 'Subscriber', 'Track', 'Gross', 'Fee', 'Net'];
             labels.forEach((label, i) => {
-                const alignRight = i >= 3;
+                const alignRight = i >= FIRST_MONEY_COL;
                 doc.text(label, colX[i] + 3, y, { width: colW[i] - 6, align: alignRight ? 'right' : 'left' });
             });
             doc.y = y + 17;
@@ -129,13 +113,14 @@ function buildReportPdf(rows, totals, periodStart, periodEnd) {
                 const cells = [
                     String(idx + 1),
                     fmtDate(r.receivedAt).slice(0, 16),
-                    String(r.subscriber).slice(0, 48),
+                    String(r.subscriber).slice(0, 36),
+                    r.track,
                     sar(r.grossHalalas),
                     feeText,
                     sar(r.netHalalas),
                 ];
                 cells.forEach((cell, i) => {
-                    const alignRight = i >= 3;
+                    const alignRight = i >= FIRST_MONEY_COL;
                     doc.text(cell, colX[i] + 3, y, { width: colW[i] - 6, align: alignRight ? 'right' : 'left', lineBreak: false });
                 });
                 doc.y = y + 15;
@@ -145,17 +130,41 @@ function buildReportPdf(rows, totals, periodStart, periodEnd) {
             const y = doc.y + 2;
             doc.moveTo(left, y).lineTo(left + usable, y).lineWidth(0.8).strokeColor('#0e7490').stroke();
             doc.font('Helvetica-Bold').fontSize(9).fillColor('#111827');
-            doc.text(`TOTAL (${rows.length} subscription${rows.length === 1 ? '' : 's'})`, colX[0] + 3, y + 5, { width: colW[0] + colW[1] + colW[2] - 6, lineBreak: false });
-            doc.text(sar(totals.gross), colX[3] + 3, y + 5, { width: colW[3] - 6, align: 'right', lineBreak: false });
-            doc.text(sar(totals.fee), colX[4] + 3, y + 5, { width: colW[4] - 6, align: 'right', lineBreak: false });
-            doc.text(sar(totals.net), colX[5] + 3, y + 5, { width: colW[5] - 6, align: 'right', lineBreak: false });
+            doc.text(`TOTAL (${rows.length} subscription${rows.length === 1 ? '' : 's'})`, colX[0] + 3, y + 5, { width: colW[0] + colW[1] + colW[2] + colW[3] - 6, lineBreak: false });
+            doc.text(sar(totals.gross), colX[4] + 3, y + 5, { width: colW[4] - 6, align: 'right', lineBreak: false });
+            doc.text(sar(totals.fee), colX[5] + 3, y + 5, { width: colW[5] - 6, align: 'right', lineBreak: false });
+            doc.text(sar(totals.net), colX[6] + 3, y + 5, { width: colW[6] - 6, align: 'right', lineBreak: false });
             doc.y = y + 24;
+
+            // ── Per-track subtotals ──
+            // The two tracks share one checkout, so this is the only place the
+            // revenue split between medical and nursing students is visible.
+            const perTrack = TRACK_KEYS
+                .map((t) => ({
+                    track: t,
+                    count: rows.filter((r) => r.track === t).length,
+                    gross: rows.filter((r) => r.track === t).reduce((n, r) => n + r.grossHalalas, 0),
+                    net: rows.filter((r) => r.track === t).reduce((n, r) => n + r.netHalalas, 0),
+                }))
+                .filter((t) => t.count > 0);
+            if (perTrack.length > 1) {
+                doc.font('Helvetica-Bold').fontSize(9).fillColor('#0e7490')
+                    .text('By track', left, doc.y, { width: usable });
+                doc.font('Helvetica').fontSize(8.5).fillColor('#111827');
+                perTrack.forEach((t) => {
+                    doc.text(
+                        `${t.track} — ${t.count} subscription${t.count === 1 ? '' : 's'} · gross ${sar(t.gross)} SAR · net ${sar(t.net)} SAR`,
+                        left, doc.y + 2, { width: usable }
+                    );
+                });
+                doc.moveDown(0.5);
+            }
         }
 
         doc.moveDown(1);
         doc.font('Helvetica').fontSize(8).fillColor('#6b7280')
             .text('* Fee estimated from the card scheme (mada / credit) + VAT because Moyasar did not report an exact fee for this payment. Exact figures are always available in the Moyasar dashboard.', left, doc.y, { width: usable })
-            .text('Automated report — sent every 2 days by the SMLE Question Bank backend.', left, doc.y + 4, { width: usable });
+            .text('Automated report — sent every 2 days by the SQB backend. Covers all study tracks.', left, doc.y + 4, { width: usable });
 
         doc.end();
     });
@@ -172,36 +181,33 @@ export async function sendSubscriptionReport(db, opts = {}) {
     const periodStart = opts.periodStart || new Date(periodEnd.getTime() - DEFAULT_WINDOW_HOURS * 3600 * 1000);
     const record = opts.record !== false;
 
-    const { rows: events } = await db.query(
-        `SELECT pe.id, pe.account_id, pe.gateway_ref, pe.amount_halalas, pe.currency,
-                pe.received_at, pe.raw_payload,
-                a.username, a.email
-           FROM payment_events pe
-           LEFT JOIN accounts a ON a.id = pe.account_id
-          WHERE pe.status = 'paid'
-            AND pe.event_type = 'payment_paid'
-            AND pe.received_at >  $1
-            AND pe.received_at <= $2
-          ORDER BY pe.received_at ASC`,
-        [periodStart, periodEnd]
-    );
+    // One shared query + settlement path for every money report.
+    const settled = await fetchPaidEvents(db, { from: periodStart, to: periodEnd });
+    const rows = settled.map((e) => ({
+        ...e,
+        subscriber: e.subscriber || `Account #${e.metadataAccountId ?? '?'} (deleted)`,
+        track: e.track || 'medical',
+    }));
+    const s = summarize(settled);
+    const totals = {
+        gross: s.grossHalalas,
+        fee: s.feeHalalas,
+        refunded: s.refundedHalalas,
+        net: s.netHalalas,
+    };
 
-    const rows = events.map((e) => {
-        const gross = Number(e.amount_halalas) || 0;
-        const { feeHalalas, estimated } = computeFee(e.raw_payload, gross);
+    // Split by track for the email body — both tracks are sold through the
+    // same checkout, so without this the inbox can't tell them apart.
+    const byTrack = TRACK_KEYS.map((t) => {
+        const trackRows = rows.filter((r) => r.track === t);
         return {
-            receivedAt: e.received_at,
-            subscriber: e.email || e.username || `Account #${e.account_id ?? '?'}`,
-            grossHalalas: gross,
-            feeHalalas,
-            netHalalas: gross - feeHalalas,
-            estimated,
+            track: t,
+            label: trackLabelAr(t),
+            count: trackRows.length,
+            gross: trackRows.reduce((n, r) => n + r.grossHalalas, 0),
+            net: trackRows.reduce((n, r) => n + r.netHalalas, 0),
         };
     });
-    const totals = rows.reduce(
-        (t, r) => ({ gross: t.gross + r.grossHalalas, fee: t.fee + r.feeHalalas, net: t.net + r.netHalalas }),
-        { gross: 0, fee: 0, net: 0 }
-    );
 
     const pdf = await buildReportPdf(rows, totals, periodStart, periodEnd);
     const dateTag = new Date().toISOString().slice(0, 10);
@@ -216,8 +222,17 @@ export async function sendSubscriptionReport(db, opts = {}) {
             <table style="width:100%;font-size:14px;border-collapse:collapse">
               <tr><td style="padding:6px 0;color:#374151">New subscriptions</td><td style="text-align:left;font-weight:bold">${rows.length}</td></tr>
               <tr><td style="padding:6px 0;color:#374151">Gross total</td><td style="text-align:left;font-weight:bold">${sar(totals.gross)} SAR</td></tr>
-              <tr><td style="padding:6px 0;color:#374151">Fees (Moyasar)</td><td style="text-align:left;font-weight:bold">${sar(totals.fee)} SAR</td></tr>
-              <tr><td style="padding:6px 0;color:#374151">Net after fees</td><td style="text-align:left;font-weight:bold;color:#059669">${sar(totals.net)} SAR</td></tr>
+              <tr><td style="padding:6px 0;color:#374151">Fees (Moyasar)</td><td style="text-align:left;font-weight:bold">−${sar(totals.fee)} SAR</td></tr>
+              ${totals.refunded > 0 ? `<tr><td style="padding:6px 0;color:#b91c1c">Refunded</td><td style="text-align:left;font-weight:bold;color:#b91c1c">−${sar(totals.refunded)} SAR</td></tr>` : ''}
+              <tr><td style="padding:6px 0;color:#374151">Net received</td><td style="text-align:left;font-weight:bold;color:#059669">${sar(totals.net)} SAR</td></tr>
+            </table>
+            <h3 style="margin:18px 0 6px;font-size:13px;color:#0e7490">By track</h3>
+            <table style="width:100%;font-size:13px;border-collapse:collapse">
+              ${byTrack.map((t) => `
+                <tr>
+                  <td style="padding:5px 0;color:#374151">${t.label} <span style="color:#9ca3af">(${t.track})</span></td>
+                  <td style="text-align:left;font-weight:bold">${t.count} · ${sar(t.net)} SAR net</td>
+                </tr>`).join('')}
             </table>
             <p style="font-size:12px;color:#6b7280;margin-top:14px">Full details (names + per-payment amounts) in the attached PDF.</p>
           </div>
@@ -227,7 +242,7 @@ export async function sendSubscriptionReport(db, opts = {}) {
         name: 'SQB Reports',
         to: REPORT_RECIPIENT,
         subject: `📈 Subscriptions Report — ${rows.length} new (${sar(totals.net)} SAR net) — ${dateTag}`,
-        text: `New subscriptions: ${rows.length}\nGross: ${sar(totals.gross)} SAR\nFees: ${sar(totals.fee)} SAR\nNet: ${sar(totals.net)} SAR\nPeriod: ${fmtDate(periodStart)} -> ${fmtDate(periodEnd)}`,
+        text: `New subscriptions: ${rows.length}\nGross: ${sar(totals.gross)} SAR\nFees: -${sar(totals.fee)} SAR\nRefunded: -${sar(totals.refunded)} SAR\nNet received: ${sar(totals.net)} SAR\nPeriod: ${fmtDate(periodStart)} -> ${fmtDate(periodEnd)}`,
         html: summaryHtml,
         attachments: [
             { filename: `subscriptions-report-${dateTag}.pdf`, content: pdf, contentType: 'application/pdf' },

@@ -25,7 +25,7 @@ const router = express.Router();
  * pattern in routes/summaries.js: Bearer token (or query/body fallback) is
  * checked against accounts.session_token.
  */
-async function requireOwnSession(req, res, next) {
+async function resolveSession(req, res, next) {
     const authHeader = req.headers['authorization'] || '';
     const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
     const username = req.query.username || req.body?.username;
@@ -41,14 +41,22 @@ async function requireOwnSession(req, res, next) {
         if (!r.rows.length || r.rows[0].session_token !== sessionToken) {
             return res.status(401).json({ success: false, message: 'Session invalid or expired' });
         }
-        if (String(r.rows[0].id) !== String(req.params.userId)) {
+        req.accountId = r.rows[0].id;
+        next();
+    } catch (err) {
+        console.error('[payment] session check failed:', err);
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+}
+
+/** As above, plus: the :userId in the path must be the session's own account. */
+async function requireOwnSession(req, res, next) {
+    resolveSession(req, res, () => {
+        if (String(req.accountId) !== String(req.params.userId)) {
             return res.status(403).json({ success: false, message: 'Cannot view another account\'s subscription status.' });
         }
         next();
-    } catch (err) {
-        console.error('[payment/status] session check failed:', err);
-        res.status(500).json({ success: false, message: 'Internal server error' });
-    }
+    });
 }
 
 const DISABLED_RESPONSE = {
@@ -85,14 +93,19 @@ router.get('/config', (req, res) => {
  * Called by the frontend callback page after Moyasar redirects back. Verifies
  * the payment server-side (secret key) and activates the subscription.
  */
-router.post('/verify', requirePaymentEnabled, async (req, res) => {
+router.post('/verify', requirePaymentEnabled, resolveSession, async (req, res) => {
     try {
-        const { paymentId, userId } = req.body || {};
-        if (!paymentId || !userId) {
-            return res.status(400).json({ success: false, message: 'paymentId and userId are required.' });
+        const { paymentId } = req.body || {};
+        if (!paymentId) {
+            return res.status(400).json({ success: false, message: 'paymentId is required.' });
         }
 
-        const result = await verifyAndActivate(req.db, paymentId, userId);
+        // The account comes from the validated session, never from the body.
+        // Previously this route was unauthenticated and trusted a client-sent
+        // userId: safe in practice only because every real payment carries
+        // metadata.account_id, but a payment created without that metadata
+        // would have activated whichever account the caller named.
+        const result = await verifyAndActivate(req.db, paymentId, req.accountId);
         if (!result.success) {
             // Payment did not check out (not paid / wrong amount / wrong account).
             return res.status(402).json(result);

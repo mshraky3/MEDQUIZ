@@ -13,9 +13,15 @@ import { checkSubscriptionAccess, isPaymentEnforcementEnabled } from './services
 import { adminAuth, isAdminRequest } from './middleware/adminAuth.js';
 import { subscriptionGuard } from './middleware/subscriptionGuard.js';
 import summariesRouter from './routes/summaries.js';
+import accountingRouter from './routes/accounting.js';
 import summaryContent from './content/summaryHtml/index.js';
 import { notifyBackendError } from './services/errorNotificationService.js';
 import { sendWelcomeEmail } from './services/userEmailService.js';
+import { OWNER_EMAIL } from './config/recipients.js';
+import {
+    DEFAULT_TRACK, TRACK_KEYS, TRACKS, isValidTrack, normalizeTrack,
+    specialtyKeys, trackLabelAr, trackForSpecialty,
+} from './config/tracks.js';
 
 dotenv.config();
 // Logging configuration
@@ -126,6 +132,22 @@ function ensureSchema() {
             await db.query(`CREATE INDEX IF NOT EXISTS idx_uqa_session ON user_question_attempts(quiz_session_id)`);
             await db.query(`CREATE INDEX IF NOT EXISTS idx_uqa_user_wrong ON user_question_attempts(user_id) WHERE is_correct = false`);
             await db.query(`CREATE INDEX IF NOT EXISTS idx_questions_type_source ON questions(question_type, source)`);
+
+            // ── Study tracks (medical | nursing) ───────────────────────────
+            // The content partition. Everything that already exists is medical,
+            // which is exactly what DEFAULT 'medical' + NOT NULL gives us — no
+            // backfill pass is needed and no row can ever be track-less.
+            // questions/summaries rows carry the track of the bank they belong
+            // to; accounts carry the track of the student.
+            // (summaries.track is added in ensureSummariesTables — that table is
+            // created later in boot, so it cannot be altered from here.)
+            await db.query(`ALTER TABLE accounts  ADD COLUMN IF NOT EXISTS track VARCHAR(20) NOT NULL DEFAULT '${DEFAULT_TRACK}'`);
+            await db.query(`ALTER TABLE questions ADD COLUMN IF NOT EXISTS track VARCHAR(20) NOT NULL DEFAULT '${DEFAULT_TRACK}'`);
+            await db.query(`CREATE INDEX IF NOT EXISTS idx_accounts_track ON accounts(track)`);
+            // Every question lookup filters by track first, then type/source —
+            // this index is the one that keeps /api/questions off a seq scan
+            // once the nursing bank is loaded alongside the medical one.
+            await db.query(`CREATE INDEX IF NOT EXISTS idx_questions_track_type_source ON questions(track, question_type, source)`);
             logger.info('Schema bootstrap complete (tables + performance indexes ensured)');
         } catch (err) {
             _schemaReady = null; // allow a retry on a later invocation
@@ -193,6 +215,15 @@ function ensurePaymentSchema() {
             `);
             await db.query(`CREATE INDEX IF NOT EXISTS idx_payment_events_account  ON payment_events(account_id)`);
             await db.query(`CREATE INDEX IF NOT EXISTS idx_payment_events_received ON payment_events(received_at)`);
+            // One paid row per Moyasar reference, enforced by the database.
+            // This is what makes activation genuinely idempotent: /verify and
+            // the webhook can race, and the loser's INSERT simply conflicts
+            // instead of recording the money (and extending the subscription)
+            // a second time. Partial so non-paid audit rows are unaffected.
+            await db.query(`
+                CREATE UNIQUE INDEX IF NOT EXISTS uq_payment_events_paid_ref
+                    ON payment_events(gateway_ref) WHERE status = 'paid'
+            `);
 
             // One free trial per email, ever — survives account deletion
             // (account_id goes NULL) so a re-signup can't re-trial.
@@ -263,13 +294,19 @@ const sendEmail = async (to, subject, text, html = null) => {
         throw error;
     }
 };
+// Simple in-memory cache for questions, keyed by track — one bank per entry, so
+// a medical response can never be served to a nursing student (or vice versa).
+const questionsCache = new Map(); // track -> { data, timestamp }
+const QUESTIONS_CACHE_TTL = 5 * 60 * 1000;
 
-// Simple in-memory cache for questions
-const questionsCache = {
-    data: null,
-    timestamp: null,
-    ttl: 5 * 60 * 1000
-};
+function readQuestionsCache(track) {
+    const hit = questionsCache.get(track);
+    if (hit && (Date.now() - hit.timestamp) < QUESTIONS_CACHE_TTL) return hit.data;
+    return null;
+}
+function writeQuestionsCache(track, data) {
+    questionsCache.set(track, { data, timestamp: Date.now() });
+}
 
 
 const app = express();
@@ -322,6 +359,7 @@ app.get('/', (req, res) => {
 
 app.post('/add_account', adminAuth, async (req, res) => {
     const { username, password } = req.body;
+    const track = normalizeTrack(req.body.track);
 
     if (!username || !password) {
         return res.status(400).json({ message: 'Missing username or password' });
@@ -343,20 +381,21 @@ app.post('/add_account', adminAuth, async (req, res) => {
         // logged: false (not logged in yet)
         // terms_accepted: false (must accept terms on first login)
         const result = await db.query(
-            "INSERT INTO accounts (username, password, isactive, logged, terms_accepted) VALUES ($1, $2, $3, $4, $5) RETURNING id",
-            [lowercaseUsername, lowercasePassword, true, false, false]
+            "INSERT INTO accounts (username, password, isactive, logged, terms_accepted, track) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
+            [lowercaseUsername, lowercasePassword, true, false, false, track]
         );
 
         const newUserId = result.rows[0].id;
 
         // Send email notification for admin-created account
         try {
-            const emailSubject = `🔧 Admin Account Created - ${username}`;
+            const emailSubject = `🔧 Admin Account Created - ${username} (${trackLabelAr(track)})`;
             const emailText = `
 New account created by admin:
 
 Username: ${username}
 User ID: ${newUserId}
+Track: ${trackLabelAr(track)} (${track})
 Created: ${new Date().toLocaleString()}
 Created by: Admin Panel
 
@@ -367,12 +406,13 @@ This account has been activated and is ready for use.
                 <h2>🔧 Admin Account Created</h2>
                 <p><strong>Username:</strong> ${username}</p>
                 <p><strong>User ID:</strong> ${newUserId}</p>
+                <p><strong>Track:</strong> ${trackLabelAr(track)} (${track})</p>
                 <p><strong>Created:</strong> ${new Date().toLocaleString()}</p>
                 <p><strong>Created by:</strong> Admin Panel</p>
                 <p><strong>Status:</strong> Active and ready for use</p>
             `;
 
-            await sendEmail('muhmodalshraky3@gmail.com', emailSubject, emailText, emailHtml);
+            await sendEmail(OWNER_EMAIL, emailSubject, emailText, emailHtml);
             console.log('📧 Admin account creation email sent for user:', username);
         } catch (emailError) {
             console.error('❌ Failed to send admin account creation email:', emailError);
@@ -393,16 +433,59 @@ This account has been activated and is ready for use.
 
 app.get('/get_all_users', adminAuth, async (req, res) => {
     try {
-        // Columns (email, created_at, updated_at) are ensured once at startup by
-        // ensureSchema() — no per-request DDL or introspection needed.
-        const result = await db.query(
-            `SELECT id, username, password, logged_date, isactive, terms_accepted, email, created_at
-             FROM accounts`
-        );
+        // Columns (email, created_at, updated_at, track) are ensured once at
+        // startup by ensureSchema() — no per-request DDL or introspection needed.
+        // ?track= narrows to one cohort; omitted returns every account.
+        const { track } = req.query;
+        const result = isValidTrack(track)
+            ? await db.query(
+                `SELECT id, username, password, logged_date, isactive, terms_accepted, email, created_at, track
+                 FROM accounts WHERE track = $1`, [track])
+            : await db.query(
+                `SELECT id, username, password, logged_date, isactive, terms_accepted, email, created_at, track
+                 FROM accounts`);
         res.json({ users: result.rows });
     } catch (err) {
         console.error('Error fetching users:', err);
         res.status(500).json({ message: "Server error while fetching users" });
+    }
+});
+
+/**
+ * Move an account between study tracks. Admin-only by design: a student picks
+ * their track once at signup and cannot change it themselves, otherwise one
+ * subscription would unlock both question banks.
+ *
+ * Switching a track does NOT touch the user's history. Attempts, sessions and
+ * progress stay attached to the questions they were answered against, and the
+ * analytics endpoints scope their denominators to the current track — so the
+ * dashboard simply shows the new bank, with the old track's rows dormant and
+ * intact should the account be moved back.
+ */
+app.post('/admin/users/:userId/track', adminAuth, async (req, res) => {
+    const { userId } = req.params;
+    const { track } = req.body;
+
+    if (!isValidTrack(track)) {
+        return res.status(400).json({ message: `track must be one of: ${TRACK_KEYS.join(', ')}` });
+    }
+    try {
+        const result = await db.query(
+            'UPDATE accounts SET track = $1 WHERE id = $2 RETURNING id, username, email, track',
+            [track, userId]
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        // Their cached session carries the old track — drop it so the very next
+        // request is served content from the new bank.
+        invalidateSessionCache(result.rows[0].username);
+        invalidateSessionCache(result.rows[0].email);
+        logger.info(`Admin moved account ${userId} to the ${track} track`);
+        res.json({ success: true, user: result.rows[0] });
+    } catch (err) {
+        logger.error('Error changing user track', err);
+        res.status(500).json({ message: 'Failed to change track' });
     }
 });
 
@@ -533,6 +616,10 @@ const ensureTempLinksTables = async () => {
                 UNIQUE(link_id, user_id)
             )
         `);
+        // An invite link is issued for one study track, so an admin can hand a
+        // nursing cohort a link that puts every account on the nursing bank
+        // without the invitee having to choose (or being able to choose wrong).
+        await db.query(`ALTER TABLE temporary_signup_links ADD COLUMN IF NOT EXISTS track VARCHAR(20) NOT NULL DEFAULT '${DEFAULT_TRACK}'`);
         await db.query(`CREATE INDEX IF NOT EXISTS idx_temp_links_token ON temporary_signup_links(token)`);
         await db.query(`CREATE INDEX IF NOT EXISTS idx_temp_links_active ON temporary_signup_links(is_active)`);
         await db.query(`CREATE INDEX IF NOT EXISTS idx_temp_link_accounts_link_id ON temp_link_accounts(link_id)`);
@@ -613,6 +700,11 @@ const ensureSummariesTables = async () => {
         // Category (specialty group) + overview flag for hub grouping of main vs sub-topic decks.
         await db.query(`ALTER TABLE summaries ADD COLUMN IF NOT EXISTS category VARCHAR(80)`);
         await db.query(`ALTER TABLE summaries ADD COLUMN IF NOT EXISTS is_overview BOOLEAN DEFAULT FALSE`);
+        // Study track. Every deck seeded below is medical, which the DEFAULT
+        // already gives them; nursing decks are inserted with track='nursing'
+        // once that content exists.
+        await db.query(`ALTER TABLE summaries ADD COLUMN IF NOT EXISTS track VARCHAR(20) NOT NULL DEFAULT '${DEFAULT_TRACK}'`);
+        await db.query(`CREATE INDEX IF NOT EXISTS idx_summaries_track ON summaries(track)`);
 
         // Seed main + sub-topic decks. question_type must match the canonical
         // questions.question_type set so "practice" links to the right bank.
@@ -1077,7 +1169,9 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
             trialFunnelRes,
             revenueRes,
             paidButInactiveRes,
-            recentPaymentsRes
+            recentPaymentsRes,
+            trackBreakdownRes,
+            trackContentRes
         ] = await Promise.all([
             // Total users
             db.query('SELECT COUNT(*) as count FROM accounts'),
@@ -1312,6 +1406,37 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
                 WHERE pe.status = 'paid'
                 ORDER BY pe.received_at DESC
                 LIMIT 10
+            `).catch(() => ({ rows: [] })),
+            // ── Per-track rollup ──
+            // The platform serves two student populations from one deployment,
+            // so every headline number above is a blend. This splits users,
+            // activity and subscriptions by track. Quiz metrics come from a
+            // LEFT JOIN so a track with users but no quizzes still returns a row.
+            db.query(`
+                SELECT a.track,
+                       COUNT(DISTINCT a.id)                                                    AS users,
+                       COUNT(DISTINCT a.id) FILTER (WHERE a.logged_date > NOW() - INTERVAL '7 days')  AS active_users,
+                       COUNT(DISTINCT a.id) FILTER (WHERE a.created_at  > NOW() - INTERVAL '7 days')  AS new_users_week,
+                       COUNT(DISTINCT a.id) FILTER (WHERE a.subscription_status = 'active'
+                                                      AND a.subscription_expiry_date > NOW())  AS active_subscribers,
+                       COUNT(q.id)                                                             AS quizzes,
+                       ROUND(AVG(q.quiz_accuracy)::numeric, 1)                                 AS avg_accuracy
+                FROM accounts a
+                LEFT JOIN user_quiz_sessions q ON q.user_id = a.id
+                GROUP BY a.track
+            `).catch(() => ({ rows: [] })),
+            // Content inventory per track — how much of each bank actually
+            // exists, which is what tells the admin a track is still empty.
+            db.query(`
+                SELECT t.track,
+                       COALESCE(q.n, 0) AS questions,
+                       COALESCE(s.n, 0) AS summaries
+                FROM (SELECT DISTINCT track FROM questions
+                      UNION SELECT DISTINCT track FROM summaries) t
+                LEFT JOIN (SELECT track, COUNT(*)::int AS n FROM questions GROUP BY track) q
+                       ON q.track = t.track
+                LEFT JOIN (SELECT track, COUNT(*)::int AS n FROM summaries WHERE is_published = TRUE GROUP BY track) s
+                       ON s.track = t.track
             `).catch(() => ({ rows: [] }))
         ]);
 
@@ -1335,7 +1460,35 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
             : 0;
         const revenue = revenueRes.rows[0] || {};
 
+        // Per-track rollup: one row per track the platform knows about, even
+        // when it has no users or content yet — the dashboard should show a
+        // nursing row reading zero rather than omitting the track entirely.
+        const trackRows = {};
+        trackBreakdownRes.rows.forEach((r) => { trackRows[normalizeTrack(r.track)] = r; });
+        const contentRows = {};
+        trackContentRes.rows.forEach((r) => { contentRows[normalizeTrack(r.track)] = r; });
+        const byTrack = TRACK_KEYS.map((key) => {
+            const u = trackRows[key] || {};
+            const c = contentRows[key] || {};
+            return {
+                track: key,
+                label: trackLabelAr(key),
+                users: parseInt(u.users) || 0,
+                activeUsers: parseInt(u.active_users) || 0,
+                newUsersWeek: parseInt(u.new_users_week) || 0,
+                activeSubscribers: parseInt(u.active_subscribers) || 0,
+                quizzes: parseInt(u.quizzes) || 0,
+                avgAccuracy: parseFloat(u.avg_accuracy) || 0,
+                questions: parseInt(c.questions) || 0,
+                summaries: parseInt(c.summaries) || 0,
+                specialties: specialtyKeys(key),
+                // Drives the "content not ready" flag in the admin panel.
+                contentReady: (parseInt(c.questions) || 0) > 0,
+            };
+        });
+
         res.json({
+            byTrack,
             overview: {
                 totalUsers: parseInt(totalUsersRes.rows[0]?.count) || 0,
                 activeUsers: parseInt(activeUsersRes.rows[0]?.count) || 0,
@@ -1560,20 +1713,24 @@ app.get('/admin/analytics', adminAuth, async (req, res) => {
 // Get detailed user info with activity
 app.get('/admin/users', adminAuth, async (req, res) => {
     try {
+        // Optional cohort filter — ?track=nursing lists only nursing students.
+        const trackFilter = isValidTrack(req.query.track) ? 'WHERE a.track = $1' : '';
+        const trackParams = trackFilter ? [req.query.track] : [];
         const usersResult = await db.query(`
             SELECT 
-                a.id, a.username, a.password, a.isactive, a.logged, a.logged_date, 
-                a.terms_accepted, a.email, a.created_at,
+                a.id, a.username, a.password, a.isactive, a.logged, a.logged_date,
+                a.terms_accepted, a.email, a.created_at, a.track,
                 COUNT(DISTINCT q.id) as total_quizzes,
                 ROUND(AVG(q.quiz_accuracy)::numeric, 1) as avg_accuracy,
                 SUM(q.total_questions) as total_questions,
                 MAX(q.start_time) as last_quiz_date
             FROM accounts a
             LEFT JOIN user_quiz_sessions q ON a.id = q.user_id
-            GROUP BY a.id, a.username, a.password, a.isactive, a.logged, a.logged_date, 
-                     a.terms_accepted, a.email, a.created_at
+            ${trackFilter}
+            GROUP BY a.id, a.username, a.password, a.isactive, a.logged, a.logged_date,
+                     a.terms_accepted, a.email, a.created_at, a.track
             ORDER BY a.id DESC
-        `);
+        `, trackParams);
 
         // Get suspicious flags for each user
         const suspiciousResult = await db.query(`
@@ -1969,28 +2126,78 @@ app.get('/wrong-questions/user/:userId', requireSession, async (req, res) => {
 
 app.get('/api/all-questions', adminOrSubscriber, async (req, res) => {
     try {
+        // Scoped to the caller's own bank. Students get their track; the admin
+        // panel (Bank) may ask for either with ?track=.
+        const track = resolveContentTrack(req);
+
         // Serve from cache when fresh — the cache is invalidated on every
         // question add/update/delete, so it can never serve stale data.
-        const now = Date.now();
-        if (questionsCache.data && questionsCache.timestamp && (now - questionsCache.timestamp) < questionsCache.ttl) {
-            return res.json({ questions: questionsCache.data });
-        }
+        const cached = readQuestionsCache(track);
+        if (cached) return res.json({ questions: cached, track });
 
-        // questions.source is ensured/backfilled once at startup by ensureSchema().
+        // questions.source/track are ensured once at startup by ensureSchema().
 
         // Fetch all necessary fields for question library
-        const result = await db.query("SELECT id, question_text, option1, option2, option3, option4, question_type, correct_option, source FROM questions");
+        const result = await db.query(
+            `SELECT id, question_text, option1, option2, option3, option4, question_type, correct_option, source, track
+             FROM questions WHERE track = $1`,
+            [track]
+        );
 
-        // Update cache
-        questionsCache.data = result.rows;
-        questionsCache.timestamp = now;
+        writeQuestionsCache(track, result.rows);
 
-        res.json({ questions: result.rows });
+        res.json({ questions: result.rows, track });
     } catch (err) {
         res.status(500).json({ message: 'Server error' });
     }
 });
 
+
+/**
+ * What content exists in the caller's track, so the UI can render an honest
+ * empty state instead of an interface that leads to a blank quiz.
+ *
+ * A track is "ready" once it has questions; summaries are reported separately
+ * because the two are loaded independently. Returns per-specialty counts too,
+ * so the hub can grey out specialties that have nothing in them yet.
+ */
+app.get('/api/track-content-status', requireSession, async (req, res) => {
+    try {
+        const track = resolveContentTrack(req);
+        const [byType, summaryCount] = await Promise.all([
+            db.query(
+                `SELECT question_type, COUNT(*)::int AS total
+                 FROM questions WHERE track = $1 GROUP BY question_type`,
+                [track]
+            ),
+            db.query(
+                `SELECT COUNT(*)::int AS total FROM summaries
+                 WHERE track = $1 AND is_published = TRUE`,
+                [track]
+            ),
+        ]);
+
+        const questionsByType = {};
+        let totalQuestions = 0;
+        byType.rows.forEach((r) => {
+            questionsByType[r.question_type] = r.total;
+            totalQuestions += r.total;
+        });
+
+        res.json({
+            track,
+            specialties: specialtyKeys(track),
+            questionsByType,
+            totalQuestions,
+            totalSummaries: summaryCount.rows[0].total,
+            hasQuestions: totalQuestions > 0,
+            hasSummaries: summaryCount.rows[0].total > 0,
+        });
+    } catch (err) {
+        logger.error('Error fetching track content status', err);
+        res.status(500).json({ message: 'Failed to fetch content status' });
+    }
+});
 
 app.get('/user-streaks/:user_id', requireSession, async (req, res) => {
     try {
@@ -2073,7 +2280,14 @@ const UNIFIED_BANK = 'MidgardGameBoy'; // sentinel the client sends for "the ban
 // Resolve a requested `source` query param to the set of sources to query.
 // A specific, still-valid collection is honored alone; the sentinel, 'mix',
 // absent, or any removed/unknown source resolves to the full kept allowlist.
-function resolveSources(sourceParam) {
+//
+// The allowlist exists only to keep the deleted 2025 MEDICAL collections from
+// leaking back. Other tracks have no such history, so they are constrained by
+// `track` alone — returning null means "add no source condition", which also
+// means a new bank's questions are servable the moment they are uploaded,
+// whatever `source` label they carry.
+function resolveSources(sourceParam, track = DEFAULT_TRACK) {
+    if (normalizeTrack(track) !== DEFAULT_TRACK) return null;
     if (sourceParam && sourceParam !== 'mix' && sourceParam !== UNIFIED_BANK
         && KEPT_SOURCES.includes(sourceParam)) {
         return [sourceParam];
@@ -2116,10 +2330,22 @@ app.get('/api/questions', requireSubscriber, async (req, res) => {
     const categoryConditions = [];
     const categoryValues = [];
 
+    // Track first: a student only ever sees their own bank. Derived from the
+    // session (requireSubscriber ran requireSession), never from the request.
+    const track = resolveContentTrack(req);
+    categoryConditions.push(`track = $${categoryValues.length + 1}`);
+    categoryValues.push(track);
+
     if (!typesParam || typesParam === 'mix') {
-        // No type filter – return all types
+        // No type filter – return all types within the track
     } else {
-        const selectedTypes = typesParam.split(',');
+        // Intersect with the track's own specialties so a crafted `types` list
+        // can't reach across banks even if a row were mislabelled.
+        const allowed = specialtyKeys(track);
+        const selectedTypes = typesParam.split(',').filter((t) => allowed.includes(t));
+        if (selectedTypes.length === 0) {
+            return res.json({ questions: [], completed: false, totalInCategory: 0 });
+        }
         categoryConditions.push(`question_type = ANY($${categoryValues.length + 1}::text[])`);
         categoryValues.push(selectedTypes);
     }
@@ -2127,9 +2353,13 @@ app.get('/api/questions', requireSubscriber, async (req, res) => {
     // Always constrain to the kept unified bank so removed 2025 sources never
     // leak. A specific still-valid collection narrows further; anything else
     // (sentinel / 'mix' / absent / deleted) spans the whole allowlist.
+    // Non-medical tracks have no removed sources — `track` alone is the filter.
     {
-        categoryConditions.push(`source = ANY($${categoryValues.length + 1}::text[])`);
-        categoryValues.push(resolveSources(sourceParam));
+        const sources = resolveSources(sourceParam, track);
+        if (sources) {
+            categoryConditions.push(`source = ANY($${categoryValues.length + 1}::text[])`);
+            categoryValues.push(sources);
+        }
     }
 
     const conditions = [...categoryConditions];
@@ -2577,8 +2807,12 @@ app.post('/quiz-sessions', requireSession, subscriberOnly, async (req, res) => {
                 try {
                     const [totalRes, doneRes] = await Promise.all([
                         db.query(
-                            `SELECT COUNT(*)::int AS c FROM questions WHERE question_type = $1 AND source = $2`,
-                            [type, source]
+                            // Track-scoped like every other bank-size denominator.
+                            // Specialty names happen to be disjoint across tracks
+                            // today, but "topic complete" must not depend on that.
+                            `SELECT COUNT(*)::int AS c FROM questions
+                              WHERE track = $1 AND question_type = $2 AND source = $3`,
+                            [resolveContentTrack(req), type, source]
                         ),
                         db.query(
                             `SELECT COUNT(*)::int AS c FROM user_question_progress
@@ -2934,18 +3168,31 @@ app.post('/api/questions', adminAuth, async (req, res) => {
         option4,
         question_type,
         correct_option,
-        source = 'general'
+        source = 'general',
+        track
     } = req.body;
     try {
+        // The specialty determines the bank — every known question_type belongs
+        // to exactly one track, so a nursing question can never be filed into
+        // the medical bank by a mis-set form field. Legacy/one-off types that
+        // predate the tracks (e.g. 'ethics') aren't in either list; those fall
+        // back to the explicitly supplied track.
+        const impliedTrack = trackForSpecialty(question_type);
+        if (impliedTrack && track && normalizeTrack(track) !== impliedTrack) {
+            return res.status(400).json({
+                message: `question_type "${question_type}" belongs to the ${impliedTrack} track, not ${track}.`
+            });
+        }
+        const resolvedTrack = impliedTrack || normalizeTrack(track);
         const result = await db.query(
-            `INSERT INTO questions (question_text, option1, option2, option3, option4, question_type, correct_option, source)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
-            [question_text, option1, option2, option3, option4, question_type, correct_option, source]
+            `INSERT INTO questions (question_text, option1, option2, option3, option4, question_type, correct_option, source, track)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
+            [question_text, option1, option2, option3, option4, question_type, correct_option, source, resolvedTrack]
         );
 
-        // Invalidate cache when new question is added
-        questionsCache.data = null;
-        questionsCache.timestamp = null;
+        // Invalidate every track's cache — a question can move between banks
+        // on edit, so clearing only one of them could strand a stale row.
+        questionsCache.clear();
 
         res.status(201).json({
             message: "Question added successfully",
@@ -2960,7 +3207,12 @@ app.post('/api/questions', adminAuth, async (req, res) => {
 
 app.get('/questions', adminAuth, async (req, res) => {
     try {
-        const result = await db.query("SELECT * FROM questions ORDER BY id");
+        // Admin-only: ?track= narrows to one bank, omitting it returns both so
+        // existing tooling that expects the full table keeps working.
+        const { track } = req.query;
+        const result = isValidTrack(track)
+            ? await db.query("SELECT * FROM questions WHERE track = $1 ORDER BY id", [track])
+            : await db.query("SELECT * FROM questions ORDER BY id");
         res.json({ questions: result.rows });
     } catch (err) {
         console.error("Error fetching questions:", err);
@@ -2974,12 +3226,13 @@ app.get('/api/check-completion/:userId', requireSession, async (req, res) => {
     const { type, source } = req.query;
 
     try {
-        // Get total questions for this cardinality
+        // Get total questions for this cardinality, within the caller's bank
+        const track = resolveContentTrack(req);
         const totalQuery = await db.query(`
             SELECT COUNT(*) as total
-            FROM questions 
-            WHERE question_type = $1 AND source = $2
-        `, [type, source]);
+            FROM questions
+            WHERE track = $1 AND question_type = $2 AND source = $3
+        `, [track, type, source]);
 
         // Get completed questions for this cardinality
         const completedQuery = await db.query(`
@@ -3182,9 +3435,9 @@ app.delete('/questions/:id', adminAuth, async (req, res) => {
             return res.status(404).json({ message: "Question not found" });
         }
 
-        // Invalidate cache when question is deleted
-        questionsCache.data = null;
-        questionsCache.timestamp = null;
+        // Invalidate every track's cache — a question can move between banks
+        // on edit, so clearing only one of them could strand a stale row.
+        questionsCache.clear();
 
         res.json({
             message: "Question deleted successfully",
@@ -3218,9 +3471,16 @@ app.put('/questions/:id', adminAuth, async (req, res) => {
         return res.status(400).json({ message: "Missing required fields" });
     }
 
+    // Keep track in lockstep with question_type: re-filing a question under a
+    // different specialty moves it to that specialty's bank in the same write,
+    // so the two columns can never disagree. A legacy type that belongs to no
+    // track (e.g. 'ethics') leaves the existing track alone — COALESCE keeps
+    // such rows editable instead of 400ing on every save.
+    const impliedTrack = trackForSpecialty(question_type);
+
     try {
         const result = await db.query(
-            `UPDATE questions 
+            `UPDATE questions
              SET question_text = $1,
                  option1 = $2,
                  option2 = $3,
@@ -3228,20 +3488,21 @@ app.put('/questions/:id', adminAuth, async (req, res) => {
                  option4 = $5,
                  question_type = $6,
                  correct_option = $7,
-                 source = $8
-             WHERE id = $9
+                 source = $8,
+                 track = COALESCE($9, track)
+             WHERE id = $10
              RETURNING *`,
             [question_text, option1, option2, option3, option4,
-                question_type, correct_option, source, id]
+                question_type, correct_option, source, impliedTrack, id]
         );
 
         if (result.rows.length === 0) {
             return res.status(404).json({ message: "Question not found" });
         }
 
-        // Invalidate cache when question is updated
-        questionsCache.data = null;
-        questionsCache.timestamp = null;
+        // Invalidate every track's cache — a question can move between banks
+        // on edit, so clearing only one of them could strand a stale row.
+        questionsCache.clear();
 
         res.json({
             message: "Question updated successfully",
@@ -3262,11 +3523,15 @@ app.get('/quiz-sessions/progress/:userId', requireSession, async (req, res) => {
     try {
         logger.debug('Fetching progress data', { userId });
 
+        // Denominators are per-bank: "how much of the question bank have I
+        // covered" must not count the other track's questions.
+        const track = resolveContentTrack(req);
+
         // Get total questions count
         const totalQuestionsResult = await db.query(`
             SELECT COUNT(*) as total_questions
-            FROM questions
-        `);
+            FROM questions WHERE track = $1
+        `, [track]);
 
         // Get answered questions count
         const answeredQuestionsResult = await db.query(`
@@ -3288,8 +3553,9 @@ app.get('/quiz-sessions/progress/:userId', requireSession, async (req, res) => {
                 COUNT(DISTINCT uqa.question_id) as answered_questions
             FROM questions q
             LEFT JOIN user_question_attempts uqa ON q.id = uqa.question_id AND uqa.user_id = $1
+            WHERE q.track = $2
             GROUP BY COALESCE(q.source, 'general')
-        `, [userId]);
+        `, [userId, track]);
 
         const sourceBreakdown = {};
         sourceBreakdownResult.rows.forEach(row => {
@@ -3307,8 +3573,9 @@ app.get('/quiz-sessions/progress/:userId', requireSession, async (req, res) => {
                 COUNT(DISTINCT uqa.question_id) as answered_questions
             FROM questions q
             LEFT JOIN user_question_attempts uqa ON q.id = uqa.question_id AND uqa.user_id = $1
+            WHERE q.track = $2
             GROUP BY q.question_type
-        `, [userId]);
+        `, [userId, track]);
 
         const typeBreakdown = {};
         typeBreakdownResult.rows.forEach(row => {
@@ -3497,7 +3764,7 @@ function getSessionCredentials(req) {
 // dominated the "Slow request" warnings. With a 30s TTL we skip the DB on the
 // hot path while keeping the "another login kicks the old session" guarantee:
 // /login and /logout evict the entry so a rotated token is never served stale.
-const sessionCache = new Map(); // username -> { token, expiresAt }
+const sessionCache = new Map(); // username -> { token, expiresAt, track, userId }
 const SESSION_CACHE_TTL = 30_000; // 30 seconds
 
 function invalidateSessionCache(username) {
@@ -3515,10 +3782,12 @@ function requireSession(req, res, next) {
     // Fast path: a recently validated (username, token) pair skips the DB.
     const cached = sessionCache.get(username);
     if (cached && cached.token === sessionToken && cached.expiresAt > Date.now()) {
+        req.userTrack = cached.track;
+        req.accountId = cached.userId;
         return next();
     }
 
-    db.query('SELECT session_token FROM accounts WHERE username = $1', [username])
+    db.query('SELECT id, session_token, track FROM accounts WHERE username = $1', [username])
         .then(result => {
             if (!result.rows.length || result.rows[0].session_token !== sessionToken) {
                 sessionCache.delete(username); // evict any stale entry
@@ -3529,13 +3798,36 @@ function requireSession(req, res, next) {
                 });
                 return res.status(401).json({ message: 'Session invalid or expired' });
             }
-            sessionCache.set(username, { token: sessionToken, expiresAt: Date.now() + SESSION_CACHE_TTL });
+            const track = normalizeTrack(result.rows[0].track);
+            const userId = result.rows[0].id;
+            sessionCache.set(username, {
+                token: sessionToken, expiresAt: Date.now() + SESSION_CACHE_TTL, track, userId,
+            });
+            req.userTrack = track;
+            req.accountId = userId;
             next();
         })
         .catch(err => {
             logger.error('[SESSION] Error checking session:', err);
             res.status(500).json({ message: 'Internal server error' });
         });
+}
+
+/**
+ * The track whose content this request may see.
+ *
+ * Always derived from the authenticated session (requireSession sets
+ * req.userTrack) — never from a client-supplied parameter, or a medical
+ * subscriber could read the nursing bank by changing a query string.
+ *
+ * Admin requests are the one exception: the admin panel legitimately needs to
+ * work across both banks, so an admin-keyed request may name a track with
+ * ?track=, and gets the default when it doesn't.
+ */
+function resolveContentTrack(req) {
+    if (req.userTrack) return req.userTrack;
+    if (isAdminRequest(req)) return normalizeTrack(req.query.track);
+    return DEFAULT_TRACK;
 }
 
 // Endpoint to accept terms
@@ -3583,7 +3875,7 @@ If you receive this email, the notification system is working correctly.
             <p>If you receive this email, the notification system is working correctly.</p>
         `;
 
-        await sendEmail('muhmodalshraky3@gmail.com', emailSubject, emailText, emailHtml);
+        await sendEmail(OWNER_EMAIL, emailSubject, emailText, emailHtml);
 
         res.status(200).json({
             success: true,
@@ -3605,6 +3897,12 @@ If you receive this email, the notification system is working correctly.
 app.post('/api/contact', async (req, res) => {
     try {
         const { name, mobile, subject, message } = req.body;
+        // Attribution is best-effort: the contact form is reachable signed out,
+        // so the client sends the track only when someone is logged in.
+        const senderTrack = isValidTrack(req.body.track)
+            ? `${trackLabelAr(req.body.track)} (${req.body.track})`
+            : 'غير معروف (زائر غير مسجّل)';
+        const senderUsername = req.body.username || '—';
 
         if (!name || !mobile || !message) {
             return res.status(400).json({
@@ -3615,12 +3913,14 @@ app.post('/api/contact', async (req, res) => {
 
         // Send email notification for contact form
         try {
-            const emailSubject = `📞 Contact Form - ${subject || 'General Inquiry'}`;
+            const emailSubject = `📞 Contact Form - ${subject || 'General Inquiry'} [${req.body.track || 'unknown'}]`;
             const emailText = `
 New contact form submission from SQB:
 
 Name: ${name}
 Mobile: ${mobile}
+Account: ${senderUsername}
+Track: ${senderTrack}
 Subject: ${subject || 'General Inquiry'}
 Submitted: ${new Date().toLocaleString()}
 
@@ -3634,6 +3934,8 @@ Please respond to the user as soon as possible.
                 <h2>📞 Contact Form Submission</h2>
                 <p><strong>Name:</strong> ${name}</p>
                 <p><strong>Mobile:</strong> ${mobile}</p>
+                <p><strong>Account:</strong> ${senderUsername}</p>
+                <p><strong>Track:</strong> ${senderTrack}</p>
                 <p><strong>Subject:</strong> ${subject || 'General Inquiry'}</p>
                 <p><strong>Submitted:</strong> ${new Date().toLocaleString()}</p>
                 <hr>
@@ -3643,7 +3945,7 @@ Please respond to the user as soon as possible.
                 <p>Please respond to the user as soon as possible.</p>
             `;
 
-            await sendEmail('muhmodalshraky3@gmail.com', emailSubject, emailText, emailHtml);
+            await sendEmail(OWNER_EMAIL, emailSubject, emailText, emailHtml);
             console.log('📧 Contact form email sent for:', name);
         } catch (emailError) {
             console.error('❌ Failed to send contact form email:', emailError);
@@ -3693,6 +3995,9 @@ app.post('/api/admin/init-suggestions-table', adminAuth, async (req, res) => {
 app.post('/api/suggestions', async (req, res) => {
     try {
         const { category, title, description, priority } = req.body;
+        const senderTrack = isValidTrack(req.body.track)
+            ? `${trackLabelAr(req.body.track)} (${req.body.track})`
+            : 'غير معروف (زائر غير مسجّل)';
 
         if (!category || !title || !description) {
             return res.status(400).json({
@@ -3760,6 +4065,9 @@ app.post('/api/suggestions', async (req, res) => {
                   <td align="right">
                     <span style="display: inline-block; background: #f1f5f9; padding: 8px 16px; border-radius: 50px; font-size: 13px; font-weight: 600; color: #475569;">
                       ${priorityLabels[priority] || priority}
+                    </span>
+                    <span style="display: inline-block; background: #eef2ff; padding: 8px 16px; border-radius: 50px; font-size: 13px; font-weight: 600; color: #4338ca; margin-right: 6px;">
+                      ${senderTrack}
                     </span>
                   </td>
                 </tr>
@@ -3831,8 +4139,8 @@ app.post('/api/suggestions', async (req, res) => {
 
         try {
             await sendEmail(
-                'muhmodalshraky3@gmail.com',
-                `💡 New Suggestion: ${title}`,
+                OWNER_EMAIL,
+                `💡 New Suggestion: ${title} [${req.body.track || 'unknown'}]`,
                 `New suggestion received:\n\nCategory: ${category}\nPriority: ${priority}\nTitle: ${title}\n\nDescription:\n${description}`,
                 emailHtml
             );
@@ -4004,12 +4312,13 @@ app.post('/api/admin/generate-temp-link', adminAuth, async (req, res) => {
 
         // Generate a unique token (similar to your preferred format)
         const token = Math.random().toString(36).substring(2, 8);
+        const linkTrack = normalizeTrack(req.body.track);
 
         // Insert the new link
         const result = await db.query(
-            `INSERT INTO temporary_signup_links (token, max_uses, created_by) 
-             VALUES ($1, $2, $3) RETURNING *`,
-            [token, maxUses, createdBy || 'admin']
+            `INSERT INTO temporary_signup_links (token, max_uses, created_by, track)
+             VALUES ($1, $2, $3, $4) RETURNING *`,
+            [token, maxUses, createdBy || 'admin', linkTrack]
         );
 
         const link = result.rows[0];
@@ -4026,6 +4335,7 @@ app.post('/api/admin/generate-temp-link', adminAuth, async (req, res) => {
                 maxUses: link.max_uses,
                 currentUses: link.current_uses,
                 isActive: link.is_active,
+                track: link.track,
                 createdAt: link.created_at
             }
         });
@@ -4068,6 +4378,7 @@ app.get('/api/admin/temp-links', adminAuth, async (req, res) => {
             maxUses: link.max_uses,
             currentUses: link.current_uses,
             isActive: link.is_active,
+            track: link.track,
             createdBy: link.created_by,
             createdAt: link.created_at,
             lastUsedAt: link.last_used_at,
@@ -4121,7 +4432,8 @@ app.get('/api/validate-temp-link/:token', async (req, res) => {
                 token: link.token,
                 maxUses: link.max_uses,
                 currentUses: link.current_uses,
-                remainingUses: link.max_uses - link.current_uses
+                remainingUses: link.max_uses - link.current_uses,
+                track: normalizeTrack(link.track)
             }
         });
     } catch (err) {
@@ -4352,6 +4664,9 @@ app.post('/api/auth/reset-password', async (req, res) => {
 app.post('/api/signup/free', async (req, res) => {
     try {
         const { email, password, otp_code } = req.body;
+        // Study track is chosen once, at signup. Anything unrecognised falls
+        // back to medical rather than failing the signup.
+        const track = normalizeTrack(req.body.track);
 
         if (!email || !password || !otp_code) {
             return res.status(400).json({
@@ -4405,9 +4720,9 @@ app.post('/api/signup/free', async (req, res) => {
 
             // Create the account (username = email for backward compat)
             const accountResult = await client.query(
-                `INSERT INTO accounts (username, email, password, isactive, logged, terms_accepted, email_verified) 
-                 VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
-                [lowerEmail, lowerEmail, lowerPassword, true, false, false, true]
+                `INSERT INTO accounts (username, email, password, isactive, logged, terms_accepted, email_verified, track)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
+                [lowerEmail, lowerEmail, lowerPassword, true, false, false, true, track]
             );
 
             const newUserId = accountResult.rows[0].id;
@@ -4416,7 +4731,7 @@ app.post('/api/signup/free', async (req, res) => {
             // daily cron). Best-effort: never fail signup if the email errors, and
             // mark it sent so the cron doesn't send a duplicate later.
             try {
-                await sendWelcomeEmail(lowerEmail, lowerEmail);
+                await sendWelcomeEmail(lowerEmail, lowerEmail, track);
                 await client.query(
                     'UPDATE accounts SET welcome_email_sent = TRUE, welcome_email_sent_at = NOW() WHERE id = $1',
                     [newUserId]
@@ -4461,6 +4776,7 @@ app.post('/api/signup/free', async (req, res) => {
                 success: true,
                 message: 'Account created successfully',
                 userId: newUserId,
+                track,
                 trial
             });
 
@@ -4567,17 +4883,20 @@ app.post('/api/signup/temp-link', async (req, res) => {
             // Accounts created via admin temp links are flagged for future
             // payment exemption (is_admin_created / account_type='admin_created').
             // Falls back to the legacy insert if migration 001 isn't applied yet.
+            // The link decides the track — an invite is issued for one cohort,
+            // so nothing the invitee sends can move them to the other bank.
+            const linkTrack = normalizeTrack(link.track);
             const columnsReady = await hasPaymentColumns();
             const accountResult = columnsReady
                 ? await client.query(
-                    `INSERT INTO accounts (username, email, password, isactive, logged, terms_accepted, email_verified, is_admin_created, account_type)
-                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
-                    [lowerEmail, lowerEmail, lowerPassword, true, false, false, true, true, 'admin_created']
+                    `INSERT INTO accounts (username, email, password, isactive, logged, terms_accepted, email_verified, is_admin_created, account_type, track)
+                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id`,
+                    [lowerEmail, lowerEmail, lowerPassword, true, false, false, true, true, 'admin_created', linkTrack]
                 )
                 : await client.query(
-                    `INSERT INTO accounts (username, email, password, isactive, logged, terms_accepted, email_verified)
-                     VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
-                    [lowerEmail, lowerEmail, lowerPassword, true, false, false, true]
+                    `INSERT INTO accounts (username, email, password, isactive, logged, terms_accepted, email_verified, track)
+                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
+                    [lowerEmail, lowerEmail, lowerPassword, true, false, false, true, linkTrack]
                 );
 
             const newUserId = accountResult.rows[0].id;
@@ -4607,8 +4926,8 @@ app.post('/api/signup/temp-link', async (req, res) => {
             // Send email notification to admin
             try {
                 const emailSubject = `🔗 Account Created via Temp Link - ${lowerEmail}`;
-                const emailText = `New account created via temp link:\nEmail: ${lowerEmail}\nUser ID: ${newUserId}\nLink Token: ${token}\nCreated: ${new Date().toLocaleString()}\nLink Usage: ${link.current_uses + 1}/${link.max_uses}`;
-                await sendEmail('muhmodalshraky3@gmail.com', emailSubject, emailText);
+                const emailText = `New account created via temp link:\nEmail: ${lowerEmail}\nUser ID: ${newUserId}\nTrack: ${trackLabelAr(linkTrack)}\nLink Token: ${token}\nCreated: ${new Date().toLocaleString()}\nLink Usage: ${link.current_uses + 1}/${link.max_uses}`;
+                await sendEmail(OWNER_EMAIL, emailSubject, emailText);
             } catch (emailError) {
                 console.error('Failed to send temp link account creation email:', emailError);
             }
@@ -4616,7 +4935,8 @@ app.post('/api/signup/temp-link', async (req, res) => {
             res.status(201).json({
                 success: true,
                 message: 'Account created successfully',
-                userId: newUserId
+                userId: newUserId,
+                track: linkTrack
             });
 
         } catch (error) {
@@ -4665,11 +4985,14 @@ app.get('/final-quiz/questions-count', requireSession, async (req, res) => {
     try {
         logger.debug('Fetching questions count for final quiz', { questionType, source });
 
+        const track = resolveContentTrack(req);
+        const sources = resolveSources(source, track);
         const result = await db.query(`
             SELECT COUNT(DISTINCT LOWER(TRIM(question_text)))::int AS total_questions
             FROM questions
-            WHERE question_type = $1 AND source = ANY($2::text[])
-        `, [questionType, resolveSources(source)]);
+            WHERE track = $1 AND question_type = $2
+              ${sources ? 'AND source = ANY($3::text[])' : ''}
+        `, sources ? [track, questionType, sources] : [track, questionType]);
 
         const totalQuestions = parseInt(result.rows[0].total_questions);
 
@@ -4707,6 +5030,8 @@ app.get('/final-quiz/questions', requireSession, subscriberOnly, async (req, res
         // instead of ORDER BY RANDOM() — that avoids making Postgres compute
         // and sort by a random key for every row just to reorder a set it has
         // to return in full regardless.
+        const track = resolveContentTrack(req);
+        const sources = resolveSources(source, track);
         const result = await db.query(`
             SELECT
                 id,
@@ -4719,8 +5044,9 @@ app.get('/final-quiz/questions', requireSession, subscriberOnly, async (req, res
                 question_type,
                 source
             FROM questions
-            WHERE question_type = $1 AND source = ANY($2::text[])
-        `, [questionType, resolveSources(source)]);
+            WHERE track = $1 AND question_type = $2
+              ${sources ? 'AND source = ANY($3::text[])' : ''}
+        `, sources ? [track, questionType, sources] : [track, questionType]);
 
         // The union of kept sources can contain the same recall twice; collapse
         // to one per normalized question text before shuffling.
@@ -5132,6 +5458,10 @@ app.use('/api/payment', (req, res, next) => { req.db = db; next(); }, paymentRou
 
 // Topic Summaries Routes (slide decks + study questions + reading progress)
 app.use('/api/summaries', (req, res, next) => { req.db = db; next(); }, summariesRouter);
+
+// Accounting (admin-only). Every money figure in the product resolves through
+// services/accountingService.js, which this router exposes.
+app.use('/api/accounting', (req, res, next) => { req.db = db; next(); }, accountingRouter);
 
 // Admin broadcast — compose one email and drip it to every user in small,
 // resumable batches. See routes/admin-broadcast.js for why it is queue-based.

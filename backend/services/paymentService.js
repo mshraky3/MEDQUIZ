@@ -18,13 +18,16 @@
 import axios from 'axios';
 import crypto from 'crypto';
 import { sendMail } from './mailer.js';
-import { computeFee } from './subscriptionReportService.js';
+import { computeFee, settleEvent } from './accountingService.js';
+import { sendInvoiceEmail } from './invoiceService.js';
+import { trackLabelAr, normalizeTrack } from '../config/tracks.js';
+import { OWNER_EMAIL } from '../config/recipients.js';
 
 const MOYASAR_API = 'https://api.moyasar.com/v1';
 
 // ── Owner notification: "payment received" ─────────────────────────────
 // Sent the moment a subscription payment is confirmed (webhook or /verify).
-const OWNER_EMAIL = 'alshraky3@gmail.com';
+// Recipient lives in config/recipients.js — one inbox for all owner mail.
 
 const sarFmt = (halalas) => (Number(halalas || 0) / 100).toFixed(2);
 
@@ -35,9 +38,14 @@ const sarFmt = (halalas) => (Number(halalas || 0) / 100).toFixed(2);
 async function notifyPaymentReceived(db, accountId, payment, expiryDate) {
     try {
         const acct = await db.query(
-            'SELECT username, email FROM accounts WHERE id = $1', [accountId]
+            'SELECT username, email, track FROM accounts WHERE id = $1', [accountId]
         );
         const who = acct.rows[0]?.email || acct.rows[0]?.username || `Account #${accountId}`;
+        // Which student population this sale came from — the two tracks are
+        // sold from the same page, so the track is the only thing that tells
+        // medical and nursing revenue apart in the inbox.
+        const trackKey = normalizeTrack(acct.rows[0]?.track);
+        const trackName = `${trackLabelAr(trackKey)} / ${trackKey}`;
         const gross = Number(payment?.amount) || 0;
         const { feeHalalas, estimated } = computeFee(payment, gross);
         const net = gross - feeHalalas;
@@ -46,8 +54,8 @@ async function notifyPaymentReceived(db, accountId, payment, expiryDate) {
         await sendMail({
             name: 'SQB Payments',
             to: OWNER_EMAIL,
-            subject: `💰 Payment received — ${sarFmt(gross)} SAR from ${who}`,
-            text: `Payment received\nFrom: ${who}\nGross: ${sarFmt(gross)} SAR\nFee${estimated ? ' (est.)' : ''}: ${sarFmt(feeHalalas)} SAR\nNet: ${sarFmt(net)} SAR\nCard: ${card}\nSubscription until: ${new Date(expiryDate).toISOString().slice(0, 10)}\nMoyasar ref: ${payment?.id || '—'}`,
+            subject: `💰 Payment received — ${sarFmt(gross)} SAR from ${who} [${trackKey}]`,
+            text: `Payment received\nFrom: ${who}\nTrack: ${trackName}\nGross: ${sarFmt(gross)} SAR\nFee${estimated ? ' (est.)' : ''}: ${sarFmt(feeHalalas)} SAR\nNet: ${sarFmt(net)} SAR\nCard: ${card}\nSubscription until: ${new Date(expiryDate).toISOString().slice(0, 10)}\nMoyasar ref: ${payment?.id || '—'}`,
             html: `
               <div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto">
                 <div style="background:linear-gradient(135deg,#059669,#047857);color:#fff;padding:16px 22px;border-radius:10px 10px 0 0">
@@ -56,6 +64,7 @@ async function notifyPaymentReceived(db, accountId, payment, expiryDate) {
                 <div style="border:1px solid #e5e7eb;border-top:none;padding:16px 22px;border-radius:0 0 10px 10px;font-size:14px">
                   <table style="width:100%;border-collapse:collapse">
                     <tr><td style="padding:5px 0;color:#374151">Subscriber</td><td style="font-weight:bold">${who}</td></tr>
+                    <tr><td style="padding:5px 0;color:#374151">Track</td><td style="font-weight:bold">${trackName}</td></tr>
                     <tr><td style="padding:5px 0;color:#374151">Gross</td><td style="font-weight:bold">${sarFmt(gross)} SAR</td></tr>
                     <tr><td style="padding:5px 0;color:#374151">Fee${estimated ? ' (estimated)' : ''}</td><td>${sarFmt(feeHalalas)} SAR</td></tr>
                     <tr><td style="padding:5px 0;color:#374151">Net</td><td style="font-weight:bold;color:#059669">${sarFmt(net)} SAR</td></tr>
@@ -205,17 +214,6 @@ function computeNewExpiry(currentExpiry) {
 export async function activateSubscriptionFromPayment(db, accountId, payment, eventType = 'payment_paid') {
     const gatewayRef = payment?.id || null;
 
-    if (gatewayRef) {
-        const existing = await db.query(
-            `SELECT id FROM payment_events
-             WHERE gateway_ref = $1 AND status = 'paid' LIMIT 1`,
-            [gatewayRef]
-        );
-        if (existing.rows.length > 0) {
-            return { activated: false, alreadyProcessed: true };
-        }
-    }
-
     const acctRes = await db.query(
         `SELECT id, subscription_expiry_date FROM accounts WHERE id = $1`,
         [accountId]
@@ -225,6 +223,35 @@ export async function activateSubscriptionFromPayment(db, accountId, payment, ev
         const err = new Error('Account not found for activation.');
         err.statusCode = 404;
         throw err;
+    }
+
+    // ── Claim the payment atomically ──────────────────────────────────────
+    // /verify (browser callback) and the webhook both call this, and they can
+    // arrive at the same instant. A SELECT-then-INSERT check would let both
+    // pass, extending the subscription twice and recording the money twice.
+    // The INSERT itself is the lock: a partial unique index on
+    // (gateway_ref) WHERE status='paid' means exactly one caller can insert,
+    // and only that caller gets a row back and proceeds.
+    const claim = await db.query(
+        `INSERT INTO payment_events
+            (account_id, event_type, gateway, gateway_ref, amount_halalas, currency, status, raw_payload)
+         VALUES ($1, $2, 'moyasar', $3, $4, $5, $6, $7)
+         ON CONFLICT (gateway_ref) WHERE status = 'paid' DO NOTHING
+         RETURNING id`,
+        [
+            accountId,
+            eventType,
+            gatewayRef,
+            payment?.amount ?? null,
+            payment?.currency ?? getCurrency(),
+            payment?.status ?? null,
+            JSON.stringify(payment ?? {}),
+        ]
+    );
+
+    if (claim.rows.length === 0) {
+        // Someone else already processed this payment.
+        return { activated: false, alreadyProcessed: true };
     }
 
     const newExpiry = computeNewExpiry(account.subscription_expiry_date);
@@ -237,26 +264,35 @@ export async function activateSubscriptionFromPayment(db, accountId, payment, ev
         [newExpiry, accountId]
     );
 
-    await db.query(
-        `INSERT INTO payment_events
-            (account_id, event_type, gateway, gateway_ref, amount_halalas, currency, status, raw_payload)
-         VALUES ($1, $2, 'moyasar', $3, $4, $5, $6, $7)`,
-        [
-            accountId,
-            eventType,
-            gatewayRef,
-            payment?.amount ?? null,
-            payment?.currency ?? getCurrency(),
-            payment?.status ?? null,
-            JSON.stringify(payment ?? {}),
-        ]
-    );
+    // Notifications run after the claim succeeded, so each fires exactly once
+    // per payment. Both are best-effort: neither may undo a completed payment.
+    const settled = settleEvent({
+        id: claim.rows[0].id,
+        account_id: accountId,
+        gateway_ref: gatewayRef,
+        amount_halalas: payment?.amount ?? 0,
+        currency: payment?.currency ?? getCurrency(),
+        received_at: new Date(),
+        raw_payload: payment ?? {},
+        username: null,
+        email: null,
+    });
 
-    // Tell the owner money arrived. Idempotency above guarantees this fires
-    // exactly once per payment even though /verify and the webhook both call.
+    try {
+        // The customer's own copy: their emailed PDF receipt.
+        const who = await db.query(
+            'SELECT email, username FROM accounts WHERE id = $1', [accountId]
+        );
+        settled.subscriber = who.rows[0]?.email || who.rows[0]?.username || null;
+        await sendInvoiceEmail(settled);
+    } catch (err) {
+        console.error('[payment] invoice email failed:', err.message);
+    }
+
+    // Tell the owner money arrived.
     await notifyPaymentReceived(db, accountId, payment, newExpiry);
 
-    return { activated: true, expiryDate: newExpiry };
+    return { activated: true, expiryDate: newExpiry, invoiceFor: settled.gatewayRef };
 }
 
 /**
@@ -309,6 +345,38 @@ export async function verifyAndActivate(db, paymentId, userId) {
 export async function handleWebhookEvent(db, payload) {
     const type = payload?.type;
     const payment = payload?.data;
+
+    // A refund must be reflected in the ledger. The payload we stored at
+    // payment time is a snapshot and will never show a later refund on its
+    // own, so refresh the stored row — otherwise accounting would keep
+    // reporting refunded money as revenue for good.
+    if (type === 'payment_refunded' || type === 'payment_voided') {
+        const ref = payment?.id;
+        if (!ref) return { handled: false, reason: 'no_payment_id' };
+        const upd = await db.query(
+            `UPDATE payment_events
+                SET raw_payload = $1
+              WHERE gateway_ref = $2 AND status = 'paid'
+              RETURNING account_id`,
+            [JSON.stringify(payment ?? {}), ref]
+        );
+        if (upd.rows.length === 0) {
+            return { handled: false, reason: 'unknown_payment' };
+        }
+        // A full refund ends access; a partial one leaves the subscription be.
+        const refunded = Number(payment?.refunded) || 0;
+        const amount = Number(payment?.amount) || 0;
+        if (amount > 0 && refunded >= amount) {
+            await db.query(
+                `UPDATE accounts
+                    SET subscription_status = 'refunded',
+                        subscription_expiry_date = NOW()
+                  WHERE id = $1`,
+                [upd.rows[0].account_id]
+            );
+        }
+        return { handled: true, type, refundedHalalas: refunded };
+    }
 
     if (type !== 'payment_paid') {
         return { handled: false, type: type || 'unknown' };

@@ -13,6 +13,7 @@
 import express from 'express';
 import { getObject, isR2Configured } from '../services/r2Service.js';
 import { isPaymentEnforcementEnabled, checkSubscriptionAccess } from '../services/paymentService.js';
+import { normalizeTrack } from '../config/tracks.js';
 
 const router = express.Router();
 
@@ -29,7 +30,7 @@ async function requireSession(req, res, next) {
     }
     try {
         const r = await req.db.query(
-            'SELECT id, session_token FROM accounts WHERE username = $1',
+            'SELECT id, session_token, track FROM accounts WHERE username = $1',
             [username]
         );
         if (!r.rows.length || r.rows[0].session_token !== sessionToken) {
@@ -37,6 +38,10 @@ async function requireSession(req, res, next) {
         }
         req.userId = r.rows[0].id;
         req.username = username;
+        // Summaries are track-segregated content. The track always comes from
+        // the account, never the request, so no caller can read the other
+        // track's decks by changing a parameter.
+        req.userTrack = normalizeTrack(r.rows[0].track);
         next();
     } catch (err) {
         console.error('[Summaries] session check failed:', err);
@@ -127,8 +132,9 @@ router.get('/', async (req, res) => {
             req.db.query(
                 `SELECT id, slug, title, title_en, question_type, description, page_count, sort_order,
                         (content_html IS NOT NULL) AS has_content
-                 FROM summaries WHERE is_published = TRUE
-                 ORDER BY sort_order ASC, id ASC`
+                 FROM summaries WHERE is_published = TRUE AND track = $1
+                 ORDER BY sort_order ASC, id ASC`,
+                [req.userTrack]
             ),
             req.db.query(
                 `SELECT summary_id, last_page, max_page_reached, completed
@@ -136,7 +142,9 @@ router.get('/', async (req, res) => {
                 [req.userId]
             ),
             req.db.query(
-                `SELECT question_type, COUNT(*)::int AS total FROM questions GROUP BY question_type`
+                `SELECT question_type, COUNT(*)::int AS total FROM questions
+                 WHERE track = $1 GROUP BY question_type`,
+                [req.userTrack]
             ),
         ]);
 
@@ -146,6 +154,7 @@ router.get('/', async (req, res) => {
         counts.rows.forEach((c) => { countBy[c.question_type] = c.total; });
 
         res.json({
+            track: req.userTrack,
             summaries: summaries.rows.map((s) => ({
                 ...s,
                 total_questions: countBy[s.question_type] || 0,
@@ -164,8 +173,8 @@ router.get('/:slug', async (req, res) => {
     try {
         const sres = await req.db.query(
             `SELECT id, slug, title, title_en, question_type, description, page_count, content_html
-             FROM summaries WHERE slug = $1 AND is_published = TRUE`,
-            [slug]
+             FROM summaries WHERE slug = $1 AND is_published = TRUE AND track = $2`,
+            [slug, req.userTrack]
         );
         if (!sres.rows.length) return res.status(404).json({ message: 'Summary not found' });
         const summary = sres.rows[0];
@@ -177,15 +186,15 @@ router.get('/:slug', async (req, res) => {
                 [req.userId, summary.id]
             ),
             req.db.query(
-                `SELECT COUNT(*)::int AS total FROM questions WHERE question_type = $1`,
-                [summary.question_type]
+                `SELECT COUNT(*)::int AS total FROM questions WHERE question_type = $1 AND track = $2`,
+                [summary.question_type, req.userTrack]
             ),
             req.db.query(
                 `SELECT COUNT(DISTINCT uqp.question_id)::int AS done
                  FROM user_question_progress uqp
                  JOIN questions q ON q.id = uqp.question_id
-                 WHERE uqp.user_id = $1 AND q.question_type = $2`,
-                [req.userId, summary.question_type]
+                 WHERE uqp.user_id = $1 AND q.question_type = $2 AND q.track = $3`,
+                [req.userId, summary.question_type, req.userTrack]
             ),
             req.db.query(
                 `SELECT total_answered, total_correct, accuracy
@@ -214,16 +223,16 @@ router.get('/:slug/questions', async (req, res) => {
     const { slug } = req.params;
     try {
         const sres = await req.db.query(
-            `SELECT question_type FROM summaries WHERE slug = $1 AND is_published = TRUE`,
-            [slug]
+            `SELECT question_type FROM summaries WHERE slug = $1 AND is_published = TRUE AND track = $2`,
+            [slug, req.userTrack]
         );
         if (!sres.rows.length) return res.status(404).json({ message: 'Summary not found' });
         const qtype = sres.rows[0].question_type;
 
         const qres = await req.db.query(
             `SELECT id, question_text, option1, option2, option3, option4, correct_option, source
-             FROM questions WHERE question_type = $1 ORDER BY id ASC`,
-            [qtype]
+             FROM questions WHERE question_type = $1 AND track = $2 ORDER BY id ASC`,
+            [qtype, req.userTrack]
         );
         res.json({ question_type: qtype, total: qres.rows.length, questions: qres.rows });
     } catch (err) {
@@ -241,8 +250,8 @@ router.get('/:slug/page/:n', async (req, res) => {
     }
     try {
         const sres = await req.db.query(
-            `SELECT r2_prefix, page_count FROM summaries WHERE slug = $1 AND is_published = TRUE`,
-            [slug]
+            `SELECT r2_prefix, page_count FROM summaries WHERE slug = $1 AND is_published = TRUE AND track = $2`,
+            [slug, req.userTrack]
         );
         if (!sres.rows.length) return res.status(404).json({ message: 'Summary not found' });
         const { r2_prefix, page_count } = sres.rows[0];
@@ -294,8 +303,8 @@ router.post('/:slug/progress', async (req, res) => {
     }
     try {
         const sres = await req.db.query(
-            `SELECT id, page_count FROM summaries WHERE slug = $1`,
-            [slug]
+            `SELECT id, page_count FROM summaries WHERE slug = $1 AND track = $2`,
+            [slug, req.userTrack]
         );
         if (!sres.rows.length) return res.status(404).json({ message: 'Summary not found' });
         const { id: summaryId, page_count: pageCount } = sres.rows[0];

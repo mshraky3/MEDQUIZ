@@ -1,6 +1,6 @@
 /**
  * Email Campaigns Routes
- * - Test routes: send to alshraky3@gmail.com for preview
+ * - Test routes: send to the owner's inbox for preview
  * - Cron routes: run daily/hourly to send campaigns to real users
  */
 
@@ -12,11 +12,17 @@ import {
     sendFeedbackEmail,
 } from '../services/userEmailService.js';
 import { maybeSendSubscriptionReport, sendSubscriptionReport } from '../services/subscriptionReportService.js';
+import { drainSendingCampaigns } from './admin-broadcast.js';
 import { adminAuth } from '../middleware/adminAuth.js';
+import { normalizeTrack } from '../config/tracks.js';
+import { OWNER_EMAIL } from '../config/recipients.js';
 
 const router = express.Router();
 
-const TEST_EMAIL = 'alshraky3@gmail.com';
+const TEST_EMAIL = OWNER_EMAIL;
+// Test routes accept ?track=nursing so both variants of every template can be
+// previewed in the inbox before a campaign goes out.
+const testTrack = (req) => normalizeTrack(req.query.track);
 const TEST_USERNAME = 'محمود';
 
 // ─── Cron auth middleware ──────────────────────────────────────────────────
@@ -31,13 +37,13 @@ const cronAuth = (req, res, next) => {
 };
 
 // ════════════════════════════════════════════════════════════
-//  TEST ROUTES  — always send to alshraky3@gmail.com
+//  TEST ROUTES  — always send to the owner's inbox
 // ════════════════════════════════════════════════════════════
 
 // GET /api/email-test/welcome
 router.get('/api/email-test/welcome', adminAuth, async (req, res) => {
     try {
-        await sendWelcomeEmail(TEST_EMAIL, TEST_USERNAME);
+        await sendWelcomeEmail(TEST_EMAIL, TEST_USERNAME, testTrack(req));
         res.json({ success: true, message: `Welcome email sent to ${TEST_EMAIL}` });
     } catch (err) {
         console.error('email-test/welcome error:', err);
@@ -48,7 +54,7 @@ router.get('/api/email-test/welcome', adminAuth, async (req, res) => {
 // GET /api/email-test/inactivity
 router.get('/api/email-test/inactivity', adminAuth, async (req, res) => {
     try {
-        await sendInactivityEmail(TEST_EMAIL, TEST_USERNAME);
+        await sendInactivityEmail(TEST_EMAIL, TEST_USERNAME, testTrack(req));
         res.json({ success: true, message: `Inactivity email sent to ${TEST_EMAIL}` });
     } catch (err) {
         console.error('email-test/inactivity error:', err);
@@ -60,7 +66,7 @@ router.get('/api/email-test/inactivity', adminAuth, async (req, res) => {
 router.get('/api/email-test/streak', adminAuth, async (req, res) => {
     const mockStreak = parseInt(req.query.streak) || 7;
     try {
-        await sendStreakReminderEmail(TEST_EMAIL, TEST_USERNAME, mockStreak);
+        await sendStreakReminderEmail(TEST_EMAIL, TEST_USERNAME, mockStreak, testTrack(req));
         res.json({ success: true, message: `Streak reminder sent to ${TEST_EMAIL} (streak=${mockStreak})` });
     } catch (err) {
         console.error('email-test/streak error:', err);
@@ -71,7 +77,7 @@ router.get('/api/email-test/streak', adminAuth, async (req, res) => {
 // GET /api/email-test/feedback
 router.get('/api/email-test/feedback', adminAuth, async (req, res) => {
     try {
-        await sendFeedbackEmail(TEST_EMAIL, TEST_USERNAME);
+        await sendFeedbackEmail(TEST_EMAIL, TEST_USERNAME, testTrack(req));
         res.json({ success: true, message: `Feedback email sent to ${TEST_EMAIL}` });
     } catch (err) {
         console.error('email-test/feedback error:', err);
@@ -93,7 +99,7 @@ router.get('/api/cron/welcome-emails', cronAuth, async (req, res) => {
     const db = req.db;
     try {
         const { rows } = await db.query(`
-            SELECT id, username, email
+            SELECT id, username, email, track
             FROM accounts
             WHERE welcome_email_sent = FALSE
               AND created_at < NOW() - INTERVAL '1 hour'
@@ -107,7 +113,7 @@ router.get('/api/cron/welcome-emails', cronAuth, async (req, res) => {
         const errors = [];
         for (const user of rows) {
             try {
-                await sendWelcomeEmail(user.email, user.username);
+                await sendWelcomeEmail(user.email, user.username, user.track);
                 await db.query(
                     `UPDATE accounts SET welcome_email_sent = TRUE, welcome_email_sent_at = NOW() WHERE id = $1`,
                     [user.id]
@@ -140,7 +146,7 @@ router.get('/api/cron/daily-emails', cronAuth, async (req, res) => {
     // ── 1. Inactivity ────────────────────────────────────────
     try {
         const { rows: inactive } = await db.query(`
-            SELECT id, username, email
+            SELECT id, username, email, track
             FROM accounts
             WHERE logged_date BETWEEN NOW() - INTERVAL '3 days' AND NOW() - INTERVAL '2 days'
               AND email IS NOT NULL
@@ -153,7 +159,7 @@ router.get('/api/cron/daily-emails', cronAuth, async (req, res) => {
 
         for (const user of inactive) {
             try {
-                await sendInactivityEmail(user.email, user.username);
+                await sendInactivityEmail(user.email, user.username, user.track);
                 await db.query(
                     `UPDATE accounts SET inactivity_email_sent_at = NOW() WHERE id = $1`,
                     [user.id]
@@ -170,7 +176,7 @@ router.get('/api/cron/daily-emails', cronAuth, async (req, res) => {
     // ── 2. Streak reminders ───────────────────────────────────
     try {
         const { rows: streakUsers } = await db.query(`
-            SELECT a.id, a.username, a.email, us.current_streak
+            SELECT a.id, a.username, a.email, a.track, us.current_streak
             FROM accounts a
             JOIN user_streaks us ON us.user_id = a.id
             WHERE us.last_active_date::date = CURRENT_DATE - 1
@@ -183,7 +189,7 @@ router.get('/api/cron/daily-emails', cronAuth, async (req, res) => {
 
         for (const user of streakUsers) {
             try {
-                await sendStreakReminderEmail(user.email, user.username, user.current_streak);
+                await sendStreakReminderEmail(user.email, user.username, user.current_streak, user.track);
                 results.streak++;
             } catch (err) {
                 results.errors.push({ job: 'streak', userId: user.id, error: err.message });
@@ -196,7 +202,7 @@ router.get('/api/cron/daily-emails', cronAuth, async (req, res) => {
     // ── 3. Feedback requests ──────────────────────────────────
     try {
         const { rows: feedbackUsers } = await db.query(`
-            SELECT id, username, email
+            SELECT id, username, email, track
             FROM accounts
             WHERE created_at < NOW() - INTERVAL '7 days'
               AND feedback_email_sent_at IS NULL
@@ -208,7 +214,7 @@ router.get('/api/cron/daily-emails', cronAuth, async (req, res) => {
 
         for (const user of feedbackUsers) {
             try {
-                await sendFeedbackEmail(user.email, user.username);
+                await sendFeedbackEmail(user.email, user.username, user.track);
                 await db.query(
                     `UPDATE accounts SET feedback_email_sent_at = NOW() WHERE id = $1`,
                     [user.id]
@@ -233,6 +239,17 @@ router.get('/api/cron/daily-emails', cronAuth, async (req, res) => {
         results.errors.push({ job: 'subscription_report', error: err.message });
     }
 
+    // ── 5. Broadcast campaigns ────────────────────────────────
+    // Push any campaign that is mid-send one batch further. A campaign spread
+    // over hours or days outlives the admin's browser tab, so it needs a
+    // scheduled nudge to finish on its own.
+    try {
+        results.broadcasts = await drainSendingCampaigns(db);
+    } catch (err) {
+        console.error('cron/daily-emails broadcast drain error:', err);
+        results.errors.push({ job: 'broadcast_drain', error: err.message });
+    }
+
     res.json({ success: true, ...results });
 });
 
@@ -252,6 +269,30 @@ router.get('/api/email-test/subscription-report', adminAuth, async (req, res) =>
         res.json({ success: true, ...result });
     } catch (err) {
         console.error('email-test/subscription-report error:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+/**
+ * GET /api/cron/broadcast-drain
+ *
+ * Advances every in-flight campaign by one batch. Separate from the daily job
+ * so it can be called as often as the pacing needs — a campaign spread over
+ * two days wants a nudge every few minutes, not once a day.
+ *
+ * Vercel's Hobby plan allows only two cron entries and both are taken, so
+ * point any external scheduler (cron-job.org, GitHub Actions, Uptime Robot)
+ * at this URL with `Authorization: Bearer $CRON_SECRET`. It is safe to call
+ * frequently: the pacing gate and the daily cap decide whether anything is
+ * actually due, and rows are claimed with SKIP LOCKED so overlapping calls
+ * can never mail the same person twice.
+ */
+router.get('/api/cron/broadcast-drain', cronAuth, async (req, res) => {
+    try {
+        const results = await drainSendingCampaigns(req.db);
+        res.json({ success: true, campaigns: results });
+    } catch (err) {
+        console.error('cron/broadcast-drain error:', err);
         res.status(500).json({ success: false, error: err.message });
     }
 });

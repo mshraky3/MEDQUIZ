@@ -1,10 +1,12 @@
 import express from 'express';
 import { adminAuth } from '../middleware/adminAuth.js';
 import { sendMail } from '../services/mailer.js';
+import { trackLabelAr, normalizeTrack, specialtyLabel } from '../config/tracks.js';
+import { OWNER_EMAIL } from '../config/recipients.js';
 
 const router = express.Router();
 
-const ADMIN_EMAIL = 'alshraky3@gmail.com';
+const ADMIN_EMAIL = OWNER_EMAIL;
 
 const sendEmail = async (to, subject, html) => {
     await sendMail({
@@ -31,18 +33,23 @@ router.post('/', async (req, res) => {
         );
         const reportId = insertRes.rows[0].id;
 
-        // Fetch question text for the notification email
+        // Fetch question text + which bank it belongs to, so the alert says
+        // whose content is being reported without a lookup in the panel.
         const qRes = await req.db.query(
-            `SELECT question_text FROM questions WHERE id = $1`,
+            `SELECT question_text, question_type, track FROM questions WHERE id = $1`,
             [question_id]
         );
         const questionText = qRes.rows[0]?.question_text || `Question ID: ${question_id}`;
+        const qTrack = normalizeTrack(qRes.rows[0]?.track);
+        const qTypeLabel = qRes.rows[0]?.question_type
+            ? specialtyLabel(qRes.rows[0].question_type)
+            : '—';
 
         // Notify admin
         try {
             await sendEmail(
                 ADMIN_EMAIL,
-                `🚩 New Question Report #${reportId}`,
+                `🚩 New Question Report #${reportId} — ${qTrack}`,
                 `<!DOCTYPE html>
 <html>
 <body style="margin:0;padding:0;background:#0b1021;font-family:'Segoe UI',Arial,sans-serif;">
@@ -60,6 +67,7 @@ router.post('/', async (req, res) => {
           <td style="padding:28px 32px 12px;">
             <p style="margin:0 0 6px;font-size:18px;color:#f8fafc;font-weight:700;">🚩 New Question Report</p>
             <p style="margin:0 0 20px;font-size:13px;color:#64748b;">Report #${reportId} — submitted by ${user_email}</p>
+            <p style="margin:-12px 0 20px;font-size:13px;color:#22d3ee;">المسار: ${trackLabelAr(qTrack)} (${qTrack}) · التخصص: ${qTypeLabel}</p>
             <div style="background:#0b1021;border:1px solid #1e293b;border-radius:8px;padding:16px;margin-bottom:16px;">
               <p style="margin:0 0 6px;font-size:11px;color:#475569;text-transform:uppercase;letter-spacing:1px;">Question</p>
               <p style="margin:0;color:#e2e8f0;font-size:14px;">${questionText}</p>

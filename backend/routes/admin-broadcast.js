@@ -32,12 +32,23 @@
  * Rows are claimed with FOR UPDATE SKIP LOCKED, so two overlapping /batch
  * calls (double-click, two tabs, cron racing the UI) can never send the same
  * person twice.
+ *
+ * ── Pacing (spread_hours) ─────────────────────────────────────────────────
+ * A campaign can be told to spread itself over a window of up to 48 hours.
+ * The batch endpoint then refuses to run ahead of schedule: it works out how
+ * many recipients *should* have been mailed by now (elapsed / window × total)
+ * and returns `waiting: true` with `nextEligibleAt` when that quota is already
+ * met. This is what keeps a large send inside a small daily allowance and
+ * spreads it across days instead of emptying the queue in one burst.
+ *
+ * spread_hours = 0 means "as fast as the daily cap and throttle allow".
  */
 
 import express from 'express';
 import crypto from 'crypto';
 import { adminAuth } from '../middleware/adminAuth.js';
 import { sendMail } from '../services/mailer.js';
+import { TRACK_KEYS, DEFAULT_TRACK, normalizeTrack } from '../config/tracks.js';
 
 const router = express.Router();
 
@@ -68,6 +79,8 @@ function ensureBroadcastSchema(db) {
                 finished_at TIMESTAMP
             )
         `);
+        // Spread window, in hours. 0 = send as fast as the cap allows.
+        await db.query(`ALTER TABLE broadcast_campaigns ADD COLUMN IF NOT EXISTS spread_hours INTEGER NOT NULL DEFAULT 0`);
         await db.query(`
             CREATE TABLE IF NOT EXISTS broadcast_recipients (
                 id SERIAL PRIMARY KEY,
@@ -118,6 +131,12 @@ async function subscriptionColumns(db) {
 async function audienceWhere(db, audience) {
     const cols = await subscriptionColumns(db);
     if (audience === 'all') return BASE_WHERE;
+    // Study-track audiences — the platform serves two student populations and
+    // most announcements are only relevant to one of them.
+    if (audience.startsWith('track:')) {
+        const track = normalizeTrack(audience.slice('track:'.length));
+        return `${BASE_WHERE} AND COALESCE(track, '${DEFAULT_TRACK}') = '${track}'`;
+    }
     if (!cols.status) throw new Error('This database has no subscription_status column — only the "all" audience is available.');
     const legacy = cols.grandfathered
         ? `(grandfathered_at IS NOT NULL OR subscription_status = 'grandfathered')`
@@ -132,7 +151,10 @@ async function audienceWhere(db, audience) {
     }
 }
 
-const AUDIENCES = ['all', 'paid', 'trial', 'legacy', 'free'];
+const AUDIENCES = [
+    'all', 'paid', 'trial', 'legacy', 'free',
+    ...TRACK_KEYS.map((t) => `track:${t}`),
+];
 
 // ─── Unsubscribe token ─────────────────────────────────────────────────────
 function unsubSecret() {
@@ -236,6 +258,9 @@ router.get('/audiences', adminAuth, async (req, res) => {
 router.post('/campaigns', adminAuth, async (req, res) => {
     const db = req.db;
     const { subject, bodyHtml, audience = 'all' } = req.body || {};
+    // Up to 2 days, as requested — long enough to trickle a big list past a
+    // small daily allowance without ever bursting.
+    const spreadHours = Math.max(0, Math.min(48, Number(req.body?.spreadHours) || 0));
     if (!subject || !String(subject).trim()) return res.status(400).json({ success: false, message: 'Subject is required.' });
     if (!bodyHtml || !String(bodyHtml).trim()) return res.status(400).json({ success: false, message: 'Body is required.' });
     if (!AUDIENCES.includes(audience)) return res.status(400).json({ success: false, message: 'Unknown audience.' });
@@ -243,8 +268,9 @@ router.post('/campaigns', adminAuth, async (req, res) => {
         await ensureBroadcastSchema(db);
         const where = await audienceWhere(db, audience);
         const { rows: [campaign] } = await db.query(
-            `INSERT INTO broadcast_campaigns (subject, body_html, audience) VALUES ($1, $2, $3) RETURNING *`,
-            [String(subject).trim(), String(bodyHtml), audience]
+            `INSERT INTO broadcast_campaigns (subject, body_html, audience, spread_hours)
+             VALUES ($1, $2, $3, $4) RETURNING *`,
+            [String(subject).trim(), String(bodyHtml), audience, spreadHours]
         );
         // DISTINCT ON collapses duplicate addresses so nobody is mailed twice.
         const { rowCount } = await db.query(`
@@ -349,6 +375,120 @@ router.post('/campaigns/:id/pause', adminAuth, (req, res) => setStatus(req, res,
 router.post('/campaigns/:id/cancel', adminAuth, (req, res) => setStatus(req, res, 'cancelled'));
 
 /**
+ * How many recipients this campaign is allowed to have sent by now.
+ *
+ * A campaign with `spread_hours = N` should be linearly through its list after
+ * N hours. If it is already at or ahead of that line, the caller waits; the
+ * returned `nextEligibleAt` says when the next recipient comes due, so the
+ * admin page (or a scheduler) knows exactly when to call again.
+ */
+async function pacingFor(db, campaign) {
+    const spread = Number(campaign.spread_hours) || 0;
+    if (spread <= 0) return { waiting: false, dueNow: BATCH_SIZE };
+
+    const { rows: [t] } = await db.query(
+        `SELECT COUNT(*)::int AS total,
+                COUNT(*) FILTER (WHERE status = 'sent')::int AS sent
+           FROM broadcast_recipients WHERE campaign_id = $1`,
+        [campaign.id]
+    );
+    const total = t.total || 0;
+    const sent = t.sent || 0;
+    if (total === 0) return { waiting: false, dueNow: BATCH_SIZE };
+
+    const startedAt = campaign.started_at ? new Date(campaign.started_at) : new Date();
+    const windowMs = spread * 3600 * 1000;
+    const elapsedMs = Date.now() - startedAt.getTime();
+
+    // Past the window: everything left is due.
+    if (elapsedMs >= windowMs) return { waiting: false, dueNow: BATCH_SIZE };
+
+    const shouldHaveSent = Math.floor((elapsedMs / windowMs) * total);
+    const dueNow = shouldHaveSent - sent;
+    if (dueNow > 0) return { waiting: false, dueNow };
+
+    // Nothing due yet — work out when recipient number (sent + 1) comes up.
+    const msPerRecipient = windowMs / total;
+    const nextAtMs = startedAt.getTime() + Math.ceil((sent + 1) * msPerRecipient);
+    return {
+        waiting: true,
+        dueNow: 0,
+        nextEligibleAt: new Date(nextAtMs).toISOString(),
+        reason: `Paced over ${spread}h — ${sent}/${total} sent. Next batch is due at `
+            + `${new Date(nextAtMs).toISOString().replace('T', ' ').slice(0, 16)} UTC.`,
+    };
+}
+
+/**
+ * Claim and send up to `take` recipients for one campaign.
+ *
+ * Extracted so the manual /batch route and the unattended cron drain share
+ * exactly one implementation — two copies of "who have we already mailed"
+ * logic is how people get emailed twice.
+ *
+ * Rows are claimed with FOR UPDATE SKIP LOCKED before any mail is sent, so
+ * overlapping callers can never pick the same person. Returns
+ * `{ drained: true }` when the queue is empty and the campaign was closed.
+ */
+async function sendOneBatch(db, c, take) {
+    const client = await db.connect();
+    let claimed = [];
+    try {
+        await client.query('BEGIN');
+        // Also reclaim anything left in 'sending' for over 5 minutes — that is
+        // a batch whose function was killed before it could finish.
+        const { rows } = await client.query(`
+            SELECT id, account_id, email, username FROM broadcast_recipients
+             WHERE campaign_id = $1
+               AND (status = 'pending'
+                    OR (status = 'sending' AND claimed_at < NOW() - INTERVAL '5 minutes'))
+             ORDER BY id LIMIT $2
+             FOR UPDATE SKIP LOCKED
+        `, [c.id, take]);
+        claimed = rows;
+        if (claimed.length) {
+            await client.query(
+                `UPDATE broadcast_recipients SET status = 'sending', claimed_at = NOW() WHERE id = ANY($1::int[])`,
+                [claimed.map((r) => r.id)]
+            );
+        }
+        await client.query('COMMIT');
+    } catch (e) {
+        await client.query('ROLLBACK');
+        throw e;
+    } finally {
+        client.release();
+    }
+
+    if (!claimed.length) {
+        await db.query(`UPDATE broadcast_campaigns SET status = 'done', finished_at = NOW() WHERE id = $1`, [c.id]);
+        return { sent: 0, failed: 0, drained: true };
+    }
+
+    let sent = 0, failed = 0;
+    for (let i = 0; i < claimed.length; i++) {
+        const r = claimed[i];
+        try {
+            await sendMail({
+                name: 'SQB',
+                to: r.email,
+                subject: c.subject,
+                html: renderEmail({ bodyHtml: c.body_html, accountId: r.account_id, username: r.username }),
+                text: htmlToText(c.body_html),
+            });
+            await db.query(`UPDATE broadcast_recipients SET status = 'sent', sent_at = NOW(), error = NULL WHERE id = $1`, [r.id]);
+            sent++;
+        } catch (err) {
+            await db.query(`UPDATE broadcast_recipients SET status = 'failed', error = $2 WHERE id = $1`, [r.id, String(err.message).slice(0, 500)]);
+            failed++;
+        }
+        // Space the sends out; no delay after the last one.
+        if (i < claimed.length - 1) await sleep(PER_EMAIL_DELAY_MS);
+    }
+    return { sent, failed, drained: false };
+}
+
+/**
  * Send ONE throttled batch. Call repeatedly until `done` is true.
  * This is the only route that actually sends to real users.
  */
@@ -362,6 +502,21 @@ router.post('/campaigns/:id/batch', adminAuth, async (req, res) => {
             return res.json({ success: true, done: true, stopped: true, reason: `Campaign is ${c.status}.`, progress: await progressFor(db, c.id) });
         }
 
+        // ── Pacing gate ──
+        // With a spread window set, only send what the schedule says is due by
+        // now. Without this the whole queue drains as fast as the caller polls,
+        // which is exactly the burst the daily cap and the domain reputation
+        // are trying to avoid.
+        const pace = await pacingFor(db, c);
+        if (pace.waiting) {
+            return res.json({
+                success: true, done: false, waiting: true,
+                reason: pace.reason,
+                nextEligibleAt: pace.nextEligibleAt,
+                progress: await progressFor(db, c.id),
+            });
+        }
+
         // Rolling 24h cap — hard stop before we touch the mailer.
         const used = await sentLast24h(db);
         const remainingQuota = DAILY_CAP - used;
@@ -373,62 +528,13 @@ router.post('/campaigns/:id/batch', adminAuth, async (req, res) => {
             });
         }
 
-        const take = Math.max(1, Math.min(BATCH_SIZE, remainingQuota));
+        // Never exceed the batch size, the remaining daily quota, or what the
+        // spread schedule says is due right now.
+        const take = Math.max(1, Math.min(BATCH_SIZE, remainingQuota, pace.dueNow || BATCH_SIZE));
 
-        // Claim rows so a concurrent call cannot pick the same people.
-        const client = await db.connect();
-        let claimed = [];
-        try {
-            await client.query('BEGIN');
-            // Also reclaim anything left in 'sending' for over 5 minutes — that
-            // is a batch whose function was killed before it could finish.
-            const { rows } = await client.query(`
-                SELECT id, account_id, email, username FROM broadcast_recipients
-                 WHERE campaign_id = $1
-                   AND (status = 'pending'
-                        OR (status = 'sending' AND claimed_at < NOW() - INTERVAL '5 minutes'))
-                 ORDER BY id LIMIT $2
-                 FOR UPDATE SKIP LOCKED
-            `, [c.id, take]);
-            claimed = rows;
-            if (claimed.length) {
-                await client.query(
-                    `UPDATE broadcast_recipients SET status = 'sending', claimed_at = NOW() WHERE id = ANY($1::int[])`,
-                    [claimed.map((r) => r.id)]
-                );
-            }
-            await client.query('COMMIT');
-        } catch (e) {
-            await client.query('ROLLBACK');
-            throw e;
-        } finally {
-            client.release();
-        }
-
-        if (!claimed.length) {
-            await db.query(`UPDATE broadcast_campaigns SET status = 'done', finished_at = NOW() WHERE id = $1`, [c.id]);
+        const { sent, failed, drained } = await sendOneBatch(db, c, take);
+        if (drained) {
             return res.json({ success: true, done: true, progress: await progressFor(db, c.id) });
-        }
-
-        let sent = 0, failed = 0;
-        for (let i = 0; i < claimed.length; i++) {
-            const r = claimed[i];
-            try {
-                await sendMail({
-                    name: 'SQB',
-                    to: r.email,
-                    subject: c.subject,
-                    html: renderEmail({ bodyHtml: c.body_html, accountId: r.account_id, username: r.username }),
-                    text: htmlToText(c.body_html),
-                });
-                await db.query(`UPDATE broadcast_recipients SET status = 'sent', sent_at = NOW(), error = NULL WHERE id = $1`, [r.id]);
-                sent++;
-            } catch (err) {
-                await db.query(`UPDATE broadcast_recipients SET status = 'failed', error = $2 WHERE id = $1`, [r.id, String(err.message).slice(0, 500)]);
-                failed++;
-            }
-            // Space the sends out; no delay after the last one.
-            if (i < claimed.length - 1) await sleep(PER_EMAIL_DELAY_MS);
         }
 
         const progress = await progressFor(db, c.id);
@@ -443,5 +549,43 @@ router.post('/campaigns/:id/batch', adminAuth, async (req, res) => {
         res.status(500).json({ success: false, message: err.message });
     }
 });
+
+/**
+ * Drain every campaign that is mid-send by one batch.
+ *
+ * This is what lets a paced campaign finish on its own: the admin page only
+ * drives batches while its tab is open, and a two-day spread obviously
+ * outlives that. Exported (rather than mounted here) so it can be wired into
+ * whatever scheduler is available — Vercel Hobby allows only two cron entries
+ * and both are already in use, so it is currently called from the existing
+ * daily cron, and can additionally be triggered by any external scheduler.
+ *
+ * Respects the same pacing gate and daily cap as the manual route: campaigns
+ * that are not due yet are skipped, not rushed.
+ */
+export async function drainSendingCampaigns(db, { maxCampaigns = 5 } = {}) {
+    await ensureBroadcastSchema(db);
+    const { rows: campaigns } = await db.query(
+        `SELECT * FROM broadcast_campaigns WHERE status = 'sending' ORDER BY id LIMIT $1`,
+        [maxCampaigns]
+    );
+
+    const out = [];
+    for (const c of campaigns) {
+        const used = await sentLast24h(db);
+        if (DAILY_CAP - used <= 0) {
+            out.push({ campaign: c.id, skipped: 'daily_cap' });
+            continue;
+        }
+        const pace = await pacingFor(db, c);
+        if (pace.waiting) {
+            out.push({ campaign: c.id, skipped: 'not_due', nextEligibleAt: pace.nextEligibleAt });
+            continue;
+        }
+        const result = await sendOneBatch(db, c, Math.min(BATCH_SIZE, DAILY_CAP - used, pace.dueNow || BATCH_SIZE));
+        out.push({ campaign: c.id, ...result });
+    }
+    return out;
+}
 
 export default router;

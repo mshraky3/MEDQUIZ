@@ -4,9 +4,8 @@
  */
 
 import { sendMail } from './mailer.js';
+import { developerEmails } from '../config/recipients.js';
 
-// Developer emails to notify
-const DEVELOPER_EMAILS = process.env.DEVELOPER_EMAILS?.split(',') || ['alshraky3@gmail.com'];
 
 // Rate limiting configuration
 const RATE_LIMIT = {
@@ -580,7 +579,8 @@ export async function sendErrorNotification(errorData) {
     // Send email
     await sendMail({
       name: 'SQB',
-      to: DEVELOPER_EMAILS.join(', '),
+      // Resolved per send (not at import time) so dotenv has already run.
+      to: developerEmails().join(', '),
       subject: subject,
       html: htmlContent
     });
