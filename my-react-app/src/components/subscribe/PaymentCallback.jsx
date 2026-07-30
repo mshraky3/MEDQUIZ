@@ -59,10 +59,13 @@ const PaymentCallback = () => {
 
         (async () => {
             try {
-                const { data } = await axios.post(`${Globals.URL}/api/payment/verify`, {
-                    paymentId,
-                    userId: user.id,
-                });
+                // The server derives the account from this session, so the
+                // credentials are required — a userId in the body is ignored.
+                const { data } = await axios.post(
+                    `${Globals.URL}/api/payment/verify`,
+                    { paymentId, username: user.username },
+                    { headers: { Authorization: `Bearer ${sessionToken}` } },
+                );
                 if (data.success) {
                     // Persist so RequireAuth lets the user into the app immediately.
                     setUser({ ...user, accessAllowed: true, subscription_status: 'active' }, sessionToken);

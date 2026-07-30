@@ -1,11 +1,17 @@
 // Learning-path layer over the summaries catalog.
 //
-// The catalog in ./content is a flat set of 4 specialties × N subtopics. This
-// module turns it into an ordered study path — milestones (specialties) made of
-// numbered steps (subtopics), with a checkpoint after each milestone — without
-// touching the content files themselves. Nothing here filters or hides content:
-// every step stays open at all times, the ordering is guidance only.
-import SECTIONS from './content/index.js';
+// The catalog in ./content is a flat set of specialties × N subtopics, one set
+// per study track. This module turns a track's set into an ordered study path —
+// milestones (specialties) made of numbered steps (subtopics), with a
+// checkpoint after each milestone — without touching the content files
+// themselves. Nothing here filters or hides content within a track: every step
+// stays open at all times, the ordering is guidance only.
+//
+// Use getPath(track). The result is built once per track and memoised, so the
+// (fairly expensive) reading-time estimate over ~800 KB of markup is not redone
+// on every render.
+import { sectionsFor } from './content/index.js';
+import { normalizeTrack } from '../../utils/tracks.js';
 
 /* ------------------------------------------------------------------ */
 /* Beginner-facing copy                                                */
@@ -111,13 +117,17 @@ const readingMinutes = (subtopic) => {
     return Math.max(3, Math.round(words / WORDS_PER_MIN + questions * MIN_PER_QUESTION));
 };
 
-/** "45 min" / "2h 10m" — used in the header and on milestone rows. */
+/**
+ * "45 دقيقة" / "2 س 10 د" — reading-time hint shown in the (Arabic) page
+ * chrome, so the units are Arabic too. The study material itself stays
+ * English; this is a UI label, not content.
+ */
 export const formatMinutes = (mins) => {
     if (!mins || mins < 1) return '—';
-    if (mins < 60) return `${mins} min`;
+    if (mins < 60) return `${mins} دقيقة`;
     const h = Math.floor(mins / 60);
     const m = mins % 60;
-    return m ? `${h}h ${m}m` : `${h}h`;
+    return m ? `${h} س ${m} د` : `${h} س`;
 };
 
 /* ------------------------------------------------------------------ */
@@ -152,9 +162,13 @@ const pickCheckQuestions = (subtopics, wanted = 3) => {
 /* The path                                                            */
 /* ------------------------------------------------------------------ */
 
-let stepNo = 0;
+const buildMilestones = (sections) => {
+    // Step numbers are global across the whole path, so the counter lives here
+    // (per build) rather than at module scope — otherwise building a second
+    // track's path would continue numbering from where the first one stopped.
+    let stepNo = 0;
 
-export const MILESTONES = SECTIONS.map((section, mIndex) => {
+    return sections.map((section, mIndex) => {
     const copy = MILESTONE_COPY[section.id] || {};
     const steps = section.subtopics.map((subtopic, i) => {
         stepNo += 1;
@@ -193,14 +207,45 @@ export const MILESTONES = SECTIONS.map((section, mIndex) => {
             questions: pickCheckQuestions(section.subtopics),
         },
     };
-});
+    });
+};
 
-export const STEPS = MILESTONES.flatMap((m) => m.steps);
-export const TOTAL_STEPS = STEPS.length;
-export const TOTAL_MINUTES = STEPS.reduce((n, s) => n + s.minutes, 0);
-export const TOTAL_QUESTIONS = STEPS.reduce((n, s) => n + s.questionCount, 0);
+const pathCache = new Map();
 
-export const STEP_BY_ID = STEPS.reduce((acc, s) => { acc[s.id] = s; return acc; }, {});
-export const MILESTONE_BY_ID = MILESTONES.reduce((acc, m) => { acc[m.id] = m; return acc; }, {});
+/**
+ * The guided path for one study track: milestones, flattened steps, totals and
+ * id lookups. A track with no authored summaries yet returns an empty but
+ * fully-shaped path (`milestones: []`, `totalSteps: 0`), so callers can render
+ * an empty state without special-casing null.
+ */
+export function getPath(track) {
+    const key = normalizeTrack(track);
+    if (pathCache.has(key)) return pathCache.get(key);
 
-export default MILESTONES;
+    const milestones = buildMilestones(sectionsFor(key));
+    const steps = milestones.flatMap((m) => m.steps);
+    const path = {
+        track: key,
+        milestones,
+        steps,
+        totalSteps: steps.length,
+        totalMinutes: steps.reduce((n, s) => n + s.minutes, 0),
+        totalQuestions: steps.reduce((n, s) => n + s.questionCount, 0),
+        stepById: steps.reduce((acc, s) => { acc[s.id] = s; return acc; }, {}),
+        milestoneById: milestones.reduce((acc, m) => { acc[m.id] = m; return acc; }, {}),
+        // Milestone boundaries as percentages along the header progress bar.
+        ticks: (() => {
+            const out = [];
+            let acc = 0;
+            milestones.forEach((m, i) => {
+                acc += m.steps.length;
+                if (i < milestones.length - 1) out.push({ id: m.id, pos: (acc / steps.length) * 100 });
+            });
+            return out;
+        })(),
+    };
+    pathCache.set(key, path);
+    return path;
+}
+
+export default getPath;

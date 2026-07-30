@@ -1,9 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import Icon from '../common/Icon.jsx';
 import Spinner from '../common/Spinner.jsx';
+import { UserContext } from '../../UserContext';
+import { userTrack } from '../../utils/tracks.js';
 import './Suggestions.css';
 
 const Suggestions = () => {
+    // Best-effort attribution — the page is reachable signed out.
+    const { user } = useContext(UserContext);
     const [form, setForm] = useState({
         category: 'feature',
         title: '',
@@ -56,7 +60,9 @@ const Suggestions = () => {
                     category: form.category,
                     title: form.title,
                     description: form.description,
-                    priority: form.priority
+                    priority: form.priority,
+                    track: user ? userTrack(user) : null,
+                    username: user?.username || null
                 })
             });
 

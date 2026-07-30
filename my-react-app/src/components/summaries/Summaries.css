@@ -947,32 +947,64 @@
 .sq-source { display: inline-block; margin-inline-start: 8px; color: #475569; font-size: 0.72rem; }
 @keyframes sq-reveal { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
 
-/* floating toolbar */
+/* ── Study toolbar: a vertical rail docked to the side ────────────────────
+   It used to sit across the bottom centre, where it covered the last lines of
+   every page and sat right where a thumb rests while reading. Docked to the
+   left edge and vertically centred it stays reachable without ever crossing
+   the reading column, which is capped at 920px and centred. */
 .summary-fab {
-    position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
-    display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center;
-    max-width: 94vw; background: rgba(255, 255, 255, 0.9); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
-    border: 1px solid #d4deee; border-radius: 16px; padding: 8px 12px;
+    position: fixed; left: 14px; top: 50%; transform: translateY(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    max-height: 90vh; overflow-y: auto;
+    background: rgba(255, 255, 255, 0.9); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+    border: 1px solid #d4deee; border-radius: 16px; padding: 12px 8px;
     box-shadow: 0 18px 44px rgba(37, 99, 235, 0.16); z-index: 60;
     animation: fab-pop 0.18s ease;
 }
-@keyframes fab-pop { from { opacity: 0; transform: translateX(-50%) translateY(8px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+@keyframes fab-pop { from { opacity: 0; transform: translateY(-50%) translateX(-8px); } to { opacity: 1; transform: translateY(-50%) translateX(0); } }
 
-/* collapsed trigger — a compact pill that opens the study toolbar on demand */
+/* Groups and separators run down the rail instead of across it. */
+.summary-fab .stb-group { flex-direction: column; }
+.summary-fab .stb-sep { width: 22px; height: 1px; }
+
+/* collapsed trigger — a compact pill on the same edge as the open rail */
 .summary-fab-toggle {
-    position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
-    display: inline-flex; align-items: center; gap: 8px;
-    height: 44px; padding: 0 18px;
+    position: fixed; left: 14px; top: 50%; transform: translateY(-50%);
+    display: inline-flex; flex-direction: column; align-items: center; gap: 4px;
+    width: 46px; padding: 12px 0;
     background: rgba(255, 255, 255, 0.92); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
-    border: 1px solid #d4deee; border-radius: 999px;
-    color: var(--accent); font-family: inherit; font-weight: 800; font-size: 0.85rem;
+    border: 1px solid #d4deee; border-radius: 14px;
+    color: var(--accent); font-family: inherit; font-weight: 800; font-size: 0.58rem;
     box-shadow: 0 12px 30px rgba(37, 99, 235, 0.18);
     cursor: pointer; z-index: 60;
     transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
-.summary-fab-toggle:hover { transform: translateX(-50%) translateY(-2px); box-shadow: 0 16px 36px rgba(37, 99, 235, 0.26); border-color: var(--accent); }
-.summary-fab-toggle:active { transform: translateX(-50%) scale(0.97); }
-.summary-fab-toggle .label { letter-spacing: 0.2px; }
+.summary-fab-toggle:hover { transform: translateY(-50%) translateX(2px); box-shadow: 0 16px 36px rgba(37, 99, 235, 0.26); border-color: var(--accent); }
+.summary-fab-toggle:active { transform: translateY(-50%) scale(0.97); }
+.summary-fab-toggle .label { letter-spacing: 0.2px; line-height: 1.15; text-align: center; }
+
+/* Narrow screens have no side gutter to spare: fall back to a horizontal bar
+   pinned to the bottom, which is the only place it doesn't steal read width. */
+@media (max-width: 720px) {
+    .summary-fab {
+        left: 50%; right: auto; top: auto; bottom: 14px;
+        transform: translateX(-50%);
+        flex-direction: row; flex-wrap: wrap; justify-content: center;
+        max-width: 94vw; max-height: none; padding: 8px 12px;
+    }
+    .summary-fab .stb-group { flex-direction: row; }
+    .summary-fab .stb-sep { width: 1px; height: 22px; }
+    @keyframes fab-pop { from { opacity: 0; transform: translateX(-50%) translateY(8px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
+    .summary-fab-toggle {
+        left: 50%; top: auto; bottom: 14px;
+        transform: translateX(-50%);
+        flex-direction: row; width: auto; height: 44px; padding: 0 18px;
+        gap: 8px; border-radius: 999px; font-size: 0.85rem;
+    }
+    .summary-fab-toggle:hover { transform: translateX(-50%) translateY(-2px); }
+    .summary-fab-toggle:active { transform: translateX(-50%) scale(0.97); }
+}
 
 /* collapse (hide) button distinguishes itself on hover */
 .stb-collapse:hover:not(:disabled) { border-color: #f43f5e; color: #dc2626; }
@@ -1770,3 +1802,108 @@
 @media (prefers-reduced-motion: reduce) {
     .algo-node, .algo-arrow, .algo-label { opacity: 1 !important; animation: none !important; }
 }
+
+/* ── Track with no authored summaries yet ─────────────────────────────────
+   Shown in place of the whole guided path when the signed-in student's track
+   has no content loaded. Arabic/RTL, since it is the only Arabic surface on an
+   otherwise English page — it speaks to the student, not to the material. */
+.summaries-hub .hub-comingsoon {
+    max-width: 560px;
+    margin: 56px auto;
+    padding: 34px 30px;
+    border-radius: 18px;
+    border: 1px solid var(--border-color, #e2e8f0);
+    background: var(--surface, #fff);
+    text-align: center;
+}
+
+.summaries-hub .hub-comingsoon-icon {
+    display: grid;
+    place-items: center;
+    width: 66px;
+    height: 66px;
+    margin: 0 auto 18px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, #f59e0b, #f97316);
+    color: #fff;
+}
+
+.summaries-hub .hub-comingsoon h1 {
+    margin: 0 0 12px;
+    font-size: 1.35rem;
+    font-weight: 800;
+    line-height: 1.5;
+    color: var(--text-dark, #0f1e3d);
+}
+
+.summaries-hub .hub-comingsoon p {
+    margin: 0 0 10px;
+    font-size: 0.95rem;
+    line-height: 1.9;
+    color: var(--text-medium, #475569);
+}
+
+.summaries-hub .hub-comingsoon-note {
+    margin-top: 16px !important;
+    padding-top: 14px;
+    border-top: 1px solid var(--border-color, #e2e8f0);
+    font-size: 0.86rem !important;
+    color: var(--muted, #64748b) !important;
+}
+
+/* The hub chrome is RTL Arabic while the study material stays English. These
+   keep mixed-direction lines (an Arabic sentence containing an English step
+   title) from breaking their alignment. */
+.summaries-hub[dir="rtl"] .hub-lead,
+.summaries-hub[dir="rtl"] .hub-head h1,
+.summaries-hub[dir="rtl"] .hub-eyebrow { text-align: right; }
+
+.summaries-hub[dir="rtl"] .hub-facts,
+.summaries-hub[dir="rtl"] .hub-track-top { justify-content: flex-start; }
+
+/* Authored English inside an Arabic block: isolate so punctuation and numbers
+   don't jump to the wrong end of the line. */
+.summaries-hub[dir="rtl"] [dir="ltr"] {
+    unicode-bidi: isolate;
+    text-align: left;
+}
+
+.hub-lead-note {
+    display: inline-block;
+    margin-inline-start: 4px;
+    font-size: 0.86em;
+    opacity: 0.75;
+}
+
+/* The study modal is a reading surface for English material — keep it LTR
+   regardless of the hub's direction. */
+.summary-panel { direction: ltr; }
+
+/* ── Deck blocks relocated next to their topic ────────────────────────────
+   Tables, algorithms and topic-cards used to be dumped in one trailing
+   "study deck" section, far from the heading they explain. They now sit at
+   the end of their own <h3> section; this wrapper gives them a little
+   separation from the prose above without turning into a second page. */
+.sum-doc .topic-deck {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin: 18px 0 26px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--border-color, #d4deee);
+}
+
+.sum-doc .topic-deck > *:first-child { margin-top: 0; }
+.sum-doc .topic-deck > *:last-child { margin-bottom: 0; }
+
+/* The h4 that labels a card group shouldn't read as a new major topic now
+   that it sits inside a section rather than in a flat list. */
+.sum-doc .topic-deck .deck-topic {
+    margin: 4px 0 0;
+    font-size: 0.98rem;
+    color: var(--text-medium, #475569);
+}
+
+/* What's left in the shared section is genuinely cross-topic, so it reads as
+   an appendix rather than the main event. */
+.sum-doc .deck-enrich { margin-top: 30px; }

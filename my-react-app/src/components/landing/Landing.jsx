@@ -5,7 +5,35 @@ import Icon from '../common/Icon.jsx';
 import HeroArt from './HeroArt.jsx';
 import InstallPrompt, { InstallGuideSection } from '../common/InstallPrompt.jsx';
 import { UserContext } from '../../UserContext';
+import { TRACKS, MEDICAL, NURSING } from '../../utils/tracks.js';
 import './Landing.css';
+
+/**
+ * The two student populations the platform serves. `ready` reflects whether the
+ * question bank for that track is loaded — it is stated plainly rather than
+ * hidden, so nobody subscribes expecting content that isn't there yet. Flip
+ * nursing to true the day its bank goes in.
+ */
+const studyTracks = [
+  {
+    key: MEDICAL,
+    icon: TRACKS[MEDICAL].icon,
+    title: 'طب بشري',
+    exam: TRACKS[MEDICAL].examAr,
+    desc: 'بنك أسئلة وملخصات كاملة للباطنة والجراحة والأطفال والنساء والولادة.',
+    specialties: TRACKS[MEDICAL].specialties.map((sp) => sp.labelAr),
+    ready: true,
+  },
+  {
+    key: NURSING,
+    icon: TRACKS[NURSING].icon,
+    title: 'تمريض',
+    exam: TRACKS[NURSING].examAr,
+    desc: 'مسار مستقل بأسئلته وملخصاته وتحليلات أدائه الخاصة — منفصل تماماً عن مسار الطب.',
+    specialties: TRACKS[NURSING].specialties.map((sp) => sp.labelAr),
+    ready: false,
+  },
+];
 
 const stats = [
   { label: 'محدّث لنمط الاختبار', value: '2026' },
@@ -271,8 +299,8 @@ const Landing = () => {
               </>
             ) : (
               <>
-                <span className="pill">منصة SMLE · جرّب كل شيء مجاناً لمدة ساعة</span>
-                <h1>تدرّب بذكاء، واجتَز اختبار SMLE بثقة</h1>
+                <span className="pill">مساران: طب بشري وتمريض · جرّب كل شيء مجاناً لمدة ساعة</span>
+                <h1>تدرّب بذكاء، واجتَز اختبار الترخيص بثقة</h1>
                 <p>
                   بنك أسئلة محدّث على نمط البرومترك، مع شرح سريري لكل إجابة وتحليل فوري يكشف نقاط ضعفك
                   ويرتّب أولويات مراجعتك — كل ما تحتاجه للوصول إلى درجتك المستهدفة في مكان واحد.
@@ -305,6 +333,45 @@ const Landing = () => {
                 <div className="stat-label">{item.label}</div>
               </article>
             ))}
+          </section>
+
+          {/* Two tracks, one platform. Placed high on the page so a nursing
+              student knows within seconds whether this is for them — and,
+              just as importantly, what the current state of their content is. */}
+          <section className="tracks-section" aria-labelledby="tracks-h">
+            <div className="section-head">
+              <p className="pill subtle">اختر مسارك عند التسجيل</p>
+              <h2 id="tracks-h">منصة واحدة، مساران منفصلان</h2>
+              <p>
+                نفس الأدوات ونفس الاشتراك — لكن الأسئلة والملخصات وتحليل الأداء
+                مفصولة بالكامل حسب مسارك، فلا ترى إلا ما يخصّ اختبارك.
+              </p>
+            </div>
+            <div className="tracks-grid">
+              {studyTracks.map((t) => (
+                <article key={t.key} className={`track-tile${t.ready ? '' : ' is-soon'}`}>
+                  <div className="track-tile-head">
+                    <span className="track-tile-icon"><Icon name={t.icon} size={22} /></span>
+                    <div>
+                      <h3>{t.title}</h3>
+                      <span className="track-tile-exam">{t.exam}</span>
+                    </div>
+                    <span className={`track-tile-badge${t.ready ? '' : ' is-soon'}`}>
+                      {t.ready ? 'متاح الآن' : 'المحتوى قيد الإعداد'}
+                    </span>
+                  </div>
+                  <p className="track-tile-desc">{t.desc}</p>
+                  <ul className="track-tile-specs">
+                    {t.specialties.map((sp) => <li key={sp}>{sp}</li>)}
+                  </ul>
+                  {!t.ready && (
+                    <p className="track-tile-note">
+                      يمكنك إنشاء حسابك على هذا المسار الآن، وسنبلغك بالبريد فور رفع المحتوى.
+                    </p>
+                  )}
+                </article>
+              ))}
+            </div>
           </section>
 
           <section className="feature-section">

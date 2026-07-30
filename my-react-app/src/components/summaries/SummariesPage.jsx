@@ -1,25 +1,25 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { findSubtopic } from './content/index.js';
-import MILESTONES, {
-    STEPS,
-    STEP_BY_ID,
-    TOTAL_STEPS,
-    TOTAL_MINUTES,
-    TOTAL_QUESTIONS,
-    formatMinutes,
-} from './pathMeta.js';
+import { getPath, formatMinutes } from './pathMeta.js';
 import QuestionCard from './QuestionCard.jsx';
 import PathCheckpoint from './PathCheckpoint.jsx';
 import SummaryAnnotation from './SummaryAnnotation.jsx';
 import Icon from '../common/Icon.jsx';
 import { UserContext } from '../../UserContext';
 import { safeGetItem, safeSetItem } from '../../utils/safeStorage.js';
+import { userTrack, trackLabel, examLabel } from '../../utils/tracks.js';
 import Globals from '../../global.js';
 import './Summaries.css';
 
 /**
- * Guided summaries learning path (English UI).
+ * Guided summaries learning path.
+ *
+ * Language: the page CHROME (headings, stats, progress, buttons, search) is
+ * Arabic/RTL to match the rest of the site; the study MATERIAL — step titles,
+ * milestone names, summaries and questions — stays English, since that is the
+ * language the content is authored and examined in. Elements that render
+ * authored content carry dir="ltr" so they read correctly inside Arabic text.
  *
  *  The path — ordered milestones (specialties) made of numbered steps
  *             (sub-topics), each with a checkpoint at the end. Every step shows
@@ -43,17 +43,6 @@ const TOOLS = [
 ];
 const COLORS = ['#2563eb', '#ef4444', '#16a34a', '#f59e0b', '#0f172a'];
 
-// Milestone boundaries as percentages along the header progress bar.
-const TRACK_TICKS = (() => {
-    const out = [];
-    let acc = 0;
-    MILESTONES.forEach((m, i) => {
-        acc += m.steps.length;
-        if (i < MILESTONES.length - 1) out.push({ id: m.id, pos: (acc / TOTAL_STEPS) * 100 });
-    });
-    return out;
-})();
-
 const EMPTY_PATH = { lastStepId: null, lastAt: 0, checkpoints: {} };
 
 const cx = (...parts) => parts.filter(Boolean).join(' ');
@@ -76,6 +65,24 @@ const enLabel = (item) => {
 const SummariesPage = () => {
     const { slug } = useParams();
     const { user, sessionToken } = useContext(UserContext);
+
+    // The guided path for this student's own track. `guide` is deliberately not
+    // called `path` — that name is already taken by the stored resume point
+    // below. getPath memoises per track, so this is a map lookup after the
+    // first render.
+    const myTrack = userTrack(user);
+    const guide = getPath(myTrack);
+    const {
+        milestones: MILESTONES,
+        steps: STEPS,
+        stepById: STEP_BY_ID,
+        totalSteps: TOTAL_STEPS,
+        totalMinutes: TOTAL_MINUTES,
+        totalQuestions: TOTAL_QUESTIONS,
+        ticks: TRACK_TICKS,
+    } = guide;
+    // A track whose summaries have not been authored yet.
+    const noContent = TOTAL_STEPS === 0;
     const [query, setQuery] = useState('');        // step search filter
     const [openSub, setOpenSub] = useState(null); // { section, subtopic }
     const [tab, setTab] = useState('summary');     // 'summary' | 'questions'
@@ -122,7 +129,10 @@ const SummariesPage = () => {
         const last = storedPath.lastStepId ? STEP_BY_ID[storedPath.lastStepId] : null;
         const focus = (last && !storedDone[last.id]) ? last : STEPS.find((s) => !storedDone[s.id]);
         setOpenMs(new Set([(focus || STEPS[0])?.milestoneId]));
-    }, [progressKey, pathKey]);
+        // myTrack, not STEPS/STEP_BY_ID: those are derived from it and are
+        // stable per track, so this is the dependency that actually changes.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [progressKey, pathKey, myTrack]);
 
     useEffect(() => () => clearTimeout(celebrateTimer.current), []);
 
@@ -247,11 +257,11 @@ const SummariesPage = () => {
     // Deep link → open the right milestone + sub-topic modal.
     useEffect(() => {
         if (!slug) return;
-        const hit = findSubtopic(slug);
+        const hit = findSubtopic(slug, myTrack);
         if (!hit) return;
         setOpenMs((prev) => new Set(prev).add(hit.section.id));
         if (hit.subtopic) openSubtopic(hit.section, hit.subtopic);
-    }, [slug]);
+    }, [slug, myTrack]);
 
     // Esc closes the modal; lock background scroll while it's open.
     useEffect(() => {
@@ -437,35 +447,59 @@ const SummariesPage = () => {
         );
     };
 
+    // A track with no authored summaries gets an honest placeholder instead of
+    // a study path with zero steps in it. Rendered before any of the path UI so
+    // none of the progress/resume machinery has to cope with an empty set.
+    if (noContent) {
+        return (
+            <div className="summaries-hub" dir="rtl">
+                <div className="hub-comingsoon">
+                    <span className="hub-comingsoon-icon" aria-hidden="true"><Icon name="hourglass" size={34} /></span>
+                    <h1>ملخصات مسار {trackLabel(myTrack)} قيد الإعداد</h1>
+                    <p>
+                        نعمل حالياً على تجهيز الملخصات المصوّرة الخاصة بـ{examLabel(myTrack)}،
+                        مرتّبة كمسار دراسي متسلسل تماماً كبقية المسارات.
+                    </p>
+                    <p className="hub-comingsoon-note">
+                        سنرسل لك بريداً فور جاهزيتها. في هذه الأثناء يمكنك متابعة التدرب على الأسئلة من صفحة الاختبارات.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <div className="summaries-hub" dir="ltr">
+        /* The page chrome is Arabic/RTL like the rest of the site. The study
+           material itself is English-only, so every element that renders
+           authored content carries dir="ltr" explicitly. */
+        <div className="summaries-hub" dir="rtl">
             {/* ---------------- header: what this path is, and where you are ------ */}
             <header className="hub-head">
-                <span className="hub-eyebrow"><Icon name="rocket" size={14} /> Guided study path</span>
-                <h1>Summaries, in the order to study them</h1>
+                <span className="hub-eyebrow"><Icon name="rocket" size={14} /> مسار مذاكرة مرتّب</span>
+                <h1>الملخصات، مرتّبة بترتيب دراستها</h1>
                 <p className="hub-lead">
-                    Every high-yield SMLE topic laid out as one path: <b>{MILESTONES.length} milestones</b>,{' '}
-                    <b>{TOTAL_STEPS} steps</b>, a checkpoint after each milestone. Read a step, test yourself,
-                    tick it off — and the path remembers where you stopped. No prior knowledge needed: start at
-                    Step 1 and follow the line.
+                    كل المواضيع عالية العائد في مسار واحد: <b>{MILESTONES.length} مراحل</b>،{' '}
+                    <b>{TOTAL_STEPS} خطوة</b>، ومحطة تقييم بعد كل مرحلة. اقرأ الخطوة، اختبر نفسك،
+                    ثم علّمها كمكتملة — والمسار يتذكّر أين توقفت. لا تحتاج أي خلفية مسبقة: ابدأ من
+                    الخطوة الأولى واتبع الخط. <span className="hub-lead-note">(محتوى الملخصات بالإنجليزية)</span>
                 </p>
 
                 <div className="hub-facts">
-                    <span className="hub-fact"><Icon name="flag" size={15} /><b>{MILESTONES.length}</b> milestones</span>
-                    <span className="hub-fact"><Icon name="book-open" size={15} /><b>{TOTAL_STEPS}</b> steps</span>
-                    <span className="hub-fact"><Icon name="clock" size={15} />≈<b>{formatMinutes(TOTAL_MINUTES)}</b> of reading</span>
-                    <span className="hub-fact"><Icon name="target" size={15} /><b>{TOTAL_QUESTIONS}</b> practice questions</span>
+                    <span className="hub-fact"><Icon name="flag" size={15} /><b>{MILESTONES.length}</b> مراحل</span>
+                    <span className="hub-fact"><Icon name="book-open" size={15} /><b>{TOTAL_STEPS}</b> خطوة</span>
+                    <span className="hub-fact"><Icon name="clock" size={15} />≈<b>{formatMinutes(TOTAL_MINUTES)}</b> قراءة</span>
+                    <span className="hub-fact"><Icon name="target" size={15} /><b>{TOTAL_QUESTIONS}</b> سؤال تدريبي</span>
                 </div>
 
                 {/* position on the path */}
                 <div className="hub-track">
                     <div className="hub-track-top">
                         <span className="hub-track-pos">
-                            {finished ? 'Path complete' : <>Step <b>{position}</b> of {TOTAL_STEPS}</>}
+                            {finished ? 'اكتمل المسار' : <>الخطوة <b>{position}</b> من {TOTAL_STEPS}</>}
                         </span>
                         <span className="hub-track-sep" aria-hidden="true">·</span>
-                        <span className="hub-track-pct"><b>{pct}%</b> complete</span>
-                        <span className="hub-track-done"><Icon name="check" size={12} /> {doneTotal} step{doneTotal !== 1 ? 's' : ''} done</span>
+                        <span className="hub-track-pct"><b>{pct}%</b> مكتمل</span>
+                        <span className="hub-track-done"><Icon name="check" size={12} /> {doneTotal} خطوة منجزة</span>
                     </div>
                     <div
                         className="hub-track-bar"
@@ -473,7 +507,7 @@ const SummariesPage = () => {
                         aria-valuenow={pct}
                         aria-valuemin={0}
                         aria-valuemax={100}
-                        aria-label="Learning path progress"
+                        aria-label="تقدّمك في مسار المذاكرة"
                     >
                         <div className="hub-track-fill" style={{ width: `${pct}%` }} />
                         {TRACK_TICKS.map((t) => (
@@ -506,9 +540,9 @@ const SummariesPage = () => {
                     <div className="hub-resume is-finished">
                         <span className="hub-resume-node"><Icon name="trophy" size={22} /></span>
                         <div className="hub-resume-text">
-                            <span className="hub-resume-kicker">Path complete</span>
-                            <strong className="hub-resume-title">All {TOTAL_STEPS} steps done</strong>
-                            <span className="hub-resume-why">Go back over any step below — everything stays open for revision.</span>
+                            <span className="hub-resume-kicker">اكتمل المسار</span>
+                            <strong className="hub-resume-title">أنجزت كل الخطوات ({TOTAL_STEPS})</strong>
+                            <span className="hub-resume-why">ارجع لأي خطوة بالأسفل — كل شيء يبقى مفتوحاً للمراجعة.</span>
                         </div>
                     </div>
                 ) : resumeStep && (
@@ -518,24 +552,24 @@ const SummariesPage = () => {
                         </span>
                         <div className="hub-resume-text">
                             <span className="hub-resume-kicker">
-                                {resuming ? 'Continue where you left off' : freshStart ? 'Start here' : 'Up next'}
+                                {resuming ? 'أكمل من حيث توقفت' : freshStart ? 'ابدأ من هنا' : 'التالي'}
                             </span>
                             <strong className="hub-resume-title">
-                                Step {resumeStep.no} · {resumeStep.title}
+                                الخطوة {resumeStep.no} · <span dir="ltr">{resumeStep.title}</span>
                             </strong>
-                            <span className="hub-resume-why">{resumeStep.why}</span>
+                            <span className="hub-resume-why" dir="ltr">{resumeStep.why}</span>
                             <span className="hub-resume-meta">
-                                {resumeStep.section.title} · ~{resumeStep.minutes} min
-                                {resumeStep.questionCount > 0 ? ` · ${resumeStep.questionCount} questions` : ''}
+                                <span dir="ltr">{resumeStep.section.title}</span> · ~{resumeStep.minutes} دقيقة
+                                {resumeStep.questionCount > 0 ? ` · ${resumeStep.questionCount} سؤال` : ''}
                             </span>
                         </div>
                         <div className="hub-resume-actions">
                             <button type="button" className="hub-resume-cta" onClick={() => openStep(resumeStep)}>
-                                {resuming ? 'Continue' : freshStart ? 'Start Step 1' : 'Continue'}
-                                <Icon name="chevron-right" size={17} />
+                                {resuming ? 'متابعة' : freshStart ? 'ابدأ الخطوة الأولى' : 'متابعة'}
+                                <Icon name="chevron-left" size={17} />
                             </button>
                             <button type="button" className="hub-resume-link" onClick={() => revealStep(resumeStep)}>
-                                Show it on the path
+                                أظهرها على المسار
                             </button>
                         </div>
                     </div>
@@ -547,13 +581,14 @@ const SummariesPage = () => {
                     <input
                         type="text"
                         className="hub-search-input"
-                        placeholder="Jump to a topic — e.g. asthma, DKA, breast cancer…"
+                        placeholder="ابحث عن موضوع — مثل asthma أو DKA أو breast cancer…"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
-                        aria-label="Search steps"
+                        aria-label="ابحث في الخطوات"
+                        dir="auto"
                     />
                     {query && (
-                        <button type="button" className="hub-search-clear" onClick={() => setQuery('')} aria-label="Clear search">
+                        <button type="button" className="hub-search-clear" onClick={() => setQuery('')} aria-label="مسح البحث">
                             <Icon name="x" size={16} />
                         </button>
                     )}
@@ -564,16 +599,16 @@ const SummariesPage = () => {
             {searching ? (
                 <div className="path-search">
                     <p className="path-search-head">
-                        {results.length} step{results.length !== 1 ? 's' : ''} match &ldquo;{query.trim()}&rdquo;
+                        {results.length} خطوة مطابقة لـ &ldquo;<span dir="ltr">{query.trim()}</span>&rdquo;
                         <button type="button" className="path-search-back" onClick={() => setQuery('')}>
-                            <Icon name="x" size={14} /> Back to the path
+                            <Icon name="x" size={14} /> العودة إلى المسار
                         </button>
                     </p>
                     {results.length === 0 ? (
                         <div className="hub-empty">
                             <Icon name="search" size={30} />
-                            <p>No steps match &ldquo;{query.trim()}&rdquo;.</p>
-                            <button type="button" className="hub-empty-clear" onClick={() => setQuery('')}>Clear search</button>
+                            <p>لا توجد خطوات مطابقة لـ &ldquo;<span dir="ltr">{query.trim()}</span>&rdquo;.</p>
+                            <button type="button" className="hub-empty-clear" onClick={() => setQuery('')}>مسح البحث</button>
                         </div>
                     ) : (
                         <ul className="path-search-list">
@@ -590,7 +625,7 @@ const SummariesPage = () => {
                                             <span className="search-step-node">
                                                 {state === 'done' ? <Icon name="check" size={13} /> : step.no}
                                             </span>
-                                            <span className="search-step-text">
+                                            <span className="search-step-text" dir="ltr">
                                                 <span className="search-step-title">{step.title}</span>
                                                 <span className="search-step-covers">{step.covers}</span>
                                             </span>
@@ -639,18 +674,18 @@ const SummariesPage = () => {
                                     >
                                         <span className="ms-head-main">
                                             <span className="ms-kicker">
-                                                Milestone {m.order} of {MILESTONES.length} · {m.tagline}
-                                                {isCurrent && <em className="ms-here">You are here</em>}
+                                                المرحلة {m.order} من {MILESTONES.length} · <span dir="ltr">{m.tagline}</span>
+                                                {isCurrent && <em className="ms-here">أنت هنا</em>}
                                             </span>
-                                            <span className="ms-title">
+                                            <span className="ms-title" dir="ltr">
                                                 <span className="ms-icon"><Icon name={m.icon} size={22} /></span>
                                                 {m.title}
                                             </span>
-                                            <span className="ms-goal">{m.goal}</span>
+                                            <span className="ms-goal" dir="ltr">{m.goal}</span>
                                             <span className="ms-meta">
-                                                <span><Icon name="book-open" size={13} /> {nTotal} steps</span>
+                                                <span><Icon name="book-open" size={13} /> {nTotal} خطوة</span>
                                                 <span><Icon name="clock" size={13} /> ≈{formatMinutes(m.minutes)}</span>
-                                                <span><Icon name="target" size={13} /> {m.questionCount} questions</span>
+                                                <span><Icon name="target" size={13} /> {m.questionCount} سؤال</span>
                                             </span>
                                         </span>
 
@@ -658,7 +693,7 @@ const SummariesPage = () => {
                                             <span className="ms-ring" style={{ '--p': msPct }}>
                                                 <i>{msPct}%</i>
                                             </span>
-                                            <span className="ms-count">{nDone}/{nTotal} done</span>
+                                            <span className="ms-count">{nDone}/{nTotal} منجزة</span>
                                             <span className={`ms-chev ${isOpen ? 'open' : ''}`} aria-hidden="true">▾</span>
                                         </span>
                                     </button>
@@ -689,11 +724,11 @@ const SummariesPage = () => {
                             <span className="path-node end-node" aria-hidden="true"><Icon name="trophy" size={18} /></span>
                         </div>
                         <div className="end-card">
-                            <h3>{finished ? 'You finished the path' : 'The finish line'}</h3>
+                            <h3>{finished ? 'أنهيت المسار' : 'خط النهاية'}</h3>
                             <p>
                                 {finished
-                                    ? `All ${TOTAL_STEPS} steps and ${MILESTONES.length} checkpoints are behind you. Come back to any step for revision — nothing closes.`
-                                    : `${TOTAL_STEPS - doneTotal} step${TOTAL_STEPS - doneTotal !== 1 ? 's' : ''} left. Keep going one step at a time — every step you tick moves the line.`}
+                                    ? `أنجزت كل الخطوات (${TOTAL_STEPS}) وكل محطات التقييم (${MILESTONES.length}). ارجع لأي خطوة للمراجعة — لا شيء يُغلق.`
+                                    : `تبقّت ${TOTAL_STEPS - doneTotal} خطوة. واصل خطوة بخطوة — كل خطوة تعلّمها تحرّك الخط للأمام.`}
                             </p>
                         </div>
                     </li>

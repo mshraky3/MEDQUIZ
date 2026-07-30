@@ -10,18 +10,14 @@ import Icon from '../common/Icon.jsx';
 import { UserContext } from '../../UserContext';
 import { getTypeLabel } from '../../utils/typeLabels';
 import { getSourceLabel } from '../../utils/sourceLabels';
+import { specialtyKeys, bankLabel, userTrack, trackLabel, examLabel } from '../../utils/tracks.js';
 
 // The whole bank is now a single unified source — "Midgard & GameBoy2026". There
 // is no source-selection step any more; every quiz is launched against this
-// sentinel and the backend resolves it to the full kept allowlist.
+// sentinel and the backend resolves it to the full kept allowlist. Tracks other
+// than medical have no retired collections, so the sentinel is simply ignored
+// for them and `track` alone selects the bank.
 const SOURCE = 'MidgardGameBoy';
-
-const availableTypes = [
-    'pediatric',
-    'obstetrics and gynecology',
-    'medicine',
-    'surgery'
-];
 
 const quizOptions = [10, 50, 'custom'];
 
@@ -41,6 +37,19 @@ const timerOptions = [
 const QuizLauncher = ({ id }) => {
     const { user, setUser, sessionToken } = useContext(UserContext);
     const navigate = useNavigate();
+
+    // The specialties offered are the ones belonging to this student's track.
+    // The server enforces the same restriction, so this only decides what the
+    // launcher *shows*.
+    const myTrack = userTrack(user);
+    const availableTypes = React.useMemo(() => specialtyKeys(myTrack), [myTrack]);
+
+    // Whether this track's bank has anything in it. The hub disables the entry
+    // points when it doesn't, but /quizs?view=custom is a real URL someone can
+    // land on directly (bookmark, back button), so the launcher checks for
+    // itself rather than offering a quiz that would come back empty.
+    // null = not known yet; treated as "has content" so nothing flashes.
+    const [bankEmpty, setBankEmpty] = useState(false);
 
     const [showTypeSelector, setShowTypeSelector] = useState(false);
     const [selectedTypes, setSelectedTypes] = useState([]);
@@ -93,6 +102,16 @@ const QuizLauncher = ({ id }) => {
             throw err;
         }
     };
+
+    useEffect(() => {
+        let alive = true;
+        if (!user || !sessionToken) return undefined;
+        protectedGet(`${Globals.URL}/api/track-content-status`)
+            .then((res) => { if (alive && res) setBankEmpty(!res.data.hasQuestions); })
+            .catch(() => { /* advisory only — never block the launcher on this */ });
+        return () => { alive = false; };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user?.username, sessionToken]);
 
     // ---- Regular quiz flow: size → type → timer ----
     const handleOptionClick = (num) => {
@@ -294,11 +313,28 @@ const QuizLauncher = ({ id }) => {
     const anyModalOpen = showTypeSelector || showTimerSelector || showCustomQuestions ||
         showFinalQuizType || showFinalQuizTime || showCongratulations;
 
+    if (bankEmpty) {
+        return (
+            <div dir="rtl">
+                <div className="quiz-main">
+                    <h1>أسئلة مسار {trackLabel(myTrack)} قيد الإعداد</h1>
+                    <p className="quiz-subtitle">
+                        نعمل حالياً على تجهيز بنك الأسئلة الخاص بـ{examLabel(myTrack)}.
+                        سنرسل لك بريداً فور جاهزيته.
+                    </p>
+                    <button className="quick-start-btn" onClick={() => navigate('/quizs')}>
+                        العودة إلى لوحتي
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div dir="rtl">
             <div className={`quiz-main${anyModalOpen ? ' is-dimmed' : ''}`}>
                 <h1>اختر اختبارك</h1>
-                <p className="quiz-subtitle">ابدأ سريعاً الآن أو خصّص الاختبار كما تريد — من بنك <bdi>Midgard &amp; GameBoy2026</bdi>.</p>
+                <p className="quiz-subtitle">ابدأ سريعاً الآن أو خصّص الاختبار كما تريد — من <bdi>{bankLabel(myTrack)}</bdi>.</p>
 
                 <button className="quick-start-btn" onClick={handleQuickStart}>
                     ابدأ سريعاً: 10 أسئلة مختلطة
@@ -333,7 +369,7 @@ const QuizLauncher = ({ id }) => {
                     <div className="custom-modal-content">
                         <h2>اختر نوع الأسئلة</h2>
                         <p className="source-info">
-                            <Icon name="book-open" size={16} /> البنك: <strong><bdi>{getSourceLabel(SOURCE)}</bdi></strong>
+                            <Icon name="book-open" size={16} /> البنك: <strong><bdi>{bankLabel(myTrack)}</bdi></strong>
                         </p>
                         <div className="custom-checkbox-group">
                             {availableTypes.map((type) => (

@@ -1,9 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import Icon from '../common/Icon.jsx';
 import Spinner from '../common/Spinner.jsx';
+import { UserContext } from '../../UserContext';
+import { userTrack } from '../../utils/tracks.js';
 import './Contact.css';
 
 const Contact = () => {
+    // The form is reachable while signed out, so this is best-effort: when we
+    // do know who is writing, tell the inbox which track they study — a
+    // "content is wrong" message means different things per track.
+    const { user } = useContext(UserContext);
 
     const [form, setForm] = useState({
         name: '',
@@ -46,7 +52,9 @@ const Contact = () => {
                     name: form.name,
                     mobile: form.mobile,
                     subject: form.subject || 'اتصال من SQB',
-                    message: form.message
+                    message: form.message,
+                    track: user ? userTrack(user) : null,
+                    username: user?.username || null
                 })
             });
 

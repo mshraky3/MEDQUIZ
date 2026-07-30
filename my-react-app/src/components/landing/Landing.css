@@ -1604,3 +1604,122 @@
     stroke-dashoffset: 0;
   }
 }
+/* ── Study tracks ─────────────────────────────────────────────────────────
+   The platform serves medical and nursing students from one deployment. This
+   section states that split high on the page, and — while a track's bank is
+   still being loaded — says so rather than implying content that isn't there. */
+.tracks-grid {
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+@media (max-width: 860px) {
+  .tracks-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.track-tile {
+  display: flex;
+  flex-direction: column;
+  padding: 24px 22px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card-grad);
+  box-shadow: var(--card-shadow);
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.track-tile:hover {
+  transform: translateY(-3px);
+  border-color: rgba(37, 99, 235, 0.35);
+}
+
+.track-tile.is-soon {
+  background: linear-gradient(165deg, #fffdf5 0%, #fef8e7 100%);
+  border-color: rgba(245, 158, 11, 0.34);
+}
+
+.track-tile-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.track-tile-icon {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, var(--accent-strong), var(--accent-3));
+  color: #fff;
+}
+
+.track-tile.is-soon .track-tile-icon {
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+}
+
+.track-tile-head h3 {
+  margin: 0 0 3px;
+  font-size: 19px;
+  color: #0f1e3d;
+}
+
+.track-tile-exam {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.track-tile-badge {
+  margin-inline-start: auto;
+  flex-shrink: 0;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  background: rgba(16, 185, 129, 0.14);
+  color: #047857;
+}
+
+.track-tile-badge.is-soon {
+  background: rgba(245, 158, 11, 0.18);
+  color: #92400e;
+}
+
+.track-tile-desc {
+  margin: 0 0 16px;
+  color: var(--muted);
+  line-height: 1.8;
+}
+
+.track-tile-specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.track-tile-specs li {
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  color: var(--dim);
+}
+
+.track-tile-note {
+  margin: 16px 0 0;
+  padding-top: 14px;
+  border-top: 1px dashed rgba(245, 158, 11, 0.4);
+  font-size: 13px;
+  line-height: 1.7;
+  color: #92400e;
+}

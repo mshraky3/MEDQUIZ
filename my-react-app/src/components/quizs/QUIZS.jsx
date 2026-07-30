@@ -11,17 +11,10 @@ import Icon from '../common/Icon.jsx';
 import QuizLauncher from './QuizLauncher.jsx';
 import { UserContext } from '../../UserContext';
 import { getTypeLabel } from '../../utils/typeLabels';
+import { specialtiesOf, userTrack, examLabel, bankLabel, trackLabel, normalizeTrack } from '../../utils/tracks.js';
 
 // Single unified bank — see QuizLauncher.jsx.
 const SOURCE = 'MidgardGameBoy';
-
-// Order matters: this is the display order of the mastery rows.
-const SPECIALTIES = [
-    { key: 'medicine', icon: 'stethoscope' },
-    { key: 'surgery', icon: 'scalpel' },
-    { key: 'pediatric', icon: 'baby' },
-    { key: 'obstetrics and gynecology', icon: 'venus' }
-];
 
 /**
  * The post-login home, built as a study dashboard rather than a menu of cards.
@@ -37,7 +30,7 @@ const SPECIALTIES = [
  * stop someone starting a quiz, so the header actions render regardless.
  */
 const QUIZS = () => {
-    const { user, sessionToken } = useContext(UserContext);
+    const { user, setUser, sessionToken } = useContext(UserContext);
     const navigate = useNavigate();
     const location = useLocation();
     // Resolve id from context first so a hard refresh (no router state) still works.
@@ -53,6 +46,15 @@ const QUIZS = () => {
     const [topics, setTopics] = useState([]);
     const [streak, setStreak] = useState(null);
     const [state, setState] = useState('loading'); // loading | ready | error
+    // Null until the content check lands. Drives the empty state shown while a
+    // track's bank is still being loaded — the nursing bank starts out empty,
+    // and a hub full of live-looking buttons that all lead to "0 questions"
+    // would be worse than saying so plainly.
+    const [content, setContent] = useState(null);
+
+    // Display order of the mastery rows: this student's own specialties.
+    const myTrack = userTrack(user);
+    const SPECIALTIES = React.useMemo(() => specialtiesOf(myTrack), [myTrack]);
 
     const protectedGet = async (url) => {
         if (!user || !sessionToken) throw new Error('Not authenticated');
@@ -75,12 +77,25 @@ const QUIZS = () => {
     const load = React.useCallback(async () => {
         if (!id || !user || !sessionToken) { setState('error'); return; }
         setState('loading');
-        const [analysisRes, streakRes, topicRes] = await Promise.allSettled([
+        const [analysisRes, streakRes, topicRes, contentRes] = await Promise.allSettled([
             protectedGet(`${Globals.URL}/user-analysis/${id}`),
             protectedGet(`${Globals.URL}/user-streaks/${id}`),
-            protectedGet(`${Globals.URL}/topic-analysis/user/${id}`)
+            protectedGet(`${Globals.URL}/topic-analysis/user/${id}`),
+            protectedGet(`${Globals.URL}/api/track-content-status`)
         ]);
         if (!aliveRef.current) return;
+        if (contentRes.status === 'fulfilled') {
+            setContent(contentRes.value.data);
+            // The server is the authority on which track this account is on.
+            // An admin can move an account at any time, and the stored session
+            // object would otherwise keep labelling the UI with the old track
+            // while the server serves content from the new one. Reconcile here,
+            // on the first authenticated request of the session.
+            const serverTrack = contentRes.value.data.track;
+            if (serverTrack && user && normalizeTrack(user.track) !== serverTrack) {
+                setUser({ ...user, track: serverTrack }, sessionToken);
+            }
+        }
         if (analysisRes.status === 'fulfilled') {
             const d = analysisRes.value.data;
             setStats({
@@ -92,7 +107,7 @@ const QUIZS = () => {
         if (streakRes.status === 'fulfilled') setStreak(streakRes.value.data.current_streak || 0);
         if (topicRes.status === 'fulfilled' && Array.isArray(topicRes.value.data)) setTopics(topicRes.value.data);
         setState(analysisRes.status === 'fulfilled' ? 'ready' : 'error');
-    }, [id, user, sessionToken]);
+    }, [id, user, setUser, sessionToken]);
 
     useEffect(() => { load(); }, [load]);
 
@@ -117,13 +132,20 @@ const QUIZS = () => {
     const hasHistory = !!stats && stats.total_quizzes > 0;
     const loading = state === 'loading';
 
-    // Per-specialty rows, always all four so the section never looks half-built.
+    // Every specialty in the track has a row, so the section never looks
+    // half-built. `available` marks the ones that actually have questions
+    // loaded — a specialty with none is shown, but not offered.
     const rows = SPECIALTIES.map(({ key, icon }) => {
         const hit = topics.find((t) => t.question_type === key);
         const answered = hit ? parseInt(hit.total_answered, 10) || 0 : 0;
         const accuracy = hit ? Math.round(parseFloat(hit.accuracy) || 0) : 0;
-        return { key, icon, label: getTypeLabel(key), answered, accuracy };
+        const available = !content || (content.questionsByType?.[key] || 0) > 0;
+        return { key, icon, label: getTypeLabel(key), answered, accuracy, available };
     });
+    // Content checks are advisory: until the request lands (or if it fails) we
+    // assume content exists rather than flashing an empty state at everyone.
+    const bankEmpty = content ? !content.hasQuestions : false;
+    const summariesEmpty = content ? !content.hasSummaries : false;
     const attempted = rows.filter((r) => r.answered > 0);
     const weakestKey = attempted.length >= 2
         ? attempted.reduce((a, b) => (a.accuracy <= b.accuracy ? a : b)).key
@@ -141,16 +163,20 @@ const QUIZS = () => {
         {
             key: 'summaries', tone: 'sum', icon: 'book-open', kicker: 'افهم',
             title: 'الملخصات',
-            desc: 'ملخصات مصوّرة بأشعة وصور طبية حقيقية لكل التخصصات.',
-            stat: 'الباطنة · الجراحة · الأطفال · النساء',
+            desc: 'ملخصات مصوّرة تغطي كل تخصصات مسارك.',
+            stat: summariesEmpty
+                ? 'قيد الإعداد'
+                : SPECIALTIES.map((sp) => getTypeLabel(sp.key)).join(' · '),
             cta: 'تصفّح الملخصات',
             onClick: () => navigate('/summaries')
         },
         {
             key: 'quiz', tone: 'quiz', icon: 'clipboard', kicker: 'ثبّت',
             title: 'الأسئلة',
-            desc: 'اختبارات تدريبية ونهائية من بنك Midgard & GameBoy2026.',
-            stat: hasHistory ? `${fmt(stats.total_quizzes)} اختبار مكتمل` : 'لم تبدأ بعد',
+            desc: `اختبارات تدريبية ونهائية من ${bankLabel(myTrack)}.`,
+            stat: bankEmpty
+                ? 'قيد الإعداد'
+                : (hasHistory ? `${fmt(stats.total_quizzes)} اختبار مكتمل` : 'لم تبدأ بعد'),
             cta: 'ابدأ اختبار',
             onClick: openLauncher
         },
@@ -167,7 +193,9 @@ const QUIZS = () => {
     // Where to point someone next: a new user starts by reading; once there is
     // history, a weak specialty is the highest-value place to practise;
     // otherwise send them to review the numbers.
-    const nextStep = !hasHistory ? 'summaries' : (weakestKey ? 'quiz' : 'analysis');
+    const nextStep = bankEmpty && summariesEmpty
+        ? null
+        : (!hasHistory ? (summariesEmpty ? 'quiz' : 'summaries') : (weakestKey ? 'quiz' : 'analysis'));
 
     const tiles = [
         { k: 'acc', icon: 'target', value: hasHistory ? `${Math.round(stats.avg_accuracy)}%` : '—', label: 'الدقة' },
@@ -184,17 +212,51 @@ const QUIZS = () => {
                     <p>جاهز لجلسة اليوم؟ ابدأ فوراً أو اختر تخصصاً تريد تقويته.</p>
                 </div>
                 <div className="hubx-actions">
-                    <button type="button" className="hubx-btn hubx-btn--primary" onClick={() => startQuiz('mix')}>
+                    <button
+                        type="button"
+                        className="hubx-btn hubx-btn--primary"
+                        onClick={() => startQuiz('mix')}
+                        disabled={bankEmpty}
+                    >
                         <Icon name="rocket" size={19} />
                         <span>ابدأ اختبار سريع</span>
-                        <small>١٠ أسئلة مختلطة</small>
+                        <small>{bankEmpty ? 'غير متاح بعد' : '١٠ أسئلة مختلطة'}</small>
                     </button>
-                    <button type="button" className="hubx-btn hubx-btn--ghost" onClick={openLauncher}>
+                    <button
+                        type="button"
+                        className="hubx-btn hubx-btn--ghost"
+                        onClick={openLauncher}
+                        disabled={bankEmpty}
+                    >
                         <Icon name="settings" size={17} />
                         <span>خصّص الاختبار</span>
                     </button>
                 </div>
             </header>
+
+            {/* A track whose bank hasn't been loaded yet says so, once, at the
+                top — rather than letting the student discover it by starting a
+                quiz that returns nothing. */}
+            {(bankEmpty || summariesEmpty) && (
+                <section className="hubx-notice" role="status">
+                    <span className="hubx-notice-icon" aria-hidden="true"><Icon name="hourglass" size={20} /></span>
+                    <div className="hubx-notice-body">
+                        <strong>
+                            {bankEmpty && summariesEmpty
+                                ? `محتوى مسار ${trackLabel(myTrack)} قيد الإعداد`
+                                : bankEmpty
+                                    ? `أسئلة مسار ${trackLabel(myTrack)} قيد الإعداد`
+                                    : `ملخصات مسار ${trackLabel(myTrack)} قيد الإعداد`}
+                        </strong>
+                        <span>
+                            نعمل على تجهيز المحتوى الخاص بـ{examLabel(myTrack)}.
+                            {!bankEmpty && ' الأسئلة متاحة الآن ويمكنك البدء فوراً.'}
+                            {!summariesEmpty && ' الملخصات متاحة الآن.'}
+                            {bankEmpty && summariesEmpty && ' سنعلمك بالبريد فور جاهزيته.'}
+                        </span>
+                    </div>
+                </section>
+            )}
 
             <nav className="hubx-journey" aria-labelledby="hubx-journey-h">
                 <div className="hubx-sec-head">
@@ -278,8 +340,13 @@ const QUIZS = () => {
                                         {loading ? <span className="hubx-skel" /> : started ? <><bdi>{fmt(r.answered)}</bdi> سؤال</> : 'لم تبدأ بعد'}
                                     </span>
                                     {isWeak && <span className="hubx-tag">أضعف تخصص</span>}
-                                    <button type="button" className="hubx-practise" onClick={() => startQuiz(r.key)}>
-                                        {started ? 'تدرّب' : 'ابدأ'}
+                                    <button
+                                        type="button"
+                                        className="hubx-practise"
+                                        onClick={() => startQuiz(r.key)}
+                                        disabled={!r.available}
+                                    >
+                                        {!r.available ? 'قريباً' : started ? 'تدرّب' : 'ابدأ'}
                                     </button>
                                 </li>
                             );

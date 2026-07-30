@@ -6,6 +6,7 @@ import { track } from '@vercel/analytics';
 import Globals from '../../global.js';
 import Spinner from '../common/Spinner.jsx';
 import { UserContext } from '../../UserContext';
+import { TRACKS, TRACK_KEYS, MEDICAL, normalizeTrack } from '../../utils/tracks.js';
 import '../login/Login.css';
 import './Signup.css';
 
@@ -25,6 +26,10 @@ const Signup = () => {
     const [trialGranted, setTrialGranted] = useState(false);
     const [tempLinkInfo, setTempLinkInfo] = useState(null);
     const [isTempLink, setIsTempLink] = useState(false);
+    // The study track this account is created on. Named studyTrack because
+    // `track` in this file is already the Vercel analytics function.
+    // Chosen once, here — afterwards only an admin can move an account.
+    const [studyTrack, setStudyTrack] = useState(MEDICAL);
     const navigate = useNavigate();
     const location = useLocation();
     const { token } = useParams();
@@ -42,6 +47,9 @@ const Signup = () => {
             if (response.data.valid) {
                 setTempLinkInfo(response.data.link);
                 setIsTempLink(true);
+                // An invite is issued for one cohort; the server ignores any
+                // track we send on this path, so mirror the link's own track.
+                setStudyTrack(normalizeTrack(response.data.link.track));
                 setError('');
             } else {
                 setError('Invalid or expired temporary link');
@@ -145,13 +153,21 @@ const Signup = () => {
             const endpoint = isTempLink ? '/api/signup/temp-link' : '/api/signup/free';
             const payload = isTempLink
                 ? { token, email: form.email.trim().toLowerCase(), password: form.password }
-                : { email: form.email.trim().toLowerCase(), password: form.password, otp_code: otpCode };
+                : {
+                    email: form.email.trim().toLowerCase(),
+                    password: form.password,
+                    otp_code: otpCode,
+                    track: studyTrack,
+                };
 
             const response = await axios.post(`${Globals.URL}${endpoint}`, payload);
 
             if (response.data.success) {
                 try {
-                    track('signup_success', { entryType: isTempLink ? 'temp-link' : 'free-account' });
+                    track('signup_success', {
+                        entryType: isTempLink ? 'temp-link' : 'free-account',
+                        studyTrack: response.data.track || studyTrack,
+                    });
                 } catch (trackError) {
                     console.debug('Analytics track skipped:', trackError);
                 }
@@ -284,6 +300,46 @@ const Signup = () => {
 
                     {step === 'credentials' ? (
                         <form onSubmit={handleCredentialsSubmit} className="login-form">
+                            {isTempLink ? (
+                                <div className="track-locked">
+                                    <Icon name={TRACKS[studyTrack].icon} size={18} />
+                                    <span>مسار الدراسة: <strong>{TRACKS[studyTrack].labelAr}</strong> — محدَّد مسبقاً في رابط الدعوة.</span>
+                                </div>
+                            ) : (
+                                <fieldset className="track-picker">
+                                    <legend className="track-picker-label">اختر مسارك الدراسي</legend>
+                                    <div className="track-options">
+                                        {TRACK_KEYS.map((key) => {
+                                            const t = TRACKS[key];
+                                            const selected = studyTrack === key;
+                                            return (
+                                                <label
+                                                    key={key}
+                                                    className={`track-option${selected ? ' is-selected' : ''}`}
+                                                >
+                                                    <input
+                                                        type="radio"
+                                                        name="studyTrack"
+                                                        value={key}
+                                                        checked={selected}
+                                                        onChange={() => setStudyTrack(key)}
+                                                    />
+                                                    <span className="track-option-icon" aria-hidden="true">
+                                                        <Icon name={t.icon} size={18} />
+                                                    </span>
+                                                    <span className="track-option-body">
+                                                        <span className="track-option-title">{t.labelAr}</span>
+                                                        <span className="track-option-desc">{t.blurbAr}</span>
+                                                    </span>
+                                                </label>
+                                            );
+                                        })}
+                                    </div>
+                                    <p className="track-picker-note">
+                                        أسئلتك وملخصاتك وتحليل أدائك ستكون خاصة بهذا المسار. لتغييره لاحقاً تواصل مع الدعم.
+                                    </p>
+                                </fieldset>
+                            )}
                             <div className="form-group">
                                 <label className="form-label" htmlFor="email">البريد الإلكتروني</label>
                                 <input
