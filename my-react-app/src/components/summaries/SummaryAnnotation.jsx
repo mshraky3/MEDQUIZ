@@ -66,6 +66,12 @@ const SummaryAnnotation = forwardRef(({ tool, color, containerRef }, ref) => {
         const dpr = window.devicePixelRatio || 1;
         const w = cont.clientWidth;
         const h = Math.max(cont.scrollHeight, cont.clientHeight);
+        // The canvas is an absolutely-positioned child of the observed
+        // container and is sized to its scroll height, so resizing it feeds
+        // straight back into the ResizeObserver. Bail out when nothing actually
+        // changed — otherwise the observer ping-pongs and the browser reports
+        // "ResizeObserver loop completed with undelivered notifications".
+        if (canvas.width === Math.floor(w * dpr) && canvas.height === Math.floor(h * dpr)) return;
         canvas.style.width = w + 'px';
         canvas.style.height = h + 'px';
         canvas.width = Math.floor(w * dpr);
@@ -76,12 +82,20 @@ const SummaryAnnotation = forwardRef(({ tool, color, containerRef }, ref) => {
     useEffect(() => {
         resize();
         const cont = containerRef.current;
-        const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(resize) : null;
+        // Never resize during observer delivery — defer to the next frame so
+        // the layout write lands outside the ResizeObserver callback.
+        let frame = 0;
+        const scheduleResize = () => {
+            if (frame) return;
+            frame = requestAnimationFrame(() => { frame = 0; resize(); });
+        };
+        const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(scheduleResize) : null;
         if (ro && cont) ro.observe(cont);
-        window.addEventListener('resize', resize);
+        window.addEventListener('resize', scheduleResize);
         return () => {
+            if (frame) cancelAnimationFrame(frame);
             if (ro) ro.disconnect();
-            window.removeEventListener('resize', resize);
+            window.removeEventListener('resize', scheduleResize);
         };
     }, [resize, containerRef]);
 
