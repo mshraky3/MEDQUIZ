@@ -1,6 +1,6 @@
 /**
  * Bulk insert January 2026 and February-April 2026 questions into the database.
- * Reads from JSON files in ../../JSON/January26/ and ../../JSON/Feb&Mar&April26/
+ * Reads from JSON files in ../../source-material/JSON/January26/ and ../../source-material/JSON/Feb&Mar&April26/
  * Maps source values: "January/26" -> "January25", "Feb&Mar&April/26" -> "FebMarApr25"
  * 
  * Usage:
@@ -50,13 +50,13 @@ const BATCH_SIZE = 100;
 const SOURCES = [
     {
         folderName: 'January26',
-        folderPath: path.join(__dirname, '..', '..', 'JSON', 'January26'),
+        folderPath: path.join(__dirname, '..', '..', 'source-material', 'JSON', 'January26'),
         sourceKey: 'January25',
         sourceValue: 'January/26'
     },
     {
         folderName: 'Feb&Mar&April26',
-        folderPath: path.join(__dirname, '..', '..', 'JSON', 'Feb&Mar&April26'),
+        folderPath: path.join(__dirname, '..', '..', 'source-material', 'JSON', 'Feb&Mar&April26'),
         sourceKey: 'FebMarApr25',
         sourceValue: 'Feb&Mar&April/26'
     }

@@ -1,6 +1,6 @@
 /**
  * Bulk insert December 2025 questions into the database.
- * Reads from all JSON files in ../../JSON/December/
+ * Reads from all JSON files in ../../source-material/JSON/December/
  * 
  * Usage:
  *   With DATABASE_URL:
@@ -45,7 +45,7 @@ const SOURCE_KEY = 'December25';
 const BATCH_SIZE = 100;
 
 async function main() {
-    const dirPath = path.join(__dirname, '..', '..', 'JSON', 'December');
+    const dirPath = path.join(__dirname, '..', '..', 'source-material', 'JSON', 'December');
 
     if (!fs.existsSync(dirPath)) {
         console.error(`ERROR: December directory not found at ${dirPath}`);

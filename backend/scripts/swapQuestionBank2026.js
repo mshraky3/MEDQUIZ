@@ -41,7 +41,7 @@ const BATCH = 200;
 
 const OLD_SOURCES = ['Midgard', 'GameBoy', 'general'];
 
-// New sources to insert: folder under JSON/ -> DB source key
+// New sources to insert: folder under source-material/JSON/ -> DB source key
 const NEW_SOURCES = [
     { folder: 'MidgardGameBoy', sourceKey: 'MidgardGameBoy' },
     { folder: 'May26', sourceKey: 'May26' },
@@ -60,7 +60,7 @@ const ALL_SESSION_SOURCES = [
 const VALID_TYPES = ['pediatric', 'obstetrics and gynecology', 'medicine', 'surgery'];
 
 function loadFolder(folder) {
-    const dir = path.join(__dirname, '..', '..', 'JSON', folder);
+    const dir = path.join(__dirname, '..', '..', 'source-material', 'JSON', folder);
     if (!fs.existsSync(dir)) return [];
     const files = fs.readdirSync(dir).filter(f => f.endsWith('.json'));
     let out = [];

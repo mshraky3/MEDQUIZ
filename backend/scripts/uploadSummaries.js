@@ -1,5 +1,5 @@
 /**
- * One-time: render the topic-summary PDFs in ../../summarys/ to per-page WebP
+ * One-time: render the topic-summary PDFs in ../../source-material/summarys/ to per-page WebP
  * images, upload them privately to R2, store the source PDF (never served), and
  * update the `summaries` table (page_count, r2_prefix). NEVER deployed/run on
  * serverless — run locally after the R2 keys are in backend/.env.
@@ -11,7 +11,7 @@
  * Usage (from backend/):
  *   node scripts/uploadSummaries.js                # render + upload to R2 + update DB
  *   node scripts/uploadSummaries.js --scale 2.5    # higher-res pages (default 2.0)
- *   node scripts/uploadSummaries.js --local        # render to summarys/_rendered/ only (no R2/DB)
+ *   node scripts/uploadSummaries.js --local        # render to source-material/summarys/_rendered/ only (no R2/DB)
  *
  * Deps (dev-only, install once): npm i -D pdfjs-dist @napi-rs/canvas sharp
  */
@@ -26,7 +26,7 @@ dotenv.config();
 const { Pool } = pg;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const SUMMARYS_DIR = path.join(__dirname, '..', '..', 'summarys');
+const SUMMARYS_DIR = path.join(__dirname, '..', '..', 'source-material', 'summarys');
 
 const args = process.argv.slice(2);
 const LOCAL_ONLY = args.includes('--local');
@@ -90,7 +90,7 @@ async function main() {
         r2 = await import('../services/r2Service.js');
         if (!r2.isR2Configured()) {
             console.error('ERROR: R2 not configured. Set R2_ENDPOINT/R2_ACCESS_KEY_ID/R2_SECRET_ACCESS_KEY in backend/.env,');
-            console.error('       or pass --local to render to summarys/_rendered/ without uploading.');
+            console.error('       or pass --local to render to source-material/summarys/_rendered/ without uploading.');
             process.exit(1);
         }
     }

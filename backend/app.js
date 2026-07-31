@@ -23,6 +23,7 @@ import {
     DEFAULT_TRACK, TRACK_KEYS, TRACKS, isValidTrack, normalizeTrack,
     specialtyKeys, trackLabelAr, trackForSpecialty,
 } from './config/tracks.js';
+import { SELECTABLE_SOURCES, resolveSources } from './config/sources.js';
 
 dotenv.config();
 // Logging configuration
@@ -2173,10 +2174,15 @@ app.get('/api/all-questions', adminOrSubscriber, async (req, res) => {
 app.get('/api/track-content-status', requireSession, async (req, res) => {
     try {
         const track = resolveContentTrack(req);
-        const [byType, summaryCount] = await Promise.all([
+        const [byType, bySource, summaryCount] = await Promise.all([
             db.query(
                 `SELECT question_type, COUNT(*)::int AS total
                  FROM questions WHERE track = $1 GROUP BY question_type`,
+                [track]
+            ),
+            db.query(
+                `SELECT source, COUNT(*)::int AS total
+                 FROM questions WHERE track = $1 GROUP BY source`,
                 [track]
             ),
             db.query(
@@ -2193,10 +2199,23 @@ app.get('/api/track-content-status', requireSession, async (req, res) => {
             totalQuestions += r.total;
         });
 
+        // The collections this track can actually be narrowed to, each with its
+        // live count. Derived from the rows themselves rather than a constant,
+        // so the launcher never offers a collection that would come back empty
+        // (and starts offering one the moment its questions are uploaded).
+        const countBySource = {};
+        bySource.rows.forEach((r) => { countBySource[r.source] = r.total; });
+        const selectableSources = (SELECTABLE_SOURCES[track] || [])
+            .filter((s) => (countBySource[s] || 0) > 0)
+            .map((s) => ({ key: s, total: countBySource[s] }));
+
         res.json({
             track,
             specialties: specialtyKeys(track),
             questionsByType,
+            // Only meaningful when there is more than one — a single collection
+            // is "the bank" and the client skips the choice.
+            selectableSources,
             totalQuestions,
             totalSummaries: summaryCount.rows[0].total,
             hasQuestions: totalQuestions > 0,
@@ -2278,31 +2297,9 @@ app.get('/user-streaks/:user_id', requireSession, async (req, res) => {
     }
 });
 
-// ==================== UNIFIED QUESTION BANK ("Midgard & GameBoy2026") ====================
-// After the 2025 cleanup these are the only sources we ever serve. A request for
-// a removed 2025 collection or the unified-bank sentinel resolves to this whole
-// allowlist, so deleted content can never leak — even before the DB deletion
-// script has been run in a given environment.
-const KEPT_SOURCES = ['MidgardGameBoy', 'January25', 'FebMarApr25', 'May26', 'June26'];
-const UNIFIED_BANK = 'MidgardGameBoy'; // sentinel the client sends for "the bank"
-
-// Resolve a requested `source` query param to the set of sources to query.
-// A specific, still-valid collection is honored alone; the sentinel, 'mix',
-// absent, or any removed/unknown source resolves to the full kept allowlist.
-//
-// The allowlist exists only to keep the deleted 2025 MEDICAL collections from
-// leaking back. Other tracks have no such history, so they are constrained by
-// `track` alone — returning null means "add no source condition", which also
-// means a new bank's questions are servable the moment they are uploaded,
-// whatever `source` label they carry.
-function resolveSources(sourceParam, track = DEFAULT_TRACK) {
-    if (normalizeTrack(track) !== DEFAULT_TRACK) return null;
-    if (sourceParam && sourceParam !== 'mix' && sourceParam !== UNIFIED_BANK
-        && KEPT_SOURCES.includes(sourceParam)) {
-        return [sourceParam];
-    }
-    return KEPT_SOURCES;
-}
+// ==================== QUESTION BANK ====================
+// Source (collection) resolution lives in config/sources.js — see that file for
+// why medical uses a kept-source allowlist and nursing does not.
 
 // De-duplicate rows by normalized question text. The same recall can exist under
 // both the main bank and a monthly collection; unioning sources would otherwise

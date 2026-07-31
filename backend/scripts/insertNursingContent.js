@@ -150,7 +150,7 @@ const DECKS = [
 const VALID_TYPES = specialtyKeys(NURSING);
 
 function loadQuestions() {
-    const dir = path.join(__dirname, '..', '..', 'JSON', 'Nursing');
+    const dir = path.join(__dirname, '..', '..', 'source-material', 'JSON', 'Nursing');
     if (!fs.existsSync(dir)) {
         console.error(`ERROR: question folder not found at ${dir}`);
         process.exit(1);

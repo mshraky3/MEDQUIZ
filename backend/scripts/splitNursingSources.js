@@ -13,7 +13,7 @@
  *   NursingConfirmed    — Q1165–1456, the block added in the September edition
  *
  * The classification itself is not recomputed here: it lives in the bank file
- * (JSON/Nursing/nursingBank.json), where every question carries its `source`.
+ * (source-material/JSON/Nursing/nursingBank.json), where every question carries its `source`.
  * This script just pushes that field onto the rows already in the DB, matching
  * on question_text within track='nursing' the same way the importer de-dupes.
  *
@@ -70,7 +70,7 @@ const ALL_SESSION_SOURCES = [
 ];
 
 function loadBank() {
-    const file = path.join(__dirname, '..', '..', 'JSON', 'Nursing', 'nursingBank.json');
+    const file = path.join(__dirname, '..', '..', 'source-material', 'JSON', 'Nursing', 'nursingBank.json');
     if (!fs.existsSync(file)) {
         console.error(`ERROR: bank file not found at ${file}`);
         process.exit(1);
