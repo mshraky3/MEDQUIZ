@@ -8,6 +8,8 @@ export const SOURCE_LABELS = {
     FebMarApr25: 'فبراير – مارس – أبريل 2026',
     May26: 'مايو 2026',
     June26: 'يونيو 2026',
+    // nursing track
+    NursingEMS: 'الأسئلة المؤكدة والأكثر تكراراً',
     // legacy — retired from the bank but present in old sessions
     October25: 'أكتوبر 2025',
     November25: 'نوفمبر 2025',

@@ -33,9 +33,9 @@ export const TRACKS = {
         key: NURSING,
         labelAr: 'تمريض',
         labelEn: 'Nursing',
-        examAr: 'اختبار الترخيص للتمريض',
+        examAr: 'اختبار SNLE للتمريض',
         blurbAr: 'مسار التمريض: الأساسيات، الباطني والجراحي، الأمومة، الأطفال، الصحة النفسية والأدوية.',
-        bankAr: 'بنك أسئلة التمريض',
+        bankAr: 'الأسئلة المؤكدة والأكثر تكراراً',
         icon: 'shield-check',
         specialties: [
             { key: 'nursing fundamentals', labelAr: 'أساسيات التمريض', icon: 'shield-check' },
