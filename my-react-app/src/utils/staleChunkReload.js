@@ -19,6 +19,10 @@ const STALE_CHUNK_PATTERNS = [
     'importing a module script failed',
     'chunkloaderror',
     'loading chunk',
+    // Safari/WebKit phrasing for the same failure: a lazy-loaded chunk
+    // resolved to something without a usable default export (stale asset
+    // hash after a deploy, or a 404 page served in place of the JS module).
+    '_result.default',
 ];
 
 export function isStaleChunkError(message) {
