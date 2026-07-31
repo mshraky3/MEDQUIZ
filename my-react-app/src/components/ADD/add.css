@@ -1172,6 +1172,96 @@
     color: #7c3aed;
 }
 
+/* ── Subscription + origin columns ────────────────────────────────────────
+   The commercial read of a row: is this account paying, and did a student
+   create it or did we. */
+.user-email {
+    font-size: 11px;
+    color: #64748b;
+    word-break: break-all;
+}
+
+.plan-cell,
+.origin-cell {
+    min-width: 150px;
+}
+
+.plan-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+}
+
+.plan-badge--paid {
+    background: rgba(22, 163, 74, 0.16);
+    color: #15803d;
+}
+
+.plan-badge--trial {
+    background: rgba(234, 179, 8, 0.18);
+    color: #a16207;
+}
+
+.plan-badge--free {
+    background: rgba(100, 116, 139, 0.16);
+    color: #475569;
+}
+
+.plan-badge--expired {
+    background: rgba(239, 68, 68, 0.16);
+    color: #b91c1c;
+}
+
+.plan-badge--legacy {
+    background: rgba(124, 58, 237, 0.16);
+    color: #6d28d9;
+}
+
+.plan-detail {
+    margin-top: 4px;
+    font-size: 11px;
+    color: #64748b;
+    line-height: 1.5;
+}
+
+/* Loud on purpose: this form mints accounts that never pay. */
+.add-user-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 0 0 16px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: rgba(124, 58, 237, 0.1);
+    border: 1px solid rgba(124, 58, 237, 0.3);
+    color: #5b21b6;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.origin-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+.origin-badge.admin {
+    background: rgba(37, 99, 235, 0.14);
+    color: #1d4ed8;
+}
+
+.origin-badge.self {
+    background: rgba(13, 148, 136, 0.16);
+    color: #0f766e;
+}
+
 .action-btn.track-btn:hover:not(:disabled) {
     background: rgba(124, 58, 237, 0.12);
 }

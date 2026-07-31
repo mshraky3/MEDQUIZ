@@ -109,7 +109,7 @@ const Navbar = () => {
               <Link to={homePath} className="nav-link" onClick={() => setMenuOpen(false)}>الرئيسية</Link>
               <Link to="/analysis" className="nav-link" onClick={() => setMenuOpen(false)}>التحليل</Link>
               <Link to="/wrong-questions" className="nav-link" onClick={() => setMenuOpen(false)}>أسئلتي الخاطئة</Link>
-              <Link to="/summaries" className="nav-link" onClick={() => setMenuOpen(false)}>الملخصات</Link>
+              <Link to="/summaries" className="nav-link" onClick={() => setMenuOpen(false)}>المحتوى الدراسي</Link>
               <Link to="/contact" className="nav-link" onClick={() => setMenuOpen(false)}>تواصل معنا</Link>
             </>
           ) : (

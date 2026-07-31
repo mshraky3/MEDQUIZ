@@ -189,3 +189,109 @@
     .bc-bar-fill, .bc-btn, .bc-list-item, .bc-back { transition: none; }
     .bc-dot { animation: none; }
 }
+
+/* ── Targeting: whole audience vs hand-picked people ────────────────────── */
+.bc-mode {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 14px;
+    padding: 4px;
+    border-radius: 10px;
+    background: rgba(148, 163, 184, 0.12);
+}
+
+.bc-mode-btn {
+    flex: 1;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: inherit;
+    opacity: 0.7;
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.bc-mode-btn.is-on { background: #2563eb; color: #fff; opacity: 1; }
+
+.bc-results {
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0;
+    max-height: 240px;
+    overflow-y: auto;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    border-radius: 10px;
+}
+
+.bc-result {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    padding: 9px 12px;
+    border: none;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: 0.83rem;
+    text-align: start;
+    cursor: pointer;
+}
+
+.bc-result:last-child { border-bottom: none; }
+.bc-result:hover { background: rgba(37, 99, 235, 0.08); }
+.bc-result.is-on { background: rgba(37, 99, 235, 0.14); }
+.bc-result-email { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+.bc-result-meta { font-size: 0.72rem; opacity: 0.65; white-space: nowrap; }
+
+.bc-chosen {
+    margin-top: 12px;
+    padding: 11px 13px;
+    border-radius: 10px;
+    background: rgba(37, 99, 235, 0.08);
+    border: 1px solid rgba(37, 99, 235, 0.25);
+}
+
+.bc-chosen-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 0.84rem;
+}
+
+.bc-chosen-clear {
+    border: none;
+    background: none;
+    color: #dc2626;
+    font: inherit;
+    font-size: 0.78rem;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.bc-chosen ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+
+.bc-chosen li {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 6px 3px 9px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.75);
+    font-size: 0.75rem;
+}
+
+.bc-chosen li button {
+    display: grid;
+    place-items: center;
+    border: none;
+    background: none;
+    color: #64748b;
+    cursor: pointer;
+    padding: 0;
+}

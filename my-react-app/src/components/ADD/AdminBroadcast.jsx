@@ -67,6 +67,12 @@ const AdminBroadcast = () => {
     const [body, setBody] = useState('');
     const [audience, setAudience] = useState('all');
     const [spreadHours, setSpreadHours] = useState(0);
+    // Targeting mode: a named audience, or a hand-picked list of people.
+    const [mode, setMode] = useState('audience'); // 'audience' | 'selected'
+    const [search, setSearch] = useState('');
+    const [results, setResults] = useState([]);
+    const [searching, setSearching] = useState(false);
+    const [selected, setSelected] = useState([]); // [{id, email, username, track}]
     const [testTo, setTestTo] = useState('');
     const [confirmed, setConfirmed] = useState(false);
     const [busy, setBusy] = useState('');             // which action is in flight
@@ -97,7 +103,13 @@ const AdminBroadcast = () => {
         setError(''); setNotice(''); setBusy('create');
         try {
             const { data } = await axios.post(`${API}/campaigns`, {
-                subject, bodyHtml: body, audience, spreadHours,
+                subject,
+                bodyHtml: body,
+                spreadHours,
+                // An explicit list wins over the audience on the server.
+                ...(mode === 'selected'
+                    ? { accountIds: selected.map((u) => u.id) }
+                    : { audience }),
             });
             setNotice(`تم إنشاء الحملة — ${data.recipients} مستلم.`);
             setConfirmed(false);
@@ -115,6 +127,36 @@ const AdminBroadcast = () => {
             setNotice(data.message);
         } catch (e) { setError(e?.response?.data?.message || 'تعذّر إرسال رسالة الاختبار.'); }
         finally { setBusy(''); }
+    };
+
+    /** Look up individual people to mail. Debounced by the caller. */
+    const runSearch = async (q) => {
+        if (!q || q.trim().length < 2) { setResults([]); return; }
+        setSearching(true);
+        try {
+            const { data } = await axios.get(
+                `${API}/recipients/search?q=${encodeURIComponent(q.trim())}`
+            );
+            setResults(data.users || []);
+        } catch (e) {
+            setError(e?.response?.data?.message || 'تعذّر البحث.');
+        } finally {
+            setSearching(false);
+        }
+    };
+
+    // Debounce so typing doesn't fire a query per keystroke.
+    useEffect(() => {
+        if (mode !== 'selected') return undefined;
+        const t = setTimeout(() => runSearch(search), 300);
+        return () => clearTimeout(t);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [search, mode]);
+
+    const toggleSelected = (u) => {
+        setSelected((prev) => (prev.some((x) => x.id === u.id)
+            ? prev.filter((x) => x.id !== u.id)
+            : [...prev, u]));
     };
 
     /** Drain the queue one small batch at a time until done, paused or capped. */
@@ -201,6 +243,82 @@ const AdminBroadcast = () => {
                 <section className="bc-card">
                     <h2>رسالة جديدة</h2>
 
+                    <div className="bc-mode" role="tablist" aria-label="طريقة الاستهداف">
+                        <button
+                            type="button" role="tab"
+                            aria-selected={mode === 'audience'}
+                            className={`bc-mode-btn${mode === 'audience' ? ' is-on' : ''}`}
+                            onClick={() => setMode('audience')}
+                        >فئة كاملة</button>
+                        <button
+                            type="button" role="tab"
+                            aria-selected={mode === 'selected'}
+                            className={`bc-mode-btn${mode === 'selected' ? ' is-on' : ''}`}
+                            onClick={() => setMode('selected')}
+                        >مستخدمون محدّدون</button>
+                    </div>
+
+                    {mode === 'selected' ? (
+                        <>
+                            <label className="bc-label" htmlFor="bc-search">ابحث عن مستخدم</label>
+                            <input
+                                id="bc-search" className="bc-input" value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                placeholder="بالبريد الإلكتروني أو اسم المستخدم…"
+                                dir="auto"
+                            />
+                            {searching && <p className="bc-hint">جارٍ البحث…</p>}
+
+                            {results.length > 0 && (
+                                <ul className="bc-results">
+                                    {results.map((u) => {
+                                        const on = selected.some((x) => x.id === u.id);
+                                        return (
+                                            <li key={u.id}>
+                                                <button
+                                                    type="button"
+                                                    className={`bc-result${on ? ' is-on' : ''}`}
+                                                    onClick={() => toggleSelected(u)}
+                                                >
+                                                    <Icon name={on ? 'check-circle' : 'circle'} size={15} />
+                                                    <span className="bc-result-email" dir="ltr">{u.email}</span>
+                                                    <span className="bc-result-meta">
+                                                        {TRACKS[u.track === 'nursing' ? 'nursing' : 'medical'].labelAr}
+                                                        {u.subscription_status ? ` · ${u.subscription_status}` : ''}
+                                                    </span>
+                                                </button>
+                                            </li>
+                                        );
+                                    })}
+                                </ul>
+                            )}
+                            {search.trim().length >= 2 && !searching && results.length === 0 && (
+                                <p className="bc-hint">لا توجد نتائج مطابقة.</p>
+                            )}
+
+                            {selected.length > 0 && (
+                                <div className="bc-chosen">
+                                    <div className="bc-chosen-head">
+                                        <strong>{selected.length} مستخدم محدّد</strong>
+                                        <button type="button" className="bc-chosen-clear"
+                                            onClick={() => setSelected([])}>مسح الكل</button>
+                                    </div>
+                                    <ul>
+                                        {selected.map((u) => (
+                                            <li key={u.id}>
+                                                <span dir="ltr">{u.email}</span>
+                                                <button type="button" aria-label={`إزالة ${u.email}`}
+                                                    onClick={() => toggleSelected(u)}>
+                                                    <Icon name="x" size={13} />
+                                                </button>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+                        </>
+                    ) : (
+                    <>
                     <label className="bc-label" htmlFor="bc-aud">الفئة المستهدفة</label>
                     <select id="bc-aud" className="bc-input" value={audience} onChange={(e) => setAudience(e.target.value)}>
                         {Object.entries(AUDIENCE_LABELS).map(([k, label]) => {
@@ -208,6 +326,9 @@ const AdminBroadcast = () => {
                             return <option key={k} value={k} disabled={n === null}>{label}{n != null ? ` — ${n}` : ' — غير متاح'}</option>;
                         })}
                     </select>
+
+                    </>
+                    )}
 
                     <label className="bc-label" htmlFor="bc-spread">مدة توزيع الإرسال</label>
                     <select id="bc-spread" className="bc-input" value={spreadHours}
@@ -231,7 +352,9 @@ const AdminBroadcast = () => {
                         placeholder={'<p>أضفنا صوراً طبية حقيقية داخل الملخصات…</p>\n<p><a href="https://…">افتح الملخصات</a></p>'} />
                     <p className="bc-hint">يُضاف تلقائياً: ترويسة SQB، تحية باسم المستخدم، ورابط إلغاء الاشتراك (إلزامي نظاماً).</p>
 
-                    <button type="button" className="bc-btn bc-btn--primary" disabled={!subject.trim() || !body.trim() || busy === 'create'}
+                    <button type="button" className="bc-btn bc-btn--primary"
+                        disabled={!subject.trim() || !body.trim() || busy === 'create'
+                            || (mode === 'selected' && selected.length === 0)}
                         onClick={createCampaign}>
                         {busy === 'create' ? 'جارٍ الإنشاء…' : 'إنشاء الحملة (بدون إرسال)'}
                     </button>

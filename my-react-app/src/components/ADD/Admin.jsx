@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from '../../utils/adminApi.js';
 import './Admin.css';
 import AdminNavbar from './AdminNavbar.jsx';
+import EngagementPanel from './EngagementPanel.jsx';
 import AdminAnalytics from './AdminAnalytics.jsx';
 import Globals from '../../global.js';
 import Spinner from '../common/Spinner.jsx';
@@ -105,8 +106,12 @@ const LineChart = ({ data, dataKey, labelKey, color = '#22d3ee', height = 150 })
         ))}
       </svg>
       <div className="line-chart-labels">
+        {/* The flex container already spaces these with space-between; an
+            additional left:% offset shifted the last label a full container
+            width past the edge, which is what gave the dashboard a horizontal
+            scrollbar. */}
         {points.filter((_, i) => i === 0 || i === points.length - 1 || i === Math.floor(points.length / 2)).map((p, i) => (
-          <span key={i} style={{ left: `${p.x}%` }}>{p.label}</span>
+          <span key={i}>{p.label}</span>
         ))}
       </div>
     </div>
@@ -552,6 +557,11 @@ const Admin = () => {
             </div>
           </section>
         )}
+
+        {/* Where students actually spend their time — quizzes vs summaries
+            vs analytics. Sits next to the track split because both answer
+            "who is using this, and for what". */}
+        <EngagementPanel />
 
         {/* Expanded analytics (account mix, active-login trends, growth, engagement) */}
         <AdminAnalytics />

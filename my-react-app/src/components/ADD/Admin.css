@@ -2282,3 +2282,14 @@
     font-size: 0.74rem;
     color: var(--admin-muted, #64748b);
 }
+
+/* Grid items default to min-width:auto, so a card whose content is wider than
+   its track spills out of the grid instead of shrinking — which is what gave
+   the dashboard a horizontal scrollbar. min-width:0 lets them shrink; wide
+   content scrolls inside its own card. */
+.tables-section > *,
+.charts-section > * {
+    min-width: 0;
+}
+
+.admin-container .table-card { overflow-x: auto; }

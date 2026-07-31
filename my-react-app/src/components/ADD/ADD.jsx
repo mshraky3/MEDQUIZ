@@ -6,6 +6,59 @@ import "./Admin.css";
 import AdminNavbar from "./AdminNavbar.jsx";
 import { TRACKS, TRACK_KEYS, MEDICAL, normalizeTrack } from '../../utils/tracks.js';
 
+/**
+ * Collapse the subscription columns into one thing an admin can read at a
+ * glance: is this account paying, on trial, free, or grandfathered — and is
+ * that still valid today? `subscription_status` alone is not enough, since an
+ * 'active' row whose expiry has passed is no longer paid.
+ */
+const subscriptionInfo = (user) => {
+    const expiry = user.subscription_expiry_date ? new Date(user.subscription_expiry_date) : null;
+    const expired = expiry ? expiry.getTime() <= Date.now() : false;
+    const status = user.subscription_status || 'free';
+
+    // Checked first, mirroring checkSubscriptionAccess: this flag short-circuits
+    // the paywall, so subscription_status is meaningless on these rows. Calling
+    // them "Free" would read as "not paying yet" rather than "never will".
+    if (user.is_admin_created) {
+        return { key: 'exempt', label: 'Free forever', cls: 'legacy', detail: 'Admin-created — never charged' };
+    }
+    if (user.grandfathered_at || status === 'grandfathered') {
+        return { key: 'legacy', label: 'Legacy', cls: 'legacy', detail: 'Free lifetime access' };
+    }
+    if (status === 'refunded') {
+        return { key: 'refunded', label: 'Refunded', cls: 'expired', detail: 'Subscription reversed' };
+    }
+    if (status === 'active') {
+        return expired
+            ? { key: 'expired', label: 'Expired', cls: 'expired', detail: `Ended ${expiry.toLocaleDateString()}` }
+            : { key: 'paid', label: 'Paid', cls: 'paid', detail: expiry ? `Until ${expiry.toLocaleDateString()}` : 'No expiry set' };
+    }
+    if (status === 'trial') {
+        return expired
+            ? { key: 'trial_expired', label: 'Trial ended', cls: 'expired', detail: `Ended ${expiry.toLocaleString()}` }
+            : { key: 'trial', label: 'Trial', cls: 'trial', detail: expiry ? `Until ${expiry.toLocaleString()}` : 'Active' };
+    }
+    return { key: 'free', label: 'Free', cls: 'free', detail: 'Never subscribed' };
+};
+
+/**
+ * Did we create this account, or did the student? Two independent markers:
+ * temp-link invites set `is_admin_created` (which also exempts them from the
+ * paywall), the admin form sets only `account_type` (no exemption).
+ */
+const adminMade = (user) => Boolean(user.is_admin_created) || user.account_type === 'admin_created';
+
+const PLAN_FILTERS = [
+    { value: 'all', label: 'All plans' },
+    { value: 'paid', label: 'Paid' },
+    { value: 'trial', label: 'On trial' },
+    { value: 'free', label: 'Free' },
+    { value: 'expired', label: 'Expired / refunded' },
+    { value: 'exempt', label: 'Free forever (admin)' },
+    { value: 'legacy', label: 'Legacy' },
+];
+
 const ADD = (props) => {
     // State for add account form
     const [username, setUsername] = useState("");
@@ -27,6 +80,7 @@ const ADD = (props) => {
     // State for UI
     const [activeTab, setActiveTab] = useState('overview'); // overview, users, suspicious
     const [searchQuery, setSearchQuery] = useState("");
+    const [planFilter, setPlanFilter] = useState("all");
     const [sortBy, setSortBy] = useState("id");
     const [sortOrder, setSortOrder] = useState("desc");
     const [selectedUser, setSelectedUser] = useState(null);
@@ -97,7 +151,16 @@ const ADD = (props) => {
         e.preventDefault();
 
         if (!username || !password) {
-            setError("Please enter both username and password.");
+            setError("Please enter both email and password.");
+            setMessage("");
+            return;
+        }
+
+        // The server enforces this too, but catching it here saves a round trip
+        // and explains why: an account whose username is not an email can
+        // never sign in.
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(username)) {
+            setError("Enter a valid email address — sign-in is by email, so a non-email account could not log in.");
             setMessage("");
             return;
         }
@@ -201,6 +264,17 @@ const ADD = (props) => {
             );
         }
 
+        // Narrow to one commercial cohort — "who is actually paying" is the
+        // question this table gets asked most.
+        if (planFilter !== 'all') {
+            filtered = filtered.filter((user) => {
+                const { key } = subscriptionInfo(user);
+                if (planFilter === 'expired') return key === 'expired' || key === 'trial_expired' || key === 'refunded';
+                if (planFilter === 'trial') return key === 'trial';
+                return key === planFilter;
+            });
+        }
+
         // Apply sort
         filtered.sort((a, b) => {
             let aVal = a[sortBy];
@@ -209,6 +283,16 @@ const ADD = (props) => {
             if (sortBy === 'suspicious') {
                 aVal = a.suspicious?.hasSuspiciousActivity ? 1 : 0;
                 bVal = b.suspicious?.hasSuspiciousActivity ? 1 : 0;
+            }
+
+            if (sortBy === 'created_at') {
+                aVal = a.created_at ? new Date(a.created_at).getTime() : 0;
+                bVal = b.created_at ? new Date(b.created_at).getTime() : 0;
+            }
+
+            if (sortBy === 'subscription_status') {
+                aVal = subscriptionInfo(a).label;
+                bVal = subscriptionInfo(b).label;
             }
 
             if (typeof aVal === 'string') {
@@ -223,7 +307,7 @@ const ADD = (props) => {
         });
 
         return filtered;
-    }, [users, searchQuery, sortBy, sortOrder]);
+    }, [users, searchQuery, planFilter, sortBy, sortOrder]);
 
     // Get suspicious users
     const suspiciousUsers = useMemo(() => {
@@ -422,12 +506,24 @@ const ADD = (props) => {
                             </div>
                             <div className="sort-controls">
                                 <select
+                                    value={planFilter}
+                                    onChange={(e) => setPlanFilter(e.target.value)}
+                                    className="sort-select"
+                                    title="Filter by subscription"
+                                >
+                                    {PLAN_FILTERS.map((f) => (
+                                        <option key={f.value} value={f.value}>{f.label}</option>
+                                    ))}
+                                </select>
+                                <select
                                     value={sortBy}
                                     onChange={(e) => setSortBy(e.target.value)}
                                     className="sort-select"
                                 >
                                     <option value="id">ID</option>
                                     <option value="username">Username</option>
+                                    <option value="created_at">Created</option>
+                                    <option value="subscription_status">Subscription</option>
                                     <option value="total_quizzes">Quizzes</option>
                                     <option value="avg_accuracy">Accuracy</option>
                                     <option value="logged_date">Last Login</option>
@@ -454,6 +550,8 @@ const ADD = (props) => {
                                 <thead>
                                     <tr>
                                         <th>User</th>
+                                        <th>Subscription</th>
+                                        <th>Origin</th>
                                         <th>Status</th>
                                         <th>Activity</th>
                                         <th>Security</th>
@@ -461,7 +559,9 @@ const ADD = (props) => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filteredUsers.map((user) => (
+                                    {filteredUsers.map((user) => {
+                                        const plan = subscriptionInfo(user);
+                                        return (
                                         <tr key={user.id} className={user.suspicious?.hasSuspiciousActivity ? 'suspicious-row' : ''}>
                                             <td className="user-cell">
                                                 <div className="user-info-compact">
@@ -470,6 +570,11 @@ const ADD = (props) => {
                                                     </span>
                                                     <div>
                                                         <div className="user-name">{user.username}</div>
+                                                        {/* Signups use the email as the username — only worth a
+                                                            second line when it actually differs. */}
+                                                        {user.email && user.email !== user.username && (
+                                                            <div className="user-email">{user.email}</div>
+                                                        )}
                                                         <div className="user-id">
                                                             ID: {user.id}
                                                             <span className={`track-chip track-chip--${normalizeTrack(user.track)}`}>
@@ -477,6 +582,20 @@ const ADD = (props) => {
                                                             </span>
                                                         </div>
                                                     </div>
+                                                </div>
+                                            </td>
+                                            <td className="plan-cell">
+                                                <span className={`plan-badge plan-badge--${plan.cls}`}>{plan.label}</span>
+                                                <div className="plan-detail">{plan.detail}</div>
+                                            </td>
+                                            <td className="origin-cell">
+                                                <span className={`origin-badge ${adminMade(user) ? 'admin' : 'self'}`}>
+                                                    <Icon name={adminMade(user) ? 'shield-check' : 'user'} size={13} />
+                                                    {adminMade(user) ? 'Admin-created' : 'Self signup'}
+                                                </span>
+                                                <div className="plan-detail">
+                                                    <Icon name="calendar" size={13} />{' '}
+                                                    {user.created_at ? new Date(user.created_at).toLocaleString() : 'Unknown'}
                                                 </div>
                                             </td>
                                             <td>
@@ -549,7 +668,8 @@ const ADD = (props) => {
                                                 </button>
                                             </td>
                                         </tr>
-                                    ))}
+                                        );
+                                    })}
                                 </tbody>
                             </table>
                             {filteredUsers.length === 0 && (
@@ -645,17 +765,27 @@ const ADD = (props) => {
                     <div className="tab-content">
                         <div className="add-user-section">
                             <h2><Icon name="plus" size={16} /> Add New User Account</h2>
+                            <p className="add-user-notice">
+                                <Icon name="shield-check" size={15} />
+                                Accounts created here skip the paywall permanently — full access,
+                                free forever, no expiry. Same as temp-link invites. Paying students
+                                should sign up themselves.
+                            </p>
                             <form onSubmit={handleSubmit} className="add-user-form">
                                 <div className="form-group">
-                                    <label htmlFor="username">Username</label>
+                                    <label htmlFor="username">Email</label>
                                     <input
                                         id="username"
-                                        type="text"
-                                        placeholder="Enter username"
+                                        type="email"
+                                        placeholder="student@example.com"
                                         value={username}
                                         onChange={(e) => setUsername(e.target.value.replace(/\s+/g, '').toLowerCase())}
                                         className="form-input"
                                     />
+                                    <small className="form-hint">
+                                        Sign-in is by email, so this must be a real email address —
+                                        it becomes both the username and the login.
+                                    </small>
                                 </div>
                                 <div className="form-group">
                                     <label htmlFor="password">Password</label>
