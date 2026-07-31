@@ -91,7 +91,11 @@ const Progress = ({ userId, username, sessionToken, track }) => {
     { key: 'FebMarApr25', label: '2026 تجميعات فبراير-مارس-ابريل', color: '#f43f5e' },
     { key: 'May26', label: '2026 تجميعات مايو', color: '#0ea5e9' },
     { key: 'June26', label: '2026 تجميعات يونيو', color: '#22c55e' },
+    // nursing track
+    { key: 'NursingMostRepeated', label: 'Most Repeated', color: '#10b981' },
+    { key: 'NursingConfirmed', label: 'Confirmed', color: '#0ea5e9' },
     // legacy sources kept for historical sessions
+    { key: 'NursingEMS', label: 'الأسئلة المؤكدة والأكثر تكراراً', color: '#6366f1' },
     { key: 'general', label: 'عام', color: '#3b82f6' },
     { key: 'Midgard', label: 'Midgard', color: '#84cc16' },
     { key: 'GameBoy', label: 'GameBoy', color: '#f59e0b' }

@@ -135,6 +135,8 @@ const QuizHistory = ({ userId, username, sessionToken }) => {
       case 'October25': return 'calendar';
       case 'May26': return 'calendar';
       case 'June26': return 'calendar';
+      case 'NursingMostRepeated': return 'refresh';
+      case 'NursingConfirmed': return 'check-circle';
       default: return 'book-open';
     }
   };
