@@ -17,9 +17,9 @@ const Bilingual = ({ ar, en }) => (
 const offerings = [
     { ar: 'بنك أسئلة شامل: أسئلة محدّثة باستمرار تغطي جميع التخصصات.', en: 'Comprehensive question bank: continuously updated questions across all specialties.' },
     { ar: 'تحليلات مفصلة: تتبّع أداءك وحدّد نقاط القوة والضعف لديك.', en: 'Detailed analytics: track your performance and identify strengths and weaknesses.' },
-    { ar: 'اختبارات متنوعة: من جلسات قصيرة (10 أسئلة) إلى اختبارات شاملة (100 سؤال).', en: 'Varied quizzes: from short sessions (10 questions) to full exams (100 questions).' },
+    { ar: 'اختبارات متنوعة: من جلسات قصيرة (10 أسئلة) إلى عدد مخصص تختاره، إضافة إلى اختبار نهائي لكل تخصص.', en: 'Varied quizzes: from short 10-question sessions to any custom length, plus a full final exam per specialty.' },
     { ar: 'تتبّع التقدم: متابعة تطوّرك عبر الزمن مع إحصائيات دقيقة.', en: 'Progress tracking: monitor your improvement over time with precise statistics.' },
-    { ar: 'تغطية شاملة: جميع التخصصات الطبية المطلوبة لاختبار SMLE في مكان واحد.', en: 'Full coverage: every medical specialty required for the SMLE exam in one place.' },
+    { ar: 'مساران مستقلان: طب بشري (SMLE) وتمريض (SNLE)، لكل منهما أسئلته وملخصاته وتحليلاته.', en: 'Two independent tracks: Medicine (SMLE) and Nursing (SNLE), each with its own questions, summaries and analytics.' },
     { ar: 'تجربة مجانية: ساعة وصول كامل مجاناً بعد إنشاء الحساب وتأكيد بريدك.', en: 'Free trial: one hour of full access, free, right after signing up and confirming your email.' }
 ];
 
@@ -36,13 +36,13 @@ const About = () => {
                 <Link to="/" className="legal-back">الرئيسية →</Link>
 
                 <h1>About Us | من نحن</h1>
-                <p className="legal-updated">SMLE Question Bank (SQB)</p>
+                <p className="legal-updated">SQB · SMLE &amp; SNLE Question Bank</p>
 
                 <section className="legal-section">
                     <h2>من نحن | Who We Are</h2>
                     <Bilingual
-                        ar="اس كيو بي (SQB) منصة تعليمية سعودية متخصصة في التحضير لاختبار الهيئة السعودية للتخصصات الصحية (SMLE) واختبار البرومترك. تأسست المنصة لمساعدة الأطباء والطلاب في المملكة والمنطقة العربية على اجتياز هذه الاختبارات بنجاح."
-                        en="SQB (SMLE Question Bank) is a Saudi-based educational platform dedicated to helping medical professionals and students prepare for the Saudi Medical Licensing Examination (SMLE) and Prometric exams, with accessible, high-quality preparation resources."
+                        ar="اس كيو بي (SQB) منصة تعليمية سعودية متخصصة في التحضير لاختبارات الهيئة السعودية للتخصصات الصحية والبرومترك، بمسارين مستقلين: الطب البشري (SMLE) والتمريض (SNLE). تأسست المنصة لمساعدة طلاب وخريجي الطب والتمريض في المملكة والمنطقة العربية على اجتياز هذه الاختبارات بنجاح."
+                        en="SQB is a Saudi-based educational platform dedicated to helping medical and nursing students and professionals prepare for the Saudi licensing examinations (SMLE and SNLE) and Prometric exams, with accessible, high-quality preparation resources."
                     />
                 </section>
 

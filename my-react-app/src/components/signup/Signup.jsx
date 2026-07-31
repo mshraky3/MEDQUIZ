@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useContext } from 'react';
 import Icon from '../common/Icon.jsx';
-import { useNavigate, useLocation, useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { track } from '@vercel/analytics';
 import Globals from '../../global.js';
 import Spinner from '../common/Spinner.jsx';
 import { UserContext } from '../../UserContext';
-import { TRACKS, TRACK_KEYS, MEDICAL, normalizeTrack } from '../../utils/tracks.js';
+import { TRACKS, TRACK_KEYS, normalizeTrack } from '../../utils/tracks.js';
 import '../login/Login.css';
 import './Signup.css';
 
@@ -26,19 +26,32 @@ const Signup = () => {
     const [trialGranted, setTrialGranted] = useState(false);
     const [tempLinkInfo, setTempLinkInfo] = useState(null);
     const [isTempLink, setIsTempLink] = useState(false);
+    // An invite link that came back invalid/expired. Rendered as its own screen
+    // with explicit choices — never as an automatic redirect (see below).
+    const [linkInvalid, setLinkInvalid] = useState(false);
     // The study track this account is created on. Named studyTrack because
     // `track` in this file is already the Vercel analytics function.
     // Chosen once, here — afterwards only an admin can move an account.
-    const [studyTrack, setStudyTrack] = useState(MEDICAL);
+    //
+    // Starts null on purpose: there is no default track. Picking the wrong one
+    // is the single most expensive mistake a new account can make (it decides
+    // which question bank, summaries and analytics the account ever sees, and
+    // only an admin can undo it), so the choice is made explicitly in a modal
+    // before the form is usable rather than inherited from a preselected radio.
+    const [studyTrack, setStudyTrack] = useState(null);
+    const [showTrackModal, setShowTrackModal] = useState(false);
     const navigate = useNavigate();
-    const location = useLocation();
     const { token } = useParams();
 
     useEffect(() => {
         if (token) {
             validateTempLink();
+        } else {
+            // Regular signup: ask which kind of student this is, first thing.
+            setShowTrackModal(true);
         }
-    }, [location.state, navigate, token]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [token]);
 
     const validateTempLink = async () => {
         try {
@@ -47,17 +60,16 @@ const Signup = () => {
             if (response.data.valid) {
                 setTempLinkInfo(response.data.link);
                 setIsTempLink(true);
+                setLinkInvalid(false);
                 // An invite is issued for one cohort; the server ignores any
                 // track we send on this path, so mirror the link's own track.
                 setStudyTrack(normalizeTrack(response.data.link.track));
                 setError('');
             } else {
-                setError('Invalid or expired temporary link');
-                setTimeout(() => navigate('/contact'), 3000);
+                setLinkInvalid(true);
             }
         } catch (err) {
-            setError('Invalid or expired temporary link');
-            setTimeout(() => navigate('/contact'), 3000);
+            setLinkInvalid(true);
         } finally {
             setLoading(false);
         }
@@ -69,6 +81,14 @@ const Signup = () => {
     };
 
     const validateCredentials = () => {
+        // Belt and braces: the modal blocks the form, but a track must never be
+        // guessed on the way to the server.
+        if (!isTempLink && !studyTrack) {
+            setError('يرجى اختيار مسارك الدراسي أولاً');
+            setShowTrackModal(true);
+            return false;
+        }
+
         if (!form.email || !form.password || !form.confirmPassword) {
             setError('جميع الحقول مطلوبة');
             return false;
@@ -239,10 +259,10 @@ const Signup = () => {
             <div className="login-body" dir="rtl">
                 <div className="login-wrapper signup-wide">
                     <div className="login-card signup-short" style={{ textAlign: 'center' }}>
-                        <div className="success-icon" style={{ fontSize: 60, marginBottom: 20 }}><Icon name="check-circle" size={56} /></div>
-                        <h2 style={{ color: '#f8fafc', fontWeight: 700, marginBottom: 12 }}>تم إنشاء الحساب بنجاح!</h2>
+                        <div className="success-icon" style={{ color: 'var(--success-color, #16a34a)', marginBottom: 20 }}><Icon name="check-circle" size={56} /></div>
+                        <h2 style={{ color: 'var(--text-dark, #0f1e3d)', fontWeight: 700, marginBottom: 12 }}>تم إنشاء الحساب بنجاح!</h2>
                         {trialGranted && (
-                            <p style={{ color: '#f8fafc', fontWeight: 600, marginBottom: 8 }}>
+                            <p style={{ color: 'var(--text-dark, #0f1e3d)', fontWeight: 600, marginBottom: 8 }}>
                                 لديك الآن ساعة وصول كامل مجاناً لكل الأسئلة والملخصات والتحليلات 🎉
                             </p>
                         )}
@@ -253,7 +273,7 @@ const Signup = () => {
         );
     }
 
-    if (loading && isTempLink && !tempLinkInfo) {
+    if (token && loading && !tempLinkInfo && !linkInvalid) {
         return (
             <div className="login-body" dir="rtl">
                 <div className="login-wrapper signup-wide">
@@ -261,6 +281,47 @@ const Signup = () => {
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '24px 0' }}>
                             <Spinner size="md" />
                             <span>جاري التحقق من الرابط...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // An expired/unknown invite link used to set a 3s timer to /contact. The
+    // timer was never cleared, so it fired even after the visitor had navigated
+    // somewhere else — the support page appearing "on its own" mid-signup. The
+    // dead end is now a screen the visitor leaves deliberately.
+    if (linkInvalid) {
+        return (
+            <div className="login-body" dir="rtl">
+                <div className="login-wrapper signup-wide">
+                    <div className="login-card signup-short" style={{ textAlign: 'center' }}>
+                        <div className="login-header">
+                            <div className="login-title">رابط الدعوة غير صالح</div>
+                            <div className="login-subtitle">
+                                انتهت صلاحية هذا الرابط أو تم استخدامه من قبل. يمكنك إنشاء حساب عادي الآن والبدء بتجربة مجانية.
+                            </div>
+                        </div>
+                        <div className="login-form">
+                            <button
+                                type="button"
+                                className="btn primary large"
+                                onClick={() => {
+                                    // Both /signup and /signup/:token render this same
+                                    // component, so the router may reuse the instance —
+                                    // clear the dead-link state ourselves.
+                                    setLinkInvalid(false);
+                                    setError('');
+                                    navigate('/signup', { replace: true });
+                                }}
+                            >
+                                إنشاء حساب والبدء مجاناً
+                            </button>
+                            <div className="login-footer-text">
+                                تعتقد أن هذا خطأ؟{' '}
+                                <Link to="/contact" className="link-primary">تواصل مع الدعم</Link>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -306,39 +367,24 @@ const Signup = () => {
                                     <span>مسار الدراسة: <strong>{TRACKS[studyTrack].labelAr}</strong> — محدَّد مسبقاً في رابط الدعوة.</span>
                                 </div>
                             ) : (
-                                <fieldset className="track-picker">
-                                    <legend className="track-picker-label">اختر مسارك الدراسي</legend>
-                                    <div className="track-options">
-                                        {TRACK_KEYS.map((key) => {
-                                            const t = TRACKS[key];
-                                            const selected = studyTrack === key;
-                                            return (
-                                                <label
-                                                    key={key}
-                                                    className={`track-option${selected ? ' is-selected' : ''}`}
-                                                >
-                                                    <input
-                                                        type="radio"
-                                                        name="studyTrack"
-                                                        value={key}
-                                                        checked={selected}
-                                                        onChange={() => setStudyTrack(key)}
-                                                    />
-                                                    <span className="track-option-icon" aria-hidden="true">
-                                                        <Icon name={t.icon} size={18} />
-                                                    </span>
-                                                    <span className="track-option-body">
-                                                        <span className="track-option-title">{t.labelAr}</span>
-                                                        <span className="track-option-desc">{t.blurbAr}</span>
-                                                    </span>
-                                                </label>
-                                            );
-                                        })}
-                                    </div>
-                                    <p className="track-picker-note">
-                                        أسئلتك وملخصاتك وتحليل أدائك ستكون خاصة بهذا المسار. لتغييره لاحقاً تواصل مع الدعم.
-                                    </p>
-                                </fieldset>
+                                <div className="track-chosen">
+                                    <span className="track-chosen-icon" aria-hidden="true">
+                                        <Icon name={studyTrack ? TRACKS[studyTrack].icon : 'help-circle'} size={20} />
+                                    </span>
+                                    <span className="track-chosen-body">
+                                        <span className="track-chosen-label">مسارك الدراسي</span>
+                                        <strong className="track-chosen-value">
+                                            {studyTrack ? TRACKS[studyTrack].labelAr : 'لم يُحدَّد بعد'}
+                                        </strong>
+                                    </span>
+                                    <button
+                                        type="button"
+                                        className="track-chosen-change"
+                                        onClick={() => setShowTrackModal(true)}
+                                    >
+                                        {studyTrack ? 'تغيير' : 'اختر الآن'}
+                                    </button>
+                                </div>
                             )}
                             <div className="form-group">
                                 <label className="form-label" htmlFor="email">البريد الإلكتروني</label>
@@ -465,6 +511,69 @@ const Signup = () => {
                     )}
                 </div>
             </div>
+
+            {/* ── Study-track modal ────────────────────────────────────────────
+                Opens before anything else on a regular signup and cannot be
+                dismissed without answering. It exists because the track decides
+                which bank, summaries and analytics the account will ever see,
+                and only an admin can move an account afterwards — an inline
+                radio with a default was quietly sending nursing students into
+                the medical bank. */}
+            {showTrackModal && !isTempLink && (
+                <div className="track-modal" dir="rtl" role="dialog" aria-modal="true" aria-labelledby="track-modal-title">
+                    <div className="track-modal-card">
+                        <div className="track-modal-head">
+                            <span className="track-modal-eyebrow">الخطوة الأولى</span>
+                            <h2 id="track-modal-title">هل أنت طالب/خريج تمريض أم طب بشري؟</h2>
+                            <p>
+                                اختيارك يحدّد بنك الأسئلة والملخصات وتحليل الأداء الذي ستستخدمه.
+                                اختر بدقّة — لا يمكن تغييره لاحقاً إلا عبر الدعم.
+                            </p>
+                        </div>
+
+                        <div className="track-modal-options">
+                            {TRACK_KEYS.map((key) => {
+                                const t = TRACKS[key];
+                                const selected = studyTrack === key;
+                                return (
+                                    <button
+                                        type="button"
+                                        key={key}
+                                        className={`track-modal-option${selected ? ' is-selected' : ''}`}
+                                        aria-pressed={selected}
+                                        onClick={() => setStudyTrack(key)}
+                                    >
+                                        <span className="track-modal-option-icon" aria-hidden="true">
+                                            <Icon name={t.icon} size={26} />
+                                        </span>
+                                        <span className="track-modal-option-title">{t.labelAr}</span>
+                                        <span className="track-modal-option-exam">{t.examAr}</span>
+                                        <span className="track-modal-option-desc">{t.blurbAr}</span>
+                                        <span className="track-modal-option-mark" aria-hidden="true">
+                                            <Icon name="check" size={15} />
+                                        </span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        <button
+                            type="button"
+                            className="btn primary large track-modal-confirm"
+                            disabled={!studyTrack}
+                            onClick={() => { setError(''); setShowTrackModal(false); }}
+                        >
+                            {studyTrack
+                                ? `متابعة كـ«${TRACKS[studyTrack].labelAr}»`
+                                : 'اختر مسارك للمتابعة'}
+                        </button>
+
+                        <p className="track-modal-note">
+                            <Icon name="info" size={14} /> اخترت المسار الخطأ؟ راسل الدعم قبل الاشتراك ونحوّل حسابك مجاناً.
+                        </p>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

@@ -3,6 +3,7 @@ import Icon from '../common/Icon.jsx';
 import Spinner from '../common/Spinner.jsx';
 import { UserContext } from '../../UserContext';
 import { userTrack } from '../../utils/tracks.js';
+import Globals from '../../global.js';
 import './Suggestions.css';
 
 const Suggestions = () => {
@@ -53,7 +54,7 @@ const Suggestions = () => {
         setLoading(true);
 
         try {
-            const response = await fetch('https://medquiz.vercel.app/api/suggestions', {
+            const response = await fetch(`${Globals.URL}/api/suggestions`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

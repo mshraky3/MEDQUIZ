@@ -3,6 +3,7 @@ import Icon from '../common/Icon.jsx';
 import Spinner from '../common/Spinner.jsx';
 import { UserContext } from '../../UserContext';
 import { userTrack } from '../../utils/tracks.js';
+import Globals from '../../global.js';
 import './Contact.css';
 
 // Direct WhatsApp line — the fastest way to reach us, so it gets a CTA of its
@@ -46,8 +47,10 @@ const Contact = () => {
         setLoading(true);
 
         try {
-            // Send email notification to admin
-            const response = await fetch('https://medquiz.vercel.app/api/contact', {
+            // Send email notification to admin. Uses the shared API base like
+            // every other request — hardcoding the production host meant this
+            // one form kept posting to prod from local/preview builds.
+            const response = await fetch(`${Globals.URL}/api/contact`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -367,11 +367,6 @@ body {
   font-weight: 600;
 }
 
-.submit-section {
-  display: flex;
-  justify-content: center;
-}
-
 .submit-button {
   padding: 16px 48px;
   font-size: 1.1rem;
@@ -724,52 +719,6 @@ body {
 .result-review-answer.bad {
   background: rgba(239, 68, 68, 0.10);
   color: #b91c1c;
-}
-
-.result-explain-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  border: 1px solid rgba(59, 130, 246, 0.35);
-  border-radius: 10px;
-  background: rgba(59, 130, 246, 0.06);
-  color: #2563eb;
-  font-size: 0.88rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.result-explain-btn:hover:not(:disabled) {
-  background: rgba(59, 130, 246, 0.12);
-}
-
-.result-explain-btn:focus-visible {
-  outline: 2px solid #3b82f6;
-  outline-offset: 2px;
-}
-
-.result-explain-btn:disabled {
-  opacity: 0.7;
-  cursor: wait;
-}
-
-.result-review-explanation {
-  padding: 12px 14px;
-  border-radius: 10px;
-  background: rgba(59, 130, 246, 0.06);
-  border: 1px solid rgba(59, 130, 246, 0.18);
-}
-
-.result-review-explanation-title {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.82rem;
-  font-weight: 800;
-  color: #2563eb;
-  margin-bottom: 6px;
 }
 
 .quiz-result .result-review-explanation p {

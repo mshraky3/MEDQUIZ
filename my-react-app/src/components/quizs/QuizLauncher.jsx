@@ -12,12 +12,10 @@ import { getTypeLabel } from '../../utils/typeLabels';
 import { getSourceLabel } from '../../utils/sourceLabels';
 import { specialtyKeys, bankLabel, userTrack, trackLabel, examLabel } from '../../utils/tracks.js';
 
-// The whole bank is now a single unified source — "Midgard & GameBoy2026". There
-// is no source-selection step any more; every quiz is launched against this
-// sentinel and the backend resolves it to the full kept allowlist. Tracks other
-// than medical have no retired collections, so the sentinel is simply ignored
-// for them and `track` alone selects the bank.
-const SOURCE = 'MidgardGameBoy';
+// Sentinel meaning "the whole of my track's bank". The backend resolves it to
+// the medical kept-source allowlist, and to no source filter at all for other
+// tracks — so it is always the right thing to send when no collection is picked.
+const WHOLE_BANK = 'MidgardGameBoy';
 
 const quizOptions = [10, 50, 'custom'];
 
@@ -50,6 +48,19 @@ const QuizLauncher = ({ id }) => {
     // itself rather than offering a quiz that would come back empty.
     // null = not known yet; treated as "has content" so nothing flashes.
     const [bankEmpty, setBankEmpty] = useState(false);
+
+    // The collections this track can be narrowed to, straight from the server
+    // ([{key,total}], already filtered to ones that actually have questions).
+    // The nursing bank has two — "Most Repeated" and "Confirmed" — and the
+    // picker below only appears when there is genuinely a choice to make.
+    const [sources, setSources] = useState([]);
+    // null = the whole bank (both collections mixed).
+    const [selectedSource, setSelectedSource] = useState(null);
+    const activeSource = selectedSource || WHOLE_BANK;
+    const totalSourceQuestions = React.useMemo(
+        () => sources.reduce((sum, s) => sum + (s.total || 0), 0),
+        [sources]
+    );
 
     const [showTypeSelector, setShowTypeSelector] = useState(false);
     const [selectedTypes, setSelectedTypes] = useState([]);
@@ -107,7 +118,11 @@ const QuizLauncher = ({ id }) => {
         let alive = true;
         if (!user || !sessionToken) return undefined;
         protectedGet(`${Globals.URL}/api/track-content-status`)
-            .then((res) => { if (alive && res) setBankEmpty(!res.data.hasQuestions); })
+            .then((res) => {
+                if (!alive || !res) return;
+                setBankEmpty(!res.data.hasQuestions);
+                setSources(Array.isArray(res.data.selectableSources) ? res.data.selectableSources : []);
+            })
             .catch(() => { /* advisory only — never block the launcher on this */ });
         return () => { alive = false; };
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -120,17 +135,17 @@ const QuizLauncher = ({ id }) => {
         } else {
             setNumQuestions(num);
             setShowTypeSelector(true);
-            if (id) checkCompletionForSource(SOURCE);
+            if (id) checkCompletionForSource(activeSource);
         }
     };
 
     const handleQuickStart = () => {
         try {
-            track('quiz_quick_start_click', { questions: 10, source: SOURCE, types: 'mix' });
+            track('quiz_quick_start_click', { questions: 10, source: activeSource, types: 'mix' });
         } catch (error) {
             console.debug('Analytics track skipped:', error);
         }
-        navigate('/quiz/10', { state: { id, types: 'mix', source: SOURCE, timer: null } });
+        navigate('/quiz/10', { state: { id, types: 'mix', source: activeSource, timer: null } });
     };
 
     const handleCheckboxChange = (type) => {
@@ -158,7 +173,7 @@ const QuizLauncher = ({ id }) => {
         const typesStr = selectedTypes.length > 0 ? selectedTypes.join(',') : 'mix';
         const timerMinutes = selectedTimer === 'custom' ? customTimerMinutes : selectedTimer;
         setShowTimerSelector(false);
-        navigate(`/quiz/${numQuestions}`, { state: { id, types: typesStr, source: SOURCE, timer: timerMinutes } });
+        navigate(`/quiz/${numQuestions}`, { state: { id, types: typesStr, source: activeSource, timer: timerMinutes } });
     };
 
     const handleCustomQuestionsConfirm = () => {
@@ -167,7 +182,7 @@ const QuizLauncher = ({ id }) => {
         setNumQuestions(clamped);
         setShowCustomQuestions(false);
         setShowTypeSelector(true);
-        if (id) checkCompletionForSource(SOURCE);
+        if (id) checkCompletionForSource(activeSource);
     };
 
     // ---- Final quiz flow: type → time ----
@@ -187,7 +202,7 @@ const QuizLauncher = ({ id }) => {
         setShowFinalQuizTime(true);
         try {
             const response = await protectedGet(
-                `${Globals.URL}/final-quiz/questions-count?questionType=${encodeURIComponent(type)}&source=${encodeURIComponent(SOURCE)}`
+                `${Globals.URL}/final-quiz/questions-count?questionType=${encodeURIComponent(type)}&source=${encodeURIComponent(activeSource)}`
             );
             setFinalQuizQuestionsCount(response.data.totalQuestions || 0);
         } catch (error) {
@@ -203,7 +218,7 @@ const QuizLauncher = ({ id }) => {
         if (!finalQuizQuestionsCount || finalQuizQuestionsCount < 1) return;
         setShowFinalQuizTime(false);
         navigate(`/quiz/${finalQuizQuestionsCount}`, {
-            state: { id, types: selectedFinalType, source: SOURCE, timer: timeLimit, isFinalQuiz: true }
+            state: { id, types: selectedFinalType, source: activeSource, timer: timeLimit, isFinalQuiz: true }
         });
     };
 
@@ -336,6 +351,48 @@ const QuizLauncher = ({ id }) => {
                 <h1>اختر اختبارك</h1>
                 <p className="quiz-subtitle">ابدأ سريعاً الآن أو خصّص الاختبار كما تريد — من <bdi>{bankLabel(myTrack)}</bdi>.</p>
 
+                {/* Collection picker. Only rendered when the track's bank really
+                    has more than one collection to choose between, so the
+                    medical (single unified bank) launcher is unchanged. The
+                    choice applies to everything started from this screen —
+                    quick start, custom quizzes and the final quiz. */}
+                {sources.length > 1 && (
+                    <div className="bank-source-picker" role="group" aria-label="مصدر الأسئلة">
+                        <span className="bank-source-legend">
+                            <Icon name="book-open" size={15} /> مصدر الأسئلة
+                        </span>
+                        <div className="bank-source-options">
+                            <button
+                                type="button"
+                                className={`bank-source-chip${selectedSource === null ? ' is-active' : ''}`}
+                                aria-pressed={selectedSource === null}
+                                onClick={() => setSelectedSource(null)}
+                            >
+                                <span className="bank-source-chip-name">الكل</span>
+                                <span className="bank-source-chip-count">
+                                    <bdi>{totalSourceQuestions}</bdi> سؤال
+                                </span>
+                            </button>
+                            {sources.map((s) => (
+                                <button
+                                    type="button"
+                                    key={s.key}
+                                    className={`bank-source-chip${selectedSource === s.key ? ' is-active' : ''}`}
+                                    aria-pressed={selectedSource === s.key}
+                                    onClick={() => setSelectedSource(s.key)}
+                                >
+                                    <span className="bank-source-chip-name">
+                                        <bdi>{getSourceLabel(s.key)}</bdi>
+                                    </span>
+                                    <span className="bank-source-chip-count">
+                                        <bdi>{s.total}</bdi> سؤال
+                                    </span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 <button className="quick-start-btn" onClick={handleQuickStart}>
                     ابدأ سريعاً: 10 أسئلة مختلطة
                 </button>
@@ -369,7 +426,10 @@ const QuizLauncher = ({ id }) => {
                     <div className="custom-modal-content">
                         <h2>اختر نوع الأسئلة</h2>
                         <p className="source-info">
-                            <Icon name="book-open" size={16} /> البنك: <strong><bdi>{bankLabel(myTrack)}</bdi></strong>
+                            <Icon name="book-open" size={16} /> البنك:{' '}
+                            <strong>
+                                <bdi>{selectedSource ? getSourceLabel(selectedSource) : bankLabel(myTrack)}</bdi>
+                            </strong>
                         </p>
                         <div className="custom-checkbox-group">
                             {availableTypes.map((type) => (

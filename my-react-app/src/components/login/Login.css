@@ -853,31 +853,6 @@
   position: relative;
 }
 
-.popup-close-btn {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  background: none;
-  border: none;
-  font-size: 24px;
-  color: #475569;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 50%;
-  transition: all 0.3s ease;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.popup-close-btn:hover {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
-  transform: rotate(90deg);
-}
-
 /* Custom scrollbar for popup */
 .popup-content::-webkit-scrollbar {
   width: 6px;
