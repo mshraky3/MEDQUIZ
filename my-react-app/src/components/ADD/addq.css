@@ -13,13 +13,6 @@
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
-.radio-option {
-  display: block;
-  margin: 6px 0;
-  font-size: 14px;
-  color: #1e293b;
-}
-
 .add-question-container h2 {
   text-align: center;
   color: #1e293b;

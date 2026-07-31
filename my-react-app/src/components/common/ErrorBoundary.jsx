@@ -1,205 +1,87 @@
-import React, { Component } from 'react';
-import { useRouteError, useNavigate } from 'react-router-dom';
+import React from 'react';
+import { useRouteError, useNavigate, Link } from 'react-router-dom';
+import Icon from './Icon.jsx';
 import { reportRenderError } from '../../utils/errorTracking';
 import { isStaleChunkError, reloadOnceForStaleChunk } from '../../utils/staleChunkReload';
+import './ErrorScreens.css';
 
-// Class-based Error Boundary for catching render errors
-class RenderErrorBoundary extends Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false, error: null, errorInfo: null };
-  }
-
-  static getDerivedStateFromError(error) {
-    return { hasError: true, error };
-  }
-
-  componentDidCatch(error, errorInfo) {
-    this.setState({ errorInfo });
-
-    // Report render error to backend
-    reportRenderError(error, errorInfo);
-
-    console.error('React render error:', error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return this.props.fallback || (
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '100vh',
-          padding: '20px',
-          textAlign: 'center',
-          background: '#eef2fb'
-        }}>
-          <div style={{
-            background: '#ffffff',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            borderRadius: '24px',
-            padding: '40px',
-            maxWidth: '500px',
-            border: '1px solid #d4deee',
-            boxShadow: '0 8px 32px rgba(15, 23, 42, 0.12)'
-          }}>
-            <h1 style={{ color: '#dc2626', marginBottom: '20px', fontSize: '1.8rem' }}>حدث خطأ غير متوقع</h1>
-            <p style={{ color: '#475569', marginBottom: '30px', lineHeight: '1.6' }}>
-              حدث خطأ أثناء تحميل هذه الصفحة.
-            </p>
-            <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
-              <button
-                onClick={() => window.location.href = '/'}
-                style={{
-                  padding: '12px 24px',
-                  background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-                  color: '#ffffff',
-                  border: 'none',
-                  borderRadius: '12px',
-                  cursor: 'pointer',
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  boxShadow: '0 4px 15px rgba(37, 99, 235, 0.3)'
-                }}
-              >
-                Go Home
-              </button>
-              <button
-                onClick={() => window.location.reload()}
-                style={{
-                  padding: '12px 24px',
-                  background: '#eef2fb',
-                  color: '#1e293b',
-                  border: '1px solid #d4deee',
-                  borderRadius: '12px',
-                  cursor: 'pointer',
-                  fontSize: '16px',
-                  fontWeight: '600'
-                }}
-              >
-                إعادة تحميل
-              </button>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    return this.props.children;
-  }
-}
-
-// Route Error Boundary (for react-router errors)
+/**
+ * The `errorElement` for every route: what a visitor sees when a route's
+ * component throws or its chunk fails to load.
+ *
+ * Not used as a route `element` — with no router error there is nothing to
+ * show, and returning null there is what used to make unknown URLs render a
+ * blank page. Unmatched paths are handled by NotFound.jsx instead.
+ */
 const RouteErrorBoundary = () => {
-  const error = useRouteError();
-  const navigate = useNavigate();
+    const error = useRouteError();
+    const navigate = useNavigate();
 
-  // Stale chunk after a deploy: reload once to pick up the new asset hashes
-  // instead of showing the error card. Only report when the reload cooldown
-  // says this is a persistent failure, not a routine post-deploy blip.
-  const staleChunk = !!error && isStaleChunkError(error?.message);
-  const [reloading] = React.useState(() => staleChunk && reloadOnceForStaleChunk());
+    // Stale chunk after a deploy: reload once to pick up the new asset hashes
+    // instead of showing the error card. Only report when the reload cooldown
+    // says this is a persistent failure, not a routine post-deploy blip.
+    const staleChunk = !!error && isStaleChunkError(error?.message);
+    const [reloading] = React.useState(() => staleChunk && reloadOnceForStaleChunk());
 
-  // Report route error
-  React.useEffect(() => {
-    if (error && !reloading) {
-      console.error('Routing error:', error);
-      reportRenderError(
-        error instanceof Error ? error : new Error(String(error)),
-        { componentStack: 'RouteErrorBoundary' }
-      );
+    React.useEffect(() => {
+        if (error && !reloading) {
+            console.error('Routing error:', error);
+            reportRenderError(
+                error instanceof Error ? error : new Error(String(error)),
+                { componentStack: 'RouteErrorBoundary' }
+            );
+        }
+    }, [error, reloading]);
+
+    if (reloading) {
+        return (
+            <div className="errscreen" dir="rtl">
+                <div className="errscreen-card">
+                    <h1>جاري تحديث الصفحة...</h1>
+                    <p>صدر تحديث جديد للمنصة — نعيد التحميل لتحصل على أحدث نسخة.</p>
+                </div>
+            </div>
+        );
     }
-  }, [error, reloading]);
 
-  // If no error, render nothing (let the route render normally)
-  if (!error) return null;
+    const notFound = error?.status === 404;
 
-  if (reloading) {
     return (
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '100vh',
-        background: '#eef2fb',
-        color: '#475569',
-        fontSize: '1.1rem',
-        fontWeight: 600
-      }} dir="rtl">
-        جاري تحديث الصفحة...
-      </div>
-    );
-  }
-
-  return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '100vh',
-      padding: '20px',
-      textAlign: 'center',
-      background: '#eef2fb'
-    }}>
-      <div style={{
-        background: '#ffffff',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        borderRadius: '24px',
-        padding: '40px',
-        maxWidth: '500px',
-        border: '1px solid #d4deee',
-        boxShadow: '0 8px 32px rgba(15, 23, 42, 0.12)'
-      }}>
-        <h1 style={{ color: '#dc2626', marginBottom: '20px', fontSize: '1.8rem' }}>حدث خطأ غير متوقع</h1>
-        <p style={{ color: '#475569', marginBottom: '30px', lineHeight: '1.6' }}>
-          {error?.status === 404
-            ? 'الصفحة المطلوبة غير موجودة.'
-            : 'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.'
-          }
-        </p>
-        <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
-          <button
-            onClick={() => navigate('/')}
-            style={{
-              padding: '12px 24px',
-              background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '12px',
-              cursor: 'pointer',
-              fontSize: '16px',
-              fontWeight: '600',
-              boxShadow: '0 4px 15px rgba(37, 99, 235, 0.3)'
-            }}
-          >
-            Go Home
-          </button>
-          <button
-            onClick={() => navigate(-1)}
-            style={{
-              padding: '12px 24px',
-              background: '#eef2fb',
-              color: '#1e293b',
-              border: '1px solid #d4deee',
-              borderRadius: '12px',
-              cursor: 'pointer',
-              fontSize: '16px',
-              fontWeight: '600'
-            }}
-          >
-            رجوع
-          </button>
+        <div className="errscreen" dir="rtl">
+            <div className="errscreen-card">
+                <span className="errscreen-icon" aria-hidden="true">
+                    <Icon name="alert-triangle" size={30} />
+                </span>
+                <h1>{notFound ? 'الصفحة غير موجودة' : 'حدث خطأ غير متوقع'}</h1>
+                <p>
+                    {notFound
+                        ? 'الرابط الذي فتحته غير صحيح أو لم يعد متاحاً.'
+                        : 'تعذّر تحميل هذه الصفحة. جرّب إعادة التحميل، وإذا تكرر الأمر تواصل معنا.'}
+                </p>
+                <div className="errscreen-actions">
+                    <button
+                        type="button"
+                        className="errscreen-btn errscreen-btn--primary"
+                        onClick={() => navigate('/')}
+                    >
+                        <Icon name="home" size={17} /> العودة للرئيسية
+                    </button>
+                    <button
+                        type="button"
+                        className="errscreen-btn errscreen-btn--ghost"
+                        onClick={() => window.location.reload()}
+                    >
+                        <Icon name="refresh" size={17} /> إعادة تحميل
+                    </button>
+                </div>
+                <nav className="errscreen-links" aria-label="روابط سريعة">
+                    <Link to="/quizs">حسابي</Link>
+                    <Link to="/faq">الأسئلة الشائعة</Link>
+                    <Link to="/contact">تواصل معنا</Link>
+                </nav>
+            </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 };
 
-// Export both - RouteErrorBoundary as default for react-router
 export default RouteErrorBoundary;
-export { RenderErrorBoundary }; 

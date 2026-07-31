@@ -1,0 +1,151 @@
+/* Shared shell for the full-page error/404 screens (ErrorBoundary, NotFound).
+   These used to be ~60 lines of duplicated inline styles per screen, which is
+   why they drifted out of the design system — hardcoded colours, an English
+   "Go Home" button in an otherwise Arabic RTL page. */
+
+.errscreen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1 0 auto;
+    min-height: 70vh;
+    padding: 40px 20px;
+    text-align: center;
+    background: radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.08), transparent 30%),
+        radial-gradient(circle at 85% 10%, rgba(99, 102, 241, 0.09), transparent 25%),
+        linear-gradient(145deg, #eef2fb 0%, #ffffff 60%, #ffffff 100%);
+}
+
+.errscreen-card {
+    width: 100%;
+    max-width: 520px;
+    padding: 40px 32px;
+    border-radius: var(--radius-xl, 24px);
+    background: var(--surface, #ffffff);
+    border: 1px solid var(--border-color, #d4deee);
+    box-shadow: var(--shadow-lg, 0 14px 36px rgba(15, 23, 42, 0.16));
+}
+
+.errscreen-code {
+    display: block;
+    font-size: 64px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -2px;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, #3b82f6, #4f46e5);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.errscreen-icon {
+    display: grid;
+    place-items: center;
+    width: 62px;
+    height: 62px;
+    margin: 0 auto 18px;
+    border-radius: 18px;
+    background: rgba(220, 38, 38, 0.10);
+    color: var(--error-color, #dc2626);
+}
+
+.errscreen-card h1 {
+    margin: 0 0 12px;
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--text-dark, #0f1e3d);
+}
+
+.errscreen-card p {
+    margin: 0 0 26px;
+    line-height: 1.75;
+    color: var(--text-medium, #475569);
+}
+
+.errscreen-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+}
+
+.errscreen-btn {
+    padding: 12px 24px;
+    border-radius: var(--radius-md, 12px);
+    border: 1px solid transparent;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+}
+
+.errscreen-btn:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+.errscreen-btn--primary {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: #ffffff;
+    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.28);
+}
+
+.errscreen-btn--primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(37, 99, 235, 0.36);
+}
+
+.errscreen-btn--ghost {
+    background: var(--surface-2, #f5f8fd);
+    color: var(--text-dark, #0f1e3d);
+    border-color: var(--border-color, #d4deee);
+}
+
+.errscreen-btn--ghost:hover {
+    background: #ffffff;
+    transform: translateY(-2px);
+}
+
+/* Helpful links under a 404 — most mistyped URLs are one of these. */
+.errscreen-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 18px;
+    margin: 26px 0 0;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-light, #e6ecf7);
+    font-size: 14px;
+}
+
+.errscreen-links a {
+    color: var(--primary-dark, #1d4ed8);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.errscreen-links a:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 480px) {
+    .errscreen-card {
+        padding: 30px 20px;
+    }
+
+    .errscreen-code {
+        font-size: 52px;
+    }
+
+    .errscreen-actions .errscreen-btn {
+        flex: 1 1 100%;
+        justify-content: center;
+    }
+}

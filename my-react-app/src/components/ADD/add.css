@@ -1021,18 +1021,6 @@
     }
 }
 
-.user-field {
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.user-field strong {
-    min-width: 120px;
-    color: #475569;
-}
-
 .status {
     padding: 4px 8px;
     border-radius: 4px;
@@ -1050,13 +1038,6 @@
     color: #721c24;
 }
 
-.no-users {
-    text-align: center;
-    padding: 40px 20px;
-    color: #475569;
-    font-style: italic;
-}
-
 /* Mobile responsiveness */
 @media (max-width: 768px) {
     .container {
@@ -1068,81 +1049,9 @@
         margin-bottom: 15px;
     }
 
-    /* Removed: an unused generic `.back-button` rule that leaked onto the
-       shared navbar button. Scope any future one to this page. */
-
-    .admin-title {
-        font-size: 20px;
-    }
-
     .form {
         padding: 1.5rem;
     }
-
-    .user-list {
-        max-height: 300px;
-        padding: 10px;
-    }
-
-    .user-item {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 10px;
-    }
-
-    .user-actions {
-        justify-content: center;
-        margin-top: 15px;
-    }
-
-    .delete-button {
-        width: 100%;
-        min-width: auto;
-    }
-
-    .user-field {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 4px;
-    }
-
-    .user-field strong {
-        min-width: auto;
-    }
-}
-
-.delete-button {
-    background-color: #dc3545;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    min-width: 120px;
-    white-space: nowrap;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.delete-button:hover:not(:disabled) {
-    background-color: #c82333;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
-
-.delete-button:disabled {
-    background-color: #e1eafb;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-}
-
-.delete-button:active:not(:disabled) {
-    background-color: #bd2130;
-    transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 /* ── Track chip on the user rows ──────────────────────────────────────────
    Which question bank an account belongs to. Shown inline with the user id
