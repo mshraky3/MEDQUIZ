@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "SQB",
+    "slug": "sqb",
+    "owner": "m_alshraky3",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "scheme": "sqb",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0b1021"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.m_alshraky3.sqb"
+    },
+    "android": {
+      "package": "com.m_alshraky3.sqb",
+      "adaptiveIcon": {
+        "backgroundColor": "#0b1021",
+        "foregroundImage": "./assets/adaptive-icon.png"
+      }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-secure-store"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "e3168990-1c46-401f-b7ce-3f27354981b2"
+      },
+      "router": {}
+    }
+  }
+}

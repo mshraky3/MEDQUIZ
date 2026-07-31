@@ -1,0 +1,97 @@
+================================================================================
+  EXPO ACCOUNT & EAS BUILD REFERENCE — SQB APP
+================================================================================
+
+EXPO ACCOUNT
+------------
+  Username   : m_alshraky3
+  Account URL: https://expo.dev/accounts/m_alshraky3
+
+PROJECT IDENTITY
+----------------
+  App Name        : SQB
+  Slug            : sqb
+  Owner           : m_alshraky3
+  EAS Project ID  : e3168990-1c46-401f-b7ce-3f27354981b2
+  Android Package : com.m_alshraky3.sqb
+  iOS Bundle ID   : com.m_alshraky3.sqb
+  Version         : 1.0.0
+  Expo SDK        : ~55.0.8
+  React Native    : 0.83.2
+
+LOCAL PROJECT PATH
+------------------
+  C:\Users\muhmo\Desktop\CODE\Projects\MEDQIZE\mobile\
+
+================================================================================
+  HOW TO LOG IN (run once per machine)
+================================================================================
+
+  npx eas-cli login
+  # Enter username: m_alshraky3
+  # Enter your Expo account password when prompted
+
+  -- OR using the old expo CLI --
+  npx expo login -u m_alshraky3
+
+  Verify login:
+  npx eas whoami
+
+================================================================================
+  EAS BUILD PROFILES  (defined in mobile/eas.json)
+================================================================================
+
+  PROFILE       | PLATFORM | OUTPUT TYPE | DISTRIBUTION
+  --------------|----------|-------------|-------------
+  development   | Android  | APK         | internal (download link)
+  preview       | Android  | APK         | internal (download link)
+  production    | Android  | AAB         | Google Play store
+
+================================================================================
+  BUILD COMMANDS  (run from inside the mobile/ folder)
+================================================================================
+
+  cd C:\Users\muhmo\Desktop\CODE\Projects\MEDQIZE\mobile
+
+  -- Build a downloadable APK (preview profile, recommended for testing) --
+  npx eas build --platform android --profile preview
+
+  -- Build a development APK (includes dev client) --
+  npx eas build --platform android --profile development
+
+  -- Build a production AAB (for Google Play) --
+  npx eas build --platform android --profile production
+
+  -- Build locally on this machine instead of EAS cloud --
+  npx eas build --platform android --profile preview --local
+
+  After a cloud build finishes, EAS prints a download URL.
+  You can also view/download all builds at:
+  https://expo.dev/accounts/m_alshraky3/projects/sqb/builds
+
+================================================================================
+  INSTALL EAS CLI (if not installed)
+================================================================================
+
+  npm install -g eas-cli
+  # then verify:
+  eas --version   # should be >= 5.0.0
+
+================================================================================
+  BACKEND (API used by the app)
+================================================================================
+
+  Production URL : https://medquiz.vercel.app
+  Stack          : Express + PostgreSQL, session-based auth
+
+================================================================================
+  KEY CONFIG FILES
+================================================================================
+
+  mobile/app.json        — Expo config (name, slug, package IDs, EAS project ID)
+  mobile/eas.json        — Build profiles (development / preview / production)
+  mobile/package.json    — Dependencies & scripts
+  mobile/src/constants/config.ts  — API base URL and app constants
+  mobile/src/contexts/AuthContext.tsx — Auth logic
+
+================================================================================

@@ -1,0 +1,66 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+dist-ssr/
+
+# Environment
+.env
+.env.*
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+
+# Personal / business documents — commercial registration, IBAN letter,
+# license scans, ID photos. Never belongs in version control.
+payment-data/
+
+# Proprietary exam content (source PDFs/JSON the question bank is built
+# from) — hundreds of MB, not app code, and not meant to be public.
+# Consolidated under source-material/: content/, JSON/, summarys/,
+# new questions/, nursing/.
+/source-material/
+/Q/
+backend/Q/
+
+# NOTE: backend/content/summaryHtml/ is deliberately NOT ignored. It is
+# application source — backend/app.js imports ./content/summaryHtml/index.js at
+# startup, so a deploy built from this repo will not boot without it. It is 15
+# authored .js files (~400 KB), not bulk exam material.
+/geyna/
+
+# Local DB/data backups — restore points, not source.
+backups/
+
+# Design/marketing assets not wired into the app (4.4 MB of landing-page demo
+# video that nothing imports). Binaries with no build step behind them do not
+# belong in a public repo.
+assets/
+
+# User-data exports (emails etc.) produced by backend scripts.
+backend/exports/
+
+# Stray local notes / debug artifacts, not part of the app. Consolidated
+# under notes/: blob.txt, moyasar.certificateSigningRequest,
+# association_check.txt (Apple Pay domain-association diagnostic dump),
+# email.txt (personal reference notes containing credentials — never
+# belongs in version control, regardless of which project reads it).
+/notes/
+backend/insertion_output.log
+backend/*.png
+# rollup-plugin-visualizer output — a build report, regenerated on demand.
+my-react-app/stats.html

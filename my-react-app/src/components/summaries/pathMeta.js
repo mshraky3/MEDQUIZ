@@ -7,10 +7,11 @@
 // themselves. Nothing here filters or hides content within a track: every step
 // stays open at all times, the ordering is guidance only.
 //
-// Use getPath(track). The result is built once per track and memoised, so the
-// (fairly expensive) reading-time estimate over ~800 KB of markup is not redone
-// on every render.
-import { sectionsFor } from './content/index.js';
+// Use loadPath(track). It is async because the catalog itself is now loaded per
+// track on demand (see ./content/index.js). The result is built once per track
+// and memoised, so the (fairly expensive) reading-time estimate over ~800 KB of
+// markup is not redone on every render.
+import { loadSections } from './content/index.js';
 import { normalizeTrack } from '../../utils/tracks.js';
 
 /* ------------------------------------------------------------------ */
@@ -237,19 +238,10 @@ const buildMilestones = (sections) => {
 
 const pathCache = new Map();
 
-/**
- * The guided path for one study track: milestones, flattened steps, totals and
- * id lookups. A track with no authored summaries yet returns an empty but
- * fully-shaped path (`milestones: []`, `totalSteps: 0`), so callers can render
- * an empty state without special-casing null.
- */
-export function getPath(track) {
-    const key = normalizeTrack(track);
-    if (pathCache.has(key)) return pathCache.get(key);
-
-    const milestones = buildMilestones(sectionsFor(key));
+function buildPath(key, sections) {
+    const milestones = buildMilestones(sections);
     const steps = milestones.flatMap((m) => m.steps);
-    const path = {
+    return {
         track: key,
         milestones,
         steps,
@@ -269,8 +261,31 @@ export function getPath(track) {
             return out;
         })(),
     };
-    pathCache.set(key, path);
-    return path;
 }
 
-export default getPath;
+/**
+ * An empty but fully-shaped path. Callers render this while the catalog chunk
+ * is in flight and for a track with no authored summaries yet, so neither case
+ * needs special-casing against null.
+ */
+export const EMPTY_PATH_SHAPE = Object.freeze(buildPath(normalizeTrack(undefined), []));
+
+/**
+ * The guided path for one study track: milestones, flattened steps, totals and
+ * id lookups. Async because the catalog is loaded per track on demand; memoised
+ * per track, so it is one round-trip on first visit and instant afterwards.
+ */
+export async function loadPath(track) {
+    const key = normalizeTrack(track);
+    if (!pathCache.has(key)) {
+        pathCache.set(
+            key,
+            loadSections(key)
+                .then((sections) => buildPath(key, sections))
+                .catch((err) => { pathCache.delete(key); throw err; })
+        );
+    }
+    return pathCache.get(key);
+}
+
+export default loadPath;

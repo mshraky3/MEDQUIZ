@@ -1,0 +1,26 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--prefix", "my-react-app", "--", "--port", "5188", "--strictPort"],
+      "port": 5188,
+      "autoPort": false
+    },
+    {
+      "name": "api",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--prefix", "backend"],
+      "port": 3000,
+      "autoPort": false
+    },
+    {
+      "name": "web-dist",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "preview", "--prefix", "my-react-app", "--", "--port", "5190", "--strictPort"],
+      "port": 5190,
+      "autoPort": false
+    }
+  ]
+}

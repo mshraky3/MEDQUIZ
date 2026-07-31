@@ -11,7 +11,9 @@
 
 import assert from 'node:assert/strict';
 import { MEDICAL, NURSING } from '../config/tracks.js';
-import { KEPT_SOURCES, resolveSources } from '../config/sources.js';
+import {
+    KEPT_SOURCES, NURSING_SOURCES, PICKABLE_SOURCES, SELECTABLE_SOURCES, resolveSources,
+} from '../config/sources.js';
 
 const cases = [
     // --- medical: always constrained to the kept allowlist ------------------
@@ -48,5 +50,42 @@ for (const [name, source, track, expected] of cases) {
     }
 }
 
-console.log(`\n${cases.length - failed}/${cases.length} passed`);
+// --- what the launcher is allowed to OFFER -------------------------------
+// Distinct from what resolveSources will honour. Medical must stay empty: that
+// bank was deliberately unified in 2026 and the monthly collections behind it
+// are an implementation detail students are not meant to choose between.
+const pickableCases = [
+    ['medical offers no picker', PICKABLE_SOURCES[MEDICAL], []],
+    ['nursing offers both collections', PICKABLE_SOURCES[NURSING], NURSING_SOURCES],
+];
+
+for (const [name, actual, expected] of pickableCases) {
+    try {
+        assert.deepEqual(actual, expected);
+        console.log(`  ok   ${name}`);
+    } catch {
+        failed++;
+        console.error(`  FAIL ${name}\n       got      ${JSON.stringify(actual)}` +
+            `\n       expected ${JSON.stringify(expected)}`);
+    }
+}
+
+// Anything offerable must also be resolvable, or the picker would hand the
+// server a source it then ignores.
+for (const track of [MEDICAL, NURSING]) {
+    for (const s of PICKABLE_SOURCES[track]) {
+        try {
+            assert.deepEqual(resolveSources(s, track), [s]);
+            assert.ok(SELECTABLE_SOURCES[track].includes(s));
+            console.log(`  ok   ${track}: offered "${s}" resolves to itself`);
+        } catch {
+            failed++;
+            console.error(`  FAIL ${track}: offered "${s}" does not resolve to itself`);
+        }
+    }
+}
+
+const total = cases.length + pickableCases.length
+    + Object.values(PICKABLE_SOURCES).reduce((n, a) => n + a.length, 0);
+console.log(`\n${total - failed}/${total} passed`);
 process.exit(failed ? 1 : 0);

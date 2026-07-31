@@ -1,11 +1,12 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { findSubtopic } from './content/index.js';
-import { getPath } from './pathMeta.js';
+import { loadPath, EMPTY_PATH_SHAPE } from './pathMeta.js';
 import QuestionCard from './QuestionCard.jsx';
 import PathCheckpoint from './PathCheckpoint.jsx';
 import SummaryAnnotation from './SummaryAnnotation.jsx';
 import Icon from '../common/Icon.jsx';
+import Spinner from '../common/Spinner.jsx';
 import { UserContext } from '../../UserContext';
 import { safeGetItem, safeSetItem } from '../../utils/safeStorage.js';
 import { userTrack, trackLabel, examLabel } from '../../utils/tracks.js';
@@ -68,10 +69,25 @@ const SummariesPage = () => {
 
     // The guided path for this student's own track. `guide` is deliberately not
     // called `path` — that name is already taken by the stored resume point
-    // below. getPath memoises per track, so this is a map lookup after the
-    // first render.
+    // below.
+    //
+    // The catalog is ~1.2 MB of authored prose split per track, so it arrives as
+    // its own chunk rather than inside this one. Until it lands we hold the
+    // empty-but-fully-shaped path, which every derived value below tolerates.
+    // loadPath memoises per track, so a revisit resolves without a round-trip.
     const myTrack = userTrack(user);
-    const guide = getPath(myTrack);
+    const [guide, setGuide] = useState(EMPTY_PATH_SHAPE);
+    const [guideState, setGuideState] = useState('loading'); // loading | ready | error
+
+    useEffect(() => {
+        let alive = true;
+        setGuideState('loading');
+        loadPath(myTrack)
+            .then((p) => { if (alive) { setGuide(p); setGuideState('ready'); } })
+            .catch(() => { if (alive) setGuideState('error'); });
+        return () => { alive = false; };
+    }, [myTrack]);
+
     const {
         milestones: MILESTONES,
         steps: STEPS,
@@ -80,8 +96,10 @@ const SummariesPage = () => {
         totalQuestions: TOTAL_QUESTIONS,
         ticks: TRACK_TICKS,
     } = guide;
-    // A track whose summaries have not been authored yet.
-    const noContent = TOTAL_STEPS === 0;
+    // A track whose summaries have not been authored yet. Only meaningful once
+    // the catalog has actually loaded — before that, zero steps just means
+    // "not here yet".
+    const noContent = guideState === 'ready' && TOTAL_STEPS === 0;
     const [query, setQuery] = useState('');        // step search filter
     const [openSub, setOpenSub] = useState(null); // { section, subtopic }
     const [tab, setTab] = useState('summary');     // 'summary' | 'questions'
@@ -253,13 +271,21 @@ const SummariesPage = () => {
     // Switching tab resets to the browse tool so questions are clickable by default.
     const changeTab = (t) => { setTab(t); setTool('move'); };
 
-    // Deep link → open the right milestone + sub-topic modal.
+    // Deep link → open the right milestone + sub-topic modal. Waits on the same
+    // cached catalog promise as the path above, so it resolves as soon as the
+    // track's chunk lands rather than fetching it a second time.
     useEffect(() => {
-        if (!slug) return;
-        const hit = findSubtopic(slug, myTrack);
-        if (!hit) return;
-        setOpenMs((prev) => new Set(prev).add(hit.section.id));
-        if (hit.subtopic) openSubtopic(hit.section, hit.subtopic);
+        if (!slug) return undefined;
+        let alive = true;
+        findSubtopic(slug, myTrack)
+            .then((hit) => {
+                if (!alive || !hit) return;
+                setOpenMs((prev) => new Set(prev).add(hit.section.id));
+                if (hit.subtopic) openSubtopic(hit.section, hit.subtopic);
+            })
+            .catch(() => { /* a bad slug is not an error worth surfacing */ });
+        return () => { alive = false; };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [slug, myTrack]);
 
     // Esc closes the modal; lock background scroll while it's open.
@@ -444,6 +470,31 @@ const SummariesPage = () => {
             </li>
         );
     };
+
+    // The catalog chunk for this track is still in flight.
+    if (guideState === 'loading') {
+        return (
+            <div className="summaries-hub" dir="rtl">
+                <Spinner fullScreen label="جاري تحميل المحتوى الدراسي" />
+            </div>
+        );
+    }
+
+    // The chunk failed to load (offline, or a stale asset hash after a deploy).
+    if (guideState === 'error') {
+        return (
+            <div className="summaries-hub" dir="rtl">
+                <div className="hub-comingsoon">
+                    <span className="hub-comingsoon-icon" aria-hidden="true"><Icon name="alert-triangle" size={34} /></span>
+                    <h1>تعذّر تحميل المحتوى الدراسي</h1>
+                    <p>تحقّق من اتصالك بالإنترنت ثم أعد المحاولة.</p>
+                    <button type="button" className="hub-search-clear" onClick={() => window.location.reload()}>
+                        إعادة المحاولة
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     // A track with no authored summaries gets an honest placeholder instead of
     // a study path with zero steps in it. Rendered before any of the path UI so

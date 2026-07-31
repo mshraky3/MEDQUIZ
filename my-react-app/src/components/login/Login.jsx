@@ -143,12 +143,11 @@ const Login = () => {
     setError('');
     setLoading(true);
 
-    // Admin bypass
-    if (cleanedUsername === 'admin' && password === 'admin1810') {
-      setLoading(false);
-      navigate('/admin');
-      return;
-    }
+    // NOTE: a hardcoded `admin` / `<password>` shortcut used to sit here that
+    // navigated straight to /admin. It granted no access — /admin is behind
+    // AdminGate, which verifies the real ADMIN_KEY against the server — but it
+    // was a credential literal in client source, shipped in the public bundle
+    // and readable by anyone. Admins reach /admin directly and enter the key.
 
     axios
       .post(`${Globals.URL}/login`, {

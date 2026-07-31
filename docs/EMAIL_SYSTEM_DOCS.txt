@@ -1,0 +1,351 @@
+================================================================================
+  SQB — EMAIL SYSTEM FULL DOCUMENTATION
+================================================================================
+
+
+--------------------------------------------------------------------------------
+1. SMTP TRANSPORTER SETUP (nodemailer — SHARED MODULE)
+--------------------------------------------------------------------------------
+
+Package: nodemailer  (npm install nodemailer)
+
+ALL email in the backend now goes through ONE shared module:
+  backend/services/mailer.js
+
+It is configured by env vars (set them on the backend host, e.g. Vercel):
+
+  SMTP_HOST          e.g. smtp.resend.com     (default: smtp.gmail.com)
+  SMTP_PORT          e.g. 465                 (default: 587)
+  SMTP_USER          e.g. resend              (default: alshrakynodeapp@gmail.com)
+  SMTP_PASS          provider API key         (default: Gmail app password)
+  MAIL_FROM_ADDRESS  e.g. noreply@smle-question-bank.com
+  MAIL_FROM_NAME     default display name     (default: SQB)
+
+UPDATE 2026-07-22: the hardcoded legacy-Gmail fallback (a real password
+sitting in source control) was removed from mailer.js. Missing SMTP_*
+vars now throw a clear error instead of silently falling back.
+
+DELIVERABILITY: Gmail-sender mail lands in spam and Gmail sometimes blocks
+SMTP logins from new IPs entirely (534 WebLoginRequired). To reach the
+inbox, use a transactional provider (e.g. Resend) with the domain
+smle-question-bank.com verified via SPF + DKIM + DMARC DNS records, and
+set MAIL_FROM_ADDRESS=noreply@smle-question-bank.com.
+
+USAGE:
+-----
+import { sendMail } from './services/mailer.js';
+
+await sendMail({
+  name: 'SQB',              // display name only; address comes from env
+  to,
+  subject,
+  text,                     // optional
+  html,                     // optional
+  attachments,              // optional
+});
+-----
+
+LEGACY SENDER ACCOUNT (deprecated, no longer wired into code):
+  Gmail address : alshrakynodeapp@gmail.com
+  App password  : <redacted — was hardcoded in mailer.js, removed 2026-07-22>
+
+ADMIN / NOTIFICATION RECIPIENT:
+  muhmodalshraky3@gmail.com
+
+
+--------------------------------------------------------------------------------
+2. EMAIL USE-CASES IN APP.JS (backend notifications to admin)
+--------------------------------------------------------------------------------
+
+All these send to: muhmodalshraky3@gmail.com
+
+A) ADMIN ACCOUNT CREATED
+   Trigger  : POST /add_account
+   Subject  : "🔧 Admin Account Created - {username}"
+   Body     : Username, User ID, creation time, created by admin
+
+B) PAYMENT CONFIRMED (legacy, now commented out but structure preserved)
+   Trigger  : Manual payment confirmation endpoint
+   Subject  : "💰 Payment Confirmed - User ID: {userId}"
+   Body     : User ID, username, payment amount $1.00 USD (3.75 SAR), timestamp
+
+C) TEST EMAIL
+   Trigger  : GET /api/test-email
+   Subject  : "🧪 Test Email - SQB System"
+   Body     : System status OK, timestamp
+
+D) CONTACT FORM
+   Trigger  : POST /api/contact
+   Subject  : "📞 Contact Form - {subject}"
+   Body     : Name, mobile, subject, message content
+   Fields   : { name, mobile, subject, message }
+
+E) SUGGESTION SUBMITTED
+   Trigger  : POST /api/suggestions
+   Subject  : "💡 New Suggestion: {title}"
+   Body     : Category, priority, title, description, suggestion ID, timestamp
+   Fields   : { category, title, description, priority }
+   Uses full HTML email template with purple gradient header and admin panel button
+   Admin panel link in email: https://medquiz.vercel.app/admin
+
+
+--------------------------------------------------------------------------------
+3. OTP EMAIL SYSTEM (sent to the USER, not admin)
+--------------------------------------------------------------------------------
+
+ENDPOINT: POST /api/auth/send-otp
+BODY: { email: "user@example.com", purpose: "signup" | "migration" }
+
+HOW IT WORKS:
+  1. Validates email format with regex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  2. For purpose="signup": checks email is not already verified in DB
+  3. Invalidates old unused OTPs for same email (sets used=TRUE)
+  4. Generates 4-digit OTP: Math.floor(1000 + Math.random() * 9000).toString()
+  5. Stores in DB table "signup_otps" with 5-minute expiry
+  6. Sends OTP email to user's email address
+
+DATABASE TABLE FOR OTP:
+  CREATE TABLE IF NOT EXISTS signup_otps (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(255) NOT NULL,
+    otp_code VARCHAR(4) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP NOT NULL,
+    used BOOLEAN DEFAULT FALSE
+  );
+
+OTP EMAIL TEMPLATE:
+  Subject : "رمز التحقق — SQB"
+  Language: Arabic (RTL)
+  Design  : Dark background (#0b1021), cyan accent (#22d3ee)
+  Shows   : 4-digit code in large font, "valid for 5 minutes" message
+  From    : alshrakynodeapp@gmail.com
+
+OTP VERIFICATION ENDPOINT: POST /api/auth/verify-migration-otp
+BODY: { username, email, otp_code }
+  - Looks up user by username or email
+  - Checks signup_otps table: email match, otp match, not used, not expired
+  - Marks OTP as used
+  - Sets accounts.email = email AND accounts.email_verified = TRUE
+
+OTP EXPIRY: 5 minutes
+  expiresAt = new Date(Date.now() + 5 * 60 * 1000)
+
+ACCOUNTS TABLE COLUMNS NEEDED:
+  ALTER TABLE accounts ADD COLUMN IF NOT EXISTS email VARCHAR(255);
+  ALTER TABLE accounts ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT FALSE;
+
+
+--------------------------------------------------------------------------------
+4. ERROR NOTIFICATION SERVICE (services/errorNotificationService.js)
+--------------------------------------------------------------------------------
+
+FILE: backend/services/errorNotificationService.js
+IMPORT IN APP: import { notifyBackendError } from './services/errorNotificationService.js';
+
+RECIPIENT: alshraky3@gmail.com  (developer email, or DEVELOPER_EMAILS env var)
+
+--- TRANSPORTER ---
+
+UPDATE 2026-07-22: this service no longer has its own transporter. It
+sends via the shared backend/services/mailer.js (see section 1), same
+as everything else — so it follows whatever SMTP_* / MAIL_FROM_* is set.
+
+const DEVELOPER_EMAILS = process.env.DEVELOPER_EMAILS?.split(',') || ['alshraky3@gmail.com'];
+
+--- RATE LIMITING ---
+
+  maxEmailsPerHour : 20
+  cooldownMinutes  : 5  (same error type won't re-email within 5 min)
+
+--- SEVERITY LEVELS ---
+
+  CRITICAL : statusCode >= 500, DATABASE errors, CONNECTION errors → always emails
+  HIGH     : 401/403, UNKNOWN errors → always emails
+  MEDIUM   : 4xx errors → SKIPPED (no email sent)
+  LOW      : everything else → SKIPPED (no email sent)
+
+Only CRITICAL and HIGH trigger emails.
+
+--- ERROR OBJECT STRUCTURE ---
+
+{
+  errorType    : 'BACKEND_ERROR',      // string, e.g. 'DATABASE_ERROR'
+  message      : 'error message',
+  endpoint     : '/api/quiz/submit',   // req.originalUrl
+  method       : 'POST',               // req.method
+  statusCode   : 500,
+  page         : '/quiz',              // req.headers.referer or origin
+  userAgent    : 'Chrome/...',         // req.headers['user-agent']
+  userId       : 42,
+  username     : 'johndoe',
+  branchId     : null,
+  timestamp    : new Date().toISOString(),
+  stackTrace   : 'Error: ...\n  at ...',
+  requestData  : { body: {}, params: {}, query: {} },
+  additionalInfo: {}
+}
+
+--- EXPORTED FUNCTIONS ---
+
+1. sendErrorNotification(errorData)
+   - Classifies severity
+   - Checks rate limit
+   - Generates error ID: `${Date.now()}-${Math.random().toString(36).substring(2,11)}`
+   - Builds full HTML email
+   - Sends to DEVELOPER_EMAILS
+   - Returns: { success: boolean, errorId?: string, message?: string }
+
+2. notifyBackendError(error, req = null, additionalInfo = {})
+   - Convenience wrapper: builds errorData from a caught JS Error + Express req
+   - Calls sendErrorNotification internally
+   - Usage: await notifyBackendError(err, req, { context: 'quiz submission' });
+
+3. getRateLimitStatus()
+   - Returns: { hourlyCount, maxPerHour, cooldownMinutes, activeErrors }
+
+--- EMAIL TEMPLATE FEATURES ---
+
+  - Full HTML with inline CSS (email-client compatible)
+  - Dark header with gradient colors per severity:
+      CRITICAL : red    (#dc2626 → #991b1b)
+      HIGH     : orange (#ea580c → #c2410c)
+      MEDIUM   : yellow (#eab308 → #ca8a04)
+      LOW      : blue   (#3b82f6 → #1d4ed8)
+  - Shows: error type, message, time, page URL, endpoint+method, status code,
+           user info, browser/agent, request data (JSON), stack trace, additional info
+  - Quick action buttons: "Open Page", "Admin Panel", "Vercel Logs"
+  - Footer shows environment badge (Production/Development) + error ID
+  - Frequency badge if same error fires multiple times (×N)
+  - Hourly count badge if > 5 emails sent this hour
+
+--- SUBJECT FORMAT ---
+
+  "{emoji} [{SEVERITY}] System Error: {errorType}"
+  e.g. "🚨 [CRITICAL] System Error: DATABASE_ERROR"
+  If repeated: "🚨 [CRITICAL] System Error: DATABASE_ERROR (×3)"
+
+--- HOW TO USE IN EXPRESS ROUTES ---
+
+  import { notifyBackendError } from './services/errorNotificationService.js';
+
+  app.get('/some-route', async (req, res) => {
+    try {
+      // ... your code
+    } catch (err) {
+      await notifyBackendError(err, req);
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+
+--- HOW TO TEST ---
+
+  Run: node testEmail.js
+  This sends a fake CRITICAL_TEST_ERROR to alshraky3@gmail.com
+
+
+--------------------------------------------------------------------------------
+5. QUICK SUMMARY TABLE
+--------------------------------------------------------------------------------
+
+  | Purpose                    | Sender                    | Recipient                  | Trigger                    |
+  |----------------------------|---------------------------|----------------------------|----------------------------|
+  | OTP verification           | alshrakynodeapp@gmail.com | user's email               | POST /api/auth/send-otp    |
+  | Admin account created      | alshrakynodeapp@gmail.com | muhmodalshraky3@gmail.com  | POST /add_account          |
+  | Contact form               | alshrakynodeapp@gmail.com | muhmodalshraky3@gmail.com  | POST /api/contact          |
+  | Suggestion submitted       | alshrakynodeapp@gmail.com | muhmodalshraky3@gmail.com  | POST /api/suggestions      |
+  | Test email                 | alshrakynodeapp@gmail.com | muhmodalshraky3@gmail.com  | GET /api/test-email        |
+  | Backend error (CRITICAL/HIGH)| alshrakynodeapp@gmail.com| alshraky3@gmail.com       | auto on error              |
+
+
+--------------------------------------------------------------------------------
+6. DEPENDENCIES
+--------------------------------------------------------------------------------
+
+  npm install nodemailer
+
+  In package.json:
+    "nodemailer": "^x.x.x"
+
+  ES Module import (used in this project):
+    import nodemailer from 'nodemailer';
+
+  CommonJS (if needed in another project):
+    const nodemailer = require('nodemailer');
+
+
+
+================================================================================
+  BULK BROADCAST — /admin/email          (added 2026-07-25)
+================================================================================
+
+WHAT IT IS
+  Compose ONE email and drip it to every user. Separate from the automated
+  lifecycle mail (welcome / inactivity / streak / feedback) in
+  routes/email-campaigns.js — that is cron-driven, this is admin-driven.
+
+  UI       my-react-app/src/components/ADD/AdminBroadcast.jsx  (route /admin/email)
+  API      backend/routes/admin-broadcast.js  (mounted at /admin/broadcast)
+  Tables   broadcast_campaigns, broadcast_recipients  (created lazily on first use)
+  Column   accounts.email_opt_out  (added lazily; honoured by every audience)
+
+WHY IT IS A QUEUE AND NOT A LOOP
+  A plain "select all users and loop" breaks three ways here:
+    1. Vercel kills the function before a long loop finishes, and there is no
+       record of how far it got.
+    2. Resend free = ~100 emails/day and ~2 requests/second. A tight loop trips
+       the rate limiter and the rest of the batch just fails.
+    3. A sudden burst of identical mail from one domain is the fastest route to
+       the spam folder.
+  So: creating a campaign freezes a recipient list, and POST .../batch sends
+  only a few at a time. The admin page calls it in a loop until done.
+
+THE THREE SAFETY LIMITS  (all env-overridable)
+  BROADCAST_BATCH_SIZE   default 5    emails per HTTP request
+  BROADCAST_DELAY_MS     default 600  gap between sends  (~1.6/s, under Resend's 2/s)
+  BROADCAST_DAILY_CAP    default 90   rolling 24h cap across ALL campaigns
+                                      (Resend free tier is 100/day — leave headroom)
+  One batch ≈ 5 x (0.6s + send latency) ≈ 5s, comfortably inside a 10s timeout.
+
+RESUMABILITY — this is the important bit
+  Progress lives in broadcast_recipients, not in the browser. Close the tab,
+  lose wifi, hit the daily cap — press start again and it continues from the
+  first unsent person. Nobody is ever mailed twice, because:
+    * rows are claimed with FOR UPDATE SKIP LOCKED (two tabs cannot collide)
+    * a row stuck in 'sending' for >5 min is treated as a killed batch and
+      retried; 'sending' rows count as OUTSTANDING so a campaign cannot report
+      itself finished while people are still unsent
+
+UNSUBSCRIBE IS MANDATORY AND AUTOMATIC
+  Every broadcast gets an unsubscribe link in the footer. GET /api/unsubscribe
+  is public (it is clicked from a mail client) but the token is an HMAC of the
+  account id, so links cannot be guessed or enumerated.
+  Secret: UNSUBSCRIBE_SECRET, falling back to ADMIN_KEY.
+  >>> Do not remove the footer. Bulk mail with no opt-out is how this domain
+      gets classified as spam, and deliverability here has been fragile before.
+
+ENV NEEDED
+  ADMIN_KEY            gates every /admin/broadcast route
+  PUBLIC_APP_URL       used to build the unsubscribe link (falls back to APP_URL)
+  UNSUBSCRIBE_SECRET   optional; ADMIN_KEY is used if unset
+  SMTP_* / MAIL_FROM_* the existing mailer settings — nothing new
+
+HOW TO SEND (the safe order)
+  1. /admin/email → pick audience → write subject + body → "إنشاء الحملة"
+     (this only freezes the recipient list; it sends nothing)
+  2. Put your own address in the test box → "إرسال اختبار" → check it renders
+  3. Tick the confirmation box → "ابدأ الإرسال" → LEAVE THE TAB OPEN
+  4. If it stops on the daily cap, come back in a few hours and press continue
+
+VERIFIED
+  All 9 routes mount under Express 5 and return 401 without an admin key;
+  a forged unsubscribe token is rejected; unsubscribe tokens are deterministic
+  per account and differ between accounts. NOT yet exercised end-to-end against
+  the real database — the first real campaign is the first true test, which is
+  exactly why step 2 above exists.
+
+================================================================================
+
+================================================================================
+  END OF DOCUMENTATION
+================================================================================

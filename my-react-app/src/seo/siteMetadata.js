@@ -247,7 +247,12 @@ const routeMap = {
         title: 'اتصل بنا | SQB',
         description: 'تواصل مع فريق SQB للحصول على الدعم أو الاستفسار عن الاشتراكات أو إرسال الملاحظات والاقتراحات المتعلقة بمنصة التحضير لاختبار SMLE.',
         keywords: 'اتصل بنا SQB, دعم SMLE, تواصل منصة طبية, دعم برومترك, contact SQB',
-        robots: 'noindex, nofollow, noarchive',
+        // Indexable on purpose. This page carries the business's real contact
+        // details, and it already has ContactPage structured data, breadcrumbs,
+        // hreflang alternates and prerendered HTML — all of which were wasted
+        // while it was marked `noindex, nofollow`. A reachable contact page is
+        // a standard trust signal for a registered business; `nofollow` was
+        // also throwing away its internal links.
         alternates: ['ar-SA', 'ar', 'x-default'],
         structuredData: [
             {

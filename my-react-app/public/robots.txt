@@ -1,8 +1,28 @@
 User-agent: *
 Allow: /
 
+# Admin surfaces — never useful to a crawler, and cheaper to exclude here than
+# to rely on the noindex meta tag alone.
 Disallow: /admin
 Disallow: /ADD_ACCOUNT
 Disallow: /ADDQ
 Disallow: /Bank
+Disallow: /TEMP_LINKS
+Disallow: /question-reports
+
+# Signed-in app pages. A crawler only ever sees the login redirect, so these
+# burn crawl budget and look like thin duplicate pages.
+Disallow: /quizs
+Disallow: /quiz/
+Disallow: /analysis
+Disallow: /wrong-questions
+Disallow: /summaries
+Disallow: /subscribe
+Disallow: /payment/
+
+# Auth utility pages with nothing to rank for. /signup itself stays crawlable
+# (it is the conversion page); only the per-invite token URLs are excluded.
+Disallow: /forgot-password
+Disallow: /signup/
+
 Sitemap: https://www.smle-question-bank.com/sitemap.xml

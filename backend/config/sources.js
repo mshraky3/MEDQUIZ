@@ -34,12 +34,32 @@ export const KEPT_SOURCES = ['MidgardGameBoy', 'January25', 'FebMarApr25', 'May2
 export const NURSING_SOURCES = ['NursingMostRepeated', 'NursingConfirmed'];
 
 /**
- * Which specific sources a track lets a student narrow to. A `source` not
- * listed for the caller's track is ignored, so a crafted value can never reach
+ * Which `source` values resolveSources() will honour for a track. A value not
+ * listed for the caller's track is ignored, so a crafted one can never reach
  * another bank (and `track` filtering would block it regardless).
+ *
+ * Medical lists its kept collections so old links and historical quiz sessions
+ * that name one still resolve to it — NOT because students choose between them.
  */
 export const SELECTABLE_SOURCES = {
     [MEDICAL]: KEPT_SOURCES,
+    [NURSING]: NURSING_SOURCES,
+};
+
+/**
+ * Which collections the quiz launcher offers as a choice — a strict subset of
+ * SELECTABLE_SOURCES, and a deliberately different list.
+ *
+ * Medical is empty on purpose: the 2026 swap unified that bank into one, and
+ * the monthly collections behind it are an implementation detail students were
+ * explicitly not meant to see again. Nursing genuinely has two collections, so
+ * it is the only track with a picker.
+ *
+ * The client hides the picker when a track offers fewer than two, so an empty
+ * list here means "no choice to make", not "no content".
+ */
+export const PICKABLE_SOURCES = {
+    [MEDICAL]: [],
     [NURSING]: NURSING_SOURCES,
 };
 

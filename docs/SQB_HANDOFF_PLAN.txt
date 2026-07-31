@@ -1,0 +1,978 @@
+================================================================================
+SQB — WORK PLAN & HANDOFF
+Written: 2026-07-25 · Updated: 2026-07-25 (second session)
+Purpose: continue this work in a new chat. Contains (A) the original plan,
+         (B) exactly what was done, (C) what still needs work.
+Brand rule: the product is "SQB" only. NEVER write "MEDQIZE" anywhere
+            user-facing or dev-facing (the repo folder name is legacy).
+
+--------------------------------------------------------------------------------
+SECOND SESSION SUMMARY — what changed since this file was first written
+--------------------------------------------------------------------------------
+  DONE   Part C item 3 — all 16 figure-less topics now have a figure (42 -> 58)
+  DONE   Part C item 4 — every subtopic now has >= 5 questions (224 -> 270)
+  DONE   Part C item 7 — mobile app aligned with the unified bank (real bug
+                         found and fixed: it still offered the 2025 collections
+                         and defaulted to the illegal source value 'mix')
+  DONE   Part C item 8 — .gitignore concern was a false alarm; resolved
+  FIXED  5 pre-existing figures were silently clipping content (see item 3)
+
+  STILL OPEN AND STILL BLOCKING: item 1 (run the DB delete) and item 2 (deploy
+  + logged-in visual verification). Both are owner actions. Item 5 (clinical
+  review of new questions) now covers 46 more questions than before.
+
+--------------------------------------------------------------------------------
+THIRD PASS (same day) — VISUAL DEFECTS + /quizs REDESIGN
+--------------------------------------------------------------------------------
+  The owner reported figures rendering wrong. They were right, and the earlier
+  verification was too weak to catch it. See PART F for the full story — read it
+  before touching any figure.
+
+  DONE  10 figures had real layout defects; all fixed. All 58 now pass four
+        independent checks (parse · paint · viewBox clipping · text-vs-shape
+        and text-vs-text collision).
+  DONE  /quizs rebuilt as a study dashboard. The 3-card hub is gone.
+================================================================================
+
+
+================================================================================
+PART 0 — QUICK CONTEXT FOR A FRESH CHAT
+================================================================================
+
+STACK
+  Frontend : my-react-app/  — React 19 + Vite 6 + react-router-dom 7
+             plain hand-written CSS, design tokens in src/index.css
+             RTL via <html lang="ar" dir="rtl"> in index.html
+             NO i18n library — Arabic copy is hardcoded in JSX
+  Backend  : backend/       — Node + Express 5 (ESM), raw PostgreSQL via `pg`
+             backend/app.js is a ~5000-line monolith + backend/routes/*
+             NO ORM. Tables bootstrapped with CREATE TABLE IF NOT EXISTS at boot.
+  DB       : PostgreSQL on Koyeb (creds in backend/.env: DBUSER/DBHOST/DBNAME/
+             DBPASSWORD/DBPORT)
+  Hosting  : Vercel (both frontend and backend)
+  Payments : Moyasar. PAYMENT_ENFORCEMENT_ENABLED=true is LIVE in prod.
+  Admin    : gated by ADMIN_KEY env var, sent as `x-admin-key` header
+             (frontend stores it in localStorage['sqb_admin_key'])
+  Mobile   : mobile/ (Expo) — NOT TOUCHED in this work. See Part C item 7.
+
+RUN THE DEV SERVER
+  A launch config already exists at .claude/launch.json (name "web", port 5188).
+    npm run dev --prefix my-react-app -- --port 5188 --strictPort
+  Production build (best quick correctness gate):
+    cd my-react-app && npx vite build
+
+KEY FILES TOUCHED IN THIS WORK
+  backend/app.js
+  backend/routes/summaries.js
+  backend/scripts/deleteLegacy2025.js                (NEW)
+  my-react-app/src/main.jsx
+  my-react-app/src/global.js                         (read only)
+  my-react-app/src/utils/sourceLabels.js
+  my-react-app/src/components/quizs/QUIZS.jsx        (REWRITTEN)
+  my-react-app/src/components/quizs/QuizLauncher.jsx (NEW)
+  my-react-app/src/components/quizs/QuizsHub.css     (NEW)
+  my-react-app/src/components/Quiz/QUIZ.jsx
+  my-react-app/src/components/common/InstallPrompt.jsx  (NEW)
+  my-react-app/src/components/common/InstallPrompt.css  (NEW)
+  my-react-app/src/components/landing/Landing.jsx
+  my-react-app/src/components/ADD/Admin.jsx
+  my-react-app/src/components/ADD/AdminAnalytics.jsx (NEW)
+  my-react-app/src/components/ADD/AdminAnalytics.css (NEW)
+  my-react-app/src/components/summaries/SummariesPage.jsx
+  my-react-app/src/components/summaries/Summaries.css
+  my-react-app/src/components/summaries/content/{medicine,pediatrics,obgyn,surgery}.js
+  my-react-app/src/components/summaries/content/FIGURES.md  (NEW)
+  my-react-app/public/sw.js                          (NEW)
+  my-react-app/public/manifest.json
+
+
+================================================================================
+PART A — THE ORIGINAL PLAN (6 TASKS, AS APPROVED)
+================================================================================
+
+CONTEXT: SQB started as a pure SMLE question bank. It now also has summaries,
+performance analytics and student content, but the UI and data still centred on
+"questions". Six workstreams were approved:
+
+T1. SUMMARIES — ADD VISUALS
+    Add many more figures/diagrams so every key idea has a visual aid.
+    DECISION MADE: build ORIGINAL SVG diagrams *and* add a gated raster-image
+    pipeline so the owner can drop in images they license.
+    COPYRIGHT RULE (important, do not break): do NOT scrape or embed Medscape,
+    Google Images, or textbook figures. They are copyrighted and this is a paid
+    product. Original artwork only, or images the owner owns/licenses.
+
+T2. LANDING PAGE — "ADD TO HOME SCREEN"
+    Tell mobile users they can install SQB to their home screen. Best-UX
+    approach, with a short visual guide for iOS and Android.
+
+T3. MAIN PAGE REDESIGN (/quizs)
+    Complete redesign of the post-login hub.
+    DECISION MADE: 3 sections — الأسئلة (Quizzes) / الملخصات (Summaries) /
+    تحليل الأداء (Performance Analysis).
+
+T4. SOURCE & DATA CLEANUP
+    One question source only. Remove the source-selection step. Rename to
+    "Midgard & GameBoy2026". Delete 2025 questions including التجميعات.
+    DECISION MADE: delete ONLY the Oct/Nov/Dec 2025 collections; keep everything
+    else and serve it as one unified bank.
+
+    !! CRITICAL DATA NOTE — THE SOURCE KEY SUFFIXES LIE !!
+      October25, November25, December25  = really 2025  -> DELETE
+      January25, FebMarApr25             = really 2026  -> KEEP
+      May26, June26                      = 2026         -> KEEP
+      MidgardGameBoy                     = undated bank -> KEEP
+    Never delete by matching the "25" suffix.
+
+T5. EXPAND SECTION EXAM QUESTIONS
+    More questions per section exam, pulled from the REAL database.
+    Do NOT generate or invent questions for the DB.
+
+T6. ADMIN PAGE — MORE ANALYTICS
+    Free/demo accounts, paid accounts, legacy accounts, login activity,
+    engagement, growth — with charts and date-range filters.
+    DECISION MADE: use Recharts.
+
+
+================================================================================
+PART B — WHAT HAS BEEN DONE (ALL 6 TASKS IMPLEMENTED)
+================================================================================
+
+--------------------------------------------------------------------------------
+T4 — SOURCE & DATA CLEANUP                                    STATUS: CODE DONE
+                                                              DB SCRIPT NOT RUN
+--------------------------------------------------------------------------------
+BACKEND (backend/app.js, added just above `app.get('/api/questions'...)`)
+  * const KEPT_SOURCES = ['MidgardGameBoy','January25','FebMarApr25','May26','June26']
+  * const UNIFIED_BANK = 'MidgardGameBoy'   (sentinel the client sends)
+  * resolveSources(sourceParam) — an ALLOWLIST. A specific still-valid
+    collection is honoured alone; the sentinel / 'mix' / absent / any deleted or
+    unknown source resolves to the full kept list. This means deleted 2025
+    content can never be served EVEN BEFORE the DB delete is run.
+  * dedupeByText(rows) — collapses duplicates by normalised question_text,
+    because the same recall can exist in both the main bank and a monthly
+    collection.
+  Applied to all three question endpoints:
+    GET /api/questions              (practice; kept the perf fix + Fisher-Yates
+                                     shuffle + "exclude already seen" logic)
+    GET /final-quiz/questions-count (now COUNT(DISTINCT LOWER(TRIM(text))))
+    GET /final-quiz/questions       (now de-duped before shuffle)
+
+FRONTEND
+  * my-react-app/src/utils/sourceLabels.js
+      MidgardGameBoy -> 'Midgard & GameBoy2026'
+      Old month keys + Midgard/GameBoy/general KEPT so historical quiz sessions
+      in /analysis still render friendly labels. Do not delete them.
+  * The source-selection modal flow was REMOVED entirely as part of the T3
+    rewrite (see below). Source is now hardcoded to 'MidgardGameBoy'.
+  * my-react-app/src/components/Quiz/QUIZ.jsx line ~46: the fallback source was
+    'mix' (an ILLEGAL value for the user_quiz_sessions CHECK constraint) and is
+    now 'MidgardGameBoy'. This closes a latent bug on stateless direct nav.
+
+DELETION SCRIPT (NEW) — backend/scripts/deleteLegacy2025.js
+  * Deletes ONLY source IN ('October25','November25','December25')
+  * Dry-run by default; requires --apply to change anything
+  * Backs up each source to backups/legacy-2025-<YYYY-MM-DD>/ FIRST and asserts
+    the backup row count == the delete count, aborting on mismatch
+  * Wraps the DELETE in a transaction (BEGIN/COMMIT, ROLLBACK on error)
+  * Leaves the user_quiz_sessions `check_valid_quiz_source` CHECK constraint
+    UNTOUCHED, so historical sessions referencing those sources stay valid
+  * Idempotent — a second run deletes 0
+  * Prints the FK cascade impact before acting
+  FK FACTS VERIFIED IN CODE:
+    questions(id) cascades ONLY to user_question_attempts and
+    user_question_progress (backend/app.js:73).
+    final_review_sessions has NO questions FK  -> historical final exams survive
+    user_topic_analysis stores aggregates      -> accuracy history survives
+
+  >>> THIS SCRIPT HAS NOT BEEN RUN. See Part C item 1. <<<
+
+--------------------------------------------------------------------------------
+T5 — EXPAND SECTION EXAM QUESTIONS                                STATUS: DONE
+--------------------------------------------------------------------------------
+  Delivered by the T4 backend change: a section (final) exam now draws from the
+  UNION of all kept sources instead of one collection, is de-duplicated, and has
+  no LIMIT — so each specialty's pool is materially larger. No questions were
+  invented; this only re-sources existing DB rows.
+  The launcher shows the live count and guards a zero/small pool with a friendly
+  Arabic message instead of navigating to /quiz/0.
+
+  KNOWN LIMITATION (accepted, out of scope): questions are typed only by the 4
+  specialties (pediatric / obstetrics and gynecology / medicine / surgery), not
+  by summary subtopic. True "match the summary topics" granularity would need
+  subtopic tagging on the questions table.
+
+--------------------------------------------------------------------------------
+T3 — /quizs REDESIGN INTO A 3-SECTION HUB                         STATUS: DONE
+--------------------------------------------------------------------------------
+  The old file was a 947-line launcher with 15+ modal state flags.
+
+  * QUIZS.jsx — REWRITTEN as the hub. Route /quizs in main.jsx is unchanged
+    (still lazy-imports QUIZS.jsx), so no routing edits were needed.
+    Renders: greeting header, streak badge, <AchievementBadges/>, THREE cards —
+      1) الأسئلة        -> swaps in <QuizLauncher/> in place (view state)
+      2) الملخصات       -> navigate('/summaries')
+      3) تحليل الأداء   -> navigate('/analysis'), plus live stat chips
+                           (total quizzes, avg accuracy, streak) from
+                           /user-analysis/:id and /user-streaks/:id
+    Uses Promise.allSettled so one failed call cannot break the page.
+    States handled: loading (shimmer skeleton chips), empty (new user →
+    "ابدأ أول اختبار…"), error (chips hidden silently).
+    id resolves from UserContext FIRST so a hard refresh works.
+
+  * QuizLauncher.jsx — NEW. The extracted launch flow with NO source picker.
+    Flow is now: size -> type -> timer   (final quiz: type -> time)
+    source is hardcoded to 'MidgardGameBoy' everywhere.
+    Preserved exactly: quick-start 10 mixed, 10/50/custom sizes, custom-count
+    modal with presets+slider, timer modal, final-quiz flow, CongratulationsPopup,
+    /api/check-completion, /api/award-achievement, /api/reset-progress,
+    Vercel track() events, and the 401 -> /login?session=expired handling.
+    Added: loading state while fetching the final-quiz count, and an empty-pool
+    guard.
+
+  * QuizsHub.css — NEW. Token-based (var(--...) from src/index.css), RTL-safe
+    logical properties (margin-inline-*, inset-inline), 1-col mobile -> 3-col
+    desktop at 720px, hover/active/focus-visible states, 44px tap targets,
+    per-card accent colours, shimmer skeleton animation.
+
+--------------------------------------------------------------------------------
+T2 — LANDING "ADD TO HOME SCREEN" (PWA INSTALL)                   STATUS: DONE
+--------------------------------------------------------------------------------
+  Situation before: manifest.json existed and was linked, but there was NO
+  service worker and NO install handling — so `beforeinstallprompt` could never
+  fire and installation was effectively impossible on Android.
+
+  * public/sw.js — NEW. A DELIBERATELY CACHE-FREE service worker: it registers
+    a `fetch` listener that never calls respondWith(), so every request goes to
+    the network. This satisfies Chrome's installability requirement WITHOUT the
+    classic "users stuck on a stale build after deploy" bug. Uses skipWaiting()
+    + clients.claim().
+    >>> Do not "improve" this by adding caching unless you also add a proper
+        versioning/update strategy. <<<
+  * src/main.jsx — registers /sw.js on window load; failure is non-fatal.
+  * components/common/InstallPrompt.jsx — NEW, exports three things:
+      useInstallPrompt()      hook: captures beforeinstallprompt, listens for
+                              appinstalled, detects iOS vs iOS-Safari, detects
+                              standalone (display-mode + navigator.standalone)
+      InstallPrompt (default) floating dismissible mobile banner; Android shows
+                              a real "تثبيت" button, iOS shows the Share->Add
+                              instruction; hidden entirely when installed;
+                              dismissal persisted via safeStorage with a 14-day
+                              re-prompt window
+      InstallGuideSection     the inline landing section
+  * components/common/InstallPrompt.css — NEW. Uses env(safe-area-inset-bottom)
+    and lifts above the landing's fixed mobile CTA bar.
+  * landing/Landing.jsx — imports both; <InstallGuideSection/> is rendered just
+    before the resource-section; <InstallPrompt/> at the end of .landing-body.
+    Section heading: "ثبّت SQB على شاشتك الرئيسية", two cards (iOS / Android),
+    3 steps each, drawn with ORIGINAL inline SVG step icons (no App Store
+    screenshots).
+  * public/manifest.json — icon purpose changed from "any maskable" to "any".
+    tab_logo.png is a real 512x512 so it serves both sizes; "maskable" without a
+    proper safe-zone was cropping the home-screen icon.
+
+  VERIFIED IN BROWSER: service worker registers and is ACTIVE (scope
+  http://localhost:5188/); the landing section renders with 2 cards and 6 steps;
+  the floating banner correctly returns null on desktop.
+
+--------------------------------------------------------------------------------
+T6 — ADMIN ANALYTICS (RECHARTS)                                   STATUS: DONE
+                                                       (UI not visually checked)
+--------------------------------------------------------------------------------
+  BACKEND — NEW endpoint GET /admin/analytics in backend/app.js, placed
+  immediately after the existing GET /admin/stats handler.
+    * behind adminAuth
+    * SEPARATE from /admin/stats on purpose: /admin/stats auto-refreshes every
+      2 minutes and already runs ~32 queries; the heavy time-series must not
+      ride that loop.
+    * ?from=&to= ISO dates, parsed/validated, swapped if reversed, window
+      clamped to 365 days, default last 90 days, always parameterised ($1/$2)
+    * TIMEZONE: login_time / created_at are TZ-less UTC. Riyadh is a fixed UTC+3
+      with no DST, so all day buckets use `(login_time + INTERVAL '3 hours')::date`.
+      Without this every daily bucket is wrong by ~3 hours.
+    * GAP-FILL: generate_series(from, to, '1 day') LEFT JOIN counts, so
+      zero-activity days still appear on the charts.
+    * Promise.allSettled for every query, so one failure degrades one section
+      instead of 500-ing the whole dashboard.
+    Returns: range, accountMix[], totals{}, activeUsers{dau,wau,mau}, logins[],
+             signups[], growth[], engagement{}
+
+    ACCOUNT CLASSIFICATION USED (verified against the real schema):
+      legacy = grandfathered_at IS NOT NULL OR subscription_status='grandfathered'
+      paid   = grandfathered_at IS NULL AND subscription_status='active'
+      trial  = grandfathered_at IS NULL AND subscription_status='trial'
+      free   = computed remainder, so the pie always sums to total accounts
+      conversion = distinct paid payers / trial_grants count, div-by-zero guarded
+
+  FRONTEND
+    * npm i recharts (already installed). It code-splits into its own ~285 kB
+      chunk and admin routes are lazy, so the public LCP route is unaffected.
+    * components/ADD/AdminAnalytics.jsx — NEW, self-contained (own fetch, own
+      loading/error/retry states). Renders 6 KPI tiles + pie (account mix) +
+      line (daily logins/active users) + bar (signups) + line (new vs returning)
+      + horizontal bar (usage by specialty). Date range with 7/30/90-day presets
+      and from/to inputs. RTL (dir="rtl"), Arabic labels, light-theme palette.
+    * components/ADD/AdminAnalytics.css — NEW.
+    * components/ADD/Admin.jsx — imports it and renders <AdminAnalytics /> right
+      after the quick-actions row. Nothing else in Admin.jsx was changed.
+
+  VERIFIED: all 9 SQL queries were executed READ-ONLY against the live
+  production database and all returned correct data. Sample real output:
+    accountMix  -> legacy 18, paid 2, trial 15, total 85
+    activeUsers -> dau 1, wau 17, mau 39
+    logins/signups/growth -> 91 gap-filled rows each
+    conversion  -> trials_ever 17, payers 5
+  BUG FOUND AND FIXED DURING THAT CHECK: "usage by specialty" was reading
+  user_quiz_sessions.quiz_type, which stores the quiz MODE ('practice'), not the
+  medical specialty. Switched to user_topic_analysis.question_type, which
+  correctly returns medicine / obstetrics and gynecology / pediatric / surgery.
+
+--------------------------------------------------------------------------------
+T1 — SUMMARIES VISUALS + QUESTIONS                     STATUS: LARGELY DONE
+                                                       (more still worth adding)
+--------------------------------------------------------------------------------
+  WHICH SUMMARY SYSTEM IS LIVE — IMPORTANT
+    There are TWO parallel summary content trees in this repo:
+      (A) my-react-app/src/components/summaries/content/{medicine,pediatrics,
+          obgyn,surgery}.js  -> rendered by SummariesPage.jsx at /summaries.
+          *** THIS IS THE LIVE, ROUTED ONE. Edit only this. ***
+      (B) backend/content/summaryHtml/*.js -> synced to summaries.content_html,
+          rendered by SlideDeck.jsx, which is NOT wired to any route.
+    Do not spend effort on (B) unless you deliberately decide to standardise
+    on it.
+
+  CONTENT FORMAT
+    Each subtopic = { id, title, title_en, summaryHtml, questions: [...] }
+    summaryHtml is an HTML template-literal string injected with
+    dangerouslySetInnerHTML. Angle brackets inside prose must be escaped
+    (&lt; / &gt;). Questions are { q, options[], answer (0-based index),
+    explanation }.
+
+  GATED RASTER-IMAGE PIPELINE (built, ready, not yet used by any figure)
+    * backend/routes/summaries.js — NEW route GET /api/summaries/figure/:name
+      placed BEFORE the /:slug route so the path is unambiguous. Streams from
+      private Cloudflare R2 under the `figures/` prefix, filename validated by
+      /^[a-zA-Z0-9_-]+\.(webp|png|jpg|jpeg|svg)$/ (no traversal). Inherits the
+      router's session guard + paywall. Returns 503 if R2 is not configured.
+    * SummariesPage.jsx — a browser <img> CANNOT send an Authorization header,
+      so gated figures are authored as <img data-figure-key="name.webp"> with NO
+      src. A post-render effect finds them, fetches with the bearer token,
+      converts to a blob: object URL, sets src, and REVOKES all object URLs on
+      cleanup (no memory leak when switching topics). Loading and error classes
+      are applied.
+    * Summaries.css — added .deck-img plus .deck-img-loading / .deck-img-error.
+    * content/FIGURES.md — NEW authoring guide documenting all three tiers:
+        1. inline original SVG  (preferred, no hosting)
+        2. public raster        (my-react-app/public/summaries/…)
+        3. gated raster         (<img data-figure-key>, R2)
+
+  FIGURES ADDED — 3 at the start, 42 now (+39 original SVG diagrams)
+    All are ORIGINAL vector artwork. No copyrighted images were used.
+    Every one has role="img" + aria-label + a <figcaption> takeaway.
+
+    MEDICINE (3 -> 10): [pre-existing: coronary territories, murmur timing,
+      + 1 other] NEW: acute asthma severity ladder; DKA vs HHS; AKI pre-renal /
+      intrinsic / post-renal with AEIOU; hepatitis B serology panel; anaemia by
+      MCV; meningitis CSF (bacterial/viral/TB); gout vs pseudogout crystals
+    PEDIATRICS (0 -> 10): milestone timeline; cyanotic CHD "5 T's"; dehydration
+      severity; neonatal jaundice timing; acyanotic CHD (VSD/ASD/PDA);
+      rheumatic fever JONES; croup vs epiglottitis (steeple vs thumbprint);
+      infant vomiting bilious-or-not; sickle cell four crises; immunodeficiency
+      by broken arm
+    OB/GYN (0 -> 8): CTG deceleration timing; placenta previa vs abruption;
+      four stages of labour; ectopic implantation sites; PPH 4 T's; pelvic organ
+      prolapse by compartment; antenatal timeline; hypertension in pregnancy at
+      the 20-week line
+    SURGERY (0 -> 14): SBO vs LBO on AXR; direct vs indirect inguinal hernia;
+      shock types; burns rule of nines; neck trauma zones; appendicitis /
+      McBurney; thyroid nodule workup; breast quadrants + triple assessment;
+      Charcot triad -> Reynolds pentad; acute limb ischaemia 6 Ps; nerve palsy
+      map; epidural vs subdural haematoma; upper vs lower GI bleed at the
+      ligament of Treitz; the acute scrotum
+
+  QUESTIONS ADDED — 165 at the start, 224 now (+59)
+    medicine 56 (unchanged) | pediatrics 30 -> 68 | obgyn 22 -> 34 |
+    surgery 57 -> 66
+    EVERY ONE OF THE 50 SUBTOPICS NOW HAS AT LEAST 3 QUESTIONS (20 topics
+    previously had only 1 or 2).
+    METHOD USED (keep using it): each question was authored strictly from facts
+    already present in that subtopic's own summaryHtml, so they are accurate by
+    construction rather than invented. Do not write questions from memory.
+
+  VERIFICATION PERFORMED
+    * production build compiles clean
+    * an automated validator ran over all 224 questions checking: object shape,
+      answer index within range, explanation present, no duplicate options
+      within a question, no duplicate stems within a topic -> 0 problems
+    * all 42 SVGs strict-parsed as image/svg+xml -> 0 malformed
+    * all 42 SVGs injected into the live DOM and measured -> all render with
+      real bounding boxes and visible text
+
+
+================================================================================
+PART C — WHAT STILL NEEDS WORK  (START HERE IN THE NEXT CHAT)
+================================================================================
+
+--------------------------------------------------------------------------------
+1. RUN THE DATABASE DELETION  *** HIGHEST PRIORITY, OWNER ACTION ***
+--------------------------------------------------------------------------------
+   Nothing was deleted from the production database. The script is written,
+   safe, and waiting.
+
+   NOTE (second session): even the read-only DRY RUN was not executed. The
+   assistant's sandbox permission classifier refuses to run
+   scripts/deleteLegacy2025.js at all, regardless of the --apply flag. This is
+   an owner action — run it yourself from your own terminal.
+
+   Step 1 — dry run (changes nothing, prints the plan and the counts):
+       cd backend
+       node scripts/deleteLegacy2025.js
+
+   Step 2 — read the output. Confirm the delete count equals the sum of the
+   October25 + November25 + December25 rows and that the cascade numbers look
+   sane.
+
+   Step 3 — apply (backs up first, asserts, then deletes in a transaction):
+       cd backend
+       node scripts/deleteLegacy2025.js --apply
+
+   Step 4 — sanity check afterwards:
+       SELECT source, COUNT(*) FROM questions GROUP BY source ORDER BY 2 DESC;
+   Expect Oct/Nov/Dec 2025 gone and everything else intact.
+
+   ROLLBACK: re-insert from backups/legacy-2025-<date>/*.json using the INSERT
+   shape in backend/scripts/swapQuestionBank2026.js.
+
+   DEPLOY ORDER MATTERS: ship the frontend + backend code FIRST (the allowlist
+   already stops those sources being served), then run the delete. Do it during
+   low traffic.
+
+--------------------------------------------------------------------------------
+2. DEPLOY + LOGGED-IN VISUAL VERIFICATION  *** NEVER DONE ***
+--------------------------------------------------------------------------------
+   Be aware of the honest limits of what was verified. Everything was checked by
+   production build + real-DB SQL execution + DOM/structure/SVG inspection.
+   NOT checked: the actual logged-in UI, because that needs real credentials and
+   screenshots were unavailable in the session (browser pane not displayed).
+
+   Still to confirm with your own eyes after deploying:
+     [ ] /quizs shows exactly 3 cards, correct routes, correct Arabic, RTL,
+         responsive at ~375px and ~1280px, stat chips populate
+     [ ] starting a quiz shows NO source-selection step; the label reads
+         "Midgard & GameBoy2026"; a quiz runs and submits successfully
+     [ ] /analysis still labels OLD sessions correctly (Oct/Nov/Dec 2025 etc.)
+     [ ] final exam pool per specialty is bigger than before and has no
+         duplicate questions
+     [ ] /summaries renders the new figures on real devices — especially the
+         5 whose viewBox was widened (JVP, gout, immunodeficiency arm, pelvic
+         organ prolapse, breast quadrants); confirm nothing is cut off
+     [ ] MOBILE: the quiz setup screen shows a read-only "Midgard & GameBoy2026"
+         source row with NO picker, and a quiz starts and submits successfully
+         (this exercises the 'mix' -> 'MidgardGameBoy' constraint fix)
+     [ ] /admin (with the admin key) renders the Recharts pie/line/bar, the
+         date-range filter changes the series, and the account-mix pie sums to
+         the total account count
+     [ ] on a real Android phone: the install button appears and works
+     [ ] on a real iPhone (Safari): the manual Share -> Add instructions show
+     [ ] the installed home-screen icon is not cropped
+
+--------------------------------------------------------------------------------
+3. SUMMARIES — FIGURES                                     STATUS: DONE 2026-07-25
+--------------------------------------------------------------------------------
+   ALL 16 remaining topics now have a figure. EVERY ONE OF THE 50 SUBTOPICS HAS
+   AT LEAST ONE. Total figures 42 -> 58, all original SVG, no licensed imagery.
+
+   What was drawn (all authored only from facts already in that summaryHtml):
+     peds-endocrinology     TSH + free-T4 interpretation grid (4 cards)
+     peds-general           SIDS risk vs prevention (mirror columns)
+     peds-genetics          trisomy 21 / 18 / 13 comparison
+     peds-nephrology        PSGN vs IgA vs HSP grid (trigger / C3 / rash)
+     peds-neurology         status epilepticus escalation ladder
+     peds-pulmonology       asthma controller staircase (steps 1-5)
+     peds-rheumatology      JIA subtypes (oligo / poly / systemic)
+     peds-uro-ophtho-ortho  hip disorders on an age axis (DDH/Perthes/SCFE)
+     peds-vaccination       the schedule as an 8-stop timeline
+     obgyn-infertility      the workup in order (male first -> tubal endpoint)
+     surg-anal              anal-canal CLOCK: internal piles 3/7/11 vs fissure
+                            midline 6/12  (NOT haemorrhoid grades I-IV — the
+                            summary only documents grade IV, so grades were not
+                            invented)
+     surg-bariatric         procedure selection driven by upper GI endoscopy
+                            (NOT sleeve-vs-bypass anatomy — not in the summary)
+     surg-fluid             hyperkalaemia: STABILISE -> SHIFT -> REMOVE, plus
+                            peaked-T vs flattened-T ECG traces
+     surg-gastro            oesophageal cancer location map (upper = squamous,
+                            lower = adenocarcinoma)  (NOT GORD/achalasia — that
+                            content does not exist in this summary)
+     surg-pediatric         inguinal vs umbilical hernia
+     surg-periop            intra-abdominal collection escalation by size
+
+   ALSO FIXED: 5 PRE-EXISTING figures were silently CLIPPING content outside
+   their viewBox (SVG root is overflow:hidden, so it was invisible, not just
+   ugly). Fixed by widening the viewBox:
+     medicine  JVP waveform            680 -> 728 wide
+     medicine  gout vs pseudogout       680 -> 702 wide
+     pediatrics immunodeficiency arm    viewBox now "-23 0 746 245"
+     obgyn     pelvic organ prolapse    viewBox now "-62 0 824 250"
+     surgery   breast quadrants         690 -> 706 wide
+   The last two overhung BOTH edges (an over-long centred caption), which is why
+   they need a negative min-x rather than just a bigger width.
+
+   >>> ADD A CLIPPING CHECK TO YOUR VERIFICATION. Parsing + painting is not
+       enough; compare each svg getBBox() against its viewBox. See Part D. <<<
+
+   HOW TO ADD ONE (see also content/FIGURES.md):
+     Anchor on the topic's <h3> heading in the content file and insert:
+       <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> TITLE</div>
+       <svg viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="...">
+         ...shapes...
+       </svg>
+       <figcaption>one-line exam takeaway</figcaption></figure>
+     Use explicit hex colours (the summaries render on a light surface), keep
+     viewBox width around 680-700, and always add aria-label + figcaption.
+
+--------------------------------------------------------------------------------
+4. SUMMARIES — QUESTION DEPTH                              STATUS: DONE 2026-07-25
+--------------------------------------------------------------------------------
+   TARGET MET: every one of the 50 subtopics now has AT LEAST 5 questions.
+   Total 224 -> 270 (+46). The 16 topics that sat at exactly 3 got +2 each; the
+   14 that sat at 4 got +1 each.
+
+     pediatrics 68 -> 85 | obgyn 34 -> 38 | surgery 66 -> 91 | medicine 56 (already 5+ everywhere)
+
+   Method used (KEEP USING IT): each question was authored strictly from facts
+   already present in that subtopic's own summaryHtml, so it is accurate by
+   construction rather than recalled from memory. Where the suggested topic in
+   an earlier draft of this plan was NOT actually covered by the summary text,
+   a different, genuinely-covered question was written instead.
+   Correct-answer indices were deliberately varied (not all index 0).
+
+   NOTE: medicine's 56 questions were still not reviewed or expanded this round;
+   it simply already had 5+ in every subtopic.
+
+--------------------------------------------------------------------------------
+5. CLINICAL REVIEW OF THE NEW QUESTIONS  *** RECOMMENDED BEFORE SHIPPING ***
+--------------------------------------------------------------------------------
+   NOW 105 NEW QUESTIONS TOTAL: 59 from the first session + 46 from the second.
+   All are internally consistent with the source summaries and pass the
+   automated validator, but they are new clinical content going to exam
+   candidates. Have a clinician spot-check them before they go live.
+
+   The 46 newest ones are the FIRST one or two questions in each subtopic's
+   `questions` array (they were prepended), which makes them easy to find.
+   Also worth a clinician's eye: the 16 new figures, since a diagram asserts
+   relationships more confidently than prose does.
+
+--------------------------------------------------------------------------------
+6. IMAGES / COPYRIGHT — THE STANDING RULE
+--------------------------------------------------------------------------------
+   Medscape images and articles are COPYRIGHTED. So are most Google Images
+   results (Google is a search index, not a licence). Do not scrape or embed
+   them into SQB — it is a paid product and that is a real takedown/liability
+   risk, not a technicality.
+
+   Acceptable sources:
+     * original SVG diagrams (what has been built — zero risk, no hotlinks,
+       restyles with the theme)
+     * images the owner personally owns or has licensed
+     * genuinely open-licensed material (Wikimedia Commons CC/public domain,
+       CDC PHIL, NIH) — still check each item's terms and provide attribution
+
+   If real clinical photographs or radiographs are wanted, the gated pipeline is
+   already built and waiting: upload to R2 under figures/ and reference with a
+   single tag:
+     <figure class="deck-fig"><img class="deck-img" data-figure-key="name.webp" alt="..." /><figcaption>...</figcaption></figure>
+   Requires the R2_* env vars to be configured (isR2Configured()); the route
+   returns 503 until then.
+
+--------------------------------------------------------------------------------
+7. MOBILE APP                                              STATUS: DONE 2026-07-25
+--------------------------------------------------------------------------------
+   The audit found a REAL inconsistency and it is fixed.
+
+   mobile/app/(tabs)/quizs.tsx
+     * Had its own SOURCES array still offering October25 / November25 /
+       December25 (the collections being deleted) and labelling the bank
+       "Midgard & GameBoy" without the 2026 suffix.
+     * The whole source picker (array, state, bottom sheet, chevron row) was
+       REMOVED, matching the web. Replaced by a read-only row showing
+       "Midgard & GameBoy2026".
+     * Both startQuiz and startFinalQuiz now send source: QUESTION_SOURCE
+       ('MidgardGameBoy'). Previously they sent 'mix' by default.
+   mobile/app/quiz.tsx
+     * Fallback source was 'mix' — an ILLEGAL value for the user_quiz_sessions
+       check_valid_quiz_source constraint. Now 'MidgardGameBoy'. Same latent
+       bug that was fixed on the web in QUIZ.jsx.
+   mobile/app/faq.tsx
+     * The FAQ claimed "over 8,000 practice questions ... from multiple
+       sources". Both halves were about to become wrong (one bank, and the
+       count changes after the 2025 delete), and the owner's standing rule is
+       no question-count numbers in marketing copy. Rewritten to
+       "SQB covers Pediatrics, Medicine, Surgery and OB/GYN in a single unified
+       question bank."
+
+   VERIFIED: npx tsc --noEmit in mobile/ reports NO errors in any of the three
+   changed files.
+   >>> PRE-EXISTING, UNRELATED: tsc reports 4 errors in
+       mobile/src/components/ui/ReportQuestionModal.tsx (lines 158/166/188/192)
+       — it reads Colors.text and Colors.background, which do not exist on the
+       theme object (it has textPrimary / bgDark etc). NOT introduced by this
+       work and NOT fixed here. Worth its own small task. <<<
+
+--------------------------------------------------------------------------------
+8. SMALLER / OPTIONAL ITEMS
+--------------------------------------------------------------------------------
+   * .env.local — RESOLVED, no change needed. The earlier note was wrong:
+     my-react-app/.gitignore line 13 is `*.local`, which already covers
+     .env.local. Confirmed with `git check-ignore -v my-react-app/.env.local`.
+     mobile/.gitignore has `.env*.local`. Both are covered.
+   * The SummariesPage chunk is now ~811 kB (was ~630 kB) — the 16 new inline
+     SVGs. Still lazy-loaded, so the landing LCP is unaffected, and vite only
+     warns. But this is now the single biggest chunk by far and it will keep
+     growing with every figure. SPLITTING THE FOUR SPECIALTIES INTO SEPARATE
+     DYNAMIC IMPORTS IS NOW THE MOST WORTHWHILE REMAINING CLEANUP.
+   * T5's known limitation (no subtopic-level question tagging) is still open if
+     you ever want summary-topic-accurate section exams.
+   * The old admin hand-rolled SVG charts still coexist with the new Recharts
+     section. Fine as-is; migrate incrementally only if you want visual
+     consistency.
+
+
+================================================================================
+PART D — HOW TO VERIFY YOUR WORK (COPY THESE)
+================================================================================
+
+BUILD (fastest correctness gate — catches any broken template literal):
+    cd my-react-app && npx vite build
+
+AUDIT + VALIDATE ALL SUMMARY QUESTIONS AND FIGURES:
+  Create my-react-app/_audit.mjs with this, run `node ./_audit.mjs`, then delete it.
+
+    import SECTIONS from './src/components/summaries/content/index.js';
+    let tq=0,tf=0,bad=0,nofig=[];
+    for (const s of SECTIONS) {
+      let sq=0,sf=0;
+      for (const t of s.subtopics) {
+        const core=(t.summaryHtml||'').split('<section class="topic deck-enrich">')[0];
+        const f=(core.match(/<svg/g)||[]).length, n=(t.questions||[]).length;
+        sq+=n; sf+=f; if(f===0) nofig.push(t.id);
+        const seen=new Set();
+        (t.questions||[]).forEach((q,i)=>{const loc=t.id+'#'+i;
+          if(!q.q||!Array.isArray(q.options)||q.options.length<2){console.log('BAD SHAPE',loc);bad++;}
+          if(typeof q.answer!=='number'||q.answer<0||q.answer>=q.options.length){console.log('BAD ANSWER',loc);bad++;}
+          if(!q.explanation){console.log('NO EXPL',loc);bad++;}
+          if(new Set(q.options).size!==q.options.length){console.log('DUP OPT',loc);bad++;}
+          if(seen.has(q.q)){console.log('DUP Q',loc);bad++;} seen.add(q.q);});
+      }
+      console.log(s.id.padEnd(11)+String(sq).padStart(4)+' questions | '+String(sf).padStart(2)+' figures');
+      tq+=sq; tf+=sf;
+    }
+    console.log('TOTAL '+tq+' questions | '+tf+' figures | problems: '+bad);
+    console.log('topics with 0 figures ('+nofig.length+'): '+nofig.join(', '));
+
+  CURRENT EXPECTED BASELINE (as of 2026-07-25, second session):
+    pediatrics 85 q | 19 fig      obgyn    38 q |  9 fig
+    medicine   56 q | 10 fig      surgery  91 q | 20 fig
+    TOTAL 270 questions | 58 figures | problems: 0 | 0 topics with 0 figures
+    Also expect: every subtopic has >= 5 questions.
+
+VALIDATE SVGs PARSE, PAINT *AND ARE NOT CLIPPED* (dev-server browser console).
+  The older version of this script only checked parse + paint. That is NOT
+  enough — it passed 5 figures that were silently cutting off content outside
+  their viewBox. Use this version instead; it adds the viewBox containment
+  check and should report "problems: NONE".
+
+    (async () => {
+      const files=['medicine','pediatrics','obgyn','surgery'];
+      const problems=[]; let total=0, ok=0;
+      const host=document.createElement('div');
+      host.style.cssText='position:fixed;left:-9999px;width:760px';
+      document.body.appendChild(host);
+      for (const n of files) {
+        const txt=await fetch('/src/components/summaries/content/'+n+'.js?t='+Date.now()).then(r=>r.text());
+        (txt.match(/<svg[\s\S]*?<\/svg>/g)||[]).forEach((s,i)=>{
+          total++;
+          if(new DOMParser().parseFromString(s,'image/svg+xml').querySelector('parsererror')){problems.push(n+'#'+i+' MALFORMED');return;}
+          host.innerHTML=s;
+          const el=host.querySelector('svg');
+          const [vx,vy,vw,vh]=el.getAttribute('viewBox').split(/[ ,]+/).map(Number);
+          const b=el.getBBox();
+          const texts=[...host.querySelectorAll('text')].filter(t=>t.getComputedTextLength()>0).length;
+          const worst=Math.max(vx-b.x, vy-b.y, (b.x+b.width)-(vx+vw), (b.y+b.height)-(vy+vh));
+          if(worst>1) problems.push(n+'#'+i+' CLIPPED by '+worst.toFixed(1)+'px');
+          else if(b.width>50&&b.height>20&&texts>0) ok++;
+          else problems.push(n+'#'+i+' BLANK/NO TEXT');
+        });
+      }
+      document.body.removeChild(host);
+      return total+' svgs | '+ok+' fully OK | problems: '+(problems.length?'\n'+problems.join('\n'):'NONE');
+    })()
+
+  A clip on the RIGHT is fixed by widening the viewBox width. A clip on the
+  LEFT (negative bbox.x) needs a NEGATIVE viewBox min-x — usually caused by an
+  over-long text-anchor="middle" caption that overhangs both edges.
+
+OPTIONAL — TEXT COLLISION CHECK (catches mis-positioned labels in a new figure):
+  render one figure into an offscreen div, take every <text> getBBox(), and
+  report any pair overlapping by >3px in both axes. All 58 current figures
+  report 0 overlaps.
+
+OLDER SCRIPT (parse + paint only — kept for reference, prefer the one above):
+
+    const files=['medicine','pediatrics','obgyn','surgery'];
+    Promise.all(files.map(n=>fetch('/src/components/summaries/content/'+n+'.js?t='+Date.now())
+      .then(r=>r.text()).then(txt=>{
+        const svgs=txt.match(/<svg[\s\S]*?<\/svg>/g)||[];
+        let bad=0,painted=0;
+        const host=document.createElement('div');
+        host.style.cssText='position:fixed;left:-9999px;width:760px';
+        document.body.appendChild(host);
+        svgs.forEach(s=>{
+          if(new DOMParser().parseFromString(s,'image/svg+xml').querySelector('parsererror')){bad++;return;}
+          host.innerHTML=s; const el=host.querySelector('svg'); const bb=el.getBBox();
+          const texts=[...host.querySelectorAll('text')].filter(t=>t.getComputedTextLength()>0).length;
+          if(bb.width>50&&bb.height>20&&texts>0) painted++;
+        });
+        document.body.removeChild(host);
+        return n+': '+svgs.length+' svgs, '+bad+' malformed, '+painted+' render OK';
+      }))).then(r=>console.log(r.join('\n')));
+
+TEST THE ADMIN ANALYTICS SQL WITHOUT BOOTING THE SERVER:
+  Put a throwaway .mjs inside backend/ (so it can resolve pg/dotenv), run it,
+  then delete it. Load backend/.env, open a pg Pool with
+  ssl:{rejectUnauthorized:false}, and run each query read-only. This is how the
+  9 analytics queries were validated against production.
+
+
+================================================================================
+PART E — GOTCHAS WORTH REMEMBERING
+================================================================================
+  * The source key suffixes lie. January25 and FebMarApr25 are 2026 content.
+  * login_time / created_at are TZ-less UTC. Always add INTERVAL '3 hours' for
+    Riyadh day buckets.
+  * user_quiz_sessions has a CHECK constraint on `source`. 'mix' is NOT a legal
+    value. Keep the legacy source names in that constraint forever so old rows
+    stay valid.
+  * A browser <img> cannot send an Authorization header — that is why gated
+    figures use data-figure-key + a blob fetch.
+  * beforeinstallprompt only fires with a registered service worker over HTTPS.
+  * Passwords in this codebase are stored LOWERCASED AND IN PLAINTEXT across
+    every auth path. This is a known, separate, pre-existing security issue. It
+    needs its own dedicated fix — do NOT try to patch it as a drive-by change
+    inside another task.
+  * Edit only the FRONTEND summary content tree (my-react-app/src/components/
+    summaries/content/), not backend/content/summaryHtml/.
+  * PAYMENT_ENFORCEMENT_ENABLED is true in production. Summaries and final
+    quizzes are paid content and will 402 for unpaid accounts.
+
+================================================================================
+PART F — SVG LAYOUT DEFECTS: WHAT WENT WRONG AND HOW TO NOT REPEAT IT
+================================================================================
+
+WHAT HAPPENED
+  Two earlier passes declared all figures "verified". The owner then found
+  obvious visual bugs by simply looking at the page: text running out of the
+  side of a card, and labels sitting on top of a drawing. Both passes were
+  running checks that could not detect either fault.
+
+WHY THE OLD CHECKS MISSED IT
+  * "parses + paints"  — an SVG with text spilling out of a coloured box still
+    parses fine and still has a valid bounding box. Passes.
+  * "viewBox clipping" — text that overflows its CARD but stays inside the
+    viewBox is not clipped by the viewBox at all. Passes.
+  * "text-vs-text collision" — a label sitting on top of a circle or a rect is
+    not overlapping another TEXT node. Passes.
+  In short: every check was about the SVG as a whole, and none was about a text
+  element versus the box it is supposed to live in.
+
+THE CHECK THAT ACTUALLY WORKS (use this one — it is in PART D)
+  For every <text>: if some shape fully contains it → fine. Otherwise, if it
+  intersects any shape → flag it. Plus the viewBox containment check.
+  Collect shapes from rect, circle, ellipse, path, polygon — NOT just rect and
+  circle. The brain outlines in the haematoma figure are <path>, which is
+  exactly why an earlier run of this check reported it clean.
+
+KNOWN FALSE POSITIVES (verify by hand before "fixing")
+  * A <polyline> bounding box is the box around the whole squiggle, not the
+    stroke, so a label sitting in a trough looks like a collision but is not
+    (medicine JVP waveform, the "y" label).
+  * Text sitting exactly on the boundary between two equal-area quadrant paths
+    can pick the "wrong" owner and report a phantom spill (medicine coronary
+    territories, the "Lateral" label — measured at a real 5.4px gap).
+  Always print the actual numbers before editing coordinates.
+
+THE 10 FIGURES THAT WERE FIXED
+  pediatrics croup vs epiglottitis  treatment line ran out of both cards; text
+                                    column moved left, treatment given its own
+                                    pill row, cards grown 196→230 tall
+  surgery    epidural vs subdural   WORST ONE. All six fact lines were in a
+                                    single centre column at x=256 that overlaid
+                                    the left brain, so the subdural facts looked
+                                    like they belonged to the epidural side, and
+                                    subdural had no labels of its own. Rebuilt
+                                    as two symmetric columns, each under its own
+                                    skull, 4 facts each, taken from the topic's
+                                    own comparison table
+  medicine   gout vs pseudogout     4 labels overflowed both cards
+  surgery    breast quadrants       triple-assessment line 1 overflowed its box;
+                                    split onto two lines
+  obgyn      ectopic sites          5 scattered labels collided with the tubes;
+                                    moved into a colour-keyed legend below
+  pediatrics immunodeficiency arm   footer sentence wider than its own banner;
+                                    split onto 2 lines, viewBox back to 0-origin
+  surgery    inguinal hernia        mnemonic pill too narrow for its text
+  surgery    oesophageal cancer     "GE junction" label touched the stomach
+  surgery    rule of nines          "front (back 18%)" too wide for the torso
+  medicine   coronary territories   "Lateral" was 4px from the LV circle
+
+RULE FOR NEW FIGURES
+  Text inside a card must fit the CARD, not just the canvas. Before shipping a
+  figure, run the PART D check and read the numbers. "It looks about right in
+  the source" is what produced all ten of these.
+
+================================================================================
+PART G — /quizs IS NOW A DASHBOARD, NOT CARDS
+================================================================================
+  WHY: the owner's verdict was "boring and empty — the cards idea itself is the
+  problem". It was three big navigation buttons and nothing else, and the
+  primary action (start a quiz) was hidden behind a card tap.
+
+  WHAT IT IS NOW  (my-react-app/src/components/quizs/QUIZS.jsx + QuizsHub.css,
+  both rewritten; route and QuizLauncher.jsx untouched)
+    1. Header band — greeting + "ابدأ اختبار سريع" (goes straight to a 10-question
+       mixed quiz) + "خصّص الاختبار" (swaps in the existing QuizLauncher)
+    2. Four stat tiles — accuracy · quizzes · questions answered · streak
+    3. "إتقانك حسب التخصص" — a mastery bar per specialty with a تدرّب button that
+       launches a quiz filtered to that specialty; the weakest specialty is
+       tagged and coloured amber
+    4. Slim links to الملخصات and تحليل الأداء (secondary, not equal-weight cards)
+
+  DATA: no new backend endpoints. It uses GET /user-analysis/:id,
+  GET /user-streaks/:id and GET /topic-analysis/user/:id (the last one returns
+  the per-specialty rows and was already there but unused by this page). All
+  three go through Promise.allSettled, so a stats outage still lets someone
+  start a quiz — the header actions never depend on the fetches.
+
+  ALSO ADDED: chevron-left / chevron-right to components/common/Icon.jsx (there
+  were no directional chevrons). They are directional — mirror them if a screen
+  is ever rendered LTR.
+
+  CSS NOTE, DO NOT REMOVE: selectors are written .quiz-selection.hubx and
+  .hubx <child> on purpose. The shared .quiz-selection class in QUIZS.css
+  centres its children and restyles bare h1/p; without the extra specificity
+  the dashboard inherits centred text and 48px headings.
+
+  VERIFIED (measured in a real browser, both widths, with the project's actual
+  CSS files loaded):
+    375px — column layout, no overflow, no clipped text, every button ≥44px,
+            no overlapping cells, mastery bars get their own row so the track
+            stays 220px instead of being squeezed to 20px
+    1280px— two-column grid, mastery panel to the RIGHT of the links panel
+            (correct for RTL), all four bar tracks exactly equal at 214px so the
+            percentages are visually comparable, fills measured at 72/55/81/38%
+            against expected 72/55/81/38, whole page 748px so it fits above the
+            fold
+    Muted caption colour #64748b on #fff ≈ 4.76:1 — passes AA.
+
+  STILL NOT DONE: nobody has seen this logged in. Screenshots were unavailable
+  in the session (browser pane not displayed), so everything above is measured
+  geometry, not eyeballs. Check it after deploying.
+
+================================================================================
+PART H — REAL IMAGERY FOR ANATOMY FIGURES (open-licensed route)
+================================================================================
+  OWNER'S RULE, 2026-07-25: anything depicting the human body must be a real
+  IMAGE, not a hand-drawn schematic. 23 of the 58 figures are anatomical.
+
+  ROUTE CHOSEN: open-licensed only (Wikimedia Commons CC / NIH / CDC PHIL),
+  with the owner approving each download individually. NOT paid stock, and
+  absolutely NOT Medscape/Google/textbook scrapes — that rule still stands.
+
+  DELIVERED SO FAR — "Placenta previa vs abruption" (obgyn.js)
+    The hand-drawn balloons are gone. It now shows two real illustrations:
+      my-react-app/public/summaries/placenta-previa-openstax.jpg
+        OpenStax College · CC BY 3.0 · 1599x1017 · 505 kB
+        https://commons.wikimedia.org/wiki/File:2906_Placenta_Previa-02.jpg
+      my-react-app/public/summaries/placental-abruption-blausen.png
+        Blausen Medical 2014 · CC BY 3.0 · 954x665 · 365 kB
+        https://commons.wikimedia.org/wiki/File:Blausen_0737_PlacentalAbruption.png
+    Both used UNMODIFIED. Bonus teaching point the old drawing missed: the
+    Blausen image contrasts revealed vs CONCEALED abruption.
+
+  >>> LICENCE OBLIGATION — DO NOT STRIP <<<
+    CC BY REQUIRES visible attribution. The credit line is rendered by
+    <p class="deck-credit"> directly under the figure, styled in Summaries.css.
+    Deleting that line, or the .deck-credit CSS, puts SQB in breach of the
+    licence. If you ever crop or recolour one of these images you must also say
+    "modified" in the credit.
+
+  TIER USED: tier 2 (public raster, my-react-app/public/summaries/) — NOT the
+  gated R2 tier. These images are already public on Wikimedia, so gating them
+  buys nothing and would need the R2 env vars. Licensed/paid imagery, if ever
+  bought, should still go through the gated tier.
+
+  NEW CSS in Summaries.css: .deck-imgrow / .deck-imgcell / .deck-imgcap /
+  .deck-hi / .deck-credit. Side-by-side pair above 640px, stacked below.
+
+  DELIVERED, ROUND 2 — the whole of TIER 1 (the "a drawing cannot teach this"
+  set). Nine images now live in my-react-app/public/summaries/:
+    croup-steeple-sign.jpg        Frank Gaillard        CC BY-SA 3.0
+    epiglottitis-thumbprint-sign.jpg  Med Chaos         CC0 1.0
+    epidural-haematoma-ct.jpg     James Heilman, MD     CC BY-SA 4.0
+    subdural-haematoma-ct.jpg     Lucien Monfils        CC BY-SA 3.0
+    gout-msu-crystals.jpg         Gabriel Caponetti     CC BY-SA 3.0
+    pseudogout-cppd-crystals.jpg  Mikael Häggström, MD  CC0 1.0
+    bowel-obstruction-axr.jpg     James Heilman, MD     CC BY-SA 3.0
+    placenta-previa-openstax.jpg  OpenStax College      CC BY 3.0
+    placental-abruption-blausen.jpg  Blausen Medical    CC BY 3.0
+  NOTHING NON-COMMERCIAL was used. Radiopaedia was deliberately avoided — its
+  default CC BY-NC-SA forbids use in a paid product.
+
+  Figures rebuilt around them: croup vs epiglottitis (pediatrics), epidural vs
+  subdural (surgery), gout vs pseudogout (medicine), previa vs abruption
+  (obgyn), plus a real AXR added under the SBO-vs-LBO schematic.
+
+  ONE DELIBERATE RESTRAINT: the AXR is captioned only as "dilated loops with
+  multiple air-fluid levels". The Commons description says just "bowel
+  obstruction" and I could not tell small from large from the film, so it is
+  NOT labelled as either. The schematic above it still does the small-vs-large
+  teaching. Do not relabel it without a radiologist confirming.
+
+  ALL IMAGES WERE RESIZED (max 1200px, JPEG q84) with Pillow — total dropped
+  2032 kB -> 587 kB. The pseudogout original was a 1.5 MB iPhone photo carrying
+  GPS EXIF; re-saving stripped it (that file is CC0 so modification is fine).
+  The credit lines say "resized for web; content unmodified" accordingly.
+  NOTE: Wikimedia rate-limits bursts — fetch one file at a time with
+  curl --retry, and their /thumb/ URLs were refusing us entirely.
+
+  STILL TO DO — 14 anatomical figures without real imagery. Ranked by how much
+  a real image beats a drawing:
+    HIGHEST (a drawing genuinely cannot teach the finding — these are what a
+    radiograph/CT actually looks like):
+      croup steeple sign · epiglottitis thumbprint sign · SBO vs LBO on AXR ·
+      epidural vs subdural on CT · gout vs pseudogout crystal microscopy
+    HIGH (anatomy the student must recognise):
+      ectopic implantation sites · inguinal hernia direct vs indirect ·
+      breast quadrants · acute scrotum · prolapse by compartment ·
+      paediatric hip disorders · oesophageal cancer location ·
+      neck trauma zones · McBurney's point · paediatric hernias
+    LOWER (works fine as a schematic — mostly maps/ladders, not true anatomy):
+      coronary territories · rule of nines · nerve palsy map · anal canal clock
+      · acute limb ischaemia 6 Ps · four stages of labour
+
+  ECTOPIC IMPLANTATION SITES — SEARCHED, NO GOOD OPEN-LICENSED MATCH YET
+    Candidates found and rejected:
+      File:Ectopic_Pregnancy_Diagram.jpg  CC BY-SA 3.0 — shows ONE tubal site
+      File:Ectopic-pregnancy-area.png     CC BY-SA 3.0 + GFDL — only 234x225
+      File:Ectopic_Pregnancy.png          CC BY-SA 4.0 — could not confirm it
+                                          labels all six sites
+    The whole teaching value of this figure is the DISTRIBUTION (ampulla ~70%,
+    isthmus ~12%, fimbrial ~11%, ovarian ~3%, interstitial ~2%, cervical <1%),
+    and none of the above carries it. Suggested resolution: use a real CC BY
+    illustration of the uterus + tubes as the anatomical base and keep the
+    existing percentage legend beside it, rather than swapping in a weaker
+    image just to make it "a photo". Left as-is pending the owner's call.
+
+================================================================================
+END OF HANDOFF
+================================================================================
