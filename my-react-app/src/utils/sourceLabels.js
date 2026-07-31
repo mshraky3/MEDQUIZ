@@ -8,9 +8,12 @@ export const SOURCE_LABELS = {
     FebMarApr25: 'فبراير – مارس – أبريل 2026',
     May26: 'مايو 2026',
     June26: 'يونيو 2026',
-    // nursing track
-    NursingEMS: 'الأسئلة المؤكدة والأكثر تكراراً',
+    // nursing track — the bank is split the same way the medical one is:
+    // the core EMS review file vs. the block appended in its September edition.
+    NursingMostRepeated: 'Most Repeated',
+    NursingConfirmed: 'Confirmed',
     // legacy — retired from the bank but present in old sessions
+    NursingEMS: 'الأسئلة المؤكدة والأكثر تكراراً',
     October25: 'أكتوبر 2025',
     November25: 'نوفمبر 2025',
     December25: 'ديسمبر 2025',
