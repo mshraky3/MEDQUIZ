@@ -1,9 +1,13 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import axios from 'axios';
 import Globals from '../../global.js';
 import { UserContext } from '../../UserContext';
 import Spinner from '../common/Spinner.jsx';
+import Icon from '../common/Icon.jsx';
+// The card shell (.login-card, .btn, .alert-box) lives in Login.css. Import it
+// explicitly — landing on /subscribe directly would otherwise render unstyled.
+import '../login/Login.css';
 import './Subscribe.css';
 
 // Moyasar embedded payment form (Moyasar.js). 1.16.0 is the latest CDN build
@@ -44,10 +48,17 @@ const Subscribe = () => {
     const { user, sessionToken } = useContext(UserContext);
     const navigate = useNavigate();
     const location = useLocation();
-    const [status, setStatus] = useState('loading'); // loading | ready | error
+    // loading  → fetching config / injecting Moyasar
+    // ready    → the card form is on screen and usable
+    // blocked  → Moyasar loaded but refused to render a form (e.g. non-HTTPS
+    //            origin, or a live key on an unregistered domain). Without this
+    //            state the page is a dead end: a price and no way to pay.
+    // error    → config or asset load failed outright
+    const [status, setStatus] = useState('loading');
     const [error, setError] = useState('');
     const [priceHalalas, setPriceHalalas] = useState(null);
     const [isTestMode, setIsTestMode] = useState(false);
+    const formRef = useRef(null);
 
     useEffect(() => {
         document.documentElement.dir = 'rtl';
@@ -60,6 +71,7 @@ const Subscribe = () => {
             return;
         }
         let cancelled = false;
+        let watchdog = null;
 
         (async () => {
             try {
@@ -99,6 +111,16 @@ const Subscribe = () => {
                     metadata: { account_id: String(user.id), plan: 'annual' },
                 });
                 setStatus('ready');
+
+                // Moyasar.init() resolves even when it then declines to build
+                // the form. Confirm a real <form> actually landed, otherwise
+                // fall back to a state that still tells the user what to do.
+                watchdog = setTimeout(() => {
+                    if (cancelled) return;
+                    if (!document.querySelector('.mysr-form form')) {
+                        setStatus('blocked');
+                    }
+                }, 3000);
             } catch (err) {
                 if (cancelled) return;
                 console.error('Subscribe init failed:', err);
@@ -107,8 +129,20 @@ const Subscribe = () => {
             }
         })();
 
-        return () => { cancelled = true; };
+        return () => {
+            cancelled = true;
+            if (watchdog) clearTimeout(watchdog);
+        };
     }, [user, sessionToken, navigate]);
+
+    // Scroll the card form into view — on mobile the perks push it below the
+    // fold, so the price is visible but the way to pay is not.
+    const goToPaymentForm = () => {
+        const el = formRef.current;
+        if (!el) return;
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.querySelector('input')?.focus({ preventScroll: true });
+    };
 
     const riyals = priceHalalas != null ? priceHalalas / 100 : null;
     const trialEnded = new URLSearchParams(location.search).get('reason') === 'trial_expired'
@@ -144,7 +178,7 @@ const Subscribe = () => {
                     </div>
 
                     <ul className="subscribe-perks">
-                        <li>بنك أسئلة محدّث بالكامل لنمط 2026 مع شرح سريري</li>
+                        <li>بنك أسئلة محدّث بالكامل لنمط 2026 مع تفسير لكل إجابة</li>
                         <li>تجميعات شهرية جديدة تُضاف طوال مدة اشتراكك</li>
                         <li>تحليلات أداء تكشف نقاط ضعفك وتعيد تدريبك عليها</li>
                     </ul>
@@ -163,10 +197,46 @@ const Subscribe = () => {
                         </div>
                     )}
 
-                    {status === 'error' && <div className="alert-box error">{error}</div>}
+                    {/* Primary CTA — the page must never show a price without an
+                        obvious next step, on any screen size. */}
+                    {status === 'ready' && (
+                        <button
+                            type="button"
+                            className="btn primary large subscribe-cta"
+                            onClick={goToPaymentForm}
+                        >
+                            <Icon name="lock" size={18} />
+                            ادفع {riyals != null ? `${riyals} ريال` : ''} واشترك الآن
+                        </button>
+                    )}
+
+                    {(status === 'error' || status === 'blocked') && (
+                        <div className="subscribe-fallback">
+                            <div className="alert-box error">
+                                {status === 'blocked'
+                                    ? 'تعذّر عرض نموذج الدفع على هذا المتصفح. جرّب إعادة التحميل، أو تواصل معنا وسنفعّل اشتراكك يدوياً.'
+                                    : error}
+                            </div>
+                            <button
+                                type="button"
+                                className="btn primary large"
+                                onClick={() => window.location.reload()}
+                            >
+                                <Icon name="refresh" size={18} />
+                                إعادة تحميل صفحة الدفع
+                            </button>
+                            <Link to="/contact" className="btn subscribe-fallback-secondary">
+                                تواصل معنا لإتمام الدفع
+                            </Link>
+                        </div>
+                    )}
 
                     {/* Moyasar renders the card form inside this element */}
-                    <div className="mysr-form" style={{ display: status === 'ready' ? 'block' : 'none' }} />
+                    <div
+                        ref={formRef}
+                        className="mysr-form"
+                        style={{ display: status === 'ready' ? 'block' : 'none' }}
+                    />
 
                     <p className="subscribe-note">
                         الدفع آمن ومعالَج عبر <strong>ميسر</strong>. لا نقوم بتخزين بيانات بطاقتك على خوادمنا.

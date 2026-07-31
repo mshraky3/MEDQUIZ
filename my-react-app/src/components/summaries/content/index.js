@@ -10,15 +10,28 @@ import medicine from './medicine.js';
 import pediatrics from './pediatrics.js';
 import surgery from './surgery.js';
 import obgyn from './obgyn.js';
+import nursingFundamentals from './nursingFundamentals.js';
+import medicalSurgicalNursing from './medicalSurgicalNursing.js';
+import maternalNewbornNursing from './maternalNewbornNursing.js';
+import pediatricNursing from './pediatricNursing.js';
+import mentalHealthNursing from './mentalHealthNursing.js';
+import nursingPharmacology from './nursingPharmacology.js';
 import { MEDICAL, NURSING, normalizeTrack } from '../../../utils/tracks.js';
 
 // Order: Pediatrics, OB/GYN, Medicine, Surgery (kept consistent with the
 // product's specialty ordering; medicine is the deepest per the /critical set).
 export const SECTIONS_BY_TRACK = {
     [MEDICAL]: [pediatrics, obgyn, medicine, surgery],
-    // Nursing summaries are not authored yet. Add the section modules here —
-    // one per specialty in tracks.js — and the whole guided path builds itself.
-    [NURSING]: [],
+    // Order follows the SNLE blueprint: the foundations first, then the biggest
+    // clinical block, then the life-stage specialties, then pharmacology.
+    [NURSING]: [
+        nursingFundamentals,
+        medicalSurgicalNursing,
+        maternalNewbornNursing,
+        pediatricNursing,
+        mentalHealthNursing,
+        nursingPharmacology,
+    ],
 };
 
 export const sectionsFor = (track) => SECTIONS_BY_TRACK[normalizeTrack(track)] || [];

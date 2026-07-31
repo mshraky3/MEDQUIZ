@@ -35,6 +35,31 @@ const MILESTONE_COPY = {
         tagline: 'Who needs an operation',
         goal: 'Decide who needs surgery, how urgently, and what has to happen before and after it.',
     },
+    /* ---- Nursing track ---- */
+    'nursing-fundamentals': {
+        tagline: 'How a nurse decides',
+        goal: 'Learn the reasoning the whole exam rests on — which patient comes first, what you may delegate, what the law and the consent form require, and how infection is stopped.',
+    },
+    'medical-surgical-nursing': {
+        tagline: 'The adult ward',
+        goal: 'Work through the systems the biggest part of the paper covers: before and after surgery, the heart, the chest, the kidneys, the gut, the endocrine emergencies, burns and shock.',
+    },
+    'maternal-newborn-nursing': {
+        tagline: 'Mother and baby, start to finish',
+        goal: 'Follow a pregnancy from the booking visit through labour and delivery to the newborn and the postpartum ward, including the bleeding and blood-pressure emergencies.',
+    },
+    'pediatric-nursing': {
+        tagline: 'Care that changes with age',
+        goal: 'Match your assessment and your teaching to the child in front of you, and recognise the paediatric conditions the exam returns to every sitting.',
+    },
+    'mental-health-nursing': {
+        tagline: 'What to say, and when',
+        goal: 'Master therapeutic communication and the vocabulary of thought and mood disorders — the two things almost every mental-health question actually tests.',
+    },
+    'nursing-pharmacology': {
+        tagline: 'Give it safely, calculate it right',
+        goal: 'Get every dosage and drip-rate calculation correct, then learn the checks, antidotes and side effects that decide the drug questions.',
+    },
 };
 
 // One line per step, written for someone starting from zero: what the step

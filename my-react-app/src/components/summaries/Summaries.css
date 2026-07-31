@@ -256,7 +256,10 @@
     border-bottom: 1px solid #d4deee;
     padding-bottom: 6px;
 }
-.sum-doc h4 { color: #93c5fd; font-size: 0.96rem; margin: 14px 0 6px; }
+/* #93c5fd was too light to read against the white study panel (it fails
+   contrast on body-size text); the medical decks sidestep it by tagging every
+   sub-heading .deck-topic. Darkened so a bare <h4> is legible either way. */
+.sum-doc h4 { color: #1d4ed8; font-weight: 700; font-size: 0.96rem; margin: 14px 0 6px; }
 .sum-doc ul, .sum-doc ol { margin: 6px 0; padding-inline-start: 22px; }
 .sum-doc li { margin: 4px 0; font-size: 0.89rem; }
 .sum-doc b { color: #1e293b; }
@@ -843,7 +846,9 @@
 
 /* Level 3a — summary content (rich .sum-doc) */
 .sub-summary { padding: 16px 22px 4px; line-height: 1.7; color: #1e293b; }
-.sub-summary h4 { display: flex; align-items: center; gap: 9px; color: #bcd2f5; font-size: 1rem; font-weight: 800; margin: 18px 0 9px; }
+/* #bcd2f5 is near-invisible on the panel's white background — the accent
+   diamond carries the colour, so the label itself reads in the body ink. */
+.sub-summary h4 { display: flex; align-items: center; gap: 9px; color: #0f1e3d; font-size: 1rem; font-weight: 800; margin: 18px 0 9px; }
 .sub-summary h4::before { content: ''; width: 8px; height: 8px; border-radius: 2px; background: var(--accent); transform: rotate(45deg); }
 .sub-summary ul { list-style: none; margin: 9px 0; padding: 0; }
 .sub-summary ul li { position: relative; padding-inline-start: 20px; margin: 8px 0; font-size: 0.92rem; line-height: 1.7; }

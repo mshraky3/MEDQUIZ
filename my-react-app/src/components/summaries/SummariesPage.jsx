@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { findSubtopic } from './content/index.js';
-import { getPath, formatMinutes } from './pathMeta.js';
+import { getPath } from './pathMeta.js';
 import QuestionCard from './QuestionCard.jsx';
 import PathCheckpoint from './PathCheckpoint.jsx';
 import SummaryAnnotation from './SummaryAnnotation.jsx';
@@ -77,7 +77,6 @@ const SummariesPage = () => {
         steps: STEPS,
         stepById: STEP_BY_ID,
         totalSteps: TOTAL_STEPS,
-        totalMinutes: TOTAL_MINUTES,
         totalQuestions: TOTAL_QUESTIONS,
         ticks: TRACK_TICKS,
     } = guide;
@@ -419,7 +418,6 @@ const SummariesPage = () => {
                         )}
 
                         <div className="step-meta">
-                            <span><Icon name="clock" size={13} /> ~{step.minutes} min read</span>
                             {step.questionCount > 0 && (
                                 <span><Icon name="target" size={13} /> {step.questionCount} practice questions</span>
                             )}
@@ -455,9 +453,9 @@ const SummariesPage = () => {
             <div className="summaries-hub" dir="rtl">
                 <div className="hub-comingsoon">
                     <span className="hub-comingsoon-icon" aria-hidden="true"><Icon name="hourglass" size={34} /></span>
-                    <h1>ملخصات مسار {trackLabel(myTrack)} قيد الإعداد</h1>
+                    <h1>المحتوى الدراسي لمسار {trackLabel(myTrack)} قيد الإعداد</h1>
                     <p>
-                        نعمل حالياً على تجهيز الملخصات المصوّرة الخاصة بـ{examLabel(myTrack)}،
+                        نعمل حالياً على تجهيز المحتوى الدراسي المصوّر الخاص بـ{examLabel(myTrack)}،
                         مرتّبة كمسار دراسي متسلسل تماماً كبقية المسارات.
                     </p>
                     <p className="hub-comingsoon-note">
@@ -476,18 +474,10 @@ const SummariesPage = () => {
             {/* ---------------- header: what this path is, and where you are ------ */}
             <header className="hub-head">
                 <span className="hub-eyebrow"><Icon name="rocket" size={14} /> مسار مذاكرة مرتّب</span>
-                <h1>الملخصات، مرتّبة بترتيب دراستها</h1>
-                <p className="hub-lead">
-                    كل المواضيع عالية العائد في مسار واحد: <b>{MILESTONES.length} مراحل</b>،{' '}
-                    <b>{TOTAL_STEPS} خطوة</b>، ومحطة تقييم بعد كل مرحلة. اقرأ الخطوة، اختبر نفسك،
-                    ثم علّمها كمكتملة — والمسار يتذكّر أين توقفت. لا تحتاج أي خلفية مسبقة: ابدأ من
-                    الخطوة الأولى واتبع الخط. <span className="hub-lead-note">(محتوى الملخصات بالإنجليزية)</span>
-                </p>
-
+                <h1>المحتوى الدراسي، مرتّب بترتيب دراسته</h1>
                 <div className="hub-facts">
                     <span className="hub-fact"><Icon name="flag" size={15} /><b>{MILESTONES.length}</b> مراحل</span>
                     <span className="hub-fact"><Icon name="book-open" size={15} /><b>{TOTAL_STEPS}</b> خطوة</span>
-                    <span className="hub-fact"><Icon name="clock" size={15} />≈<b>{formatMinutes(TOTAL_MINUTES)}</b> قراءة</span>
                     <span className="hub-fact"><Icon name="target" size={15} /><b>{TOTAL_QUESTIONS}</b> سؤال تدريبي</span>
                 </div>
 
@@ -559,7 +549,7 @@ const SummariesPage = () => {
                             </strong>
                             <span className="hub-resume-why" dir="ltr">{resumeStep.why}</span>
                             <span className="hub-resume-meta">
-                                <span dir="ltr">{resumeStep.section.title}</span> · ~{resumeStep.minutes} دقيقة
+                                <span dir="ltr">{resumeStep.section.title}</span>
                                 {resumeStep.questionCount > 0 ? ` · ${resumeStep.questionCount} سؤال` : ''}
                             </span>
                         </div>
@@ -684,7 +674,6 @@ const SummariesPage = () => {
                                             <span className="ms-goal" dir="ltr">{m.goal}</span>
                                             <span className="ms-meta">
                                                 <span><Icon name="book-open" size={13} /> {nTotal} خطوة</span>
-                                                <span><Icon name="clock" size={13} /> ≈{formatMinutes(m.minutes)}</span>
                                                 <span><Icon name="target" size={13} /> {m.questionCount} سؤال</span>
                                             </span>
                                         </span>

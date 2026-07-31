@@ -5,6 +5,10 @@ import { UserContext } from '../../UserContext';
 import { userTrack } from '../../utils/tracks.js';
 import './Contact.css';
 
+// Direct WhatsApp line — the fastest way to reach us, so it gets a CTA of its
+// own above the form rather than only a row in the contact list.
+const WHATSAPP_LINK = 'https://wa.link/bjflcg';
+
 const Contact = () => {
     // The form is reachable while signed out, so this is best-effort: when we
     // do know who is writing, tell the inbox which track they study — a
@@ -93,7 +97,7 @@ ${form.message}
             icon: 'https://img.icons8.com/?size=100&id=yY3YzfabynRr&format=png&color=000000',
             title: 'دعم واتساب',
             value: '0582619119',
-            link: 'https://wa.link/gqafib'
+            link: WHATSAPP_LINK
         },
         {
             icon: 'https://img.icons8.com/?size=100&id=yY3YzfabynRr&format=png&color=000000',
@@ -113,7 +117,7 @@ ${form.message}
                     <div className="contact-fallback">
                         <p>يمكنك أيضاً التواصل معنا مباشرة:</p>
                         <div className="whatsapp-links">
-                            <a href="https://wa.link/gqafib" className="whatsapp-link">
+                            <a href={WHATSAPP_LINK} className="whatsapp-link" target="_blank" rel="noopener noreferrer">
                                 <Icon name="phone" size={15} /> WhatsApp: 0582619119
                             </a>
                         </div>
@@ -130,6 +134,20 @@ ${form.message}
                     <h1> اتصل بنا</h1>
                     <p>تواصل معنا للحصول على الدعم أو الأسئلة أو الملاحظات</p>
                 </div>
+
+                <a
+                    href={WHATSAPP_LINK}
+                    className="whatsapp-cta"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    <span className="whatsapp-cta-icon"><Icon name="phone" size={20} /></span>
+                    <span className="whatsapp-cta-text">
+                        <strong>تواصل معنا على واتساب</strong>
+                        <small>أسرع طريقة للرد — عادةً خلال دقائق</small>
+                    </span>
+                    <span className="whatsapp-cta-arrow">←</span>
+                </a>
 
                 <div className="contact-content">
                     {/* Contact Information */}

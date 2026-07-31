@@ -104,6 +104,33 @@
     text-decoration: underline;
 }
 
+/* Primary "go pay" CTA — the one unmissable next step on the page. */
+.subscribe-cta {
+    width: 100%;
+    margin-bottom: 6px;
+}
+
+/* Shown when the embedded form cannot render: an explanation plus two real
+   ways forward, never a bare error. */
+.subscribe-fallback {
+    display: grid;
+    gap: 10px;
+    margin: 4px 0 6px;
+}
+
+.subscribe-fallback-secondary {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--border, #d7dee9);
+    color: var(--text-dark, #0f1e3d);
+}
+
+.subscribe-fallback-secondary:hover {
+    background: rgba(37, 99, 235, 0.06);
+    border-color: var(--primary-color, #2563eb);
+    color: var(--primary-color, #2563eb);
+}
+
 .mysr-form {
     margin-top: 8px;
 }

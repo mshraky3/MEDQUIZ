@@ -5,6 +5,9 @@ import Globals from '../../global.js';
 import { UserContext } from '../../UserContext';
 import Spinner from '../common/Spinner.jsx';
 import Icon from '../common/Icon.jsx';
+// Same shared card shell as Subscribe — the callback URL is often opened as a
+// fresh page load, so Login.css cannot be assumed to be in the bundle already.
+import '../login/Login.css';
 import './Subscribe.css';
 
 function reasonToArabic(reason) {

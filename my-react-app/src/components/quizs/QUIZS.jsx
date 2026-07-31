@@ -162,12 +162,12 @@ const QUIZS = () => {
     const steps = [
         {
             key: 'summaries', tone: 'sum', icon: 'book-open', kicker: 'افهم',
-            title: 'الملخصات',
-            desc: 'ملخصات مصوّرة تغطي كل تخصصات مسارك.',
+            title: 'المحتوى الدراسي',
+            desc: 'محتوى دراسي مصوّر يغطي كل تخصصات مسارك.',
             stat: summariesEmpty
                 ? 'قيد الإعداد'
                 : SPECIALTIES.map((sp) => getTypeLabel(sp.key)).join(' · '),
-            cta: 'تصفّح الملخصات',
+            cta: 'تصفّح المحتوى',
             onClick: () => navigate('/summaries')
         },
         {
@@ -251,7 +251,7 @@ const QUIZS = () => {
                         <span>
                             نعمل على تجهيز المحتوى الخاص بـ{examLabel(myTrack)}.
                             {!bankEmpty && ' الأسئلة متاحة الآن ويمكنك البدء فوراً.'}
-                            {!summariesEmpty && ' الملخصات متاحة الآن.'}
+                            {!summariesEmpty && ' المحتوى الدراسي متاح الآن.'}
                             {bankEmpty && summariesEmpty && ' سنعلمك بالبريد فور جاهزيته.'}
                         </span>
                     </div>

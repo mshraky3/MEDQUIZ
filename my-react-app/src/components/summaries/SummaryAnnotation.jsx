@@ -5,30 +5,32 @@ import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef 
  *
  * The <canvas> is absolutely positioned inside the modal's scroll container
  * (`.panel-body`) and sized to its full scroll height, so annotations scroll
- * naturally with the content — no scroll-sync maths needed.
+ * naturally with the content.
  *
- * ── Coordinates are normalized ────────────────────────────────────────────
- * Points are stored as fractions of the canvas box (0..1 on each axis), not
- * as pixels. Pixels broke on every reflow: rotating the device changes the
- * container's width and its scroll height, so replaying absolute pixel paths
- * dropped strokes somewhere else entirely on the page. Fractions scale with
- * the content, so a mark stays over the passage it was drawn on when the
- * screen turns from portrait to landscape.
+ * ── Strokes are anchored to the CONTENT, not to the screen ────────────────
+ * Each point is stored as "element #N, at (fx, fy) within that element's box"
+ * rather than as a position on the canvas. This is the whole point: rotating
+ * the device REFLOWS the text, so a paragraph that was 30% down the document
+ * in portrait might be 45% down in landscape. Canvas-relative coordinates —
+ * pixels OR fractions — therefore drift away from the sentence they were
+ * drawn over. Element-relative coordinates move with the paragraph, so a
+ * highlight over "VSD: small → asymptomatic…" stays on that sentence no
+ * matter how the page reflows.
  *
- * Line widths stay in CSS pixels (they are NOT scaled) so a stroke doesn't
- * become fat or hairline after a resize.
+ * Elements are identified by their index in a document-order walk of the
+ * container, captured once per mount. The DOM structure never changes while a
+ * summary is open (only its layout does), so the index is stable.
+ *
+ * Points that land in the gaps between elements fall back to container-
+ * relative fractions, which is the best available anchor for empty space.
  *
  * ── Two-finger zoom while a tool is active ────────────────────────────────
  * `touch-action: pinch-zoom` hands pinch gestures to the browser while we
- * keep single-finger input for drawing. The old value (`none`) swallowed
- * every touch gesture, which is why zooming was impossible without first
- * switching back to the move tool. A stroke started with one finger is
- * discarded the moment a second finger lands, so beginning a pinch never
- * leaves a stray line behind.
- *
- * Pinch-zoom is *visual viewport* zoom: it magnifies without reflowing, so
- * the canvas and the text underneath scale together and annotations stay
- * exactly where they were drawn.
+ * keep single-finger input for drawing. `none` (the old value) swallowed
+ * every touch gesture, which is why zooming was impossible without switching
+ * back to the move tool. A stroke started with one finger is discarded the
+ * moment a second finger lands, so beginning a pinch never leaves a stray
+ * line behind.
  *
  * When `tool === 'move'` the canvas is click-through (pointer-events:none) so
  * the interactive questions underneath stay usable.
@@ -37,18 +39,28 @@ import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef 
  */
 const TOOL_WIDTH = { pen: 3, highlighter: 16, eraser: 22 };
 
+// Elements worth anchoring to: the ones that actually carry text or figures.
+const ANCHOR_SELECTOR = 'p, li, h1, h2, h3, h4, h5, td, th, figure, figcaption,'
+    + ' pre, blockquote, .deck-card, .deck-block, .sum-callout, img, svg, table';
+
 const SummaryAnnotation = forwardRef(({ tool, color, containerRef }, ref) => {
     const canvasRef = useRef(null);
-    // [{ mode, color, width, points:[{ nx, ny }] }] — nx/ny are 0..1 fractions
+    // [{ mode, color, width, points:[{ el, fx, fy }] }]
+    //   el = index into anchors.current, or -1 for "container-relative"
     const strokes = useRef([]);
     const drawing = useRef(null);
-    // Every pointer currently on the canvas. Size > 1 means the user is making
-    // a gesture (pinch), not drawing.
     const activePointers = useRef(new Set());
-    // Live CSS size of the canvas, used to convert fractions → pixels.
+    // Ordered list of anchorable elements, rebuilt whenever the content changes.
+    const anchors = useRef([]);
     const box = useRef({ w: 0, h: 0 });
 
     const getCtx = () => canvasRef.current && canvasRef.current.getContext('2d');
+
+    /** Snapshot the anchorable elements in document order. */
+    const indexAnchors = useCallback(() => {
+        const cont = containerRef.current;
+        anchors.current = cont ? Array.from(cont.querySelectorAll(ANCHOR_SELECTOR)) : [];
+    }, [containerRef]);
 
     const applyStyle = (c, s) => {
         c.lineJoin = 'round';
@@ -65,13 +77,28 @@ const SummaryAnnotation = forwardRef(({ tool, color, containerRef }, ref) => {
         }
     };
 
-    /** Fraction → CSS pixel, against the canvas's current box. */
-    const toPx = (p) => ({ x: p.nx * box.current.w, y: p.ny * box.current.h });
+    /**
+     * Resolve a stored point to canvas pixels using the element's CURRENT
+     * position — this is what makes an annotation follow its paragraph.
+     * `rectCache` avoids re-measuring the same element for every point.
+     */
+    const toPx = (p, canvasRect, rectCache) => {
+        if (p.el < 0) return { x: p.fx * box.current.w, y: p.fy * box.current.h };
+        const el = anchors.current[p.el];
+        if (!el || !el.isConnected) return null; // content changed — drop the point
+        let r = rectCache.get(p.el);
+        if (!r) { r = el.getBoundingClientRect(); rectCache.set(p.el, r); }
+        return {
+            x: (r.left - canvasRect.left) + p.fx * r.width,
+            y: (r.top - canvasRect.top) + p.fy * r.height,
+        };
+    };
 
-    const strokePath = (c, s) => {
-        if (s.points.length < 1) return;
+    const strokePath = (c, s, canvasRect, rectCache) => {
+        if (!s.points.length) return;
+        const pts = s.points.map((p) => toPx(p, canvasRect, rectCache)).filter(Boolean);
+        if (!pts.length) return;
         applyStyle(c, s);
-        const pts = s.points.map(toPx);
         c.beginPath();
         c.moveTo(pts[0].x, pts[0].y);
         for (let i = 1; i < pts.length; i++) c.lineTo(pts[i].x, pts[i].y);
@@ -86,7 +113,9 @@ const SummaryAnnotation = forwardRef(({ tool, color, containerRef }, ref) => {
         const dpr = window.devicePixelRatio || 1;
         c.setTransform(dpr, 0, 0, dpr, 0, 0);
         c.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
-        for (const s of strokes.current) strokePath(c, s);
+        const canvasRect = canvas.getBoundingClientRect();
+        const rectCache = new Map();
+        for (const s of strokes.current) strokePath(c, s, canvasRect, rectCache);
         c.globalCompositeOperation = 'source-over';
         c.globalAlpha = 1;
     }, []);
@@ -98,29 +127,29 @@ const SummaryAnnotation = forwardRef(({ tool, color, containerRef }, ref) => {
         const dpr = window.devicePixelRatio || 1;
         const w = cont.clientWidth;
         const h = Math.max(cont.scrollHeight, cont.clientHeight);
+        box.current = { w, h };
         // The canvas is an absolutely-positioned child of the observed
         // container and is sized to its scroll height, so resizing it feeds
         // straight back into the ResizeObserver. Bail out when nothing actually
         // changed — otherwise the observer ping-pongs and the browser reports
         // "ResizeObserver loop completed with undelivered notifications".
-        if (canvas.width === Math.floor(w * dpr) && canvas.height === Math.floor(h * dpr)) {
-            box.current = { w, h };
-            return;
+        const sameSize = canvas.width === Math.floor(w * dpr)
+            && canvas.height === Math.floor(h * dpr);
+        if (!sameSize) {
+            canvas.style.width = w + 'px';
+            canvas.style.height = h + 'px';
+            canvas.width = Math.floor(w * dpr);
+            canvas.height = Math.floor(h * dpr);
         }
-        canvas.style.width = w + 'px';
-        canvas.style.height = h + 'px';
-        canvas.width = Math.floor(w * dpr);
-        canvas.height = Math.floor(h * dpr);
-        // Strokes are fractions, so the new box is all the replay needs.
-        box.current = { w, h };
+        // Redraw regardless: a reflow can move paragraphs without changing the
+        // container's overall size, and the strokes follow the paragraphs.
         redraw();
     }, [containerRef, redraw]);
 
     useEffect(() => {
+        indexAnchors();
         resize();
         const cont = containerRef.current;
-        // Never resize during observer delivery — defer to the next frame so
-        // the layout write lands outside the ResizeObserver callback.
         let frame = 0;
         const scheduleResize = () => {
             if (frame) return;
@@ -129,9 +158,9 @@ const SummaryAnnotation = forwardRef(({ tool, color, containerRef }, ref) => {
         const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(scheduleResize) : null;
         if (ro && cont) ro.observe(cont);
         window.addEventListener('resize', scheduleResize);
-        // Rotation reflows the text. The ResizeObserver catches the box change,
-        // but orientationchange can fire before layout settles, so run a second
-        // pass shortly after to pick up the final size.
+        // Rotation reflows the text. orientationchange can fire before layout
+        // settles, so run a second pass shortly after to pick up the final
+        // positions of every paragraph.
         const onOrientation = () => { scheduleResize(); setTimeout(scheduleResize, 250); };
         window.addEventListener('orientationchange', onOrientation);
         return () => {
@@ -140,22 +169,43 @@ const SummaryAnnotation = forwardRef(({ tool, color, containerRef }, ref) => {
             window.removeEventListener('resize', scheduleResize);
             window.removeEventListener('orientationchange', onOrientation);
         };
-    }, [resize, containerRef]);
+    }, [resize, indexAnchors, containerRef]);
 
     useImperativeHandle(ref, () => ({
         undo: () => { strokes.current.pop(); redraw(); },
         clear: () => { strokes.current = []; redraw(); },
     }));
 
-    /** Pointer position as a 0..1 fraction of the canvas box. */
+    /**
+     * Turn a pointer event into a content-anchored point: find the innermost
+     * anchorable element under the cursor and record the position *within* it.
+     */
     const pos = (e) => {
-        const r = canvasRef.current.getBoundingClientRect();
-        const w = r.width || 1;
-        const h = r.height || 1;
-        return { nx: (e.clientX - r.left) / w, ny: (e.clientY - r.top) / h };
+        const canvasRect = canvasRef.current.getBoundingClientRect();
+        // The canvas sits above the text, so hide it for the hit-test.
+        const prev = canvasRef.current.style.pointerEvents;
+        canvasRef.current.style.pointerEvents = 'none';
+        const hit = document.elementFromPoint(e.clientX, e.clientY);
+        canvasRef.current.style.pointerEvents = prev;
+
+        const el = hit && hit.closest(ANCHOR_SELECTOR);
+        const idx = el ? anchors.current.indexOf(el) : -1;
+        if (idx >= 0) {
+            const r = el.getBoundingClientRect();
+            return {
+                el: idx,
+                fx: r.width ? (e.clientX - r.left) / r.width : 0,
+                fy: r.height ? (e.clientY - r.top) / r.height : 0,
+            };
+        }
+        // Empty space between elements — anchor to the container instead.
+        return {
+            el: -1,
+            fx: box.current.w ? (e.clientX - canvasRect.left) / box.current.w : 0,
+            fy: box.current.h ? (e.clientY - canvasRect.top) / box.current.h : 0,
+        };
     };
 
-    /** Drop the in-progress stroke and repaint without it. */
     const abortStroke = () => {
         if (!drawing.current) return;
         drawing.current = null;
@@ -179,11 +229,12 @@ const SummaryAnnotation = forwardRef(({ tool, color, containerRef }, ref) => {
     };
 
     const onMove = (e) => {
-        // Ignore movement entirely while more than one pointer is down.
         if (activePointers.current.size > 1 || !drawing.current) return;
         drawing.current.points.push(pos(e));
         const c = getCtx();
-        if (c) strokePath(c, drawing.current); // incremental; full redraw on pointer-up
+        if (!c) return;
+        // Incremental draw; the full redraw happens on pointer-up.
+        strokePath(c, drawing.current, canvasRef.current.getBoundingClientRect(), new Map());
     };
 
     const endPointer = (e) => {

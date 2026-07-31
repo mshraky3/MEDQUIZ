@@ -20,15 +20,6 @@ const Login = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  // Email migration state
-  const [showMigrationPopup, setShowMigrationPopup] = useState(false);
-  const [migrationEmail, setMigrationEmail] = useState('');
-  const [migrationOtp, setMigrationOtp] = useState('');
-  const [migrationStep, setMigrationStep] = useState('notify'); // 'notify' | 'otp'
-  const [migrationLoading, setMigrationLoading] = useState(false);
-  const [migrationError, setMigrationError] = useState('');
-  const [migrationUsername, setMigrationUsername] = useState('');
-  const [graceLoginsUsed, setGraceLoginsUsed] = useState(0);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -172,7 +163,7 @@ const Login = () => {
         // a `subscription` object. Unpaid / expired accounts are funnelled to the
         // /subscribe paywall (handled in the redirect below); grandfathered,
         // admin, and active accounts pass straight through. RequireAuth is the
-        // safety net for the popup paths (terms / email-migration) that follow.
+        // safety net for the terms popup path that follows.
 
         if (response.data.showTerms) {
           setShowTermsPopup(true);
@@ -183,17 +174,6 @@ const Login = () => {
 
         const loggedUser = response.data.user || { username };
         setUser(loggedUser, response.data.sessionToken);
-
-        if (response.data.showEmailMigrationNotice) {
-          setMigrationUsername(loggedUser.username || cleanedUsername);
-          setMigrationEmail(loggedUser.email || '');
-          setMigrationStep('notify');
-          setMigrationError('');
-          setGraceLoginsUsed(response.data.graceLoginsUsed || 0);
-          setShowMigrationPopup(true);
-          setLoading(false);
-          return;
-        }
 
         setLoading(false);
         // Unpaid / expired subscription → paywall.
@@ -222,53 +202,6 @@ const Login = () => {
         }
         setLoading(false);
       });
-  };
-
-  const handleSendMigrationOtp = async () => {
-    if (!migrationEmail) {
-      setMigrationError('يرجى إدخال البريد الإلكتروني');
-      return;
-    }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(migrationEmail)) {
-      setMigrationError('يرجى إدخال بريد إلكتروني صحيح');
-      return;
-    }
-    setMigrationLoading(true);
-    setMigrationError('');
-    try {
-      await axios.post(`${Globals.URL}/api/auth/send-otp`, {
-        email: migrationEmail.toLowerCase().trim(),
-        purpose: 'migration'
-      });
-      setMigrationStep('otp');
-    } catch (err) {
-      setMigrationError(err.response?.data?.message || 'فشل إرسال الرمز. حاول مرة أخرى.');
-    } finally {
-      setMigrationLoading(false);
-    }
-  };
-
-  const handleVerifyMigrationOtp = async () => {
-    if (!migrationOtp || migrationOtp.length !== 4) {
-      setMigrationError('يرجى إدخال الرمز المكون من 4 أرقام');
-      return;
-    }
-    setMigrationLoading(true);
-    setMigrationError('');
-    try {
-      await axios.post(`${Globals.URL}/api/auth/verify-migration-otp`, {
-        username: migrationUsername,
-        email: migrationEmail.toLowerCase().trim(),
-        otp_code: migrationOtp
-      });
-      setShowMigrationPopup(false);
-      navigate('/quizs');
-    } catch (err) {
-      setMigrationError(err.response?.data?.message || 'الرمز غير صحيح أو منتهي الصلاحية');
-    } finally {
-      setMigrationLoading(false);
-    }
   };
 
   const handleAcceptTerms = async () => {
@@ -434,111 +367,7 @@ const Login = () => {
           </div>
         )}
 
-        {/* Email Migration Popup */}
-        {showMigrationPopup && (() => {
-          const graceLeft = 3 - graceLoginsUsed;
-          const isLastChance = graceLeft <= 0;
-          const warningColor = graceLeft <= 1 ? '#ef4444' : graceLeft === 2 ? '#f97316' : '#6366f1';
-          const warningText = isLastChance
-            ? 'هذه آخر فرصة! لن تتمكن من الدخول مرة أخرى بدون بريد إلكتروني.'
-            : graceLeft === 1
-              ? `تحذير: لديك محاولة دخول واحدة فقط متبقية قبل حذف حسابك نهائياً.`
-              : `لديك ${graceLeft} محاولات دخول متبقية قبل حذف حسابك.`;
-          return (
-            <div className="popup-overlay" style={{ zIndex: 1100 }}>
-              <div className="popup-content large-popup" style={{ maxWidth: 420 }}>
-                {migrationStep === 'notify' ? (
-                  <>
-                    <h3 style={{ color: warningColor, marginBottom: 12 }}><Icon name="mail" size={18} /> أضف بريدك الإلكتروني</h3>
-                    <div style={{ background: isLastChance ? '#450a0a' : graceLeft === 1 ? '#431407' : '#1e1b4b', border: `1px solid ${warningColor}`, borderRadius: 10, padding: '12px 16px', marginBottom: 16, color: warningColor, fontSize: 14, lineHeight: 1.7 }}>
-                      {warningText}
-                    </div>
-                    <p style={{ marginBottom: 16, lineHeight: 1.7, color: '#94a3b8', fontSize: 14 }}>
-                      أضف بريدك الإلكتروني الآن لتأمين حسابك والاستفادة من جميع ميزات المنصة.
-                    </p>
-                    <div style={{ marginBottom: 12 }}>
-                      <label style={{ display: 'block', marginBottom: 6, color: '#94a3b8', fontSize: 14 }}>البريد الإلكتروني</label>
-                      <input
-                        type="email"
-                        className="form-input"
-                        value={migrationEmail}
-                        onChange={(e) => setMigrationEmail(e.target.value)}
-                        placeholder="أدخل بريدك الإلكتروني"
-                        style={{ marginBottom: 0 }}
-                      />
-                    </div>
-                    {migrationError && <div className="alert-box error" style={{ marginBottom: 12 }}>{migrationError}</div>}
-                    <div className="popup-buttons" style={{ flexDirection: 'column', gap: 8 }}>
-                      <button
-                        className="popup-btn try-free"
-                        onClick={handleSendMigrationOtp}
-                        disabled={migrationLoading}
-                      >
-                        {migrationLoading ? 'جاري الإرسال...' : 'إرسال رمز التحقق'}
-                      </button>
-                      {!isLastChance && (
-                        <button
-                          className="popup-btn no-thanks"
-                          onClick={() => { setShowMigrationPopup(false); navigate('/quizs'); }}
-                          disabled={migrationLoading}
-                        >
-                          تخطى الآن
-                        </button>
-                      )}
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <h3 style={{ color: '#6366f1', marginBottom: 12 }}>تأكيد البريد الإلكتروني</h3>
-                    <p style={{ marginBottom: 16, color: '#94a3b8' }}>
-                      أدخل الرمز المرسل إلى {migrationEmail}
-                    </p>
-                    <input
-                      type="text"
-                      className="form-input"
-                      value={migrationOtp}
-                      onChange={(e) => setMigrationOtp(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                      placeholder="0000"
-                      maxLength={4}
-                      inputMode="numeric"
-                      style={{ textAlign: 'center', fontSize: '28px', letterSpacing: '10px', marginBottom: 12 }}
-                    />
-                    <p style={{ fontSize: 13, color: '#94a3b8', marginBottom: 12, lineHeight: 1.6 }}>
-                      ⚠️ إذا لم تجد الرمز، تحقّق من مجلد <strong>الرسائل غير المرغوب فيها (Spam)</strong> أو <strong>المهملات</strong>.
-                    </p>
-                    {migrationError && <div className="alert-box error" style={{ marginBottom: 12 }}>{migrationError}</div>}
-                    <div className="popup-buttons" style={{ flexDirection: 'column', gap: 8 }}>
-                      <button
-                        className="popup-btn try-free"
-                        onClick={handleVerifyMigrationOtp}
-                        disabled={migrationLoading}
-                      >
-                        {migrationLoading ? 'جاري التحقق...' : 'تأكيد'}
-                      </button>
-                      <button
-                        className="popup-btn no-thanks"
-                        onClick={() => { setMigrationStep('notify'); setMigrationOtp(''); setMigrationError(''); }}
-                        disabled={migrationLoading}
-                      >
-                        ← رجوع
-                      </button>
-                      {!isLastChance && (
-                        <button
-                          className="popup-btn no-thanks"
-                          onClick={() => { setShowMigrationPopup(false); navigate('/quizs'); }}
-                          disabled={migrationLoading}
-                          style={{ color: '#64748b' }}
-                        >
-                          تخطى الآن
-                        </button>
-                      )}
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-          );
-        })()}
+
 
         {/* Subscription Expired Popup */}
         {showPopup && (
