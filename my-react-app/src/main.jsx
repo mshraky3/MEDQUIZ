@@ -8,6 +8,7 @@ import { createRoot } from 'react-dom/client';
 // the landing chunk. App (the "/" landing route) is also eager because it is
 // the LCP route — splitting it would only add a round-trip before first paint.
 import ErrorBoundary from './components/common/ErrorBoundary.jsx';
+import NotFound from './components/common/NotFound.jsx';
 import Layout from './components/common/Layout.jsx';
 import RequireAuth from './components/common/RequireAuth.jsx';
 import AdminGate from './components/common/AdminGate.jsx';
@@ -70,177 +71,64 @@ const lazyEl = (node) => (
   <Suspense fallback={<Spinner fullScreen label="جاري التحميل" />}>{node}</Suspense>
 );
 
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <App />,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/login",
-    element: <Layout>{lazyEl(<Login />)}</Layout>,
-    errorElement: <ErrorBoundary />,
-  },
+// ---- Route builders --------------------------------------------------------
+// Every route carries the same errorElement, and each one belongs to exactly
+// one of three access tiers. Naming the tiers makes the table below readable at
+// a glance — and makes it impossible to add a private page without saying so.
+//
+//   pub(...)    public page inside the standard Layout (navbar + footer)
+//   authed(...) signed-in users only
+//   admin(...)  admin only
+const withBoundary = (path, element) => ({ path, element, errorElement: <ErrorBoundary /> });
+const pub = (path, node) => withBoundary(path, <Layout>{lazyEl(node)}</Layout>);
+const authed = (path, node) => withBoundary(path, <Layout><RequireAuth>{lazyEl(node)}</RequireAuth></Layout>);
+const admin = (path, node) => withBoundary(path, <AdminGate>{lazyEl(node)}</AdminGate>);
 
-  {
-    path: "/ADD_ACCOUNT",
-    element: <AdminGate>{lazyEl(<ADD host={getHostUrl} />)}</AdminGate>,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/quizs",
-    element: <Layout><RequireAuth>{lazyEl(<QUIZS />)}</RequireAuth></Layout>,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/quiz/:numQuestions",
-    element: <Layout><RequireAuth>{lazyEl(<QUIZ />)}</RequireAuth></Layout>,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/ADDQ",
-    element: <AdminGate>{lazyEl(<ADDQ host={Globals.URL} />)}</AdminGate>,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/analysis",
-    element: <Layout><RequireAuth>{lazyEl(<Analysis />)}</RequireAuth></Layout>,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/wrong-questions",
-    element: <Layout><RequireAuth>{lazyEl(<WrongQuestions />)}</RequireAuth></Layout>,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/summaries",
-    element: <Layout><RequireAuth>{lazyEl(<SummariesPage />)}</RequireAuth></Layout>,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/summaries/:slug",
-    element: <Layout><RequireAuth>{lazyEl(<SummariesPage />)}</RequireAuth></Layout>,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/admin",
-    element: <AdminGate>{lazyEl(<Admin />)}</AdminGate>,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/admin/email",
-    element: <AdminGate>{lazyEl(<AdminBroadcast />)}</AdminGate>,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/Bank",
-    element: <AdminGate>{lazyEl(<Bank />)}</AdminGate>,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/admin/accounting",
-    element: <AdminGate>{lazyEl(<Accounting />)}</AdminGate>,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/TEMP_LINKS",
-    element: <AdminGate>{lazyEl(<TempLinks host={Globals.URL} />)}</AdminGate>,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/question-reports",
-    element: <AdminGate>{lazyEl(<QuestionReports />)}</AdminGate>,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/subscribe",
-    element: <Layout><RequireAuth>{lazyEl(<Subscribe />)}</RequireAuth></Layout>,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/payment/callback",
-    element: <Layout><RequireAuth>{lazyEl(<PaymentCallback />)}</RequireAuth></Layout>,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/signup",
-    element: <Layout>{lazyEl(<Signup />)}</Layout>,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/signup/:token",
-    element: <Layout>{lazyEl(<Signup />)}</Layout>,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/forgot-password",
-    element: <Layout>{lazyEl(<ForgotPassword />)}</Layout>,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/contact",
-    element: <Layout>{lazyEl(<Contact />)}</Layout>,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/privacy",
-    element: <Layout>{lazyEl(<Privacy />)}</Layout>,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/terms",
-    element: <Layout>{lazyEl(<Terms />)}</Layout>,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/refund-policy",
-    element: <Layout>{lazyEl(<RefundPolicy />)}</Layout>,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/about",
-    element: <Layout>{lazyEl(<About />)}</Layout>,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/faq",
-    element: <Layout>{lazyEl(<FAQ />)}</Layout>,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/suggestions",
-    element: <Layout>{lazyEl(<Suggestions />)}</Layout>,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/guides",
-    element: <Layout>{lazyEl(<GuidesHub />)}</Layout>,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/guides/smle-study-plan",
-    element: <Layout>{lazyEl(<SmleStudyPlanGuide />)}</Layout>,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/guides/wrong-questions-method",
-    element: <Layout>{lazyEl(<WrongQuestionsMethodGuide />)}</Layout>,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/guides/smle-vs-prometric-differences",
-    element: <Layout>{lazyEl(<SmleVsPrometricGuide />)}</Layout>,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/guides/smle-high-yield-topics",
-    element: <Layout>{lazyEl(<SmleHighYieldTopicsGuide />)}</Layout>,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "*",
-    element: <ErrorBoundary />,
-  },
+const router = createBrowserRouter([
+  // Landing — its own shell (own topbar/footer), so not wrapped in Layout.
+  withBoundary('/', <App />),
+
+  // Public
+  pub('/login', <Login />),
+  pub('/signup', <Signup />),
+  pub('/signup/:token', <Signup />),
+  pub('/forgot-password', <ForgotPassword />),
+  pub('/contact', <Contact />),
+  pub('/about', <About />),
+  pub('/faq', <FAQ />),
+  pub('/privacy', <Privacy />),
+  pub('/terms', <Terms />),
+  pub('/refund-policy', <RefundPolicy />),
+  pub('/suggestions', <Suggestions />),
+  pub('/guides', <GuidesHub />),
+  pub('/guides/smle-study-plan', <SmleStudyPlanGuide />),
+  pub('/guides/wrong-questions-method', <WrongQuestionsMethodGuide />),
+  pub('/guides/smle-vs-prometric-differences', <SmleVsPrometricGuide />),
+  pub('/guides/smle-high-yield-topics', <SmleHighYieldTopicsGuide />),
+
+  // Signed-in
+  authed('/quizs', <QUIZS />),
+  authed('/quiz/:numQuestions', <QUIZ />),
+  authed('/analysis', <Analysis />),
+  authed('/wrong-questions', <WrongQuestions />),
+  authed('/summaries', <SummariesPage />),
+  authed('/summaries/:slug', <SummariesPage />),
+  authed('/subscribe', <Subscribe />),
+  authed('/payment/callback', <PaymentCallback />),
+
+  // Admin
+  admin('/admin', <Admin />),
+  admin('/admin/email', <AdminBroadcast />),
+  admin('/admin/accounting', <Accounting />),
+  admin('/ADD_ACCOUNT', <ADD host={getHostUrl} />),
+  admin('/ADDQ', <ADDQ host={getHostUrl} />),
+  admin('/Bank', <Bank />),
+  admin('/TEMP_LINKS', <TempLinks host={getHostUrl} />),
+  admin('/question-reports', <QuestionReports />),
+
+  // Anything else. A real 404 page — NOT the error boundary, which renders
+  // nothing when there is no router error.
+  { path: '*', element: <Layout><NotFound /></Layout> },
 ]);
 
 createRoot(document.getElementById('root')).render(

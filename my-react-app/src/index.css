@@ -221,16 +221,6 @@ p {
   transform: translateY(-2px);
 }
 
-.btn-sm {
-  padding: var(--space-2) var(--space-4);
-  font-size: var(--text-sm);
-}
-
-.btn-lg {
-  padding: var(--space-4) var(--space-8);
-  font-size: var(--text-lg);
-}
-
 /* Cards */
 .card {
   background: var(--surface);
@@ -319,14 +309,6 @@ p {
   padding: var(--space-6);
 }
 
-.modal-footer {
-  padding: var(--space-6);
-  border-top: 1px solid var(--border-color);
-  display: flex;
-  gap: var(--space-3);
-  justify-content: flex-end;
-}
-
 /* Loading States — all spinners use the shared <Spinner> component
    (src/components/common/Spinner.jsx). This is just the inline wrapper that
    lays a spinner + its label out on one row. */
@@ -335,15 +317,6 @@ p {
   align-items: center;
   justify-content: center;
   gap: 10px;
-}
-
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-8);
-  text-align: center;
 }
 
 /* Error States */
@@ -357,91 +330,6 @@ p {
   color: var(--success-color);
   font-size: var(--text-sm);
   margin-top: var(--space-2);
-}
-
-/* Utility Classes */
-.text-center {
-  text-align: center;
-}
-
-.text-left {
-  text-align: left;
-}
-
-.text-right {
-  text-align: right;
-}
-
-.mt-1 {
-  margin-top: var(--space-1);
-}
-
-.mt-2 {
-  margin-top: var(--space-2);
-}
-
-.mt-3 {
-  margin-top: var(--space-3);
-}
-
-.mt-4 {
-  margin-top: var(--space-4);
-}
-
-.mt-5 {
-  margin-top: var(--space-5);
-}
-
-.mt-6 {
-  margin-top: var(--space-6);
-}
-
-.mb-1 {
-  margin-bottom: var(--space-1);
-}
-
-.mb-2 {
-  margin-bottom: var(--space-2);
-}
-
-.mb-3 {
-  margin-bottom: var(--space-3);
-}
-
-.mb-4 {
-  margin-bottom: var(--space-4);
-}
-
-.mb-5 {
-  margin-bottom: var(--space-5);
-}
-
-.mb-6 {
-  margin-bottom: var(--space-6);
-}
-
-.p-1 {
-  padding: var(--space-1);
-}
-
-.p-2 {
-  padding: var(--space-2);
-}
-
-.p-3 {
-  padding: var(--space-3);
-}
-
-.p-4 {
-  padding: var(--space-4);
-}
-
-.p-5 {
-  padding: var(--space-5);
-}
-
-.p-6 {
-  padding: var(--space-6);
 }
 
 /* Responsive Design */

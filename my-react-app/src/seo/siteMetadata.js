@@ -16,6 +16,10 @@ const faqItems = [
         answer: 'نعم، المنصة مصممة لمساعدة الأطباء والطلاب على التدريب على أسئلة SMLE وبرومترك عبر جلسات قصيرة وطويلة وتحليلات تفصيلية.'
     },
     {
+        question: 'هل تدعم SQB مسار التمريض SNLE؟',
+        answer: 'نعم، SQB توفر مساراً كاملاً ومستقلاً للتمريض يغطي أساسيات التمريض والتمريض الباطني والجراحي وتمريض الأمومة والمواليد وتمريض الأطفال والصحة النفسية والأدوية وحسابات الجرعات، بأسئلته وملخصاته وتحليلات أدائه الخاصة.'
+    },
+    {
         question: 'هل يمكنني إنشاء حساب مجاني؟',
         answer: 'نعم، يمكنك إنشاء حساب مجاني والبدء في استكشاف المنصة قبل الانتقال إلى استخدام أوسع حسب احتياجك.'
     },
@@ -126,14 +130,14 @@ const webSiteSchema = {
     alternateName: 'SQB',
     url: SITE_ORIGIN,
     inLanguage: 'ar-SA',
-    description: 'منصة عربية للتحضير لاختبار SMLE والبرومترك من خلال بنك أسئلة وتحليلات أداء ومسارات تدريب عملية.'
+    description: 'منصة عربية للتحضير لاختبار SMLE للطب البشري وSNLE للتمريض والبرومترك، من خلال بنك أسئلة وتحليلات أداء ومسارات تدريب عملية.'
 };
 
 const routeMap = {
     '/': {
-        title: 'اس كيو بي | بنك أسئلة SMLE وبرومترك في السعودية',
-        description: 'منصة SQB تساعدك على التحضير لاختبار SMLE والبرومترك عبر بنك أسئلة عربي، تحليلات أداء، اختبارات تدريبية، ومراجعة ذكية للأطباء وطلاب الطب في السعودية.',
-        keywords: 'SMLE, Prometric, Saudi Medical Licensing Examination, بنك أسئلة SMLE, اسئلة برومترك, اسئلة الهيئة السعودية للتخصصات الصحية, تحضير SMLE, منصة طبية, بنك اسئلة طبية, Saudi Prometric questions, medical MCQ',
+        title: 'اس كيو بي | بنك أسئلة SMLE وSNLE وبرومترك في السعودية',
+        description: 'منصة SQB تساعدك على التحضير لاختبار SMLE للطب البشري وSNLE للتمريض والبرومترك، عبر بنك أسئلة عربي، تحليلات أداء، اختبارات تدريبية، ومراجعة ذكية لطلاب الطب والتمريض في السعودية.',
+        keywords: 'SMLE, SNLE, Prometric, Saudi Medical Licensing Examination, Saudi Nursing Licensure Examination, بنك أسئلة SMLE, بنك اسئلة تمريض, اسئلة SNLE, اسئلة برومترك, اسئلة الهيئة السعودية للتخصصات الصحية, تحضير SMLE, تحضير اختبار التمريض, منصة طبية, بنك اسئلة طبية, Saudi Prometric questions, nursing MCQ, medical MCQ',
         alternates: ['ar-SA', 'ar', 'x-default'],
         structuredData: [
             routePageData('/', 'اس كيو بي | بنك أسئلة SMLE وبرومترك', 'منصة عربية للتحضير لاختبار الهيئة السعودية للتخصصات الصحية وبرومترك.'),
@@ -144,12 +148,16 @@ const routeMap = {
       <main class="seo-shell" dir="rtl">
         <header class="seo-hero">
           <p class="seo-kicker">SQB</p>
-          <h1>منصة عربية للتحضير لاختبار SMLE والبرومترك</h1>
-          <p>بنك أسئلة طبي، تحليلات أداء، مراجعة للأخطاء، واختبارات تدريبية تساعد الأطباء وطلاب الطب في السعودية على الاستعداد لاختبارات الهيئة السعودية للتخصصات الصحية.</p>
+          <h1>منصة عربية للتحضير لاختبار SMLE وSNLE والبرومترك</h1>
+          <p>بنك أسئلة، تحليلات أداء، مراجعة للأخطاء، واختبارات تدريبية تساعد طلاب الطب والتمريض والأطباء في السعودية على الاستعداد لاختبارات الهيئة السعودية للتخصصات الصحية.</p>
         </header>
         <section>
           <h2>لماذا يستخدم الطلاب والأطباء منصة SQB؟</h2>
           <p>لأنها تجمع بين الأسئلة التدريبية المنظمة، وتتبع التقدم، والقدرة على التركيز على نقاط الضعف، مع تجربة عربية سهلة على الجوال والكمبيوتر.</p>
+        </section>
+        <section>
+          <h2>مساران مستقلان: طب بشري وتمريض</h2>
+          <p>تختار مسارك عند إنشاء الحساب. مسار الطب البشري يغطي الباطنة والجراحة والأطفال والنساء والولادة، ومسار التمريض يغطي أساسيات التمريض والتمريض الباطني والجراحي وتمريض الأمومة والمواليد وتمريض الأطفال والصحة النفسية والأدوية وحسابات الجرعات. كل مسار له بنك أسئلته وملخصاته وتحليلات أدائه الخاصة.</p>
         </section>
         <section>
           <h2>ماذا ستجد داخل المنصة؟</h2>
@@ -540,12 +548,17 @@ const routeMap = {
         canonicalPath: '/quizs',
         structuredData: [routePageData('/quizs', 'جلسة اختبار | SQB', 'صفحة جلسة اختبار داخلية.')]
     },
+    // Fallback for any path with no entry above — utility pages and, notably,
+    // unmatched URLs (the 404 screen). noindex so mistyped/dead links never
+    // enter the index, and canonical points at the homepage rather than at the
+    // junk path itself.
     default: {
-        title: 'SQB | بنك أسئلة SMLE',
-        description: 'منصة عربية للتحضير لاختبار SMLE والبرومترك من خلال بنك أسئلة وتحليلات أداء.',
-        keywords: 'SQB, SMLE, Prometric, بنك أسئلة SMLE',
+        title: 'SQB | بنك أسئلة SMLE وSNLE',
+        description: 'منصة عربية للتحضير لاختبار SMLE للطب البشري وSNLE للتمريض والبرومترك، من خلال بنك أسئلة وتحليلات أداء.',
+        keywords: 'SQB, SMLE, SNLE, Prometric, بنك أسئلة SMLE, بنك أسئلة تمريض',
         robots: 'noindex, nofollow, noarchive',
-        structuredData: [routePageData('/', 'SQB', 'منصة تحضير لاختبار SMLE والبرومترك.')]
+        canonicalPath: '/',
+        structuredData: [routePageData('/', 'SQB', 'منصة تحضير لاختبارات SMLE وSNLE والبرومترك.')]
     }
 };
 

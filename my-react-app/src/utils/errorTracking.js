@@ -4,6 +4,7 @@
  */
 
 import { isStaleChunkError } from './staleChunkReload.js';
+import Globals from '../global.js';
 
 const ERROR_REPORT_ENDPOINT = '/api/error-report';
 const BATCH_ENDPOINT = '/api/error-report/batch';
@@ -53,11 +54,14 @@ let _isReportingError = false;
 const isBrowser = typeof window !== 'undefined';
 
 /**
- * Get API base URL
+ * Get API base URL.
+ *
+ * Deliberately the same resolver the rest of the app uses. This used to hold a
+ * second, simpler copy that always fell back to the production host, so errors
+ * thrown while developing locally were reported into the production inbox.
  */
 function getApiBaseUrl() {
-    // Check for environment variable or use default
-    return import.meta.env?.VITE_API_URL || 'https://medquiz.vercel.app';
+    return Globals.URL;
 }
 
 /**

@@ -10,6 +10,7 @@ export const SOURCE_LABELS = {
     June26: 'يونيو 2026',
     // nursing track — the bank is split the same way the medical one is:
     // the core EMS review file vs. the block appended in its September edition.
+    // Students know these two by their English names, so they are not translated.
     NursingMostRepeated: 'Most Repeated',
     NursingConfirmed: 'Confirmed',
     // legacy — retired from the bank but present in old sessions
