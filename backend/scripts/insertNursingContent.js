@@ -10,12 +10,13 @@
  *
  * Steps:
  *   1. Widen the user_quiz_sessions source CHECK constraint to accept the
- *      nursing source. /quiz-sessions derives the session source from the
+ *      nursing sources. /quiz-sessions derives the session source from the
  *      questions actually answered, so a nursing quiz would otherwise violate
  *      the constraint the first time a student finishes one.
  *   2. Seed the six summaries rows with track='nursing' and sync content_html
  *      from content/summaryHtml (the same content app.js syncs on boot).
- *   3. Insert the questions with track='nursing'.
+ *   3. Insert the questions with track='nursing' and the source each one carries
+ *      in the bank file (see NURSING_SOURCES below).
  *
  * Usage (from backend/, reads DB creds from .env like app.js):
  *   node scripts/insertNursingContent.js            # dry run: shows the plan
@@ -54,8 +55,23 @@ const SUMMARIES_ONLY = process.argv.includes('--summaries-only');
 const QUESTIONS_ONLY = process.argv.includes('--questions-only');
 const BATCH = 200;
 
-/** DB `source` label for this bank. Must appear in ALL_SESSION_SOURCES below. */
-const SOURCE = 'NursingEMS';
+/**
+ * The nursing bank has two sources, mirroring how the medical bank is split.
+ * Every question in nursingBank.json carries one of these in its `source` field
+ * (see scripts/splitNursingSources.js for how existing rows were relabelled):
+ *
+ *   NursingMostRepeated — the main EMS review file (Q1–1164), i.e. the غيث
+ *                         questions: the confirmed, most-repeated core bank.
+ *   NursingConfirmed    — the block appended in the September edition
+ *                         (Q1165–1456).
+ *
+ * NURSING_EMS is the single label both used to share; it is still accepted by
+ * the session constraint because historical quiz sessions reference it.
+ */
+const MOST_REPEATED = 'NursingMostRepeated';
+const CONFIRMED = 'NursingConfirmed';
+const NURSING_SOURCES = [MOST_REPEATED, CONFIRMED];
+const LEGACY_NURSING_SOURCE = 'NursingEMS';
 
 /**
  * Every value that may legally appear in user_quiz_sessions.source. The medical
@@ -68,7 +84,7 @@ const ALL_SESSION_SOURCES = [
     'October25', 'November25', 'December25',
     'January25', 'FebMarApr25',
     'MidgardGameBoy', 'May26', 'June26',
-    SOURCE,
+    LEGACY_NURSING_SOURCE, ...NURSING_SOURCES,
 ];
 
 /**
@@ -154,6 +170,7 @@ function loadQuestions() {
 /** Same shape rule as the medical importer: four options, key among them. */
 function normalize(q) {
     const opt = (v) => (v ?? '').toString().trim() || 'Option not recalled';
+    const src = (q.source ?? '').toString().trim();
     return {
         text: (q.question_text ?? '').toString().trim(),
         opt1: opt(q.option1),
@@ -162,6 +179,9 @@ function normalize(q) {
         opt4: opt(q.option4),
         type: (q.question_type ?? '').toString().trim(),
         correct: (q.correct_option ?? '').toString().trim(),
+        // An untagged row would otherwise land under an invalid source and be
+        // invisible to the analytics breakdown; the core bank is the safe default.
+        source: NURSING_SOURCES.includes(src) ? src : MOST_REPEATED,
     };
 }
 
@@ -192,6 +212,11 @@ async function main() {
             toInsert.forEach((q) => { byType[q.type] = (byType[q.type] || 0) + 1; });
             Object.entries(byType).sort((a, b) => b[1] - a[1])
                 .forEach(([t, n]) => console.log(`   ${t.padEnd(30)} ${n}`));
+            const bySource = {};
+            toInsert.forEach((q) => { bySource[q.source] = (bySource[q.source] || 0) + 1; });
+            console.log('   by source:');
+            Object.entries(bySource).sort((a, b) => b[1] - a[1])
+                .forEach(([s, n]) => console.log(`      ${s.padEnd(27)} ${n}`));
         }
 
         const before = await client.query(
@@ -212,7 +237,7 @@ async function main() {
             const list = ALL_SESSION_SOURCES.map((s) => `'${s}'`).join(', ');
             await client.query(
                 `ALTER TABLE user_quiz_sessions ADD CONSTRAINT check_valid_quiz_source CHECK (source IN (${list}))`);
-            console.log(`   ✓ constraint now accepts ${SOURCE}`);
+            console.log(`   ✓ constraint now accepts ${NURSING_SOURCES.join(', ')}`);
         }
 
         // ---- 2. summaries ----------------------------------------------------
@@ -263,7 +288,7 @@ async function main() {
                                 (question_text, option1, option2, option3, option4,
                                  question_type, correct_option, source, track)
                              VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
-                            [q.text, q.opt1, q.opt2, q.opt3, q.opt4, q.type, q.correct, SOURCE, NURSING]);
+                            [q.text, q.opt1, q.opt2, q.opt3, q.opt4, q.type, q.correct, q.source, NURSING]);
                         inserted++;
                     } catch (e) {
                         errors++;
@@ -279,12 +304,20 @@ async function main() {
         const qAfter = await client.query(
             `SELECT question_type, COUNT(*)::int AS n FROM questions
              WHERE track = $1 GROUP BY question_type ORDER BY n DESC`, [NURSING]);
+        const srcAfter = await client.query(
+            `SELECT source, COUNT(*)::int AS n FROM questions
+             WHERE track = $1 GROUP BY source ORDER BY n DESC`, [NURSING]);
         const sAfter = await client.query(
             `SELECT slug, question_type, is_published, length(content_html) AS html_len
              FROM summaries WHERE track = $1 ORDER BY sort_order`, [NURSING]);
 
         console.log('\nFinal nursing questions by specialty:');
         qAfter.rows.forEach((r) => console.log(`   ${r.question_type.padEnd(30)} ${r.n}`));
+        console.log('\nFinal nursing questions by source:');
+        srcAfter.rows.forEach((r) => console.log(`   ${String(r.source).padEnd(30)} ${r.n}`));
+        const stale = srcAfter.rows.filter((r) => !NURSING_SOURCES.includes(r.source));
+        stale.forEach((r) =>
+            console.warn(`   ! ${r.n} row(s) still on legacy source "${r.source}" — run scripts/splitNursingSources.js --apply`));
         console.log('\nFinal nursing summaries:');
         sAfter.rows.forEach((r) =>
             console.log(`   ${r.slug.padEnd(26)} type=${r.question_type.padEnd(30)} html=${r.html_len || 0} published=${r.is_published}`));
