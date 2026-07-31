@@ -24,12 +24,12 @@
  * when the gateway hasn't given us one, and such rows are flagged `estimated`
  * so they can be marked in reports.
  *
- * ── fee = 0 ───────────────────────────────────────────────────────────────
- * Moyasar returns `fee: 0` on some payments (older ones in this account).
- * Zero is NOT "this transaction was free" — it means the fee had not been
- * settled when we captured the payload. Those are treated as unreported and
- * estimated, which is why `estimated` matters: it is the difference between a
- * figure from the gateway and a figure we computed.
+ * ── fee = 0 means "test payment" ──────────────────────────────────────────
+ * Every `fee: 0` payment in this account turned out to be a Moyasar TEST
+ * payment: none of them exist under the live secret key, and none ever
+ * settled. They are excluded from revenue entirely — see `livemode` below.
+ * The estimator therefore only ever runs for a live payment whose fee has not
+ * settled yet, which is why estimated rows are flagged rather than hidden.
  */
 
 const HALALA = 100;
@@ -146,8 +146,12 @@ export function summarize(settled) {
  * same instant could each write a row for one payment. Collapsing by gateway
  * reference means a duplicate can never inflate revenue.
  */
-export async function fetchPaidEvents(db, { from = null, to = null } = {}) {
+export async function fetchPaidEvents(db, { from = null, to = null, includeTest = false } = {}) {
+    // Test-environment payments are not revenue. `livemode IS NULL` (not yet
+    // verified) counts as live so a gateway outage can never silently wipe
+    // real income off the books.
     const conds = [`pe.status = 'paid'`];
+    if (!includeTest) conds.push(`pe.livemode IS DISTINCT FROM FALSE`);
     const params = [];
     if (from) { params.push(from); conds.push(`pe.received_at > $${params.length}`); }
     if (to) { params.push(to); conds.push(`pe.received_at <= $${params.length}`); }
@@ -195,4 +199,83 @@ export function splitVat(grossHalalas) {
     if (!registered) return { netHalalas: null, vatHalalas: null, percent: null };
     const net = Math.round(grossHalalas / (1 + percent / 100));
     return { netHalalas: net, vatHalalas: grossHalalas - net, percent };
+}
+
+/**
+ * ── Live vs test payments ─────────────────────────────────────────────────
+ * Moyasar's test environment produces payments that look identical to real
+ * ones in our database: status 'paid', a real-looking amount, an APPROVED
+ * message. They differ in two ways — they report `fee: 0`, and they do not
+ * exist under the LIVE secret key.
+ *
+ * Counting them overstated revenue badly: 8 "payments" totalling 793.00 SAR
+ * gross, when only 4 were real. Reconciled against the Moyasar settlements
+ * (193.42 on 16/07 + 191.43 on 30/07 = 384.85 from 4 transactions), the four
+ * live payments match to the halala and the four test ones never settled at
+ * all, because no money ever moved.
+ *
+ * `livemode` records the verdict so the check is done once, not on every
+ * page load:
+ *   true  → confirmed against the live API
+ *   false → 404 under the live key, i.e. a test payment
+ *   null  → not yet verified (treated as live, so a network problem never
+ *           silently erases real revenue from the books)
+ */
+
+/** Add the livemode column. Idempotent. */
+export async function ensureLivemodeColumn(db) {
+    await db.query(`ALTER TABLE payment_events ADD COLUMN IF NOT EXISTS livemode BOOLEAN`);
+    await db.query(
+        `CREATE INDEX IF NOT EXISTS idx_payment_events_livemode ON payment_events(livemode)`
+    );
+}
+
+/**
+ * Ask Moyasar about every unverified paid payment and record the verdict.
+ *
+ * A 200 also refreshes the stored payload, which is how a refund or a
+ * late-settled fee ever reaches our books — the payload we saved at payment
+ * time is a snapshot and never changes on its own.
+ *
+ * @returns {Promise<{checked:number, live:number, test:number, errors:number}>}
+ */
+export async function reconcileWithGateway(db, { onlyUnverified = true } = {}) {
+    const { default: axios } = await import('axios');
+    const secretKey = process.env.MOYASAR_SECRET_KEY;
+    if (!secretKey) return { checked: 0, live: 0, test: 0, errors: 0, skipped: 'no_secret_key' };
+
+    await ensureLivemodeColumn(db);
+    const { rows } = await db.query(`
+        SELECT id, gateway_ref FROM payment_events
+         WHERE status = 'paid' AND gateway_ref IS NOT NULL
+           ${onlyUnverified ? 'AND livemode IS NULL' : ''}
+         ORDER BY received_at
+    `);
+
+    let live = 0, test = 0, errors = 0;
+    for (const row of rows) {
+        try {
+            const r = await axios.get(
+                `https://api.moyasar.com/v1/payments/${encodeURIComponent(row.gateway_ref)}`,
+                { auth: { username: secretKey, password: '' }, timeout: 15000, validateStatus: () => true }
+            );
+            if (r.status === 200) {
+                // Refresh the payload too: this is what brings refunds and
+                // settled fees into the ledger.
+                await db.query(
+                    `UPDATE payment_events SET livemode = TRUE, raw_payload = $1 WHERE id = $2`,
+                    [JSON.stringify(r.data), row.id]
+                );
+                live++;
+            } else if (r.status === 404) {
+                await db.query(`UPDATE payment_events SET livemode = FALSE WHERE id = $1`, [row.id]);
+                test++;
+            } else {
+                errors++; // transient — leave NULL so it is retried
+            }
+        } catch (_) {
+            errors++;
+        }
+    }
+    return { checked: rows.length, live, test, errors };
 }

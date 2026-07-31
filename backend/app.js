@@ -14,6 +14,7 @@ import { adminAuth, isAdminRequest } from './middleware/adminAuth.js';
 import { subscriptionGuard } from './middleware/subscriptionGuard.js';
 import summariesRouter from './routes/summaries.js';
 import accountingRouter from './routes/accounting.js';
+import engagementRouter from './routes/engagement.js';
 import summaryContent from './content/summaryHtml/index.js';
 import { notifyBackendError } from './services/errorNotificationService.js';
 import { sendWelcomeEmail } from './services/userEmailService.js';
@@ -224,6 +225,9 @@ function ensurePaymentSchema() {
                 CREATE UNIQUE INDEX IF NOT EXISTS uq_payment_events_paid_ref
                     ON payment_events(gateway_ref) WHERE status = 'paid'
             `);
+            // Live vs Moyasar-test. NULL = not yet reconciled with the gateway.
+            await db.query(`ALTER TABLE payment_events ADD COLUMN IF NOT EXISTS livemode BOOLEAN`);
+            await db.query(`CREATE INDEX IF NOT EXISTS idx_payment_events_livemode ON payment_events(livemode)`);
 
             // One free trial per email, ever — survives account deletion
             // (account_id goes NULL) so a re-signup can't re-trial.
@@ -369,21 +373,52 @@ app.post('/add_account', adminAuth, async (req, res) => {
     const lowercaseUsername = username.toLowerCase();
     const lowercasePassword = password.toLowerCase();
 
+    // /login rejects any account whose username is not also its email, so an
+    // account created with a non-email username can never be signed into.
+    // Refuse up front instead of silently creating a dead account.
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(lowercaseUsername)) {
+        return res.status(400).json({
+            message: 'Username must be a valid email address — sign-in is by email.',
+        });
+    }
+
     try {
-        // Check if username already exists
-        const check = await db.query("SELECT * FROM accounts WHERE username = $1", [lowercaseUsername]);
+        // Match /login's dual lookup: an existing row under either column would
+        // collide, so both have to be free.
+        const check = await db.query(
+            "SELECT id FROM accounts WHERE username = $1 OR email = $1",
+            [lowercaseUsername]
+        );
         if (check.rows.length > 0) {
-            return res.status(400).json({ message: 'Username already exists' });
+            return res.status(400).json({ message: 'An account with this email already exists' });
         }
 
         // Insert new account with proper defaults
         // isactive: true (admin creates active accounts)
         // logged: false (not logged in yet)
         // terms_accepted: false (must accept terms on first login)
-        const result = await db.query(
-            "INSERT INTO accounts (username, password, isactive, logged, terms_accepted, track) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
-            [lowercaseUsername, lowercasePassword, true, false, false, track]
-        );
+        //
+        // email MUST be set and equal to username: /login looks the account up
+        // by either column but then requires the two to match. Leaving it NULL
+        // (as this route used to) produces an account that always fails login.
+        // email_verified marks the address as settled so the same person cannot
+        // later self-signup and create a duplicate account.
+        //
+        // is_admin_created = true is a PERMANENT paywall exemption: it is the
+        // first thing checkSubscriptionAccess() tests, so these accounts never
+        // see the paywall and never expire — free forever, by design. Same
+        // treatment as temp-link invites. account_type records the origin for
+        // the admin users table.
+        const columnsReady = await hasPaymentColumns();
+        const result = columnsReady
+            ? await db.query(
+                "INSERT INTO accounts (username, email, password, isactive, logged, terms_accepted, email_verified, track, account_type, is_admin_created) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id",
+                [lowercaseUsername, lowercaseUsername, lowercasePassword, true, false, false, true, track, 'admin_created', true]
+            )
+            : await db.query(
+                "INSERT INTO accounts (username, email, password, isactive, logged, terms_accepted, email_verified, track) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id",
+                [lowercaseUsername, lowercaseUsername, lowercasePassword, true, false, false, true, track]
+            );
 
         const newUserId = result.rows[0].id;
 
@@ -570,8 +605,7 @@ const ensureEmailCampaignColumns = async () => {
                 ADD COLUMN IF NOT EXISTS welcome_email_sent BOOLEAN DEFAULT FALSE,
                 ADD COLUMN IF NOT EXISTS welcome_email_sent_at TIMESTAMP,
                 ADD COLUMN IF NOT EXISTS inactivity_email_sent_at TIMESTAMP,
-                ADD COLUMN IF NOT EXISTS feedback_email_sent_at TIMESTAMP,
-                ADD COLUMN IF NOT EXISTS email_grace_logins INT DEFAULT 0
+                ADD COLUMN IF NOT EXISTS feedback_email_sent_at TIMESTAMP
         `);
         // Mark all pre-existing accounts (older than 24 hours) as already welcomed
         // so they don't receive a welcome email on the first cron run.
@@ -889,14 +923,13 @@ app.post('/login', async (req, res) => {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
-        // If user has migrated to email auth, block username-based login
-        const loggedInByEmail = lowercaseUsername === userRow.email;
-        const loginedByUsername = !loggedInByEmail && lowercaseUsername === userRow.username;
-        if (loginedByUsername && userRow.email_verified) {
+        // Sign-in is by email. Legacy username-only accounts were removed, and
+        // every signup path has required a verified email since.
+        if (lowercaseUsername !== userRow.email) {
             await client.query('ROLLBACK');
             client.release();
-            logger.warn(`Username login blocked — account migrated to email: ${lowercaseUsername}`);
-            return res.status(401).json({ message: 'This account uses email login. Please sign in with your email address.' });
+            logger.warn(`Non-email login attempt: ${lowercaseUsername}`);
+            return res.status(401).json({ message: 'Please sign in with your email address.' });
         }
 
         if (lowercasePassword !== userRow.password) {
@@ -918,29 +951,6 @@ app.post('/login', async (req, res) => {
             });
         }
 
-        // Grace login enforcement for users without a verified email
-        if (!userRow.email_verified) {
-            const graceCount = userRow.email_grace_logins || 0;
-            if (graceCount >= 3) {
-                // All 3 chances used — delete account and related data
-                await client.query('DELETE FROM login_history WHERE user_id = $1', [userRow.id]);
-                await client.query('DELETE FROM user_question_attempts WHERE user_id = $1', [userRow.id]);
-                await client.query('DELETE FROM user_quiz_sessions WHERE user_id = $1', [userRow.id]);
-                await client.query('DELETE FROM user_topic_analysis WHERE user_id = $1', [userRow.id]);
-                await client.query('DELETE FROM user_streaks WHERE user_id = $1', [userRow.id]);
-                await client.query('DELETE FROM user_analysis WHERE user_id = $1', [userRow.id]);
-                await client.query('DELETE FROM user_question_progress WHERE user_id = $1', [userRow.id]);
-                await client.query('DELETE FROM accounts WHERE id = $1', [userRow.id]);
-                await client.query('COMMIT');
-                client.release();
-                logger.warn(`Account deleted due to no email after 3 grace logins: ${lowercaseUsername}`);
-                return res.status(403).json({
-                    message: 'تم حذف حسابك لعدم إضافة بريد إلكتروني. يمكنك إنشاء حساب جديد.',
-                    accountDeleted: true
-                });
-            }
-        }
-
         // Session timeout logic
         let now = new Date();
         if (userRow.logged) {
@@ -958,13 +968,10 @@ app.post('/login', async (req, res) => {
         // Generate a session token
         const sessionToken = crypto.randomBytes(24).toString('hex');
 
-        // Update login state and store session token; increment grace counter for unverified users
-        const newGraceCount = (!userRow.email_verified)
-            ? (userRow.email_grace_logins || 0) + 1
-            : (userRow.email_grace_logins || 0);
+        // Update login state and store session token.
         await client.query(
-            "UPDATE accounts SET logged = $1, logged_date = $2, session_token = $3, email_grace_logins = $4 WHERE id = $5",
-            [true, now, sessionToken, newGraceCount, userRow.id]
+            "UPDATE accounts SET logged = $1, logged_date = $2, session_token = $3 WHERE id = $4",
+            [true, now, sessionToken, userRow.id]
         );
         // Token rotated — drop any cached session under this username (and its
         // email alias) so a previously cached old token can't pass requireSession.
@@ -1054,9 +1061,7 @@ app.post('/login', async (req, res) => {
             subscription,
             user: updatedUser,
             sessionToken,
-            showTerms: !userRow.terms_accepted,
-            showEmailMigrationNotice: !userRow.email_verified,
-            graceLoginsUsed: !userRow.email_verified ? newGraceCount : 0
+            showTerms: !userRow.terms_accepted
         });
 
     } catch (error) {
@@ -1720,6 +1725,8 @@ app.get('/admin/users', adminAuth, async (req, res) => {
             SELECT 
                 a.id, a.username, a.password, a.isactive, a.logged, a.logged_date,
                 a.terms_accepted, a.email, a.created_at, a.track,
+                a.subscription_status, a.subscription_expiry_date,
+                a.account_type, a.is_admin_created, a.grandfathered_at,
                 COUNT(DISTINCT q.id) as total_quizzes,
                 ROUND(AVG(q.quiz_accuracy)::numeric, 1) as avg_accuracy,
                 SUM(q.total_questions) as total_questions,
@@ -1728,7 +1735,9 @@ app.get('/admin/users', adminAuth, async (req, res) => {
             LEFT JOIN user_quiz_sessions q ON a.id = q.user_id
             ${trackFilter}
             GROUP BY a.id, a.username, a.password, a.isactive, a.logged, a.logged_date,
-                     a.terms_accepted, a.email, a.created_at, a.track
+                     a.terms_accepted, a.email, a.created_at, a.track,
+                     a.subscription_status, a.subscription_expiry_date,
+                     a.account_type, a.is_admin_created, a.grandfathered_at
             ORDER BY a.id DESC
         `, trackParams);
 
@@ -4563,55 +4572,9 @@ app.post('/api/auth/send-otp', async (req, res) => {
 
 // ============================================
 // AUTH — VERIFY MIGRATION OTP
-// ============================================
-app.post('/api/auth/verify-migration-otp', async (req, res) => {
-    try {
-        const { username, email, otp_code } = req.body;
 
-        if (!username || !email || !otp_code) {
-            return res.status(400).json({ success: false, message: 'Username, email, and OTP are required' });
-        }
-
-        const lowerEmail = email.toLowerCase().trim();
-        const lowerUsername = username.toLowerCase().trim();
-
-        // Find user
-        const userResult = await db.query(
-            'SELECT id FROM accounts WHERE username = $1 OR email = $1',
-            [lowerUsername]
-        );
-        if (userResult.rows.length === 0) {
-            return res.status(404).json({ success: false, message: 'User not found' });
-        }
-        const userId = userResult.rows[0].id;
-
-        // Verify OTP
-        const otpResult = await db.query(
-            `SELECT id FROM signup_otps 
-             WHERE email = $1 AND otp_code = $2 AND used = FALSE AND expires_at > NOW()
-             ORDER BY created_at DESC LIMIT 1`,
-            [lowerEmail, otp_code]
-        );
-
-        if (otpResult.rows.length === 0) {
-            return res.status(400).json({ success: false, message: 'Invalid or expired OTP' });
-        }
-
-        // Mark OTP used + update account
-        await db.query('UPDATE signup_otps SET used = TRUE WHERE id = $1', [otpResult.rows[0].id]);
-        await db.query(
-            'UPDATE accounts SET email = $1, email_verified = TRUE WHERE id = $2',
-            [lowerEmail, userId]
-        );
-
-        return res.status(200).json({ success: true, message: 'Email verified successfully' });
-
-    } catch (err) {
-        logger.error('Error verifying migration OTP', err);
-        return res.status(500).json({ success: false, message: 'Failed to verify OTP' });
-    }
-});
-
+// NOTE: the email-migration OTP endpoint was removed with the rest of the
+// username-only login support — every account has a verified email now.
 // ============================================
 // AUTH — RESET PASSWORD
 // ============================================
@@ -5462,6 +5425,9 @@ app.use('/api/summaries', (req, res, next) => { req.db = db; next(); }, summarie
 // Accounting (admin-only). Every money figure in the product resolves through
 // services/accountingService.js, which this router exposes.
 app.use('/api/accounting', (req, res, next) => { req.db = db; next(); }, accountingRouter);
+
+// Page engagement: POST /api/engagement (students) + GET /api/engagement/admin.
+app.use('/api/engagement', (req, res, next) => { req.db = db; next(); }, engagementRouter);
 
 // Admin broadcast — compose one email and drip it to every user in small,
 // resumable batches. See routes/admin-broadcast.js for why it is queue-based.

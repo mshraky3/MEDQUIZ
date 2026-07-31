@@ -9,7 +9,7 @@
 import express from 'express';
 import { adminAuth } from '../middleware/adminAuth.js';
 import {
-    fetchPaidEvents, summarize, sar, vatConfig, splitVat,
+    fetchPaidEvents, summarize, sar, vatConfig, splitVat, reconcileWithGateway,
 } from '../services/accountingService.js';
 import { TRACK_KEYS, trackLabelAr } from '../config/tracks.js';
 import { buildInvoicePdf, invoiceNumberFor } from '../services/invoiceService.js';
@@ -107,6 +107,27 @@ router.get('/summary', async (req, res) => {
     } catch (err) {
         console.error('[accounting/summary] failed:', err);
         res.status(500).json({ success: false, message: 'Failed to build accounting summary' });
+    }
+});
+
+/**
+ * POST /api/accounting/reconcile
+ *
+ * Ask Moyasar about every payment we haven't verified yet: confirms which are
+ * real (and refreshes their fee/refund figures) and marks test-environment
+ * payments so they stop counting as revenue.
+ *
+ * ?all=1 re-checks everything, not just unverified rows.
+ */
+router.post('/reconcile', async (req, res) => {
+    try {
+        const result = await reconcileWithGateway(req.db, {
+            onlyUnverified: req.query.all !== '1',
+        });
+        res.json({ success: true, ...result });
+    } catch (err) {
+        console.error('[accounting/reconcile] failed:', err);
+        res.status(500).json({ success: false, message: err.message });
     }
 });
 

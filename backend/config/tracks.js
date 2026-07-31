@@ -49,7 +49,7 @@ export const TRACKS = {
         key: NURSING,
         labelAr: 'تمريض',
         labelEn: 'Nursing',
-        examAr: 'اختبار الترخيص للتمريض',
+        examAr: 'اختبار SNLE للتمريض',
         audienceAr: 'طلاب وخريجي التمريض',
         specialties: [
             { key: 'nursing fundamentals', labelAr: 'أساسيات التمريض', labelEn: 'Fundamentals of Nursing', icon: 'shield-check' },

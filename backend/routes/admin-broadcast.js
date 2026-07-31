@@ -254,6 +254,37 @@ router.get('/audiences', adminAuth, async (req, res) => {
     }
 });
 
+/**
+ * GET /admin/broadcast/recipients/search?q=&limit=
+ *
+ * Look up individual users to mail directly, for the cases a broad audience
+ * can't express: answering one person, or telling a handful of students about
+ * something specific. Matches on email or username.
+ */
+router.get('/recipients/search', adminAuth, async (req, res) => {
+    const db = req.db;
+    try {
+        await ensureBroadcastSchema(db);
+        const q = String(req.query.q || '').trim();
+        const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 20));
+        if (q.length < 2) {
+            return res.json({ success: true, users: [], message: 'Type at least 2 characters.' });
+        }
+        const { rows } = await db.query(`
+            SELECT id, username, email, track, subscription_status,
+                   COALESCE(email_opt_out, FALSE) AS opted_out
+              FROM accounts
+             WHERE ${BASE_WHERE}
+               AND (email ILIKE $1 OR username ILIKE $1)
+             ORDER BY id DESC
+             LIMIT $2
+        `, [`%${q}%`, limit]);
+        res.json({ success: true, users: rows });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
 /** Create a campaign and freeze its recipient list. Does NOT send anything. */
 router.post('/campaigns', adminAuth, async (req, res) => {
     const db = req.db;
@@ -263,24 +294,49 @@ router.post('/campaigns', adminAuth, async (req, res) => {
     const spreadHours = Math.max(0, Math.min(48, Number(req.body?.spreadHours) || 0));
     if (!subject || !String(subject).trim()) return res.status(400).json({ success: false, message: 'Subject is required.' });
     if (!bodyHtml || !String(bodyHtml).trim()) return res.status(400).json({ success: false, message: 'Body is required.' });
-    if (!AUDIENCES.includes(audience)) return res.status(400).json({ success: false, message: 'Unknown audience.' });
+    // Either a named audience, or an explicit list of account ids picked by
+    // hand in the UI. `selected` wins when present.
+    const selectedIds = Array.isArray(req.body?.accountIds)
+        ? req.body.accountIds.map(Number).filter(Number.isInteger)
+        : [];
+    if (!selectedIds.length && !AUDIENCES.includes(audience)) {
+        return res.status(400).json({ success: false, message: 'Unknown audience.' });
+    }
     try {
         await ensureBroadcastSchema(db);
-        const where = await audienceWhere(db, audience);
+        const label = selectedIds.length ? `selected:${selectedIds.length}` : audience;
         const { rows: [campaign] } = await db.query(
             `INSERT INTO broadcast_campaigns (subject, body_html, audience, spread_hours)
              VALUES ($1, $2, $3, $4) RETURNING *`,
-            [String(subject).trim(), String(bodyHtml), audience, spreadHours]
+            [String(subject).trim(), String(bodyHtml), label, spreadHours]
         );
+
         // DISTINCT ON collapses duplicate addresses so nobody is mailed twice.
-        const { rowCount } = await db.query(`
-            INSERT INTO broadcast_recipients (campaign_id, account_id, email, username)
-            SELECT $1, id, LOWER(email), username FROM (
-                SELECT DISTINCT ON (LOWER(email)) id, email, username
-                FROM accounts WHERE ${where} ORDER BY LOWER(email), id
-            ) t
-            ON CONFLICT (campaign_id, email) DO NOTHING
-        `, [campaign.id]);
+        // The base rules (real address, active, not opted out) apply to a
+        // hand-picked list exactly as they do to an audience — an unsubscribe
+        // must hold even when someone is selected by name.
+        let rowCount;
+        if (selectedIds.length) {
+            ({ rowCount } = await db.query(`
+                INSERT INTO broadcast_recipients (campaign_id, account_id, email, username)
+                SELECT $1, id, LOWER(email), username FROM (
+                    SELECT DISTINCT ON (LOWER(email)) id, email, username
+                    FROM accounts WHERE ${BASE_WHERE} AND id = ANY($2::int[])
+                    ORDER BY LOWER(email), id
+                ) t
+                ON CONFLICT (campaign_id, email) DO NOTHING
+            `, [campaign.id, selectedIds]));
+        } else {
+            const where = await audienceWhere(db, audience);
+            ({ rowCount } = await db.query(`
+                INSERT INTO broadcast_recipients (campaign_id, account_id, email, username)
+                SELECT $1, id, LOWER(email), username FROM (
+                    SELECT DISTINCT ON (LOWER(email)) id, email, username
+                    FROM accounts WHERE ${where} ORDER BY LOWER(email), id
+                ) t
+                ON CONFLICT (campaign_id, email) DO NOTHING
+            `, [campaign.id]));
+        }
         res.json({ success: true, campaign, recipients: rowCount });
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });
