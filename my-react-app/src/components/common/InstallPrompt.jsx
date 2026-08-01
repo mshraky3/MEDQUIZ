@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import Icon from './Icon.jsx';
 import { safeGetItem, safeSetItem } from '../../utils/safeStorage.js';
+import { useCopy, useLang } from '../../i18n';
+import installCopy from '../../i18n/copy/install.js';
 import './InstallPrompt.css';
 
 const DISMISS_KEY = 'sqb_install_dismissed_at';
@@ -87,6 +89,8 @@ const DotsGlyph = () => (
  */
 export default function InstallPrompt() {
     const { canInstallAndroid, isIOS, isStandalone, promptInstall } = useInstallPrompt();
+    const t = useCopy(installCopy);
+    const { dir } = useLang();
     const [hidden, setHidden] = useState(true); // hidden until we've read the dismissal
 
     useEffect(() => {
@@ -105,20 +109,20 @@ export default function InstallPrompt() {
     };
 
     return (
-        <div className="install-banner" role="dialog" aria-label="تثبيت تطبيق SQB" dir="rtl">
+        <div className="install-banner" role="dialog" aria-label={t.bannerLabel} dir={dir}>
             <span className="install-banner-icon"><Icon name="home" size={20} /></span>
             <div className="install-banner-text">
-                <strong>ثبّت SQB على جهازك</strong>
+                <strong>{t.bannerTitle}</strong>
                 <span>
                     {isIOS
-                        ? <>اضغط زر المشاركة <ShareGlyph /> ثم «إضافة إلى الشاشة الرئيسية».</>
-                        : 'افتحه كتطبيق بنقرة واحدة، وصول أسرع بلا متصفح.'}
+                        ? <>{t.bannerIOSBefore} <ShareGlyph /> {t.bannerIOSAfter}</>
+                        : t.bannerAndroid}
                 </span>
             </div>
             {canInstallAndroid && (
-                <button className="install-banner-btn" onClick={promptInstall}>تثبيت</button>
+                <button className="install-banner-btn" onClick={promptInstall}>{t.install}</button>
             )}
-            <button className="install-banner-close" onClick={dismiss} aria-label="إغلاق">
+            <button className="install-banner-close" onClick={dismiss} aria-label={t.close}>
                 <Icon name="x" size={16} />
             </button>
         </div>
@@ -132,43 +136,45 @@ export default function InstallPrompt() {
  */
 export function InstallGuideSection() {
     const { canInstallAndroid, isStandalone, promptInstall } = useInstallPrompt();
+    const t = useCopy(installCopy);
     if (isStandalone) return null;
 
+    // The leading glyph of each step, in the order the steps are written.
+    const iosIcons = [<ShareGlyph />, <Icon name="plus" size={18} />, <Icon name="check" size={18} />];
+    const androidIcons = [<DotsGlyph />, <Icon name="home" size={18} />, <Icon name="check" size={18} />];
+
+    const steps = (items, icons) => (
+        <ol className="install-steps">
+            {items.map((step, i) => (
+                <li key={step}><span className="install-step-ic">{icons[i]}</span> {step}</li>
+            ))}
+        </ol>
+    );
+
     return (
-        <section className="install-section" aria-label="تثبيت التطبيق على الشاشة الرئيسية">
+        <section className="install-section" aria-label={t.sectionLabel}>
             <div className="section-head">
-                <p className="pill subtle">تطبيق على جهازك</p>
-                <h2>ثبّت SQB على شاشتك الرئيسية</h2>
-                <p>
-                    أضف المنصة كأيقونة على جوالك لتفتحها بنقرة واحدة كأنها تطبيق — بملء الشاشة وبدون
-                    شريط المتصفح، ودون الحاجة إلى متجر التطبيقات.
-                </p>
+                <p className="pill subtle">{t.pill}</p>
+                <h2>{t.sectionTitle}</h2>
+                <p>{t.sectionBody}</p>
             </div>
 
             <div className="install-guide-grid">
                 <article className="install-guide-card">
-                    <h3><span className="install-os"></span> على iPhone / iPad (Safari)</h3>
-                    <ol className="install-steps">
-                        <li><span className="install-step-ic"><ShareGlyph /></span> اضغط زر «المشاركة» في شريط سفاري.</li>
-                        <li><span className="install-step-ic"><Icon name="plus" size={18} /></span> اختر «إضافة إلى الشاشة الرئيسية».</li>
-                        <li><span className="install-step-ic"><Icon name="check" size={18} /></span> اضغط «إضافة» — ستظهر أيقونة SQB على شاشتك.</li>
-                    </ol>
+                    <h3><span className="install-os"></span> {t.iosTitle}</h3>
+                    {steps(t.iosSteps, iosIcons)}
                 </article>
 
                 <article className="install-guide-card">
-                    <h3><span className="install-os"></span> على Android (Chrome)</h3>
-                    <ol className="install-steps">
-                        <li><span className="install-step-ic"><DotsGlyph /></span> افتح قائمة المتصفح (⋮) أعلى الشاشة.</li>
-                        <li><span className="install-step-ic"><Icon name="home" size={18} /></span> اختر «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية».</li>
-                        <li><span className="install-step-ic"><Icon name="check" size={18} /></span> أكّد — ستُضاف أيقونة SQB إلى جهازك.</li>
-                    </ol>
+                    <h3><span className="install-os"></span> {t.androidTitle}</h3>
+                    {steps(t.androidSteps, androidIcons)}
                 </article>
             </div>
 
             {canInstallAndroid && (
                 <div className="install-section-cta">
                     <button className="btn primary" onClick={promptInstall}>
-                        <Icon name="home" size={18} /> تثبيت التطبيق الآن
+                        <Icon name="home" size={18} /> {t.installNow}
                     </button>
                 </div>
             )}

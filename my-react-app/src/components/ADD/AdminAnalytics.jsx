@@ -20,7 +20,7 @@ const TOOLTIP = { background: '#fff', border: '1px solid #d4deee', borderRadius:
 // Derived from the track config so a specialty added to either track is
 // labelled here automatically, instead of falling back to its raw db value.
 const SPECIALTY_LABELS = TRACK_KEYS.reduce((acc, key) => {
-    TRACKS[key].specialties.forEach((sp) => { acc[sp.key] = sp.labelAr; });
+    TRACKS[key].specialties.forEach((sp) => { acc[sp.key] = sp.label.en; });
     return acc;
 }, {});
 
@@ -28,12 +28,12 @@ const daysAgoISO = (n) => new Date(Date.now() - n * 86400000).toISOString().slic
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
 const fmtDuration = (s) => {
-    if (!s) return '0 د';
+    if (!s) return '0m';
     const m = Math.round(s / 60);
-    if (m < 60) return `${m} د`;
+    if (m < 60) return `${m}m`;
     const h = Math.floor(m / 60);
     const rm = m % 60;
-    return rm ? `${h} س ${rm} د` : `${h} س`;
+    return rm ? `${h}h ${rm}m` : `${h}h`;
 };
 
 const Kpi = ({ icon, label, value }) => (
@@ -67,7 +67,7 @@ const AdminAnalytics = () => {
             setData(res.data);
         } catch (e) {
             console.error('Failed to load admin analytics', e);
-            setError('تعذّر تحميل التحليلات');
+            setError('Could not load the analytics');
         } finally {
             setLoading(false);
         }
@@ -94,46 +94,46 @@ const AdminAnalytics = () => {
         : [];
 
     return (
-        <section className="admin-analytics" dir="rtl" aria-label="تحليلات موسّعة">
+        <section className="admin-analytics" aria-label="Extended analytics">
             <div className="aa-head">
-                <h2><Icon name="bar-chart" size={18} /> تحليلات موسّعة</h2>
+                <h2><Icon name="bar-chart" size={18} /> Extended analytics</h2>
                 <div className="aa-controls">
                     <div className="aa-presets">
-                        <button type="button" onClick={() => preset(7)}>٧ أيام</button>
-                        <button type="button" onClick={() => preset(30)}>٣٠ يوم</button>
-                        <button type="button" onClick={() => preset(90)}>٩٠ يوم</button>
+                        <button type="button" onClick={() => preset(7)}>7 days</button>
+                        <button type="button" onClick={() => preset(30)}>30 days</button>
+                        <button type="button" onClick={() => preset(90)}>90 days</button>
                     </div>
-                    <label className="aa-date">من
+                    <label className="aa-date">From
                         <input type="date" value={from} max={to} onChange={(e) => setFrom(e.target.value)} />
                     </label>
-                    <label className="aa-date">إلى
+                    <label className="aa-date">To
                         <input type="date" value={to} min={from} max={todayISO()} onChange={(e) => setTo(e.target.value)} />
                     </label>
-                    <button type="button" className="aa-apply" onClick={applyRange}>تطبيق</button>
+                    <button type="button" className="aa-apply" onClick={applyRange}>Apply</button>
                 </div>
             </div>
 
-            {loading && <div className="aa-state">جارٍ تحميل التحليلات…</div>}
+            {loading && <div className="aa-state">Loading analytics…</div>}
             {error && !loading && (
                 <div className="aa-state aa-error">
-                    {error} <button type="button" onClick={() => fetchData(from, to)}>إعادة المحاولة</button>
+                    {error} <button type="button" onClick={() => fetchData(from, to)}>Try again</button>
                 </div>
             )}
 
             {data && !loading && !error && (
                 <>
                     <div className="aa-kpis">
-                        <Kpi icon="users" label="إجمالي الحسابات" value={data.totals.totalAccounts} />
-                        <Kpi icon="flame" label="نشطون اليوم" value={data.activeUsers.dau} />
-                        <Kpi icon="calendar" label="نشطون أسبوعياً" value={data.activeUsers.wau} />
-                        <Kpi icon="trending-up" label="نشطون شهرياً" value={data.activeUsers.mau} />
-                        <Kpi icon="target" label="تحويل تجريبي ← مدفوع" value={`${data.totals.trialToPaidRate}%`} />
-                        <Kpi icon="clock" label="متوسط زمن الجلسة" value={fmtDuration(data.engagement.avgSessionSeconds)} />
+                        <Kpi icon="users" label="Total accounts" value={data.totals.totalAccounts} />
+                        <Kpi icon="flame" label="Active today" value={data.activeUsers.dau} />
+                        <Kpi icon="calendar" label="Active this week" value={data.activeUsers.wau} />
+                        <Kpi icon="trending-up" label="Active this month" value={data.activeUsers.mau} />
+                        <Kpi icon="target" label="Trial → paid" value={`${data.totals.trialToPaidRate}%`} />
+                        <Kpi icon="clock" label="Avg session length" value={fmtDuration(data.engagement.avgSessionSeconds)} />
                     </div>
 
                     <div className="aa-grid">
                         <div className="aa-card">
-                            <h3>توزيع الحسابات</h3>
+                            <h3>Account mix</h3>
                             <ResponsiveContainer width="100%" height={260}>
                                 <PieChart>
                                     <Pie data={data.accountMix} dataKey="value" nameKey="label" innerRadius={55} outerRadius={92} paddingAngle={2}>
@@ -146,7 +146,7 @@ const AdminAnalytics = () => {
                         </div>
 
                         <div className="aa-card aa-card--wide">
-                            <h3>نشاط الدخول اليومي</h3>
+                            <h3>Daily login activity</h3>
                             <ResponsiveContainer width="100%" height={260}>
                                 <LineChart data={data.logins} margin={{ top: 8, right: 12, left: -8, bottom: 0 }}>
                                     <CartesianGrid stroke={GRID} vertical={false} />
@@ -154,27 +154,27 @@ const AdminAnalytics = () => {
                                     <YAxis tick={{ fill: AXIS, fontSize: 11 }} allowDecimals={false} width={34} />
                                     <Tooltip contentStyle={TOOLTIP} />
                                     <Legend />
-                                    <Line type="monotone" dataKey="active_users" name="مستخدمون" stroke={PALETTE[0]} strokeWidth={2} dot={false} />
-                                    <Line type="monotone" dataKey="logins" name="مرات الدخول" stroke={PALETTE[2]} strokeWidth={2} dot={false} />
+                                    <Line type="monotone" dataKey="active_users" name="Users" stroke={PALETTE[0]} strokeWidth={2} dot={false} />
+                                    <Line type="monotone" dataKey="logins" name="Logins" stroke={PALETTE[2]} strokeWidth={2} dot={false} />
                                 </LineChart>
                             </ResponsiveContainer>
                         </div>
 
                         <div className="aa-card aa-card--wide">
-                            <h3>التسجيلات الجديدة</h3>
+                            <h3>New signups</h3>
                             <ResponsiveContainer width="100%" height={240}>
                                 <BarChart data={data.signups} margin={{ top: 8, right: 12, left: -8, bottom: 0 }}>
                                     <CartesianGrid stroke={GRID} vertical={false} />
                                     <XAxis dataKey="date" tick={{ fill: AXIS, fontSize: 11 }} minTickGap={24} />
                                     <YAxis tick={{ fill: AXIS, fontSize: 11 }} allowDecimals={false} width={34} />
                                     <Tooltip contentStyle={TOOLTIP} />
-                                    <Bar dataKey="signups" name="تسجيلات" fill={PALETTE[1]} radius={[4, 4, 0, 0]} />
+                                    <Bar dataKey="signups" name="Signups" fill={PALETTE[1]} radius={[4, 4, 0, 0]} />
                                 </BarChart>
                             </ResponsiveContainer>
                         </div>
 
                         <div className="aa-card aa-card--wide">
-                            <h3>مستخدمون جدد مقابل عائدين</h3>
+                            <h3>New vs returning users</h3>
                             <ResponsiveContainer width="100%" height={240}>
                                 <LineChart data={data.growth} margin={{ top: 8, right: 12, left: -8, bottom: 0 }}>
                                     <CartesianGrid stroke={GRID} vertical={false} />
@@ -182,16 +182,16 @@ const AdminAnalytics = () => {
                                     <YAxis tick={{ fill: AXIS, fontSize: 11 }} allowDecimals={false} width={34} />
                                     <Tooltip contentStyle={TOOLTIP} />
                                     <Legend />
-                                    <Line type="monotone" dataKey="new_users" name="جدد" stroke={PALETTE[1]} strokeWidth={2} dot={false} />
-                                    <Line type="monotone" dataKey="returning_users" name="عائدون" stroke={PALETTE[3]} strokeWidth={2} dot={false} />
+                                    <Line type="monotone" dataKey="new_users" name="New" stroke={PALETTE[1]} strokeWidth={2} dot={false} />
+                                    <Line type="monotone" dataKey="returning_users" name="Returning" stroke={PALETTE[3]} strokeWidth={2} dot={false} />
                                 </LineChart>
                             </ResponsiveContainer>
                         </div>
 
                         <div className="aa-card">
-                            <h3>الاستخدام حسب التخصص</h3>
+                            <h3>Usage by specialty</h3>
                             {specialtyData.length === 0 ? (
-                                <div className="aa-empty">لا توجد بيانات بعد</div>
+                                <div className="aa-empty">No data yet</div>
                             ) : (
                                 <ResponsiveContainer width="100%" height={260}>
                                     <BarChart data={specialtyData} layout="vertical" margin={{ top: 8, right: 16, left: 8, bottom: 0 }}>
@@ -199,7 +199,7 @@ const AdminAnalytics = () => {
                                         <XAxis type="number" tick={{ fill: AXIS, fontSize: 11 }} allowDecimals={false} />
                                         <YAxis type="category" dataKey="label" tick={{ fill: AXIS, fontSize: 12 }} width={84} />
                                         <Tooltip contentStyle={TOOLTIP} />
-                                        <Bar dataKey="answered" name="أسئلة مُجابة" fill={PALETTE[5]} radius={[0, 4, 4, 0]} />
+                                        <Bar dataKey="answered" name="Questions answered" fill={PALETTE[5]} radius={[0, 4, 4, 0]} />
                                     </BarChart>
                                 </ResponsiveContainer>
                             )}

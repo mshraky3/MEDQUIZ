@@ -1,9 +1,14 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import Icon from '../common/Icon.jsx';
 import { getSourceLabel } from '../../utils/sourceLabels';
+import { getTypeLabel } from '../../utils/typeLabels';
+import { useCopy, useLang } from '../../i18n';
+import analysisCopy from '../../i18n/copy/analysis.js';
 import './analysis.css';
 
 const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz }) => {
+    const t = useCopy(analysisCopy).attempts;
+    const { lang } = useLang();
     const [showAll, setShowAll] = useState(false);
 
     // Memoize expensive filtering and sorting operations
@@ -32,17 +37,19 @@ const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz }) => {
 
     return (
         <section className="streak-section">
-            <h3 className="section-header">أسئلة آخر اختبار</h3>
+            <h3 className="section-header">{t.title}</h3>
 
             {lastQuizAttempts.length > 0 ? (
                 <>
                     <div className="questions-grid">
                         {displayedAttempts.map((attempt, index) => {
                             const questionRow = questionsMap.get(attempt.question_id);
-                            const questionText = questionRow?.question_text || 'Unknown question';
-                            const correctAnswer = questionRow?.correct_option || 'N/A';
-                            const questionSource = getSourceLabel(questionRow?.source);
-                            const questionType = questionRow?.question_type || 'General';
+                            const questionText = questionRow?.question_text || t.unknownQuestion;
+                            const correctAnswer = questionRow?.correct_option || '—';
+                            const questionSource = getSourceLabel(questionRow?.source, lang);
+                            const questionType = questionRow?.question_type
+                                ? getTypeLabel(questionRow.question_type, lang)
+                                : '';
                             const isCorrect = attempt.is_correct;
                             return (
                                 <div key={attempt.id || index} className="question-card">
@@ -55,7 +62,7 @@ const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz }) => {
                                                 <Icon name="book-open" size={15} /> {questionSource}
                                             </span>
                                             <span className={`result-badge ${isCorrect ? 'correct' : 'wrong'}`}>
-                                                {isCorrect ? <><Icon name="check-circle" size={13} /> صحيح</> : <><Icon name="x-circle" size={13} /> خطأ</>}
+                                                {isCorrect ? <><Icon name="check-circle" size={13} /> {t.correct}</> : <><Icon name="x-circle" size={13} /> {t.wrong}</>}
                                             </span>
                                         </div>
                                     </div>
@@ -67,13 +74,13 @@ const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz }) => {
 
                                         <div className="answers-section">
                                             <div className="answer-row">
-                                                <span className="answer-label wrong">إجابتك:</span>
+                                                <span className="answer-label wrong">{t.yourAnswer}</span>
                                                 <span className={`answer-text ${isCorrect ? 'correct' : 'wrong'}`}>
                                                     {attempt.selected_option}
                                                 </span>
                                             </div>
                                             <div className="answer-row">
-                                                <span className="answer-label correct">الإجابة الصحيحة:</span>
+                                                <span className="answer-label correct">{t.correctAnswer}</span>
                                                 <span className="answer-text correct">{correctAnswer}</span>
                                             </div>
                                         </div>
@@ -89,13 +96,13 @@ const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz }) => {
                                 onClick={toggleShowAll}
                                 className="see-all-button"
                             >
-                                {showAll ? '▲ عرض أقل' : `▼ عرض الكل (${lastQuizAttempts.length})`}
+                                {showAll ? t.showLess : t.showAll(lastQuizAttempts.length)}
                             </button>
                         </div>
                     )}
                 </>
             ) : (
-                <p className="no-streak">لم يتم العثور على أسئلة في آخر اختبار.</p>
+                <p className="no-streak">{t.empty}</p>
             )}
 
         </section>

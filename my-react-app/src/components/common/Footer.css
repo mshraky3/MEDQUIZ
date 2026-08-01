@@ -38,11 +38,11 @@
   margin-top: 0.5rem;
 }
 
-.footer-tagline-ar {
-  color: #64748b;
-  font-size: 0.85rem;
-  margin-top: 0.25rem;
-  direction: rtl;
+/* The footer is where a visitor looks for "settings"-ish links, so the
+   language switch gets a second, always-reachable home here besides the
+   navbar — no new visual weight, just the same quiet pill. */
+.footer-lang-toggle {
+  margin-top: 0.6rem;
 }
 
 .footer-links {
@@ -100,7 +100,8 @@
   display: inline-block;
 }
 
-/* Dedicated contact column (bilingual, RTL/LTR aware) */
+/* Dedicated contact column — the label/value pair flows with the page
+   direction; only the address and number themselves are pinned to LTR. */
 .footer-contact-line {
   display: flex;
   flex-wrap: wrap;

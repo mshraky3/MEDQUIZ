@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { UserContext } from '../../UserContext';
 import Icon from './Icon.jsx';
+import { useCommon, useLang } from '../../i18n';
 import './TrialBanner.css';
 
 /**
@@ -13,6 +14,8 @@ const TrialBanner = () => {
   const { user, setUser } = useContext(UserContext);
   const navigate = useNavigate();
   const location = useLocation();
+  const t = useCommon();
+  const { dir } = useLang();
   const [msLeft, setMsLeft] = useState(null);
 
   const isTrial = user?.subscription_status === 'trial' && user?.subscription_expiry_date;
@@ -46,13 +49,13 @@ const TrialBanner = () => {
   if (msLeft <= 0) {
     if (!onQuiz) return null;
     return (
-      <div className="trial-banner trial-banner-urgent" dir="rtl" role="status">
+      <div className="trial-banner trial-banner-urgent" dir={dir} role="status">
         <span className="trial-banner-text">
           <Icon name="clock" size={16} />
-          انتهت تجربتك المجانية — أكمل اختبارك الحالي وشاهد نتيجتك
+          {t.trial.ended}
         </span>
         <button type="button" className="trial-banner-cta" onClick={() => navigate('/subscribe')}>
-          اشترك الآن
+          {t.trial.cta}
         </button>
       </div>
     );
@@ -64,13 +67,13 @@ const TrialBanner = () => {
   const urgent = msLeft <= 5 * 60 * 1000;
 
   return (
-    <div className={`trial-banner${urgent ? ' trial-banner-urgent' : ''}`} dir="rtl" role="status">
+    <div className={`trial-banner${urgent ? ' trial-banner-urgent' : ''}`} dir={dir} role="status">
       <span className="trial-banner-text">
         <Icon name="clock" size={16} />
-        تجربة مجانية — {minutes}:{seconds.toString().padStart(2, '0')} متبقية
+        {t.trial.remaining(`${minutes}:${seconds.toString().padStart(2, '0')}`)}
       </span>
       <button type="button" className="trial-banner-cta" onClick={() => navigate('/subscribe')}>
-        اشترك الآن
+        {t.trial.cta}
       </button>
     </div>
   );

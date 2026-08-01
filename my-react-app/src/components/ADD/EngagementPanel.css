@@ -5,7 +5,7 @@
     border-radius: 14px;
     border: 1px solid var(--admin-border, #e2e8f0);
     background: var(--admin-surface, #fff);
-    direction: rtl;
+    /* Admin is English-only and always LTR — see src/i18n/AdminShell.jsx. */
 }
 
 .eng-head {

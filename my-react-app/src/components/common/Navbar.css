@@ -63,9 +63,14 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  gap: 8px;
   height: 72px;
   min-width: 0;
   animation: fadeIn 0.8s ease-out 0.2s both;
+}
+
+.navbar-lang-toggle {
+  flex-shrink: 0;
 }
 
 /* Subscription expiry chip, now a row inside the user dropdown rather than
@@ -122,7 +127,9 @@
   font-weight: 800;
   font-size: 1.2rem;
   text-decoration: none;
-  margin-left: 12px;
+  /* Logical, not margin-left: the gap belongs between the brand and whatever
+     follows it, which swaps sides with the site language. */
+  margin-inline-end: 12px;
   letter-spacing: 1px;
 }
 
@@ -172,7 +179,6 @@
   border: none;
   cursor: pointer;
   padding: 8px;
-  margin-left: 8px;
   /* Keep the icon at 22px but guarantee a 44px touch target for mobile a11y. */
   min-width: 44px;
   min-height: 44px;
@@ -209,7 +215,8 @@
   align-items: center;
   background: rgba(59, 130, 246, 0.1);
   border-radius: 999px;
-  padding: 8px 16px 8px 10px;
+  padding-block: 8px;
+  padding-inline: 16px 10px;
   font-weight: 600;
   color: #3b82f6;
   font-size: 12.5px;
@@ -250,7 +257,7 @@
 }
 
 .user-icon {
-  margin-left: 10px;
+  margin-inline-end: 10px;
   transition: transform 0.3s ease;
   flex-shrink: 0;
 }
@@ -407,11 +414,11 @@
 
   .user-info {
     font-size: 12px;
-    padding: 8px 16px 8px 10px;
+    padding-inline: 16px 10px;
   }
 
   .user-icon {
-    margin-left: 8px;
+    margin-inline-end: 8px;
     width: 18px;
     height: 18px;
   }
@@ -438,7 +445,8 @@
 
   .user-info {
     font-size: 13px;
-    padding: 7px 14px 7px 8px;
+    padding-block: 7px;
+    padding-inline: 14px 8px;
     max-width: 150px;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -446,7 +454,7 @@
   }
 
   .user-icon {
-    margin-left: 6px;
+    margin-inline-end: 6px;
     width: 16px;
     height: 16px;
   }
@@ -473,12 +481,13 @@
 
   .user-info {
     font-size: 12px;
-    padding: 6px 12px 6px 6px;
+    padding-block: 6px;
+    padding-inline: 12px 6px;
     max-width: 120px;
   }
 
   .user-icon {
-    margin-left: 4px;
+    margin-inline-end: 4px;
     width: 14px;
     height: 14px;
   }

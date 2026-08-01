@@ -178,7 +178,7 @@ const ADDQ = () => {
                     >
                         {TRACK_KEYS.map((key) => (
                             <option key={key} value={key}>
-                                {TRACKS[key].labelEn} ({TRACKS[key].labelAr})
+                                {TRACKS[key].label.en}
                             </option>
                         ))}
                     </select>
@@ -193,7 +193,7 @@ const ADDQ = () => {
                     >
                         {questionTypes.map((type) => (
                             <option key={type.key} value={type.key}>
-                                {type.labelAr} — {type.key}
+                                {type.label.en} — {type.key}
                             </option>
                         ))}
                     </select>

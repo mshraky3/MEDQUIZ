@@ -199,8 +199,8 @@ const ADD = (props) => {
         const current = normalizeTrack(user.track);
         const next = TRACK_KEYS.find((k) => k !== current) || current;
         if (!window.confirm(
-            `Move "${user.username}" from ${TRACKS[current].labelEn} to ${TRACKS[next].labelEn}?\n\n`
-            + `They will immediately see the ${TRACKS[next].labelEn} question bank and summaries. `
+            `Move "${user.username}" from ${TRACKS[current].label.en} to ${TRACKS[next].label.en}?\n\n`
+            + `They will immediately see the ${TRACKS[next].label.en} question bank and summaries. `
             + `Their existing history is kept but stops being counted, since it belongs to the other bank.`
         )) return;
 
@@ -208,7 +208,7 @@ const ADD = (props) => {
         setError("");
         try {
             await axios.post(`${props.host}/admin/users/${user.id}/track`, { track: next });
-            setMessage(`Moved ${user.username} to the ${TRACKS[next].labelEn} track.`);
+            setMessage(`Moved ${user.username} to the ${TRACKS[next].label.en} track.`);
             fetchUsers();
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to change track.');
@@ -578,7 +578,7 @@ const ADD = (props) => {
                                                         <div className="user-id">
                                                             ID: {user.id}
                                                             <span className={`track-chip track-chip--${normalizeTrack(user.track)}`}>
-                                                                {TRACKS[normalizeTrack(user.track)].labelEn}
+                                                                {TRACKS[normalizeTrack(user.track)].label.en}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -808,7 +808,7 @@ const ADD = (props) => {
                                     >
                                         {TRACK_KEYS.map((key) => (
                                             <option key={key} value={key}>
-                                                {TRACKS[key].labelEn} ({TRACKS[key].labelAr})
+                                                {TRACKS[key].label.en}
                                             </option>
                                         ))}
                                     </select>

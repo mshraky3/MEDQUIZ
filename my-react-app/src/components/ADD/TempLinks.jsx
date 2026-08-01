@@ -222,7 +222,7 @@ const TempLinks = (props) => {
                                 >
                                     {TRACK_KEYS.map((key) => (
                                         <option key={key} value={key}>
-                                            {TRACKS[key].labelEn} ({TRACKS[key].labelAr})
+                                            {TRACKS[key].label.en}
                                         </option>
                                     ))}
                                 </select>
@@ -276,7 +276,7 @@ const TempLinks = (props) => {
                                 <div className="link-details">
                                     <p><strong>Token:</strong> {generatedLink.token}</p>
                                     <p><strong>Max Uses:</strong> {generatedLink.maxUses}</p>
-                                    <p><strong>Track:</strong> {TRACKS[normalizeTrack(generatedLink.track)].labelEn}</p>
+                                    <p><strong>Track:</strong> {TRACKS[normalizeTrack(generatedLink.track)].label.en}</p>
                                     <p><strong>Status:</strong> <span className="status active"><Icon name="check-circle" size={16} /> Active</span></p>
                                 </div>
                             </div>
@@ -344,7 +344,7 @@ const TempLinks = (props) => {
                                                 <strong>Token:</strong> {link.token}
                                             </div>
                                             <div className="stat-item">
-                                                <strong>Track:</strong> {TRACKS[normalizeTrack(link.track)].labelEn}
+                                                <strong>Track:</strong> {TRACKS[normalizeTrack(link.track)].label.en}
                                             </div>
                                             <div>
                                                 <strong>Usage:</strong> {link.currentUses}/{link.maxUses}

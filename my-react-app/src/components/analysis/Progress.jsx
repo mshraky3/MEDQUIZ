@@ -3,13 +3,19 @@ import Icon from '../common/Icon.jsx';
 import axios from 'axios';
 import Globals from '../../global.js';
 import Spinner from '../common/Spinner.jsx';
-import { specialtiesOf } from '../../utils/tracks.js';
+import { specialtiesOf, pick } from '../../utils/tracks.js';
+import { getSourceLabel } from '../../utils/sourceLabels';
+import { useCopy, useLang, formatNumber } from '../../i18n';
+import analysisCopy from '../../i18n/copy/analysis.js';
 import './Progress.css';
 
 // Series colours, applied by position so any track's specialty list is covered.
 const TYPE_COLORS = ['#8b5cf6', '#06b6d4', '#f97316', '#ef4444', '#16a34a', '#eab308'];
 
 const Progress = ({ userId, username, sessionToken, track }) => {
+  const t = useCopy(analysisCopy).progress;
+  const { lang, dir } = useLang();
+  const fmt = (n) => formatNumber(n, lang);
   const [progressData, setProgressData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -30,7 +36,7 @@ const Progress = ({ userId, username, sessionToken, track }) => {
       setProgressData(response.data);
     } catch (err) {
       console.error('Error fetching progress data:', err);
-      setError('فشل في تحميل بيانات التقدم');
+      setError(t.error);
     } finally {
       setLoading(false);
     }
@@ -45,7 +51,7 @@ const Progress = ({ userId, username, sessionToken, track }) => {
   if (loading) {
     return (
       <div className="progress-container">
-        <Spinner fullScreen label="جاري تحميل بيانات التقدم..." />
+        <Spinner fullScreen label={t.loading} />
       </div>
     );
   }
@@ -56,7 +62,7 @@ const Progress = ({ userId, username, sessionToken, track }) => {
         <div className="error-message">
           <p><Icon name="x-circle" size={15} /> {error}</p>
           <button onClick={fetchProgressData} className="retry-button">
-            <Icon name="refresh" size={15} /> Retry
+            <Icon name="refresh" size={15} /> {t.retry}
           </button>
         </div>
       </div>
@@ -67,7 +73,7 @@ const Progress = ({ userId, username, sessionToken, track }) => {
     return (
       <div className="progress-container">
         <div className="no-data">
-          <p><Icon name="bar-chart" size={15} /> لا توجد بيانات تقدم متاحة</p>
+          <p><Icon name="bar-chart" size={15} /> {t.noData}</p>
         </div>
       </div>
     );
@@ -82,42 +88,44 @@ const Progress = ({ userId, username, sessionToken, track }) => {
     typeBreakdown = {}
   } = progressData;
 
+  // Labels come from the shared source map so the names here can never drift
+  // from the ones the launcher and the history view use.
   const sources = [
-    { key: 'MidgardGameBoy', label: 'Midgard & GameBoy', color: '#10b981' },
-    { key: 'October25', label: '2025 تجميعات اكتوبر', color: '#a855f7' },
-    { key: 'November25', label: '2025 تجميعات نوفمبر', color: '#ec4899' },
-    { key: 'December25', label: '2025 تجميعات ديسمبر', color: '#14b8a6' },
-    { key: 'January25', label: '2026 تجميعات يناير', color: '#6366f1' },
-    { key: 'FebMarApr25', label: '2026 تجميعات فبراير-مارس-ابريل', color: '#f43f5e' },
-    { key: 'May26', label: '2026 تجميعات مايو', color: '#0ea5e9' },
-    { key: 'June26', label: '2026 تجميعات يونيو', color: '#22c55e' },
+    { key: 'MidgardGameBoy', color: '#10b981' },
+    { key: 'October25', color: '#a855f7' },
+    { key: 'November25', color: '#ec4899' },
+    { key: 'December25', color: '#14b8a6' },
+    { key: 'January25', color: '#6366f1' },
+    { key: 'FebMarApr25', color: '#f43f5e' },
+    { key: 'May26', color: '#0ea5e9' },
+    { key: 'June26', color: '#22c55e' },
     // nursing track
-    { key: 'NursingMostRepeated', label: 'Most Repeated', color: '#10b981' },
-    { key: 'NursingConfirmed', label: 'Confirmed', color: '#0ea5e9' },
+    { key: 'NursingMostRepeated', color: '#10b981' },
+    { key: 'NursingConfirmed', color: '#0ea5e9' },
     // legacy sources kept for historical sessions
-    { key: 'NursingEMS', label: 'الأسئلة المؤكدة والأكثر تكراراً', color: '#6366f1' },
-    { key: 'general', label: 'عام', color: '#3b82f6' },
-    { key: 'Midgard', label: 'Midgard', color: '#84cc16' },
-    { key: 'GameBoy', label: 'GameBoy', color: '#f59e0b' }
-  ];
+    { key: 'NursingEMS', color: '#6366f1' },
+    { key: 'general', color: '#3b82f6' },
+    { key: 'Midgard', color: '#84cc16' },
+    { key: 'GameBoy', color: '#f59e0b' }
+  ].map((s) => ({ ...s, label: getSourceLabel(s.key, lang) }));
 
   // The breakdown covers this student's own specialties. The backend already
   // scopes the totals to their track, so the two always line up.
   const questionTypes = specialtiesOf(track).map((sp, i) => ({
     key: sp.key,
-    label: sp.labelAr,
+    label: pick(sp.label, lang),
     color: TYPE_COLORS[i % TYPE_COLORS.length],
   }));
 
   return (
-    <div className="progress-container">
+    <div className="progress-container" dir={dir}>
       {/* Overall Progress */}
       <div className="progress-section">
-        <h3 className="section-title"><Icon name="bar-chart" size={15} /> التقدم العام</h3>
+        <h3 className="section-title"><Icon name="bar-chart" size={15} /> {t.overallTitle}</h3>
         <div className="progress-overview">
           <div className="progress-card main-progress">
             <div className="progress-header">
-              <h4>التقدم الكلي</h4>
+              <h4>{t.overallCard}</h4>
               <span className="progress-percentage">{percentageCompleted.toFixed(1)}%</span>
             </div>
             <div className="progress-bar">
@@ -128,16 +136,16 @@ const Progress = ({ userId, username, sessionToken, track }) => {
             </div>
             <div className="progress-stats">
               <div className="stat-item">
-                <span className="stat-label">تمت الإجابة:</span>
-                <span className="stat-value answered">{answeredQuestions.toLocaleString()}</span>
+                <span className="stat-label">{t.answered}</span>
+                <span className="stat-value answered">{fmt(answeredQuestions)}</span>
               </div>
               <div className="stat-item">
-                <span className="stat-label">المتبقي:</span>
-                <span className="stat-value remaining">{remainingQuestions.toLocaleString()}</span>
+                <span className="stat-label">{t.remaining}</span>
+                <span className="stat-value remaining">{fmt(remainingQuestions)}</span>
               </div>
               <div className="stat-item">
-                <span className="stat-label">الإجمالي:</span>
-                <span className="stat-value total">{totalQuestions.toLocaleString()}</span>
+                <span className="stat-label">{t.total}</span>
+                <span className="stat-value total">{fmt(totalQuestions)}</span>
               </div>
             </div>
           </div>
@@ -146,7 +154,7 @@ const Progress = ({ userId, username, sessionToken, track }) => {
 
       {/* Source Breakdown */}
       <div className="progress-section">
-        <h3 className="section-title"><Icon name="book-open" size={15} /> التقدم حسب المصدر</h3>
+        <h3 className="section-title"><Icon name="book-open" size={15} /> {t.bySource}</h3>
         <div className="breakdown-grid">
           {/* Only show sources that still have questions — this hides the
               retired general/Midgard/GameBoy sources (0 questions after the
@@ -173,12 +181,12 @@ const Progress = ({ userId, username, sessionToken, track }) => {
                 </div>
                 <div className="breakdown-stats">
                   <div className="breakdown-stat">
-                    <span className="breakdown-label">تمت الإجابة:</span>
-                    <span className="breakdown-value">{sourceData.answered.toLocaleString()}</span>
+                    <span className="breakdown-label">{t.answered}</span>
+                    <span className="breakdown-value">{fmt(sourceData.answered)}</span>
                   </div>
                   <div className="breakdown-stat">
-                    <span className="breakdown-label">الإجمالي:</span>
-                    <span className="breakdown-value">{sourceData.total.toLocaleString()}</span>
+                    <span className="breakdown-label">{t.total}</span>
+                    <span className="breakdown-value">{fmt(sourceData.total)}</span>
                   </div>
                 </div>
               </div>
@@ -189,7 +197,7 @@ const Progress = ({ userId, username, sessionToken, track }) => {
 
       {/* Question Type Breakdown */}
       <div className="progress-section">
-        <h3 className="section-title"><Icon name="target" size={15} /> التقدم حسب التخصص</h3>
+        <h3 className="section-title"><Icon name="target" size={15} /> {t.bySpecialty}</h3>
         <div className="breakdown-grid">
           {questionTypes.map(type => {
             const typeData = typeBreakdown[type.key] || { answered: 0, total: 0 };
@@ -212,12 +220,12 @@ const Progress = ({ userId, username, sessionToken, track }) => {
                 </div>
                 <div className="breakdown-stats">
                   <div className="breakdown-stat">
-                    <span className="breakdown-label">تمت الإجابة:</span>
-                    <span className="breakdown-value">{typeData.answered.toLocaleString()}</span>
+                    <span className="breakdown-label">{t.answered}</span>
+                    <span className="breakdown-value">{fmt(typeData.answered)}</span>
                   </div>
                   <div className="breakdown-stat">
-                    <span className="breakdown-label">الإجمالي:</span>
-                    <span className="breakdown-value">{typeData.total.toLocaleString()}</span>
+                    <span className="breakdown-label">{t.total}</span>
+                    <span className="breakdown-value">{fmt(typeData.total)}</span>
                   </div>
                 </div>
               </div>
@@ -228,17 +236,17 @@ const Progress = ({ userId, username, sessionToken, track }) => {
 
       {/* Progress Insights */}
       <div className="progress-section">
-        <h3 className="section-title"><Icon name="lightbulb" size={15} /> ملاحظات التقدم</h3>
+        <h3 className="section-title"><Icon name="lightbulb" size={15} /> {t.insightsTitle}</h3>
         <div className="insights-grid">
           <div className="insight-card">
             <div className="insight-icon"><Icon name="target" size={26} /></div>
             <div className="insight-content">
-              <h4>مجالات التركيز</h4>
+              <h4>{t.focusAreas}</h4>
               <p>
                 {Object.entries(sourceBreakdown).map(([key, data]) => {
                   const percentage = data.total > 0 ? (data.answered / data.total) * 100 : 0;
                   return percentage < 50 ? sources.find(s => s.key === key)?.label : null;
-                }).filter(Boolean).join(', ') || 'جميع المصادر مغطاة بشكل جيد!'}
+                }).filter(Boolean).join(', ') || t.allCovered}
               </p>
             </div>
           </div>
@@ -246,10 +254,10 @@ const Progress = ({ userId, username, sessionToken, track }) => {
           <div className="insight-card">
             <div className="insight-icon"><Icon name="trending-up" size={26} /></div>
             <div className="insight-content">
-              <h4>نسبة الإكمال</h4>
+              <h4>{t.completionRate}</h4>
               <p>
-                لقد أكملت {percentageCompleted.toFixed(1)}% من جميع الأسئلة المتاحة.
-                {remainingQuestions > 0 ? ` ${remainingQuestions.toLocaleString()} سؤال متبقي.` : ' مبروك! لقد أكملت جميع الأسئلة!'}
+                {t.completionBody(percentageCompleted.toFixed(1))}
+                {remainingQuestions > 0 ? t.remainingBody(fmt(remainingQuestions)) : t.allDone}
               </p>
             </div>
           </div>
@@ -257,12 +265,12 @@ const Progress = ({ userId, username, sessionToken, track }) => {
           <div className="insight-card">
             <div className="insight-icon"><Icon name="trophy" size={26} /></div>
             <div className="insight-content">
-              <h4>الإنجاز</h4>
+              <h4>{t.achievement}</h4>
               <p>
-                {percentageCompleted >= 100 ? <><Icon name="sparkles" size={14} /> ممتاز! لقد أكملت جميع الأسئلة!</> :
-                  percentageCompleted >= 75 ? <><Icon name="flame" size={14} /> تقدم رائع! أنت قريب من النهاية!</> :
-                    percentageCompleted >= 50 ? <><Icon name="book-open" size={14} /> تقدم جيد! استمر في المذاكرة!</> :
-                      <><Icon name="rocket" size={14} /> بداية رائعة! استمر في التدريب لتحسين تقدمك!</>}
+                {percentageCompleted >= 100 ? <><Icon name="sparkles" size={14} /> {t.achieve100}</> :
+                  percentageCompleted >= 75 ? <><Icon name="flame" size={14} /> {t.achieve75}</> :
+                    percentageCompleted >= 50 ? <><Icon name="book-open" size={14} /> {t.achieve50}</> :
+                      <><Icon name="rocket" size={14} /> {t.achieve0}</>}
               </p>
             </div>
           </div>

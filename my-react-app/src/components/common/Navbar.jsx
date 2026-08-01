@@ -2,10 +2,13 @@ import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { UserContext } from '../../UserContext';
 import Icon from './Icon.jsx';
+import { useCommon, useLang, LanguageToggle, formatDate } from '../../i18n';
 import './Navbar.css';
 
 const Navbar = () => {
   const { user, sessionToken, logout } = useContext(UserContext);
+  const t = useCommon();
+  const { lang, dir } = useLang();
   const navigate = useNavigate();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -35,7 +38,7 @@ const Navbar = () => {
 
   // Authenticated users' "home" is the quizzes dashboard; everyone else's is
   // the public landing page. This is the single source of truth so the brand,
-  // the الرئيسية link, and the back button can never send a logged-out visitor
+  // the Home link, and the back button can never send a logged-out visitor
   // into a protected route.
   const homePath = isAuthenticated ? '/quizs' : '/';
 
@@ -53,7 +56,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="navbar" dir="rtl">
+    <nav className="navbar" dir={dir}>
       <div className="navbar-right">
         <Link to={homePath} className="navbar-brand">SQB</Link>
         {user && user.username && (
@@ -81,8 +84,8 @@ const Navbar = () => {
               <div className="user-menu-dropdown" role="menu">
                 <span className="user-menu-email">{user.username}</span>
                 {user.subscription_status === 'active' && user.subscription_expiry_date && (
-                  <span className="sub-badge" title="تاريخ انتهاء اشتراكك">
-                    الاشتراك حتى {new Date(user.subscription_expiry_date).toLocaleDateString('ar-SA')}
+                  <span className="sub-badge" title={t.nav.subscriptionExpiryTitle}>
+                    {t.nav.subscriptionUntil(formatDate(user.subscription_expiry_date, lang))}
                   </span>
                 )}
                 <button
@@ -92,7 +95,7 @@ const Navbar = () => {
                   role="menuitem"
                 >
                   <Icon name="log-out" size={17} />
-                  <span>تسجيل الخروج</span>
+                  <span>{t.nav.logout}</span>
                 </button>
               </div>
             )}
@@ -106,34 +109,35 @@ const Navbar = () => {
             // Inside the app the nav is about studying, not marketing —
             // the marketing pages stay reachable from the footer.
             <>
-              <Link to={homePath} className="nav-link" onClick={() => setMenuOpen(false)}>الرئيسية</Link>
-              <Link to="/analysis" className="nav-link" onClick={() => setMenuOpen(false)}>التحليل</Link>
-              <Link to="/wrong-questions" className="nav-link" onClick={() => setMenuOpen(false)}>أسئلتي الخاطئة</Link>
-              <Link to="/summaries" className="nav-link" onClick={() => setMenuOpen(false)}>المحتوى الدراسي</Link>
-              <Link to="/contact" className="nav-link" onClick={() => setMenuOpen(false)}>تواصل معنا</Link>
+              <Link to={homePath} className="nav-link" onClick={() => setMenuOpen(false)}>{t.nav.home}</Link>
+              <Link to="/analysis" className="nav-link" onClick={() => setMenuOpen(false)}>{t.nav.analysis}</Link>
+              <Link to="/wrong-questions" className="nav-link" onClick={() => setMenuOpen(false)}>{t.nav.wrongQuestions}</Link>
+              <Link to="/summaries" className="nav-link" onClick={() => setMenuOpen(false)}>{t.nav.studyContent}</Link>
+              <Link to="/contact" className="nav-link" onClick={() => setMenuOpen(false)}>{t.nav.contact}</Link>
             </>
           ) : (
             <>
-              <Link to="/guides" className="nav-link" onClick={() => setMenuOpen(false)}>أدلة التحضير</Link>
-              <Link to="/about" className="nav-link" onClick={() => setMenuOpen(false)}>من نحن</Link>
-              <Link to="/faq" className="nav-link" onClick={() => setMenuOpen(false)}>الأسئلة الشائعة</Link>
-              <Link to="/contact" className="nav-link" onClick={() => setMenuOpen(false)}>تواصل معنا</Link>
+              <Link to="/guides" className="nav-link" onClick={() => setMenuOpen(false)}>{t.nav.guides}</Link>
+              <Link to="/about" className="nav-link" onClick={() => setMenuOpen(false)}>{t.nav.about}</Link>
+              <Link to="/faq" className="nav-link" onClick={() => setMenuOpen(false)}>{t.nav.faq}</Link>
+              <Link to="/contact" className="nav-link" onClick={() => setMenuOpen(false)}>{t.nav.contact}</Link>
             </>
           )}
         </div>
       </div>
 
       <div className="navbar-left">
+        <LanguageToggle className="navbar-lang-toggle" />
         <button
           className="navbar-hamburger"
           onClick={() => setMenuOpen(!menuOpen)}
-          aria-label="القائمة"
+          aria-label={t.nav.menu}
         >
           <span className={`hamburger-line ${menuOpen ? 'line-open' : ''}`}></span>
           <span className={`hamburger-line ${menuOpen ? 'line-open' : ''}`}></span>
           <span className={`hamburger-line ${menuOpen ? 'line-open' : ''}`}></span>
         </button>
-        <button onClick={handleGoBack} className="back-button" aria-label="رجوع">
+        <button onClick={handleGoBack} className="back-button" aria-label={t.nav.back}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6"></polyline>
           </svg>

@@ -69,12 +69,12 @@ const AdminGate = ({ children }) => {
         } catch (err) {
             const status = err.response?.status;
             if (status === 503) {
-                return { ok: false, message: 'مفتاح الإدارة غير مُفعَّل على الخادم (ADMIN_KEY). أضِفه في إعدادات Vercel ثم أعد النشر.' };
+                return { ok: false, message: 'The admin key is not configured on the server (ADMIN_KEY). Add it in the Vercel settings, then redeploy.' };
             }
             if (status === 401) {
-                return { ok: false, message: 'مفتاح الإدارة غير صحيح.' };
+                return { ok: false, message: 'That admin key is not correct.' };
             }
-            return { ok: false, message: 'تعذّر الاتصال بالخادم. حاول مرة أخرى.' };
+            return { ok: false, message: 'Could not reach the server. Please try again.' };
         }
     };
 
@@ -118,13 +118,13 @@ const AdminGate = ({ children }) => {
     }
 
     return (
-        <div style={wrapStyle} dir="rtl">
+        <div style={wrapStyle}>
             <form style={cardStyle} onSubmit={submit}>
                 <div style={{ fontSize: 22, fontWeight: 800, color: '#22d3ee', marginBottom: 6 }}>
-                    لوحة الإدارة
+                    Admin panel
                 </div>
                 <p style={{ margin: '0 0 20px', fontSize: 13.5, color: '#94a3b8', lineHeight: 1.7 }}>
-                    هذه الصفحة مخصصة للمشرف فقط. أدخل مفتاح الإدارة للمتابعة.
+                    This page is for the site administrator only. Enter the admin key to continue.
                 </p>
                 <input
                     style={inputStyle}
@@ -139,7 +139,7 @@ const AdminGate = ({ children }) => {
                     <p style={{ margin: '10px 0 0', fontSize: 13, color: '#f87171' }}>{error}</p>
                 )}
                 <button style={buttonStyle} type="submit" disabled={state === 'verifying' || !keyInput.trim()}>
-                    {state === 'verifying' ? 'جاري التحقق…' : 'دخول'}
+                    {state === 'verifying' ? 'Verifying…' : 'Enter'}
                 </button>
             </form>
         </div>

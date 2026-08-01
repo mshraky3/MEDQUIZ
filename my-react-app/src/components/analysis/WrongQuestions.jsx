@@ -9,9 +9,13 @@ import { getSourceLabel } from '../../utils/sourceLabels';
 import { getTypeLabel } from '../../utils/typeLabels';
 import { useContext } from 'react';
 import { UserContext } from '../../UserContext';
+import { useCopy, useLang, formatDate } from '../../i18n';
+import analysisCopy from '../../i18n/copy/analysis.js';
 
 const WrongQuestions = () => {
     const navigate = useNavigate();
+    const t = useCopy(analysisCopy).wrong;
+    const { lang, dir } = useLang();
     const { user, sessionToken, setUser } = useContext(UserContext);
     const [wrongQuestions, setWrongQuestions] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -61,7 +65,7 @@ const WrongQuestions = () => {
 
         } catch (err) {
             console.error('Error fetching wrong questions:', err);
-            setError('تعذر تحميل الأسئلة الخاطئة');
+            setError(t.error);
         } finally {
             setLoading(false);
         }
@@ -78,19 +82,19 @@ const WrongQuestions = () => {
     }, [hasMore, loading, currentPage, fetchWrongQuestions]);
 
     return (
-        <div className="analysis-wrapper fade-in">
+        <div className="analysis-wrapper fade-in" dir={dir}>
                 <div className="screen-header">
 
-                    <h2 className="screen-title">مراجعة الأسئلة الخاطئة</h2>
+                    <h2 className="screen-title">{t.title}</h2>
                     <p className="screen-subtitle">
-                        راجع أخطاءك وتعلم منها
+                        {t.subtitle}
                     </p>
                 </div>
 
                 {loading && wrongQuestions.length === 0 ? (
                     <div className="loading-state">
                         <Spinner size="lg" />
-                        <p>جاري تحميل الأسئلة الخاطئة...</p>
+                        <p>{t.loading}</p>
                     </div>
                 ) : error ? (
                     <div className="error-state">
@@ -99,35 +103,35 @@ const WrongQuestions = () => {
                             onClick={() => fetchWrongQuestions(0, false)}
                             className="primary-button"
                         >
-                            حاول مرة أخرى
+                            {t.retry}
                         </button>
                     </div>
                 ) : wrongQuestions.length === 0 ? (
                     <div className="no-data-state">
-                        <h3><Icon name="sparkles" size={20} /> ممتاز!</h3>
-                        <p>لم تخطئ في أي سؤال بعد.</p>
+                        <h3><Icon name="sparkles" size={20} /> {t.emptyTitle}</h3>
+                        <p>{t.emptyBody}</p>
                         <button
                             onClick={() => navigate('/quizs')}
                             className="primary-button"
                         >
-                            ابدأ اختبار
+                            {t.emptyCta}
                         </button>
                     </div>
                 ) : (
                     <>
                         <div className="stats-summary">
                             <div className="stat-card">
-                                <h3>إجمالي الإجابات الخاطئة</h3>
+                                <h3>{t.totalWrong}</h3>
                                 <p className="stat-number">{totalQuestions}</p>
                             </div>
                             <div className="stat-card">
-                                <h3>الأسئلة المحملة</h3>
+                                <h3>{t.loaded}</h3>
                                 <p className="stat-number">{wrongQuestions.length}</p>
                             </div>
                         </div>
 
                         <section className="streak-section">
-                            <h3 className="section-header">أسئلتك الخاطئة</h3>
+                            <h3 className="section-header">{t.listTitle}</h3>
 
                             <div className="questions-grid">
                                 {wrongQuestions.map((question, index) => (
@@ -135,13 +139,13 @@ const WrongQuestions = () => {
                                         <div className="question-header">
                                             <div className="question-meta">
                                                 <span className="type-badge">
-                                                    <Icon name="book" size={15} /> {getTypeLabel(question.question_type)}
+                                                    <Icon name="book" size={15} /> {getTypeLabel(question.question_type, lang)}
                                                 </span>
                                                 <span className="source-badge">
-                                                    <Icon name="book-open" size={15} /> {getSourceLabel(question.source)}
+                                                    <Icon name="book-open" size={15} /> {getSourceLabel(question.source, lang)}
                                                 </span>
                                                 <span className="date-badge">
-                                                    <Icon name="calendar" size={15} /> {new Date(question.attempted_at).toLocaleDateString()}
+                                                    <Icon name="calendar" size={15} /> {formatDate(question.attempted_at, lang)}
                                                 </span>
                                             </div>
                                         </div>
@@ -153,11 +157,11 @@ const WrongQuestions = () => {
 
                                             <div className="answers-section">
                                                 <div className="answer-row">
-                                                    <span className="answer-label wrong">إجابتك:</span>
+                                                    <span className="answer-label wrong">{t.yourAnswer}</span>
                                                     <span className="answer-text wrong">{question.selected_option}</span>
                                                 </div>
                                                 <div className="answer-row">
-                                                    <span className="answer-label correct">الإجابة الصحيحة:</span>
+                                                    <span className="answer-label correct">{t.correctAnswer}</span>
                                                     <span className="answer-text correct">{question.correct_option}</span>
                                                 </div>
                                             </div>
@@ -173,7 +177,7 @@ const WrongQuestions = () => {
                                         className="load-more-button"
                                         disabled={loading}
                                     >
-                                        {loading ? 'جاري التحميل...' : `تحميل المزيد (${Math.min(limit, totalQuestions - wrongQuestions.length)} متبقي)`}
+                                        {loading ? t.loadingMore : t.loadMore(Math.min(limit, totalQuestions - wrongQuestions.length))}
                                     </button>
                                 </div>
                             )}
