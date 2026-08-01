@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import QuestionCard from './QuestionCard.jsx';
 import Icon from '../common/Icon.jsx';
+import { useCopy } from '../../i18n';
+import summariesCopy from '../../i18n/copy/summaries.js';
 
 /**
  * Checkpoint that closes a milestone on the learning path.
@@ -11,6 +13,7 @@ import Icon from '../common/Icon.jsx';
  * other step) stays open whether or not the checkpoint is passed.
  */
 const PathCheckpoint = ({ milestone, nextMilestone, passed, doneCount, onPass, onRedo }) => {
+    const t = useCopy(summariesCopy).checkpoint;
     const [answers, setAnswers] = useState({});   // question index -> was it correct
     const [passing, setPassing] = useState(false); // transient, drives the pass animation
     const passTimer = useRef(null);
@@ -48,16 +51,18 @@ const PathCheckpoint = ({ milestone, nextMilestone, passed, doneCount, onPass, o
                 <div className="cp-head">
                     <span className="cp-kicker">
                         <Icon name={passed ? 'check-circle' : 'help-circle'} size={14} />
-                        {passed ? 'Checkpoint passed' : 'Checkpoint'}
+                        {passed ? t.passed : t.label}
                     </span>
+                    {/* The milestone's own name is study material — it stays in
+                        English and reads LTR inside Arabic chrome. */}
                     <h3 className="cp-title">
-                        {passed ? `${milestone.title} — done` : `Ready to leave ${milestone.title}?`}
+                        {passed
+                            ? t.titlePassed(milestone.title)
+                            : t.titleOpen(milestone.title)}
                     </h3>
                     <p className="cp-recap">
-                        You&rsquo;ve marked <b>{doneCount} of {total}</b> steps in this milestone as done.
-                        {allRead
-                            ? ' Check you can still answer these from memory before moving on.'
-                            : ' Nothing is locked — you can continue now and come back to the rest whenever you like.'}
+                        {t.recapBefore} <b>{doneCount} {t.recapOf} {total}</b> {t.recapAfter}
+                        {allRead ? t.allRead : t.notAllRead}
                     </p>
                 </div>
 
@@ -66,7 +71,7 @@ const PathCheckpoint = ({ milestone, nextMilestone, passed, doneCount, onPass, o
                         <p className="cp-prompt">{milestone.checkpoint.prompt}</p>
                         {questions.map((qq, i) => (
                             <div className="cp-q" key={`${qq.fromId}-${i}`}>
-                                <span className="cp-q-from">From step: {qq.fromTitle}</span>
+                                <span className="cp-q-from">{t.fromStep} <span dir="ltr">{qq.fromTitle}</span></span>
                                 <QuestionCard
                                     question={qq}
                                     number={i + 1}
@@ -81,19 +86,19 @@ const PathCheckpoint = ({ milestone, nextMilestone, passed, doneCount, onPass, o
                 <div className="cp-foot">
                     <span className={`cp-score ${answered === questions.length && questions.length > 0 ? 'is-complete' : ''}`}>
                         {answered === 0
-                            ? 'Not attempted yet'
-                            : <><Icon name="target" size={13} /> {correct} of {answered} correct</>}
+                            ? t.notAttempted
+                            : <><Icon name="target" size={13} /> {t.score(correct, answered)}</>}
                     </span>
 
                     {passed ? (
                         <button type="button" className="cp-redo" onClick={handleRedo}>
-                            <Icon name="refresh" size={15} /> Redo this check
+                            <Icon name="refresh" size={15} /> {t.redo}
                         </button>
                     ) : (
                         <button type="button" className="cp-pass" onClick={handlePass}>
                             {nextMilestone
-                                ? <>I&rsquo;m ready — continue to {nextMilestone.title}</>
-                                : <>I&rsquo;m ready — finish the path</>}
+                                ? t.readyNext(nextMilestone.title)
+                                : t.readyFinish}
                             <Icon name="chevron-right" size={16} />
                         </button>
                     )}

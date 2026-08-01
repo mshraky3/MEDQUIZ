@@ -6,6 +6,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import Globals from '../../global.js';
 import { UserContext } from '../../UserContext';
 import { safeGetItem } from '../../utils/safeStorage.js';
+import { useCopy, useLang } from '../../i18n';
+import authCopy from '../../i18n/copy/auth.js';
 
 const Login = () => {
   const { setUser, user } = useContext(UserContext);
@@ -23,14 +25,9 @@ const Login = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
-
-  useEffect(() => {
-    const originalDir = document.documentElement.dir;
-    document.documentElement.dir = 'rtl';
-    return () => {
-      document.documentElement.dir = originalDir || 'rtl';
-    };
-  }, []);
+  const copy = useCopy(authCopy).login;
+  const terms = useCopy(authCopy).terms;
+  const { dir } = useLang();
 
   // Handle success message from signup redirect
   useEffect(() => {
@@ -97,32 +94,8 @@ const Login = () => {
     }
   }, [user]);
 
-  const copy = {
-    loginTitle: "تسجيل الدخول",
-    sessionExpired: "انتهت جلسة الدخول الخاصة بك أو قام مستخدم آخر بتسجيل الدخول بهذا الحساب. الرجاء تسجيل الدخول مرة أخرى.",
-    usernamePlaceholder: "البريد الإلكتروني",
-    passwordPlaceholder: "كلمة المرور",
-    loginButton: "تسجيل الدخول",
-    loggingIn: "جاري تسجيل الدخول...",
-    contactLink: "إنشاء حساب مجاني",
-    termsTitle: "شروط الاستخدام",
-    termsAccept: "أوافق على شروط الاستخدام",
-    continue: "متابعة",
-    popupTitle: "تجديد الاشتراك",
-    popupBody: "انتهى اشتراكك أو أنك مستخدم جديد؟ يرجى التواصل معنا لإعادة التفعيل.",
-    close: "إغلاق",
-    contactUs: "تواصل معنا للاشتراك",
-    contactSupport: "تواصل مع الدعم",
-    requiredFieldsError: "يرجى إدخال اسم المستخدم وكلمة المرور.",
-    accountInUseError: "هذا الحساب مستخدم حالياً على جهاز أو متصفح آخر. يرجى الانتظار 30 دقيقة أو تسجيل الخروج من الجهاز الآخر.",
-    credentialsError: "البريد الإلكتروني أو كلمة المرور غير صحيحة. حاول مرة أخرى.",
-    acceptTermsError: "تعذر قبول الشروط. يرجى المحاولة مرة أخرى.",
-    popupIntro: "انتهى اشتراكك أو أنك مستخدم جديد؟\nيرجى التواصل معنا.",
-    contactSupportEmail: "مرحباً، أحتاج مساعدة في تسجيل الدخول إلى حسابي.",
-    supportSubject: "دعم تسجيل الدخول"
-  };
 
-  const supportMailLink = `mailto:alshraky3@gmail.com?subject=${encodeURIComponent(copy.supportSubject)}&body=${encodeURIComponent(copy.contactSupportEmail)}`;
+  const supportMailLink = `mailto:alshraky3@gmail.com?subject=${encodeURIComponent(copy.supportSubject)}&body=${encodeURIComponent(copy.supportBody)}`;
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -190,7 +163,7 @@ const Login = () => {
         const newAttempts = failedAttempts + 1;
         setFailedAttempts(newAttempts);
         if (err.response?.data?.accountDeleted) {
-          setError('تم حذف حسابك لعدم إضافة بريد إلكتروني بعد 3 محاولات. يمكنك إنشاء حساب جديد.');
+          setError(copy.accountDeletedError);
         } else if (err.response && err.response.data && err.response.data.alreadyLogged) {
           setError(copy.accountInUseError);
         } else {
@@ -223,17 +196,13 @@ const Login = () => {
 
   return (
     <>
-      <div className="login-body" dir="rtl">
+      <div className="login-body" dir={dir}>
         <div className="login-wrapper">
           <div className="login-card">
             <div className="login-header">
-              <span className="pill">
-                مرحباً بعودتك
-              </span>
-              <h1 className="login-title">{copy.loginTitle}</h1>
-              <p className="login-subtitle">
-                استكمل رحلتك التدريبية وتابع تقدمك
-              </p>
+              <span className="pill">{copy.pill}</span>
+              <h1 className="login-title">{copy.title}</h1>
+              <p className="login-subtitle">{copy.subtitle}</p>
             </div>
 
             {sessionExpired && (
@@ -250,11 +219,11 @@ const Login = () => {
 
             <form onSubmit={handleSubmit} className="login-form">
               <div className="form-group">
-                <label className="form-label">{copy.usernamePlaceholder}</label>
+                <label className="form-label">{copy.emailLabel}</label>
                 <input
                   type="text"
                   name="username"
-                  placeholder="البريد الإلكتروني"
+                  placeholder={copy.emailPlaceholder}
                   value={form.username}
                   onChange={handleChange}
                   className="form-input"
@@ -263,12 +232,12 @@ const Login = () => {
               </div>
 
               <div className="form-group">
-                <label className="form-label">{copy.passwordPlaceholder}</label>
+                <label className="form-label">{copy.passwordLabel}</label>
                 <div className="password-input-wrapper">
                   <input
                     type={showPassword ? "text" : "password"}
                     name="password"
-                    placeholder="كلمة المرور"
+                    placeholder={copy.passwordPlaceholder}
                     value={form.password}
                     onChange={handleChange}
                     className="form-input"
@@ -277,6 +246,7 @@ const Login = () => {
                     type="button"
                     className="password-toggle"
                     onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? copy.hidePassword : copy.showPassword}
                     tabIndex="-1"
                   >
                     {showPassword ? <Icon name="eye" size={18} /> : <Icon name="eye-off" size={18} />}
@@ -284,8 +254,10 @@ const Login = () => {
                 </div>
               </div>
 
-              <div style={{ textAlign: 'left', marginBottom: 8 }}>
-                <a href="/forgot-password" className="link-primary" style={{ fontSize: 13 }}>نسيت كلمة المرور؟</a>
+              {/* `end`, not `left`: the link hugs whichever edge the reading
+                  direction ends on. */}
+              <div style={{ textAlign: 'end', marginBottom: 8 }}>
+                <a href="/forgot-password" className="link-primary" style={{ fontSize: 13 }}>{copy.forgot}</a>
               </div>
 
               {error && (
@@ -295,13 +267,13 @@ const Login = () => {
               )}
 
               <button type="submit" className="btn primary large" disabled={loading}>
-                {loading ? copy.loggingIn : copy.loginButton}
+                {loading ? copy.submitting : copy.submit}
               </button>
 
               <div className="login-footer-text">
-                <span>لا تملك حساباً؟</span>
+                <span>{copy.noAccount}</span>
                 <a href="/signup" className="link-primary">
-                  {copy.contactLink}
+                  {copy.signupLink}
                 </a>
               </div>
             </form>
@@ -313,38 +285,26 @@ const Login = () => {
           <div className="popup-overlay" style={{ zIndex: 1000 }}>
             <div className="popup-content large-popup">
               <div className="terms-section">
-                <h4>شروط الاستخدام</h4>
-                <p>
-                  <strong>هدف المنصة:</strong><br />
-                  جميع الأسئلة والمواد المتاحة هنا جُمعت بجهود طلابية فردية ولا ترتبط بأي جهة تعليمية أو صحية رسمية. الغرض منها تعليمي بحت للمراجعة والتحضير.
-                </p>
-                <p>
-                  <strong>تنبيه حول الدقة:</strong><br />
-                  نبذل قصارى جهدنا للحفاظ على دقة المحتوى، لكن قد توجد أخطاء أو معلومات ناقصة. لا نضمن صحة أو اكتمال أو موثوقية أي مادة، ويجب الرجوع للمصادر الرسمية عند الاستعداد للاختبارات.
-                </p>
-                <p>
-                  <strong>سياسات الحساب:</strong><br />
-                  أنت مسؤول عن سرية بيانات الدخول. يمنع مشاركة الحساب مع أشخاص غير مصرح لهم، وللإدارة الحق في إيقاف أو حذف أي حساب مخالف.
-                </p>
+                <h4>{terms.title}</h4>
+                {terms.sections.map((sec) => (
+                  <p key={sec.heading}>
+                    <strong>{sec.heading}:</strong><br />
+                    {sec.body}
+                  </p>
+                ))}
                 <div>
-                  <strong>سلوكيات محظورة:</strong><br />
+                  <strong>{terms.prohibitedHeading}:</strong><br />
                   <ul>
-                    <li>تحميل أو نسخ المحتوى دون إذن كتابي من إدارة المنصة.</li>
-                    <li>استخدام أدوات آلية لجمع أو نسخ الأسئلة.</li>
-                    <li>تزييف الهوية أو الانتحال عند استخدام الخدمة.</li>
+                    {terms.prohibited.map((item) => <li key={item}>{item}</li>)}
                   </ul>
                 </div>
-                <p>
-                  <strong>الملكية الفكرية:</strong><br />
-                  جميع المحتوى محمي بحقوق الملكية الفكرية، وأي استخدام غير مصرح به يعرض صاحبه للمساءلة.
-                </p>
-                <p>
-                  <strong>حدود المسؤولية:</strong><br />
-                  لا تتحمل المنصة أو القائمون عليها أي مسؤولية عن أضرار مباشرة أو غير مباشرة ناتجة عن استخدامك للموقع أو اعتمادك على المحتوى.
-                </p>
-                <p>
-                  باستخدامك لهذه الخدمة فأنت تقر بقراءة الشروط والموافقة عليها بالكامل.
-                </p>
+                {terms.sectionsAfter.map((sec) => (
+                  <p key={sec.heading}>
+                    <strong>{sec.heading}:</strong><br />
+                    {sec.body}
+                  </p>
+                ))}
+                <p>{terms.closing}</p>
               </div>
               <label className="checkbox-label">
                 <input
@@ -352,7 +312,7 @@ const Login = () => {
                   checked={termsChecked}
                   onChange={(e) => setTermsChecked(e.target.checked)}
                 />
-                {copy.termsAccept}
+                {terms.accept}
               </label>
               <button
                 className="popup-btn try-free"
@@ -360,7 +320,7 @@ const Login = () => {
                 disabled={!termsChecked}
                 style={{ marginTop: '15px' }}
               >
-                {copy.continue}
+                {terms.continue}
               </button>
             </div>
           </div>

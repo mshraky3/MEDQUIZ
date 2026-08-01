@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import Icon from '../common/Icon.jsx';
+import { useCopy } from '../../i18n';
+import summariesCopy from '../../i18n/copy/summaries.js';
 
 const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
 
@@ -12,6 +14,7 @@ const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
  * path checkpoints can score a small set of questions. Optional.
  */
 const QuestionCard = ({ question, number, onAnswer, className = '' }) => {
+    const t = useCopy(summariesCopy).question;
     const [selected, setSelected] = useState(null);
     const revealed = selected !== null;
     const { q, options, answer, explanation, source } = question;
@@ -54,7 +57,7 @@ const QuestionCard = ({ question, number, onAnswer, className = '' }) => {
                 <div className="sq-explain">
                     <b className="sq-verdict" style={{ color: selected === answer ? '#16a34a' : '#dc2626' }}>
                         <Icon name={selected === answer ? 'check' : 'x'} size={15} />
-                        {selected === answer ? ' Correct' : ' Incorrect'}
+                        {' '}{selected === answer ? t.correct : t.incorrect}
                     </b>
                     {explanation ? <span> — {explanation}</span> : null}
                     {source && source !== 'general' && <span className="sq-source">{source}</span>}

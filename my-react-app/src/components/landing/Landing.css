@@ -127,6 +127,13 @@
   color: #2563eb;
 }
 
+/* Language switch + login sit together at the far end of the topbar. */
+.landing-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .topbar-btn.btn {
   min-width: 0;
   padding: 9px 18px;

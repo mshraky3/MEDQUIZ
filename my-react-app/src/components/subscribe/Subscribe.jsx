@@ -5,6 +5,8 @@ import Globals from '../../global.js';
 import { UserContext } from '../../UserContext';
 import Spinner from '../common/Spinner.jsx';
 import Icon from '../common/Icon.jsx';
+import { useCopy, useLang } from '../../i18n';
+import supportCopy from '../../i18n/copy/support.js';
 // The card shell (.login-card, .btn, .alert-box) lives in Login.css. Import it
 // explicitly — landing on /subscribe directly would otherwise render unstyled.
 import '../login/Login.css';
@@ -48,6 +50,8 @@ const Subscribe = () => {
     const { user, sessionToken } = useContext(UserContext);
     const navigate = useNavigate();
     const location = useLocation();
+    const t = useCopy(supportCopy).subscribe;
+    const { dir } = useLang();
     // loading  → fetching config / injecting Moyasar
     // ready    → the card form is on screen and usable
     // blocked  → Moyasar loaded but refused to render a form (e.g. non-HTTPS
@@ -59,10 +63,6 @@ const Subscribe = () => {
     const [priceHalalas, setPriceHalalas] = useState(null);
     const [isTestMode, setIsTestMode] = useState(false);
     const formRef = useRef(null);
-
-    useEffect(() => {
-        document.documentElement.dir = 'rtl';
-    }, []);
 
     useEffect(() => {
         // Payment is tied to a specific account, so a session is required.
@@ -98,7 +98,7 @@ const Subscribe = () => {
                     element: '.mysr-form',
                     amount: cfg.priceHalalas,
                     currency: cfg.currency || 'SAR',
-                    description: `اشتراك سنوي — حساب ${user.id}`,
+                    description: t.paymentDescription(user.id),
                     publishable_api_key: cfg.publishableKey,
                     callback_url: `${window.location.origin}/payment/callback`,
                     methods: ['creditcard', 'applepay'],
@@ -124,7 +124,7 @@ const Subscribe = () => {
             } catch (err) {
                 if (cancelled) return;
                 console.error('Subscribe init failed:', err);
-                setError('تعذّر تحميل نموذج الدفع. حدّث الصفحة وحاول مرة أخرى.');
+                setError(t.loadError);
                 setStatus('error');
             }
         })();
@@ -149,51 +149,44 @@ const Subscribe = () => {
         || user?.subscription_status === 'trial';
 
     return (
-        <div className="login-body" dir="rtl">
+        <div className="login-body" dir={dir}>
             <div className="login-wrapper">
                 <div className="login-card subscribe-card">
                     <div className="login-header">
-                        <span className="pill">اشتراك المنصة</span>
+                        <span className="pill">{t.pill}</span>
                         {trialEnded ? (
                             <>
-                                <h1 className="login-title">انتهت تجربتك المجانية</h1>
-                                <p className="login-subtitle">
-                                    اشترك الآن للمتابعة والاستفادة من وصول كامل لجميع الأسئلة والملخصات والتحليلات.
-                                </p>
+                                <h1 className="login-title">{t.trialEndedTitle}</h1>
+                                <p className="login-subtitle">{t.trialEndedBody}</p>
                             </>
                         ) : (
                             <>
-                                <h1 className="login-title">فعّل اشتراكك السنوي</h1>
-                                <p className="login-subtitle">
-                                    وصول كامل لجميع الأسئلة والملخصات والتحليلات لمدة سنة كاملة.
-                                </p>
+                                <h1 className="login-title">{t.title}</h1>
+                                <p className="login-subtitle">{t.body}</p>
                             </>
                         )}
                     </div>
 
                     <div className="subscribe-price">
                         <span className="subscribe-price-amount">{riyals != null ? riyals : '—'}</span>
-                        <span className="subscribe-price-cur">ريال</span>
-                        <span className="subscribe-price-period">/ سنة</span>
+                        <span className="subscribe-price-cur">{t.currency}</span>
+                        <span className="subscribe-price-period">{t.period}</span>
                     </div>
 
                     <ul className="subscribe-perks">
-                        <li>بنك أسئلة محدّث بالكامل لنمط 2026 مع تفسير لكل إجابة</li>
-                        <li>تجميعات شهرية جديدة تُضاف طوال مدة اشتراكك</li>
-                        <li>تحليلات أداء تكشف نقاط ضعفك وتعيد تدريبك عليها</li>
+                        {t.perks.map((perk) => <li key={perk}>{perk}</li>)}
                     </ul>
 
                     {isTestMode && (
                         <div className="subscribe-test-banner">
-                            وضع تجريبي — استخدم بطاقة الاختبار <strong>4111 1111 1111 1111</strong>،
-                            أي تاريخ مستقبلي، وأي رمز CVC.
+                            {t.testBannerBefore} <strong dir="ltr">4111 1111 1111 1111</strong> {t.testBannerAfter}
                         </div>
                     )}
 
                     {status === 'loading' && (
                         <div className="subscribe-loading">
                             <Spinner size="md" />
-                            <span>جاري تحميل نموذج الدفع الآمن...</span>
+                            <span>{t.loadingForm}</span>
                         </div>
                     )}
 
@@ -206,16 +199,14 @@ const Subscribe = () => {
                             onClick={goToPaymentForm}
                         >
                             <Icon name="lock" size={18} />
-                            ادفع {riyals != null ? `${riyals} ريال` : ''} واشترك الآن
+                            {riyals != null ? t.payCta(t.amountWithCurrency(riyals)) : t.payCtaPlain}
                         </button>
                     )}
 
                     {(status === 'error' || status === 'blocked') && (
                         <div className="subscribe-fallback">
                             <div className="alert-box error">
-                                {status === 'blocked'
-                                    ? 'تعذّر عرض نموذج الدفع على هذا المتصفح. جرّب إعادة التحميل، أو تواصل معنا وسنفعّل اشتراكك يدوياً.'
-                                    : error}
+                                {status === 'blocked' ? t.blocked : error}
                             </div>
                             <button
                                 type="button"
@@ -223,10 +214,10 @@ const Subscribe = () => {
                                 onClick={() => window.location.reload()}
                             >
                                 <Icon name="refresh" size={18} />
-                                إعادة تحميل صفحة الدفع
+                                {t.reload}
                             </button>
                             <Link to="/contact" className="btn subscribe-fallback-secondary">
-                                تواصل معنا لإتمام الدفع
+                                {t.contactUs}
                             </Link>
                         </div>
                     )}
@@ -239,12 +230,12 @@ const Subscribe = () => {
                     />
 
                     <p className="subscribe-note">
-                        الدفع آمن ومعالَج عبر <strong>ميسر</strong>. لا نقوم بتخزين بيانات بطاقتك على خوادمنا.
+                        {t.secureNoteBefore} <strong>{t.secureNoteProvider}</strong>{t.secureNoteAfter}
                     </p>
                     <p className="subscribe-policy">
-                        الاشتراك سنوي (سنة واحدة) ولا يُجدَّد تلقائياً. بالمتابعة فإنك توافق على{' '}
-                        <Link to="/terms" target="_blank" rel="noopener">شروط الاستخدام</Link>{' '}و{' '}
-                        <Link to="/refund-policy" target="_blank" rel="noopener">سياسة الاسترجاع</Link>.
+                        {t.policyBefore}{' '}
+                        <Link to="/terms" target="_blank" rel="noopener">{t.terms}</Link>{' '}{t.and}{' '}
+                        <Link to="/refund-policy" target="_blank" rel="noopener">{t.refund}</Link>.
                     </p>
                 </div>
             </div>

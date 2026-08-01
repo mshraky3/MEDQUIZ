@@ -144,16 +144,18 @@ const readingMinutes = (subtopic) => {
 };
 
 /**
- * "45 دقيقة" / "2 س 10 د" — reading-time hint shown in the (Arabic) page
- * chrome, so the units are Arabic too. The study material itself stays
- * English; this is a UI label, not content.
+ * "45 دقيقة" / "45 min" — a reading-time hint shown in the page chrome, so its
+ * units follow the UI language. The study material itself stays English; this
+ * is a UI label, not content.
  */
-export const formatMinutes = (mins) => {
+export const formatMinutes = (mins, lang = 'ar') => {
     if (!mins || mins < 1) return '—';
-    if (mins < 60) return `${mins} دقيقة`;
+    const ar = lang !== 'en';
+    if (mins < 60) return ar ? `${mins} دقيقة` : `${mins} min`;
     const h = Math.floor(mins / 60);
     const m = mins % 60;
-    return m ? `${h} س ${m} د` : `${h} س`;
+    if (ar) return m ? `${h} س ${m} د` : `${h} س`;
+    return m ? `${h} h ${m} min` : `${h} h`;
 };
 
 /* ------------------------------------------------------------------ */

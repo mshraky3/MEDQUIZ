@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useContext } from 'react';
 import Icon from '../common/Icon.jsx';
 import Spinner from '../common/Spinner.jsx';
 import { UserContext } from '../../UserContext';
 import { userTrack } from '../../utils/tracks.js';
 import Globals from '../../global.js';
+import { useCopy, useLang } from '../../i18n';
+import supportCopy from '../../i18n/copy/support.js';
 import './Contact.css';
 
 // Direct WhatsApp line — the fastest way to reach us, so it gets a CTA of its
@@ -15,6 +17,10 @@ const Contact = () => {
     // do know who is writing, tell the inbox which track they study — a
     // "content is wrong" message means different things per track.
     const { user } = useContext(UserContext);
+    const t = useCopy(supportCopy).contact;
+    const { dir } = useLang();
+    // Decorative "go" arrows point the way the page reads.
+    const arrow = dir === 'rtl' ? '←' : '→';
 
     const [form, setForm] = useState({
         name: '',
@@ -24,15 +30,6 @@ const Contact = () => {
     });
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
-
-    useEffect(() => {
-        const originalDir = document.documentElement.dir;
-        document.documentElement.dir = 'rtl';
-
-        return () => {
-            document.documentElement.dir = originalDir || 'ltr';
-        };
-    }, []);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -58,7 +55,7 @@ const Contact = () => {
                 body: JSON.stringify({
                     name: form.name,
                     mobile: form.mobile,
-                    subject: form.subject || 'اتصال من SQB',
+                    subject: form.subject || t.mailSubject,
                     message: form.message,
                     track: user ? userTrack(user) : null,
                     username: user?.username || null
@@ -69,12 +66,12 @@ const Contact = () => {
                 setSuccess(true);
                 setForm({ name: '', mobile: '', subject: 'subscription', message: '' });
             } else {
-                throw new Error('فشل إرسال الرسالة');
+                throw new Error(t.failed);
             }
         } catch (error) {
             console.error('Error sending message:', error);
             // Fallback to email client
-            const subject = encodeURIComponent(form.subject || 'اتصال من SQB');
+            const subject = encodeURIComponent(form.subject || t.mailSubject);
             const body = encodeURIComponent(`
 Name: ${form.name}
 Mobile: ${form.mobile}
@@ -83,7 +80,7 @@ Message:
 ${form.message}
 
 ---
-تم الإرسال من نموذج الاتصال SQB
+${t.mailFooter}
             `);
 
             const mailtoLink = `mailto:alshraky3@gmail.com?subject=${subject}&body=${body}`;
@@ -98,13 +95,13 @@ ${form.message}
     const contactInfo = [
         {
             icon: 'https://img.icons8.com/?size=100&id=yY3YzfabynRr&format=png&color=000000',
-            title: 'دعم واتساب',
+            title: t.whatsappSupport,
             value: '0582619119',
             link: WHATSAPP_LINK
         },
         {
             icon: 'https://img.icons8.com/?size=100&id=yY3YzfabynRr&format=png&color=000000',
-            title: 'البريد الإلكتروني',
+            title: t.email,
             value: 'alshraky3@gmail.com',
             link: 'mailto:alshraky3@gmail.com'
         }
@@ -112,13 +109,13 @@ ${form.message}
 
     if (success) {
         return (
-            <div className="contact-container" dir="rtl">
+            <div className="contact-container" dir={dir}>
                 <div className="contact-card success">
                     <div className="success-icon"><Icon name="check-circle" size={40} /></div>
-                    <h2>تم إرسال الرسالة!</h2>
-                    <p>شكراً لتواصلك معنا! سنعود إليك في أقرب وقت ممكن.</p>
+                    <h2>{t.successTitle}</h2>
+                    <p>{t.successBody}</p>
                     <div className="contact-fallback">
-                        <p>يمكنك أيضاً التواصل معنا مباشرة:</p>
+                        <p>{t.successAlso}</p>
                         <div className="whatsapp-links">
                             <a href={WHATSAPP_LINK} className="whatsapp-link" target="_blank" rel="noopener noreferrer">
                                 <Icon name="phone" size={15} /> WhatsApp: 0582619119
@@ -131,11 +128,11 @@ ${form.message}
     }
 
     return (
-        <div className="contact-container" dir="rtl">
+        <div className="contact-container" dir={dir}>
             <div className="contact-card">
                 <div className="contact-header">
-                    <h1> اتصل بنا</h1>
-                    <p>تواصل معنا للحصول على الدعم أو الأسئلة أو الملاحظات</p>
+                    <h1>{t.title}</h1>
+                    <p>{t.subtitle}</p>
                 </div>
 
                 <a
@@ -146,10 +143,10 @@ ${form.message}
                 >
                     <span className="whatsapp-cta-icon"><Icon name="phone" size={20} /></span>
                     <span className="whatsapp-cta-text">
-                        <strong>تواصل معنا على واتساب</strong>
-                        <small>أسرع طريقة للرد — عادةً خلال دقائق</small>
+                        <strong>{t.whatsappCta}</strong>
+                        <small>{t.whatsappHint}</small>
                     </span>
-                    <span className="whatsapp-cta-arrow">←</span>
+                    <span className="whatsapp-cta-arrow" aria-hidden="true">{arrow}</span>
                 </a>
 
                 <div className="contact-content">
@@ -179,66 +176,68 @@ ${form.message}
                         <a href="/suggestions" className="suggestions-button">
                             <span className="suggestions-icon"><Icon name="lightbulb" size={18} /></span>
                             <div className="suggestions-text">
-                                <span className="suggestions-title">الاقتراحات والأفكار</span>
-                                <span className="suggestions-subtitle">ساعدنا في تحسين التطبيق</span>
+                                <span className="suggestions-title">{t.suggestionsTitle}</span>
+                                <span className="suggestions-subtitle">{t.suggestionsSubtitle}</span>
                             </div>
-                            <span className="suggestions-arrow">←</span>
+                            <span className="suggestions-arrow" aria-hidden="true">{arrow}</span>
                         </a>
                     </div>
 
                     {/* Contact Form */}
                     <div className="contact-form-section">
-                        <h2>أرسل لنا رسالة وسنعود إليك</h2>
+                        <h2>{t.formTitle}</h2>
                         <form onSubmit={handleSubmit} className="contact-form">
                             <div className="form-row">
                                 <div className="form-group">
-                                    <label htmlFor="name">اسمك *</label>
+                                    <label htmlFor="name">{t.name}</label>
                                     <input
                                         type="text"
                                         id="name"
                                         name="name"
                                         value={form.name}
                                         onChange={handleInputChange}
-                                        placeholder="أدخل اسمك الكامل"
+                                        placeholder={t.namePlaceholder}
                                         required
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <label htmlFor="mobile">رقم جوالك *</label>
+                                    <label htmlFor="mobile">{t.mobile}</label>
                                     <input
                                         type="tel"
                                         id="mobile"
                                         name="mobile"
                                         value={form.mobile}
                                         onChange={handleInputChange}
-                                        placeholder="أدخل رقم جوالك"
+                                        placeholder={t.mobilePlaceholder}
                                         required
                                     />
                                 </div>
                             </div>
 
                             <div className="form-group">
-                                <label htmlFor="subject">الموضوع</label>
+                                <label htmlFor="subject">{t.subject}</label>
                                 <select
                                     id="subject"
                                     name="subject"
                                     value={form.subject}
                                     onChange={handleInputChange}
                                 >
-                                    <option value="subscription">اشتراك</option>
-                                    <option value="report issue">الإبلاغ عن مشكلة</option>
-                                    <option value="other">أخرى</option>
+                                    {/* The values are stable keys the admin
+                                        inbox reads — only the labels change. */}
+                                    <option value="subscription">{t.subjectSubscription}</option>
+                                    <option value="report issue">{t.subjectIssue}</option>
+                                    <option value="other">{t.subjectOther}</option>
                                 </select>
                             </div>
 
                             <div className="form-group">
-                                <label htmlFor="message">الرسالة *</label>
+                                <label htmlFor="message">{t.message}</label>
                                 <textarea
                                     id="message"
                                     name="message"
                                     value={form.message}
                                     onChange={handleInputChange}
-                                    placeholder="أخبرنا كيف يمكننا مساعدتك..."
+                                    placeholder={t.messagePlaceholder}
                                     rows="3"
                                     required
                                 ></textarea>
@@ -252,10 +251,10 @@ ${form.message}
                                 {loading ? (
                                     <div className="loading-spinner">
                                         <Spinner size="sm" />
-                                        جاري الإرسال...
+                                        {t.sending}
                                     </div>
                                 ) : (
-                                    (<><Icon name="send" size={16} /> إرسال الرسالة</>)
+                                    (<><Icon name="send" size={16} /> {t.send}</>)
                                 )}
                             </button>
                         </form>

@@ -448,7 +448,8 @@
         radial-gradient(820px 460px at 6% 4%, rgba(16, 78, 185, 0.06), transparent 50%),
         linear-gradient(180deg, #eef2fb 0%, #ffffff 60%);
     color: #1e293b;
-    direction: ltr;
+    /* Direction follows the hub's dir attribute (the site language); the
+       authored English material carries its own dir="ltr". */
     padding: 30px clamp(14px, 4vw, 48px) 90px;
     box-sizing: border-box;
 }
@@ -1240,9 +1241,12 @@
     text-align: left;
 }
 
-/* The study modal is a reading surface for English material — keep it LTR
-   regardless of the hub's direction. */
-.summary-panel { direction: ltr; }
+/* The modal's chrome follows the site language; the summary body and the
+   practice questions inside it carry their own dir="ltr", because that
+   material is English in both languages. */
+.sum-doc,
+.sub-summary,
+.sq-card { direction: ltr; text-align: left; }
 
 /* ── Deck blocks relocated next to their topic ────────────────────────────
    Tables, algorithms and topic-cards used to be dumped in one trailing

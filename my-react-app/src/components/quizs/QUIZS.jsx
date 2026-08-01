@@ -12,6 +12,8 @@ import QuizLauncher from './QuizLauncher.jsx';
 import { UserContext } from '../../UserContext';
 import { getTypeLabel } from '../../utils/typeLabels';
 import { specialtiesOf, userTrack, examLabel, bankLabel, trackLabel, normalizeTrack } from '../../utils/tracks.js';
+import { useCopy, useLang, formatNumber } from '../../i18n';
+import quizCopy from '../../i18n/copy/quiz.js';
 
 // Single unified bank — see QuizLauncher.jsx.
 const SOURCE = 'MidgardGameBoy';
@@ -33,6 +35,8 @@ const QUIZS = () => {
     const { user, setUser, sessionToken } = useContext(UserContext);
     const navigate = useNavigate();
     const location = useLocation();
+    const t = useCopy(quizCopy).hub;
+    const { lang, dir } = useLang();
     // Resolve id from context first so a hard refresh (no router state) still works.
     const id = user?.id || location.state?.id || location.state?.user?.id;
 
@@ -140,7 +144,7 @@ const QUIZS = () => {
         const answered = hit ? parseInt(hit.total_answered, 10) || 0 : 0;
         const accuracy = hit ? Math.round(parseFloat(hit.accuracy) || 0) : 0;
         const available = !content || (content.questionsByType?.[key] || 0) > 0;
-        return { key, icon, label: getTypeLabel(key), answered, accuracy, available };
+        return { key, icon, label: getTypeLabel(key, lang), answered, accuracy, available };
     });
     // Content checks are advisory: until the request lands (or if it fails) we
     // assume content exists rather than flashing an empty state at everyone.
@@ -151,7 +155,10 @@ const QUIZS = () => {
         ? attempted.reduce((a, b) => (a.accuracy <= b.accuracy ? a : b)).key
         : null;
 
-    const fmt = (n) => new Intl.NumberFormat('en-US').format(n);
+    const fmt = (n) => formatNumber(n, lang);
+    // The journey chevrons point "forward", which is leftwards in Arabic and
+    // rightwards in English.
+    const arrow = dir === 'rtl' ? 'chevron-left' : 'chevron-right';
 
     /**
      * The three destinations, framed as one loop: understand → practise →
@@ -161,31 +168,31 @@ const QUIZS = () => {
      */
     const steps = [
         {
-            key: 'summaries', tone: 'sum', icon: 'book-open', kicker: 'افهم',
-            title: 'المحتوى الدراسي',
-            desc: 'محتوى دراسي مصوّر يغطي كل تخصصات مسارك.',
+            key: 'summaries', tone: 'sum', icon: 'book-open', kicker: t.stepSummariesKicker,
+            title: t.stepSummariesTitle,
+            desc: t.stepSummariesDesc,
             stat: summariesEmpty
-                ? 'قيد الإعداد'
-                : SPECIALTIES.map((sp) => getTypeLabel(sp.key)).join(' · '),
-            cta: 'تصفّح المحتوى',
+                ? t.inPreparation
+                : SPECIALTIES.map((sp) => getTypeLabel(sp.key, lang)).join(' · '),
+            cta: t.stepSummariesCta,
             onClick: () => navigate('/summaries')
         },
         {
-            key: 'quiz', tone: 'quiz', icon: 'clipboard', kicker: 'ثبّت',
-            title: 'الأسئلة',
-            desc: `اختبارات تدريبية ونهائية من ${bankLabel(myTrack)}.`,
+            key: 'quiz', tone: 'quiz', icon: 'clipboard', kicker: t.stepQuizKicker,
+            title: t.stepQuizTitle,
+            desc: t.stepQuizDesc(bankLabel(myTrack, lang)),
             stat: bankEmpty
-                ? 'قيد الإعداد'
-                : (hasHistory ? `${fmt(stats.total_quizzes)} اختبار مكتمل` : 'لم تبدأ بعد'),
-            cta: 'ابدأ اختبار',
+                ? t.inPreparation
+                : (hasHistory ? t.stepQuizStat(fmt(stats.total_quizzes)) : t.stepQuizNotStarted),
+            cta: t.stepQuizCta,
             onClick: openLauncher
         },
         {
-            key: 'analysis', tone: 'ana', icon: 'bar-chart', kicker: 'قِس',
-            title: 'تحليل الأداء',
-            desc: 'دقتك، وأقوى وأضعف المواضيع لديك، وتقدّمك أسبوعاً بأسبوع.',
-            stat: hasHistory ? `${Math.round(stats.avg_accuracy)}% دقة حالياً` : 'يظهر بعد أول اختبار',
-            cta: 'افتح التقرير',
+            key: 'analysis', tone: 'ana', icon: 'bar-chart', kicker: t.stepAnalysisKicker,
+            title: t.stepAnalysisTitle,
+            desc: t.stepAnalysisDesc,
+            stat: hasHistory ? t.stepAnalysisStat(Math.round(stats.avg_accuracy)) : t.stepAnalysisEmpty,
+            cta: t.stepAnalysisCta,
             onClick: () => navigate('/analysis', { state: { id } })
         }
     ];
@@ -198,18 +205,20 @@ const QUIZS = () => {
         : (!hasHistory ? (summariesEmpty ? 'quiz' : 'summaries') : (weakestKey ? 'quiz' : 'analysis'));
 
     const tiles = [
-        { k: 'acc', icon: 'target', value: hasHistory ? `${Math.round(stats.avg_accuracy)}%` : '—', label: 'الدقة' },
-        { k: 'quiz', icon: 'clipboard', value: hasHistory ? fmt(stats.total_quizzes) : '—', label: 'اختبار' },
-        { k: 'q', icon: 'check-circle', value: hasHistory ? fmt(stats.total_questions_answered) : '—', label: 'سؤال' },
-        { k: 'streak', icon: 'flame', value: streak != null && streak > 0 ? fmt(streak) : '—', label: 'يوم متتالٍ' }
+        { k: 'acc', icon: 'target', value: hasHistory ? `${Math.round(stats.avg_accuracy)}%` : '—', label: t.kpiAccuracy },
+        { k: 'quiz', icon: 'clipboard', value: hasHistory ? fmt(stats.total_quizzes) : '—', label: t.kpiQuizzes },
+        { k: 'q', icon: 'check-circle', value: hasHistory ? fmt(stats.total_questions_answered) : '—', label: t.kpiQuestions },
+        { k: 'streak', icon: 'flame', value: streak != null && streak > 0 ? fmt(streak) : '—', label: t.kpiStreak }
     ];
 
     return (
-        <div className="quiz-selection hubx" dir="rtl">
+        <div className="quiz-selection hubx" dir={dir}>
             <header className="hubx-top">
                 <div className="hubx-greet">
-                    <h1>{firstName ? <>أهلاً <bdi>{firstName}</bdi> 👋</> : 'أهلاً بك 👋'}</h1>
-                    <p>جاهز لجلسة اليوم؟ ابدأ فوراً أو اختر تخصصاً تريد تقويته.</p>
+                    <h1>{firstName
+                        ? <>{t.greetingNamePrefix}<bdi>{firstName}</bdi>{t.greetingNameSuffix}</>
+                        : t.greeting}</h1>
+                    <p>{t.subtitle}</p>
                 </div>
                 <div className="hubx-actions">
                     <button
@@ -219,8 +228,8 @@ const QUIZS = () => {
                         disabled={bankEmpty}
                     >
                         <Icon name="rocket" size={19} />
-                        <span>ابدأ اختبار سريع</span>
-                        <small>{bankEmpty ? 'غير متاح بعد' : '١٠ أسئلة مختلطة'}</small>
+                        <span>{t.quickStart}</span>
+                        <small>{bankEmpty ? t.unavailable : t.quickStartHint}</small>
                     </button>
                     <button
                         type="button"
@@ -229,7 +238,7 @@ const QUIZS = () => {
                         disabled={bankEmpty}
                     >
                         <Icon name="settings" size={17} />
-                        <span>خصّص الاختبار</span>
+                        <span>{t.customize}</span>
                     </button>
                 </div>
             </header>
@@ -243,16 +252,16 @@ const QUIZS = () => {
                     <div className="hubx-notice-body">
                         <strong>
                             {bankEmpty && summariesEmpty
-                                ? `محتوى مسار ${trackLabel(myTrack)} قيد الإعداد`
+                                ? t.noticeBoth(trackLabel(myTrack, lang))
                                 : bankEmpty
-                                    ? `أسئلة مسار ${trackLabel(myTrack)} قيد الإعداد`
-                                    : `ملخصات مسار ${trackLabel(myTrack)} قيد الإعداد`}
+                                    ? t.noticeBank(trackLabel(myTrack, lang))
+                                    : t.noticeSummaries(trackLabel(myTrack, lang))}
                         </strong>
                         <span>
-                            نعمل على تجهيز المحتوى الخاص بـ{examLabel(myTrack)}.
-                            {!bankEmpty && ' الأسئلة متاحة الآن ويمكنك البدء فوراً.'}
-                            {!summariesEmpty && ' المحتوى الدراسي متاح الآن.'}
-                            {bankEmpty && summariesEmpty && ' سنعلمك بالبريد فور جاهزيته.'}
+                            {t.noticeBody(examLabel(myTrack, lang))}
+                            {!bankEmpty && t.noticeQuestionsReady}
+                            {!summariesEmpty && t.noticeSummariesReady}
+                            {bankEmpty && summariesEmpty && t.noticeWillEmail}
                         </span>
                     </div>
                 </section>
@@ -260,8 +269,8 @@ const QUIZS = () => {
 
             <nav className="hubx-journey" aria-labelledby="hubx-journey-h">
                 <div className="hubx-sec-head">
-                    <h2 id="hubx-journey-h">رحلة المذاكرة</h2>
-                    <span className="hubx-sec-note">افهم ← ثبّت ← قِس، ثم كرّر</span>
+                    <h2 id="hubx-journey-h">{t.journeyTitle}</h2>
+                    <span className="hubx-sec-note">{t.journeyNote}</span>
                 </div>
                 <ol className="hubx-steps">
                     {steps.map((s, i) => (
@@ -271,17 +280,17 @@ const QUIZS = () => {
                                     <span className="hubx-step-top">
                                         <span className="hubx-step-n">{i + 1}</span>
                                         <span className="hubx-step-kicker">{s.kicker}</span>
-                                        {s.key === nextStep && <span className="hubx-step-flag">ابدأ من هنا</span>}
+                                        {s.key === nextStep && <span className="hubx-step-flag">{t.startHere}</span>}
                                     </span>
                                     <span className="hubx-step-icon"><Icon name={s.icon} size={24} /></span>
                                     <strong className="hubx-step-title">{s.title}</strong>
                                     <span className="hubx-step-desc">{s.desc}</span>
                                     <span className="hubx-step-stat">{s.stat}</span>
-                                    <span className="hubx-step-cta">{s.cta} <Icon name="chevron-left" size={15} /></span>
+                                    <span className="hubx-step-cta">{s.cta} <Icon name={arrow} size={15} /></span>
                                 </button>
                             </li>
                             {i < steps.length - 1 && (
-                                <li className="hubx-step-arrow" aria-hidden="true"><Icon name="chevron-left" size={20} /></li>
+                                <li className="hubx-step-arrow" aria-hidden="true"><Icon name={arrow} size={20} /></li>
                             )}
                         </React.Fragment>
                     ))}
@@ -293,25 +302,25 @@ const QUIZS = () => {
                 showed the same story in different shapes. */}
             <section className="hubx-mastery" aria-labelledby="hubx-mastery-h">
                 <div className="hubx-sec-head">
-                    <h2 id="hubx-mastery-h">أداؤك</h2>
-                    {weakestKey && <span className="hubx-sec-note">ابدأ بأضعف تخصص لأكبر أثر</span>}
+                    <h2 id="hubx-mastery-h">{t.performanceTitle}</h2>
+                    {weakestKey && <span className="hubx-sec-note">{t.performanceNote}</span>}
                 </div>
 
-                <div className="hubx-kpis" aria-label="ملخص أدائك">
-                    {tiles.map((t) => (
-                        <div className={`hubx-kpi${loading ? ' is-loading' : ''}`} key={t.k}>
-                            <span className="hubx-kpi-icon"><Icon name={t.icon} size={15} /></span>
-                            <span className="hubx-kpi-value"><bdi>{loading ? '' : t.value}</bdi></span>
-                            <span className="hubx-kpi-label">{t.label}</span>
+                <div className="hubx-kpis" aria-label={t.kpiSummary}>
+                    {tiles.map((tile) => (
+                        <div className={`hubx-kpi${loading ? ' is-loading' : ''}`} key={tile.k}>
+                            <span className="hubx-kpi-icon"><Icon name={tile.icon} size={15} /></span>
+                            <span className="hubx-kpi-value"><bdi>{loading ? '' : tile.value}</bdi></span>
+                            <span className="hubx-kpi-label">{tile.label}</span>
                         </div>
                     ))}
                 </div>
 
                 {state === 'error' ? (
                     <div className="hubx-inline-error">
-                        <p>تعذّر تحميل بياناتك.</p>
+                        <p>{t.loadError}</p>
                         <button type="button" className="hubx-retry" onClick={load}>
-                            <Icon name="refresh" size={15} /> إعادة المحاولة
+                            <Icon name="refresh" size={15} /> {t.retry}
                         </button>
                     </div>
                 ) : (
@@ -323,7 +332,7 @@ const QUIZS = () => {
                             return (
                                 <li className={`hubx-spec${isWeak ? ' is-weak' : ''}${started ? '' : ' is-empty'}`} key={r.key}>
                                     <span className="hubx-spec-ring" role="img"
-                                        aria-label={started ? `${r.label}: دقة ${r.accuracy} بالمئة من ${r.answered} سؤال` : `${r.label}: لم تبدأ بعد`}>
+                                        aria-label={started ? t.specAria(r.label, r.accuracy, r.answered) : t.specAriaEmpty(r.label)}>
                                         <svg viewBox="0 0 64 64" aria-hidden="true">
                                             <circle className="hubx-ring-bg" cx="32" cy="32" r="26" />
                                             <circle className="hubx-ring-fg" cx="32" cy="32" r="26"
@@ -337,16 +346,16 @@ const QUIZS = () => {
                                         <Icon name={r.icon} size={15} /> {r.label}
                                     </span>
                                     <span className="hubx-spec-sub">
-                                        {loading ? <span className="hubx-skel" /> : started ? <><bdi>{fmt(r.answered)}</bdi> سؤال</> : 'لم تبدأ بعد'}
+                                        {loading ? <span className="hubx-skel" /> : started ? <><bdi>{fmt(r.answered)}</bdi> {t.specQuestions}</> : t.specNotStarted}
                                     </span>
-                                    {isWeak && <span className="hubx-tag">أضعف تخصص</span>}
+                                    {isWeak && <span className="hubx-tag">{t.weakest}</span>}
                                     <button
                                         type="button"
                                         className="hubx-practise"
                                         onClick={() => startQuiz(r.key)}
                                         disabled={!r.available}
                                     >
-                                        {!r.available ? 'قريباً' : started ? 'تدرّب' : 'ابدأ'}
+                                        {!r.available ? t.soon : started ? t.practise : t.start}
                                     </button>
                                 </li>
                             );
@@ -355,7 +364,7 @@ const QUIZS = () => {
                 )}
 
                 {!loading && state !== 'error' && !hasHistory && (
-                    <p className="hubx-empty">لم تبدأ أي اختبار بعد — أول اختبار يملأ هذه اللوحة ببياناتك.</p>
+                    <p className="hubx-empty">{t.noHistory}</p>
                 )}
             </section>
 
@@ -363,7 +372,7 @@ const QUIZS = () => {
 
             <button className="suggestions-btn" onClick={() => navigate('/suggestions')}>
                 <span className="suggestions-icon"><Icon name="lightbulb" size={18} /></span>
-                <span>الاقتراحات</span>
+                <span>{t.suggestions}</span>
             </button>
         </div>
     );

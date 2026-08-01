@@ -5,37 +5,24 @@ import Globals from '../../global.js';
 import { UserContext } from '../../UserContext';
 import Spinner from '../common/Spinner.jsx';
 import Icon from '../common/Icon.jsx';
+import { useCopy, useLang } from '../../i18n';
+import supportCopy from '../../i18n/copy/support.js';
 // Same shared card shell as Subscribe — the callback URL is often opened as a
 // fresh page load, so Login.css cannot be assumed to be in the bundle already.
 import '../login/Login.css';
 import './Subscribe.css';
 
-function reasonToArabic(reason) {
-    switch (reason) {
-        case 'not_paid':
-            return 'لم تكتمل عملية الدفع. لم يتم خصم أي مبلغ.';
-        case 'amount_mismatch':
-            return 'قيمة الدفع غير مطابقة لقيمة الاشتراك.';
-        case 'currency_mismatch':
-            return 'عملة الدفع غير صحيحة.';
-        case 'account_mismatch':
-            return 'عملية الدفع لا تخص هذا الحساب.';
-        default:
-            return 'تعذّر التحقق من عملية الدفع. إذا تم خصم المبلغ تواصل مع الدعم.';
-    }
-}
-
 const PaymentCallback = () => {
     const { user, sessionToken, setUser } = useContext(UserContext);
     const navigate = useNavigate();
+    const t = useCopy(supportCopy).callback;
+    const { dir } = useLang();
+    // The server returns a stable reason code; the wording is ours.
+    const reasonText = (reason) => t.reasons[reason] || t.reasons.default;
     const [params] = useSearchParams();
     const [state, setState] = useState('verifying'); // verifying | success | failed
     const [message, setMessage] = useState('');
     const ranRef = useRef(false);
-
-    useEffect(() => {
-        document.documentElement.dir = 'rtl';
-    }, []);
 
     useEffect(() => {
         if (ranRef.current) return;
@@ -51,12 +38,12 @@ const PaymentCallback = () => {
 
         if (!paymentId) {
             setState('failed');
-            setMessage('لم نتمكن من العثور على معلومات عملية الدفع.');
+            setMessage(t.noPaymentInfo);
             return;
         }
         if (moyasarStatus && moyasarStatus !== 'paid') {
             setState('failed');
-            setMessage(params.get('message') || reasonToArabic('not_paid'));
+            setMessage(params.get('message') || reasonText('not_paid'));
             return;
         }
 
@@ -73,28 +60,28 @@ const PaymentCallback = () => {
                     // Persist so RequireAuth lets the user into the app immediately.
                     setUser({ ...user, accessAllowed: true, subscription_status: 'active' }, sessionToken);
                     setState('success');
-                    setMessage('تم تفعيل اشتراكك بنجاح! وصول كامل لمدة سنة.');
+                    setMessage(t.successMessage);
                     setTimeout(() => navigate('/quizs', { replace: true }), 1800);
                 } else {
                     setState('failed');
-                    setMessage(reasonToArabic(data.reason));
+                    setMessage(reasonText(data.reason));
                 }
             } catch (err) {
                 setState('failed');
-                setMessage(reasonToArabic(err.response?.data?.reason));
+                setMessage(reasonText(err.response?.data?.reason));
             }
         })();
     }, [user, sessionToken, params, navigate, setUser]);
 
     return (
-        <div className="login-body" dir="rtl">
+        <div className="login-body" dir={dir}>
             <div className="login-wrapper">
                 <div className="login-card subscribe-card">
                     {state === 'verifying' && (
                         <div className="subscribe-result">
                             <Spinner size="lg" />
-                            <h2>جاري التحقق من الدفع...</h2>
-                            <p>لحظات من فضلك، لا تغلق هذه الصفحة.</p>
+                            <h2>{t.verifyingTitle}</h2>
+                            <p>{t.verifyingBody}</p>
                         </div>
                     )}
 
@@ -103,9 +90,9 @@ const PaymentCallback = () => {
                             <div className="subscribe-result-icon success">
                                 <Icon name="check-circle" size={64} />
                             </div>
-                            <h2>تم تفعيل الاشتراك</h2>
+                            <h2>{t.successTitle}</h2>
                             <p>{message}</p>
-                            <p>جاري تحويلك إلى المنصة...</p>
+                            <p>{t.redirecting}</p>
                         </div>
                     )}
 
@@ -114,14 +101,14 @@ const PaymentCallback = () => {
                             <div className="subscribe-result-icon failed">
                                 <Icon name="x-circle" size={64} />
                             </div>
-                            <h2>تعذّر إتمام العملية</h2>
+                            <h2>{t.failedTitle}</h2>
                             <p>{message}</p>
                             <button
                                 className="btn primary large"
                                 style={{ marginTop: 8 }}
                                 onClick={() => navigate('/subscribe', { replace: true })}
                             >
-                                إعادة المحاولة
+                                {t.retry}
                             </button>
                         </div>
                     )}

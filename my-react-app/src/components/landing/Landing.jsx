@@ -1,235 +1,50 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { track } from '@vercel/analytics';
 import Icon from '../common/Icon.jsx';
 import HeroArt from './HeroArt.jsx';
 import InstallPrompt, { InstallGuideSection } from '../common/InstallPrompt.jsx';
 import { UserContext } from '../../UserContext';
-import { TRACKS, MEDICAL, NURSING } from '../../utils/tracks.js';
+import { TRACKS, MEDICAL, NURSING, pick } from '../../utils/tracks.js';
+import { useCopy, useLang, LanguageToggle } from '../../i18n';
+import landingCopy from '../../i18n/copy/landing.js';
 import './Landing.css';
-
-/**
- * The two student populations the platform serves. `ready` reflects whether the
- * track's question bank and summaries are actually loaded — stated plainly
- * rather than hidden, so nobody subscribes expecting content that isn't there.
- * Both tracks have been live since July 2026.
- */
-const studyTracks = [
-  {
-    key: MEDICAL,
-    icon: TRACKS[MEDICAL].icon,
-    title: 'طب بشري',
-    exam: TRACKS[MEDICAL].examAr,
-    desc: 'بنك أسئلة وملخصات كاملة للباطنة والجراحة والأطفال والنساء والولادة.',
-    specialties: TRACKS[MEDICAL].specialties.map((sp) => sp.labelAr),
-    ready: true,
-  },
-  {
-    key: NURSING,
-    icon: TRACKS[NURSING].icon,
-    title: 'تمريض',
-    exam: TRACKS[NURSING].examAr,
-    desc: 'مسار مستقل بأسئلته وملخصاته وتحليلات أدائه الخاصة — منفصل تماماً عن مسار الطب.',
-    specialties: TRACKS[NURSING].specialties.map((sp) => sp.labelAr),
-    ready: true,
-  },
-];
-
-const stats = [
-  { label: 'محدّث لنمط الاختبار', value: '2026' },
-  { label: 'تغطية لمواضيع الاختبار', value: '100%' },
-  { label: 'من الطلاب بدرجات عالية', value: 'مئات' },
-  { label: 'السنة كاملة', value: '99 ريال' }
-];
-
-const features = [
-  {
-    icon: 'book-open',
-    title: 'تغطية كاملة لاختبارك',
-    desc: 'بنك أسئلة منسق وفق أحدث مخطط برومترك — SMLE للطب البشري وSNLE للتمريض.'
-  },
-  {
-    icon: 'trending-up',
-    title: 'تحليلات موجهة',
-    desc: 'تتبع نقاط الضعف والسرعة والدقة عبر لوحات واضحة.'
-  },
-  {
-    icon: 'target',
-    title: 'تدريب متكيف',
-    desc: 'تمارين موجهة، محاكاة زمنية، ومراجعة ذكية.'
-  },
-  {
-    icon: 'brain',
-    title: 'تفكير سريري',
-    desc: 'سيناريوهات سريرية تركز على اتخاذ القرار لا الحفظ.'
-  }
-];
-
-const steps = [
-  {
-    label: 'أنشئ حسابك وأكّد بريدك',
-    hint: 'تحصل فوراً على ساعة وصول كامل مجاناً لتجربة كل شيء.'
-  },
-  {
-    label: 'تمرن بدقة',
-    hint: 'اختر المواضيع، اضبط الوقت، وركّز على المهارات المطلوبة.'
-  },
-  {
-    label: 'راجع وتحسّن',
-    hint: 'تحليلات فورية، سلاسل إنجاز، وتوصيات مخصصة.'
-  }
-];
-
-const included = [
-  'بنك أسئلة شامل محدّث بنمط اختبارك — SMLE أو SNLE — مع تجميعات جديدة باستمرار',
-  'تفسير واضح لكل إجابة — تعرف لماذا هي الصحيحة، ولماذا البقية خطأ',
-  'ملخصات مركّزة للمواضيع عالية التكرار بدل تشتت الملفات والمصادر',
-  'اختبارات محاكية بتوقيت حقيقي تهيّئك لأجواء الاختبار الفعلي',
-  'لوحة تحليلات تكشف نقاط ضعفك وتعيد تدريبك عليها تلقائياً',
-  'مراجعة أسئلتك الخاطئة في أي وقت حتى تتقنها',
-  'يعمل على الجوال والكمبيوتر، وتقدّمك محفوظ ومتزامن دائماً'
-];
-
-const valuePoints = [
-  {
-    icon: 'award',
-    title: 'استثمار صغير، عائد كبير',
-    desc: 'رسوم دخول الاختبار وإعادته تتجاوز مئات الريالات، ودورات التحضير تكلف آلافاً. اشتراك SQB يكلف 99 ريالاً فقط للسنة كاملة — أقل من ريالين في الأسبوع.'
-  },
-  {
-    icon: 'check-circle',
-    title: 'دفع آمن وبدون التزامات',
-    desc: 'دفعة واحدة عبر بوابة ميسر السعودية المرخّصة (مدى، Visa، Mastercard). بدون تجديد تلقائي وبدون رسوم مخفية — سنة كاملة من الوصول غير المحدود.'
-  },
-  {
-    icon: 'refresh',
-    title: 'محتوى لا يتوقف عن التحديث',
-    desc: 'نضيف تجميعات جديدة تواكب أحدث نمط لأسئلة الهيئة السعودية، فتتدرب دائماً على الأقرب لما ستراه في اختبارك.'
-  },
-  {
-    icon: 'users',
-    title: 'انضم إلى مئات الناجحين',
-    desc: 'مئات الطلاب تدرّبوا على المنصة واجتازوا اختبار الترخيص بدرجات عالية. تدرّب على نفس الأسئلة التي صنعت نتائجهم.'
-  }
-];
-
-const seoTopics = [
-  {
-    title: 'تحضير منظم لاختبار SMLE',
-    desc: 'ابدأ بجلسات قصيرة أو طويلة حسب وقتك، وراجع أداءك حسب التخصص والموضوع.'
-  },
-  {
-    title: 'تحضير لاختبار التمريض SNLE',
-    desc: 'مسار تمريض كامل ومستقل: أساسيات التمريض، الباطني والجراحي، الأمومة والمواليد، الأطفال، الصحة النفسية، والأدوية وحسابات الجرعات.'
-  },
-  {
-    title: 'مراجعة نقاط الضعف بسرعة',
-    desc: 'اعرف أين تخطئ، وارجع إلى الأسئلة الخاطئة، وركّز على المواضيع التي تحتاج إلى عمل فعلي.'
-  },
-  {
-    title: 'تجميعات محدّثة لأسئلة البرومترك',
-    desc: 'بنك أسئلة شامل مع تجميعات محدّثة تواكب أحدث نمط أسئلة اختبار الهيئة السعودية للتخصصات الصحية.'
-  }
-];
-
-const purchaseFaq = [
-  {
-    q: 'كيف تعمل التجربة المجانية؟',
-    a: 'أنشئ حسابك وأكّد بريدك لتحصل فوراً على ساعة وصول كامل لكل الأسئلة والتحليلات — بدون بطاقة دفع.'
-  },
-  {
-    q: 'هل يوجد تجديد تلقائي أو رسوم خفية؟',
-    a: 'لا. تدفع 99 ريالاً مرة واحدة وتحصل على سنة كاملة — لن يُخصم منك أي مبلغ آخر تلقائياً.'
-  },
-  {
-    q: 'كيف أدفع؟ وهل الدفع آمن؟',
-    a: 'الدفع عبر بوابة ميسر السعودية المرخّصة، ويدعم مدى وVisa وMastercard وApple Pay — لا نخزّن بيانات بطاقتك إطلاقاً.'
-  },
-  {
-    q: 'هل الأسئلة محدّثة لنمط اختبار 2026؟',
-    a: 'نعم — بنك الطب البشري محدّث بالكامل لنمط Midgard & Gameboy 2026، وبنك التمريض مبني على أحدث مراجعة معتمدة لاختبار SNLE. وتُضاف تجميعات جديدة باستمرار.'
-  },
-  {
-    q: 'هل يشمل الاشتراك مسار التمريض أيضاً؟',
-    a: 'نعم — نفس السعر لكلا المسارين. تختار مسارك (طب بشري أو تمريض) عند إنشاء الحساب، وكل الأسئلة والملخصات والتحليلات تكون خاصة بمسارك وحده.'
-  }
-];
-
-const compareRows = [
-  {
-    label: 'التكلفة',
-    sqb: '99 ريالاً للسنة كاملة',
-    files: 'مجانية لكن مبعثرة وغير موثوقة',
-    courses: 'آلاف الريالات'
-  },
-  {
-    label: 'تحديث المحتوى',
-    sqb: 'تجميعات شهرية مدقّقة',
-    files: 'غير منتظم وبدون تدقيق',
-    courses: 'ينتهي بانتهاء الدورة'
-  },
-  {
-    label: 'شرح الإجابات',
-    sqb: 'تفسير لكل سؤال',
-    files: 'إجابات بلا شرح غالباً',
-    courses: 'يعتمد على المحاضر'
-  },
-  {
-    label: 'تحليل الأداء والأخطاء',
-    sqb: 'تحليلات تلقائية بعد كل جلسة',
-    files: 'يدوي — إن وُجد',
-    courses: 'غير متوفر غالباً'
-  },
-  {
-    label: 'مدة الوصول',
-    sqb: 'سنة كاملة، من أي جهاز',
-    files: 'روابط تنتهي وملفات تضيع',
-    courses: 'فترة محدودة'
-  }
-];
-
-const newsItems = [
-  {
-    icon: 'shield-check',
-    title: 'إطلاق مسار التمريض SNLE',
-    desc: 'مسار التمريض صار متاحاً بالكامل: بنك أسئلة مستقل وملخصات مصوّرة تغطي أساسيات التمريض، والتمريض الباطني والجراحي، وتمريض الأمومة والمواليد، وتمريض الأطفال، والصحة النفسية، والأدوية وحسابات الجرعات — مع تحليل أداء خاص بالمسار. اختر «تمريض» عند إنشاء حسابك.',
-    date: '31 يوليو 2026'
-  },
-  {
-    icon: 'sparkles',
-    title: 'صور طبية حقيقية داخل الملخصات',
-    desc: 'الملخصات صارت مصوّرة بأشعة وصور مجهرية ورسوم تشريحية حقيقية — علامة الـSteeple في الخانوق، وعلامة الإبهام في التهاب لسان المزمار، والنزف فوق وتحت الجافية على الأشعة المقطعية، وبلورات النقرس تحت الضوء المستقطب. مع مخططات جديدة في كل تخصص وأسئلة تفاعلية أكثر بعد كل ملخص.',
-    date: '25 يوليو 2026'
-  },
-  {
-    icon: 'phone',
-    title: 'اختصار SQB على شاشة جوالك',
-    desc: 'ثبّت SQB على الشاشة الرئيسية لجوالك وافتحه بضغطة واحدة كأي تطبيق — بدون متجر تطبيقات وبدون تحميل. الخطوات كاملة للآيفون والأندرويد في القسم التالي.',
-    date: '25 يوليو 2026'
-  },
-  {
-    icon: 'target',
-    title: 'تحديث الأسئلة لنمط 2026 Midgard & Gameboy',
-    desc: 'تمت مراجعة بنك الأسئلة وتحديثه بالكامل ليواكب أحدث نمط اختبار 2026 (Midgard & Gameboy)، لتتدرب على الأقرب لما ستراه فعلياً في الاختبار.',
-    date: '15 يوليو 2026'
-  },
-  {
-    icon: 'calendar',
-    title: 'إضافة التجميعات الشهرية لشهري 5 و6',
-    desc: 'انضمت التجميعات الشهرية الجديدة لشهر مايو ويونيو إلى بنك الأسئلة، بعد مراجعة وتدقيق كامل لكل سؤال.',
-    date: '15 يوليو 2026'
-  },
-  {
-    icon: 'book-open',
-    title: 'تطوير وتحديث الملخصات',
-    desc: 'أعدنا صياغة الملخصات وحدّثنا محتواها لتكون أكثر وضوحاً وتركيزاً على النقاط عالية الأهمية.',
-    date: '15 يوليو 2026'
-  }
-];
 
 const Landing = () => {
   const navigate = useNavigate();
   const { user, sessionToken, logout } = useContext(UserContext);
+  const t = useCopy(landingCopy);
+  const { lang, dir } = useLang();
+
+  /**
+   * The two student populations the platform serves. `ready` reflects whether
+   * the track's question bank and summaries are actually loaded — stated
+   * plainly rather than hidden, so nobody subscribes expecting content that
+   * isn't there. Both tracks have been live since July 2026.
+   *
+   * Track and specialty names come from tracks.js so the landing page can never
+   * drift from what the signup picker and the quiz launcher call them.
+   */
+  const studyTracks = [
+    {
+      key: MEDICAL,
+      icon: TRACKS[MEDICAL].icon,
+      title: pick(TRACKS[MEDICAL].label, lang),
+      exam: pick(TRACKS[MEDICAL].exam, lang),
+      desc: t.tracks.medicalDesc,
+      specialties: TRACKS[MEDICAL].specialties.map((sp) => pick(sp.label, lang)),
+      ready: true,
+    },
+    {
+      key: NURSING,
+      icon: TRACKS[NURSING].icon,
+      title: pick(TRACKS[NURSING].label, lang),
+      exam: pick(TRACKS[NURSING].exam, lang),
+      desc: t.tracks.nursingDesc,
+      specialties: TRACKS[NURSING].specialties.map((sp) => pick(sp.label, lang)),
+      ready: true,
+    },
+  ];
 
   // Mirrors Navbar's definition so both agree on what counts as "logged in".
   const isAuthenticated = !!(user && user.id && sessionToken);
@@ -262,82 +77,74 @@ const Landing = () => {
     await logout();
   };
 
-  useEffect(() => {
-    const originalDir = document.documentElement.dir;
-    document.documentElement.dir = 'rtl';
-    return () => {
-      document.documentElement.dir = originalDir || 'ltr';
-    };
-  }, []);
-
   return (
     <>
       {/* Explicit dir: index.css sets body{direction:ltr}, which would cancel
           the documentElement dir for everything inside. */}
-      <div className="landing-body" dir="rtl" lang="ar">
+      <div className="landing-body" dir={dir} lang={lang}>
         <header className="landing-topbar">
           <span className="landing-brand">SQB</span>
-          {isAuthenticated ? (
-            <button className="btn ghost topbar-btn" onClick={handleContinue}>
-              حسابي
-            </button>
-          ) : (
-            <button className="btn ghost topbar-btn" onClick={handleLogin}>
-              تسجيل الدخول
-            </button>
-          )}
+          <div className="landing-topbar-actions">
+            {/* The landing page has its own topbar (no navbar on "/"), so the
+                language switch has to live here too — it is the first thing a
+                visitor in the wrong language needs. */}
+            <LanguageToggle compact />
+            {isAuthenticated ? (
+              <button className="btn ghost topbar-btn" onClick={handleContinue}>
+                {t.topbar.account}
+              </button>
+            ) : (
+              <button className="btn ghost topbar-btn" onClick={handleLogin}>
+                {t.topbar.login}
+              </button>
+            )}
+          </div>
         </header>
 
         <section className="hero">
-            <HeroArt />
-            {isAuthenticated ? (
-              <>
-                <span className="pill">مرحباً بعودتك</span>
-                <h1>أهلاً بك من جديد{user?.username ? <>، <bdi>{user.username}</bdi></> : ''}</h1>
-                <p>
-                  حسابك محفوظ على هذا الجهاز — تابع تدريبك من حيث توقفت، أو راجع تحليلاتك وواصل
-                  التحضير لاختبارك.
-                </p>
-                <div className="cta-row">
-                  <button className="btn primary" onClick={handleContinue}>
-                    متابعة إلى حسابي
-                  </button>
-                  <button className="btn ghost" onClick={handleLogout}>
-                    تسجيل الخروج
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <span className="pill">مساران: طب بشري وتمريض · جرّب كل شيء مجاناً لمدة ساعة</span>
-                <h1>تدرّب بذكاء، واجتَز اختبار الترخيص بثقة</h1>
-                <p>
-                  بنك أسئلة محدّث على نمط البرومترك، مع تفسير واضح لكل إجابة وتحليل فوري يكشف نقاط ضعفك
-                  ويرتّب أولويات مراجعتك — كل ما تحتاجه للوصول إلى درجتك المستهدفة في مكان واحد.
-                </p>
-                <div className="cta-row">
-                  <button className="btn primary" onClick={handleSignup}>
-                    سجّل وجرّب مجاناً لمدة ساعة
-                  </button>
-                  <button className="btn ghost" onClick={handleLogin}>
-                    تسجيل الدخول
-                  </button>
-                </div>
-                <ul className="hero-trust">
-                  <li>ساعة وصول كامل مجاناً بعد تأكيد بريدك</li>
-                  <li>99 ريال للسنة كاملة بعد التجربة</li>
-                  <li>تغطية كاملة لمواضيع الاختبار</li>
-                  <li>تفسير واضح لكل سؤال</li>
-                  <li>بدون تجديد تلقائي</li>
-                </ul>
-              </>
-            )}
+          <HeroArt />
+          {isAuthenticated ? (
+            <>
+              <span className="pill">{t.heroReturning.pill}</span>
+              <h1>
+                {user?.username
+                  ? <>{t.heroReturning.titlePrefix}<bdi>{user.username}</bdi></>
+                  : t.heroReturning.title}
+              </h1>
+              <p>{t.heroReturning.body}</p>
+              <div className="cta-row">
+                <button className="btn primary" onClick={handleContinue}>
+                  {t.heroReturning.primary}
+                </button>
+                <button className="btn ghost" onClick={handleLogout}>
+                  {t.heroReturning.secondary}
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <span className="pill">{t.hero.pill}</span>
+              <h1>{t.hero.title}</h1>
+              <p>{t.hero.body}</p>
+              <div className="cta-row">
+                <button className="btn primary" onClick={handleSignup}>
+                  {t.hero.primary}
+                </button>
+                <button className="btn ghost" onClick={handleLogin}>
+                  {t.hero.secondary}
+                </button>
+              </div>
+              <ul className="hero-trust">
+                {t.hero.trust.map((item) => <li key={item}>{item}</li>)}
+              </ul>
+            </>
+          )}
         </section>
 
         <div className="landing-shell">
 
-          <section className="stat-grid" aria-label="إحصائيات المنصة">
-            {stats.map((item) => (
+          <section className="stat-grid" aria-label={t.statsLabel}>
+            {t.stats.map((item) => (
               <article key={item.label} className="stat-card">
                 <div className="stat-value">{item.value}</div>
                 <div className="stat-label">{item.label}</div>
@@ -350,34 +157,28 @@ const Landing = () => {
               just as importantly, what the current state of their content is. */}
           <section className="tracks-section" aria-labelledby="tracks-h">
             <div className="section-head">
-              <p className="pill subtle">اختر مسارك عند التسجيل</p>
-              <h2 id="tracks-h">اختر تخصصك وابدأ</h2>
-              <p>
-                محتوى مخصّص لكل تخصص: لن يظهر لك إلا ما يخصّ اختبارك أنت.
-              </p>
+              <p className="pill subtle">{t.tracks.pill}</p>
+              <h2 id="tracks-h">{t.tracks.title}</h2>
+              <p>{t.tracks.body}</p>
             </div>
             <div className="tracks-grid">
-              {studyTracks.map((t) => (
-                <article key={t.key} className={`track-tile${t.ready ? '' : ' is-soon'}`}>
+              {studyTracks.map((st) => (
+                <article key={st.key} className={`track-tile${st.ready ? '' : ' is-soon'}`}>
                   <div className="track-tile-head">
-                    <span className="track-tile-icon"><Icon name={t.icon} size={22} /></span>
+                    <span className="track-tile-icon"><Icon name={st.icon} size={22} /></span>
                     <div>
-                      <h3>{t.title}</h3>
-                      <span className="track-tile-exam">{t.exam}</span>
+                      <h3>{st.title}</h3>
+                      <span className="track-tile-exam">{st.exam}</span>
                     </div>
-                    <span className={`track-tile-badge${t.ready ? '' : ' is-soon'}`}>
-                      {t.ready ? 'متاح الآن' : 'المحتوى قيد الإعداد'}
+                    <span className={`track-tile-badge${st.ready ? '' : ' is-soon'}`}>
+                      {st.ready ? t.tracks.ready : t.tracks.soon}
                     </span>
                   </div>
-                  <p className="track-tile-desc">{t.desc}</p>
+                  <p className="track-tile-desc">{st.desc}</p>
                   <ul className="track-tile-specs">
-                    {t.specialties.map((sp) => <li key={sp}>{sp}</li>)}
+                    {st.specialties.map((sp) => <li key={sp}>{sp}</li>)}
                   </ul>
-                  {!t.ready && (
-                    <p className="track-tile-note">
-                      يمكنك إنشاء حسابك على هذا المسار الآن، وسنبلغك بالبريد فور رفع المحتوى.
-                    </p>
-                  )}
+                  {!st.ready && <p className="track-tile-note">{t.tracks.soonNote}</p>}
                 </article>
               ))}
             </div>
@@ -385,14 +186,12 @@ const Landing = () => {
 
           <section className="feature-section">
             <div className="section-head">
-              <p className="pill subtle">كل الأدوات في مكان واحد</p>
-              <h2>كل ما تحتاجه لاجتياز الاختبار من أول محاولة</h2>
-              <p>
-                أسئلة محدّثة، وتفسير واضح لكل إجابة، وتحليلات ذكية — مصممة لتوصلك لدرجتك المستهدفة بأقل وقت وجهد.
-              </p>
+              <p className="pill subtle">{t.features.pill}</p>
+              <h2>{t.features.title}</h2>
+              <p>{t.features.body}</p>
             </div>
             <div className="feature-grid">
-              {features.map((feature) => (
+              {t.features.items.map((feature) => (
                 <div key={feature.title} className="feature-card">
                   <span className="feature-icon" aria-hidden="true"><Icon name={feature.icon} size={28} /></span>
                   <h3>{feature.title}</h3>
@@ -402,29 +201,26 @@ const Landing = () => {
             </div>
           </section>
 
-          <section className="compare-section" aria-label="مقارنة طرق التحضير">
+          <section className="compare-section" aria-label={t.compare.sectionLabel}>
             <div className="section-head">
-              <p className="pill subtle">قارن بنفسك</p>
-              <h2>لماذا SQB بدل الملفات المتناثرة والدورات المكلفة؟</h2>
-              <p>
-                معظم المتقدمين يجمعون تجميعات من مصادر متفرقة أو يدفعون آلاف الريالات لدورات تحضيرية.
-                إليك المقارنة الصريحة.
-              </p>
+              <p className="pill subtle">{t.compare.pill}</p>
+              <h2>{t.compare.title}</h2>
+              <p>{t.compare.body}</p>
             </div>
-            <div className="compare-scroll" role="region" aria-label="جدول المقارنة" tabIndex="0">
+            <div className="compare-scroll" role="region" aria-label={t.compare.tableLabel} tabIndex="0">
               <table className="compare-table">
                 <thead>
                   <tr>
-                    <th scope="col">وجه المقارنة</th>
+                    <th scope="col">{t.compare.colAspect}</th>
                     <th scope="col" className="compare-sqb-col">
-                      منصة SQB <span className="compare-badge">الخيار الذكي</span>
+                      {t.compare.colSqb} <span className="compare-badge">{t.compare.badge}</span>
                     </th>
-                    <th scope="col">ملفات وتجميعات متناثرة</th>
-                    <th scope="col">الدورات التحضيرية</th>
+                    <th scope="col">{t.compare.colFiles}</th>
+                    <th scope="col">{t.compare.colCourses}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {compareRows.map((row) => (
+                  {t.compare.rows.map((row) => (
                     <tr key={row.label}>
                       <th scope="row">{row.label}</th>
                       <td className="compare-sqb-col"><Icon name="check-circle" size={16} aria-hidden="true" /> {row.sqb}</td>
@@ -435,22 +231,19 @@ const Landing = () => {
                 </tbody>
               </table>
             </div>
-            <p className="compare-hint" aria-hidden="true">اسحب الجدول جانبياً لعرض المقارنة كاملة</p>
+            <p className="compare-hint" aria-hidden="true">{t.compare.hint}</p>
           </section>
 
-          <section className="value-section" aria-label="الاشتراك والأسعار">
+          <section className="value-section" aria-label={t.value.sectionLabel}>
             <div className="section-head">
-              <p className="pill subtle">لماذا الاشتراك؟</p>
-              <h2>كل تحضيرك لاختبار الترخيص مقابل 99 ريالاً في السنة</h2>
-              <p>
-                نجاحك في الاختبار يفتح لك باب التدريب والوظيفة — والرسوب يكلفك رسوم إعادة، وشهوراً
-                من الانتظار، وضغطاً أنت في غنى عنه. صُممت SQB لتوصلك لدرجتك المستهدفة من أول محاولة.
-              </p>
+              <p className="pill subtle">{t.value.pill}</p>
+              <h2>{t.value.title}</h2>
+              <p>{t.value.body}</p>
             </div>
 
             <div className="value-grid">
               <div className="value-points">
-                {valuePoints.map((point) => (
+                {t.value.points.map((point) => (
                   <div key={point.title} className="value-point">
                     <span className="feature-icon" aria-hidden="true"><Icon name={point.icon} size={24} /></span>
                     <div>
@@ -461,56 +254,52 @@ const Landing = () => {
                 ))}
               </div>
 
-              <aside className="price-card" aria-label="تفاصيل الاشتراك">
-                <p className="price-card-plan">اشتراك سنوي — دفعة واحدة</p>
+              <aside className="price-card" aria-label={t.value.priceCardLabel}>
+                <p className="price-card-plan">{t.value.plan}</p>
                 <div className="price-card-amount">
-                  <span className="price-card-value">99</span>
-                  <span className="price-card-cur">ريال / سنة</span>
+                  <span className="price-card-value">{t.value.amount}</span>
+                  <span className="price-card-cur">{t.value.currency}</span>
                 </div>
-                <p className="price-card-permonth">أي أقل من ريالين في الأسبوع — أرخص من كوب قهوة</p>
+                <p className="price-card-permonth">{t.value.perMonth}</p>
                 <ul className="price-card-list">
-                  {included.map((item) => (
+                  {t.value.included.map((item) => (
                     <li key={item}>{item}</li>
                   ))}
                 </ul>
                 <button className="btn primary price-card-cta" onClick={handleSignup}>
-                  ابدأ بساعة مجانية
+                  {t.value.cta}
                 </button>
-                <p className="price-card-note">
-                  ساعة تجربة مجانية أولاً · دفع آمن عبر ميسر · مدى / Visa / Mastercard / Apple Pay · بدون تجديد تلقائي
-                </p>
+                <p className="price-card-note">{t.value.note}</p>
               </aside>
             </div>
           </section>
 
-          <section className="faq-section" aria-label="أسئلة قبل الاشتراك">
+          <section className="faq-section" aria-label={t.faq.sectionLabel}>
             <div className="section-head">
-              <p className="pill subtle">قبل أن تشترك</p>
-              <h2>أسئلة تُطرح قبل الاشتراك</h2>
-              <p>إجابات مباشرة على أكثر ما يسأل عنه الطلاب قبل البدء.</p>
+              <p className="pill subtle">{t.faq.pill}</p>
+              <h2>{t.faq.title}</h2>
+              <p>{t.faq.body}</p>
             </div>
             <div className="purchase-faq-grid">
-              {purchaseFaq.map((item) => (
+              {t.faq.items.map((item) => (
                 <article key={item.q} className="purchase-faq-card">
                   <h3>{item.q}</h3>
                   <p>{item.a}</p>
                 </article>
               ))}
             </div>
-            <Link to="/faq" className="faq-preview-link">عرض كل الأسئلة الشائعة</Link>
+            <Link to="/faq" className="faq-preview-link">{t.faq.link}</Link>
           </section>
 
           <section className="flow-section">
             <div className="flow-card">
               <div className="flow-head">
-                <p className="pill subtle">تدفق واضح</p>
-                <h2>ابدأ وتدرّب وراجع خلال دقائق</h2>
-                <p>
-                  مسار بسيط يقودك من إنشاء الحساب إلى جلسات المراجعة الذكية دون تشتيت.
-                </p>
+                <p className="pill subtle">{t.flow.pill}</p>
+                <h2>{t.flow.title}</h2>
+                <p>{t.flow.body}</p>
               </div>
               <div className="steps">
-                {steps.map((step, index) => (
+                {t.flow.steps.map((step, index) => (
                   <div key={step.label} className="step">
                     <div className="step-index">0{index + 1}</div>
                     <div>
@@ -523,14 +312,14 @@ const Landing = () => {
             </div>
           </section>
 
-          <section className="news-section" aria-label="آخر التحديثات">
+          <section className="news-section" aria-label={t.news.sectionLabel}>
             <div className="section-head">
-              <p className="pill subtle">جديد المنصة</p>
-              <h2>آخر التحديثات والإضافات</h2>
-              <p>نطوّر المنصة باستمرار — إليك آخر ما أضفناه وحدّثناه مؤخراً.</p>
+              <p className="pill subtle">{t.news.pill}</p>
+              <h2>{t.news.title}</h2>
+              <p>{t.news.body}</p>
             </div>
             <div className="news-list">
-              {newsItems.map((item) => (
+              {t.news.items.map((item) => (
                 <article key={item.title} className="news-item">
                   <span className="news-item-icon" aria-hidden="true"><Icon name={item.icon} size={22} /></span>
                   <div className="news-item-body">
@@ -550,45 +339,29 @@ const Landing = () => {
           <section className="resource-section">
             <div className="resource-card">
               <div className="section-head">
-                <p className="pill subtle">روابط أساسية</p>
-                <h2>صفحات تساعدك قبل البدء</h2>
-                <p>
-                  قبل إنشاء الحساب أو بدء التدريب، يمكنك قراءة مزيد من التفاصيل عن المنصة، الاطلاع على الأسئلة الشائعة،
-                  أو التواصل معنا مباشرة إذا كنت تحتاج مساعدة.
-                </p>
+                <p className="pill subtle">{t.resources.pill}</p>
+                <h2>{t.resources.title}</h2>
+                <p>{t.resources.body}</p>
               </div>
               <div className="resource-links">
-                <Link to="/about" className="resource-link-card">
-                  <h3>من نحن</h3>
-                  <p>تعرف على هدف SQB وما الذي تقدمه لطلاب الطب والتمريض والأطباء في السعودية.</p>
-                </Link>
-                <Link to="/guides" className="resource-link-card">
-                  <h3>أدلة التحضير</h3>
-                  <p>مقالات عملية عن خطة SMLE، مراجعة الأخطاء، وإدارة الوقت قبل الاختبار.</p>
-                </Link>
-                <Link to="/faq" className="resource-link-card">
-                  <h3>الأسئلة الشائعة</h3>
-                  <p>إجابات سريعة حول الحسابات، الاستخدام، والجوال وطبيعة بنك الأسئلة.</p>
-                </Link>
-                <Link to="/contact" className="resource-link-card">
-                  <h3>اتصل بنا</h3>
-                  <p>تواصل مع فريق SQB إذا احتجت دعماً أو كان لديك استفسار عن المنصة.</p>
-                </Link>
+                {t.resources.links.map((link) => (
+                  <Link key={link.to} to={link.to} className="resource-link-card">
+                    <h3>{link.title}</h3>
+                    <p>{link.desc}</p>
+                  </Link>
+                ))}
               </div>
             </div>
           </section>
 
           <section className="seo-section">
             <div className="section-head">
-              <p className="pill subtle">SMLE • SNLE • برومترك • السعودية</p>
-              <h2>محتوى موجّه لما يبحث عنه طلاب الطب والتمريض فعلاً</h2>
-              <p>
-                إذا كنت تبحث عن بنك أسئلة لاختبار الهيئة السعودية للتخصصات الصحية أو طريقة عملية للتحضير لاختبار البرومترك،
-                فهذه المنصة تجمع بين الأسئلة، التدرج في التدريب، والتحليل بعد كل جلسة.
-              </p>
+              <p className="pill subtle">{t.seo.pill}</p>
+              <h2>{t.seo.title}</h2>
+              <p>{t.seo.body}</p>
             </div>
             <div className="seo-grid">
-              {seoTopics.map((topic) => (
+              {t.seo.topics.map((topic) => (
                 <article key={topic.title} className="seo-card">
                   <h3>{topic.title}</h3>
                   <p>{topic.desc}</p>
@@ -602,20 +375,15 @@ const Landing = () => {
               <div>
                 {isAuthenticated ? (
                   <>
-                    <p className="pill subtle">جاهز لمتابعة التدريب؟</p>
-                    <h2>أكمل من حيث توقفت</h2>
-                    <p>
-                      حسابك متزامن وجاهز — عد إلى لوحتك وواصل التدريب أو راجع تحليلاتك.
-                    </p>
+                    <p className="pill subtle">{t.ctaBand.returning.pill}</p>
+                    <h2>{t.ctaBand.returning.title}</h2>
+                    <p>{t.ctaBand.returning.body}</p>
                   </>
                 ) : (
                   <>
-                    <p className="pill subtle">جاهز للبدء؟</p>
-                    <h2>كل يوم تأجيل هو يوم تدريب يكسبه غيرك عليك</h2>
-                    <p>
-                      أنشئ حسابك، أكّد بريدك، واحصل فوراً على ساعة وصول كامل مجاناً — انضم إلى
-                      مئات الطلاب الذين اجتازوا اختبارهم بعد التدريب هنا.
-                    </p>
+                    <p className="pill subtle">{t.ctaBand.visitor.pill}</p>
+                    <h2>{t.ctaBand.visitor.title}</h2>
+                    <p>{t.ctaBand.visitor.body}</p>
                   </>
                 )}
               </div>
@@ -623,23 +391,21 @@ const Landing = () => {
                 {isAuthenticated ? (
                   <>
                     <button className="btn primary" onClick={handleContinue}>
-                      الذهاب إلى حسابي
+                      {t.ctaBand.returning.primary}
                     </button>
                     <button className="btn outline" onClick={handleLogout}>
-                      تسجيل الخروج
+                      {t.ctaBand.returning.secondary}
                     </button>
                   </>
                 ) : (
                   <>
                     <button className="btn primary" onClick={handleSignup}>
-                      إنشاء حساب
+                      {t.ctaBand.visitor.primary}
                     </button>
                     <button className="btn outline" onClick={handleLogin}>
-                      تسجيل الدخول
+                      {t.ctaBand.visitor.secondary}
                     </button>
-                    <p className="cta-band-note">
-                      ساعة تجربة مجانية · ثم 99 ريال للسنة كاملة · دفع آمن عبر ميسر · بدون تجديد تلقائي
-                    </p>
+                    <p className="cta-band-note">{t.ctaBand.visitor.note}</p>
                   </>
                 )}
               </div>
@@ -651,19 +417,19 @@ const Landing = () => {
           {isAuthenticated ? (
             <>
               <button className="btn primary" onClick={handleContinue}>
-                متابعة
+                {t.mobileCta.continue}
               </button>
               <button className="btn outline" onClick={handleLogout}>
-                خروج
+                {t.mobileCta.logout}
               </button>
             </>
           ) : (
             <>
               <button className="btn primary" onClick={handleSignup}>
-                جرّب مجاناً لمدة ساعة
+                {t.mobileCta.tryFree}
               </button>
               <button className="btn outline" onClick={handleLogin}>
-                دخول
+                {t.mobileCta.login}
               </button>
             </>
           )}

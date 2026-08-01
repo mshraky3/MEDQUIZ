@@ -13,6 +13,8 @@ import QuizComplete from './QuizComplete';
 import Globals from '../../global.js';
 import { getSourceLabel } from '../../utils/sourceLabels';
 import { UserContext } from '../../UserContext';
+import { useCopy, useLang } from '../../i18n';
+import quizCopy from '../../i18n/copy/quiz.js';
 
 const isValidQuestion = (question) => {
   return (
@@ -27,6 +29,8 @@ const QUIZ = () => {
   const { numQuestions } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const t = useCopy(quizCopy).quiz;
+  const { lang, dir } = useLang();
   const id = location.state?.id;
   const [questions, setQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -135,7 +139,7 @@ const QUIZ = () => {
         if (isFinalQuiz) {
           // Final quiz is only for authenticated users
           if (!user || !sessionToken) {
-            setError("الاختبار النهائي متاح فقط للمستخدمين المسجلين.");
+            setError(t.errFinalAuth);
             setLoading(false);
             return;
           }
@@ -162,18 +166,18 @@ const QUIZ = () => {
           if (sanitizedQuestions.length > 0) {
             setQuestions(sanitizedQuestions);
           } else {
-            setError("تعذر تحميل الأسئلة بسبب بيانات غير صالحة.");
+            setError(t.errInvalidData);
           }
         } else if (response.data.completed) {
           // No unseen questions left because the whole category is finished —
           // show the completion screen instead of an error.
           setCategoryDone({ total: response.data.totalInCategory || 0 });
         } else {
-          setError("لم يتم إرجاع أي أسئلة.");
+          setError(t.errNoQuestions);
         }
       } catch (err) {
         console.error('Error fetching questions:', err);
-        setError("فشل في تحميل الأسئلة.");
+        setError(t.errLoadFailed);
         // Don't auto-redirect, let user retry
       } finally {
         setLoading(false);
@@ -207,7 +211,7 @@ const QUIZ = () => {
       setRetryCount(prev => prev + 1); // refetch — questions are available again
     } catch (err) {
       console.error('Error resetting category progress:', err);
-      setError('تعذر إعادة تعيين القسم. حاول مرة أخرى.');
+      setError(t.errResetFailed);
       setCategoryDone(null);
     } finally {
       setResettingCategory(false);
@@ -439,7 +443,7 @@ const QUIZ = () => {
   if (categoryDone) {
     return (
       <QuizComplete
-        sourceLabel={getSourceLabel(source)}
+        sourceLabel={getSourceLabel(source, lang)}
         total={categoryDone.total}
         resetting={resettingCategory}
         onRestart={handleResetCategory}
@@ -514,7 +518,7 @@ const QUIZ = () => {
   if (!isValidQuestion(currentQuestion)) {
     return (
       <ErrorScreen
-        message="حدث خلل أثناء تحميل السؤال الحالي. حاول إعادة المحاولة."
+        message={t.errInvalidData}
         navigate={navigate}
         id={id}
         onRetry={handleRetry}
@@ -542,10 +546,10 @@ const QUIZ = () => {
       {/* Unanswered Questions Popup */}
       {showUnansweredPopup && (
         <div className="unanswered-popup-overlay">
-          <div className="unanswered-popup" dir="rtl">
-            <h3><Icon name="alert-triangle" size={18} /> لديك {unansweredCount} أسئلة بدون إجابة</h3>
+          <div className="unanswered-popup" dir={dir}>
+            <h3><Icon name="alert-triangle" size={18} /> {t.unansweredTitle(unansweredCount)}</h3>
             <p className="redirect-message">
-              سننقلك لأول سؤال غير مُجاب خلال <span className="countdown">{countdown}</span>...
+              {t.unansweredRedirectBefore} <span className="countdown">{countdown}</span>...
             </p>
           </div>
         </div>
