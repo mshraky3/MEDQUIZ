@@ -1,0 +1,71 @@
+/* Language switch pill — deliberately quiet: it borrows the navbar's existing
+   ghost-button look rather than introducing a new accent, so adding it to
+   every page changes nothing about the visual hierarchy. */
+.lang-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 36px;
+    padding: 0 12px;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.lang-toggle-label {
+    /* Latin and Arabic glyphs have different metrics; a tiny nudge keeps the
+       label optically centred next to the globe in both. */
+    position: relative;
+    top: 0.5px;
+}
+
+/* Light navbar */
+.lang-toggle-light {
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    background: rgba(15, 23, 42, 0.04);
+    color: #475569;
+}
+
+.lang-toggle-light:hover {
+    background: rgba(59, 130, 246, 0.12);
+    border-color: rgba(59, 130, 246, 0.4);
+    color: #2563eb;
+}
+
+/* Dark landing topbar / footer */
+.lang-toggle-dark {
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.08);
+    color: #e2e8f0;
+}
+
+.lang-toggle-dark:hover {
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.4);
+    color: #ffffff;
+}
+
+.lang-toggle:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.35);
+}
+
+.lang-toggle-compact {
+    height: 32px;
+    padding: 0 10px;
+    gap: 4px;
+}
+
+@media (max-width: 480px) {
+    .lang-toggle {
+        height: 32px;
+        padding: 0 10px;
+        font-size: 12px;
+    }
+}

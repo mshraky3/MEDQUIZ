@@ -51,6 +51,7 @@ const PaymentCallback = lazy(() => import('./components/subscribe/PaymentCallbac
 
 import Globals from './global.js';
 import { UserProvider } from './UserContext.jsx';
+import { LanguageProvider, AdminShell, useCommon } from './i18n';
 
 import { initErrorTracking } from './utils/errorTracking.js';
 import { reloadOnceForStaleChunk } from './utils/staleChunkReload.js';
@@ -67,8 +68,9 @@ const getHostUrl = Globals.URL;
 
 // Wrap a lazily-loaded route element so its chunk can suspend while loading,
 // showing the one canonical spinner instead of a blank screen.
+const RouteFallback = () => <Spinner fullScreen label={useCommon().loading} />;
 const lazyEl = (node) => (
-  <Suspense fallback={<Spinner fullScreen label="جاري التحميل" />}>{node}</Suspense>
+  <Suspense fallback={<RouteFallback />}>{node}</Suspense>
 );
 
 // ---- Route builders --------------------------------------------------------
@@ -82,7 +84,8 @@ const lazyEl = (node) => (
 const withBoundary = (path, element) => ({ path, element, errorElement: <ErrorBoundary /> });
 const pub = (path, node) => withBoundary(path, <Layout>{lazyEl(node)}</Layout>);
 const authed = (path, node) => withBoundary(path, <Layout><RequireAuth>{lazyEl(node)}</RequireAuth></Layout>);
-const admin = (path, node) => withBoundary(path, <AdminGate>{lazyEl(node)}</AdminGate>);
+// Admin stays English/LTR regardless of the site language — AdminShell pins it.
+const admin = (path, node) => withBoundary(path, <AdminShell><AdminGate>{lazyEl(node)}</AdminGate></AdminShell>);
 
 const router = createBrowserRouter([
   // Landing — its own shell (own topbar/footer), so not wrapped in Layout.
@@ -133,10 +136,12 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <UserProvider>
-      <RouterProvider router={router} />
-      <CookieConsent />
-    </UserProvider>
+    <LanguageProvider>
+      <UserProvider>
+        <RouterProvider router={router} />
+        <CookieConsent />
+      </UserProvider>
+    </LanguageProvider>
   </StrictMode>,
 )
 

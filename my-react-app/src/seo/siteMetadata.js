@@ -567,6 +567,44 @@ const routeMap = {
     }
 };
 
+/**
+ * English overlay for the browser tab title and meta description.
+ *
+ * Deliberately NOT a full second SEO surface: canonical URLs, hreflang, JSON-LD
+ * and the prerendered HTML stay Arabic, because each page is indexed at exactly
+ * one URL and that URL's indexed language should not change based on a
+ * visitor's client-side toggle. This map only fixes what an English-reading
+ * visitor actually sees — the tab title and the share/description string.
+ */
+const enOverlay = {
+    '/': {
+        title: 'SQB | SMLE & SNLE Question Bank for Saudi Arabia',
+        description: 'SQB helps you prepare for the SMLE (medicine), the SNLE (nursing) and Prometric exams with a large question bank, performance analytics, mock exams and smart review.'
+    },
+    '/about': { title: 'About us | SQB', description: 'Who is behind SQB, what the platform offers, and how it helps you prepare for the SMLE, SNLE and Prometric exams.' },
+    '/faq': { title: 'Frequently asked questions | SQB', description: 'Answers to the most common questions about SQB: subscriptions, the question bank, the nursing track, refunds and support.' },
+    '/contact': { title: 'Contact us | SQB', description: 'Get in touch with the SQB team by email or WhatsApp for help, feedback or billing questions.' },
+    '/privacy': { title: 'Privacy Policy | SQB', description: 'How SQB collects, uses and protects your personal data.' },
+    '/terms': { title: 'Terms of Service | SQB', description: 'The terms that govern your use of the SQB platform.' },
+    '/refund-policy': { title: 'Refund Policy | SQB', description: 'When and how you can request a refund for an SQB subscription.' },
+    '/guides': { title: 'SMLE study guides | SQB', description: 'Practical guides for preparing for the SMLE: study plans, high-yield topics, and how to review your wrong questions.' },
+    '/guides/smle-study-plan': { title: 'The 12-week SMLE study plan | SQB', description: 'A week-by-week SMLE study plan you can actually follow, built around question practice and spaced review.' },
+    '/guides/wrong-questions-method': { title: 'How to review your wrong questions | SQB', description: 'A repeatable method for turning every wrong answer into a question you will never miss again.' },
+    '/guides/smle-vs-prometric-differences': { title: 'SMLE vs Prometric: the differences | SQB', description: 'What actually differs between the SMLE and Prometric exams, and what it means for how you prepare.' },
+    '/guides/smle-high-yield-topics': { title: 'High-yield SMLE topics | SQB', description: 'The topics that carry the most marks in the SMLE, and how much time each one deserves.' },
+    '/login': { title: 'Log in | SQB', description: 'Log in to your SQB account to continue studying.' },
+    '/signup': { title: 'Create a free account | SQB', description: 'Create an SQB account and start practising for the SMLE, SNLE and Prometric exams.' },
+    '/quizs': { title: 'Start a quiz | SQB', description: 'Choose how many questions to practise and which mode to use.' },
+    '/suggestions': { title: 'Suggestions and ideas | SQB', description: 'Send the SQB team your suggestions.' },
+    '/analysis': { title: 'Performance analytics | SQB', description: 'Your performance analytics inside SQB.' },
+    '/summaries': { title: 'Study material | SQB', description: 'Topic summaries inside SQB — members-only content.' },
+    '/summaries-detail': { title: 'Topic summary | SQB', description: 'A topic summary page — members-only content.' },
+    '/wrong-questions': { title: 'Review your wrong questions | SQB', description: 'Review the questions you got wrong.' },
+    '/signup-token': { title: 'Create an account | SQB', description: 'A personal invite link for creating an SQB account.' },
+    '/quiz-dynamic': { title: 'Quiz session | SQB', description: 'An SQB quiz session.' },
+    default: { title: 'SQB | SMLE & SNLE Question Bank', description: 'Prepare for the SMLE, SNLE and Prometric exams with a question bank and performance analytics.' }
+};
+
 function resolveRouteKey(pathname) {
     if (pathname.startsWith('/signup/')) {
         return '/signup-token';
@@ -583,21 +621,24 @@ function resolveRouteKey(pathname) {
     return routeMap[pathname] ? pathname : 'default';
 }
 
-export function getSeoConfig(pathname = '/') {
+export function getSeoConfig(pathname = '/', lang = 'ar') {
     const key = resolveRouteKey(pathname);
     const route = routeMap[key] || routeMap.default;
     const canonicalPath = route.canonicalPath || pathname;
+    // English visitors get an English tab title and description; everything
+    // else about the page's SEO identity stays as indexed. See enOverlay.
+    const overlay = (lang === 'en' && (enOverlay[key] || enOverlay.default)) || null;
+    const title = overlay?.title || route.title;
+    const description = overlay?.description || route.description;
 
     return {
-        title: route.title,
-        description: route.description,
+        title,
+        description,
         keywords: route.keywords,
         image: route.image || DEFAULT_IMAGE,
-        imageAlt: route.imageAlt || route.title,
+        imageAlt: route.imageAlt || title,
         url: makeUrl(canonicalPath),
         type: pathname === '/' ? 'website' : 'article',
-        lang: 'ar',
-        dir: 'rtl',
         siteName: SITE_NAME,
         robots: route.robots || DEFAULT_ROBOTS,
         locale: 'ar_SA',
