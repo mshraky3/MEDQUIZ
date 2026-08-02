@@ -52,6 +52,7 @@ async function notifyPaymentReceived(db, accountId, payment, expiryDate) {
         const card = payment?.source?.company ? String(payment.source.company).toUpperCase() : '—';
 
         await sendMail({
+            event: 'medqize.owner.payment_received',
             name: 'SQB Payments',
             to: OWNER_EMAIL,
             subject: `💰 Payment received — ${sarFmt(gross)} SAR from ${who} [${trackKey}]`,

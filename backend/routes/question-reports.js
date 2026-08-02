@@ -8,12 +8,13 @@ const router = express.Router();
 
 const ADMIN_EMAIL = OWNER_EMAIL;
 
-const sendEmail = async (to, subject, html) => {
+const sendEmail = async (to, subject, html, opts = {}) => {
     await sendMail({
         name: 'SQB',
         to,
         subject,
         html,
+        ...opts,
     });
 };
 
@@ -88,7 +89,8 @@ router.post('/', async (req, res) => {
     </td></tr>
   </table>
 </body>
-</html>`
+</html>`,
+                { event: 'medqize.owner.question_report_filed' }
             );
         } catch (emailErr) {
             console.error('[QuestionReports] Admin notification email failed:', emailErr);
@@ -214,7 +216,8 @@ router.put('/:id/resolve', adminAuth, async (req, res) => {
                     <p style="margin-top:20px;">Thank you for helping us improve the platform. Your contribution keeps the question bank accurate for everyone.</p>
                     <p style="color:#94a3b8;font-size:12px;margin-top:24px;">— The SQB Team</p>
                 </div>
-                `
+                `,
+                { event: 'medqize.question_report.corrected' }
             );
         } else {
             // Question is correct — just update report status
@@ -247,7 +250,8 @@ router.put('/:id/resolve', adminAuth, async (req, res) => {
                     ${admin_note ? `<p style="color:#64748b;font-size:13px;">Admin note: ${admin_note}</p>` : ''}
                     <p style="color:#94a3b8;font-size:12px;margin-top:24px;">— The SQB Team</p>
                 </div>
-                `
+                `,
+                { event: 'medqize.question_report.confirmed' }
             );
         }
 

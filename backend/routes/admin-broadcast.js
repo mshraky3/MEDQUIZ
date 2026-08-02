@@ -393,7 +393,7 @@ router.post('/campaigns/:id/test', adminAuth, async (req, res) => {
         const { rows: [c] } = await db.query(`SELECT * FROM broadcast_campaigns WHERE id = $1`, [req.params.id]);
         if (!c) return res.status(404).json({ success: false, message: 'Campaign not found.' });
         const html = renderEmail({ bodyHtml: c.body_html, accountId: null, username: null });
-        await sendMail({ name: 'SQB', to, subject: `[TEST] ${c.subject}`, html, text: htmlToText(c.body_html) });
+        await sendMail({ event: 'medqize.broadcast.test', name: 'SQB', to, subject: `[TEST] ${c.subject}`, html, text: htmlToText(c.body_html) });
         res.json({ success: true, message: `Test sent to ${to}` });
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });
@@ -526,6 +526,9 @@ async function sendOneBatch(db, c, take) {
         const r = claimed[i];
         try {
             await sendMail({
+                event: 'medqize.broadcast.campaign',
+                bulk: true,
+                idempotencyKey: `bcast:${c.id}:${r.email.toLowerCase()}`,
                 name: 'SQB',
                 to: r.email,
                 subject: c.subject,

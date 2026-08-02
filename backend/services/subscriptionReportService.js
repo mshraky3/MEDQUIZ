@@ -239,6 +239,8 @@ export async function sendSubscriptionReport(db, opts = {}) {
         </div>`;
 
     await sendMail({
+        // Carries a PDF, and goes to the owner.
+        event: 'medqize.owner.subscriptions_report',
         name: 'SQB Reports',
         to: REPORT_RECIPIENT,
         subject: `📈 Subscriptions Report — ${rows.length} new (${sar(totals.net)} SAR net) — ${dateTag}`,

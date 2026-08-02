@@ -262,6 +262,10 @@ export async function sendInvoiceEmail(payment) {
         }
         const pdf = await buildInvoicePdf(payment);
         await sendMail({
+            // Carries a PDF. The gateway takes attachments as base64 and
+            // mailer.js converts the Buffer below on the way out.
+            event: 'medqize.invoice',
+            idempotencyKey: `invoice:${number}`,
             name: 'SQB',
             to: payment.subscriber,
             subject: `🧾 فاتورة اشتراكك في SQB — ${number}`,

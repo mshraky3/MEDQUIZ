@@ -283,14 +283,22 @@ function ensurePaymentSchema() {
 ensurePaymentSchema();
 
 // Email notification functions (shared transport — see services/mailer.js)
-const sendEmail = async (to, subject, text, html = null) => {
+//
+// `opts` is optional and additive, so every existing call site keeps working
+// unchanged. Pass { event } where you can: the central gateway uses it to pick
+// the priority, decide whether the mail is digested, and route owner-facing
+// mail over Gmail (which costs no Resend quota). Omitting it is safe — the
+// gateway falls back to cautious defaults — but the rationing works better
+// when it knows what the message actually is.
+const sendEmail = async (to, subject, text, html = null, opts = {}) => {
     try {
         const result = await sendMail({
             name: 'SQB',
             to: to,
             subject: subject,
             text: text,
-            html: html
+            html: html,
+            ...opts,
         });
         logger.info('Email sent successfully', { messageId: result.messageId });
         return result;
@@ -448,7 +456,7 @@ This account has been activated and is ready for use.
                 <p><strong>Status:</strong> Active and ready for use</p>
             `;
 
-            await sendEmail(OWNER_EMAIL, emailSubject, emailText, emailHtml);
+            await sendEmail(OWNER_EMAIL, emailSubject, emailText, emailHtml, { event: 'medqize.owner.admin_account_created' });
             console.log('📧 Admin account creation email sent for user:', username);
         } catch (emailError) {
             console.error('❌ Failed to send admin account creation email:', emailError);
@@ -3882,7 +3890,7 @@ If you receive this email, the notification system is working correctly.
             <p>If you receive this email, the notification system is working correctly.</p>
         `;
 
-        await sendEmail(OWNER_EMAIL, emailSubject, emailText, emailHtml);
+        await sendEmail(OWNER_EMAIL, emailSubject, emailText, emailHtml, { event: 'medqize.owner.test_email' });
 
         res.status(200).json({
             success: true,
@@ -3952,7 +3960,10 @@ Please respond to the user as soon as possible.
                 <p>Please respond to the user as soon as possible.</p>
             `;
 
-            await sendEmail(OWNER_EMAIL, emailSubject, emailText, emailHtml);
+            await sendEmail(OWNER_EMAIL, emailSubject, emailText, emailHtml, {
+                event: 'medqize.owner.contact_form',
+                sourceOrigin: req.headers.referer || req.headers.origin,
+            });
             console.log('📧 Contact form email sent for:', name);
         } catch (emailError) {
             console.error('❌ Failed to send contact form email:', emailError);
@@ -4149,7 +4160,11 @@ app.post('/api/suggestions', async (req, res) => {
                 OWNER_EMAIL,
                 `💡 New Suggestion: ${title} [${req.body.track || 'unknown'}]`,
                 `New suggestion received:\n\nCategory: ${category}\nPriority: ${priority}\nTitle: ${title}\n\nDescription:\n${description}`,
-                emailHtml
+                emailHtml,
+                {
+                    event: 'medqize.owner.suggestion',
+                    sourceOrigin: req.headers.referer || req.headers.origin,
+                }
             );
             console.log('📧 Suggestion email sent for:', title);
         } catch (emailError) {
@@ -4558,7 +4573,13 @@ app.post('/api/auth/send-otp', async (req, res) => {
             ? `رمز تفعيل حسابك في SQB هو: ${otp} — صالح لمدة 5 دقائق. بعد التأكيد تبدأ ساعة تجربتك المجانية.`
             : `رمز إعادة تعيين كلمة المرور في SQB هو: ${otp} — صالح لمدة 5 دقائق.`;
 
-        await sendEmail(lowerEmail, subject, text, html);
+        // P0 on the gateway: sent inline, never queued behind bulk mail, and
+        // guaranteed a reserved slice of the daily budget.
+        await sendEmail(lowerEmail, subject, text, html, {
+            event: isSignup ? 'medqize.otp.signup' : 'medqize.otp.reset',
+            idempotencyKey: `otp:${lowerEmail}:${otp}`,
+            sourceOrigin: req.headers.referer || req.headers.origin,
+        });
 
         return res.status(200).json({ success: true, message: 'OTP sent successfully' });
 
@@ -4888,7 +4909,7 @@ app.post('/api/signup/temp-link', async (req, res) => {
             try {
                 const emailSubject = `🔗 Account Created via Temp Link - ${lowerEmail}`;
                 const emailText = `New account created via temp link:\nEmail: ${lowerEmail}\nUser ID: ${newUserId}\nTrack: ${trackLabelAr(linkTrack)}\nLink Token: ${token}\nCreated: ${new Date().toLocaleString()}\nLink Usage: ${link.current_uses + 1}/${link.max_uses}`;
-                await sendEmail(OWNER_EMAIL, emailSubject, emailText);
+                await sendEmail(OWNER_EMAIL, emailSubject, emailText, { event: 'medqize.owner.temp_link_account' });
             } catch (emailError) {
                 console.error('Failed to send temp link account creation email:', emailError);
             }

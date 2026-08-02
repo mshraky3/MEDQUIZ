@@ -18,13 +18,16 @@ const copyFor = (track) => {
     };
 };
 
-const sendEmail = async (to, subject, html, text) => {
+const sendEmail = async (to, subject, html, text, opts = {}) => {
   await sendMail({
     name: 'SQB',
     to,
     subject,
     text: text || '',
     html,
+    // Lifecycle mail is marketing, so an unsubscribe must apply to it.
+    bulk: true,
+    ...opts,
   });
 };
 
@@ -96,7 +99,7 @@ export const sendWelcomeEmail = async (to, username, track) => {
           </td>
         </tr>
     `);
-  await sendEmail(to, '🎉 أهلًا بك في SQB!', html, `أهلًا يا ${username}! يسعدنا انضمامك إلى SQB — مسار ${c.trackLabel}.`);
+  await sendEmail(to, '🎉 أهلًا بك في SQB!', html, `أهلًا يا ${username}! يسعدنا انضمامك إلى SQB — مسار ${c.trackLabel}.`, { event: 'medqize.lifecycle.welcome' });
 };
 
 // ─── 2. INACTIVITY EMAIL ───────────────────────────────────────────────────
@@ -149,7 +152,7 @@ export const sendInactivityEmail = async (to, username, track) => {
           </td>
         </tr>
     `);
-  await sendEmail(to, '📚 نفتقدك! الاختبار ينتظرك', html, `نفتقدك يا ${username}! عُد إلى SQB وأكمل مراجعتك.`);
+  await sendEmail(to, '📚 نفتقدك! الاختبار ينتظرك', html, `نفتقدك يا ${username}! عُد إلى SQB وأكمل مراجعتك.`, { event: 'medqize.lifecycle.inactivity' });
 };
 
 // ─── 3. STREAK REMINDER EMAIL ──────────────────────────────────────────────
@@ -193,7 +196,8 @@ export const sendStreakReminderEmail = async (to, username, currentStreak, track
     to,
     `🔥 لا تكسر سلسلتك! ${currentStreak} أيام متتالية`,
     html,
-    `سلسلتك ${currentStreak} أيام في خطر يا ${username}! أكمل جلستك اليوم على SQB.`
+    `سلسلتك ${currentStreak} أيام في خطر يا ${username}! أكمل جلستك اليوم على SQB.`,
+    { event: 'medqize.lifecycle.streak' }
   );
 };
 
@@ -230,5 +234,5 @@ export const sendFeedbackEmail = async (to, username, track) => {
           </td>
         </tr>
     `);
-  await sendEmail(to, `💬 رأيك يهمّنا — SQB ${c.trackLabel}`, html, `يا ${username}، رأيك يساعدنا على تحسين منصتنا. شاركنا اقتراحاتك!`);
+  await sendEmail(to, `💬 رأيك يهمّنا — SQB ${c.trackLabel}`, html, `يا ${username}، رأيك يساعدنا على تحسين منصتنا. شاركنا اقتراحاتك!`, { event: 'medqize.lifecycle.feedback' });
 };

@@ -187,6 +187,7 @@ async function main() {
 
     if (mode === 'preview') {
         await sendMail({
+            event: 'medqize.campaign.free_era_preview',
             name: 'SQB — بنك أسئلة SMLE',
             to: OWNER_EMAIL,
             subject: `[PREVIEW] ${SUBJECT}`,
@@ -217,6 +218,8 @@ async function main() {
     for (const t of emailable) {
         try {
             await sendMail({
+                event: 'medqize.campaign.free_era',
+                bulk: true,
                 name: 'SQB — بنك أسئلة SMLE',
                 to: t.email,
                 subject: SUBJECT,
