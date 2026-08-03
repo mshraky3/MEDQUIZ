@@ -1,0 +1,536 @@
+/* Live product showcase on the landing page.
+   Every "screen" here is markup, not an image — see ProductShowcase.jsx for
+   why. Animations are driven by the `.is-on` / `.is-visible` classes the
+   IntersectionObserver adds, so a visitor with prefers-reduced-motion (or no
+   IntersectionObserver) gets the finished state immediately rather than a
+   blank panel.
+
+   COLOUR: these panels are replicas of screens the visitor is about to be
+   shown, so they use the APP's palette, not a landing-page one — white cards
+   on #f6f9fe, #0f1e3d headings, #2563eb accents, the same #eef2f8/#2563eb ring
+   as GoalCard.css. They were previously slate-900 with cyan accents, which
+   made them dark islands on a white page AND misrepresented the product: the
+   app is light. The one deliberate exception is the radiograph in panel 3,
+   which is dark because radiographs are.
+
+   Logical properties throughout: the landing page renders RTL and LTR from
+   exactly these rules. */
+
+.ps-section { padding: 12px 0 8px; }
+
+.ps-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 64px;
+  margin-top: 40px;
+}
+
+.ps-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+  align-items: center;
+  gap: 40px;
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ps-row.is-visible { opacity: 1; transform: none; }
+
+/* Alternating sides. `direction` is untouched — only the visual order flips,
+   so the text stays on the natural reading side half the time in both
+   languages. */
+.ps-row.is-flipped .ps-copy { order: 2; }
+.ps-row.is-flipped .ps-visual { order: 1; }
+
+.ps-copy h3 {
+  margin: 12px 0 10px;
+  font-size: clamp(1.15rem, 2.4vw, 1.55rem);
+  font-weight: 800;
+  line-height: 1.4;
+  color: #0f1e3d;
+}
+
+.ps-copy p {
+  margin: 0;
+  font-size: 0.98rem;
+  line-height: 1.9;
+  color: #475569;
+}
+
+.ps-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.08);
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #2563eb;
+}
+
+/* ── The device frame ────────────────────────────────────────── */
+.ps-visual { position: relative; min-width: 0; }
+
+.ps-live-tag {
+  position: absolute;
+  inset-block-start: -12px;
+  inset-inline-end: 14px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid rgba(22, 163, 74, 0.35);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #15803d;
+}
+
+.ps-live-tag i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #16a34a;
+  animation: ps-pulse 2s ease-in-out infinite;
+}
+
+@keyframes ps-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+
+/* The card, at the app's own radius and border. The shadow is deeper than a
+   real in-app card's because this one is floating on a marketing page. */
+.ps-screen {
+  border-radius: 18px;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid #e6ecf6;
+  box-shadow: 0 18px 48px rgba(37, 99, 235, 0.12), 0 3px 10px rgba(15, 23, 42, 0.05);
+}
+
+.ps-screen-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  background: #f5f8fd;
+  border-bottom: 1px solid #e6ecf6;
+}
+
+.ps-screen-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  flex: 0 0 auto;
+}
+
+.ps-screen-title {
+  margin-inline-start: 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The app's page background, so the white rows inside sit on it exactly the
+   way cards sit on the real hub. */
+.ps-screen-body { padding: 16px 18px 18px; background: #f6f9fe; }
+
+/* ── Panel 1: quiz ───────────────────────────────────────────── */
+.ps-quiz-stem {
+  margin: 0 0 14px;
+  font-size: 0.86rem;
+  line-height: 1.75;
+  color: #1e293b;
+}
+
+.ps-quiz-options { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+
+/* Mirrors .option-button in Quiz/QUIZ.css: 2px hairline border, near-white
+   fill, slate text. */
+.ps-quiz-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 2px solid rgba(15, 23, 42, 0.09);
+  background: #ffffff;
+  font-size: 0.82rem;
+  color: #1e293b;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.45s ease, transform 0.45s ease, border-color 0.5s ease, background 0.5s ease;
+  /* Options stagger in, one after another. */
+  transition-delay: calc(var(--i) * 90ms);
+}
+
+.ps-quiz.is-on .ps-quiz-option { opacity: 1; transform: none; }
+
+.ps-quiz-key {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  border-radius: 6px;
+  background: #e8eefb;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #2563eb;
+}
+
+.ps-quiz-text { flex: 1 1 auto; min-width: 0; }
+
+.ps-quiz-check {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #16a34a;
+  color: #ffffff;
+  opacity: 0;
+  transform: scale(0.4);
+  transition: opacity 0.3s ease 0.9s, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) 0.9s;
+}
+
+/* The answer only turns green after the options have finished arriving —
+   the delay is what makes it read as "you answered", not "it was pre-marked". */
+.ps-quiz.is-on .ps-quiz-option.is-correct {
+  border-color: rgba(22, 163, 74, 0.45);
+  background: rgba(22, 163, 74, 0.07);
+  color: #14532d;
+  transition-delay: calc(var(--i) * 90ms), calc(var(--i) * 90ms), 0.85s, 0.85s;
+}
+
+.ps-quiz.is-on .ps-quiz-option.is-correct .ps-quiz-key { background: #16a34a; color: #ffffff; }
+.ps-quiz.is-on .ps-quiz-check { opacity: 1; transform: none; }
+
+.ps-quiz-explain {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(22, 163, 74, 0.06);
+  border: 1px solid rgba(22, 163, 74, 0.22);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.5s ease 1.15s, transform 0.5s ease 1.15s;
+}
+
+.ps-quiz.is-on .ps-quiz-explain { opacity: 1; transform: none; }
+
+.ps-quiz-tag {
+  display: inline-block;
+  margin-bottom: 6px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  color: #15803d;
+}
+
+.ps-quiz-explain p {
+  margin: 0;
+  font-size: 0.79rem;
+  line-height: 1.8;
+  color: #475569;
+}
+
+/* ── Panel 2: analysis rings ─────────────────────────────────── */
+.ps-rings {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.ps-ring {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+  min-width: 0;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  transition-delay: calc(var(--i) * 110ms);
+}
+
+.ps-analysis.is-on .ps-ring { opacity: 1; transform: none; }
+
+.ps-ring-svg { position: relative; display: inline-grid; place-items: center; width: 62px; height: 62px; }
+.ps-ring-svg svg { width: 62px; height: 62px; transform: rotate(-90deg); }
+
+/* Exactly GoalCard.css's .goalx-ring-bg / -fg: same track colour, same weight,
+   same cap, same blue. A visitor who signs up sees this identical ring. */
+.ps-ring-bg { fill: none; stroke: #eef2f8; stroke-width: 8; }
+
+.ps-ring-fg {
+  fill: none;
+  stroke: #2563eb;
+  stroke-width: 8;
+  stroke-linecap: round;
+  /* The fill sweep is the whole point of the panel, so it is the slowest
+     transition here and it waits for the tile to have arrived. */
+  transition: stroke-dashoffset 1.1s cubic-bezier(0.22, 1, 0.36, 1) 0.25s;
+}
+
+.ps-ring.is-weak .ps-ring-fg { stroke: #d97706; }
+
+.ps-ring-pct {
+  position: absolute;
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: #0f1e3d;
+}
+
+.ps-ring-label {
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: #64748b;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.ps-ring-tag {
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(217, 119, 6, 0.12);
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: #b45309;
+  white-space: nowrap;
+}
+
+.ps-analysis-foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #e6ecf6;
+}
+
+.ps-analysis-foot-label { font-size: 0.72rem; font-weight: 700; color: #64748b; white-space: nowrap; }
+.ps-analysis-foot-val { font-size: 0.8rem; font-weight: 800; color: #2563eb; }
+
+.ps-analysis-bar {
+  flex: 1 1 auto;
+  height: 7px;
+  border-radius: 999px;
+  background: #eef2f8;
+  overflow: hidden;
+}
+
+.ps-analysis-bar i {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #3b82f6, #2563eb);
+  transition: width 1.1s cubic-bezier(0.22, 1, 0.36, 1) 0.5s;
+}
+
+.ps-analysis.is-on .ps-analysis-bar i { width: var(--w); }
+
+/* ── Panel 3: annotation ─────────────────────────────────────── */
+.ps-tools { display: flex; gap: 6px; margin-bottom: 12px; }
+
+/* Copies .stb-btn from summaries/Summaries.css — the actual study toolbar —
+   at 30px instead of 36px, since the whole replica runs a little smaller than
+   life size. Same border colour, same radius, same blue active fill. */
+.ps-tool {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  border-radius: 9px;
+  border: 1px solid #d4deee;
+  background: #ffffff;
+  color: #475569;
+}
+
+.ps-tool.is-on { background: #3b82f6; border-color: #3b82f6; color: #ffffff; }
+
+/* The radiograph stays dark on purpose — a chest film is black, and a "light
+   themed" X-ray would be the one thing on this page that looks fake. */
+.ps-xray {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 14px;
+  border: 1px solid #e6ecf6;
+}
+
+.ps-xray-svg { display: block; width: 100%; height: auto; }
+
+/* The pen stroke draws itself. 130 comfortably exceeds the ellipse's
+   perimeter, so the dash fully clears the path at either end. */
+.ps-pen {
+  stroke-dasharray: 130;
+  stroke-dashoffset: 130;
+  transition: stroke-dashoffset 1.3s ease 0.5s;
+}
+
+.ps-annotate.is-on .ps-pen { stroke-dashoffset: 0; }
+
+/* Sits on the dark film, so this one label is deliberately light-on-dark. */
+.ps-xray-note {
+  position: absolute;
+  inset-block-end: 8px;
+  inset-inline-start: 10px;
+  padding: 3px 9px;
+  border-radius: 6px;
+  background: rgba(220, 38, 38, 0.88);
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: #ffffff;
+  opacity: 0;
+  transition: opacity 0.5s ease 1.6s;
+}
+
+.ps-annotate.is-on .ps-xray-note { opacity: 1; }
+
+.ps-highlight-line { position: relative; margin: 0 0 10px; display: inline-block; }
+
+/* The real highlighter, exactly: the amber from the study toolbar's colour
+   palette (#f59e0b) at the 0.32 alpha SummaryAnnotation.jsx strokes it with. */
+.ps-highlight-mark {
+  position: absolute;
+  inset-block: -2px;
+  inset-inline-start: -3px;
+  width: 0;
+  border-radius: 3px;
+  background: rgba(245, 158, 11, 0.32);
+  transition: width 0.9s ease 0.9s;
+}
+
+.ps-annotate.is-on .ps-highlight-mark { width: calc(100% + 6px); }
+
+.ps-highlight-text {
+  position: relative;
+  font-size: 0.83rem;
+  font-weight: 700;
+  color: #0f1e3d;
+}
+
+.ps-fake-line {
+  height: 7px;
+  width: var(--w);
+  margin: 0 0 7px;
+  border-radius: 999px;
+  background: #e4eaf5;
+}
+
+/* ── Panel 4: wrong questions ────────────────────────────────── */
+.ps-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  background: #ffffff;
+  color: #64748b;
+  margin-bottom: 12px;
+}
+
+/* The term types itself in: a width animation over an inline-block with
+   overflow hidden, which needs no JS timer and no per-character state. */
+.ps-search-typed {
+  display: inline-block;
+  max-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #0f1e3d;
+  transition: max-width 0.9s steps(12, end) 0.3s;
+}
+
+.ps-wrong.is-on .ps-search-typed { max-width: 12ch; }
+
+.ps-caret {
+  width: 1.5px;
+  height: 14px;
+  background: #2563eb;
+  animation: ps-blink 1.1s step-end infinite;
+}
+
+@keyframes ps-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+.ps-wrong-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+
+.ps-wrong-item {
+  padding: 11px 13px;
+  border-radius: 12px;
+  border: 1px solid #e6ecf6;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.45s ease, transform 0.45s ease;
+  /* Results land only after the search term has finished typing. */
+  transition-delay: calc(1.3s + var(--i) * 140ms);
+}
+
+.ps-wrong.is-on .ps-wrong-item { opacity: 1; transform: none; }
+
+.ps-wrong-q {
+  margin: 0 0 7px;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: #1e293b;
+}
+
+.ps-wrong-answers { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; }
+
+.ps-wrong-bad, .ps-wrong-good {
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.ps-wrong-bad { background: rgba(220, 38, 38, 0.10); color: #b91c1c; }
+.ps-wrong-good { background: rgba(22, 163, 74, 0.10); color: #15803d; }
+
+/* ── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 880px) {
+  .ps-rows { gap: 44px; margin-top: 30px; }
+  .ps-row { grid-template-columns: 1fr; gap: 22px; }
+  /* On one column the visual always follows its prose, whichever side it
+     would have taken on desktop. */
+  .ps-row.is-flipped .ps-copy,
+  .ps-row.is-flipped .ps-visual { order: initial; }
+  .ps-rings { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .ps-screen-body { padding: 14px 14px 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ps-row,
+  .ps-quiz-option,
+  .ps-quiz-check,
+  .ps-quiz-explain,
+  .ps-ring,
+  .ps-ring-fg,
+  .ps-analysis-bar i,
+  .ps-pen,
+  .ps-xray-note,
+  .ps-highlight-mark,
+  .ps-search-typed,
+  .ps-wrong-item {
+    transition: none !important;
+  }
+  .ps-live-tag i, .ps-caret { animation: none; }
+}

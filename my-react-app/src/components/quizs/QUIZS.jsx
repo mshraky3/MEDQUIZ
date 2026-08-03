@@ -8,6 +8,9 @@ import Globals from '../../global.js';
 
 import AchievementBadges from '../common/AchievementBadges.jsx';
 import Icon from '../common/Icon.jsx';
+import GoalCard from './GoalCard.jsx';
+import ExamDateCard from './ExamDateCard.jsx';
+import StreakCard from './StreakCard.jsx';
 import QuizLauncher from './QuizLauncher.jsx';
 import { UserContext } from '../../UserContext';
 import { getTypeLabel } from '../../utils/typeLabels';
@@ -48,6 +51,8 @@ const QUIZS = () => {
     const openLauncher = () => navigate({ pathname: '/quizs', search: '?view=custom' });
     const [stats, setStats] = useState(null);
     const [topics, setTopics] = useState([]);
+    // The whole /user-streaks payload, not just the count: StreakCard renders
+    // the last seven days from `active_days`, which a bare number cannot give.
     const [streak, setStreak] = useState(null);
     const [state, setState] = useState('loading'); // loading | ready | error
     // Null until the content check lands. Drives the empty state shown while a
@@ -108,7 +113,7 @@ const QUIZS = () => {
                 avg_accuracy: d.avg_accuracy || 0
             });
         }
-        if (streakRes.status === 'fulfilled') setStreak(streakRes.value.data.current_streak || 0);
+        if (streakRes.status === 'fulfilled') setStreak(streakRes.value.data || null);
         if (topicRes.status === 'fulfilled' && Array.isArray(topicRes.value.data)) setTopics(topicRes.value.data);
         setState(analysisRes.status === 'fulfilled' ? 'ready' : 'error');
     }, [id, user, setUser, sessionToken]);
@@ -204,11 +209,14 @@ const QUIZS = () => {
         ? null
         : (!hasHistory ? (summariesEmpty ? 'quiz' : 'summaries') : (weakestKey ? 'quiz' : 'analysis'));
 
+    // The streak used to be a fourth tile here. It moved to its own card above
+    // (StreakCard) because a streak is the one number on this page that needs
+    // a "is today done?" answer next to it — repeating it as a bare tile would
+    // just be the same figure twice.
     const tiles = [
         { k: 'acc', icon: 'target', value: hasHistory ? `${Math.round(stats.avg_accuracy)}%` : '—', label: t.kpiAccuracy },
         { k: 'quiz', icon: 'clipboard', value: hasHistory ? fmt(stats.total_quizzes) : '—', label: t.kpiQuizzes },
-        { k: 'q', icon: 'check-circle', value: hasHistory ? fmt(stats.total_questions_answered) : '—', label: t.kpiQuestions },
-        { k: 'streak', icon: 'flame', value: streak != null && streak > 0 ? fmt(streak) : '—', label: t.kpiStreak }
+        { k: 'q', icon: 'check-circle', value: hasHistory ? fmt(stats.total_questions_answered) : '—', label: t.kpiQuestions }
     ];
 
     return (
@@ -265,6 +273,38 @@ const QUIZS = () => {
                         </span>
                     </div>
                 </section>
+            )}
+
+            {/* Placed above the journey deliberately: a goal is a commitment
+                device, and "28 questions to go this week" is what turns an
+                open dashboard into a started quiz. Hidden while the bank is
+                empty — there is nothing to make progress against.
+
+                The exam date and the streak sit above the goal because they
+                are the two facts that frame it: how long you have, and whether
+                today has been used. */}
+            {!bankEmpty && user?.username && sessionToken && (
+                <>
+                    <div className="hub-cards-row">
+                        <ExamDateCard
+                            username={user.username}
+                            sessionToken={sessionToken}
+                            questionsRemaining={content?.totalQuestions || 0}
+                        />
+                        <StreakCard streak={streak} onStartToday={() => startQuiz('mix')} />
+                    </div>
+                    {/* `sources` comes from the content-status response rather
+                        than a constant, so the collection picker only ever
+                        offers collections this track actually has loaded — and
+                        stays hidden entirely for medical, whose bank is
+                        unified by design. */}
+                    <GoalCard
+                        username={user.username}
+                        sessionToken={sessionToken}
+                        specialties={SPECIALTIES}
+                        sources={content?.selectableSources || []}
+                    />
+                </>
             )}
 
             <nav className="hubx-journey" aria-labelledby="hubx-journey-h">

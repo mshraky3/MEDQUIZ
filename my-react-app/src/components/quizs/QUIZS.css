@@ -441,11 +441,16 @@
    start (right in Arabic) and the hover nudge follows the same direction. */
 .custom-checkbox-group label {
   position: relative;
-  padding: 14px 46px 14px 16px;
+  padding-block: 14px;
+  padding-inline-start: 46px;
+  padding-inline-end: 16px;
   cursor: pointer;
   font-size: 15px;
   color: var(--text);
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
   margin-bottom: 10px;
   text-align: start;
   user-select: none;
@@ -454,6 +459,22 @@
   border: 1.5px solid var(--border);
   border-radius: 12px;
   font-weight: 600;
+}
+
+.checkbox-type-count {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  background: rgba(37, 99, 235, 0.08);
+  border-radius: 999px;
+  padding: 2px 9px;
+  line-height: 1.6;
+}
+
+.custom-checkbox-group label:has(input:checked) .checkbox-type-count {
+  color: var(--accent-strong);
+  background: rgba(59, 130, 246, 0.14);
 }
 
 .custom-checkbox-group label:hover {
@@ -726,7 +747,9 @@
 
   .custom-checkbox-group label {
     font-size: 14px;
-    padding: 12px 16px;
+    padding-block: 12px;
+    padding-inline-start: 42px;
+    padding-inline-end: 16px;
   }
 
   .custom-source-btn {
@@ -756,7 +779,9 @@
 
   .custom-checkbox-group label {
     font-size: 13px;
-    padding: 10px 14px;
+    padding-block: 10px;
+    padding-inline-start: 38px;
+    padding-inline-end: 14px;
   }
 
   .custom-source-btn {
@@ -787,7 +812,9 @@
 
   .custom-checkbox-group label {
     font-size: 12px;
-    padding: 8px 12px;
+    padding-block: 8px;
+    padding-inline-start: 34px;
+    padding-inline-end: 12px;
   }
 
   .custom-source-btn {

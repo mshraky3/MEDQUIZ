@@ -52,6 +52,10 @@ const QuizLauncher = ({ id }) => {
     // The nursing bank has two — "Most Repeated" and "Confirmed" — and the
     // picker below only appears when there is genuinely a choice to make.
     const [sources, setSources] = useState([]);
+    // How much of each specialty this user has already answered, as a 0-100
+    // percentage straight from the server ({type: pct}) — shown as a small
+    // badge next to each checkbox so the user knows how much is left.
+    const [progressByType, setProgressByType] = useState({});
     // null = the whole bank (both collections mixed).
     const [selectedSource, setSelectedSource] = useState(null);
     const activeSource = selectedSource || WHOLE_BANK;
@@ -120,6 +124,7 @@ const QuizLauncher = ({ id }) => {
                 if (!alive || !res) return;
                 setBankEmpty(!res.data.hasQuestions);
                 setSources(Array.isArray(res.data.selectableSources) ? res.data.selectableSources : []);
+                setProgressByType(res.data.progressByType || {});
             })
             .catch(() => { /* advisory only — never block the launcher on this */ });
         return () => { alive = false; };
@@ -434,7 +439,10 @@ const QuizLauncher = ({ id }) => {
                                         checked={selectedTypes.includes(type)}
                                         onChange={() => handleCheckboxChange(type)}
                                     />
-                                    {getTypeLabel(type, lang)}
+                                    <span>{getTypeLabel(type, lang)}</span>
+                                    <span className="checkbox-type-count">
+                                        <bdi>{progressByType[type] || 0}%</bdi>
+                                    </span>
                                 </label>
                             ))}
                         </div>

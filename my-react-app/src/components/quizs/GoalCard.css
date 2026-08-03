@@ -1,0 +1,348 @@
+/* Goal card on the study hub. Shares the hub's card language (soft border,
+   white ground, generous radius) so it reads as part of the dashboard rather
+   than a bolted-on widget. Logical properties throughout — the hub renders
+   both RTL and LTR from the same rules. */
+
+.goalx {
+  background: #fff;
+  border: 1px solid #e6ecf6;
+  border-radius: 18px;
+  padding: 20px 22px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+  margin-bottom: 22px;
+}
+
+.goalx.is-achieved {
+  border-color: rgba(16, 185, 129, 0.4);
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.06), #fff 60%);
+}
+
+.goalx-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.goalx-head h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f1e3d;
+}
+
+.goalx-head-actions { display: flex; gap: 12px; }
+
+.goalx-link {
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #2563eb;
+  cursor: pointer;
+}
+.goalx-link:hover { text-decoration: underline; }
+.goalx-link--muted { color: #94a3b8; }
+
+/* ── Active goal ─────────────────────────────────────────────── */
+.goalx-body {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.goalx-ring {
+  position: relative;
+  flex: 0 0 auto;
+  display: inline-grid;
+  place-items: center;
+  width: 84px;
+  height: 84px;
+}
+
+.goalx-ring svg {
+  width: 84px;
+  height: 84px;
+  /* Start the arc at 12 o'clock in both directions. */
+  transform: rotate(-90deg);
+}
+
+.goalx-ring-bg {
+  fill: none;
+  stroke: #eef2f8;
+  stroke-width: 8;
+}
+
+.goalx-ring-fg {
+  fill: none;
+  stroke: #2563eb;
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.6s ease;
+}
+
+.is-achieved .goalx-ring-fg { stroke: #10b981; }
+
+.goalx-ring-pct {
+  position: absolute;
+  font-size: 17px;
+  font-weight: 800;
+  color: #0f1e3d;
+}
+
+.goalx-detail { min-width: 0; }
+
+.goalx-count {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  color: #0f1e3d;
+  line-height: 1.2;
+}
+
+.goalx-of { color: #cbd5e1; font-weight: 600; }
+
+.goalx-type {
+  margin: 3px 0 0;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.goalx-period { color: #94a3b8; }
+
+.goalx-remaining {
+  margin: 8px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #2563eb;
+}
+
+.goalx-achieved {
+  margin: 8px 0 0;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #047857;
+}
+.goalx-achieved span {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+/* ── Week-on-week progress strip ─────────────────────────────── */
+.goalx-progress {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #eef2f8;
+}
+
+.goalx-progress-title {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  margin-bottom: 10px;
+}
+
+.goalx-progress-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.goalx-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.goalx-trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.goalx-trend--up { color: #047857; }
+.goalx-trend--down { color: #b45309; }
+.goalx-trend--flat { color: #94a3b8; font-weight: 500; }
+
+.goalx-progress-empty {
+  margin: 0;
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+/* ── Empty state ─────────────────────────────────────────────── */
+.goalx--empty {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.goalx-empty-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: linear-gradient(150deg, rgba(59, 130, 246, 0.18), rgba(99, 102, 241, 0.14));
+  border: 1px solid rgba(59, 130, 246, 0.26);
+  color: #2563eb;
+  flex: 0 0 auto;
+}
+
+.goalx-empty-body { flex: 1 1 220px; min-width: 0; }
+
+.goalx-empty-body h2 {
+  margin: 0 0 4px;
+  font-size: 15.5px;
+  font-weight: 800;
+  color: #0f1e3d;
+}
+
+.goalx-empty-body p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.65;
+  color: #64748b;
+}
+
+/* ── Editor ──────────────────────────────────────────────────── */
+.goalx-field { margin-bottom: 16px; }
+
+.goalx-label {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  margin-bottom: 8px;
+}
+
+.goalx-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.goalx-choice {
+  padding: 8px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  color: #475569;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+
+.goalx-choice:hover { border-color: #93b4f7; color: #2563eb; }
+
+.goalx-choice.is-on {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+
+.goalx-input {
+  margin-top: 10px;
+  width: 130px;
+  padding: 9px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f1e3d;
+}
+
+.goalx-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* ── Scope ───────────────────────────────────────────────────── */
+.goalx-scope {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0 0;
+}
+
+.goalx-scope-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.09);
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #2563eb;
+}
+
+.goalx-scope-hint {
+  margin: 8px 0 0;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: #94a3b8;
+}
+
+.goalx-error {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: #dc2626;
+}
+
+.goalx-actions { display: flex; gap: 10px; }
+
+.goalx-btn {
+  padding: 10px 20px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #475569;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+
+.goalx-btn:hover { border-color: #cbd5e1; background: #f8fafc; }
+
+.goalx-btn--primary {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+
+.goalx-btn--primary:hover { background: #1d4ed8; border-color: #1d4ed8; }
+.goalx-btn:disabled { opacity: 0.6; cursor: default; }
+
+@media (max-width: 560px) {
+  .goalx { padding: 18px 16px; }
+  .goalx-body { gap: 14px; }
+  .goalx-ring, .goalx-ring svg { width: 70px; height: 70px; }
+  .goalx-count { font-size: 19px; }
+}

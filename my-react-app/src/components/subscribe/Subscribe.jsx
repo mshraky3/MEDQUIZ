@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import axios from 'axios';
+import { trackFunnel } from '../../utils/analytics.js';
 import Globals from '../../global.js';
 import { UserContext } from '../../UserContext';
 import Spinner from '../common/Spinner.jsx';
@@ -70,6 +71,9 @@ const Subscribe = () => {
             navigate('/login', { replace: true, state: { from: '/subscribe' } });
             return;
         }
+        trackFunnel('subscribe_view', {
+            reason: new URLSearchParams(location.search).get('reason') || null,
+        });
         let cancelled = false;
         let watchdog = null;
 
@@ -138,6 +142,7 @@ const Subscribe = () => {
     // Scroll the card form into view — on mobile the perks push it below the
     // fold, so the price is visible but the way to pay is not.
     const goToPaymentForm = () => {
+        trackFunnel('subscribe_pay_click', { amountHalalas: priceHalalas });
         const el = formRef.current;
         if (!el) return;
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -145,8 +150,15 @@ const Subscribe = () => {
     };
 
     const riyals = priceHalalas != null ? priceHalalas / 100 : null;
+    // Only true when the trial is ACTUALLY over — checking `subscription_status
+    // === 'trial'` alone matched every trial account regardless of time
+    // remaining, so a user with 40 minutes left who tapped "Subscribe now" in
+    // the trial banner was told their trial had already ended.
+    const trialExpiryPassed = user?.subscription_expiry_date
+        ? new Date(user.subscription_expiry_date).getTime() <= Date.now()
+        : false;
     const trialEnded = new URLSearchParams(location.search).get('reason') === 'trial_expired'
-        || user?.subscription_status === 'trial';
+        || (user?.subscription_status === 'trial' && trialExpiryPassed);
 
     return (
         <div className="login-body" dir={dir}>

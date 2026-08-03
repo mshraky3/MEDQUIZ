@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import Icon from '../common/Icon.jsx';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import axios from 'axios';
-import { track } from '@vercel/analytics';
+import { safeTrack, trackFunnel } from '../../utils/analytics.js';
 import Globals from '../../global.js';
 import Spinner from '../common/Spinner.jsx';
 import { UserContext } from '../../UserContext';
@@ -56,6 +56,11 @@ const Signup = () => {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [token]);
+
+    useEffect(() => {
+        trackFunnel('signup_view', { entryType: token ? 'temp-link' : 'free-account' });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const validateTempLink = async () => {
         try {
@@ -166,6 +171,7 @@ const Signup = () => {
             email: form.email.trim().toLowerCase(),
             purpose: 'signup'
         });
+        trackFunnel('signup_otp_sent', { track: studyTrack });
     };
 
     // Create the account. `otpCode` is null for temp/invite-link signups, which
@@ -187,14 +193,12 @@ const Signup = () => {
             const response = await axios.post(`${Globals.URL}${endpoint}`, payload);
 
             if (response.data.success) {
-                try {
-                    track('signup_success', {
-                        entryType: isTempLink ? 'temp-link' : 'free-account',
-                        studyTrack: response.data.track || studyTrack,
-                    });
-                } catch (trackError) {
-                    console.debug('Analytics track skipped:', trackError);
-                }
+                safeTrack('signup_success', {
+                    entryType: isTempLink ? 'temp-link' : 'free-account',
+                    studyTrack: response.data.track || studyTrack,
+                });
+                if (!isTempLink) trackFunnel('signup_otp_verified', { track: response.data.track || studyTrack });
+                if (response.data.trial?.granted) trackFunnel('trial_started', { track: response.data.track || studyTrack });
 
                 setTrialGranted(!!response.data.trial?.granted);
                 setSuccess(true);
@@ -203,6 +207,7 @@ const Signup = () => {
                 throw new Error(response.data.message || t.errCreate);
             }
         } catch (error) {
+            if (!isTempLink) trackFunnel('signup_otp_failed', { message: error.response?.data?.message || error.message });
             setError(error.response?.data?.message || error.message || t.errCreate);
         } finally {
             setLoading(false);
@@ -540,7 +545,7 @@ const Signup = () => {
                                         key={key}
                                         className={`track-modal-option${selected ? ' is-selected' : ''}`}
                                         aria-pressed={selected}
-                                        onClick={() => setStudyTrack(key)}
+                                        onClick={() => { setStudyTrack(key); trackFunnel('signup_track_selected', { track: key }); }}
                                     >
                                         <span className="track-modal-option-icon" aria-hidden="true">
                                             <Icon name={trackDef.icon} size={26} />

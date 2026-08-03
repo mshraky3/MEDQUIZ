@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
+import { trackFunnel } from '../../utils/analytics.js';
 import Globals from '../../global.js';
 import { UserContext } from '../../UserContext';
 import Spinner from '../common/Spinner.jsx';
@@ -39,11 +40,13 @@ const PaymentCallback = () => {
         if (!paymentId) {
             setState('failed');
             setMessage(t.noPaymentInfo);
+            trackFunnel('payment_failed', { reason: 'no_payment_info' });
             return;
         }
         if (moyasarStatus && moyasarStatus !== 'paid') {
             setState('failed');
             setMessage(params.get('message') || reasonText('not_paid'));
+            trackFunnel('payment_failed', { reason: 'not_paid' });
             return;
         }
 
@@ -61,14 +64,17 @@ const PaymentCallback = () => {
                     setUser({ ...user, accessAllowed: true, subscription_status: 'active' }, sessionToken);
                     setState('success');
                     setMessage(t.successMessage);
+                    trackFunnel('payment_success', { amountHalalas: data.amountHalalas ?? data.amount_halalas ?? null });
                     setTimeout(() => navigate('/quizs', { replace: true }), 1800);
                 } else {
                     setState('failed');
                     setMessage(reasonText(data.reason));
+                    trackFunnel('payment_failed', { reason: data.reason || 'unknown' });
                 }
             } catch (err) {
                 setState('failed');
                 setMessage(reasonText(err.response?.data?.reason));
+                trackFunnel('payment_failed', { reason: err.response?.data?.reason || 'exception' });
             }
         })();
     }, [user, sessionToken, params, navigate, setUser]);

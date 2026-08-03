@@ -1,9 +1,12 @@
 import React, { useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { track } from '@vercel/analytics';
+import { safeTrack, trackFunnel } from '../../utils/analytics.js';
 import Icon from '../common/Icon.jsx';
 import HeroArt from './HeroArt.jsx';
-import InstallPrompt, { InstallGuideSection } from '../common/InstallPrompt.jsx';
+import ExamCountdown from './ExamCountdown.jsx';
+import ProductShowcase from './ProductShowcase.jsx';
+import InstallPrompt from '../common/InstallPrompt.jsx';
+import InstallShowcase from '../common/InstallShowcase.jsx';
 import { UserContext } from '../../UserContext';
 import { TRACKS, MEDICAL, NURSING, pick } from '../../utils/tracks.js';
 import { useCopy, useLang, LanguageToggle } from '../../i18n';
@@ -49,17 +52,23 @@ const Landing = () => {
   // Mirrors Navbar's definition so both agree on what counts as "logged in".
   const isAuthenticated = !!(user && user.id && sessionToken);
 
-  const safeTrack = (eventName, payload) => {
-    try {
-      track(eventName, payload);
-    } catch (error) {
-      console.debug('Analytics track skipped:', error);
-    }
-  };
+  // Usernames ARE email addresses on this platform, so greeting someone by
+  // `user.username` printed "Welcome back, alshraky3@gmail.com" across the
+  // hero. Take the local part, and only its first word, exactly as the study
+  // hub already does.
+  const displayName = user?.username
+    ? String(user.username).split('@')[0].split(/[ _.]/).filter(Boolean)[0] || ''
+    : '';
 
-  const handleSignup = () => {
-    safeTrack('landing_cta_signup_click', { section: 'landing' });
-    navigate('/signup');
+  // The specialty names shown inside the analytics replica, so the mock is
+  // labelled with this visitor's own track rather than hardcoded English.
+  const showcaseSpecialties = TRACKS[MEDICAL].specialties.map((sp) => pick(sp.label, lang));
+
+  // `placement` differentiates the 4 signup CTAs (hero / price card / CTA
+  // band / mobile bar), which previously all fired the exact same event with
+  // the exact same payload — making it impossible to tell which one converts.
+  const trackSignupClick = (placement) => {
+    trackFunnel('landing_cta_signup_click', { placement });
   };
 
   const handleLogin = () => {
@@ -94,9 +103,21 @@ const Landing = () => {
                 {t.topbar.account}
               </button>
             ) : (
-              <button className="btn ghost topbar-btn" onClick={handleLogin}>
-                {t.topbar.login}
-              </button>
+              <>
+                <button className="btn ghost topbar-btn" onClick={handleLogin}>
+                  {t.topbar.login}
+                </button>
+                {/* A visitor who scrolls back to the top should not have to
+                    scroll down again to find a way in. Hidden on narrow
+                    screens, where the fixed mobile bar already carries it. */}
+                <Link
+                  to="/signup"
+                  className="btn primary topbar-btn topbar-cta"
+                  onClick={() => trackSignupClick('topbar')}
+                >
+                  {t.topbar.signup}
+                </Link>
+              </>
             )}
           </div>
         </header>
@@ -107,8 +128,8 @@ const Landing = () => {
             <>
               <span className="pill">{t.heroReturning.pill}</span>
               <h1>
-                {user?.username
-                  ? <>{t.heroReturning.titlePrefix}<bdi>{user.username}</bdi></>
+                {displayName
+                  ? <>{t.heroReturning.titlePrefix}<bdi>{displayName}</bdi></>
                   : t.heroReturning.title}
               </h1>
               <p>{t.heroReturning.body}</p>
@@ -126,10 +147,11 @@ const Landing = () => {
               <span className="pill">{t.hero.pill}</span>
               <h1>{t.hero.title}</h1>
               <p>{t.hero.body}</p>
+              <ExamCountdown copy={t.hero.examCountdown} />
               <div className="cta-row">
-                <button className="btn primary" onClick={handleSignup}>
+                <Link to="/signup" className="btn primary" onClick={() => trackSignupClick('hero')}>
                   {t.hero.primary}
-                </button>
+                </Link>
                 <button className="btn ghost" onClick={handleLogin}>
                   {t.hero.secondary}
                 </button>
@@ -139,18 +161,17 @@ const Landing = () => {
               </ul>
             </>
           )}
+
+          {/* The hero fills the viewport, so it needs to say that there is
+              more below it — otherwise a full-screen first section reads as
+              the whole page on a phone. */}
+          <span className="hero-scroll" aria-hidden="true">
+            {t.hero.scrollCue}
+            <Icon name="chevron-down" size={16} />
+          </span>
         </section>
 
         <div className="landing-shell">
-
-          <section className="stat-grid" aria-label={t.statsLabel}>
-            {t.stats.map((item) => (
-              <article key={item.label} className="stat-card">
-                <div className="stat-value">{item.value}</div>
-                <div className="stat-label">{item.label}</div>
-              </article>
-            ))}
-          </section>
 
           {/* Two tracks, one platform. Placed high on the page so a nursing
               student knows within seconds whether this is for them — and,
@@ -182,24 +203,33 @@ const Landing = () => {
                 </article>
               ))}
             </div>
+
+            {/* The section that makes someone decide "this is for me" is the
+                one that has to let them act on it — previously the nearest
+                signup button was two screens further down. */}
+            {!isAuthenticated && (
+              <div className="section-cta">
+                <Link to="/signup" className="btn primary" onClick={() => trackSignupClick('tracks')}>
+                  {t.tracks.cta}
+                </Link>
+                <p className="section-cta-note">{t.tracks.ctaNote}</p>
+              </div>
+            )}
           </section>
 
-          <section className="feature-section">
-            <div className="section-head">
-              <p className="pill subtle">{t.features.pill}</p>
-              <h2>{t.features.title}</h2>
-              <p>{t.features.body}</p>
+          {/* Replaces the old adjective grid: the product, shown working. */}
+          <ProductShowcase copy={t.showcase} specialtyLabels={showcaseSpecialties} />
+
+          {/* Seeing the product work is the moment the visitor stops reading
+              and starts wanting it — so the tour ends with a way in. */}
+          {!isAuthenticated && (
+            <div className="section-cta">
+              <Link to="/signup" className="btn primary" onClick={() => trackSignupClick('showcase')}>
+                {t.showcase.cta}
+              </Link>
+              <p className="section-cta-note">{t.showcase.ctaNote}</p>
             </div>
-            <div className="feature-grid">
-              {t.features.items.map((feature) => (
-                <div key={feature.title} className="feature-card">
-                  <span className="feature-icon" aria-hidden="true"><Icon name={feature.icon} size={28} /></span>
-                  <h3>{feature.title}</h3>
-                  <p>{feature.desc}</p>
-                </div>
-              ))}
-            </div>
-          </section>
+          )}
 
           <section className="compare-section" aria-label={t.compare.sectionLabel}>
             <div className="section-head">
@@ -232,6 +262,48 @@ const Landing = () => {
               </table>
             </div>
             <p className="compare-hint" aria-hidden="true">{t.compare.hint}</p>
+
+            {/* Same reasoning as the tracks CTA: a comparison table is a
+                decision moment, and a decision moment needs a button. */}
+            {!isAuthenticated && (
+              <div className="section-cta">
+                <Link to="/signup" className="btn primary" onClick={() => trackSignupClick('compare')}>
+                  {t.compare.cta}
+                </Link>
+                <p className="section-cta-note">{t.compare.ctaNote}</p>
+              </div>
+            )}
+          </section>
+
+          <section className="cost-section" aria-label={t.costOfWaiting.sectionLabel}>
+            <div className="section-head">
+              <p className="pill subtle">{t.costOfWaiting.pill}</p>
+              <h2>{t.costOfWaiting.title}</h2>
+              <p>{t.costOfWaiting.body}</p>
+            </div>
+            <div className="cost-grid">
+              {t.costOfWaiting.items.map((item) => (
+                <div key={item.title} className="cost-item">
+                  <span className="cost-item-icon" aria-hidden="true"><Icon name={item.icon} size={24} /></span>
+                  <div>
+                    <h3>{item.title}</h3>
+                    <p>{item.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="cost-note">{t.costOfWaiting.note}</p>
+
+            {/* This section ends on the price of doing nothing; the button is
+                the alternative to doing nothing. */}
+            {!isAuthenticated && (
+              <div className="section-cta">
+                <Link to="/signup" className="btn primary" onClick={() => trackSignupClick('cost')}>
+                  {t.costOfWaiting.cta}
+                </Link>
+                <p className="section-cta-note">{t.costOfWaiting.ctaNote}</p>
+              </div>
+            )}
           </section>
 
           <section className="value-section" aria-label={t.value.sectionLabel}>
@@ -266,30 +338,14 @@ const Landing = () => {
                     <li key={item}>{item}</li>
                   ))}
                 </ul>
-                <button className="btn primary price-card-cta" onClick={handleSignup}>
+                <Link to="/signup" className="btn primary price-card-cta" onClick={() => trackSignupClick('price_card')}>
                   {t.value.cta}
-                </button>
+                </Link>
                 <p className="price-card-note">{t.value.note}</p>
               </aside>
             </div>
           </section>
 
-          <section className="faq-section" aria-label={t.faq.sectionLabel}>
-            <div className="section-head">
-              <p className="pill subtle">{t.faq.pill}</p>
-              <h2>{t.faq.title}</h2>
-              <p>{t.faq.body}</p>
-            </div>
-            <div className="purchase-faq-grid">
-              {t.faq.items.map((item) => (
-                <article key={item.q} className="purchase-faq-card">
-                  <h3>{item.q}</h3>
-                  <p>{item.a}</p>
-                </article>
-              ))}
-            </div>
-            <Link to="/faq" className="faq-preview-link">{t.faq.link}</Link>
-          </section>
 
           <section className="flow-section">
             <div className="flow-card">
@@ -309,6 +365,17 @@ const Landing = () => {
                   </div>
                 ))}
               </div>
+
+              {/* Step 1 of the flow is "create your account" — so step 1 is
+                  reachable from the card that describes it. */}
+              {!isAuthenticated && (
+                <div className="section-cta">
+                  <Link to="/signup" className="btn primary" onClick={() => trackSignupClick('flow')}>
+                    {t.flow.cta}
+                  </Link>
+                  <p className="section-cta-note">{t.flow.ctaNote}</p>
+                </div>
+              )}
             </div>
           </section>
 
@@ -332,43 +399,23 @@ const Landing = () => {
                 </article>
               ))}
             </div>
-          </section>
 
-          <InstallGuideSection />
-
-          <section className="resource-section">
-            <div className="resource-card">
-              <div className="section-head">
-                <p className="pill subtle">{t.resources.pill}</p>
-                <h2>{t.resources.title}</h2>
-                <p>{t.resources.body}</p>
+            {/* Everything listed above is already included in the same
+                subscription — say so where it is being read. */}
+            {!isAuthenticated && (
+              <div className="section-cta">
+                <Link to="/signup" className="btn primary" onClick={() => trackSignupClick('news')}>
+                  {t.news.cta}
+                </Link>
+                <p className="section-cta-note">{t.news.ctaNote}</p>
               </div>
-              <div className="resource-links">
-                {t.resources.links.map((link) => (
-                  <Link key={link.to} to={link.to} className="resource-link-card">
-                    <h3>{link.title}</h3>
-                    <p>{link.desc}</p>
-                  </Link>
-                ))}
-              </div>
-            </div>
+            )}
           </section>
 
-          <section className="seo-section">
-            <div className="section-head">
-              <p className="pill subtle">{t.seo.pill}</p>
-              <h2>{t.seo.title}</h2>
-              <p>{t.seo.body}</p>
-            </div>
-            <div className="seo-grid">
-              {t.seo.topics.map((topic) => (
-                <article key={topic.title} className="seo-card">
-                  <h3>{topic.title}</h3>
-                  <p>{topic.desc}</p>
-                </article>
-              ))}
-            </div>
-          </section>
+          {/* The steps, played on a phone rather than listed. */}
+          <InstallShowcase />
+
+
 
           <section className="cta-band">
             <div className="cta-band-content">
@@ -399,9 +446,9 @@ const Landing = () => {
                   </>
                 ) : (
                   <>
-                    <button className="btn primary" onClick={handleSignup}>
+                    <Link to="/signup" className="btn primary" onClick={() => trackSignupClick('cta_band')}>
                       {t.ctaBand.visitor.primary}
-                    </button>
+                    </Link>
                     <button className="btn outline" onClick={handleLogin}>
                       {t.ctaBand.visitor.secondary}
                     </button>
@@ -425,9 +472,9 @@ const Landing = () => {
             </>
           ) : (
             <>
-              <button className="btn primary" onClick={handleSignup}>
+              <Link to="/signup" className="btn primary" onClick={() => trackSignupClick('mobile_bar')}>
                 {t.mobileCta.tryFree}
-              </button>
+              </Link>
               <button className="btn outline" onClick={handleLogin}>
                 {t.mobileCta.login}
               </button>

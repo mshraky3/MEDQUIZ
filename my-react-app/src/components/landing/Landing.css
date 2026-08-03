@@ -140,12 +140,22 @@
   font-size: 13.5px;
 }
 
+/* The signup button in the topbar is a convenience for someone who has
+   scrolled back up — on phones the fixed bottom bar already carries it, and
+   three controls do not fit next to the brand. */
+@media (max-width: 600px) {
+  .topbar-cta.btn { display: none; }
+}
+
 .landing-shell {
   position: relative;
   z-index: 1;
   max-width: 1280px;
   margin: 0 auto;
-  padding: 0 24px 64px;
+  /* The stats band used to be pulled up onto the hero with a negative margin
+     and supplied the gap between the two. With it gone, the shell owns its
+     own breathing room. */
+  padding: clamp(40px, 6vw, 72px) 24px 64px;
   display: flex;
   flex-direction: column;
   gap: clamp(36px, 5vw, 56px);
@@ -221,7 +231,17 @@
 }
 
 /* Full-bleed hero band — spans the whole screen width with its own colour,
-   sits outside .landing-shell. Stat cards overlap its bottom edge. */
+   sits outside .landing-shell.
+
+   It now claims the WHOLE viewport. `100svh` (small viewport height) rather
+   than `100vh` is deliberate: on mobile Safari and Chrome, 100vh is the height
+   with the URL bar retracted, so a 100vh hero is always taller than what the
+   visitor can actually see and pushes its own CTA below the fold — the exact
+   opposite of what a full-screen hero is for. The vh line before it is the
+   fallback for browsers without svh.
+
+   The topbar is ~64px and sits above the hero, so the hero subtracts it to
+   avoid pushing the fold down by a topbar's worth. */
 .hero {
   width: 100%;
   box-sizing: border-box;
@@ -230,9 +250,14 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  gap: 24px;
-  min-height: clamp(540px, 74vh, 740px);
-  padding: clamp(84px, 9vw, 116px) clamp(16px, 5vw, 64px) clamp(96px, 10vw, 132px);
+  /* Rhythm is tight on purpose. The hero is now a full screen tall, so every
+     pixel of padding and gap is a pixel that pushes the CTA — and the scroll
+     cue below it — past the fold on a 13" laptop. Measured against 1280×860
+     with the longest (Arabic) copy. */
+  gap: clamp(12px, 1.6vw, 18px);
+  min-height: calc(100vh - 64px);
+  min-height: calc(100svh - 64px);
+  padding: clamp(32px, 4vw, 56px) clamp(16px, 5vw, 64px) clamp(52px, 5.5vw, 76px);
   position: relative;
   overflow: hidden;
   background:
@@ -276,6 +301,23 @@
   background: linear-gradient(120deg, rgba(59, 130, 246, 0.14), rgba(99, 102, 241, 0.14));
   border-color: rgba(37, 99, 235, 0.30);
   box-shadow: 0 8px 24px rgba(37, 99, 235, 0.16);
+}
+
+.exam-countdown {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 2px 0 0;
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #b45309;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  width: fit-content;
 }
 
 .hero h1 {
@@ -432,66 +474,61 @@
   font-weight: 800;
 }
 
-
-.stat-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 18px;
-  position: relative;
-  z-index: 2;
-  border: none;
-  padding: 0;
-  /* pull the cards up onto the hero band so the two blocks interlock */
-  margin-top: clamp(-76px, -6vw, -48px);
-}
-
-.landing-body .stat-card {
-  position: relative;
-  text-align: center;
-  padding: 28px 20px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--card-grad);
-  box-shadow: var(--card-shadow);
-  overflow: hidden;
-  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
-}
-
-.landing-body .stat-card::before {
-  content: '';
+/* Scroll cue. The hero fills the viewport now, which on a phone can read as
+   "this is the entire page" — this is the affordance that says otherwise.
+   Absolutely positioned so it does not add to the flex gap and squeeze the
+   content it sits under. */
+.hero-scroll {
   position: absolute;
-  inset: 0 0 auto 0;
-  height: 4px;
-  background: linear-gradient(90deg, var(--accent), var(--accent-3));
-}
-
-.landing-body .stat-card:nth-child(2)::before { background: linear-gradient(90deg, var(--accent-cyan), var(--accent)); }
-.landing-body .stat-card:nth-child(3)::before { background: linear-gradient(90deg, var(--accent-emerald), var(--accent-cyan)); }
-.landing-body .stat-card:nth-child(4)::before { background: linear-gradient(90deg, var(--accent-violet), var(--accent-3)); }
-
-.landing-body .stat-card:hover {
-  transform: translateY(-5px);
-  border-color: var(--border-strong);
-  box-shadow: 0 20px 44px rgba(37, 99, 235, 0.16);
-}
-
-.stat-value {
-  font-size: clamp(28px, 3.6vw, 38px);
-  font-weight: 900;
-  background: linear-gradient(120deg, #2563eb, #6366f1);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: #2563eb;
-  letter-spacing: 0.5px;
-  line-height: 1.1;
-}
-
-.stat-label {
-  margin-top: 6px;
+  inset-block-end: clamp(14px, 3vw, 26px);
+  inset-inline-start: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--muted);
+  opacity: 0.85;
+  pointer-events: none;
+  animation: heroScrollHint 2.4s ease-in-out infinite;
+}
+
+@keyframes heroScrollHint {
+  0%, 100% { transform: translate(-50%, 0); }
+  50% { transform: translate(-50%, 6px); }
+}
+
+/* Short viewports (a landscape phone) have no room for a cue under a hero
+   that is already scrolling — hide it rather than overlap the CTA. */
+@media (max-height: 620px) {
+  .hero-scroll { display: none; }
+}
+
+/* Mid-page CTA. Sits at the bottom of the sections where a visitor actually
+   decides — the tracks grid and the comparison table — because both used to
+   end by handing the reader nothing to do. */
+.section-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: clamp(24px, 3.5vw, 38px);
+  text-align: center;
+}
+
+.section-cta .btn.primary {
+  padding: 15px 34px;
+  font-size: 15.5px;
+}
+
+.section-cta-note {
+  margin: 0;
   font-size: 13px;
-  font-weight: 600;
+  color: var(--muted);
 }
 
 /* ── News / changelog — three compact cards in one row ───────────── */
@@ -582,44 +619,6 @@
   line-height: 1.7;
 }
 
-.feature-grid {
-  margin-top: 24px;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 20px;
-}
-
-.feature-card {
-  position: relative;
-  padding: 26px 22px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--card-grad);
-  box-shadow: var(--card-shadow);
-  overflow: hidden;
-  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
-}
-
-.feature-card::before {
-  content: '';
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 4px;
-  background: linear-gradient(90deg, var(--accent), var(--accent-3));
-  opacity: 0.9;
-  transition: opacity 0.25s ease;
-}
-
-.feature-card:hover {
-  transform: translateY(-5px);
-  border-color: rgba(59, 130, 246, 0.4);
-  box-shadow: 0 24px 50px rgba(59, 130, 246, 0.14);
-}
-
-.feature-card:hover::before {
-  opacity: 1;
-}
-
 .feature-icon {
   font-size: 26px;
   display: inline-grid;
@@ -636,39 +635,6 @@
 }
 
 /* per-card icon tints + matching top accent for a colourful, cohesive grid */
-.feature-card:nth-child(2) .feature-icon {
-  background: linear-gradient(150deg, rgba(14, 165, 233, 0.22), rgba(59, 130, 246, 0.16));
-  border-color: rgba(14, 165, 233, 0.30);
-  color: var(--accent-cyan);
-  animation-delay: 0.4s;
-}
-.feature-card:nth-child(3) .feature-icon {
-  background: linear-gradient(150deg, rgba(16, 185, 129, 0.22), rgba(14, 165, 233, 0.16));
-  border-color: rgba(16, 185, 129, 0.30);
-  color: var(--accent-emerald);
-  animation-delay: 0.8s;
-}
-.feature-card:nth-child(4) .feature-icon {
-  background: linear-gradient(150deg, rgba(124, 58, 237, 0.22), rgba(99, 102, 241, 0.16));
-  border-color: rgba(124, 58, 237, 0.30);
-  color: var(--accent-violet);
-  animation-delay: 1.2s;
-}
-.feature-card:nth-child(2)::before { background: linear-gradient(90deg, var(--accent-cyan), var(--accent)); }
-.feature-card:nth-child(3)::before { background: linear-gradient(90deg, var(--accent-emerald), var(--accent-cyan)); }
-.feature-card:nth-child(4)::before { background: linear-gradient(90deg, var(--accent-violet), var(--accent-3)); }
-
-.feature-card h3 {
-  margin: 0 0 6px;
-  color: #0f1e3d;
-  font-size: 19px;
-}
-
-.feature-card p {
-  margin: 0;
-  color: var(--muted);
-  line-height: 1.65;
-}
 
 /* ── Comparison table — full-bleed tinted band breaks up the white ── */
 .compare-section {
@@ -807,6 +773,53 @@
   grid-template-columns: 1.15fr 0.85fr;
   gap: 28px;
   align-items: start;
+}
+
+.cost-grid {
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.cost-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 16px;
+  align-items: start;
+  padding: 22px 20px;
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  border-radius: var(--radius);
+  background: var(--card-grad);
+  box-shadow: var(--card-shadow);
+}
+
+.cost-item .feature-icon {
+  margin-bottom: 0;
+  animation: none;
+  background: linear-gradient(150deg, rgba(248, 113, 113, 0.20), rgba(251, 146, 60, 0.16));
+  border-color: rgba(248, 113, 113, 0.30);
+  color: #dc2626;
+}
+
+.cost-item h3 {
+  margin: 0 0 6px;
+  color: #0f1e3d;
+  font-size: 16px;
+}
+
+.cost-item p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.cost-note {
+  margin: 18px 0 0;
+  text-align: center;
+  font-weight: 700;
+  color: #b45309;
 }
 
 .value-points {
@@ -968,6 +981,35 @@
   box-shadow: 0 22px 44px rgba(2, 6, 23, 0.34);
 }
 
+.price-card-guarantee {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  text-align: start;
+}
+
+.price-card-guarantee > svg { flex: 0 0 auto; margin-top: 1px; }
+
+.price-card-guarantee strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.price-card-guarantee-note {
+  display: block;
+  margin-top: 2px;
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.8);
+}
+
 .price-card-note {
   margin: 0;
   text-align: center;
@@ -975,155 +1017,7 @@
   color: rgba(255, 255, 255, 0.78);
 }
 
-.seo-section,
-.resource-card {
-  border: none;
-  border-radius: 0;
-  background: none;
-  padding: 0;
-}
-
 /* ── Purchase-objection FAQ — 2×2 card grid near the offer ───────── */
-.purchase-faq-grid {
-  margin-top: 24px;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-}
-
-.purchase-faq-card {
-  padding: 22px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--card-grad);
-  box-shadow: var(--card-shadow);
-  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
-}
-
-.purchase-faq-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(59, 130, 246, 0.4);
-  box-shadow: 0 22px 48px rgba(59, 130, 246, 0.12);
-}
-
-.purchase-faq-card h3 {
-  margin: 0 0 8px;
-  color: #0f1e3d;
-  font-size: 16.5px;
-  position: relative;
-  padding-inline-start: 14px;
-}
-
-.purchase-faq-card h3::before {
-  content: '';
-  position: absolute;
-  inset-inline-start: 0;
-  top: 4px;
-  bottom: 4px;
-  width: 3px;
-  border-radius: 3px;
-  background: linear-gradient(180deg, var(--accent), var(--accent-2));
-}
-
-.purchase-faq-card p {
-  margin: 0;
-  color: var(--muted);
-  line-height: 1.75;
-  font-size: 14.5px;
-}
-
-.faq-section .faq-preview-link {
-  display: inline-block;
-  margin-top: 20px;
-}
-
-.seo-grid {
-  margin-top: 24px;
-  display: grid;
-  /* auto-fit + min(100%, …) keeps any card count tidy (no orphan row) and
-     never overflows on small screens. */
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
-  gap: 20px;
-}
-
-.seo-card,
-.resource-link-card {
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--card-grad);
-  box-shadow: var(--card-shadow);
-  padding: 24px 22px;
-  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
-}
-
-.seo-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(59, 130, 246, 0.4);
-  box-shadow: 0 22px 48px rgba(59, 130, 246, 0.12);
-}
-
-.seo-card h3,
-.resource-link-card h3 {
-  position: relative;
-  padding-inline-start: 14px;
-}
-
-.seo-card h3::before,
-.resource-link-card h3::before {
-  content: '';
-  position: absolute;
-  inset-inline-start: 0;
-  top: 4px;
-  bottom: 4px;
-  width: 3px;
-  border-radius: 3px;
-  background: linear-gradient(180deg, var(--accent), var(--accent-2));
-}
-
-.seo-card h3,
-.resource-link-card h3 {
-  margin: 0 0 8px;
-  color: #0f1e3d;
-}
-
-.seo-card p,
-.resource-link-card p {
-  margin: 0;
-  color: var(--muted);
-  line-height: 1.7;
-}
-
-.resource-links {
-  margin-top: 24px;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
-  gap: 18px;
-}
-
-.resource-link-card {
-  text-decoration: none;
-  display: block;
-}
-
-.resource-link-card:hover h3 {
-  color: var(--accent);
-}
-
-.resource-link-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(59, 130, 246, 0.4);
-  box-shadow: 0 22px 48px rgba(59, 130, 246, 0.12);
-}
-
-.faq-preview-link {
-  color: var(--accent);
-  font-weight: 700;
-  text-decoration: none;
-}
-
-.faq-preview-link:hover {
-  color: #93c5fd;
-}
 
 .flow-section {
   display: grid;
@@ -1186,7 +1080,6 @@
   flex-shrink: 0;
   box-shadow: 0 6px 18px rgba(59, 130, 246, 0.12);
 }
-
 
 .step h4 {
   margin: 0 0 3px;
@@ -1368,13 +1261,8 @@
     position: static;
   }
 
-  .feature-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .stat-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px;
+  .cost-grid {
+    grid-template-columns: 1fr;
   }
 
   /* single-column news reads better horizontal: icon beside text */
@@ -1454,14 +1342,6 @@
     padding: 28px 20px;
   }
 
-  .feature-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .feature-card {
-    padding: 20px 18px;
-  }
-
   .feature-icon {
     width: 48px;
     height: 48px;
@@ -1469,22 +1349,6 @@
   }
 
   /* stats stay a tight 2×2 — tall single-column stacks waste a full screen */
-  .stat-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-  }
-
-  .landing-body .stat-card {
-    padding: 18px 10px;
-  }
-
-  .stat-value {
-    font-size: 24px;
-  }
-
-  .stat-label {
-    font-size: 12px;
-  }
 
   .news-item {
     padding: 18px 16px;
@@ -1512,11 +1376,6 @@
     gap: 18px;
   }
 
-  .purchase-faq-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
   .compare-table {
     min-width: 560px;
     font-size: 13px;
@@ -1534,11 +1393,6 @@
 
   .compare-hint {
     display: block;
-  }
-
-  .seo-card,
-  .resource-link-card {
-    padding: 20px 18px;
   }
 
   .cta-row,
@@ -1590,8 +1444,8 @@
   }
 
   .feature-icon,
-  .feature-card,
-  .stat-card,
+  .track-tile,
+  .hero-scroll,
   .btn {
     animation: none !important;
     transition: none !important;
