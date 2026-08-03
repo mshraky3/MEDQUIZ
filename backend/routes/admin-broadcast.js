@@ -163,7 +163,10 @@ function unsubSecret() {
 export function unsubToken(accountId) {
     return crypto.createHmac('sha256', unsubSecret()).update(`unsub:${accountId}`).digest('hex').slice(0, 32);
 }
-function unsubUrl(accountId) {
+// Exported so lifecycle mail (services/userEmailService.js) can carry the same
+// one-click unsubscribe a broadcast does — it is bulk mail by the same
+// definition, and until now it shipped without any way out of it.
+export function unsubUrl(accountId) {
     const base = (process.env.PUBLIC_APP_URL || process.env.APP_URL || '').replace(/\/$/, '');
     return `${base}/api/unsubscribe?u=${accountId}&t=${unsubToken(accountId)}`;
 }
@@ -275,7 +278,7 @@ router.get('/recipients/search', adminAuth, async (req, res) => {
                    COALESCE(email_opt_out, FALSE) AS opted_out
               FROM accounts
              WHERE ${BASE_WHERE}
-               AND (email ILIKE $1 OR username ILIKE $1)
+               AND email ILIKE $1
              ORDER BY id DESC
              LIMIT $2
         `, [`%${q}%`, limit]);

@@ -38,9 +38,9 @@ const sarFmt = (halalas) => (Number(halalas || 0) / 100).toFixed(2);
 async function notifyPaymentReceived(db, accountId, payment, expiryDate) {
     try {
         const acct = await db.query(
-            'SELECT username, email, track FROM accounts WHERE id = $1', [accountId]
+            'SELECT email, track FROM accounts WHERE id = $1', [accountId]
         );
-        const who = acct.rows[0]?.email || acct.rows[0]?.username || `Account #${accountId}`;
+        const who = acct.rows[0]?.email || `Account #${accountId}`;
         // Which student population this sale came from — the two tracks are
         // sold from the same page, so the track is the only thing that tells
         // medical and nursing revenue apart in the inbox.
@@ -282,9 +282,9 @@ export async function activateSubscriptionFromPayment(db, accountId, payment, ev
     try {
         // The customer's own copy: their emailed PDF receipt.
         const who = await db.query(
-            'SELECT email, username FROM accounts WHERE id = $1', [accountId]
+            'SELECT email FROM accounts WHERE id = $1', [accountId]
         );
-        settled.subscriber = who.rows[0]?.email || who.rows[0]?.username || null;
+        settled.subscriber = who.rows[0]?.email || null;
         await sendInvoiceEmail(settled);
     } catch (err) {
         console.error('[payment] invoice email failed:', err.message);

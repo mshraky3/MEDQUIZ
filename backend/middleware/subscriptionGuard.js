@@ -17,6 +17,7 @@
  * @param {import('pg').Pool} db - the shared PostgreSQL pool
  */
 import { isPaymentEnforcementEnabled, checkSubscriptionAccess } from '../services/paymentService.js';
+import { recordFunnelEvent } from '../routes/funnel.js';
 
 export function subscriptionGuard(db) {
     return async function (req, res, next) {
@@ -40,6 +41,14 @@ export function subscriptionGuard(db) {
 
             const { allowed, reason } = checkSubscriptionAccess(account);
             if (!allowed) {
+                // Fire-and-forget: the one funnel event a client could otherwise
+                // suppress just by not sending the beacon, since this IS the
+                // real paywall gate — the trial countdown is only cosmetic.
+                recordFunnelEvent(db, {
+                    accountId: account?.id ?? null,
+                    event: 'paywall_hit',
+                    props: { reason, path: req.originalUrl },
+                }).catch(() => {});
                 return res.status(402).json({
                     success: false,
                     expired: reason === 'subscription_required' || reason === 'trial_expired',

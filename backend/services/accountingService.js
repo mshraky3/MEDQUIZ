@@ -106,7 +106,9 @@ export function settleEvent(row) {
         metadataAccountId: raw?.metadata?.account_id ?? null,
         gatewayRef: row.gateway_ref,
         receivedAt: row.received_at,
-        subscriber: row.email || row.username || null,
+        // username === email on every account, and both are NULL together when
+        // the LEFT JOIN misses (deleted payer), so email alone says it all.
+        subscriber: row.email || null,
         track: row.track || null,
         currency: row.currency || 'SAR',
         company: raw?.source?.company || null,

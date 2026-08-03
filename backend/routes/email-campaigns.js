@@ -10,7 +10,18 @@ import {
     sendInactivityEmail,
     sendStreakReminderEmail,
     sendFeedbackEmail,
+    sendTrialEndedEmail,
+    sendProgressDigestEmail,
+    sendExpiryReminderEmail,
+    sendExamReminderEmail,
 } from '../services/userEmailService.js';
+import {
+    runTrialEndedJob,
+    runExpiryReminderJob,
+    runProgressDigestJob,
+    runExamReminderJob,
+    EXAM_REMINDER_STAGES,
+} from '../services/lifecycleJobs.js';
 import { maybeSendSubscriptionReport, sendSubscriptionReport } from '../services/subscriptionReportService.js';
 import { drainSendingCampaigns } from './admin-broadcast.js';
 import { adminAuth } from '../middleware/adminAuth.js';
@@ -23,7 +34,13 @@ const TEST_EMAIL = OWNER_EMAIL;
 // Test routes accept ?track=nursing so both variants of every template can be
 // previewed in the inbox before a campaign goes out.
 const testTrack = (req) => normalizeTrack(req.query.track);
-const TEST_USERNAME = 'محمود';
+// ...and ?lang=en, since every template now renders in the student's own
+// language. Both variants of every template must be previewable.
+const testLang = (req) => (String(req.query.lang || '').toLowerCase().startsWith('en') ? 'en' : 'ar');
+const testOpts = (req) => ({ lang: testLang(req) });
+const TEST_USERNAME_AR = 'محمود';
+const TEST_USERNAME_EN = 'Mahmod';
+const testName = (req) => (testLang(req) === 'en' ? TEST_USERNAME_EN : TEST_USERNAME_AR);
 
 // ─── Cron auth middleware ──────────────────────────────────────────────────
 // Vercel sets Authorization: Bearer <CRON_SECRET> on cron invocations.
@@ -40,49 +57,125 @@ const cronAuth = (req, res, next) => {
 //  TEST ROUTES  — always send to the owner's inbox
 // ════════════════════════════════════════════════════════════
 
-// GET /api/email-test/welcome
-router.get('/api/email-test/welcome', adminAuth, async (req, res) => {
+/**
+ * One preview definition per template, so /api/email-test/:name and the
+ * send-everything route below can never drift apart — adding a template here
+ * is all it takes for both to know about it.
+ *
+ * Every entry is a function of the request, because the previews are meant to
+ * be steerable: ?track=nursing, ?lang=en, ?days=3, ?streak=12.
+ */
+const PREVIEWS = {
+    welcome: (req) => sendWelcomeEmail(TEST_EMAIL, testName(req), testTrack(req), testOpts(req)),
+
+    inactivity: (req) => sendInactivityEmail(TEST_EMAIL, testName(req), testTrack(req), testOpts(req)),
+
+    streak: (req) => sendStreakReminderEmail(
+        TEST_EMAIL, testName(req), parseInt(req.query.streak) || 7, testTrack(req), testOpts(req)),
+
+    feedback: (req) => sendFeedbackEmail(TEST_EMAIL, testName(req), testTrack(req), testOpts(req)),
+
+    'trial-ended': (req) => sendTrialEndedEmail(TEST_EMAIL, testName(req), testTrack(req), {
+        questionsAnswered: req.query.answered !== undefined ? parseInt(req.query.answered) : 24,
+        accuracy: req.query.accuracy !== undefined ? parseFloat(req.query.accuracy) : 71,
+        quizzesCompleted: req.query.quizzes !== undefined ? parseInt(req.query.quizzes) : 3,
+    }, testOpts(req)),
+
+    'progress-digest': (req) => sendProgressDigestEmail(TEST_EMAIL, testName(req), testTrack(req), {
+        questionsThisWeek: 86,
+        accuracyThisWeek: 74,
+        accuracyLastWeek: 66,
+        streak: 5,
+        goal: {
+            label: testLang(req) === 'en' ? 'questions' : 'أسئلة',
+            current: 86,
+            target: 100,
+        },
+        examDaysRemaining: req.query.examDays !== undefined ? parseInt(req.query.examDays) : 21,
+    }, testOpts(req)),
+
+    'expiry-reminder': (req) => sendExpiryReminderEmail(
+        TEST_EMAIL, testName(req), testTrack(req), parseInt(req.query.days) || 7, testOpts(req)),
+
+    // The ladder is one template with five faces, so the preview takes ?days
+    // and the send-all route below walks every rung.
+    'exam-reminder': (req) => sendExamReminderEmail(
+        TEST_EMAIL, testName(req), testTrack(req),
+        req.query.days !== undefined ? parseInt(req.query.days) : 14,
+        {
+            questionsAnswered: req.query.answered !== undefined ? parseInt(req.query.answered) : 412,
+            accuracy: req.query.accuracy !== undefined ? parseFloat(req.query.accuracy) : 68,
+            wrongCount: req.query.wrong !== undefined ? parseInt(req.query.wrong) : 131,
+            weakestLabel: testLang(req) === 'en' ? 'Pediatrics' : 'الأطفال',
+            weakestAccuracy: 54,
+        },
+        testOpts(req)),
+};
+
+/**
+ * GET /api/email-test/:name — send one template to the owner's inbox.
+ * e.g. /api/email-test/exam-reminder?days=3&lang=en&track=nursing
+ */
+router.get('/api/email-test/:name', adminAuth, async (req, res, next) => {
+    const preview = PREVIEWS[req.params.name];
+    // Not a template name — fall through so the sibling routes registered
+    // below this one (subscription-report, all) still match.
+    if (!preview) return next();
     try {
-        await sendWelcomeEmail(TEST_EMAIL, TEST_USERNAME, testTrack(req));
-        res.json({ success: true, message: `Welcome email sent to ${TEST_EMAIL}` });
+        await preview(req);
+        res.json({
+            success: true,
+            message: `${req.params.name} email sent to ${TEST_EMAIL} (lang=${testLang(req)}, track=${testTrack(req)})`,
+        });
     } catch (err) {
-        console.error('email-test/welcome error:', err);
+        console.error(`email-test/${req.params.name} error:`, err);
         res.status(500).json({ success: false, error: err.message });
     }
 });
 
-// GET /api/email-test/inactivity
-router.get('/api/email-test/inactivity', adminAuth, async (req, res) => {
-    try {
-        await sendInactivityEmail(TEST_EMAIL, TEST_USERNAME, testTrack(req));
-        res.json({ success: true, message: `Inactivity email sent to ${TEST_EMAIL}` });
-    } catch (err) {
-        console.error('email-test/inactivity error:', err);
-        res.status(500).json({ success: false, error: err.message });
-    }
-});
+/**
+ * GET /api/email-test/all?lang=en&track=medical — every template, in order.
+ *
+ * Sends sequentially with a small gap rather than in parallel: the shared
+ * Resend budget is rationed per-second by the gateway, and a burst of a dozen
+ * would have several of them rejected rather than delivered. Errors are
+ * collected, not thrown, so one bad template cannot hide the other eleven.
+ *
+ * The exam ladder contributes one message per rung, because the whole point of
+ * the ladder is that the rungs read differently.
+ */
+router.get('/api/email-test/all', adminAuth, async (req, res) => {
+    const sent = [];
+    const errors = [];
+    const run = async (label, fn) => {
+        try {
+            await fn();
+            sent.push(label);
+        } catch (err) {
+            errors.push({ template: label, error: err.message });
+        }
+        await new Promise((r) => setTimeout(r, 900));
+    };
 
-// GET /api/email-test/streak
-router.get('/api/email-test/streak', adminAuth, async (req, res) => {
-    const mockStreak = parseInt(req.query.streak) || 7;
-    try {
-        await sendStreakReminderEmail(TEST_EMAIL, TEST_USERNAME, mockStreak, testTrack(req));
-        res.json({ success: true, message: `Streak reminder sent to ${TEST_EMAIL} (streak=${mockStreak})` });
-    } catch (err) {
-        console.error('email-test/streak error:', err);
-        res.status(500).json({ success: false, error: err.message });
+    for (const [name, preview] of Object.entries(PREVIEWS)) {
+        if (name === 'exam-reminder') continue; // walked rung by rung below
+        await run(name, () => preview(req));
     }
-});
+    for (const days of EXAM_REMINDER_STAGES) {
+        // Every preview reads nothing but `query`, so a bare shim is both
+        // sufficient and safer than cloning an Express request.
+        const shim = { query: { ...req.query, days: String(days) } };
+        await run(`exam-reminder:${days}d`, () => PREVIEWS['exam-reminder'](shim));
+    }
 
-// GET /api/email-test/feedback
-router.get('/api/email-test/feedback', adminAuth, async (req, res) => {
-    try {
-        await sendFeedbackEmail(TEST_EMAIL, TEST_USERNAME, testTrack(req));
-        res.json({ success: true, message: `Feedback email sent to ${TEST_EMAIL}` });
-    } catch (err) {
-        console.error('email-test/feedback error:', err);
-        res.status(500).json({ success: false, error: err.message });
-    }
+    res.json({
+        success: errors.length === 0,
+        to: TEST_EMAIL,
+        lang: testLang(req),
+        track: testTrack(req),
+        sent,
+        errors,
+    });
 });
 
 // ════════════════════════════════════════════════════════════
@@ -99,13 +192,14 @@ router.get('/api/cron/welcome-emails', cronAuth, async (req, res) => {
     const db = req.db;
     try {
         const { rows } = await db.query(`
-            SELECT id, username, email, track
+            SELECT id, username, email, track, preferred_lang
             FROM accounts
             WHERE welcome_email_sent = FALSE
               AND created_at < NOW() - INTERVAL '1 hour'
               AND email IS NOT NULL
               AND email_verified = TRUE
               AND isactive = TRUE
+              AND COALESCE(email_opt_out, FALSE) = FALSE
             LIMIT 50
         `);
 
@@ -113,7 +207,8 @@ router.get('/api/cron/welcome-emails', cronAuth, async (req, res) => {
         const errors = [];
         for (const user of rows) {
             try {
-                await sendWelcomeEmail(user.email, user.username, user.track);
+                await sendWelcomeEmail(user.email, String(user.username).split('@')[0], user.track,
+                    { lang: user.preferred_lang, accountId: user.id });
                 await db.query(
                     `UPDATE accounts SET welcome_email_sent = TRUE, welcome_email_sent_at = NOW() WHERE id = $1`,
                     [user.id]
@@ -146,12 +241,13 @@ router.get('/api/cron/daily-emails', cronAuth, async (req, res) => {
     // ── 1. Inactivity ────────────────────────────────────────
     try {
         const { rows: inactive } = await db.query(`
-            SELECT id, username, email, track
+            SELECT id, username, email, track, preferred_lang
             FROM accounts
             WHERE logged_date BETWEEN NOW() - INTERVAL '3 days' AND NOW() - INTERVAL '2 days'
               AND email IS NOT NULL
               AND email_verified = TRUE
               AND isactive = TRUE
+              AND COALESCE(email_opt_out, FALSE) = FALSE
               AND (inactivity_email_sent_at IS NULL
                    OR inactivity_email_sent_at < NOW() - INTERVAL '7 days')
             LIMIT 100
@@ -159,7 +255,8 @@ router.get('/api/cron/daily-emails', cronAuth, async (req, res) => {
 
         for (const user of inactive) {
             try {
-                await sendInactivityEmail(user.email, user.username, user.track);
+                await sendInactivityEmail(user.email, String(user.username).split('@')[0], user.track,
+                    { lang: user.preferred_lang, accountId: user.id });
                 await db.query(
                     `UPDATE accounts SET inactivity_email_sent_at = NOW() WHERE id = $1`,
                     [user.id]
@@ -176,7 +273,7 @@ router.get('/api/cron/daily-emails', cronAuth, async (req, res) => {
     // ── 2. Streak reminders ───────────────────────────────────
     try {
         const { rows: streakUsers } = await db.query(`
-            SELECT a.id, a.username, a.email, a.track, us.current_streak
+            SELECT a.id, a.username, a.email, a.track, a.preferred_lang, us.current_streak
             FROM accounts a
             JOIN user_streaks us ON us.user_id = a.id
             WHERE us.last_active_date::date = CURRENT_DATE - 1
@@ -184,12 +281,14 @@ router.get('/api/cron/daily-emails', cronAuth, async (req, res) => {
               AND a.email IS NOT NULL
               AND a.email_verified = TRUE
               AND a.isactive = TRUE
+              AND COALESCE(a.email_opt_out, FALSE) = FALSE
             LIMIT 100
         `);
 
         for (const user of streakUsers) {
             try {
-                await sendStreakReminderEmail(user.email, user.username, user.current_streak, user.track);
+                await sendStreakReminderEmail(user.email, String(user.username).split('@')[0], user.current_streak, user.track,
+                    { lang: user.preferred_lang, accountId: user.id });
                 results.streak++;
             } catch (err) {
                 results.errors.push({ job: 'streak', userId: user.id, error: err.message });
@@ -202,19 +301,21 @@ router.get('/api/cron/daily-emails', cronAuth, async (req, res) => {
     // ── 3. Feedback requests ──────────────────────────────────
     try {
         const { rows: feedbackUsers } = await db.query(`
-            SELECT id, username, email, track
+            SELECT id, username, email, track, preferred_lang
             FROM accounts
             WHERE created_at < NOW() - INTERVAL '7 days'
               AND feedback_email_sent_at IS NULL
               AND email IS NOT NULL
               AND email_verified = TRUE
               AND isactive = TRUE
+              AND COALESCE(email_opt_out, FALSE) = FALSE
             LIMIT 50
         `);
 
         for (const user of feedbackUsers) {
             try {
-                await sendFeedbackEmail(user.email, user.username, user.track);
+                await sendFeedbackEmail(user.email, String(user.username).split('@')[0], user.track,
+                    { lang: user.preferred_lang, accountId: user.id });
                 await db.query(
                     `UPDATE accounts SET feedback_email_sent_at = NOW() WHERE id = $1`,
                     [user.id]
@@ -226,6 +327,28 @@ router.get('/api/cron/daily-emails', cronAuth, async (req, res) => {
         }
     } catch (err) {
         results.errors.push({ job: 'feedback_query', error: err.message });
+    }
+
+    // ── 3b. Conversion & retention lifecycle ──────────────────
+    // Trial-ended is the highest-value email in the product: the journey audit
+    // found 86% of trial users never return after their hour and nothing was
+    // sent at that moment. Each job is idempotent and stamps its own dedupe
+    // column, so running them here AND from /api/cron/lifecycle-emails (for a
+    // tighter cadence than once a day) can never double-send.
+    for (const [name, job] of [
+        ['trialEnded', runTrialEndedJob],
+        ['expiryReminder', runExpiryReminderJob],
+        ['progressDigest', runProgressDigestJob],
+        ['examReminder', runExamReminderJob],
+    ]) {
+        try {
+            const r = await job(db);
+            results[name] = r.sent;
+            if (r.errors.length) results.errors.push(...r.errors);
+        } catch (err) {
+            console.error(`cron/daily-emails ${name} error:`, err);
+            results.errors.push({ job: name, error: err.message });
+        }
     }
 
     // ── 4. Bi-daily subscription report ───────────────────────
@@ -287,6 +410,39 @@ router.get('/api/email-test/subscription-report', adminAuth, async (req, res) =>
  * actually due, and rows are claimed with SKIP LOCKED so overlapping calls
  * can never mail the same person twice.
  */
+/**
+ * GET /api/cron/lifecycle-emails
+ *
+ * Trial-ended + expiry-reminder + progress-digest, on demand.
+ *
+ * The same three jobs also run inside the daily cron, but a trial lasts ONE
+ * HOUR — a student who signs up at 10:00 and loses access at 11:00 would not
+ * hear from us until the next 09:00 run. Vercel's Hobby plan caps the project
+ * at two cron entries and both are taken, so point an external scheduler
+ * (cron-job.org, GitHub Actions, Uptime Robot) at this URL every 15-30 minutes
+ * with `Authorization: Bearer $CRON_SECRET` to close that gap. Safe to call as
+ * often as you like: every job is idempotent and stamps its dedupe column
+ * immediately after each successful send.
+ */
+router.get('/api/cron/lifecycle-emails', cronAuth, async (req, res) => {
+    const out = { trialEnded: 0, expiryReminder: 0, progressDigest: 0, errors: [] };
+    for (const [name, job] of [
+        ['trialEnded', runTrialEndedJob],
+        ['expiryReminder', runExpiryReminderJob],
+        ['progressDigest', runProgressDigestJob],
+        ['examReminder', runExamReminderJob],
+    ]) {
+        try {
+            const r = await job(req.db);
+            out[name] = r.sent;
+            if (r.errors.length) out.errors.push(...r.errors);
+        } catch (err) {
+            out.errors.push({ job: name, error: err.message });
+        }
+    }
+    res.json({ success: true, ...out });
+});
+
 router.get('/api/cron/broadcast-drain', cronAuth, async (req, res) => {
     try {
         const results = await drainSendingCampaigns(req.db);

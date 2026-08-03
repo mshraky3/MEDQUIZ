@@ -15,13 +15,23 @@ import { subscriptionGuard } from './middleware/subscriptionGuard.js';
 import summariesRouter from './routes/summaries.js';
 import accountingRouter from './routes/accounting.js';
 import engagementRouter from './routes/engagement.js';
+import funnelRouter from './routes/funnel.js';
+import goalsRouter from './routes/goals.js';
+import notificationsRouter from './routes/notifications.js';
+import examDateRouter from './routes/examDate.js';
+import { checkMilestones } from './services/notificationService.js';
+import {
+    revenueSnapshot, subscriptionSnapshot, conversionSnapshot,
+    paidButInactiveCount, userSnapshot, activeUserSnapshot, dailySignups,
+    dailyActiveUsers, openReportsCount,
+} from './services/adminMetricsService.js';
 import summaryContent from './content/summaryHtml/index.js';
 import { notifyBackendError } from './services/errorNotificationService.js';
 import { sendWelcomeEmail } from './services/userEmailService.js';
 import { OWNER_EMAIL } from './config/recipients.js';
 import {
     DEFAULT_TRACK, TRACK_KEYS, TRACKS, isValidTrack, normalizeTrack,
-    specialtyKeys, trackLabelAr, trackForSpecialty,
+    specialtyKeys, trackLabelAr, trackLabelEn, trackForSpecialty,
 } from './config/tracks.js';
 import { PICKABLE_SOURCES, resolveSources } from './config/sources.js';
 
@@ -98,6 +108,119 @@ function ensureSchema() {
                     UNIQUE(user_id, achievement_type, achievement_key)
                 )
             `);
+            // Pre-signup/pre-login funnel events (landing → signup → trial →
+            // paywall → subscribe → payment). account_id is nullable and set
+            // only once an event can be tied to a session; anon_id is a stable
+            // per-browser id so the whole funnel is joinable even before an
+            // account exists — the gap page_engagement (logged-in only) and
+            // Vercel Analytics (un-joinable to accounts) both leave open.
+            await db.query(`
+                CREATE TABLE IF NOT EXISTS funnel_events (
+                    id         BIGSERIAL PRIMARY KEY,
+                    account_id INTEGER REFERENCES accounts(id) ON DELETE SET NULL,
+                    anon_id    VARCHAR(64),
+                    event      VARCHAR(60) NOT NULL,
+                    props      JSONB NOT NULL DEFAULT '{}',
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                )
+            `);
+            // Lifecycle-email dedupe stamps. Each column is "when we last sent
+            // this campaign to this account", so the cron can find who is due
+            // without a separate send-log table.
+            await db.query(`
+                ALTER TABLE accounts
+                    ADD COLUMN IF NOT EXISTS trial_ended_email_sent_at  TIMESTAMPTZ DEFAULT NULL,
+                    ADD COLUMN IF NOT EXISTS progress_digest_sent_at    TIMESTAMPTZ DEFAULT NULL,
+                    ADD COLUMN IF NOT EXISTS expiry_reminder_sent_at    TIMESTAMPTZ DEFAULT NULL
+            `);
+            // The student's own exam date, and how far the reminder ladder has
+            // been walked for it. A DATE (not a timestamp) because a sitting is
+            // a day, not a moment, and the countdown must read the same whether
+            // the student opens the app at 08:00 in Riyadh or 23:00 in Cairo.
+            //
+            // exam_reminder_stage stores the LAST milestone mailed (30, 14, 7,
+            // 3, 1 days out). Storing the stage rather than a timestamp is what
+            // makes the ladder idempotent: a job that runs hourly can only ever
+            // move the stage down, so each milestone mails exactly once — and
+            // setting a new date resets it to NULL, which restarts the ladder.
+            await db.query(`
+                ALTER TABLE accounts
+                    ADD COLUMN IF NOT EXISTS exam_date           DATE    DEFAULT NULL,
+                    ADD COLUMN IF NOT EXISTS exam_reminder_stage INTEGER DEFAULT NULL
+            `);
+            // Which language to write to this student in. The whole site has
+            // been bilingual since 2026-08-01, but lifecycle mail was still
+            // Arabic-only — an English-speaking user got an Arabic welcome to a
+            // product they were reading in English. Defaults to 'ar' because
+            // that is what every existing account was already being sent, so
+            // nobody's mail changes language underneath them; the client PUTs
+            // the real preference on first authenticated page view.
+            await db.query(`
+                ALTER TABLE accounts
+                    ADD COLUMN IF NOT EXISTS preferred_lang VARCHAR(5) NOT NULL DEFAULT 'ar'
+            `);
+            // Partial index: the reminder job scans only rows that HAVE a date,
+            // which is a small minority of accounts.
+            await db.query(`
+                CREATE INDEX IF NOT EXISTS idx_accounts_exam_date
+                    ON accounts(exam_date) WHERE exam_date IS NOT NULL
+            `);
+            // Study goals. One ACTIVE goal per user at a time (enforced by the
+            // partial unique index) so the hub always has exactly one thing to
+            // show; completed/abandoned goals stay as history.
+            await db.query(`
+                CREATE TABLE IF NOT EXISTS user_goals (
+                    id          SERIAL PRIMARY KEY,
+                    user_id     INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+                    goal_type   VARCHAR(20) NOT NULL,
+                    target_value INTEGER NOT NULL,
+                    period      VARCHAR(10) NOT NULL DEFAULT 'weekly',
+                    baseline    INTEGER NOT NULL DEFAULT 0,
+                    is_active   BOOLEAN NOT NULL DEFAULT TRUE,
+                    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    achieved_at TIMESTAMPTZ DEFAULT NULL
+                )
+            `);
+            await db.query(`
+                CREATE UNIQUE INDEX IF NOT EXISTS uq_user_goals_one_active
+                    ON user_goals(user_id) WHERE is_active = TRUE
+            `);
+            // Scope: a goal can be narrowed to one specialty and/or one
+            // collection ("200 paediatrics questions", "finish the Confirmed
+            // source"). NULL in either column means "the whole bank", which is
+            // exactly what every pre-existing row already meant — so no
+            // backfill, and old goals keep computing identically.
+            await db.query(`
+                ALTER TABLE user_goals
+                    ADD COLUMN IF NOT EXISTS question_type VARCHAR(50) DEFAULT NULL,
+                    ADD COLUMN IF NOT EXISTS source        VARCHAR(50) DEFAULT NULL
+            `);
+            // In-app notifications, written by real events (goal reached,
+            // streak milestone, trial ending) — never a marketing queue.
+            await db.query(`
+                CREATE TABLE IF NOT EXISTS user_notifications (
+                    id         BIGSERIAL PRIMARY KEY,
+                    user_id    INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+                    type       VARCHAR(40) NOT NULL,
+                    title      VARCHAR(200) NOT NULL,
+                    body       TEXT,
+                    cta_url    VARCHAR(200),
+                    dedupe_key VARCHAR(120),
+                    read_at    TIMESTAMPTZ DEFAULT NULL,
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                )
+            `);
+            await db.query(`CREATE INDEX IF NOT EXISTS idx_user_notifications_user ON user_notifications(user_id, created_at DESC)`);
+            // A milestone fires once. The dedupe key carries what happened
+            // ("goal:12:done", "streak:7"), so re-running the check is safe.
+            await db.query(`
+                CREATE UNIQUE INDEX IF NOT EXISTS uq_user_notifications_dedupe
+                    ON user_notifications(user_id, dedupe_key) WHERE dedupe_key IS NOT NULL
+            `);
+            await db.query(`CREATE INDEX IF NOT EXISTS idx_funnel_events_event ON funnel_events(event)`);
+            await db.query(`CREATE INDEX IF NOT EXISTS idx_funnel_events_created ON funnel_events(created_at)`);
+            await db.query(`CREATE INDEX IF NOT EXISTS idx_funnel_events_anon ON funnel_events(anon_id)`);
+            await db.query(`CREATE INDEX IF NOT EXISTS idx_funnel_events_account ON funnel_events(account_id)`);
             // Columns that used to be ensured with ALTER TABLE on EVERY request in
             // the hot paths (/quiz-sessions, /user-analysis, /api/all-questions,
             // /get_all_users). Ensuring them once here removes 10-15 DDL round-trips
@@ -150,6 +273,48 @@ function ensureSchema() {
             // this index is the one that keeps /api/questions off a seq scan
             // once the nursing bank is loaded alongside the medical one.
             await db.query(`CREATE INDEX IF NOT EXISTS idx_questions_track_type_source ON questions(track, question_type, source)`);
+
+            // Auth resolves accounts by email (/login, /session-validate), but
+            // the only unique index was on `username` — so email lookups were
+            // heading for a seq scan on every sign-in and every session check.
+            // Deliberately NOT unique: uniqueness is already guaranteed by
+            // UNIQUE(username) plus the parity below, and a UNIQUE index that
+            // failed to build would take the whole schema bootstrap down.
+            await db.query(`CREATE INDEX IF NOT EXISTS idx_accounts_email ON accounts(email)`);
+
+            // ── username === email ─────────────────────────────────────────
+            // Sign-in has been email-only for a long time (see /login), but a
+            // handful of pre-email accounts still carried a separate handle
+            // like 'albaraa1'. That split identity is what forced every auth
+            // query into a `(email = $1 OR username = $1)` dual-lookup, and it
+            // leaked into the client, which stores `user.username` and sends it
+            // back on every session check.
+            //
+            // Collapsing the two here — at boot, before any request is served —
+            // is what makes dropping that dual-lookup safe regardless of deploy
+            // order. Idempotent: after the first run it matches zero rows.
+            //
+            // Guarded against the UNIQUE(username) constraint: an account is
+            // only rewritten when no OTHER account already holds that email as
+            // its username, so a would-be collision is skipped rather than
+            // crashing boot.
+            const parity = await db.query(`
+                UPDATE accounts a
+                   SET username = a.email, updated_at = NOW()
+                 WHERE a.email IS NOT NULL
+                   AND btrim(a.email) <> ''
+                   AND a.username IS DISTINCT FROM a.email
+                   AND NOT EXISTS (
+                       SELECT 1 FROM accounts b
+                        WHERE b.id <> a.id AND b.username = a.email
+                   )
+                RETURNING a.id
+            `);
+            if (parity.rowCount > 0) {
+                logger.info(`username→email parity applied to ${parity.rowCount} account(s)`,
+                    { ids: parity.rows.map((r) => r.id) });
+            }
+
             logger.info('Schema bootstrap complete (tables + performance indexes ensured)');
         } catch (err) {
             _schemaReady = null; // allow a retry on a later invocation
@@ -382,9 +547,8 @@ app.post('/add_account', adminAuth, async (req, res) => {
     const lowercaseUsername = username.toLowerCase();
     const lowercasePassword = password.toLowerCase();
 
-    // /login rejects any account whose username is not also its email, so an
-    // account created with a non-email username can never be signed into.
-    // Refuse up front instead of silently creating a dead account.
+    // Sign-in is by email, so an account whose username is not an email could
+    // never be signed into. Refuse up front rather than create a dead account.
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(lowercaseUsername)) {
         return res.status(400).json({
             message: 'Username must be a valid email address — sign-in is by email.',
@@ -392,8 +556,10 @@ app.post('/add_account', adminAuth, async (req, res) => {
     }
 
     try {
-        // Match /login's dual lookup: an existing row under either column would
-        // collide, so both have to be free.
+        // Both columns are still checked even though they now always hold the
+        // same value: UNIQUE(username) is the constraint an insert would
+        // actually violate, and checking email too keeps this correct for any
+        // row the boot-time parity pass had to skip.
         const check = await db.query(
             "SELECT id FROM accounts WHERE username = $1 OR email = $1",
             [lowercaseUsername]
@@ -917,9 +1083,14 @@ app.post('/login', async (req, res) => {
     const client = await db.connect();
     try {
         await client.query('BEGIN');
-        // Dual-lookup: match by email OR username (for existing users)
+        // Sign-in is by email, full stop. This used to be a
+        // `(email = $1 OR username = $1)` dual-lookup followed by a guard that
+        // rejected the row whenever the match came from `username` — i.e. the
+        // username branch could never succeed. Every account now has
+        // username === email (enforced at boot), so matching on email alone is
+        // the same set of rows minus the dead branch.
         const userResult = await client.query(
-            "SELECT * FROM accounts WHERE (email = $1 OR username = $1) FOR UPDATE",
+            "SELECT * FROM accounts WHERE email = $1 FOR UPDATE",
             [lowercaseUsername]
         );
         const userRow = userResult.rows[0];
@@ -928,17 +1099,8 @@ app.post('/login', async (req, res) => {
         if (!userRow) {
             await client.query('ROLLBACK');
             client.release();
-            logger.warn(`No user found for username: ${lowercaseUsername}`);
+            logger.warn(`No user found for email: ${lowercaseUsername}`);
             return res.status(401).json({ message: 'Invalid credentials' });
-        }
-
-        // Sign-in is by email. Legacy username-only accounts were removed, and
-        // every signup path has required a verified email since.
-        if (lowercaseUsername !== userRow.email) {
-            await client.query('ROLLBACK');
-            client.release();
-            logger.warn(`Non-email login attempt: ${lowercaseUsername}`);
-            return res.status(401).json({ message: 'Please sign in with your email address.' });
         }
 
         if (lowercasePassword !== userRow.password) {
@@ -1091,9 +1253,12 @@ app.post('/session-validate', async (req, res) => {
     // token from the Authorization header (preferred) or the body.
     const { sessionToken } = getSessionCredentials(req);
     try {
-        // Match by email OR username (existing accounts may sign in by either).
+        // username === email for every account, so the old
+        // `(username = $1 OR email = $1)` pair matched the same row twice.
+        // The client still labels this field `username` in its stored session
+        // object; the value it holds is the email.
         const user = await db.query(
-            "SELECT id, logged, logged_date, session_token FROM accounts WHERE (username = $1 OR email = $1)",
+            "SELECT id, logged, logged_date, session_token FROM accounts WHERE email = $1",
             [username]
         );
         const userRow = user.rows[0];
@@ -1150,12 +1315,12 @@ app.post('/logout', async (req, res) => {
 // Get comprehensive admin statistics
 app.get('/admin/stats', adminAuth, async (req, res) => {
     try {
-        // Run all queries in parallel for performance
+        // Run all queries in parallel for performance. Money, subscriptions,
+        // users and active-user counts are NOT queried here directly — they
+        // come from services/adminMetricsService.js, the single definition
+        // shared with /admin/analytics and /api/accounting/summary, so this
+        // endpoint can no longer drift from the accounting page.
         const [
-            totalUsersRes,
-            activeUsersRes,
-            newUsersWeekRes,
-            newUsersMonthRes,
             totalQuizzesRes,
             quizzesTodayRes,
             quizzesWeekRes,
@@ -1166,12 +1331,11 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
             quizzesByTopicRes,
             recentLoginsRes,
             totalQuestionsAnsweredRes,
-            onlineUsersRes,
             userGrowthRes,
             quizGrowthRes,
             accuracyByTopicRes,
             hourlyActivityRes,
-            retentionRateRes,
+            wowActiveRatioRes,
             avgQuestionsPerQuizRes,
             deviceStatsRes,
             browserStatsRes,
@@ -1179,22 +1343,17 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
             quizCompletionRateRes,
             streakLeadersRes,
             accuracyDistributionRes,
-            subscriptionBreakdownRes,
-            trialFunnelRes,
-            revenueRes,
-            paidButInactiveRes,
-            recentPaymentsRes,
             trackBreakdownRes,
-            trackContentRes
+            trackContentRes,
+            users,
+            activeUsers,
+            revenue,
+            subs,
+            paidButInactive,
+            signups30d,
+            activeUsers30d,
+            openReports,
         ] = await Promise.all([
-            // Total users
-            db.query('SELECT COUNT(*) as count FROM accounts'),
-            // Active users (logged in last 7 days)
-            db.query(`SELECT COUNT(*) as count FROM accounts WHERE logged_date > NOW() - INTERVAL '7 days'`),
-            // New users this week
-            db.query(`SELECT COUNT(*) as count FROM accounts WHERE created_at > NOW() - INTERVAL '7 days'`),
-            // New users this month
-            db.query(`SELECT COUNT(*) as count FROM accounts WHERE created_at > NOW() - INTERVAL '30 days'`),
             // Total quizzes taken
             db.query('SELECT COUNT(*) as count FROM user_quiz_sessions'),
             // Quizzes today
@@ -1205,15 +1364,15 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
             db.query('SELECT ROUND(AVG(quiz_accuracy)::numeric, 1) as avg FROM user_quiz_sessions WHERE quiz_accuracy IS NOT NULL'),
             // Logins by day (last 14 days)
             db.query(`
-                SELECT DATE(login_time) as date, COUNT(*) as count 
-                FROM login_history 
+                SELECT DATE(login_time) as date, COUNT(*) as count
+                FROM login_history
                 WHERE login_time > NOW() - INTERVAL '14 days'
-                GROUP BY DATE(login_time) 
+                GROUP BY DATE(login_time)
                 ORDER BY date
             `),
             // Top 10 most active users
             db.query(`
-                SELECT a.id, a.username, COUNT(q.id) as quiz_count, 
+                SELECT a.id, a.username, COUNT(q.id) as quiz_count,
                        ROUND(AVG(q.quiz_accuracy)::numeric, 1) as avg_accuracy,
                        SUM(q.total_questions) as total_questions_answered,
                        MAX(q.start_time) as last_activity
@@ -1226,7 +1385,7 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
             `),
             // Users flagged for suspicious activity
             db.query(`
-                SELECT DISTINCT lh.user_id, a.username, 
+                SELECT DISTINCT lh.user_id, a.username,
                        COUNT(DISTINCT lh.ip_address) as unique_ips,
                        COUNT(DISTINCT CONCAT(lh.device_type, '-', lh.browser)) as unique_devices,
                        MAX(lh.login_time) as last_login,
@@ -1256,8 +1415,6 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
             `),
             // Total questions answered across all users
             db.query('SELECT SUM(total_questions) as count FROM user_quiz_sessions'),
-            // Currently online users (active session in last 30 min)
-            db.query(`SELECT COUNT(*) as count FROM accounts WHERE logged = true AND logged_date > NOW() - INTERVAL '30 minutes'`),
             // User growth by week (last 8 weeks)
             db.query(`
                 SELECT DATE_TRUNC('week', created_at) as week, COUNT(*) as count
@@ -1276,7 +1433,7 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
             `),
             // Accuracy by topic (for radar chart)
             db.query(`
-                SELECT question_type as topic, 
+                SELECT question_type as topic,
                        ROUND(AVG(accuracy)::numeric, 1) as avg_accuracy,
                        SUM(total_answered) as total_questions
                 FROM user_topic_analysis
@@ -1292,9 +1449,11 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
                 GROUP BY EXTRACT(HOUR FROM start_time)
                 ORDER BY hour
             `),
-            // User retention rate (users active in last 7 days who were also active in previous 7 days)
+            // Week-over-week active ratio: NOT retention (it can exceed 100% —
+            // it's a raw week-to-week comparison, not a cohort that was
+            // tracked over time). Previously mislabelled "Retention Rate".
             db.query(`
-                SELECT 
+                SELECT
                     COUNT(DISTINCT CASE WHEN logged_date > NOW() - INTERVAL '7 days' THEN id END) as active_this_week,
                     COUNT(DISTINCT CASE WHEN logged_date BETWEEN NOW() - INTERVAL '14 days' AND NOW() - INTERVAL '7 days' THEN id END) as active_last_week
                 FROM accounts
@@ -1328,23 +1487,23 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
             `),
             // Quiz completion rate (quizzes with results vs started)
             db.query(`
-                SELECT 
+                SELECT
                     COUNT(*) as total_started,
                     COUNT(CASE WHEN quiz_accuracy IS NOT NULL THEN 1 END) as completed
                 FROM user_quiz_sessions
             `),
-            // Streak leaders (users with highest current streaks from user_stats table if exists)
+            // Streak leaders (users with highest current streaks from user_streaks)
             db.query(`
                 SELECT a.username, COALESCE(us.current_streak, 0) as streak
                 FROM accounts a
-                LEFT JOIN user_stats us ON a.id = us.user_id
+                LEFT JOIN user_streaks us ON a.id = us.user_id
                 ORDER BY COALESCE(us.current_streak, 0) DESC
                 LIMIT 5
             `).catch(() => ({ rows: [] })),
             // Accuracy distribution (group users by accuracy ranges)
             db.query(`
-                SELECT 
-                    CASE 
+                SELECT
+                    CASE
                         WHEN avg_acc < 40 THEN '0-40%'
                         WHEN avg_acc < 60 THEN '40-60%'
                         WHEN avg_acc < 80 THEN '60-80%'
@@ -1360,67 +1519,6 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
                 GROUP BY range
                 ORDER BY range
             `),
-            // Accounts by subscription status (active/trial/free/grandfathered/admin-created)
-            db.query(`
-                SELECT
-                    COUNT(*) FILTER (WHERE subscription_status = 'active' AND subscription_expiry_date > NOW()) as active_subscribers,
-                    COUNT(*) FILTER (WHERE subscription_status = 'trial' AND subscription_expiry_date > NOW()) as trial_active,
-                    COUNT(*) FILTER (WHERE subscription_status = 'trial' AND subscription_expiry_date <= NOW()) as trial_expired_unconverted,
-                    COUNT(*) FILTER (WHERE subscription_status = 'free') as free_no_trial,
-                    COUNT(*) FILTER (WHERE grandfathered_at IS NOT NULL) as grandfathered,
-                    COUNT(*) FILTER (WHERE is_admin_created = true) as admin_created
-                FROM accounts
-            `).catch(() => ({ rows: [{}] })),
-            // Trial funnel: how many trials were ever granted vs how many of those
-            // accounts are now paying (the number that matters for the free-trial bet).
-            db.query(`
-                SELECT
-                    (SELECT COUNT(*) FROM trial_grants) as total_trials_granted,
-                    (SELECT COUNT(*) FROM trial_grants tg
-                       JOIN accounts a ON a.id = tg.account_id
-                      WHERE a.subscription_status = 'active') as trial_to_paid
-            `).catch(() => ({ rows: [{ total_trials_granted: 0, trial_to_paid: 0 }] })),
-            // Revenue from confirmed Moyasar payments. Three DIFFERENT numbers,
-            // kept separate so the dashboard can't conflate them:
-            //   payment_count       = raw paid events (includes renewals + a
-            //                         pre-launch test row + payments whose
-            //                         account was later deleted)
-            //   distinct_payers     = distinct still-present accounts that paid
-            //                         (the real "how many customers paid" count)
-            //   total_halalas       = actual money received (sum of all paid rows)
-            db.query(`
-                SELECT
-                    COUNT(*) as payment_count,
-                    COUNT(DISTINCT account_id) FILTER (WHERE account_id IS NOT NULL) as distinct_payers,
-                    COALESCE(SUM(amount_halalas), 0) as total_halalas
-                FROM payment_events WHERE status = 'paid'
-            `).catch(() => ({ rows: [{ payment_count: 0, distinct_payers: 0, total_halalas: 0 }] })),
-            // Money/access-at-risk: accounts that HAVE a confirmed payment but do
-            // NOT currently have access (not active-unexpired, not grandfathered,
-            // not admin). These are the soft-launch payers whose payment recorded
-            // before activation logic was wired — they paid but hit the paywall.
-            db.query(`
-                SELECT COUNT(*) as n FROM accounts a
-                WHERE EXISTS (SELECT 1 FROM payment_events pe
-                              WHERE pe.account_id = a.id AND pe.status = 'paid')
-                  AND NOT (
-                        (a.subscription_status = 'active' AND a.subscription_expiry_date > NOW())
-                        OR a.grandfathered_at IS NOT NULL
-                        OR a.is_admin_created = true
-                  )
-            `).catch(() => ({ rows: [{ n: 0 }] })),
-            // Last 10 confirmed payments for a quick recent-activity table.
-            // LEFT JOIN on purpose: payment_events.account_id is ON DELETE SET
-            // NULL, so a payment whose account was later deleted must still
-            // show up here — the money happened even if the account didn't survive.
-            db.query(`
-                SELECT pe.received_at, pe.amount_halalas, pe.currency, a.username, a.email
-                FROM payment_events pe
-                LEFT JOIN accounts a ON a.id = pe.account_id
-                WHERE pe.status = 'paid'
-                ORDER BY pe.received_at DESC
-                LIMIT 10
-            `).catch(() => ({ rows: [] })),
             // ── Per-track rollup ──
             // The platform serves two student populations from one deployment,
             // so every headline number above is a blend. This splits users,
@@ -1451,28 +1549,37 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
                        ON q.track = t.track
                 LEFT JOIN (SELECT track, COUNT(*)::int AS n FROM summaries WHERE is_published = TRUE GROUP BY track) s
                        ON s.track = t.track
-            `).catch(() => ({ rows: [] }))
+            `).catch(() => ({ rows: [] })),
+            userSnapshot(db),
+            activeUserSnapshot(db),
+            revenueSnapshot(db),
+            subscriptionSnapshot(db),
+            paidButInactiveCount(db),
+            dailySignups(db, {
+                from: new Date(Date.now() - 29 * 86400000).toISOString().slice(0, 10),
+                to: new Date().toISOString().slice(0, 10),
+            }),
+            dailyActiveUsers(db, {
+                from: new Date(Date.now() - 29 * 86400000).toISOString().slice(0, 10),
+                to: new Date().toISOString().slice(0, 10),
+            }),
+            openReportsCount(db),
         ]);
 
+        // conversionSnapshot needs revenue's resolved payer set, so it can't
+        // join the Promise.all above.
+        const conversion = await conversionSnapshot(db, revenue.payerAccountIds);
+
         // Calculate derived metrics
-        const retentionData = retentionRateRes.rows[0];
-        const retentionRate = retentionData.active_last_week > 0
-            ? Math.round((retentionData.active_this_week / retentionData.active_last_week) * 100)
+        const wowData = wowActiveRatioRes.rows[0];
+        const wowActiveRatio = wowData.active_last_week > 0
+            ? Math.round((wowData.active_this_week / wowData.active_last_week) * 100)
             : 0;
 
         const completionData = quizCompletionRateRes.rows[0];
         const completionRate = completionData.total_started > 0
             ? Math.round((completionData.completed / completionData.total_started) * 100)
             : 0;
-
-        const subBreakdown = subscriptionBreakdownRes.rows[0] || {};
-        const funnel = trialFunnelRes.rows[0] || {};
-        const totalTrialsGranted = parseInt(funnel.total_trials_granted) || 0;
-        const trialToPaid = parseInt(funnel.trial_to_paid) || 0;
-        const trialConversionRate = totalTrialsGranted > 0
-            ? Math.round((trialToPaid / totalTrialsGranted) * 100)
-            : 0;
-        const revenue = revenueRes.rows[0] || {};
 
         // Per-track rollup: one row per track the platform knows about, even
         // when it has no users or content yet — the dashboard should show a
@@ -1486,7 +1593,8 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
             const c = contentRows[key] || {};
             return {
                 track: key,
-                label: trackLabelAr(key),
+                // English — this feeds the admin panel, which stays English/LTR.
+                label: trackLabelEn(key),
                 users: parseInt(u.users) || 0,
                 activeUsers: parseInt(u.active_users) || 0,
                 newUsersWeek: parseInt(u.new_users_week) || 0,
@@ -1504,42 +1612,49 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
         res.json({
             byTrack,
             overview: {
-                totalUsers: parseInt(totalUsersRes.rows[0]?.count) || 0,
-                activeUsers: parseInt(activeUsersRes.rows[0]?.count) || 0,
-                onlineNow: parseInt(onlineUsersRes.rows[0]?.count) || 0,
-                newUsersWeek: parseInt(newUsersWeekRes.rows[0]?.count) || 0,
-                newUsersMonth: parseInt(newUsersMonthRes.rows[0]?.count) || 0,
+                totalUsers: users.totalUsers,
+                activeUsers: users.activeUsers,
+                onlineNow: users.onlineNow,
+                newUsersToday: users.newUsersToday,
+                newUsersWeek: users.newUsersWeek,
+                newUsersMonth: users.newUsersMonth,
                 totalQuizzes: parseInt(totalQuizzesRes.rows[0]?.count) || 0,
                 quizzesToday: parseInt(quizzesTodayRes.rows[0]?.count) || 0,
                 quizzesThisWeek: parseInt(quizzesWeekRes.rows[0]?.count) || 0,
                 avgAccuracy: parseFloat(avgAccuracyRes.rows[0]?.avg) || 0,
                 totalQuestionsAnswered: parseInt(totalQuestionsAnsweredRes.rows[0]?.count) || 0,
                 avgQuestionsPerQuiz: parseFloat(avgQuestionsPerQuizRes.rows[0]?.avg) || 0,
-                retentionRate: retentionRate,
+                wowActiveRatio,
                 completionRate: completionRate,
                 suspiciousCount: suspiciousUsersRes.rows.length
             },
+            activeUsers,
             subscriptions: {
-                activeSubscribers: parseInt(subBreakdown.active_subscribers) || 0,
-                trialActive: parseInt(subBreakdown.trial_active) || 0,
-                trialExpiredUnconverted: parseInt(subBreakdown.trial_expired_unconverted) || 0,
-                freeNoTrial: parseInt(subBreakdown.free_no_trial) || 0,
-                grandfathered: parseInt(subBreakdown.grandfathered) || 0,
-                adminCreated: parseInt(subBreakdown.admin_created) || 0,
-                totalTrialsGranted,
-                trialToPaid,
-                trialConversionRate,
-                paymentCount: parseInt(revenue.payment_count) || 0,
-                distinctPayers: parseInt(revenue.distinct_payers) || 0,
-                paidButInactive: parseInt(paidButInactiveRes.rows[0]?.n) || 0,
-                totalRevenueSar: (parseInt(revenue.total_halalas) || 0) / 100,
-                recentPayments: recentPaymentsRes.rows.map(p => ({
-                    receivedAt: p.received_at,
-                    amountSar: (parseInt(p.amount_halalas) || 0) / 100,
-                    currency: p.currency,
-                    username: p.username,
-                    email: p.email
-                }))
+                // Net received is the headline everywhere: gross minus Moyasar
+                // fees minus refunds, i.e. what actually reached the bank.
+                // Identical to /api/accounting/summary's totals because both
+                // read the same ledger via adminMetricsService.revenueSnapshot.
+                netSar: revenue.netHalalas / 100,
+                grossSar: revenue.grossHalalas / 100,
+                feeSar: revenue.feeHalalas / 100,
+                refundedSar: revenue.refundedHalalas / 100,
+                thisMonthNetSar: revenue.thisMonthNetHalalas / 100,
+                lastMonthNetSar: revenue.lastMonthNetHalalas / 100,
+                paymentCount: revenue.count,
+                payerCount: revenue.distinctPayers,
+                activeSubscribers: parseInt(subs.active_subscribers) || 0,
+                trialActive: parseInt(subs.trial_active) || 0,
+                trialExpiredUnconverted: parseInt(subs.trial_expired_unconverted) || 0,
+                freeNoTrial: parseInt(subs.free_no_trial) || 0,
+                grandfathered: parseInt(subs.grandfathered) || 0,
+                adminCreated: parseInt(subs.admin_created) || 0,
+                expiringIn7d: parseInt(subs.expiring_7d) || 0,
+                expiringIn30d: parseInt(subs.expiring_30d) || 0,
+                totalTrialsGranted: conversion.totalTrialsGranted,
+                trialToPaid: conversion.trialToPaid,
+                trialConversionRate: conversion.trialConversionRate,
+                paidButInactive,
+                recentPayments: revenue.recentPayments,
             },
             charts: {
                 loginsByDay: loginsByDayRes.rows,
@@ -1550,13 +1665,22 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
                 deviceStats: deviceStatsRes.rows,
                 browserStats: browserStatsRes.rows,
                 accuracyByTopic: accuracyByTopicRes.rows,
-                accuracyDistribution: accuracyDistributionRes.rows
+                accuracyDistribution: accuracyDistributionRes.rows,
+                dailySignups: signups30d,
+                dailyActiveUsers: activeUsers30d,
+                revenueByMonth: revenue.byMonth.map((m) => ({
+                    month: m.month,
+                    count: m.count,
+                    netSar: m.netHalalas / 100,
+                    grossSar: m.grossHalalas / 100,
+                })),
             },
             topUsers: topUsersRes.rows,
             suspiciousUsers: suspiciousUsersRes.rows,
             quizzesByTopic: quizzesByTopicRes.rows,
             recentLogins: recentLoginsRes.rows,
-            streakLeaders: streakLeadersRes.rows
+            streakLeaders: streakLeadersRes.rows,
+            openReports,
         });
     } catch (err) {
         logger.error('Error fetching admin stats', err);
@@ -1600,7 +1724,7 @@ app.get('/admin/analytics', adminAuth, async (req, res) => {
     try {
         const [
             mixRes, activeRes, loginsRes, signupsRes, growthRes,
-            specialtyRes, sessionRes, summaryRes, conversionRes
+            specialtyRes, sessionRes, summaryRes
         ] = await Promise.allSettled([
             q(`SELECT
                     COUNT(*) FILTER (WHERE grandfathered_at IS NOT NULL OR subscription_status = 'grandfathered')::int AS legacy,
@@ -1671,24 +1795,24 @@ app.get('/admin/analytics', adminAuth, async (req, res) => {
                 FROM user_quiz_sessions`),
             q(`SELECT COUNT(*)::int AS total_views, COUNT(DISTINCT user_id)::int AS distinct_users
                 FROM summary_progress`),
-            q(`SELECT
-                    (SELECT COUNT(*) FROM trial_grants)::int AS trials_ever,
-                    (SELECT COUNT(DISTINCT account_id) FROM payment_events WHERE status = 'paid' AND account_id IS NOT NULL)::int AS payers`)
         ]);
 
         const mix = firstOf(mixRes, { legacy: 0, paid: 0, trial: 0, total: 0 });
         const free = Math.max(0, (mix.total || 0) - (mix.legacy || 0) - (mix.paid || 0) - (mix.trial || 0));
+        // English labels — admin stays English/LTR regardless of site language (AdminShell).
         const accountMix = [
-            { key: 'paid', label: 'مدفوع', value: mix.paid || 0 },
-            { key: 'trial', label: 'تجريبي', value: mix.trial || 0 },
-            { key: 'free', label: 'مجاني', value: free },
-            { key: 'legacy', label: 'قديم (Legacy)', value: mix.legacy || 0 }
+            { key: 'paid', label: 'Paid', value: mix.paid || 0 },
+            { key: 'trial', label: 'Trial', value: mix.trial || 0 },
+            { key: 'free', label: 'Free', value: free },
+            { key: 'legacy', label: 'Legacy', value: mix.legacy || 0 }
         ];
 
-        const conv = firstOf(conversionRes, { trials_ever: 0, payers: 0 });
-        const trialToPaidRate = conv.trials_ever > 0
-            ? Math.round((conv.payers / conv.trials_ever) * 1000) / 10
-            : 0;
+        // Shared with /admin/stats: same ledger, same trial→paid definition —
+        // this used to be its own "distinct payers / trials ever" ratio,
+        // which read differently from the dashboard's number for the same
+        // metric on the same screen.
+        const revenue = await revenueSnapshot(db);
+        const conversion = await conversionSnapshot(db, revenue.payerAccountIds);
 
         const sess = firstOf(sessionRes, { total_sessions: 0, avg_session_seconds: 0 });
         const summary = firstOf(summaryRes, { total_views: 0, distinct_users: 0 });
@@ -1702,9 +1826,10 @@ app.get('/admin/analytics', adminAuth, async (req, res) => {
                 trial: mix.trial || 0,
                 legacy: mix.legacy || 0,
                 free,
-                trialsEver: conv.trials_ever || 0,
-                payers: conv.payers || 0,
-                trialToPaidRate
+                trialsEver: conversion.totalTrialsGranted,
+                payers: revenue.distinctPayers,
+                trialToPaid: conversion.trialToPaid,
+                trialToPaidRate: conversion.trialConversionRate
             },
             activeUsers: firstOf(activeRes, { dau: 0, wau: 0, mau: 0 }),
             logins: rowsOf(loginsRes),
@@ -2101,14 +2226,42 @@ app.get('/question-attempts/session/:sessionId', requireSession, async (req, res
     }
 });
 
+/**
+ * The student's wrong answers, newest first.
+ *
+ * Searching happens HERE rather than in the browser because the page is
+ * paginated: filtering the 20 rows already loaded would search a window, not a
+ * history, and a student with 400 wrong answers looking for "myasthenia" would
+ * be told there are none. `q` matches the question text and both answers, and
+ * `type` narrows to one specialty; the count query carries the same filters so
+ * "142 results" always describes what pagination will actually walk through.
+ */
 app.get('/wrong-questions/user/:userId', requireSession, async (req, res) => {
     const { userId } = req.params;
     const { limit = 50, offset = 0 } = req.query;
+    const search = String(req.query.q || '').trim().slice(0, 120);
+    const type = String(req.query.type || '').trim().slice(0, 50);
 
     try {
-        // Get wrong question attempts with question details
+        // Built once and shared by both queries so they can never disagree.
+        // $1 is always the user; search/type append in a fixed order.
+        const where = [`uqa.user_id = $1`, `uqa.is_correct = false`];
+        const params = [userId];
+        if (search) {
+            params.push(`%${search}%`);
+            const p = `$${params.length}`;
+            // ILIKE (not to_tsvector) on purpose: students type fragments and
+            // drug-name prefixes, which a stemmed full-text match would miss.
+            where.push(`(q.question_text ILIKE ${p} OR q.correct_option ILIKE ${p} OR uqa.selected_option ILIKE ${p})`);
+        }
+        if (type) {
+            params.push(type);
+            where.push(`q.question_type = $${params.length}`);
+        }
+        const whereSql = where.join(' AND ');
+
         const result = await db.query(`
-            SELECT 
+            SELECT
                 uqa.*,
                 q.question_text,
                 q.correct_option,
@@ -2116,23 +2269,38 @@ app.get('/wrong-questions/user/:userId', requireSession, async (req, res) => {
                 q.source
             FROM user_question_attempts uqa
             JOIN questions q ON uqa.question_id = q.id
-            WHERE uqa.user_id = $1 
-            AND uqa.is_correct = false
+            WHERE ${whereSql}
             ORDER BY uqa.attempted_at DESC
-            LIMIT $2 OFFSET $3
-        `, [userId, parseInt(limit), parseInt(offset)]);
+            LIMIT $${params.length + 1} OFFSET $${params.length + 2}
+        `, [...params, parseInt(limit), parseInt(offset)]);
 
-        // Get total count for pagination
+        // Total for pagination, plus the per-specialty breakdown that fills the
+        // filter chips — computed over the search results, so a chip never
+        // offers a specialty the current search has nothing in.
         const countResult = await db.query(`
-            SELECT COUNT(*) as total
+            SELECT COUNT(*)::int AS total
             FROM user_question_attempts uqa
-            WHERE uqa.user_id = $1 
-            AND uqa.is_correct = false
-        `, [userId]);
+            JOIN questions q ON uqa.question_id = q.id
+            WHERE ${whereSql}
+        `, params);
+
+        // Specialty facets ignore the type filter itself — otherwise selecting
+        // one specialty would hide every other chip and trap the student there.
+        const facetWhere = where.filter((clause) => !clause.startsWith('q.question_type ='));
+        const facetParams = type ? params.slice(0, -1) : params;
+        const facets = await db.query(`
+            SELECT q.question_type, COUNT(*)::int AS total
+            FROM user_question_attempts uqa
+            JOIN questions q ON uqa.question_id = q.id
+            WHERE ${facetWhere.join(' AND ')}
+            GROUP BY q.question_type
+            ORDER BY total DESC
+        `, facetParams);
 
         res.json({
             wrongQuestions: result.rows,
-            total: parseInt(countResult.rows[0].total),
+            total: countResult.rows[0].total,
+            byType: facets.rows,
             limit: parseInt(limit),
             offset: parseInt(offset)
         });
@@ -2182,7 +2350,12 @@ app.get('/api/all-questions', adminOrSubscriber, async (req, res) => {
 app.get('/api/track-content-status', requireSession, async (req, res) => {
     try {
         const track = resolveContentTrack(req);
-        const [byType, bySource, summaryCount] = await Promise.all([
+        // Types are namespaced per track (specialtyKeys(track) never overlaps
+        // across tracks), so filtering the user's progress by that list is
+        // enough to scope it to this track without a track column on
+        // user_question_progress — same pattern the /quiz route uses.
+        const trackTypes = specialtyKeys(track);
+        const [byType, bySource, summaryCount, completedByType] = await Promise.all([
             db.query(
                 `SELECT question_type, COUNT(*)::int AS total
                  FROM questions WHERE track = $1 GROUP BY question_type`,
@@ -2198,6 +2371,13 @@ app.get('/api/track-content-status', requireSession, async (req, res) => {
                  WHERE track = $1 AND is_published = TRUE`,
                 [track]
             ),
+            db.query(
+                `SELECT question_type, COUNT(*)::int AS completed
+                 FROM user_question_progress
+                 WHERE user_id = $1 AND question_type = ANY($2::text[])
+                 GROUP BY question_type`,
+                [req.accountId, trackTypes]
+            ),
         ]);
 
         const questionsByType = {};
@@ -2205,6 +2385,15 @@ app.get('/api/track-content-status', requireSession, async (req, res) => {
         byType.rows.forEach((r) => {
             questionsByType[r.question_type] = r.total;
             totalQuestions += r.total;
+        });
+
+        const completedCountByType = {};
+        completedByType.rows.forEach((r) => { completedCountByType[r.question_type] = r.completed; });
+        const progressByType = {};
+        trackTypes.forEach((type) => {
+            const total = questionsByType[type] || 0;
+            const completed = Math.min(completedCountByType[type] || 0, total);
+            progressByType[type] = total > 0 ? Math.round((completed / total) * 100) : 0;
         });
 
         // The collections the launcher should offer for this track, each with
@@ -2222,6 +2411,7 @@ app.get('/api/track-content-status', requireSession, async (req, res) => {
             track,
             specialties: specialtyKeys(track),
             questionsByType,
+            progressByType,
             // Only meaningful when there is more than one — a single collection
             // is "the bank" and the client skips the choice.
             selectableSources,
@@ -2294,10 +2484,34 @@ app.get('/user-streaks/:user_id', requireSession, async (req, res) => {
             lastActiveDate = dates[dates.length - 1];
         }
 
+        // The calendar behind the number. A bare "5" says nothing about whether
+        // today is already safe or about to break the run, which is the only
+        // thing a streak counter is actually for — so the client gets the raw
+        // active days for the last CALENDAR_DAYS and renders the week itself.
+        //
+        // Formatted from the local Y/M/D parts rather than toISOString(), which
+        // would shift a date backwards for any timezone east of UTC and make
+        // "today" look unstudied to a student in Riyadh until 03:00.
+        const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        const CALENDAR_DAYS = 35;
+        const todayMidnight = new Date();
+        todayMidnight.setHours(0, 0, 0, 0);
+        const windowStart = todayMidnight.getTime() - (CALENDAR_DAYS - 1) * 86400000;
+        const activeDays = quizDates.rows
+            .map((row) => new Date(row.quiz_date))
+            .map((d) => { d.setHours(0, 0, 0, 0); return d; })
+            .filter((d) => d.getTime() >= windowStart)
+            .map(ymd);
+
         res.json({
             current_streak: currentStreak,
             longest_streak: longestStreak,
-            last_active_date: lastActiveDate
+            last_active_date: lastActiveDate,
+            // Ascending, de-duplicated, last 35 days only — enough for a week
+            // strip and a month heat row without shipping a full history.
+            active_days: activeDays,
+            today: ymd(todayMidnight),
+            studied_today: activeDays.includes(ymd(todayMidnight)),
         });
 
     } catch (err) {
@@ -2847,10 +3061,22 @@ app.post('/quiz-sessions', requireSession, subscriberOnly, async (req, res) => {
                 .map(({ type, source }) => ({ type, source }));
         }
 
+        // Goal completion and streak milestones. Awaited (not fire-and-forget)
+        // so the response can tell the client something was earned and the hub
+        // can celebrate it immediately — but wrapped, because a notification
+        // must never turn a successfully recorded quiz into a 500.
+        let milestones = [];
+        try {
+            milestones = await checkMilestones(db, user_id);
+        } catch (e) {
+            logger.warn('Milestone check failed', { error: e.message });
+        }
+
         res.status(201).json({
             id: result.rows[0].id,
             session_id: result.rows[0].session_id,
             completedCategories,
+            milestones,
             message: 'Quiz session created successfully'
         });
     } catch (err) {
@@ -5447,6 +5673,119 @@ app.use('/api/accounting', (req, res, next) => { req.db = db; next(); }, account
 
 // Page engagement: POST /api/engagement (students) + GET /api/engagement/admin.
 app.use('/api/engagement', (req, res, next) => { req.db = db; next(); }, engagementRouter);
+
+// Pre-signup/pre-login funnel events: POST /api/funnel (unauthenticated,
+// rate-limited) + GET /api/funnel/admin.
+app.use('/api/funnel', (req, res, next) => { req.db = db; next(); }, funnelRouter);
+
+// Study goals and the in-app notification feed. Both resolve the account from
+// the validated session (req.accountId set by requireSession), never from the
+// request body.
+app.use('/api/goals', requireSession, (req, res, next) => { req.db = db; next(); }, goalsRouter);
+app.use('/api/notifications', requireSession, (req, res, next) => { req.db = db; next(); }, notificationsRouter);
+// The student's own sitting date — the anchor for the hub countdown and the
+// staged reminder emails.
+app.use('/api/exam-date', requireSession, (req, res, next) => { req.db = db; next(); }, examDateRouter);
+
+/**
+ * GET /api/progress/weekly — this week vs last week, for the hub's progress
+ * panel. Deliberately a comparison rather than a running total: "you answered
+ * 340 questions" is a fact, "you are 8% more accurate than last week" is a
+ * reason to come back. Same 7-day windows the digest email uses.
+ */
+app.get('/api/progress/weekly', requireSession, async (req, res) => {
+    try {
+        const { rows } = await db.query(`
+            SELECT
+                COALESCE(SUM(total_questions) FILTER (WHERE start_time > NOW() - INTERVAL '7 days'), 0)::int  AS q_now,
+                COALESCE(SUM(correct_answers) FILTER (WHERE start_time > NOW() - INTERVAL '7 days'), 0)::int  AS c_now,
+                COUNT(*) FILTER (WHERE start_time > NOW() - INTERVAL '7 days' AND end_time IS NOT NULL)::int  AS quizzes_now,
+                COALESCE(SUM(total_questions) FILTER (WHERE start_time > NOW() - INTERVAL '14 days'
+                                                        AND start_time <= NOW() - INTERVAL '7 days'), 0)::int AS q_prev,
+                COALESCE(SUM(correct_answers) FILTER (WHERE start_time > NOW() - INTERVAL '14 days'
+                                                        AND start_time <= NOW() - INTERVAL '7 days'), 0)::int AS c_prev
+              FROM user_quiz_sessions WHERE user_id = $1
+        `, [req.accountId]);
+        const r = rows[0] || {};
+        const qNow = r.q_now || 0;
+        const qPrev = r.q_prev || 0;
+        res.json({
+            success: true,
+            questionsThisWeek: qNow,
+            quizzesThisWeek: r.quizzes_now || 0,
+            accuracyThisWeek: qNow > 0 ? Math.round(((r.c_now || 0) / qNow) * 100) : null,
+            // null (not 0) when there is no prior week to compare against, so the
+            // UI can say "not enough history" instead of implying a 100% drop.
+            accuracyLastWeek: qPrev > 0 ? Math.round(((r.c_prev || 0) / qPrev) * 100) : null,
+            questionsLastWeek: qPrev,
+        });
+    } catch (err) {
+        logger.error('Failed to compute weekly progress', err);
+        res.status(500).json({ success: false, message: 'Failed to load progress' });
+    }
+});
+
+/**
+ * PUT /api/preferences/language — remember which language to email in.
+ *
+ * The site language lives in localStorage (see i18n/LanguageContext), which the
+ * cron jobs obviously cannot read. This mirrors it onto the account so lifecycle
+ * mail is written in the language the student actually reads the site in.
+ * Deliberately tiny and idempotent: the client fires it on every authenticated
+ * page load, and the UPDATE is a no-op when nothing changed.
+ */
+app.put('/api/preferences/language', requireSession, async (req, res) => {
+    const lang = String(req.body?.lang || '').toLowerCase().startsWith('en') ? 'en' : 'ar';
+    try {
+        await db.query(
+            `UPDATE accounts SET preferred_lang = $2 WHERE id = $1 AND preferred_lang IS DISTINCT FROM $2`,
+            [req.accountId, lang]
+        );
+        res.json({ success: true, lang });
+    } catch (err) {
+        logger.error('Failed to save language preference', err);
+        res.status(500).json({ success: false });
+    }
+});
+
+/**
+ * GET /api/public/stats — live usage numbers for the landing page's social
+ * proof (real activity, not question-bank inventory — the site never states
+ * bank size). Unauthenticated, read-only, no PII: three counts, nothing else.
+ *
+ * Cached in memory for CACHE_MS so a viral landing page can't turn this into
+ * three COUNT(*) queries per pageview. Failures fall back to whatever was
+ * last cached (or null, if the process just started) — the landing page's
+ * job is to fall back to static copy rather than show a broken number.
+ */
+const PUBLIC_STATS_CACHE_MS = 15 * 60 * 1000;
+let _publicStatsCache = null; // { data, at }
+app.get('/api/public/stats', async (req, res) => {
+    const now = Date.now();
+    if (_publicStatsCache && now - _publicStatsCache.at < PUBLIC_STATS_CACHE_MS) {
+        return res.json({ success: true, ...(_publicStatsCache.data), cached: true });
+    }
+    try {
+        const [activeWeek, questionsMonth, quizzesMonth] = await Promise.all([
+            db.query(`SELECT COUNT(DISTINCT user_id)::int AS n FROM login_history WHERE login_time > NOW() - INTERVAL '7 days'`),
+            db.query(`SELECT COUNT(*)::int AS n FROM user_question_attempts WHERE quiz_session_id IN (
+                          SELECT id FROM user_quiz_sessions WHERE start_time > NOW() - INTERVAL '30 days'
+                      )`),
+            db.query(`SELECT COUNT(*)::int AS n FROM user_quiz_sessions WHERE start_time > NOW() - INTERVAL '30 days' AND end_time IS NOT NULL`),
+        ]);
+        const data = {
+            activeStudentsThisWeek: activeWeek.rows[0]?.n || 0,
+            questionsAnsweredThisMonth: questionsMonth.rows[0]?.n || 0,
+            quizzesCompletedThisMonth: quizzesMonth.rows[0]?.n || 0,
+        };
+        _publicStatsCache = { data, at: now };
+        res.json({ success: true, ...data, cached: false });
+    } catch (err) {
+        logger.error('Failed to compute public stats', err);
+        if (_publicStatsCache) return res.json({ success: true, ...(_publicStatsCache.data), cached: true, stale: true });
+        res.status(503).json({ success: false });
+    }
+});
 
 // Admin broadcast — compose one email and drip it to every user in small,
 // resumable batches. See routes/admin-broadcast.js for why it is queue-based.
