@@ -255,6 +255,18 @@ const analysisCopy = {
             correctAnswer: 'الإجابة الصحيحة:',
             loadingMore: 'جاري التحميل...',
             loadMore: (n) => `تحميل المزيد (${n} متبقي)`,
+            // Search runs on the server across the whole history, not over the
+            // page already loaded — see the endpoint comment in app.js.
+            searchLabel: 'ابحث في أسئلتك الخاطئة',
+            searchPlaceholder: 'ابحث بكلمة من السؤال أو من الإجابة…',
+            searchClear: 'مسح البحث',
+            filterAll: 'كل التخصصات',
+            searching: 'جاري البحث…',
+            resultsFor: (n, q) => `${n} نتيجة لـ «${q}»`,
+            resultsFiltered: (n) => `${n} نتيجة`,
+            noResultsTitle: 'لا نتائج',
+            noResultsBody: 'جرّب كلمة أخرى أو أزل الفلتر.',
+            noResultsCta: 'مسح البحث',
         },
     },
 
@@ -505,6 +517,18 @@ const analysisCopy = {
             correctAnswer: 'Correct answer:',
             loadingMore: 'Loading…',
             loadMore: (n) => `Load more (${n} remaining)`,
+            // Search runs on the server across the whole history, not over the
+            // page already loaded — see the endpoint comment in app.js.
+            searchLabel: 'Search your wrong questions',
+            searchPlaceholder: 'Search the question or either answer…',
+            searchClear: 'Clear search',
+            filterAll: 'All specialties',
+            searching: 'Searching…',
+            resultsFor: (n, q) => `${n} result${n === 1 ? '' : 's'} for “${q}”`,
+            resultsFiltered: (n) => `${n} result${n === 1 ? '' : 's'}`,
+            noResultsTitle: 'Nothing matched',
+            noResultsBody: 'Try a different word, or drop the specialty filter.',
+            noResultsCta: 'Clear search',
         },
     },
 };

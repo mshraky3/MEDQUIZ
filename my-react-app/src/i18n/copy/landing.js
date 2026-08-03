@@ -12,7 +12,7 @@
  */
 const landingCopy = {
     ar: {
-        topbar: { account: 'حسابي', login: 'تسجيل الدخول' },
+        topbar: { account: 'حسابي', login: 'تسجيل الدخول', signup: 'ابدأ مجاناً' },
 
         heroReturning: {
             pill: 'مرحباً بعودتك',
@@ -33,19 +33,14 @@ const landingCopy = {
             trust: [
                 'ساعة وصول كامل مجاناً بعد تأكيد بريدك',
                 '99 ريال للسنة كاملة بعد التجربة',
-                'تغطية كاملة لمواضيع الاختبار',
                 'تفسير واضح لكل سؤال',
                 'بدون تجديد تلقائي',
             ],
+            // Rendered only when config/examDates.js has a real, verified future
+            // date — otherwise ExamCountdown renders nothing.
+            examCountdown: (days) => `الاختبار القادم بعد ${days} ${days === 1 ? 'يوم' : 'يوماً'}`,
+            scrollCue: 'تصفّح',
         },
-
-        statsLabel: 'إحصائيات المنصة',
-        stats: [
-            { label: 'محدّث لنمط الاختبار', value: '2026' },
-            { label: 'تغطية لمواضيع الاختبار', value: '100%' },
-            { label: 'من الطلاب بدرجات عالية', value: 'مئات' },
-            { label: 'السنة كاملة', value: '99 ريال' },
-        ],
 
         tracks: {
             pill: 'اختر مسارك عند التسجيل',
@@ -56,18 +51,77 @@ const landingCopy = {
             soonNote: 'يمكنك إنشاء حسابك على هذا المسار الآن، وسنبلغك بالبريد فور رفع المحتوى.',
             medicalDesc: 'بنك أسئلة وملخصات كاملة للباطنة والجراحة والأطفال والنساء والولادة.',
             nursingDesc: 'مسار مستقل بأسئلته وملخصاته وتحليلات أدائه الخاصة — منفصل تماماً عن مسار الطب.',
+            cta: 'اختر مسارك وابدأ مجاناً',
+            ctaNote: 'ساعة وصول كامل مجاناً · بدون بطاقة دفع',
         },
 
-        features: {
+        // Replaces the old four-icon "features" grid. Instead of describing the
+        // product in adjectives, the section REBUILDS it: each panel is a live,
+        // animated replica of the real screen, driven by the same CSS the app
+        // uses. No screenshots — an image would go stale the first time the UI
+        // changed, and would ship a 300 KB PNG to every mobile visitor.
+        showcase: {
+            sectionLabel: 'جولة داخل المنصة',
             pill: 'كل الأدوات في مكان واحد',
-            title: 'كل ما تحتاجه لاجتياز الاختبار من أول محاولة',
-            body: 'أسئلة محدّثة، وتفسير واضح لكل إجابة، وتحليلات ذكية — مصممة لتوصلك لدرجتك المستهدفة بأقل وقت وجهد.',
+            title: 'شاهد المنصة قبل أن تسجّل',
+            body: 'هذه ليست صوراً — بل الشاشات الفعلية للمنصة، تتحرك أمامك كما ستستخدمها تماماً.',
+            liveTag: 'معاينة حيّة',
             items: [
-                { icon: 'book-open', title: 'تغطية كاملة لاختبارك', desc: 'بنك أسئلة منسق وفق أحدث مخطط برومترك — SMLE للطب البشري وSNLE للتمريض.' },
-                { icon: 'trending-up', title: 'تحليلات موجهة', desc: 'تتبع نقاط الضعف والسرعة والدقة عبر لوحات واضحة.' },
-                { icon: 'target', title: 'تدريب متكيف', desc: 'تمارين موجهة، محاكاة زمنية، ومراجعة ذكية.' },
-                { icon: 'brain', title: 'تفكير سريري', desc: 'سيناريوهات سريرية تركز على اتخاذ القرار لا الحفظ.' },
+                {
+                    key: 'quiz',
+                    icon: 'clipboard',
+                    kicker: 'الأسئلة',
+                    title: 'سؤال بنمط الاختبار، وتفسير فوري',
+                    desc: 'تختار إجابتك فتظهر لك الإجابة الصحيحة وسبب صحتها فوراً — لا تنتظر نهاية الاختبار لتعرف أين أخطأت.',
+                },
+                {
+                    key: 'analysis',
+                    icon: 'bar-chart',
+                    kicker: 'التحليلات',
+                    title: 'دقتك في كل تخصص، بنظرة واحدة',
+                    desc: 'حلقات تقدّم لكل تخصص، وتحديد تلقائي لأضعف نقطة لديك — لتعرف من أين تبدأ مراجعتك بدل التخمين.',
+                },
+                {
+                    key: 'annotate',
+                    icon: 'highlighter',
+                    kicker: 'الملخصات',
+                    title: 'علّم وارسم على الملخصات',
+                    desc: 'أداة تحديد ورسم مدمجة داخل الملخصات المصوّرة — ظلّل النقاط المهمة وارسم عليها، وتبقى ملاحظاتك محفوظة.',
+                },
+                {
+                    key: 'wrong',
+                    icon: 'refresh',
+                    kicker: 'أخطاؤك',
+                    title: 'كل سؤال أخطأت فيه، مجموعاً وقابلاً للبحث',
+                    desc: 'صفحة واحدة تجمع أخطاءك مع بحث فوري وفلترة بالتخصص — مراجعة الأخطاء هي أسرع طريق لرفع درجتك.',
+                },
             ],
+            // Text inside the animated replicas. Kept here so the mock screens
+            // are translated like everything else.
+            mock: {
+                quizProgress: 'سؤال ٧ من ١٠',
+                quizStem: 'رجل ٦٢ عاماً يعاني ألماً صدرياً ضاغطاً منذ ساعتين، ينتشر إلى الفك الأيسر مع تعرّق. ما أنسب خطوة أولى؟',
+                quizOptions: ['تصوير مقطعي للصدر', 'تخطيط قلب كهربائي فوراً', 'اختبار جهد', 'تصوير صدر بالأشعة'],
+                quizCorrectIndex: 1,
+                quizExplain: 'تخطيط القلب خلال ١٠ دقائق هو المعيار في أي ألم صدري مشتبه بكونه إقفارياً — فهو ما يحدد مسار العلاج فوراً.',
+                quizCorrectTag: 'إجابة صحيحة',
+                analysisTitle: 'دقتك حسب التخصص',
+                analysisWeak: 'أضعف تخصص',
+                analysisOverall: 'الدقة العامة',
+                annotateTitle: 'علامة الـSteeple في الخانوق',
+                annotateTools: ['تحديد', 'قلم', 'ممحاة'],
+                annotateNote: 'تضيّق تحت المزمار',
+                wrongSearch: 'الأطفال',
+                wrongCount: 'ثلاث نتائج',
+                wrongItems: [
+                    { q: 'أنسب علاج أولي للخانوق المتوسط…', you: 'مضاد حيوي', right: 'ديكساميثازون' },
+                    { q: 'أشيع مسبب لالتهاب القصيبات…', you: 'المكورة الرئوية', right: 'الفيروس المخلوي RSV' },
+                ],
+                wrongYou: 'إجابتك',
+                wrongRight: 'الصحيحة',
+            },
+            cta: 'جرّب هذه الشاشات بنفسك',
+            ctaNote: 'ساعة وصول كامل مجاناً · بدون بطاقة دفع',
         },
 
         compare: {
@@ -89,18 +143,51 @@ const landingCopy = {
                 { label: 'تحليل الأداء والأخطاء', sqb: 'تحليلات تلقائية بعد كل جلسة', files: 'يدوي — إن وُجد', courses: 'غير متوفر غالباً' },
                 { label: 'مدة الوصول', sqb: 'سنة كاملة، من أي جهاز', files: 'روابط تنتهي وملفات تضيع', courses: 'فترة محدودة' },
             ],
+            cta: 'جرّب SQB مجاناً لمدة ساعة',
+            ctaNote: 'قارن بنفسك قبل أن تدفع ريالاً واحداً',
+        },
+
+        costOfWaiting: {
+            sectionLabel: 'التكلفة الحقيقية للتأجيل',
+            pill: 'قبل أن تقرر',
+            title: 'الرسوب لا يكلّفك درجة فقط — يكلّفك وقتاً ومالاً',
+            body: 'قبل أن تقارن الأسعار، قارن التكلفة الحقيقية للمحاولة غير المستعدة: تسجيل جديد، انتظار الدورة القادمة، وتأخر يمتد لأشهر قبل أن تحصل على ترخيصك وتبدأ عملك.',
+            items: [
+                {
+                    icon: 'refresh',
+                    title: 'تسجيل جديد ودفع رسوم الاختبار مجدداً',
+                    desc: 'أي محاولة إضافية تعني دفع رسوم الاختبار من جديد — قبل أن تُحتسب تكلفة وقتك.',
+                },
+                {
+                    icon: 'calendar',
+                    title: 'انتظار الدورة القادمة',
+                    desc: 'مواعيد الاختبار محدودة على مدار السنة — رسوب دورة واحدة قد يعني أشهراً من الانتظار قبل فرصتك التالية.',
+                },
+                {
+                    icon: 'trending-down',
+                    title: 'تأخر الترخيص وبداية العمل',
+                    desc: 'كل شهر تأخير في الترخيص هو شهر دخل مؤجَّل — التكلفة الأكبر، وإن كانت لا تظهر في أي فاتورة.',
+                },
+            ],
+            note: '99 ريالاً لسنة كاملة من التحضير أقل بكثير من تكلفة محاولة واحدة إضافية.',
+            cta: 'ابدأ التحضير الآن مجاناً',
+            ctaNote: 'ابدأ اليوم بدل أن تدفع ثمن التأجيل لاحقاً',
         },
 
         value: {
             sectionLabel: 'الاشتراك والأسعار',
             pill: 'لماذا الاشتراك؟',
-            title: 'كل تحضيرك لاختبار الترخيص مقابل 99 ريالاً في السنة',
-            body: 'نجاحك في الاختبار يفتح لك باب التدريب والوظيفة — والرسوب يكلفك رسوم إعادة، وشهوراً من الانتظار، وضغطاً أنت في غنى عنه. صُممت SQB لتوصلك لدرجتك المستهدفة من أول محاولة.',
+            // Sharpened to lead with the stake rather than the price. Every
+            // consequence named here is real and verifiable — a resit fee, a
+            // limited sitting calendar, a delayed licence. Nothing invents a
+            // deadline, a vanishing discount or a seat cap.
+            title: 'السؤال ليس «99 ريالاً كثيرة؟» — بل «كم يكلفني الرسوب؟»',
+            body: 'رسوب واحد يعني رسوم اختبار جديدة، وأشهراً حتى الدورة القادمة، وتأخراً في التوظيف والتدريب. اشتراك سنة كامل هنا يكلف أقل من ريالين في الأسبوع. الفرق بين الرقمين هو كل ما في الأمر.',
             points: [
-                { icon: 'award', title: 'استثمار صغير، عائد كبير', desc: 'رسوم دخول الاختبار وإعادته تتجاوز مئات الريالات، ودورات التحضير تكلف آلافاً. اشتراك SQB يكلف 99 ريالاً فقط للسنة كاملة — أقل من ريالين في الأسبوع.' },
-                { icon: 'check-circle', title: 'دفع آمن وبدون التزامات', desc: 'دفعة واحدة عبر بوابة ميسر السعودية المرخّصة (مدى، Visa، Mastercard). بدون تجديد تلقائي وبدون رسوم مخفية — سنة كاملة من الوصول غير المحدود.' },
-                { icon: 'refresh', title: 'محتوى لا يتوقف عن التحديث', desc: 'نضيف تجميعات جديدة تواكب أحدث نمط لأسئلة الهيئة السعودية، فتتدرب دائماً على الأقرب لما ستراه في اختبارك.' },
-                { icon: 'users', title: 'انضم إلى مئات الناجحين', desc: 'مئات الطلاب تدرّبوا على المنصة واجتازوا اختبار الترخيص بدرجات عالية. تدرّب على نفس الأسئلة التي صنعت نتائجهم.' },
+                { icon: 'trending-down', title: 'ثمن المحاولة الثانية أعلى من الاشتراك بكثير', desc: 'إعادة الاختبار تعني دفع رسوم الاختبار كاملة من جديد، وشهوراً من الانتظار، وسنةً تُضاف إلى تخرجك قبل أن تبدأ عملك. 99 ريالاً في مقابل ذلك ليست تكلفة — بل تأمين.' },
+                { icon: 'target', title: 'لا تدخل الاختبار وأنت تجهل نقاط ضعفك', desc: 'أكثر من يرسب لا يرسب لأنه لم يذاكر، بل لأنه ذاكر ما يتقنه أصلاً. التحليلات هنا تكشف التخصص الذي يخسّرك الدرجات وتعيد تدريبك عليه تحديداً.' },
+                { icon: 'refresh', title: 'أسئلة محدّثة، لا ملفات عمرها ثلاث سنوات', desc: 'التجميعات المتداولة مجاناً غالباً قديمة وغير مدقّقة — وقد تحفظ منها إجابة خاطئة. نضيف تجميعات مراجَعة تواكب أحدث نمط لأسئلة الهيئة السعودية.' },
+                { icon: 'check-circle', title: 'المخاطرة عليك صفر', desc: 'جرّب كل شيء مجاناً لمدة ساعة قبل الدفع. دفعة واحدة عبر ميسر، وبدون تجديد تلقائي.' },
             ],
             priceCardLabel: 'تفاصيل الاشتراك',
             plan: 'اشتراك سنوي — دفعة واحدة',
@@ -120,20 +207,6 @@ const landingCopy = {
             note: 'ساعة تجربة مجانية أولاً · دفع آمن عبر ميسر · مدى / Visa / Mastercard / Apple Pay · بدون تجديد تلقائي',
         },
 
-        faq: {
-            sectionLabel: 'أسئلة قبل الاشتراك',
-            pill: 'قبل أن تشترك',
-            title: 'أسئلة تُطرح قبل الاشتراك',
-            body: 'إجابات مباشرة على أكثر ما يسأل عنه الطلاب قبل البدء.',
-            link: 'عرض كل الأسئلة الشائعة',
-            items: [
-                { q: 'كيف تعمل التجربة المجانية؟', a: 'أنشئ حسابك وأكّد بريدك لتحصل فوراً على ساعة وصول كامل لكل الأسئلة والتحليلات — بدون بطاقة دفع.' },
-                { q: 'هل يوجد تجديد تلقائي أو رسوم خفية؟', a: 'لا. تدفع 99 ريالاً مرة واحدة وتحصل على سنة كاملة — لن يُخصم منك أي مبلغ آخر تلقائياً.' },
-                { q: 'كيف أدفع؟ وهل الدفع آمن؟', a: 'الدفع عبر بوابة ميسر السعودية المرخّصة، ويدعم مدى وVisa وMastercard وApple Pay — لا نخزّن بيانات بطاقتك إطلاقاً.' },
-                { q: 'هل الأسئلة محدّثة لنمط اختبار 2026؟', a: 'نعم — بنك الطب البشري محدّث بالكامل لنمط Midgard & Gameboy 2026، وبنك التمريض مبني على أحدث مراجعة معتمدة لاختبار SNLE. وتُضاف تجميعات جديدة باستمرار.' },
-                { q: 'هل يشمل الاشتراك مسار التمريض أيضاً؟', a: 'نعم — نفس السعر لكلا المسارين. تختار مسارك (طب بشري أو تمريض) عند إنشاء الحساب، وكل الأسئلة والملخصات والتحليلات تكون خاصة بمسارك وحده.' },
-            ],
-        },
 
         flow: {
             pill: 'تدفق واضح',
@@ -144,6 +217,8 @@ const landingCopy = {
                 { label: 'تمرن بدقة', hint: 'اختر المواضيع، اضبط الوقت، وركّز على المهارات المطلوبة.' },
                 { label: 'راجع وتحسّن', hint: 'تحليلات فورية، سلاسل إنجاز، وتوصيات مخصصة.' },
             ],
+            cta: 'ابدأ بالخطوة الأولى',
+            ctaNote: 'التسجيل يستغرق أقل من دقيقة',
         },
 
         news: {
@@ -159,31 +234,11 @@ const landingCopy = {
                 { icon: 'calendar', title: 'إضافة التجميعات الشهرية لشهري 5 و6', desc: 'انضمت التجميعات الشهرية الجديدة لشهر مايو ويونيو إلى بنك الأسئلة، بعد مراجعة وتدقيق كامل لكل سؤال.', date: '15 يوليو 2026' },
                 { icon: 'book-open', title: 'تطوير وتحديث الملخصات', desc: 'أعدنا صياغة الملخصات وحدّثنا محتواها لتكون أكثر وضوحاً وتركيزاً على النقاط عالية الأهمية.', date: '15 يوليو 2026' },
             ],
+            cta: 'احصل على كل هذا الآن',
+            ctaNote: 'كل ما سبق مشمول في الاشتراك نفسه — وكل جديد يصلك تلقائياً',
         },
 
-        resources: {
-            pill: 'روابط أساسية',
-            title: 'صفحات تساعدك قبل البدء',
-            body: 'قبل إنشاء الحساب أو بدء التدريب، يمكنك قراءة مزيد من التفاصيل عن المنصة، الاطلاع على الأسئلة الشائعة، أو التواصل معنا مباشرة إذا كنت تحتاج مساعدة.',
-            links: [
-                { to: '/about', title: 'من نحن', desc: 'تعرف على هدف SQB وما الذي تقدمه لطلاب الطب والتمريض والأطباء في السعودية.' },
-                { to: '/guides', title: 'أدلة التحضير', desc: 'مقالات عملية عن خطة SMLE، مراجعة الأخطاء، وإدارة الوقت قبل الاختبار.' },
-                { to: '/faq', title: 'الأسئلة الشائعة', desc: 'إجابات سريعة حول الحسابات، الاستخدام، والجوال وطبيعة بنك الأسئلة.' },
-                { to: '/contact', title: 'اتصل بنا', desc: 'تواصل مع فريق SQB إذا احتجت دعماً أو كان لديك استفسار عن المنصة.' },
-            ],
-        },
 
-        seo: {
-            pill: 'SMLE • SNLE • برومترك • السعودية',
-            title: 'محتوى موجّه لما يبحث عنه طلاب الطب والتمريض فعلاً',
-            body: 'إذا كنت تبحث عن بنك أسئلة لاختبار الهيئة السعودية للتخصصات الصحية أو طريقة عملية للتحضير لاختبار البرومترك، فهذه المنصة تجمع بين الأسئلة، التدرج في التدريب، والتحليل بعد كل جلسة.',
-            topics: [
-                { title: 'تحضير منظم لاختبار SMLE', desc: 'ابدأ بجلسات قصيرة أو طويلة حسب وقتك، وراجع أداءك حسب التخصص والموضوع.' },
-                { title: 'تحضير لاختبار التمريض SNLE', desc: 'مسار تمريض كامل ومستقل: أساسيات التمريض، الباطني والجراحي، الأمومة والمواليد، الأطفال، الصحة النفسية، والأدوية وحسابات الجرعات.' },
-                { title: 'مراجعة نقاط الضعف بسرعة', desc: 'اعرف أين تخطئ، وارجع إلى الأسئلة الخاطئة، وركّز على المواضيع التي تحتاج إلى عمل فعلي.' },
-                { title: 'تجميعات محدّثة لأسئلة البرومترك', desc: 'بنك أسئلة شامل مع تجميعات محدّثة تواكب أحدث نمط أسئلة اختبار الهيئة السعودية للتخصصات الصحية.' },
-            ],
-        },
 
         ctaBand: {
             returning: {
@@ -212,7 +267,7 @@ const landingCopy = {
     },
 
     en: {
-        topbar: { account: 'My account', login: 'Log in' },
+        topbar: { account: 'My account', login: 'Log in', signup: 'Start free' },
 
         heroReturning: {
             pill: 'Welcome back',
@@ -231,19 +286,14 @@ const landingCopy = {
             trust: [
                 'One hour of full access, free, once you confirm your email',
                 'SAR 99 for the whole year after the trial',
-                'Full coverage of the exam syllabus',
                 'A clear explanation for every question',
                 'No auto-renewal',
             ],
+            // Rendered only when config/examDates.js has a real, verified future
+            // date — otherwise ExamCountdown renders nothing.
+            examCountdown: (days) => `Next exam window in ${days} day${days === 1 ? '' : 's'}`,
+            scrollCue: 'Scroll',
         },
-
-        statsLabel: 'Platform statistics',
-        stats: [
-            { label: 'Updated to the exam format', value: '2026' },
-            { label: 'Coverage of exam topics', value: '100%' },
-            { label: 'Of students scored highly', value: 'Hundreds' },
-            { label: 'For the whole year', value: 'SAR 99' },
-        ],
 
         tracks: {
             pill: 'Choose your track when you sign up',
@@ -254,18 +304,77 @@ const landingCopy = {
             soonNote: 'You can create your account on this track now — we will email you the moment the content goes live.',
             medicalDesc: 'A full question bank and summaries for internal medicine, surgery, paediatrics, and obstetrics & gynaecology.',
             nursingDesc: 'A standalone track with its own questions, summaries and performance analytics — completely separate from the medical track.',
+            cta: 'Pick your track and start free',
+            ctaNote: 'One free hour of full access · No payment card',
         },
 
-        features: {
+        // Replaces the old four-icon "features" grid. Instead of describing the
+        // product in adjectives, the section REBUILDS it: each panel is a live,
+        // animated replica of the real screen, driven by the same CSS the app
+        // uses. No screenshots — an image would go stale the first time the UI
+        // changed, and would ship a 300 KB PNG to every mobile visitor.
+        showcase: {
+            sectionLabel: 'A tour inside the platform',
             pill: 'Every tool in one place',
-            title: 'Everything you need to pass on your first attempt',
-            body: 'Up-to-date questions, a clear explanation for every answer, and smart analytics — built to get you to your target score with the least wasted time.',
+            title: 'See the platform before you sign up',
+            body: 'These are not screenshots — they are the real screens, moving exactly the way you will use them.',
+            liveTag: 'Live preview',
             items: [
-                { icon: 'book-open', title: 'Full coverage of your exam', desc: 'A question bank organised around the latest Prometric blueprint — SMLE for medicine, SNLE for nursing.' },
-                { icon: 'trending-up', title: 'Analytics that point somewhere', desc: 'Track your weak spots, your speed and your accuracy on dashboards that actually read clearly.' },
-                { icon: 'target', title: 'Adaptive practice', desc: 'Targeted drills, timed simulation, and smart review.' },
-                { icon: 'brain', title: 'Clinical reasoning', desc: 'Clinical scenarios built around decision-making, not memorisation.' },
+                {
+                    key: 'quiz',
+                    icon: 'clipboard',
+                    kicker: 'Questions',
+                    title: 'An exam-style question, explained the moment you answer',
+                    desc: 'Pick an option and the correct answer — and the reasoning behind it — appears immediately. You never wait until the end of a quiz to find out where you went wrong.',
+                },
+                {
+                    key: 'analysis',
+                    icon: 'bar-chart',
+                    kicker: 'Analytics',
+                    title: 'Your accuracy in every specialty, at a glance',
+                    desc: 'A progress ring per specialty and your weakest one flagged automatically — so you know where revision starts instead of guessing.',
+                },
+                {
+                    key: 'annotate',
+                    icon: 'highlighter',
+                    kicker: 'Summaries',
+                    title: 'Highlight and draw straight on the summaries',
+                    desc: 'A highlighter and pen built into the illustrated summaries — mark what matters, draw on the images, and your notes stay put.',
+                },
+                {
+                    key: 'wrong',
+                    icon: 'refresh',
+                    kicker: 'Your mistakes',
+                    title: 'Every question you got wrong, collected and searchable',
+                    desc: 'One page gathering all your mistakes, with instant search and a specialty filter. Reworking your own errors is the fastest way to move your score.',
+                },
             ],
+            // Text inside the animated replicas. Kept here so the mock screens
+            // are translated like everything else.
+            mock: {
+                quizProgress: 'Question 7 of 10',
+                quizStem: 'A 62-year-old man has two hours of crushing chest pain radiating to the left jaw, with sweating. What is the most appropriate first step?',
+                quizOptions: ['CT chest', 'Immediate 12-lead ECG', 'Exercise stress test', 'Chest X-ray'],
+                quizCorrectIndex: 1,
+                quizExplain: 'An ECG within 10 minutes is the standard for any suspected ischaemic chest pain — it is what decides the treatment pathway straight away.',
+                quizCorrectTag: 'Correct',
+                analysisTitle: 'Accuracy by specialty',
+                analysisWeak: 'Weakest',
+                analysisOverall: 'Overall accuracy',
+                annotateTitle: 'Steeple sign in croup',
+                annotateTools: ['Highlight', 'Pen', 'Erase'],
+                annotateNote: 'Subglottic narrowing',
+                wrongSearch: 'croup',
+                wrongCount: '3 results',
+                wrongItems: [
+                    { q: 'First-line treatment for moderate croup…', you: 'Antibiotics', right: 'Dexamethasone' },
+                    { q: 'Commonest cause of bronchiolitis…', you: 'Pneumococcus', right: 'RSV' },
+                ],
+                wrongYou: 'You',
+                wrongRight: 'Correct',
+            },
+            cta: 'Try these screens yourself',
+            ctaNote: 'One free hour of full access · No payment card',
         },
 
         compare: {
@@ -287,18 +396,51 @@ const landingCopy = {
                 { label: 'Performance and error analysis', sqb: 'Automatic analytics after every session', files: 'Manual — if at all', courses: 'Usually not offered' },
                 { label: 'How long you keep access', sqb: 'A full year, from any device', files: 'Links expire and files get lost', courses: 'A limited window' },
             ],
+            cta: 'Try SQB free for an hour',
+            ctaNote: 'See it for yourself before you pay a riyal',
+        },
+
+        costOfWaiting: {
+            sectionLabel: 'The real cost of waiting',
+            pill: 'Before you decide',
+            title: "Failing doesn't just cost you a grade — it costs you time and money",
+            body: "Before you compare prices, compare the real cost of an unprepared attempt: registering again, waiting for the next sitting window, and months of delay before you're licensed and earning.",
+            items: [
+                {
+                    icon: 'refresh',
+                    title: 'Re-registering and paying the exam fee again',
+                    desc: 'Every extra attempt means paying the exam fee again — before your time is even counted.',
+                },
+                {
+                    icon: 'calendar',
+                    title: 'Waiting for the next sitting window',
+                    desc: 'Exam dates are limited across the year — failing one sitting can mean months before your next shot.',
+                },
+                {
+                    icon: 'trending-down',
+                    title: 'A delayed licence, a delayed start',
+                    desc: 'Every month your licence is delayed is a month of income postponed — the biggest cost, even though it never shows up on an invoice.',
+                },
+            ],
+            note: 'SAR 99 for a full year of preparation is far less than the cost of a single extra attempt.',
+            cta: 'Start preparing now, free',
+            ctaNote: 'Start today instead of paying for the delay later',
         },
 
         value: {
             sectionLabel: 'Subscription and pricing',
             pill: 'Why subscribe?',
-            title: 'Your whole licensing-exam prep for SAR 99 a year',
-            body: 'Passing opens the door to your training post and your job — failing costs you a resit fee, months of waiting, and pressure you do not need. SQB is built to get you to your target score first time.',
+            // Sharpened to lead with the stake rather than the price. Every
+            // consequence named here is real and verifiable — a resit fee, a
+            // limited sitting calendar, a delayed licence. Nothing invents a
+            // deadline, a vanishing discount or a seat cap.
+            title: 'The question is not “is SAR 99 a lot?” — it is “what does failing cost me?”',
+            body: 'One failed attempt means paying the exam fee again, months until the next sitting window, and a delayed start to your training and your income. A full year here costs less than two riyals a week. The gap between those two numbers is the whole argument.',
             points: [
-                { icon: 'award', title: 'A small investment, a large return', desc: 'Sitting the exam — and resitting it — runs into hundreds of riyals, and prep courses cost thousands. An SQB subscription is SAR 99 for a full year: less than two riyals a week.' },
-                { icon: 'check-circle', title: 'Secure payment, no strings', desc: 'A single payment through Moyasar, the licensed Saudi gateway (mada, Visa, Mastercard). No auto-renewal and no hidden fees — a full year of unlimited access.' },
-                { icon: 'refresh', title: 'Content that keeps being updated', desc: 'We keep adding new collections that follow the latest SCFHS question style, so you always practise on what is closest to what you will actually sit.' },
-                { icon: 'users', title: 'Join hundreds who passed', desc: 'Hundreds of students trained here and passed their licensing exam with strong scores. Practise on the same questions that produced those results.' },
+                { icon: 'trending-down', title: 'A second attempt costs far more than a subscription', desc: 'Resitting means the full exam fee again, months of waiting, and another year added before you start earning. Against that, SAR 99 is not a cost — it is insurance.' },
+                { icon: 'target', title: "Don't walk in blind to your own weak spots", desc: 'Most people who fail did revise — they revised what they were already good at. The analytics here name the specialty that is losing you marks and drill you on that one.' },
+                { icon: 'refresh', title: 'Current questions, not files three years old', desc: 'The collections passed around for free are usually old and unverified — you can memorise a wrong answer from them. We add reviewed collections that track the latest SCFHS question style.' },
+                { icon: 'check-circle', title: 'The risk on you is zero', desc: 'Try everything free for an hour before you pay anything. One payment through Moyasar, and no auto-renewal.' },
             ],
             priceCardLabel: 'Subscription details',
             plan: 'Annual subscription — one payment',
@@ -318,20 +460,6 @@ const landingCopy = {
             note: 'A free hour first · Secure payment via Moyasar · mada / Visa / Mastercard / Apple Pay · No auto-renewal',
         },
 
-        faq: {
-            sectionLabel: 'Questions before you subscribe',
-            pill: 'Before you subscribe',
-            title: 'Questions people ask before subscribing',
-            body: 'Straight answers to what students most often ask before starting.',
-            link: 'See all frequently asked questions',
-            items: [
-                { q: 'How does the free trial work?', a: 'Create your account and confirm your email to get an immediate hour of full access to every question and every analytic — no payment card needed.' },
-                { q: 'Is there auto-renewal or any hidden fee?', a: 'No. You pay SAR 99 once and get a full year — nothing else is ever charged automatically.' },
-                { q: 'How do I pay, and is it secure?', a: 'Payment goes through Moyasar, the licensed Saudi gateway, and supports mada, Visa, Mastercard and Apple Pay — we never store your card details.' },
-                { q: 'Are the questions updated to the 2026 exam format?', a: 'Yes — the medical bank is fully updated to the Midgard & Gameboy 2026 format, and the nursing bank is built on the latest approved SNLE review. New collections are added continually.' },
-                { q: 'Does the subscription cover the nursing track too?', a: 'Yes — the same price covers both tracks. You choose your track (medicine or nursing) when you create your account, and every question, summary and analytic is specific to that track alone.' },
-            ],
-        },
 
         flow: {
             pill: 'A clear path',
@@ -342,6 +470,8 @@ const landingCopy = {
                 { label: 'Practise precisely', hint: 'Pick your topics, set the timer, and drill the skills you need.' },
                 { label: 'Review and improve', hint: 'Instant analytics, streaks, and recommendations made for you.' },
             ],
+            cta: 'Start with step one',
+            ctaNote: 'Signing up takes under a minute',
         },
 
         news: {
@@ -357,31 +487,11 @@ const landingCopy = {
                 { icon: 'calendar', title: 'May and June monthly collections added', desc: 'The new May and June monthly collections have joined the question bank, after a full review and verification of every question.', date: '15 July 2026' },
                 { icon: 'book-open', title: 'Summaries rewritten and updated', desc: 'We rewrote the summaries and refreshed their content so they are clearer and more focused on the high-yield points.', date: '15 July 2026' },
             ],
+            cta: 'Get all of this now',
+            ctaNote: 'Everything above is in the same subscription — and every update reaches you automatically',
         },
 
-        resources: {
-            pill: 'Essential links',
-            title: 'Pages worth reading before you start',
-            body: 'Before creating an account or starting to practise, you can read more about the platform, browse the FAQ, or contact us directly if you need help.',
-            links: [
-                { to: '/about', title: 'About us', desc: 'What SQB is for, and what it offers medical and nursing students and doctors in Saudi Arabia.' },
-                { to: '/guides', title: 'Study guides', desc: 'Practical articles on the SMLE study plan, reviewing your mistakes, and managing your time before the exam.' },
-                { to: '/faq', title: 'FAQ', desc: 'Quick answers about accounts, using the platform, mobile, and what the question bank contains.' },
-                { to: '/contact', title: 'Contact us', desc: 'Reach the SQB team if you need support or have a question about the platform.' },
-            ],
-        },
 
-        seo: {
-            pill: 'SMLE • SNLE • Prometric • Saudi Arabia',
-            title: 'Built around what medical and nursing students are actually looking for',
-            body: 'If you are looking for a question bank for the SCFHS licensing exam, or a practical way to prepare for Prometric, this platform brings the questions, a graded practice path, and post-session analysis together.',
-            topics: [
-                { title: 'Structured SMLE preparation', desc: 'Start with short or long sessions depending on your time, and review your performance by specialty and by topic.' },
-                { title: 'SNLE nursing exam preparation', desc: 'A complete, standalone nursing track: fundamentals, medical-surgical, maternal and newborn, paediatrics, mental health, and pharmacology with dosage calculations.' },
-                { title: 'Fix your weak spots fast', desc: 'See where you go wrong, revisit those questions, and put your time into the topics that actually need work.' },
-                { title: 'Updated Prometric question collections', desc: 'A comprehensive bank with updated collections that follow the latest SCFHS question style.' },
-            ],
-        },
 
         ctaBand: {
             returning: {

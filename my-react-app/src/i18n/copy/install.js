@@ -33,6 +33,20 @@ const installCopy = {
             'أكّد — ستُضاف أيقونة SQB إلى جهازك.',
         ],
         installNow: 'ثبّت التطبيق الآن',
+        // Labels inside the animated phone that plays the steps (see
+        // InstallShowcase.jsx). They mirror what the real OS shows, so the
+        // student recognises the sheet when it actually appears.
+        mock: {
+            addressBar: 'smle-question-bank.com',
+            sheetTitle: 'خيارات المشاركة',
+            addToHome: 'إضافة إلى الشاشة الرئيسية',
+            installApp: 'تثبيت التطبيق',
+            confirm: 'إضافة',
+            homeLabel: 'الشاشة الرئيسية',
+            done: 'تم — SQB على جهازك',
+            stepAria: (n, total) => `الخطوة ${n} من ${total}`,
+            replay: 'إعادة التشغيل',
+        },
     },
 
     en: {
@@ -61,6 +75,20 @@ const installCopy = {
             'Confirm — the SQB icon is added to your device.',
         ],
         installNow: 'Install the app now',
+        // Labels inside the animated phone that plays the steps (see
+        // InstallShowcase.jsx). They mirror what the real OS shows, so the
+        // student recognises the sheet when it actually appears.
+        mock: {
+            addressBar: 'smle-question-bank.com',
+            sheetTitle: 'Share options',
+            addToHome: 'Add to Home Screen',
+            installApp: 'Install app',
+            confirm: 'Add',
+            homeLabel: 'Home screen',
+            done: 'Done — SQB is on your device',
+            stepAria: (n, total) => `Step ${n} of ${total}`,
+            replay: 'Replay',
+        },
     },
 };
 

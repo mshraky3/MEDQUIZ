@@ -78,6 +78,16 @@ const common = {
             ended: 'انتهت تجربتك المجانية — أكمل اختبارك الحالي وشاهد نتيجتك',
             cta: 'اشترك الآن',
         },
+        notifications: {
+            label: 'الإشعارات',
+            title: 'الإشعارات',
+            empty: 'لا توجد إشعارات بعد. أكمل اختباراً أو اضبط هدفاً وستظهر إنجازاتك هنا.',
+            markAllRead: 'تعليم الكل كمقروء',
+            justNow: 'الآن',
+            minutesAgo: (n) => `قبل ${n} دقيقة`,
+            hoursAgo: (n) => `قبل ${n} ساعة`,
+            daysAgo: (n) => `قبل ${n} يوم`,
+        },
         errors: {
             notFoundTitle: 'الصفحة غير موجودة',
             notFoundBody: 'الرابط الذي فتحته غير صحيح أو لم يعد متاحاً. يمكنك العودة للرئيسية أو الانتقال مباشرة إلى ما تبحث عنه.',
@@ -159,6 +169,16 @@ const common = {
             remaining: (time) => `Free trial — ${time} left`,
             ended: 'Your free trial has ended — finish this quiz and see your result',
             cta: 'Subscribe now',
+        },
+        notifications: {
+            label: 'Notifications',
+            title: 'Notifications',
+            empty: 'Nothing yet. Finish a quiz or set a goal and your milestones will show up here.',
+            markAllRead: 'Mark all as read',
+            justNow: 'Just now',
+            minutesAgo: (n) => `${n}m ago`,
+            hoursAgo: (n) => `${n}h ago`,
+            daysAgo: (n) => `${n}d ago`,
         },
         errors: {
             notFoundTitle: 'Page not found',

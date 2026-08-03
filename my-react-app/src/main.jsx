@@ -1,8 +1,10 @@
 import { StrictMode, Suspense, lazy } from 'react'
 import './index.css'
 import App from './App.jsx';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
 import { createRoot } from 'react-dom/client';
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 // Shell components are part of every route, so they stay eagerly bundled with
 // the landing chunk. App (the "/" landing route) is also eager because it is
@@ -26,6 +28,7 @@ const ADDQ = lazy(() => import('./components/ADD/ADDQ.jsx'));
 const Analysis = lazy(() => import('./components/analysis/Analysis.jsx'));
 const WrongQuestions = lazy(() => import('./components/analysis/WrongQuestions.jsx'));
 const Admin = lazy(() => import('./components/ADD/Admin.jsx'));
+const Growth = lazy(() => import('./components/ADD/Growth.jsx'));
 const AdminBroadcast = lazy(() => import('./components/ADD/AdminBroadcast.jsx'));
 const Bank = lazy(() => import('./components/ADD/Bank.jsx'));
 const Accounting = lazy(() => import('./components/ADD/Accounting.jsx'));
@@ -119,15 +122,23 @@ const router = createBrowserRouter([
   authed('/subscribe', <Subscribe />),
   authed('/payment/callback', <PaymentCallback />),
 
-  // Admin
+  // Admin — one hub (/admin) with sub-sections. Old URLs redirect so any
+  // bookmark or saved link still works.
   admin('/admin', <Admin />),
-  admin('/admin/email', <AdminBroadcast />),
+  admin('/admin/growth', <Growth />),
   admin('/admin/accounting', <Accounting />),
-  admin('/ADD_ACCOUNT', <ADD host={getHostUrl} />),
-  admin('/ADDQ', <ADDQ host={getHostUrl} />),
-  admin('/Bank', <Bank />),
-  admin('/TEMP_LINKS', <TempLinks host={getHostUrl} />),
-  admin('/question-reports', <QuestionReports />),
+  admin('/admin/users', <ADD host={getHostUrl} />),
+  admin('/admin/questions', <ADDQ host={getHostUrl} />),
+  admin('/admin/bank', <Bank />),
+  admin('/admin/reports', <QuestionReports />),
+  admin('/admin/links', <TempLinks host={getHostUrl} />),
+  admin('/admin/email', <AdminBroadcast />),
+
+  withBoundary('/ADD_ACCOUNT', <Navigate to="/admin/users" replace />),
+  withBoundary('/ADDQ', <Navigate to="/admin/questions" replace />),
+  withBoundary('/Bank', <Navigate to="/admin/bank" replace />),
+  withBoundary('/TEMP_LINKS', <Navigate to="/admin/links" replace />),
+  withBoundary('/question-reports', <Navigate to="/admin/reports" replace />),
 
   // Anything else. A real 404 page — NOT the error boundary, which renders
   // nothing when there is no router error.
@@ -140,6 +151,11 @@ createRoot(document.getElementById('root')).render(
       <UserProvider>
         <RouterProvider router={router} />
         <CookieConsent />
+        {/* Mounted at the root (not inside the "/" route element) so every
+            route is tracked, not just landing — a visitor arriving directly
+            on /signup or /subscribe used to be invisible to analytics. */}
+        {import.meta.env.PROD && <Analytics />}
+        {import.meta.env.PROD && <SpeedInsights />}
       </UserProvider>
     </LanguageProvider>
   </StrictMode>,
