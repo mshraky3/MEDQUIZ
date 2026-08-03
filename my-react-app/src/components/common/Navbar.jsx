@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { UserContext } from '../../UserContext';
 import Icon from './Icon.jsx';
+import NotificationBell from './NotificationBell.jsx';
 import { useCommon, useLang, LanguageToggle, formatDate } from '../../i18n';
 import './Navbar.css';
 
@@ -127,6 +128,7 @@ const Navbar = () => {
       </div>
 
       <div className="navbar-left">
+        {isAuthenticated && <NotificationBell />}
         <LanguageToggle className="navbar-lang-toggle" />
         <button
           className="navbar-hamburger"

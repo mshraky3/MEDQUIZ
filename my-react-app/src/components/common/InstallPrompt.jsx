@@ -76,12 +76,6 @@ const ShareGlyph = () => (
         <path d="M5 12v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7" />
     </svg>
 );
-const DotsGlyph = () => (
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
-        <circle cx="12" cy="5" r="1.6" /><circle cx="12" cy="12" r="1.6" /><circle cx="12" cy="19" r="1.6" />
-    </svg>
-);
-
 /**
  * Floating, dismissible install banner. Shows on mobile only (Android install
  * button, or iOS manual hint); hidden when already installed or recently
@@ -126,58 +120,5 @@ export default function InstallPrompt() {
                 <Icon name="x" size={16} />
             </button>
         </div>
-    );
-}
-
-/**
- * Inline landing-page section explaining how to add SQB to the home screen on
- * both iOS and Android, with a one-tap install button when the browser supports
- * it. Hidden when the app is already installed.
- */
-export function InstallGuideSection() {
-    const { canInstallAndroid, isStandalone, promptInstall } = useInstallPrompt();
-    const t = useCopy(installCopy);
-    if (isStandalone) return null;
-
-    // The leading glyph of each step, in the order the steps are written.
-    const iosIcons = [<ShareGlyph />, <Icon name="plus" size={18} />, <Icon name="check" size={18} />];
-    const androidIcons = [<DotsGlyph />, <Icon name="home" size={18} />, <Icon name="check" size={18} />];
-
-    const steps = (items, icons) => (
-        <ol className="install-steps">
-            {items.map((step, i) => (
-                <li key={step}><span className="install-step-ic">{icons[i]}</span> {step}</li>
-            ))}
-        </ol>
-    );
-
-    return (
-        <section className="install-section" aria-label={t.sectionLabel}>
-            <div className="section-head">
-                <p className="pill subtle">{t.pill}</p>
-                <h2>{t.sectionTitle}</h2>
-                <p>{t.sectionBody}</p>
-            </div>
-
-            <div className="install-guide-grid">
-                <article className="install-guide-card">
-                    <h3><span className="install-os"></span> {t.iosTitle}</h3>
-                    {steps(t.iosSteps, iosIcons)}
-                </article>
-
-                <article className="install-guide-card">
-                    <h3><span className="install-os"></span> {t.androidTitle}</h3>
-                    {steps(t.androidSteps, androidIcons)}
-                </article>
-            </div>
-
-            {canInstallAndroid && (
-                <div className="install-section-cta">
-                    <button className="btn primary" onClick={promptInstall}>
-                        <Icon name="home" size={18} /> {t.installNow}
-                    </button>
-                </div>
-            )}
-        </section>
     );
 }

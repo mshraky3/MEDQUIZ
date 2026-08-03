@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Icon from '../common/Icon.jsx';
 import axios from '../../utils/adminApi.js';
-import AdminNavbar from './AdminNavbar.jsx';
+import AdminLayout from './AdminLayout.jsx';
 import Globals from '../../global.js';
 
 const API = Globals.URL;
@@ -68,8 +68,8 @@ const QuestionReports = () => {
     const resolved = reports.filter((r) => r.status !== 'pending');
 
     return (
-        <div style={{ minHeight: '100vh', background: '#0b1021', color: '#e2e8f0' }}>
-            <AdminNavbar />
+        <AdminLayout bare>
+            <div style={{ minHeight: 'calc(100vh - 60px)', background: '#0b1021', color: '#e2e8f0' }}>
             <div style={{ maxWidth: 900, margin: '0 auto', padding: '32px 16px' }}>
                 <h1 style={{ fontSize: 24, marginBottom: 8 }}><Icon name="flag" size={16} /> Question Reports</h1>
                 <p style={{ color: '#94a3b8', marginBottom: 32 }}>
@@ -216,7 +216,8 @@ const QuestionReports = () => {
                     </>
                 )}
             </div>
-        </div>
+            </div>
+        </AdminLayout>
     );
 };
 

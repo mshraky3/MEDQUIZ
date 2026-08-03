@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from '../../utils/adminApi.js';
 import './addq.css';
 import Globals from '../../global.js';
+import AdminLayout from './AdminLayout.jsx';
 import { TRACKS, TRACK_KEYS, MEDICAL, specialtiesOf } from '../../utils/tracks.js';
 
 const ADDQ = () => {
@@ -77,6 +78,7 @@ const ADDQ = () => {
         }
     };
     return (
+        <AdminLayout>
         <div className="add-question-container">
             <h2>Add New Question</h2>
             {error && <div className="error">{error}</div>}
@@ -216,6 +218,7 @@ const ADDQ = () => {
                 <button type="submit" className="submit-button">Add Question</button>
             </form>
         </div>
+        </AdminLayout>
     );
 };
 

@@ -38,6 +38,7 @@ const PATHS = {
     flag: <><path d="M4 22V4" /><path d="M4 4h13l-2 4 2 4H4" /></>,
     refresh: <><path d="M21 12a9 9 0 1 1-2.6-6.3" /><path d="M21 4v5h-5" /></>,
     mail: <><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></>,
+    'message-circle': <><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.8-.9L3 21l1.9-5a8.4 8.4 0 0 1-.9-3.8 8.4 8.4 0 0 1 8.4-9 8.4 8.4 0 0 1 8.6 8.3z" /></>,
     phone: <><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L19 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z" /></>,
     search: <><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></>,
     calendar: <><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></>,
@@ -74,11 +75,14 @@ const PATHS = {
     monitor: <><rect x="3" y="4" width="18" height="12" rx="2" /><path d="M8 20h8M12 16v4" /></>,
     inbox: <><path d="M22 12h-6l-2 3h-4l-2-3H2" /><path d="M5 5h14l3 7v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-6z" /></>,
     hourglass: <><path d="M6 2h12M6 22h12" /><path d="M6 2c0 5 12 5 12 0M6 22c0-5 12-5 12 0" /></>,
+    bell: <><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.7 21a2 2 0 0 1-3.4 0" /></>,
     'log-out': <><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></>,
     'shield-check': <><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5z" /><path d="m8.5 11.5 2.5 2.5 4.5-4.5" /></>,
     // Directional — mirror these when the surrounding text direction flips.
     'chevron-left': <><path d="m15 6-6 6 6 6" /></>,
     'chevron-right': <><path d="m9 6 6 6-6 6" /></>,
+    // Vertical chevrons need no mirroring; used by the hero's scroll cue.
+    'chevron-down': <><path d="m6 9 6 6 6-6" /></>,
 };
 
 const Icon = ({ name, size = 20, strokeWidth = 2, className = '', title, ...rest }) => {

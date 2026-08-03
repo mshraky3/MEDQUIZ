@@ -34,7 +34,12 @@ const dur = (s) => {
     return h ? `${h}h ${m}m` : `${m}m`;
 };
 
-const EngagementPanel = () => {
+/**
+ * @param {boolean} [compact] - Overview page embeds a condensed version: no
+ * range switcher (fixed 30 days), no per-track split, no top-users list. The
+ * full version (range switcher + breakdowns) lives on the Growth page.
+ */
+const EngagementPanel = ({ compact = false }) => {
     const [days, setDays] = useState(30);
     const [data, setData] = useState(null);
     const [state, setState] = useState('loading');
@@ -80,18 +85,20 @@ const EngagementPanel = () => {
             <div className="eng-head">
                 <div>
                     <h2>What are students actually using?</h2>
-                    <span>Real time spent in each section — counted only while the page is visible to the user</span>
+                    {!compact && <span>Real time spent in each section — counted only while the page is visible to the user</span>}
                 </div>
-                <div className="eng-ranges">
-                    {RANGES.map((r) => (
-                        <button
-                            key={r.days}
-                            type="button"
-                            className={`eng-range${days === r.days ? ' is-on' : ''}`}
-                            onClick={() => setDays(r.days)}
-                        >{r.label}</button>
-                    ))}
-                </div>
+                {!compact && (
+                    <div className="eng-ranges">
+                        {RANGES.map((r) => (
+                            <button
+                                key={r.days}
+                                type="button"
+                                className={`eng-range${days === r.days ? ' is-on' : ''}`}
+                                onClick={() => setDays(r.days)}
+                            >{r.label}</button>
+                        ))}
+                    </div>
+                )}
             </div>
 
             {!data?.hasData ? (
@@ -139,7 +146,7 @@ const EngagementPanel = () => {
                         })}
                     </div>
 
-                    {(data.byTrack || []).some((t) => t.sections.some((s) => s.seconds > 0)) && (
+                    {!compact && (data.byTrack || []).some((t) => t.sections.some((s) => s.seconds > 0)) && (
                         <div className="eng-track-split">
                             <h3>By track</h3>
                             {data.byTrack.map((t) => {
@@ -167,7 +174,7 @@ const EngagementPanel = () => {
                         </div>
                     )}
 
-                    {(data.topUsers || []).length > 0 && (
+                    {!compact && (data.topUsers || []).length > 0 && (
                         <details className="eng-top">
                             <summary>Most active users ({data.topUsers.length})</summary>
                             <ul>

@@ -3,7 +3,7 @@ import axios, { getAdminKey } from '../../utils/adminApi.js';
 import Globals from '../../global.js';
 import Icon from '../common/Icon.jsx';
 import Spinner from '../common/Spinner.jsx';
-import AdminNavbar from './AdminNavbar.jsx';
+import AdminLayout from './AdminLayout.jsx';
 import './Accounting.css';
 
 /**
@@ -92,27 +92,21 @@ const Accounting = () => {
 
     if (state === 'loading' && !data) {
         return (
-            <div className="admin-page-wrapper">
-                <AdminNavbar />
-                <div className="admin-container">
-                    <div className="acc-loading"><Spinner size="lg" /><p>Loading accounting…</p></div>
-                </div>
-            </div>
+            <AdminLayout>
+                <div className="acc-loading"><Spinner size="lg" /><p>Loading accounting…</p></div>
+            </AdminLayout>
         );
     }
 
     if (state === 'error' && !data) {
         return (
-            <div className="admin-page-wrapper">
-                <AdminNavbar />
-                <div className="admin-container">
-                    <div className="acc-error">
-                        <Icon name="alert-triangle" size={28} />
-                        <p>{error}</p>
-                        <button className="acc-btn" onClick={load}>Retry</button>
-                    </div>
+            <AdminLayout>
+                <div className="acc-error">
+                    <Icon name="alert-triangle" size={28} />
+                    <p>{error}</p>
+                    <button className="acc-btn" onClick={load}>Retry</button>
                 </div>
-            </div>
+            </AdminLayout>
         );
     }
 
@@ -120,9 +114,7 @@ const Accounting = () => {
     const tag = fmtDate(new Date());
 
     return (
-        <div className="admin-page-wrapper">
-            <AdminNavbar />
-            <div className="admin-container">
+        <AdminLayout>
 
                 <header className="acc-head">
                     <div>
@@ -349,8 +341,7 @@ const Accounting = () => {
                         </table>
                     </div>
                 </section>
-            </div>
-        </div>
+        </AdminLayout>
     );
 };
 

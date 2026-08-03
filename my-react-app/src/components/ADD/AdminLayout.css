@@ -1,0 +1,232 @@
+/* Admin layout — replaces AdminNavbar.css */
+
+.admin-page-wrapper {
+    min-height: 100vh;
+    background: #ffffff;
+}
+
+.admin-navbar {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(15, 23, 42, 0.10);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+
+.admin-navbar-content {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 10px 24px;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+.admin-navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.admin-navbar-icon {
+    font-size: 24px;
+}
+
+.admin-navbar-title {
+    font-size: 16px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #236ded 0%, #1054ca 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+
+/* Grouped desktop links — the "easy access buttons" */
+.admin-navbar-groups {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+
+.admin-navbar-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.admin-navbar-group + .admin-navbar-group {
+    padding-inline-start: 18px;
+    border-inline-start: 1px solid rgba(15, 23, 42, 0.10);
+}
+
+.admin-navbar-group-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #94a3b8;
+    flex-shrink: 0;
+}
+
+.admin-navbar-group-links {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.admin-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: #64748b;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.admin-nav-link:hover {
+    color: #1e293b;
+    background: rgba(15, 23, 42, 0.04);
+}
+
+.admin-nav-link.active {
+    color: #236ded;
+    background: rgba(35, 109, 237, 0.1);
+    border-color: rgba(35, 109, 237, 0.25);
+}
+
+.admin-back-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #ffffff;
+    background: linear-gradient(135deg, #236ded 0%, #1054ca 100%);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.admin-back-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(35, 109, 237, 0.3);
+}
+
+.admin-menu-toggle {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+    color: #1e293b;
+    background: rgba(15, 23, 42, 0.04);
+    border: 1px solid rgba(15, 23, 42, 0.10);
+    border-radius: 8px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+/* Mobile menu */
+.admin-mobile-menu {
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 16px 16px;
+    background: rgba(255, 255, 255, 0.98);
+    border-top: 1px solid rgba(15, 23, 42, 0.10);
+    max-height: 0;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.admin-mobile-menu.open {
+    max-height: 560px;
+    padding-bottom: 16px;
+    overflow-y: auto;
+}
+
+.admin-mobile-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 16px;
+    font-size: 14.5px;
+    font-weight: 500;
+    color: #64748b;
+    background: rgba(15, 23, 42, 0.04);
+    border: 1px solid rgba(15, 23, 42, 0.10);
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: left;
+}
+
+.admin-mobile-link.active {
+    color: #236ded;
+    background: rgba(35, 109, 237, 0.1);
+    border-color: rgba(35, 109, 237, 0.3);
+}
+
+.admin-mobile-link.back {
+    margin-top: 8px;
+    background: linear-gradient(135deg, rgba(35, 109, 237, 0.15) 0%, rgba(16, 84, 202, 0.15) 100%);
+    border-color: rgba(35, 109, 237, 0.3);
+    color: #236ded;
+}
+
+.mobile-link-icon {
+    font-size: 18px;
+    width: 22px;
+    text-align: center;
+}
+
+@media (max-width: 1050px) {
+    .admin-navbar-groups { display: none; }
+    .admin-back-btn { display: none; }
+    .admin-menu-toggle { display: flex; }
+    .admin-mobile-menu { display: flex; }
+}
+
+@media (max-width: 480px) {
+    .admin-navbar-content { padding: 10px 16px; }
+    .admin-navbar-title { font-size: 14px; }
+}
+
+/* Page container — same footprint as the old .admin-container */
+.admin-container {
+    background: #ffffff;
+    min-height: calc(100vh - 60px);
+    padding: 1.5rem;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+    .admin-container { padding: 1rem; }
+}

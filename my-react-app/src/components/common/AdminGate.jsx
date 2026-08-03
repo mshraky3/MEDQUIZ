@@ -4,8 +4,9 @@ import adminApi, { getAdminKey, setAdminKey, clearAdminKey } from '../../utils/a
 import Spinner from './Spinner.jsx';
 
 /**
- * Gate screen for admin-only routes (/admin, /ADD_ACCOUNT, /ADDQ, /Bank,
- * /TEMP_LINKS, /question-reports).
+ * Gate screen for admin-only routes (/admin and its sub-sections:
+ * /admin/growth, /admin/accounting, /admin/users, /admin/questions,
+ * /admin/bank, /admin/reports, /admin/links, /admin/email).
  *
  * Verifies the stored admin key against GET /api/admin/verify-key before
  * rendering any admin UI; otherwise shows a key prompt. The key travels in

@@ -1,0 +1,125 @@
+/* ==================== Shared admin UI kit ====================
+   Used by Kpi, Panel and ChartCard across every /admin/* page — the light,
+   card-based language already established by AdminAnalytics.css. */
+
+.admin-kpi {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: rgba(15, 23, 42, 0.03);
+    border: 1px solid #eef2fb;
+    border-radius: 12px;
+    min-width: 0;
+}
+
+.admin-kpi.is-clickable {
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.admin-kpi.is-clickable:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+    border-color: rgba(37, 99, 235, 0.3);
+}
+
+.admin-kpi-ic {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: 10px;
+    color: #fff;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+.admin-kpi--positive .admin-kpi-ic { background: linear-gradient(135deg, #4ade80, #16a34a); }
+.admin-kpi--negative .admin-kpi-ic { background: linear-gradient(135deg, #f87171, #dc2626); }
+.admin-kpi--warning .admin-kpi-ic { background: linear-gradient(135deg, #fbbf24, #d97706); }
+
+.admin-kpi-body { display: flex; flex-direction: column; min-width: 0; gap: 1px; }
+.admin-kpi-value { font-size: 1.4rem; font-weight: 800; color: #0f1e3d; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.admin-kpi-label { font-size: 0.74rem; color: #64748b; font-weight: 600; }
+.admin-kpi-sub { font-size: 0.68rem; color: #94a3b8; }
+
+.admin-kpi--negative .admin-kpi-value { color: #b91c1c; }
+.admin-kpi--warning .admin-kpi-value { color: #b45309; }
+
+/* Panel */
+.admin-panel {
+    padding: 20px 22px;
+    background: #fff;
+    border: 1px solid #e6ecf7;
+    border-radius: 16px;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+    margin-bottom: 20px;
+}
+
+.admin-panel-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.admin-panel-head h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-size: 1.1rem;
+    color: #0f1e3d;
+}
+
+.admin-panel-sub {
+    display: block;
+    margin-top: 2px;
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+.admin-panel-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Chart card */
+.admin-chart-card { min-width: 0; }
+
+.admin-chart-state {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+    font-size: 0.85rem;
+    text-align: center;
+}
+
+.admin-chart-state--error { color: #b91c1c; }
+
+/* Strip layout — a row of Kpi tiles */
+.admin-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+/* Grid of chart cards / panels, 2-up on desktop */
+.admin-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+@media (max-width: 900px) {
+    .admin-grid-2 { grid-template-columns: 1fr; }
+}

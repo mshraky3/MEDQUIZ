@@ -756,6 +756,31 @@
   padding: 1.5rem !important;
 }
 
+.admin-link-btn {
+  padding: 6px 14px;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #236ded;
+  background: rgba(35, 109, 237, 0.08);
+  border: 1px solid rgba(35, 109, 237, 0.2);
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.admin-link-btn:hover {
+  background: rgba(35, 109, 237, 0.14);
+}
+
+.admin-chart-card-wrap {
+  grid-column: span 2;
+}
+
+@media (max-width: 900px) {
+  .admin-chart-card-wrap { grid-column: auto; }
+}
+
 /* Loading & Error States */
 .dashboard-loading,
 .dashboard-error {

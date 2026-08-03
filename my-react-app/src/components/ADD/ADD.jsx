@@ -3,7 +3,7 @@ import Icon from '../common/Icon.jsx';
 import axios from "../../utils/adminApi.js";
 import "./add.css";
 import "./Admin.css";
-import AdminNavbar from "./AdminNavbar.jsx";
+import AdminLayout from "./AdminLayout.jsx";
 import { TRACKS, TRACK_KEYS, MEDICAL, normalizeTrack } from '../../utils/tracks.js';
 
 /**
@@ -72,13 +72,11 @@ const ADD = (props) => {
     const [loading, setLoading] = useState(false);
 
     // State for dashboard data
-    const [stats, setStats] = useState(null);
     const [users, setUsers] = useState([]);
-    const [, setLoadingStats] = useState(true);
     const [, setLoadingUsers] = useState(true);
 
     // State for UI
-    const [activeTab, setActiveTab] = useState('overview'); // overview, users, suspicious
+    const [activeTab, setActiveTab] = useState('users'); // users, suspicious, add
     const [searchQuery, setSearchQuery] = useState("");
     const [planFilter, setPlanFilter] = useState("all");
     const [sortBy, setSortBy] = useState("id");
@@ -87,19 +85,6 @@ const ADD = (props) => {
     const [showLoginHistory, setShowLoginHistory] = useState(false);
     const [loginHistory, setLoginHistory] = useState([]);
     const [deletingUser, setDeletingUser] = useState(null);
-
-    // Fetch dashboard stats
-    const fetchStats = async () => {
-        try {
-            setLoadingStats(true);
-            const response = await axios.get(`${props.host}/admin/stats`);
-            setStats(response.data);
-        } catch (err) {
-            console.error("Failed to fetch stats:", err);
-        } finally {
-            setLoadingStats(false);
-        }
-    };
 
     // Fetch users with activity data
     const fetchUsers = async () => {
@@ -134,14 +119,10 @@ const ADD = (props) => {
 
     // Initial data fetch
     useEffect(() => {
-        fetchStats();
         fetchUsers();
 
         // Refresh every 60 seconds
-        const interval = setInterval(() => {
-            fetchStats();
-            fetchUsers();
-        }, 60000);
+        const interval = setInterval(fetchUsers, 60000);
 
         return () => clearInterval(interval);
     }, []);
@@ -314,49 +295,10 @@ const ADD = (props) => {
         return users.filter(user => user.suspicious?.hasSuspiciousActivity);
     }, [users]);
 
-    // Simple bar chart component
-    const SimpleBarChart = ({ data, labelKey, valueKey, maxBars = 7 }) => {
-        if (!data || data.length === 0) return <div className="no-data">No data available</div>;
-
-        const slicedData = data.slice(0, maxBars);
-        const maxValue = Math.max(...slicedData.map(d => parseInt(d[valueKey]) || 0));
-
-        return (
-            <div className="simple-chart">
-                {slicedData.map((item, index) => {
-                    const value = parseInt(item[valueKey]) || 0;
-                    const percentage = maxValue > 0 ? (value / maxValue) * 100 : 0;
-                    const label = item[labelKey] || 'Unknown';
-
-                    return (
-                        <div key={index} className="chart-bar-container">
-                            <div className="chart-label">{typeof label === 'string' ? label.slice(0, 10) : label}</div>
-                            <div className="chart-bar-wrapper">
-                                <div
-                                    className="chart-bar"
-                                    style={{ width: `${percentage}%` }}
-                                />
-                            </div>
-                            <div className="chart-value">{value}</div>
-                        </div>
-                    );
-                })}
-            </div>
-        );
-    };
-
     return (
-        <div className="admin-page-wrapper">
-            <AdminNavbar />
-            <div className="admin-dashboard">
+        <AdminLayout containerClassName="admin-dashboard">
                 {/* Tab Navigation */}
                 <div className="dashboard-tabs">
-                    <button
-                        className={`tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('overview')}
-                    >
-                        <Icon name="bar-chart" size={16} /> Overview
-                    </button>
                     <button
                         className={`tab-btn ${activeTab === 'users' ? 'active' : ''}`}
                         onClick={() => setActiveTab('users')}
@@ -380,114 +322,6 @@ const ADD = (props) => {
                 {/* Messages */}
                 {error && <div className="alert alert-error">{error}</div>}
                 {message && <div className="alert alert-success">{message}</div>}
-
-                {/* Overview Tab */}
-                {activeTab === 'overview' && (
-                    <div className="tab-content">
-                        {/* Stats Cards */}
-                        <div className="stats-grid">
-                            <div className="stat-card-mini">
-                                <div className="stat-icon"><Icon name="users" size={16} /></div>
-                                <div className="stat-info">
-                                    <span className="stat-value">{stats?.overview?.totalUsers || 0}</span>
-                                    <span className="stat-label">Total Users</span>
-                                </div>
-                            </div>
-                            <div className="stat-card-mini">
-                                <div className="stat-icon"><Icon name="circle" size={16} /></div>
-                                <div className="stat-info">
-                                    <span className="stat-value">{stats?.overview?.activeUsers || 0}</span>
-                                    <span className="stat-label">Active (7 days)</span>
-                                </div>
-                            </div>
-                            <div className="stat-card-mini">
-                                <div className="stat-icon">🆕</div>
-                                <div className="stat-info">
-                                    <span className="stat-value">{stats?.overview?.newUsersWeek || 0}</span>
-                                    <span className="stat-label">New This Week</span>
-                                </div>
-                            </div>
-                            <div className="stat-card-mini">
-                                <div className="stat-icon"><Icon name="pen" size={16} /></div>
-                                <div className="stat-info">
-                                    <span className="stat-value">{stats?.overview?.totalQuizzes || 0}</span>
-                                    <span className="stat-label">Total Quizzes</span>
-                                </div>
-                            </div>
-                            <div className="stat-card-mini">
-                                <div className="stat-icon"><Icon name="target" size={16} /></div>
-                                <div className="stat-info">
-                                    <span className="stat-value">{stats?.overview?.avgAccuracy || 0}%</span>
-                                    <span className="stat-label">Avg Accuracy</span>
-                                </div>
-                            </div>
-                            <div className="stat-card-mini warning">
-                                <div className="stat-icon"><Icon name="alert-triangle" size={16} /></div>
-                                <div className="stat-info">
-                                    <span className="stat-value">{suspiciousUsers.length}</span>
-                                    <span className="stat-label">Suspicious</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Charts Section */}
-                        <div className="charts-grid">
-                            <div className="chart-card">
-                                <h3><Icon name="trending-up" size={16} /> Logins (Last 7 Days)</h3>
-                                <SimpleBarChart
-                                    data={stats?.charts?.loginsByDay || []}
-                                    labelKey="date"
-                                    valueKey="count"
-                                />
-                            </div>
-                            <div className="chart-card">
-                                <h3><Icon name="trophy" size={16} /> Top Users</h3>
-                                <SimpleBarChart
-                                    data={stats?.topUsers || []}
-                                    labelKey="username"
-                                    valueKey="quiz_count"
-                                    maxBars={5}
-                                />
-                            </div>
-                            <div className="chart-card">
-                                <h3><Icon name="book-open" size={16} /> Questions by Topic</h3>
-                                <SimpleBarChart
-                                    data={stats?.quizzesByTopic || []}
-                                    labelKey="topic"
-                                    valueKey="count"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Recent Logins */}
-                        <div className="recent-section">
-                            <h3><Icon name="clock" size={16} /> Recent Logins</h3>
-                            <div className="recent-logins-list">
-                                {stats?.recentLogins?.slice(0, 5).map((login, idx) => (
-                                    <div key={idx} className={`recent-login-item ${login.is_suspicious ? 'suspicious' : ''}`}>
-                                        <div className="login-user">
-                                            <span className="login-avatar"><Icon name="user" size={16} /></span>
-                                            <span className="login-username">{login.username}</span>
-                                        </div>
-                                        <div className="login-details">
-                                            <span className="login-device">{login.device_type} • {login.browser}</span>
-                                            <span className="login-ip">{login.ip_address}</span>
-                                        </div>
-                                        <div className="login-time">
-                                            {new Date(login.login_time).toLocaleString()}
-                                        </div>
-                                        {login.is_suspicious && (
-                                            <span className="suspicious-badge"><Icon name="alert-triangle" size={16} /></span>
-                                        )}
-                                    </div>
-                                ))}
-                                {(!stats?.recentLogins || stats.recentLogins.length === 0) && (
-                                    <div className="no-data">No recent logins recorded</div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                )}
 
                 {/* Users Tab */}
                 {activeTab === 'users' && (
@@ -538,7 +372,7 @@ const ADD = (props) => {
                             </div>
                             <button
                                 className="refresh-btn"
-                                onClick={() => { fetchUsers(); fetchStats(); }}
+                                onClick={fetchUsers}
                             >
                                 <Icon name="refresh" size={16} /> Refresh
                             </button>
@@ -862,8 +696,7 @@ const ADD = (props) => {
                         </div>
                     </div>
                 )}
-            </div>
-        </div>
+        </AdminLayout>
     );
 };
 

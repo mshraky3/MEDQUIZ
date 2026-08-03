@@ -3,7 +3,7 @@ import Icon from '../common/Icon.jsx';
 import axios from "../../utils/adminApi.js";
 import "./add.css";
 import "./Admin.css";
-import AdminNavbar from "./AdminNavbar.jsx";
+import AdminLayout from "./AdminLayout.jsx";
 import { TRACKS, TRACK_KEYS, MEDICAL, normalizeTrack } from '../../utils/tracks.js';
 
 const TempLinks = (props) => {
@@ -104,8 +104,7 @@ const TempLinks = (props) => {
     };
 
     return (
-        <div className="admin-page-wrapper">
-            <AdminNavbar />
+        <AdminLayout>
             <div className="container">
                 <div className="admin-header">
                     <h1><Icon name="link" size={16} /> Temporary Signup Links</h1>
@@ -384,7 +383,7 @@ const TempLinks = (props) => {
                     )}
                 </div>
             </div>
-        </div>
+        </AdminLayout>
     );
 };
 

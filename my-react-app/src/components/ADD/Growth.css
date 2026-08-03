@@ -1,0 +1,126 @@
+.growth-view {
+    padding: 1.5rem !important;
+}
+
+.growth-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.growth-presets {
+    display: inline-flex;
+    gap: 4px;
+    padding: 3px;
+    background: rgba(15, 23, 42, 0.04);
+    border-radius: 10px;
+}
+
+.growth-presets button {
+    padding: 6px 12px;
+    min-height: 34px;
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #475569;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.growth-presets button:hover { background: #fff; color: #2563eb; }
+
+.growth-date {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #64748b;
+}
+
+.growth-date input {
+    padding: 7px 10px;
+    min-height: 36px;
+    font-family: inherit;
+    font-size: 0.8rem;
+    color: #0f1e3d;
+    background: #fff;
+    border: 1px solid #d4deee;
+    border-radius: 8px;
+}
+
+.growth-apply {
+    padding: 8px 18px;
+    min-height: 36px;
+    font-family: inherit;
+    font-weight: 800;
+    font-size: 0.8rem;
+    color: #fff;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.growth-apply:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3); }
+
+.growth-state {
+    padding: 16px;
+    text-align: center;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.growth-state--error { color: #b91c1c; }
+.growth-state button {
+    margin-inline-start: 8px;
+    padding: 6px 14px;
+    font-family: inherit;
+    font-weight: 700;
+    color: #fff;
+    background: #dc2626;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.growth-table-wrap {
+    overflow-x: auto;
+}
+
+.growth-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.growth-table th,
+.growth-table td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid #eef2fb;
+}
+
+.growth-table th {
+    color: #64748b;
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.growth-table td { color: #0f1e3d; }
+.growth-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.growth-empty {
+    text-align: center;
+    color: #94a3b8;
+    padding: 24px;
+}
+
+@media (max-width: 768px) {
+    .growth-view { padding: 1rem !important; }
+}

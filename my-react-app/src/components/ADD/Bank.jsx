@@ -4,6 +4,7 @@ import axios from "../../utils/adminApi.js";
 import "./Bank.css";
 import Globals from '../../global.js';
 import Spinner from '../common/Spinner.jsx';
+import AdminLayout from './AdminLayout.jsx';
 import { TRACKS, TRACK_KEYS, MEDICAL, specialtiesOf } from '../../utils/tracks.js';
 
 const Bank = () => {
@@ -133,6 +134,7 @@ const Bank = () => {
   const currentQuestion = questions[currentIndex];
 
   return (
+    <AdminLayout bare>
     <div className="app-container">
       <h1 className="title">Question Bank</h1>
 
@@ -326,6 +328,7 @@ const Bank = () => {
         </>
       )}
     </div>
+    </AdminLayout>
   );
 };
 

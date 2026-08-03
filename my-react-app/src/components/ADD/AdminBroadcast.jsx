@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import axios from '../../utils/adminApi.js';
 import Globals from '../../global.js';
 import Icon from '../common/Icon.jsx';
+import AdminLayout from './AdminLayout.jsx';
 import { TRACKS, TRACK_KEYS } from '../../utils/tracks.js';
 import './AdminBroadcast.css';
 
@@ -53,7 +53,6 @@ const STATUS_LABELS = {
  * from the first still-pending recipient.
  */
 const AdminBroadcast = () => {
-    const navigate = useNavigate();
 
     const [meta, setMeta] = useState(null);           // audience counts + quota
     const [campaigns, setCampaigns] = useState([]);
@@ -214,15 +213,13 @@ const AdminBroadcast = () => {
     const pct = (p) => (p && p.total ? Math.round(((p.sent + p.failed) / p.total) * 100) : 0);
     const quota = active?.quota || meta?.quota;
 
-    if (loading) return <div className="bc-wrap"><p className="bc-muted">Loading…</p></div>;
+    if (loading) return <AdminLayout><div className="bc-wrap"><p className="bc-muted">Loading…</p></div></AdminLayout>;
 
     return (
+        <AdminLayout>
         <div className="bc-wrap">
             <header className="bc-head">
                 <div>
-                    <button type="button" className="bc-back" onClick={() => navigate('/admin')}>
-                        <Icon name="chevron-left" size={16} /> Dashboard
-                    </button>
                     <h1>Bulk email</h1>
                     <p className="bc-muted">Write one message and send it to every user in small batches — without exceeding Resend's limits or the Vercel timeout.</p>
                 </div>
@@ -461,6 +458,7 @@ const AdminBroadcast = () => {
                 )}
             </section>
         </div>
+        </AdminLayout>
     );
 };
 
