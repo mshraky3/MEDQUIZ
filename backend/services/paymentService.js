@@ -112,7 +112,8 @@ export function getCurrency() {
  *   - allow if grandfathered_at is set (pre-rollout users)
  *   - allow if subscription_status='active' AND expiry in the future
  *   - allow if subscription_status='trial' AND expiry in the future
- *   - otherwise deny (trial_expired if a trial ran out, else subscription_required)
+ *   - otherwise deny (trial_expired if a trial ran out, trial_pending_activation
+ *     if a trial was granted but not yet started by a login, else subscription_required)
  *
  * @param {object} account - row from the accounts table
  * @returns {{ allowed: boolean, reason: string }}
@@ -142,6 +143,11 @@ export function checkSubscriptionAccess(account) {
     }
     if (status === 'trial') {
         return { allowed: false, reason: 'trial_expired' };
+    }
+    if (status === 'trial_pending') {
+        // Granted (e.g. by an admin reset) but the hour hasn't started —
+        // it only starts at the account's next /login. See app.js login route.
+        return { allowed: false, reason: 'trial_pending_activation' };
     }
     return { allowed: false, reason: 'subscription_required' };
 }

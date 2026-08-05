@@ -55,6 +55,8 @@ export function subscriptionGuard(db) {
                     reason,
                     message: reason === 'trial_expired'
                         ? 'Your free trial has ended. Subscribe to keep going.'
+                        : reason === 'trial_pending_activation'
+                        ? 'Your free trial is ready — log in again to start your hour.'
                         : 'An active subscription is required to access this feature.',
                 });
             }

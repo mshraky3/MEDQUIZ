@@ -1122,6 +1122,31 @@ app.post('/login', async (req, res) => {
             });
         }
 
+        // Activate a pending trial reset on first login.
+        // A trial *grant* (signup, or an admin reset) and trial *activation*
+        // are different moments: subscription_status='trial_pending' means
+        // "granted, hour not started yet". The countdown only begins here,
+        // at the user's own first login after the grant — never at grant
+        // time — so a reset campaign emailed to many people doesn't quietly
+        // burn everyone's hour before they actually open the email.
+        if (userRow.subscription_status === 'trial_pending') {
+            const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+            await client.query(
+                `UPDATE accounts SET subscription_status = 'trial', subscription_expiry_date = $1 WHERE id = $2`,
+                [expiresAt, userRow.id]
+            );
+            await client.query(
+                `INSERT INTO trial_grants (email, account_id, granted_at, expires_at)
+                 VALUES ($1, $2, NOW(), $3)
+                 ON CONFLICT (email) DO UPDATE
+                   SET account_id = EXCLUDED.account_id, granted_at = EXCLUDED.granted_at, expires_at = EXCLUDED.expires_at`,
+                [lowercaseUsername, userRow.id, expiresAt]
+            );
+            userRow.subscription_status = 'trial';
+            userRow.subscription_expiry_date = expiresAt;
+            logger.info(`Activated pending trial on login for ${lowercaseUsername}, expires ${expiresAt.toISOString()}`);
+        }
+
         // Session timeout logic
         let now = new Date();
         if (userRow.logged) {

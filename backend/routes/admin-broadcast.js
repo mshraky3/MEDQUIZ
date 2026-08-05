@@ -195,7 +195,7 @@ function normalizeLang(lang) {
  * `lang`; the admin's own bodyHtml is used as-is for whichever language it
  * was written in.
  */
-function renderEmail({ bodyHtml, accountId, username, lang }) {
+export function renderEmail({ bodyHtml, accountId, username, lang }) {
     const isEn = normalizeLang(lang) === 'en';
     const name = username ? escapeHtml(String(username).split('@')[0]) : '';
     const greeting = name
