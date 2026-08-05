@@ -8,16 +8,20 @@
 // languages; only the month collections actually differ.
 export const SOURCE_LABELS = {
     ar: {
-        MidgardGameBoy: 'Midgard & GameBoy2026',
-        January25: 'يناير 2026',
-        FebMarApr25: 'فبراير – مارس – أبريل 2026',
-        May26: 'مايو 2026',
-        June26: 'يونيو 2026',
+        // medical track — the 2026H2 rebuild's three collections.
+        MedicalGameBoy: 'GameBoy',
+        MedicalConfirmed: 'Confirmed',
+        MedicalMidgard: 'Midgard',
         // nursing track — the bank is split the same way the medical one is:
         // the core EMS review file vs. the block appended in its September edition.
         NursingMostRepeated: 'Most Repeated',
         NursingConfirmed: 'Confirmed',
         // legacy — retired from the bank but present in old sessions
+        MidgardGameBoy: 'Midgard & GameBoy2026',
+        January25: 'يناير 2026',
+        FebMarApr25: 'فبراير – مارس – أبريل 2026',
+        May26: 'مايو 2026',
+        June26: 'يونيو 2026',
         NursingEMS: 'الأسئلة المؤكدة والأكثر تكراراً',
         October25: 'أكتوبر 2025',
         November25: 'نوفمبر 2025',
@@ -27,13 +31,17 @@ export const SOURCE_LABELS = {
         GameBoy: 'GameBoy',
     },
     en: {
+        MedicalGameBoy: 'GameBoy',
+        MedicalConfirmed: 'Confirmed',
+        MedicalMidgard: 'Midgard',
+        NursingMostRepeated: 'Most Repeated',
+        NursingConfirmed: 'Confirmed',
+        // legacy — retired from the bank but present in old sessions
         MidgardGameBoy: 'Midgard & GameBoy2026',
         January25: 'January 2026',
         FebMarApr25: 'February – March – April 2026',
         May26: 'May 2026',
         June26: 'June 2026',
-        NursingMostRepeated: 'Most Repeated',
-        NursingConfirmed: 'Confirmed',
         NursingEMS: 'Confirmed & Most Repeated questions',
         October25: 'October 2025',
         November25: 'November 2025',

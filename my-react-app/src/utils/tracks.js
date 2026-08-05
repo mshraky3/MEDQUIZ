@@ -25,8 +25,9 @@ export const TRACKS = {
             en: 'SMLE questions and summaries for medicine, surgery, paediatrics and OB/GYN.',
         },
         // Display name of the track's question bank, shown on the launcher.
-        // A proper name — identical in both languages.
-        bank: { ar: 'Midgard & GameBoy2026', en: 'Midgard & GameBoy2026' },
+        // Names all three 2026H2 collections, same convention as nursing's
+        // bank label below — proper names, identical in both languages.
+        bank: { ar: 'GameBoy وConfirmed وMidgard', en: 'GameBoy, Confirmed & Midgard questions' },
         icon: 'stethoscope',
         specialties: [
             { key: 'medicine', label: { ar: 'الباطنة', en: 'Internal Medicine' }, icon: 'stethoscope' },
