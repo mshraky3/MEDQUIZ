@@ -7,14 +7,10 @@
   min-height: 400px;
   text-align: center;
   padding: 2rem;
-  background: rgba(15, 23, 42, 0.04);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-radius: 20px;
-  border: 1px solid rgba(15, 23, 42, 0.10);
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  background: #ffffff;
+  border-radius: 18px;
+  border: 1px solid #e6ecf6;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
 }
 
 .error-icon {
@@ -58,40 +54,34 @@
 }
 
 .retry-button {
-  background: linear-gradient(135deg, #236ded 0%, #1054ca 100%);
+  background: #2563eb;
   color: #ffffff;
-  box-shadow: 0 4px 15px rgba(35, 109, 237, 0.3);
 }
 
 .retry-button:hover {
-  background: linear-gradient(135deg, #6d9ef3 0%, #236ded 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(35, 109, 237, 0.4);
+  background: #1d4ed8;
 }
 
 .quiz-container .back-button {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  border: 1px solid rgba(15, 23, 42, 0.10);
-  background: rgba(15, 23, 42, 0.04);
-  color: #1e293b;
+  border: 1px solid #e6ecf6;
+  background: #ffffff;
+  color: #0f1e3d;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
   min-width: unset;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 .quiz-container .back-button:hover {
-  background: rgba(35, 109, 237, 0.15);
-  border-color: rgba(35, 109, 237, 0.4);
-  color: #236ded;
-  transform: translateY(-2px);
-  box-shadow: 0 0 16px rgba(35, 109, 237, 0.25);
+  background: #eef4ff;
+  border-color: #93b4f5;
+  color: #2563eb;
 }
 
 /* Responsive Design */

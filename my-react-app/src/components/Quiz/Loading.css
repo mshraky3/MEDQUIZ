@@ -8,18 +8,14 @@
   min-height: 400px;
   text-align: center;
   padding: 2rem;
-  background: rgba(15, 23, 42, 0.04);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-radius: 20px;
-  border: 1px solid rgba(15, 23, 42, 0.10);
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  background: #ffffff;
+  border-radius: 18px;
+  border: 1px solid #e6ecf6;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
 }
 
 .loading-content h2 {
-  color: #1e293b;
+  color: #0f1e3d;
   font-size: 1.8rem;
   margin-bottom: 0.5rem;
   font-weight: 600;
@@ -35,7 +31,7 @@
 .loading-bar {
   width: 200px;
   height: 3px;
-  background: rgba(15, 23, 42, 0.04);
+  background: #eef2fb;
   border-radius: 4px;
   overflow: hidden;
 }
@@ -43,7 +39,7 @@
 .loading-bar-fill {
   width: 40%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, #236ded, transparent);
+  background: linear-gradient(90deg, transparent, #2563eb, transparent);
   border-radius: 4px;
   animation: loading-sweep 1.5s ease-in-out infinite;
 }

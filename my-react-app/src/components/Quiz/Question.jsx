@@ -64,9 +64,9 @@ const Question = ({
             <div className="question-text">{safeQuestionText}</div>
 
             <div className="options">
-              {optionKeys.map((optKey, index) => (
+              {optionKeys.map((optKey) => (
                 <button
-                  key={index}
+                  key={optKey}
                   className={`option-button ${selectedAnswer === question?.[optKey] ? "selected" : ""}`}
                   onClick={() => question?.[optKey] && onSelectOption(question[optKey])}
                   disabled={!question?.[optKey]}

@@ -15,8 +15,8 @@ import { useCopy, useLang } from '../../i18n';
 import quizCopy from '../../i18n/copy/quiz.js';
 
 // Sentinel meaning "the whole of my track's bank". The backend resolves it to
-// the medical kept-source allowlist, and to no source filter at all for other
-// tracks — so it is always the right thing to send when no collection is picked.
+// all three medical sources, and to no source filter at all for nursing — so
+// it is always the right thing to send when no collection is picked.
 const WHOLE_BANK = 'MidgardGameBoy';
 
 const quizOptions = [10, 50, 'custom'];
@@ -387,6 +387,14 @@ const QuizLauncher = ({ id }) => {
                                     <span className="bank-source-chip-count">
                                         <bdi>{s.total}</bdi> {t.questionsUnit}
                                     </span>
+                                    {s.priority && (
+                                        <span
+                                            className="bank-source-chip-priority"
+                                            aria-label={t.sourcePriorityLabel(s.priority)}
+                                        >
+                                            {t.sourcePriorityBadge(s.priority)}
+                                        </span>
+                                    )}
                                 </button>
                             ))}
                         </div>

@@ -176,6 +176,22 @@
   opacity: 0.75;
 }
 
+.bank-source-chip-priority {
+  margin-top: 2px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  background: rgba(37, 99, 235, 0.12);
+  color: var(--accent-strong);
+}
+
+.bank-source-chip.is-active .bank-source-chip-priority {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
 .quick-start-btn {
   width: 100%;
   max-width: 520px;

@@ -25,6 +25,22 @@ const isValidQuestion = (question) => {
   );
 };
 
+// Runs each task, retries only the ones that failed once, and reports how
+// many are still failing after that — used for the per-question-attempt and
+// topic-analysis submissions so one flaky request doesn't silently drop the
+// rest (Promise.all would reject the whole batch on a single failure).
+const settleWithRetry = async (tasks) => {
+  const firstPass = await Promise.allSettled(tasks.map((task) => task()));
+  const failedIndexes = firstPass
+    .map((result, index) => (result.status === 'rejected' ? index : -1))
+    .filter((index) => index !== -1);
+  if (failedIndexes.length === 0) return { failures: 0 };
+
+  const retryPass = await Promise.allSettled(failedIndexes.map((index) => tasks[index]()));
+  const stillFailing = retryPass.filter((result) => result.status === 'rejected').length;
+  return { failures: stillFailing };
+};
+
 const QUIZ = () => {
   const { numQuestions } = useParams();
   const navigate = useNavigate();
@@ -252,28 +268,11 @@ const QUIZ = () => {
     });
 
     if (unansweredQuestions.length > 0) {
-      // Show popup with count of unanswered questions and auto-redirect
+      // Show popup with count of unanswered questions; the countdown itself
+      // and its redirect run in the effect below.
       setUnansweredCount(unansweredQuestions.length);
       setCountdown(2);
       setShowUnansweredPopup(true);
-
-      // Start countdown
-      const countdownInterval = setInterval(() => {
-        setCountdown(prev => {
-          if (prev <= 1) {
-            clearInterval(countdownInterval);
-            // Redirect to first unanswered question
-            const firstUnansweredIndex = questions.findIndex((_, index) => !questionAnswers[index]);
-            if (firstUnansweredIndex !== -1) {
-              setCurrentQuestionIndex(firstUnansweredIndex);
-              setShowUnansweredPopup(false);
-            }
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-
       return;
     }
     // Store the final duration when quiz is finished
@@ -281,6 +280,31 @@ const QUIZ = () => {
     setFinalDuration(duration);
     setQuizFinished(true);
   };
+
+  // Drives the unanswered-questions popup's redirect countdown as a proper
+  // effect, so the interval is always cleared — on unmount if the user
+  // navigates away mid-countdown, and if the popup is retriggered — instead of
+  // a timer started inline in an event handler that only clears itself on
+  // reaching 0 and otherwise leaks, calling setState after the component is gone.
+  useEffect(() => {
+    if (!showUnansweredPopup) return;
+
+    const interval = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          const firstUnansweredIndex = questions.findIndex((_, index) => !questionAnswers[index]);
+          if (firstUnansweredIndex !== -1) {
+            setCurrentQuestionIndex(firstUnansweredIndex);
+          }
+          setShowUnansweredPopup(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [showUnansweredPopup, questions, questionAnswers]);
 
 
   // Sync selected answer when question changes
@@ -388,9 +412,10 @@ const QUIZ = () => {
           setCompletedTopics(sessionRes.data.completedCategories);
         }
 
-        // Send individual question attempts (skip for final quiz)
+        // Send individual question attempts (skip for final quiz). One failed
+        // request no longer drops the rest of the batch — see settleWithRetry.
         if (!isFinalQuiz) {
-          const attemptPromises = finalAnswers.map((answer, index) => {
+          const attemptTasks = finalAnswers.map((answer, index) => () => {
             const question = validQuestions[index];
             const attemptData = {
               user_id: id,
@@ -404,12 +429,15 @@ const QUIZ = () => {
             return protectedPost(`${Globals.URL}/question-attempts`, attemptData);
           });
 
-          await Promise.all(attemptPromises);
+          const { failures } = await settleWithRetry(attemptTasks);
+          if (failures > 0) {
+            console.warn(`${failures} question attempt(s) failed to sync after retry.`);
+          }
         }
 
         // Update topic analysis (skip for final quiz)
         if (!isFinalQuiz) {
-          const topicAnalysisPromises = topicsCovered.map(topic => {
+          const topicAnalysisTasks = topicsCovered.map(topic => () => {
             const topicQuestions = validQuestions.filter(q => q.question_type === topic);
             const topicAnswers = finalAnswers.filter((_, index) => validQuestions[index].question_type === topic);
             const topicCorrect = topicAnswers.filter(a => a.isCorrect).length;
@@ -425,7 +453,10 @@ const QUIZ = () => {
             });
           });
 
-          await Promise.all(topicAnalysisPromises);
+          const { failures: topicFailures } = await settleWithRetry(topicAnalysisTasks);
+          if (topicFailures > 0) {
+            console.warn(`${topicFailures} topic-analysis update(s) failed to sync after retry.`);
+          }
         }
 
       } catch (error) {
@@ -529,6 +560,9 @@ const QUIZ = () => {
   return (
     <>
       <Question
+        // Remounts per question so the question-card's entrance fade
+        // (QUIZ.css) actually plays on every question change, not just once.
+        key={currentQuestionIndex}
         question={currentQuestion}
         questionNumber={currentQuestionIndex + 1}
         totalQuestions={questions.length}
