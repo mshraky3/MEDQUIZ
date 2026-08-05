@@ -6,17 +6,18 @@
  * query. `source` is the soft partition underneath it — which collection inside
  * that bank a quiz should be drawn from.
  *
- * The two tracks use it differently:
+ * Both tracks now work the same way: a real, student-facing choice between the
+ * collections their source material was split into.
  *
- *   medical — the 2025 collections (October25/November25/December25) were
- *     retired. KEPT_SOURCES is a leak guard: every medical query is constrained
- *     to it, so deleted content cannot come back even in an environment where
- *     the deletion script has not been run. Students see one unified bank.
+ *   medical — the 2026H2 rebuild replaced the old unified "MidgardGameBoy"
+ *     bank with three genuine collections: GameBoy, Confirmed and Midgard.
+ *     KEPT_SOURCES/UNIFIED_BANK describe the retired single-bank era; they stay
+ *     exported only because historical quiz sessions and a couple of test
+ *     scripts still reference them, not because they route any live query.
  *
- *   nursing — nothing was ever retired. The bank is split the way its source
- *     material is, and the split is a real choice a student makes:
- *       NursingMostRepeated — the core, most-repeated block
+ *   nursing — the bank is split the way its source material is:
  *       NursingConfirmed    — the block added in the September edition
+ *       NursingMostRepeated — the core, most-repeated block
  *     Rows still on the pre-split `NursingEMS` label belong to the bank and
  *     must stay servable, which is why the nursing fallback adds no source
  *     condition at all rather than an allowlist.
@@ -24,42 +25,68 @@
 
 import { MEDICAL, NURSING, DEFAULT_TRACK, normalizeTrack } from './tracks.js';
 
-/** Sentinel the client sends for "the whole of my track's bank". */
+/**
+ * Sentinel the client sends for "the whole of my track's bank". Predates the
+ * three-way medical split and no longer names a real source any question
+ * carries — kept only because resolveSources() still special-cases it and
+ * historical quiz sessions reference it literally.
+ */
 export const UNIFIED_BANK = 'MidgardGameBoy';
 
-/** The only medical sources we ever serve. */
+/**
+ * The old single-bank-era medical allowlist. No longer used to resolve live
+ * queries (see MEDICAL_SOURCES) — kept for historical `user_quiz_sessions`
+ * rows and the scripts that still assert against it
+ * (checkSources.js, verifyCompletionQueries.js).
+ */
 export const KEPT_SOURCES = ['MidgardGameBoy', 'January25', 'FebMarApr25', 'May26', 'June26'];
 
-/** The nursing bank's two collections. */
-export const NURSING_SOURCES = ['NursingMostRepeated', 'NursingConfirmed'];
+/**
+ * The medical bank's three collections, ordered by recommended study
+ * priority (see SOURCE_PRIORITY) — GameBoy first, Midgard last.
+ */
+export const MEDICAL_SOURCES = ['MedicalGameBoy', 'MedicalConfirmed', 'MedicalMidgard'];
+
+/**
+ * The nursing bank's two collections, ordered by recommended study priority
+ * (see SOURCE_PRIORITY) — Confirmed first.
+ */
+export const NURSING_SOURCES = ['NursingConfirmed', 'NursingMostRepeated'];
 
 /**
  * Which `source` values resolveSources() will honour for a track. A value not
  * listed for the caller's track is ignored, so a crafted one can never reach
  * another bank (and `track` filtering would block it regardless).
- *
- * Medical lists its kept collections so old links and historical quiz sessions
- * that name one still resolve to it — NOT because students choose between them.
  */
 export const SELECTABLE_SOURCES = {
-    [MEDICAL]: KEPT_SOURCES,
+    [MEDICAL]: MEDICAL_SOURCES,
     [NURSING]: NURSING_SOURCES,
 };
 
 /**
- * Which collections the quiz launcher offers as a choice — a strict subset of
- * SELECTABLE_SOURCES, and a deliberately different list.
+ * Which collections the quiz launcher offers as a choice — identical to
+ * SELECTABLE_SOURCES for both tracks now that medical genuinely has three
+ * collections to choose between, same as nursing's two.
  *
- * Medical is empty on purpose: the 2026 swap unified that bank into one, and
- * the monthly collections behind it are an implementation detail students were
- * explicitly not meant to see again. Nursing genuinely has two collections, so
- * it is the only track with a picker.
- *
- * The client hides the picker when a track offers fewer than two, so an empty
- * list here means "no choice to make", not "no content".
+ * The client hides the picker when a track offers fewer than two, so this is
+ * only ever a UI convenience, not a content restriction.
  */
 export const PICKABLE_SOURCES = {
-    [MEDICAL]: [],
+    [MEDICAL]: MEDICAL_SOURCES,
+    [NURSING]: NURSING_SOURCES,
+};
+
+/**
+ * Recommended study order per track, most important first. A separate export
+ * from PICKABLE_SOURCES (even though the values match today) because "what
+ * order to query/display" and "what order to recommend studying" are
+ * conceptually different things that happen to coincide right now.
+ *
+ * Consumed by /api/track-content-status to attach a `priority` rank to each
+ * selectable source, rendered as a numbered badge in QuizLauncher.jsx.
+ */
+export const SOURCE_PRIORITY = {
+    [MEDICAL]: MEDICAL_SOURCES,
     [NURSING]: NURSING_SOURCES,
 };
 
@@ -77,5 +104,5 @@ export function resolveSources(sourceParam, track = DEFAULT_TRACK) {
         && selectable.includes(sourceParam)) {
         return [sourceParam];
     }
-    return t === MEDICAL ? KEPT_SOURCES : null;
+    return t === MEDICAL ? MEDICAL_SOURCES : null;
 }

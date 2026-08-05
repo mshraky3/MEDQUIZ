@@ -33,7 +33,7 @@ import {
     DEFAULT_TRACK, TRACK_KEYS, TRACKS, isValidTrack, normalizeTrack,
     specialtyKeys, trackLabelAr, trackLabelEn, trackForSpecialty,
 } from './config/tracks.js';
-import { PICKABLE_SOURCES, resolveSources } from './config/sources.js';
+import { PICKABLE_SOURCES, SOURCE_PRIORITY, resolveSources } from './config/sources.js';
 
 dotenv.config();
 // Logging configuration
@@ -2397,15 +2397,16 @@ app.get('/api/track-content-status', requireSession, async (req, res) => {
         });
 
         // The collections the launcher should offer for this track, each with
-        // its live count. Intersected with the rows actually present, so the
-        // launcher never offers a collection that would come back empty (and
-        // starts offering one the moment its questions are uploaded).
-        // Medical's list is empty by design — that bank is unified.
+        // its live count and its recommended-study-order rank. Intersected with
+        // the rows actually present, so the launcher never offers a collection
+        // that would come back empty (and starts offering one the moment its
+        // questions are uploaded).
         const countBySource = {};
         bySource.rows.forEach((r) => { countBySource[r.source] = r.total; });
+        const priorityOrder = SOURCE_PRIORITY[track] || [];
         const selectableSources = (PICKABLE_SOURCES[track] || [])
             .filter((s) => (countBySource[s] || 0) > 0)
-            .map((s) => ({ key: s, total: countBySource[s] }));
+            .map((s) => ({ key: s, total: countBySource[s], priority: priorityOrder.indexOf(s) + 1 || undefined }));
 
         res.json({
             track,

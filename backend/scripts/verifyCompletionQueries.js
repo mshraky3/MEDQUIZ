@@ -65,9 +65,9 @@ async function main() {
         console.log('Using userId:', userId);
 
         const cases = [
-            ['medicine', 'MidgardGameBoy'],
-            ['medicine,surgery', 'June26'],
-            ['mix', 'May26'],
+            ['medicine', 'MedicalGameBoy'],
+            ['medicine,surgery', 'MedicalConfirmed'],
+            ['mix', 'MedicalMidgard'],
             ['medicine', 'mix'],
             ['mix', 'mix'],
         ];
@@ -88,25 +88,25 @@ async function main() {
         console.log('\nCompletion-check SQL (per cardinality):');
         const t = await client.query(
             `SELECT COUNT(*)::int AS c FROM questions WHERE question_type = $1 AND source = $2`,
-            ['obstetrics and gynecology', 'MidgardGameBoy']
+            ['obstetrics and gynecology', 'MedicalConfirmed']
         );
         const d = await client.query(
             `SELECT COUNT(*)::int AS c FROM user_question_progress WHERE user_id = $1 AND question_type = $2 AND source = $3`,
-            [userId, 'obstetrics and gynecology', 'MidgardGameBoy']
+            [userId, 'obstetrics and gynecology', 'MedicalConfirmed']
         );
-        console.log(`  obgyn/MidgardGameBoy: total=${t.rows[0].c} answered=${d.rows[0].c} complete=${t.rows[0].c > 0 && d.rows[0].c >= t.rows[0].c}`);
+        console.log(`  obgyn/MedicalConfirmed: total=${t.rows[0].c} answered=${d.rows[0].c} complete=${t.rows[0].c > 0 && d.rows[0].c >= t.rows[0].c}`);
 
         // /api/reset-progress shapes — executed then ROLLED BACK (no data change)
         console.log('\nReset SQL shapes (rolled back, nothing deleted):');
         await client.query('BEGIN');
         const r1 = await client.query(
             `DELETE FROM user_question_progress WHERE user_id = $1 AND source = $2 AND question_type = ANY($3::text[])`,
-            [userId, 'MidgardGameBoy', ['medicine', 'surgery']]
+            [userId, 'MedicalGameBoy', ['medicine', 'surgery']]
         );
         console.log(`  source+types  -> would clear ${r1.rowCount}`);
         const r2 = await client.query(
             `DELETE FROM user_question_progress WHERE user_id = $1 AND source = $2`,
-            [userId, 'MidgardGameBoy']
+            [userId, 'MedicalGameBoy']
         );
         console.log(`  source only   -> would clear ${r2.rowCount}`);
         const r3 = await client.query(

@@ -81,6 +81,12 @@ function ensureBroadcastSchema(db) {
         `);
         // Spread window, in hours. 0 = send as fast as the cap allows.
         await db.query(`ALTER TABLE broadcast_campaigns ADD COLUMN IF NOT EXISTS spread_hours INTEGER NOT NULL DEFAULT 0`);
+        // Optional English variant. `subject`/`body_html` stay the Arabic
+        // content (unchanged column names, so nothing that already writes
+        // them breaks); a recipient whose account is in English gets these
+        // instead, falling back to Arabic when a campaign never set them.
+        await db.query(`ALTER TABLE broadcast_campaigns ADD COLUMN IF NOT EXISTS subject_en TEXT`);
+        await db.query(`ALTER TABLE broadcast_campaigns ADD COLUMN IF NOT EXISTS body_html_en TEXT`);
         await db.query(`
             CREATE TABLE IF NOT EXISTS broadcast_recipients (
                 id SERIAL PRIMARY KEY,
@@ -97,6 +103,11 @@ function ensureBroadcastSchema(db) {
         `);
         // Older deployments of this table predate claimed_at.
         await db.query(`ALTER TABLE broadcast_recipients ADD COLUMN IF NOT EXISTS claimed_at TIMESTAMP`);
+        // Recipient's own language at send time (accounts.preferred_lang),
+        // frozen onto the row so a later change to their preference can't
+        // retroactively alter an in-flight campaign. Defaults to Arabic,
+        // matching every account's behaviour before the site went bilingual.
+        await db.query(`ALTER TABLE broadcast_recipients ADD COLUMN IF NOT EXISTS lang VARCHAR(5) NOT NULL DEFAULT 'ar'`);
         await db.query(`CREATE INDEX IF NOT EXISTS idx_bcast_recip_pending ON broadcast_recipients(campaign_id, status)`);
         await db.query(`CREATE INDEX IF NOT EXISTS idx_bcast_recip_sent_at ON broadcast_recipients(sent_at) WHERE status = 'sent'`);
         // Opt-out flag. Bulk mail without a working unsubscribe is how a domain
@@ -171,22 +182,42 @@ export function unsubUrl(accountId) {
     return `${base}/api/unsubscribe?u=${accountId}&t=${unsubToken(accountId)}`;
 }
 
-/** Wrap the admin's HTML in an RTL shell with the required unsubscribe footer. */
-function renderEmail({ bodyHtml, accountId, username }) {
-    const greeting = username ? `<p style="margin:0 0 14px">مرحباً ${escapeHtml(String(username).split('@')[0])}،</p>` : '';
+/** Anything → 'ar' | 'en'. Unknown/missing values fall back to Arabic — the
+ *  same rule the lifecycle mail in userEmailService.js uses, so a broadcast
+ *  and a lifecycle email never disagree about which language a user gets. */
+function normalizeLang(lang) {
+    return String(lang || '').toLowerCase().startsWith('en') ? 'en' : 'ar';
+}
+
+/**
+ * Wrap the admin's HTML in a language-appropriate shell with the required
+ * unsubscribe footer. Direction, greeting and footer copy all switch with
+ * `lang`; the admin's own bodyHtml is used as-is for whichever language it
+ * was written in.
+ */
+function renderEmail({ bodyHtml, accountId, username, lang }) {
+    const isEn = normalizeLang(lang) === 'en';
+    const name = username ? escapeHtml(String(username).split('@')[0]) : '';
+    const greeting = name
+        ? (isEn ? `<p style="margin:0 0 14px">Hi ${name},</p>` : `<p style="margin:0 0 14px">مرحباً ${name}،</p>`)
+        : '';
     const unsub = accountId ? unsubUrl(accountId) : '';
-    return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
+    const unsubLink = unsub
+        ? `<br><a href="${unsub}" style="color:#64748b">${isEn ? 'Unsubscribe from SQB emails' : 'إلغاء الاشتراك من رسائل SQB'}</a>`
+        : '';
+    const footerLabel = isEn ? 'SQB — SMLE Question Bank' : 'SQB — بنك أسئلة SMLE';
+    return `<!doctype html><html lang="${isEn ? 'en' : 'ar'}" dir="${isEn ? 'ltr' : 'rtl'}"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#eef2fb">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef2fb;padding:24px 12px">
 <tr><td align="center">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border-radius:14px;overflow:hidden;font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif">
 <tr><td style="background:#1d4ed8;padding:18px 22px"><span style="color:#fff;font-size:20px;font-weight:800;letter-spacing:.5px">SQB</span></td></tr>
-<tr><td style="padding:24px 22px;color:#0f1e3d;font-size:15px;line-height:1.8;text-align:right">
+<tr><td style="padding:24px 22px;color:#0f1e3d;font-size:15px;line-height:1.8;text-align:${isEn ? 'left' : 'right'}">
 ${greeting}${bodyHtml}
 </td></tr>
-<tr><td style="padding:16px 22px;background:#f8fafc;color:#94a3b8;font-size:11.5px;line-height:1.7;text-align:right">
-SQB — بنك أسئلة SMLE${unsub ? `<br><a href="${unsub}" style="color:#64748b">إلغاء الاشتراك من رسائل SQB</a>` : ''}
+<tr><td style="padding:16px 22px;background:#f8fafc;color:#94a3b8;font-size:11.5px;line-height:1.7;text-align:${isEn ? 'left' : 'right'}">
+${footerLabel}${unsubLink}
 </td></tr>
 </table></td></tr></table></body></html>`;
 }
@@ -291,7 +322,7 @@ router.get('/recipients/search', adminAuth, async (req, res) => {
 /** Create a campaign and freeze its recipient list. Does NOT send anything. */
 router.post('/campaigns', adminAuth, async (req, res) => {
     const db = req.db;
-    const { subject, bodyHtml, audience = 'all' } = req.body || {};
+    const { subject, bodyHtml, subjectEn, bodyHtmlEn, audience = 'all' } = req.body || {};
     // Up to 2 days, as requested — long enough to trickle a big list past a
     // small daily allowance without ever bursting.
     const spreadHours = Math.max(0, Math.min(48, Number(req.body?.spreadHours) || 0));
@@ -309,21 +340,27 @@ router.post('/campaigns', adminAuth, async (req, res) => {
         await ensureBroadcastSchema(db);
         const label = selectedIds.length ? `selected:${selectedIds.length}` : audience;
         const { rows: [campaign] } = await db.query(
-            `INSERT INTO broadcast_campaigns (subject, body_html, audience, spread_hours)
-             VALUES ($1, $2, $3, $4) RETURNING *`,
-            [String(subject).trim(), String(bodyHtml), label, spreadHours]
+            `INSERT INTO broadcast_campaigns (subject, body_html, subject_en, body_html_en, audience, spread_hours)
+             VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+            [String(subject).trim(), String(bodyHtml),
+             subjectEn ? String(subjectEn).trim() : null, bodyHtmlEn ? String(bodyHtmlEn) : null,
+             label, spreadHours]
         );
 
         // DISTINCT ON collapses duplicate addresses so nobody is mailed twice.
         // The base rules (real address, active, not opted out) apply to a
         // hand-picked list exactly as they do to an audience — an unsubscribe
-        // must hold even when someone is selected by name.
+        // must hold even when someone is selected by name. `lang` is frozen
+        // onto the row from the account's own preferred_lang, so each person
+        // gets the campaign's Arabic or English content to match — falling
+        // back to Arabic for the same reason userEmailService.js does.
+        const langExpr = `CASE WHEN LOWER(COALESCE(preferred_lang, '')) LIKE 'en%' THEN 'en' ELSE 'ar' END`;
         let rowCount;
         if (selectedIds.length) {
             ({ rowCount } = await db.query(`
-                INSERT INTO broadcast_recipients (campaign_id, account_id, email, username)
-                SELECT $1, id, LOWER(email), username FROM (
-                    SELECT DISTINCT ON (LOWER(email)) id, email, username
+                INSERT INTO broadcast_recipients (campaign_id, account_id, email, username, lang)
+                SELECT $1, id, LOWER(email), username, lang FROM (
+                    SELECT DISTINCT ON (LOWER(email)) id, email, username, ${langExpr} AS lang
                     FROM accounts WHERE ${BASE_WHERE} AND id = ANY($2::int[])
                     ORDER BY LOWER(email), id
                 ) t
@@ -332,9 +369,9 @@ router.post('/campaigns', adminAuth, async (req, res) => {
         } else {
             const where = await audienceWhere(db, audience);
             ({ rowCount } = await db.query(`
-                INSERT INTO broadcast_recipients (campaign_id, account_id, email, username)
-                SELECT $1, id, LOWER(email), username FROM (
-                    SELECT DISTINCT ON (LOWER(email)) id, email, username
+                INSERT INTO broadcast_recipients (campaign_id, account_id, email, username, lang)
+                SELECT $1, id, LOWER(email), username, lang FROM (
+                    SELECT DISTINCT ON (LOWER(email)) id, email, username, ${langExpr} AS lang
                     FROM accounts WHERE ${where} ORDER BY LOWER(email), id
                 ) t
                 ON CONFLICT (campaign_id, email) DO NOTHING
@@ -386,7 +423,7 @@ router.get('/campaigns/:id', adminAuth, async (req, res) => {
     }
 });
 
-/** Send a single preview to an explicitly supplied address. */
+/** Send a single preview to an explicitly supplied address. `?lang=en` previews the English variant. */
 router.post('/campaigns/:id/test', adminAuth, async (req, res) => {
     const db = req.db;
     const to = String(req.body?.to || '').trim();
@@ -395,9 +432,12 @@ router.post('/campaigns/:id/test', adminAuth, async (req, res) => {
         await ensureBroadcastSchema(db);
         const { rows: [c] } = await db.query(`SELECT * FROM broadcast_campaigns WHERE id = $1`, [req.params.id]);
         if (!c) return res.status(404).json({ success: false, message: 'Campaign not found.' });
-        const html = renderEmail({ bodyHtml: c.body_html, accountId: null, username: null });
-        await sendMail({ event: 'medqize.broadcast.test', name: 'SQB', to, subject: `[TEST] ${c.subject}`, html, text: htmlToText(c.body_html) });
-        res.json({ success: true, message: `Test sent to ${to}` });
+        const lang = normalizeLang(req.body?.lang || req.query?.lang);
+        const subject = (lang === 'en' && c.subject_en) ? c.subject_en : c.subject;
+        const bodyHtml = (lang === 'en' && c.body_html_en) ? c.body_html_en : c.body_html;
+        const html = renderEmail({ bodyHtml, accountId: null, username: null, lang });
+        await sendMail({ event: 'medqize.broadcast.test', name: 'SQB', to, subject: `[TEST] ${subject}`, html, text: htmlToText(bodyHtml) });
+        res.json({ success: true, message: `Test sent to ${to} (lang=${lang})` });
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });
     }
@@ -416,9 +456,9 @@ async function setStatus(req, res, next) {
         await ensureBroadcastSchema(db);
         const { rows: [c] } = await db.query(
             `UPDATE broadcast_campaigns
-                SET status = $2,
-                    started_at = COALESCE(started_at, CASE WHEN $2 = 'sending' THEN NOW() END),
-                    finished_at = CASE WHEN $2 = 'cancelled' THEN NOW() ELSE finished_at END
+                SET status = $2::varchar,
+                    started_at = COALESCE(started_at, CASE WHEN $2::varchar = 'sending' THEN NOW() END),
+                    finished_at = CASE WHEN $2::varchar = 'cancelled' THEN NOW() ELSE finished_at END
               WHERE id = $1 RETURNING *`,
             [req.params.id, next]
         );
@@ -497,7 +537,7 @@ async function sendOneBatch(db, c, take) {
         // Also reclaim anything left in 'sending' for over 5 minutes — that is
         // a batch whose function was killed before it could finish.
         const { rows } = await client.query(`
-            SELECT id, account_id, email, username FROM broadcast_recipients
+            SELECT id, account_id, email, username, lang FROM broadcast_recipients
              WHERE campaign_id = $1
                AND (status = 'pending'
                     OR (status = 'sending' AND claimed_at < NOW() - INTERVAL '5 minutes'))
@@ -528,15 +568,20 @@ async function sendOneBatch(db, c, take) {
     for (let i = 0; i < claimed.length; i++) {
         const r = claimed[i];
         try {
+            // Each recipient's own language, frozen at campaign creation —
+            // falls back to Arabic when the campaign has no English variant.
+            const lang = normalizeLang(r.lang);
+            const subject = (lang === 'en' && c.subject_en) ? c.subject_en : c.subject;
+            const bodyHtml = (lang === 'en' && c.body_html_en) ? c.body_html_en : c.body_html;
             await sendMail({
                 event: 'medqize.broadcast.campaign',
                 bulk: true,
                 idempotencyKey: `bcast:${c.id}:${r.email.toLowerCase()}`,
                 name: 'SQB',
                 to: r.email,
-                subject: c.subject,
-                html: renderEmail({ bodyHtml: c.body_html, accountId: r.account_id, username: r.username }),
-                text: htmlToText(c.body_html),
+                subject,
+                html: renderEmail({ bodyHtml, accountId: r.account_id, username: r.username, lang }),
+                text: htmlToText(bodyHtml),
             });
             await db.query(`UPDATE broadcast_recipients SET status = 'sent', sent_at = NOW(), error = NULL WHERE id = $1`, [r.id]);
             sent++;
