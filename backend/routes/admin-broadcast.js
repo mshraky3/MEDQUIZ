@@ -49,6 +49,7 @@ import crypto from 'crypto';
 import { adminAuth } from '../middleware/adminAuth.js';
 import { sendMail } from '../services/mailer.js';
 import { TRACK_KEYS, DEFAULT_TRACK, normalizeTrack } from '../config/tracks.js';
+import { FREE_QUESTION_ALLOWANCE } from '../services/paymentService.js';
 
 const router = express.Router();
 
@@ -153,17 +154,22 @@ async function audienceWhere(db, audience) {
         ? `(grandfathered_at IS NOT NULL OR subscription_status = 'grandfathered')`
         : `(subscription_status = 'grandfathered')`;
     const notLegacy = cols.grandfathered ? `grandfathered_at IS NULL` : `TRUE`;
+    // The free tier splits into two audiences that want very different mail:
+    // students with allowance left (nudge them to use it) and students who
+    // spent all 40 (the subscribe conversation). Replaces the old
+    // 'trial'/'free' pair, which the retired 1-hour trial defined.
+    const notPaid = `${notLegacy} AND COALESCE(subscription_status, '') <> 'active'`;
     switch (audience) {
-        case 'paid':   return `${BASE_WHERE} AND ${notLegacy} AND subscription_status = 'active'`;
-        case 'trial':  return `${BASE_WHERE} AND ${notLegacy} AND subscription_status = 'trial'`;
-        case 'legacy': return `${BASE_WHERE} AND ${legacy}`;
-        case 'free':   return `${BASE_WHERE} AND NOT ${legacy} AND COALESCE(subscription_status, '') NOT IN ('active', 'trial')`;
+        case 'paid':      return `${BASE_WHERE} AND ${notLegacy} AND subscription_status = 'active'`;
+        case 'legacy':    return `${BASE_WHERE} AND ${legacy}`;
+        case 'free':      return `${BASE_WHERE} AND NOT ${legacy} AND ${notPaid} AND COALESCE(free_questions_used, 0) < ${FREE_QUESTION_ALLOWANCE}`;
+        case 'exhausted': return `${BASE_WHERE} AND NOT ${legacy} AND ${notPaid} AND COALESCE(free_questions_used, 0) >= ${FREE_QUESTION_ALLOWANCE}`;
         default: throw new Error(`Unknown audience "${audience}".`);
     }
 }
 
 const AUDIENCES = [
-    'all', 'paid', 'trial', 'legacy', 'free',
+    'all', 'paid', 'legacy', 'free', 'exhausted',
     ...TRACK_KEYS.map((t) => `track:${t}`),
 ];
 

@@ -23,6 +23,7 @@ const router = express.Router();
 
 /** Every event a client or the server is allowed to record. Anything else is dropped. */
 export const FUNNEL_EVENTS = new Set([
+    'landing_view',
     'landing_cta_signup_click',
     'signup_view',
     'signup_track_selected',

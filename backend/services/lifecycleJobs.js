@@ -17,29 +17,36 @@ import {
     sendProgressDigestEmail,
     sendExpiryReminderEmail,
     sendExamReminderEmail,
+    sendOneSessionComebackEmail,
     arDaysCount,
 } from './userEmailService.js';
 import { notify } from './notificationService.js';
 import { specialtyLabel } from '../config/tracks.js';
+import { FREE_QUESTION_ALLOWANCE } from './paymentService.js';
 
 /**
- * Trial ended, never converted → the re-engagement email.
+ * Free allowance used up, never converted → the re-engagement email.
  *
- * The audit behind this job: of 28 traceable trial grants, 4 came back after
- * expiry and 1 paid. Nothing was sent at expiry, so this is the first thing
- * that has ever addressed that moment.
+ * Was the "trial ended" job. The moment it addresses is the same one — the
+ * student has seen what the bank is like and hit the end of the free part —
+ * but it is now a question count, not a clock, and reaching it no longer locks
+ * anyone out. That changes the ask: not "you've been cut off", but "you've
+ * finished the free 40, here's what they showed about you".
  *
- * Deliberately waits an hour past expiry before sending, so someone who is
- * actively subscribing right now isn't emailed mid-checkout, and skips anyone
- * who already has access (paid, admin-created or grandfathered).
+ * Skips anyone who already has access (paid, admin-created or grandfathered),
+ * and anyone with a paid event in the ledger even if their term has lapsed.
  */
 export async function runTrialEndedJob(db, { limit = 100 } = {}) {
     const result = { sent: 0, errors: [] };
+    // No grace window is needed any more: the old one existed because the
+    // heartbeat stamped subscription_expiry_date at the exact instant of
+    // exhaustion and we did not want to mail someone mid-checkout. The
+    // allowance is spent when a quiz is SUBMITTED, and the job runs daily, so
+    // the gap is already hours.
     const { rows } = await db.query(`
-        SELECT a.id, a.username, a.email, a.track, a.preferred_lang, tg.granted_at, tg.expires_at
-          FROM trial_grants tg
-          JOIN accounts a ON a.id = tg.account_id
-         WHERE tg.expires_at < NOW() - INTERVAL '1 hour'
+        SELECT a.id, a.username, a.email, a.track, a.preferred_lang, a.created_at
+          FROM accounts a
+         WHERE a.free_questions_used >= ${FREE_QUESTION_ALLOWANCE}
            AND a.trial_ended_email_sent_at IS NULL
            AND a.email IS NOT NULL
            AND a.email_verified = TRUE
@@ -47,26 +54,27 @@ export async function runTrialEndedJob(db, { limit = 100 } = {}) {
            AND COALESCE(a.email_opt_out, FALSE) = FALSE
            AND a.is_admin_created = FALSE
            AND a.grandfathered_at IS NULL
+           AND NOT (a.subscription_status = 'active' AND a.subscription_expiry_date > NOW())
            AND NOT EXISTS (
                  SELECT 1 FROM payment_events pe
                   WHERE pe.account_id = a.id AND pe.status = 'paid'
                     AND pe.livemode IS DISTINCT FROM FALSE)
-         ORDER BY tg.expires_at
+         ORDER BY a.id
          LIMIT $1
     `, [limit]);
 
     for (const user of rows) {
         try {
-            // What they actually did inside their hour — the most persuasive
-            // content in the email, and entirely theirs.
+            // What they actually did with their 40 — the most persuasive
+            // content in the email, and entirely theirs. Their whole history
+            // now, since the free questions are their whole history.
             const { rows: s } = await db.query(`
                 SELECT COALESCE(SUM(qs.total_questions), 0)::int AS answered,
                        COALESCE(SUM(qs.correct_answers), 0)::int AS correct,
                        COUNT(*) FILTER (WHERE qs.end_time IS NOT NULL)::int AS quizzes
                   FROM user_quiz_sessions qs
                  WHERE qs.user_id = $1
-                   AND qs.start_time BETWEEN $2 AND $3
-            `, [user.id, user.granted_at, user.expires_at]);
+            `, [user.id]);
             const answered = s[0]?.answered || 0;
             const correct = s[0]?.correct || 0;
 
@@ -79,6 +87,80 @@ export async function runTrialEndedJob(db, { limit = 100 } = {}) {
             result.sent++;
         } catch (err) {
             result.errors.push({ job: 'trial_ended', userId: user.id, error: err.message });
+        }
+    }
+    return result;
+}
+
+/**
+ * Day-1/Day-3 win-back for anyone stuck at exactly one quiz session, ever.
+ *
+ * The journey audit behind MONETIZATION_ANALYSIS_2026-08.md found 26 of 42
+ * quizzing users did precisely one session and never returned — the single
+ * largest drop-off in the funnel, and the one nobody had ever addressed.
+ * Right now that user gets nothing after their one quiz. This writes itself
+ * from data already on hand (their own wrong answers), which is the whole
+ * point: it is the most persuasive, and the cheapest, email in the file.
+ *
+ * A ladder like exam_reminder_stage, but counting UP from the session instead
+ * of down to a deadline: stage 1 fires ~a day after the session, stage 3 a
+ * couple of days after that. Anyone who ran a second session already came
+ * back on their own and drops out of the query entirely — no need to nag
+ * someone who is already using the product.
+ */
+export const COMEBACK_STAGES = [1, 3];
+
+export async function runComebackJob(db, { limit = 200 } = {}) {
+    const result = { sent: 0, errors: [] };
+    const { rows } = await db.query(`
+        SELECT a.id, a.username, a.email, a.track, a.preferred_lang, a.comeback_email_stage,
+               qs.id AS session_id, qs.total_questions, qs.correct_answers,
+               FLOOR(EXTRACT(EPOCH FROM (NOW() - qs.start_time)) / 86400)::int AS days_since
+          FROM accounts a
+          JOIN LATERAL (
+               SELECT id, total_questions, correct_answers, start_time
+                 FROM user_quiz_sessions
+                WHERE user_id = a.id AND end_time IS NOT NULL
+                ORDER BY start_time ASC
+                LIMIT 1
+          ) qs ON TRUE
+         WHERE a.email IS NOT NULL
+           AND a.email_verified = TRUE
+           AND a.isactive = TRUE
+           AND COALESCE(a.email_opt_out, FALSE) = FALSE
+           AND qs.start_time <= NOW() - INTERVAL '1 day'
+           AND (SELECT COUNT(*) FROM user_quiz_sessions s2
+                 WHERE s2.user_id = a.id AND s2.end_time IS NOT NULL) = 1
+         ORDER BY qs.start_time
+         LIMIT $1
+    `, [limit]);
+
+    for (const user of rows) {
+        const daysSince = Number(user.days_since) || 0;
+        const due = [...COMEBACK_STAGES].reverse().find((s) => daysSince >= s);
+        if (due == null) continue;
+        if (user.comeback_email_stage != null && user.comeback_email_stage >= due) continue;
+
+        try {
+            const { rows: wrong } = await db.query(`
+                SELECT COUNT(*)::int AS n
+                  FROM user_question_attempts
+                 WHERE quiz_session_id = $1 AND is_correct = FALSE
+            `, [user.session_id]);
+
+            const answered = Number(user.total_questions) || 0;
+            const correct = Number(user.correct_answers) || 0;
+            const wrongCount = wrong[0]?.n ?? Math.max(0, answered - correct);
+
+            await sendOneSessionComebackEmail(user.email, String(user.username).split('@')[0], user.track, {
+                questionsAnswered: answered,
+                correct,
+                wrongCount,
+            }, { lang: user.preferred_lang, accountId: user.id });
+            await db.query(`UPDATE accounts SET comeback_email_stage = $2 WHERE id = $1`, [user.id, due]);
+            result.sent++;
+        } catch (err) {
+            result.errors.push({ job: 'comeback', userId: user.id, error: err.message });
         }
     }
     return result;

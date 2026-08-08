@@ -336,17 +336,20 @@ export const sendFeedbackEmail = async (to, username, track, opts = {}) => {
   );
 };
 
-// ─── 5. TRIAL ENDED ────────────────────────────────────────────────────────
+// ─── 5. FREE ALLOWANCE USED UP ─────────────────────────────────────────────
 /**
- * The single highest-leverage email in the product. The journey audit found
- * that 86% of trial users never open the app again once their free hour ends,
- * and until now nothing was sent at that moment at all.
+ * The single highest-leverage email in the product: sent the day a student
+ * finishes their free questions, the moment they know exactly what the bank is
+ * like and have nothing else to spend.
  *
- * It leads with what the student actually DID in their hour — their own
- * questions answered and accuracy — because that is the most persuasive thing
- * available and it is entirely theirs. Stats are passed in already computed;
- * when a trial produced no activity the numbers block is dropped rather than
- * printing a row of zeros back at someone.
+ * It leads with what the student actually DID — their own questions answered
+ * and accuracy — because that is the most persuasive thing available and it is
+ * entirely theirs. Stats are passed in already computed; if somehow nothing was
+ * recorded the numbers block is dropped rather than printing zeros at someone.
+ *
+ * Tone note: the free tier does NOT lock the account. This email must never
+ * imply otherwise — the student can still log in, read their analytics and read
+ * the free lesson of every specialty. What ran out is the quiz allowance.
  *
  * @param {{questionsAnswered:number, accuracy:number, quizzesCompleted:number}} stats
  */
@@ -362,7 +365,7 @@ export const sendTrialEndedEmail = async (to, username, track, stats = {}, opts 
               <tr>
                 <td style="background:#0b1021;border-radius:12px;padding:20px 24px;border:1px solid #1e293b;">
                   <p style="margin:0 0 14px;font-size:13px;font-weight:700;color:#22d3ee;">
-                    ${T(lang, 'ما أنجزته في ساعتك المجانية', 'What you did in your free hour')}
+                    ${T(lang, 'ما أنجزته بأسئلتك المجانية', 'What you did with your free questions')}
                   </p>
                   <table cellpadding="0" cellspacing="0" style="width:100%;">
                     <tr>
@@ -382,8 +385,8 @@ export const sendTrialEndedEmail = async (to, username, track, stats = {}, opts 
                   </table>
                   <p style="margin:14px 0 0;font-size:12.5px;color:#64748b;line-height:1.7;">
                     ${T(lang,
-                      'هذا في ساعة واحدة. تخيّل ما يمكنك إنجازه في سنة كاملة — تقدّمك محفوظ وينتظرك.',
-                      'That was one hour. Your progress is saved and waiting — a year of it costs less than a coffee a month.')}
+                      'هذا من ٤٠ سؤالاً فقط. البنك كامل بانتظارك — وتقدّمك محفوظ كما هو.',
+                      'And that was from 40 questions. The full bank is waiting, and your progress stays exactly where it is.')}
                   </p>
                 </td>
               </tr>
@@ -393,8 +396,8 @@ export const sendTrialEndedEmail = async (to, username, track, stats = {}, opts 
                 <td style="background:#0b1021;border-radius:12px;padding:18px 22px;border:1px solid #1e293b;">
                   <p style="margin:0;font-size:13px;color:#94a3b8;line-height:1.8;">
                     ${T(lang,
-                      'لم تتمكّن من تجربة المنصة فعلياً خلال ساعتك — نعرف أن الوقت ضيّق. الاشتراك يعطيك سنة كاملة بلا عدّاد، تبدأ متى ما ناسبك.',
-                      "You didn't really get to try it in your hour — we know the timing rarely suits. A subscription is a full year with no clock running, starting whenever you do.")}
+                      'أسئلتك المجانية انتهت. حسابك مفتوح كما هو، وأول درس من كل تخصص يبقى متاحاً لك مجاناً في أي وقت.',
+                      'Your free questions are used up. Your account stays open exactly as it is, and the first lesson of every specialty remains free to read any time.')}
                   </p>
                 </td>
               </tr>
@@ -403,14 +406,14 @@ export const sendTrialEndedEmail = async (to, username, track, stats = {}, opts 
   const html = wrapLayout(`
         <tr>
           <td align="center" style="padding:36px 40px 32px;">
-            <div style="font-size:48px;margin-bottom:16px;">⏳</div>
+            <div style="font-size:48px;margin-bottom:16px;">🎯</div>
             <h1 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#f8fafc;">
-              ${T(lang, `انتهت ساعتك المجانية يا ${username}`, `Your free hour is over, ${username}`)}
+              ${T(lang, `أنهيت أسئلتك الأربعين يا ${username}`, `That's your 40 free questions, ${username}`)}
             </h1>
             <p style="margin:0 0 24px;font-size:14px;color:#94a3b8;line-height:1.7;">
               ${T(lang,
-                'حسابك وتقدّمك محفوظان بالكامل — لكن الوصول إلى بنك الأسئلة والملخصات متوقّف الآن.',
-                'Your account and everything you did are still saved — but the question bank and summaries are locked for now.')}
+                'حسابك يبقى مفتوحاً وتقدّمك محفوظ — الاشتراك هو ما يفتح بقية البنك والملخصات كاملة.',
+                'Your account stays open and your progress is saved — a subscription is what opens the rest of the bank and the full summaries.')}
             </p>
             ${statsBlock}
             <!-- Honest loss framing: every item here is a real consequence. -->
@@ -437,14 +440,12 @@ export const sendTrialEndedEmail = async (to, username, track, stats = {}, opts 
             </table>
             <div style="background:#0b1021;border-radius:12px;padding:18px 22px;margin-bottom:26px;border:1px solid #1e293b;">
               <p style="margin:0 0 4px;font-size:12.5px;color:#94a3b8;">
-                ${T(lang, 'اشتراك سنوي كامل — دفعة واحدة، بدون تجديد تلقائي', 'A full year — one payment, no auto-renewal')}
-              </p>
-              <p style="margin:0;font-size:30px;font-weight:800;color:#22d3ee;">
-                ${T(lang, '99 ريال', 'SAR 99')} <span style="font-size:13px;font-weight:400;color:#94a3b8;">${T(lang, '/ سنة', '/ year')}</span>
+                ${T(lang, '50 ريالاً شهرياً · 129 لأربعة أشهر · 300 للسنة',
+                          'SAR 50 a month · 129 for four months · 300 for a year')}
               </p>
               <p style="margin:8px 0 0;font-size:12px;color:#64748b;">
-                ${T(lang, 'أقل من ريالين في الأسبوع — ويمكنك استرجاع المبلغ خلال 14 يوماً.',
-                          'Under two riyals a week — and refundable in full within 14 days.')}
+                ${T(lang, 'دفعة واحدة، بدون تجديد تلقائي. وهناك اشتراكات جماعية إن كنتم مجموعة تذاكر معاً.',
+                          'One payment, no automatic renewal. Group plans are available if you are studying together.')}
               </p>
             </div>
             ${button(`${SITE}/subscribe`, T(lang, 'أكمل من حيث توقفت ←', 'Pick up where I left off →'))}
@@ -454,12 +455,77 @@ export const sendTrialEndedEmail = async (to, username, track, stats = {}, opts 
 
   await sendEmail(
     to,
-    T(lang, `انتهت ساعتك المجانية — تقدّمك محفوظ يا ${username}`,
-             `Your free hour is over — your progress is saved, ${username}`),
+    T(lang, `أنهيت أسئلتك المجانية — تقدّمك محفوظ يا ${username}`,
+             `You've used your 40 free questions — your progress is saved, ${username}`),
     html,
-    T(lang, `انتهت ساعتك المجانية في SQB. تقدّمك محفوظ. اشترك بـ99 ريال للسنة الكاملة: ${SITE}/subscribe`,
-             `Your free hour on SQB has ended and your progress is saved. A full year is SAR 99: ${SITE}/subscribe`),
+    T(lang, `أنهيت أسئلتك الأربعين المجانية في SQB. حسابك مفتوح وتقدّمك محفوظ. اشترك الآن: ${SITE}/subscribe`,
+             `You've used your 40 free questions on SQB. Your account stays open and your progress is saved. Subscribe now: ${SITE}/subscribe`),
     { event: 'medqize.lifecycle.trial_ended' }
+  );
+};
+
+// ─── 5b. ONE-SESSION COMEBACK ──────────────────────────────────────────────
+/**
+ * Day-1/Day-3 nudge for a student stuck at exactly one quiz session. See
+ * lifecycleJobs.runComebackJob for the query and stage ladder — this just
+ * renders what it found: their own wrong-answer count from that one session,
+ * pointing at the wrong-questions page rather than inventing new content.
+ *
+ * @param {{questionsAnswered:number, correct:number, wrongCount:number}} stats
+ */
+export const sendOneSessionComebackEmail = async (to, username, track, stats = {}, opts = {}) => {
+  const lang = normalizeLang(opts.lang);
+  const c = copyFor(track, lang);
+  const answered = Number(stats.questionsAnswered) || 0;
+  const correct = Number(stats.correct) || 0;
+  const wrongCount = Math.max(0, Number(stats.wrongCount) || 0);
+  const accuracy = answered > 0 ? Math.round((correct / answered) * 100) : 0;
+
+  const html = wrapLayout(`
+        <tr>
+          <td align="center" style="padding:36px 40px 32px;">
+            <div style="font-size:48px;margin-bottom:16px;">🎯</div>
+            <h1 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#f8fafc;">
+              ${T(lang, `أحسنت في أول اختبار يا ${username}!`, `Nice work on your first quiz, ${username}!`)}
+            </h1>
+            <p style="margin:0 0 24px;font-size:14px;color:#94a3b8;line-height:1.7;">
+              ${T(lang,
+                `أجبت عن ${answered} سؤالاً بدقة ${accuracy}% — وهذه مجرد بداية. بنك ${c.exam} أكبر بكثير مما رأيته حتى الآن.`,
+                `You answered ${answered} questions at ${accuracy}% — and that's just a first look. The ${c.exam} bank goes a lot further than what you've seen so far.`)}
+            </p>
+            ${wrongCount > 0 ? `
+            <table cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:24px;">
+              <tr>
+                <td style="background:#0b1021;border-radius:12px;padding:20px 24px;border:1px solid #1e293b;">
+                  <p style="margin:0 0 10px;font-size:13px;font-weight:700;color:#22d3ee;">
+                    ${T(lang, 'أسئلتك التي أخطأت فيها في انتظارك', 'The ones you missed are waiting for a rematch')}
+                  </p>
+                  <p style="margin:0;font-size:13px;color:#cbd5e1;line-height:1.8;">
+                    ${T(lang,
+                      `أخطأت في <strong style="color:#f8fafc;">${wrongCount} من ${answered}</strong> — راجعها الآن، وستجد أسئلة مشابهة لها تنتظرك في نفس التخصص.`,
+                      `You missed <strong style="color:#f8fafc;">${wrongCount} of ${answered}</strong> — review them now, and you'll find more like them waiting in the same specialty.`)}
+                  </p>
+                </td>
+              </tr>
+            </table>
+            ${button(`${SITE}/wrong-questions`, T(lang, 'راجع أخطائي ←', 'Review my mistakes →'))}
+            <p style="margin:16px 0 0;">
+              <a href="${SITE}/quizs" style="font-size:13px;color:#64748b;text-decoration:underline;">
+                ${T(lang, 'أو ابدأ اختباراً جديداً', 'Or start a fresh quiz')}
+              </a>
+            </p>` : `
+            ${button(`${SITE}/quizs`, T(lang, 'ابدأ اختبارك التالي ←', 'Start your next quiz →'))}`}
+          </td>
+        </tr>
+    `, { lang, accountId: opts.accountId });
+
+  await sendEmail(
+    to,
+    T(lang, `🎯 راجع أخطاءك من أول اختبار — SQB`, `🎯 Review your first-quiz mistakes — SQB`),
+    html,
+    T(lang, `أجبت عن ${answered} سؤالاً بدقة ${accuracy}%. راجع ما أخطأت فيه: ${SITE}/wrong-questions`,
+             `You answered ${answered} questions at ${accuracy}% accuracy. Review what you missed: ${SITE}/wrong-questions`),
+    { event: 'medqize.lifecycle.comeback' }
   );
 };
 
@@ -609,11 +675,9 @@ export const sendExpiryReminderEmail = async (to, username, track, daysRemaining
               </p>
             </div>
             <div style="background:#0b1021;border-radius:12px;padding:18px 22px;margin-bottom:26px;border:1px solid #1e293b;">
-              <p style="margin:0 0 4px;font-size:12.5px;color:#94a3b8;">
-                ${T(lang, 'تجديد سنة كاملة — دفعة واحدة', 'Another full year — one payment')}
-              </p>
-              <p style="margin:0;font-size:30px;font-weight:800;color:#22d3ee;">
-                ${T(lang, '99 ريال', 'SAR 99')} <span style="font-size:13px;font-weight:400;color:#94a3b8;">${T(lang, '/ سنة', '/ year')}</span>
+              <p style="margin:0;font-size:13px;color:#94a3b8;line-height:1.8;">
+                ${T(lang, 'اختر مدة التجديد التي تناسبك — شهرياً أو 4 أشهر أو سنوياً.',
+                          'Pick whichever renewal term suits you — monthly, 4-month, or annual.')}
               </p>
             </div>
             ${button(`${SITE}/subscribe`, T(lang, 'جدّد اشتراكي الآن', 'Renew my access'))}
@@ -779,5 +843,86 @@ export const sendExamReminderEmail = async (to, username, track, daysRemaining, 
     html,
     T(lang, `${stage.titleAr}. ${stage.leadAr}`, `${stage.titleEn}. ${stage.leadEn}`),
     { event: 'medqize.lifecycle.exam_reminder' }
+  );
+};
+
+// ─── 10. GROUP SEAT CLAIMED ────────────────────────────────────────────────
+/**
+ * Tells a group buyer that one of their invite links has been used.
+ *
+ * PRIVACY: seat number, seat count and the group's end date — nothing else.
+ * The person who claimed the seat is not identified, by design; see the rule at
+ * the top of routes/groups.js. Do not add "claimed by X" to this template.
+ *
+ * Transactional, not marketing: `bulk:false` so it is never suppressed by an
+ * unsubscribe and carries no unsubscribe footer (no accountId passed to
+ * wrapLayout). Someone who paid for five seats must be told when one is used.
+ *
+ * @param {{seatIndex:number, seats:number, expiresAt:Date|string}} info
+ */
+export const sendGroupSeatClaimedEmail = async (to, username, info = {}, opts = {}) => {
+  const lang = normalizeLang(opts.lang);
+  const seatIndex = Number(info.seatIndex) || 0;
+  const seats = Number(info.seats) || 0;
+  const used = seatIndex;             // seat N used means N of `seats` are taken
+  const left = Math.max(0, seats - used);
+  const endsOn = info.expiresAt
+    ? new Date(info.expiresAt).toISOString().slice(0, 10)
+    : null;
+
+  const html = wrapLayout(`
+        <tr>
+          <td align="center" style="padding:36px 40px 32px;">
+            <div style="font-size:48px;margin-bottom:16px;">👥</div>
+            <h1 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#f8fafc;">
+              ${T(lang, `تم استخدام أحد روابطك يا ${username}`, `One of your invite links was used, ${username}`)}
+            </h1>
+            <p style="margin:0 0 24px;font-size:14px;color:#94a3b8;line-height:1.7;">
+              ${T(lang,
+                `المقعد رقم ${seatIndex} من ${seats} أصبح مفعّلاً الآن.`,
+                `Seat ${seatIndex} of ${seats} is now active.`)}
+            </p>
+            <table cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:24px;">
+              <tr>
+                <td style="background:#0b1021;border-radius:12px;padding:20px 24px;border:1px solid #1e293b;">
+                  <table cellpadding="0" cellspacing="0" style="width:100%;">
+                    <tr>
+                      <td align="center" style="padding:0 8px;">
+                        <p style="margin:0;font-size:30px;font-weight:800;color:#f8fafc;line-height:1.2;">${used}</p>
+                        <p style="margin:2px 0 0;font-size:12px;color:#94a3b8;">${T(lang, 'مقعداً مستخدماً', 'seats used')}</p>
+                      </td>
+                      <td align="center" style="padding:0 8px;border-right:1px solid #1e293b;border-left:1px solid #1e293b;">
+                        <p style="margin:0;font-size:30px;font-weight:800;color:#22d3ee;line-height:1.2;">${left}</p>
+                        <p style="margin:2px 0 0;font-size:12px;color:#94a3b8;">${T(lang, 'رابطاً متبقياً', 'links left')}</p>
+                      </td>
+                    </tr>
+                  </table>
+                  ${endsOn ? `
+                  <p style="margin:14px 0 0;font-size:12.5px;color:#64748b;line-height:1.7;">
+                    ${T(lang,
+                      `اشتراك المجموعة كامله ينتهي في ${endsOn} — كل المقاعد تنتهي في نفس اليوم.`,
+                      `The whole group ends on ${endsOn} — every seat shares the same end date.`)}
+                  </p>` : ''}
+                </td>
+              </tr>
+            </table>
+            ${button(`${SITE}/groups`, T(lang, 'عرض مقاعد مجموعتي ←', 'View my group seats →'))}
+            <p style="margin:18px 0 0;font-size:11.5px;color:#475569;line-height:1.7;">
+              ${T(lang,
+                'لأسباب تتعلّق بالخصوصية، لا نعرض عليك بريد من استخدم الرابط — فقط أي المقاعد استُخدم ومتى.',
+                'For privacy we never show you who used a link — only which seat was used, and when.')}
+            </p>
+          </td>
+        </tr>
+    `, { lang });
+
+  await sendEmail(
+    to,
+    T(lang, `تم استخدام المقعد ${seatIndex} من ${seats} في مجموعتك`,
+             `Seat ${seatIndex} of ${seats} in your group was used`),
+    html,
+    T(lang, `المقعد ${seatIndex} من ${seats} أصبح مفعّلاً. تابع مقاعدك: ${SITE}/groups`,
+             `Seat ${seatIndex} of ${seats} is now active. See your seats: ${SITE}/groups`),
+    { event: 'medqize.group.seat_claimed', bulk: false }
   );
 };

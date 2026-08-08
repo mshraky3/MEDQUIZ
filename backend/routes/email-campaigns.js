@@ -14,12 +14,14 @@ import {
     sendProgressDigestEmail,
     sendExpiryReminderEmail,
     sendExamReminderEmail,
+    sendOneSessionComebackEmail,
 } from '../services/userEmailService.js';
 import {
     runTrialEndedJob,
     runExpiryReminderJob,
     runProgressDigestJob,
     runExamReminderJob,
+    runComebackJob,
     EXAM_REMINDER_STAGES,
 } from '../services/lifecycleJobs.js';
 import { maybeSendSubscriptionReport, sendSubscriptionReport } from '../services/subscriptionReportService.js';
@@ -79,6 +81,12 @@ const PREVIEWS = {
         questionsAnswered: req.query.answered !== undefined ? parseInt(req.query.answered) : 24,
         accuracy: req.query.accuracy !== undefined ? parseFloat(req.query.accuracy) : 71,
         quizzesCompleted: req.query.quizzes !== undefined ? parseInt(req.query.quizzes) : 3,
+    }, testOpts(req)),
+
+    comeback: (req) => sendOneSessionComebackEmail(TEST_EMAIL, testName(req), testTrack(req), {
+        questionsAnswered: req.query.answered !== undefined ? parseInt(req.query.answered) : 10,
+        correct: req.query.correct !== undefined ? parseInt(req.query.correct) : 6,
+        wrongCount: req.query.wrong !== undefined ? parseInt(req.query.wrong) : 4,
     }, testOpts(req)),
 
     'progress-digest': (req) => sendProgressDigestEmail(TEST_EMAIL, testName(req), testTrack(req), {
@@ -340,6 +348,7 @@ router.get('/api/cron/daily-emails', cronAuth, async (req, res) => {
         ['expiryReminder', runExpiryReminderJob],
         ['progressDigest', runProgressDigestJob],
         ['examReminder', runExamReminderJob],
+        ['comeback', runComebackJob],
     ]) {
         try {
             const r = await job(db);
@@ -431,6 +440,7 @@ router.get('/api/cron/lifecycle-emails', cronAuth, async (req, res) => {
         ['expiryReminder', runExpiryReminderJob],
         ['progressDigest', runProgressDigestJob],
         ['examReminder', runExamReminderJob],
+        ['comeback', runComebackJob],
     ]) {
         try {
             const r = await job(req.db);

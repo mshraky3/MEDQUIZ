@@ -9,9 +9,9 @@ import questionReportsRouter from './routes/question-reports.js';
 import emailCampaignsRouter from './routes/email-campaigns.js';
 import adminBroadcastRouter, { unsubToken } from './routes/admin-broadcast.js';
 import paymentRoutes from './routes/payment.js';
-import { checkSubscriptionAccess, isPaymentEnforcementEnabled } from './services/paymentService.js';
+import { checkSubscriptionAccess, checkQuizAccess, isPaymentEnforcementEnabled, FREE_QUESTION_ALLOWANCE } from './services/paymentService.js';
 import { adminAuth, isAdminRequest } from './middleware/adminAuth.js';
-import { subscriptionGuard } from './middleware/subscriptionGuard.js';
+import { subscriptionGuard, quizAccessGuard } from './middleware/subscriptionGuard.js';
 import summariesRouter from './routes/summaries.js';
 import accountingRouter from './routes/accounting.js';
 import engagementRouter from './routes/engagement.js';
@@ -19,15 +19,17 @@ import funnelRouter from './routes/funnel.js';
 import goalsRouter from './routes/goals.js';
 import notificationsRouter from './routes/notifications.js';
 import examDateRouter from './routes/examDate.js';
+import groupRoutes from './routes/groups.js';
+import trialRouter from './routes/trial.js';
 import { checkMilestones } from './services/notificationService.js';
 import {
     revenueSnapshot, subscriptionSnapshot, conversionSnapshot,
     paidButInactiveCount, userSnapshot, activeUserSnapshot, dailySignups,
-    dailyActiveUsers, openReportsCount,
+    dailyActiveUsers, openReportsCount, SQL_FREE_EXHAUSTED,
 } from './services/adminMetricsService.js';
 import summaryContent from './content/summaryHtml/index.js';
 import { notifyBackendError } from './services/errorNotificationService.js';
-import { sendWelcomeEmail } from './services/userEmailService.js';
+import { sendWelcomeEmail, sendGroupSeatClaimedEmail } from './services/userEmailService.js';
 import { OWNER_EMAIL } from './config/recipients.js';
 import {
     DEFAULT_TRACK, TRACK_KEYS, TRACKS, isValidTrack, normalizeTrack,
@@ -132,6 +134,25 @@ function ensureSchema() {
                     ADD COLUMN IF NOT EXISTS trial_ended_email_sent_at  TIMESTAMPTZ DEFAULT NULL,
                     ADD COLUMN IF NOT EXISTS progress_digest_sent_at    TIMESTAMPTZ DEFAULT NULL,
                     ADD COLUMN IF NOT EXISTS expiry_reminder_sent_at    TIMESTAMPTZ DEFAULT NULL
+            `);
+            // DEAD COLUMNS — the engaged-time trial they backed was retired on
+            // 2026-08-08 in favour of the 40-question allowance (see
+            // free_questions_used in ensurePaymentSchema). Kept, not dropped,
+            // because they are the only record of how much the old trial cohort
+            // actually used, which the conversion analysis still reads. Nothing
+            // writes to them any more.
+            await db.query(`
+                ALTER TABLE accounts
+                    ADD COLUMN IF NOT EXISTS trial_active_seconds    INTEGER     NOT NULL DEFAULT 0,
+                    ADD COLUMN IF NOT EXISTS trial_last_heartbeat_at TIMESTAMPTZ DEFAULT NULL
+            `);
+            // Day-1/Day-3 win-back for anyone stuck at exactly one quiz session —
+            // see lifecycleJobs.runComebackJob. Stores the highest COMEBACK_STAGE
+            // already mailed (1 or 3), same "ladder only moves down/up once"
+            // idempotency pattern as exam_reminder_stage above.
+            await db.query(`
+                ALTER TABLE accounts
+                    ADD COLUMN IF NOT EXISTS comeback_email_stage INTEGER DEFAULT NULL
             `);
             // The student's own exam date, and how far the reminder ladder has
             // been walked for it. A DATE (not a timestamp) because a sitting is
@@ -407,6 +428,57 @@ function ensurePaymentSchema() {
                 )
             `);
 
+            // ── Group subscriptions ────────────────────────────────────────
+            // One payment buys `seats` accounts. The payer is seat 1 (their own
+            // account is activated directly); seats 2..N are single-use invite
+            // links. Every seat in a group shares ONE end date, `expires_at`,
+            // fixed at purchase — so an unclaimed link cannot quietly extend
+            // the group's life by being claimed late.
+            //
+            // gateway_ref UNIQUE is the idempotency lock, the same trick as
+            // uq_payment_events_paid_ref above: /verify and the webhook both
+            // run activation and must not mint two sets of links.
+            await db.query(`
+                CREATE TABLE IF NOT EXISTS subscription_groups (
+                  id               BIGSERIAL PRIMARY KEY,
+                  owner_account_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+                  plan_id          VARCHAR(50)  NOT NULL,
+                  seats            INTEGER      NOT NULL,
+                  months           INTEGER      NOT NULL,
+                  gateway_ref      VARCHAR(255) UNIQUE NOT NULL,
+                  expires_at       TIMESTAMPTZ  NOT NULL,
+                  created_at       TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+                )
+            `);
+            // token is NULL for seat 1 (the buyer's own account — there is no
+            // link to claim), and a 32-char crypto token for every other seat.
+            await db.query(`
+                CREATE TABLE IF NOT EXISTS group_seats (
+                  id                    BIGSERIAL PRIMARY KEY,
+                  group_id              BIGINT  NOT NULL REFERENCES subscription_groups(id) ON DELETE CASCADE,
+                  seat_index            INTEGER NOT NULL,
+                  token                 VARCHAR(64) UNIQUE,
+                  claimed_by_account_id INTEGER REFERENCES accounts(id) ON DELETE SET NULL,
+                  claimed_at            TIMESTAMPTZ DEFAULT NULL,
+                  UNIQUE (group_id, seat_index)
+                )
+            `);
+            await db.query(`CREATE INDEX IF NOT EXISTS idx_group_seats_group ON group_seats(group_id)`);
+            await db.query(`CREATE INDEX IF NOT EXISTS idx_subscription_groups_owner ON subscription_groups(owner_account_id)`);
+
+            // ── Free tier: 40 questions, for life ──────────────────────────
+            // Replaces the 1-hour engaged-time trial. A lifetime counter, not a
+            // window: a free account keeps its login, its analytics and the
+            // free lessons forever, and only quiz STARTS are gated on it.
+            //
+            // Deliberately NOT derived from user_question_progress, which
+            // POST /api/reset-progress wipes on demand — that would hand every
+            // free user an unlimited refill button.
+            await db.query(`
+                ALTER TABLE accounts
+                    ADD COLUMN IF NOT EXISTS free_questions_used INTEGER NOT NULL DEFAULT 0
+            `);
+
             // Grandfather pre-rollout accounts EXACTLY ONCE.
             await db.query(`CREATE TABLE IF NOT EXISTS schema_migrations (name TEXT PRIMARY KEY, applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
             const applied = await db.query(`SELECT 1 FROM schema_migrations WHERE name = '001_grandfather_existing'`);
@@ -434,6 +506,35 @@ function ensurePaymentSchema() {
                 `);
                 await db.query(`INSERT INTO schema_migrations (name) VALUES ('002_grandfather_all_current') ON CONFLICT DO NOTHING`);
                 logger.info(`Grandfathered ${r2.rowCount} existing account(s) so only new signups pay (one-time)`);
+            }
+
+            // The 1-hour trial is retired; everyone holding one moves to the
+            // 40-question free tier. Runs EXACTLY ONCE.
+            const applied3 = await db.query(`SELECT 1 FROM schema_migrations WHERE name = '003_free_tier_40q'`);
+            if (applied3.rows.length === 0) {
+                // Seed the counter from what each account has actually answered,
+                // so a heavy trial user does not receive 40 MORE on top. Capped
+                // at the allowance: the number is a budget, not a score.
+                const seeded = await db.query(`
+                    UPDATE accounts a
+                       SET free_questions_used = LEAST($1::int, p.answered)
+                      FROM (
+                          SELECT user_id, COUNT(*)::int AS answered
+                            FROM user_question_progress
+                           GROUP BY user_id
+                      ) p
+                     WHERE p.user_id = a.id
+                       AND a.free_questions_used = 0
+                `, [FREE_QUESTION_ALLOWANCE]);
+                // Grandfathered accounts are untouched on purpose — they stay
+                // free-for-good, which is a promise already made to them.
+                const freed = await db.query(`
+                    UPDATE accounts
+                       SET subscription_status = 'free'
+                     WHERE subscription_status IN ('trial', 'trial_pending')
+                `);
+                await db.query(`INSERT INTO schema_migrations (name) VALUES ('003_free_tier_40q') ON CONFLICT DO NOTHING`);
+                logger.info(`Free tier: seeded ${seeded.rowCount} counter(s), moved ${freed.rowCount} trial account(s) to 'free' (one-time)`);
             }
             _paymentColumnsExist = true; // prime the lazy cache used elsewhere
             logger.info('Payment/subscription schema ensured');
@@ -512,22 +613,31 @@ app.use(cors({
 app.use(express.json());
 
 // ── Access-control helpers ─────────────────────────────────────────────
-// subscriberOnly: 402s unpaid accounts once PAYMENT_ENFORCEMENT_ENABLED=true
-// (transparent pass-through while the flag is off). Must run after
-// requireSession — it trusts the session username, not client-sent ids.
+// Two levels, both transparent pass-throughs while PAYMENT_ENFORCEMENT_ENABLED
+// is off. Both must run after requireSession — they trust the session
+// username, not client-sent ids.
+//
+// quizOnly       — free accounts pass while they still have allowance left,
+//                  and req.quizAccess.remaining tells the handler how many
+//                  questions it may serve.
+// subscriberOnly — paid accounts only, for features with no free slice.
+const quizOnly = quizAccessGuard(db);
 const subscriberOnly = subscriptionGuard(db);
 
-// requireSession + subscriberOnly in one hop, for routes that had no
-// middleware before (e.g. GET /api/questions).
+// requireSession + a guard in one hop, for routes that had no middleware
+// before (e.g. GET /api/questions).
+function requireQuizAccess(req, res, next) {
+    requireSession(req, res, () => quizOnly(req, res, next));
+}
 function requireSubscriber(req, res, next) {
     requireSession(req, res, () => subscriberOnly(req, res, next));
 }
 
-// Admin key OR a valid subscriber session. Used on endpoints shared by the
-// admin panel (Bank) and the student app (Analysis), like /api/all-questions.
+// Admin key OR a valid session with quiz access. Used on endpoints shared by
+// the admin panel (Bank) and the student app (Analysis), like /api/all-questions.
 function adminOrSubscriber(req, res, next) {
     if (isAdminRequest(req)) return next();
-    return requireSubscriber(req, res, next);
+    return requireQuizAccess(req, res, next);
 }
 
 // Health check (previously read a scratch "test" table — no DB needed).
@@ -1122,29 +1232,19 @@ app.post('/login', async (req, res) => {
             });
         }
 
-        // Activate a pending trial reset on first login.
-        // A trial *grant* (signup, or an admin reset) and trial *activation*
-        // are different moments: subscription_status='trial_pending' means
-        // "granted, hour not started yet". The countdown only begins here,
-        // at the user's own first login after the grant — never at grant
-        // time — so a reset campaign emailed to many people doesn't quietly
-        // burn everyone's hour before they actually open the email.
-        if (userRow.subscription_status === 'trial_pending') {
-            const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+        // Legacy trial statuses land on the free tier. The 1-hour trial is
+        // retired (migration 003_free_tier_40q converts everyone at boot); this
+        // catches the stragglers — an account restored from a backup, or one an
+        // old admin script marked 'trial_pending' before it was rewritten.
+        // Nothing is taken away: the free tier keeps their account open, which
+        // the trial did not.
+        if (userRow.subscription_status === 'trial' || userRow.subscription_status === 'trial_pending') {
             await client.query(
-                `UPDATE accounts SET subscription_status = 'trial', subscription_expiry_date = $1 WHERE id = $2`,
-                [expiresAt, userRow.id]
+                `UPDATE accounts SET subscription_status = 'free' WHERE id = $1`,
+                [userRow.id]
             );
-            await client.query(
-                `INSERT INTO trial_grants (email, account_id, granted_at, expires_at)
-                 VALUES ($1, $2, NOW(), $3)
-                 ON CONFLICT (email) DO UPDATE
-                   SET account_id = EXCLUDED.account_id, granted_at = EXCLUDED.granted_at, expires_at = EXCLUDED.expires_at`,
-                [lowercaseUsername, userRow.id, expiresAt]
-            );
-            userRow.subscription_status = 'trial';
-            userRow.subscription_expiry_date = expiresAt;
-            logger.info(`Activated pending trial on login for ${lowercaseUsername}, expires ${expiresAt.toISOString()}`);
+            userRow.subscription_status = 'free';
+            logger.info(`Moved legacy trial account ${lowercaseUsername} to the free tier`);
         }
 
         // Session timeout logic
@@ -1178,13 +1278,22 @@ app.post('/login', async (req, res) => {
         // Detect suspicious activity
         const suspiciousCheck = await detectSuspiciousLogin(userRow.id, ipAddress, userAgent);
 
-        // Record login history
+        // Record login history. country/city come from Vercel's edge geo headers
+        // (present on requests that hit Vercel's network; absent in local dev,
+        // where they're simply NULL) — see MONETIZATION_ANALYSIS_2026-08.md §3.5:
+        // these columns existed but were NULL on all 192 logins because nothing
+        // ever wrote to them.
+        const geoCountry = req.headers['x-vercel-ip-country'] || null;
+        let geoCity = null;
+        try {
+            geoCity = req.headers['x-vercel-ip-city'] ? decodeURIComponent(req.headers['x-vercel-ip-city']) : null;
+        } catch (_) { /* malformed header — leave city NULL rather than fail the login */ }
         try {
             await client.query(`
-                INSERT INTO login_history (user_id, username, ip_address, user_agent, device_type, browser, os, session_token, is_suspicious, suspicious_reason)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-            `, [userRow.id, lowercaseUsername, ipAddress, userAgent, device, browser, os, sessionToken, suspiciousCheck.isSuspicious, suspiciousCheck.reasons]);
-            logger.info(`Login history recorded for ${lowercaseUsername}`, { ip: ipAddress, device, suspicious: suspiciousCheck.isSuspicious });
+                INSERT INTO login_history (user_id, username, ip_address, user_agent, device_type, browser, os, session_token, is_suspicious, suspicious_reason, country, city)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+            `, [userRow.id, lowercaseUsername, ipAddress, userAgent, device, browser, os, sessionToken, suspiciousCheck.isSuspicious, suspiciousCheck.reasons, geoCountry, geoCity]);
+            logger.info(`Login history recorded for ${lowercaseUsername}`, { ip: ipAddress, device, suspicious: suspiciousCheck.isSuspicious, country: geoCountry });
         } catch (historyErr) {
             logger.error('Failed to record login history', historyErr);
             // Don't fail login if history recording fails
@@ -1204,20 +1313,25 @@ app.post('/login', async (req, res) => {
             active: true,
             expiryDate: null,
             daysRemaining: null,
-            minutesRemaining: null,
-            trial: false,
+            freeQuestionsRemaining: null,
+            allowance: FREE_QUESTION_ALLOWANCE,
             reason: 'enforcement_disabled',
         };
+        let freeQuestionsRemaining = null;
         try {
             const columnsReady = await hasPaymentColumns();
             if (columnsReady && isPaymentEnforcementEnabled()) {
                 const { allowed, reason } = checkSubscriptionAccess(userRow);
                 let daysRemaining = null;
-                let minutesRemaining = null;
-                if (userRow.subscription_expiry_date) {
+                if (allowed && userRow.subscription_expiry_date) {
                     const ms = new Date(userRow.subscription_expiry_date).getTime() - Date.now();
                     daysRemaining = Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
-                    minutesRemaining = Math.max(0, Math.ceil(ms / (1000 * 60)));
+                }
+                if (!allowed) {
+                    // Free tier. `active:false` no longer means "locked out" —
+                    // the account stays fully usable, this is only how much
+                    // quiz allowance is left.
+                    freeQuestionsRemaining = checkQuizAccess(userRow).remaining;
                 }
                 subscription = {
                     enforced: true,
@@ -1225,8 +1339,8 @@ app.post('/login', async (req, res) => {
                     active: allowed,
                     expiryDate: userRow.subscription_expiry_date || null,
                     daysRemaining,
-                    minutesRemaining,
-                    trial: userRow.subscription_status === 'trial',
+                    freeQuestionsRemaining,
+                    allowance: FREE_QUESTION_ALLOWANCE,
                     reason,
                 };
             }
@@ -1240,20 +1354,25 @@ app.post('/login', async (req, res) => {
             logged_date: now,
             sessionToken,
             terms_accepted: userRow.terms_accepted,
-            // Persisted client-side and read by the route guard. Undefined on
-            // legacy stored sessions is treated as allowed (no mid-session lockout).
+            // "Is this a PAYING account?" — no longer a lockout flag. Nothing
+            // in the app may redirect on it; only quiz starts are gated, and
+            // that gate is the server's 402, not this field.
             accessAllowed: subscription.active,
-            // While enforcement is off, hide the raw stored status/expiry (e.g. a
-            // stamped 'trial') from the client so UI like the trial countdown
-            // banner never appears when nothing is actually being gated.
+            // While enforcement is off, hide the raw stored status/expiry from
+            // the client so paid-only UI never appears when nothing is gated.
             subscription_status: subscription.enforced ? userRow.subscription_status : 'free',
             subscription_expiry_date: subscription.enforced ? userRow.subscription_expiry_date : null,
+            // Drives the free-allowance pill. null = unlimited (paid/exempt).
+            free_questions_remaining: subscription.enforced ? freeQuestionsRemaining : null,
+            free_question_allowance: FREE_QUESTION_ALLOWANCE,
         };
 
         return res.status(200).json({
             message: 'Login successful',
-            expired: subscription.enforced && !subscription.active &&
-                (subscription.reason === 'subscription_required' || subscription.reason === 'trial_expired'),
+            // Nobody is "expired" any more — an account without a subscription
+            // is a free-tier account, not a locked one. Kept as a field because
+            // older clients still read it; it is now always false.
+            expired: false,
             subscription,
             user: updatedUser,
             sessionToken,
@@ -1668,16 +1787,16 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
                 paymentCount: revenue.count,
                 payerCount: revenue.distinctPayers,
                 activeSubscribers: parseInt(subs.active_subscribers) || 0,
-                trialActive: parseInt(subs.trial_active) || 0,
-                trialExpiredUnconverted: parseInt(subs.trial_expired_unconverted) || 0,
-                freeNoTrial: parseInt(subs.free_no_trial) || 0,
+                freeTrying: parseInt(subs.free_trying) || 0,
+                freeExhaustedUnconverted: parseInt(subs.free_exhausted_unconverted) || 0,
+                freeNeverStarted: parseInt(subs.free_never_started) || 0,
                 grandfathered: parseInt(subs.grandfathered) || 0,
                 adminCreated: parseInt(subs.admin_created) || 0,
                 expiringIn7d: parseInt(subs.expiring_7d) || 0,
                 expiringIn30d: parseInt(subs.expiring_30d) || 0,
-                totalTrialsGranted: conversion.totalTrialsGranted,
-                trialToPaid: conversion.trialToPaid,
-                trialConversionRate: conversion.trialConversionRate,
+                totalTried: conversion.totalTried,
+                triedToPaid: conversion.triedToPaid,
+                conversionRate: conversion.conversionRate,
                 paidButInactive,
                 recentPayments: revenue.recentPayments,
             },
@@ -1754,7 +1873,7 @@ app.get('/admin/analytics', adminAuth, async (req, res) => {
             q(`SELECT
                     COUNT(*) FILTER (WHERE grandfathered_at IS NOT NULL OR subscription_status = 'grandfathered')::int AS legacy,
                     COUNT(*) FILTER (WHERE grandfathered_at IS NULL AND subscription_status = 'active')::int AS paid,
-                    COUNT(*) FILTER (WHERE grandfathered_at IS NULL AND subscription_status = 'trial')::int AS trial,
+                    COUNT(*) FILTER (WHERE ${SQL_FREE_EXHAUSTED})::int AS exhausted,
                     COUNT(*)::int AS total
                 FROM accounts`),
             q(`SELECT
@@ -1822,13 +1941,16 @@ app.get('/admin/analytics', adminAuth, async (req, res) => {
                 FROM summary_progress`),
         ]);
 
-        const mix = firstOf(mixRes, { legacy: 0, paid: 0, trial: 0, total: 0 });
-        const free = Math.max(0, (mix.total || 0) - (mix.legacy || 0) - (mix.paid || 0) - (mix.trial || 0));
+        const mix = firstOf(mixRes, { legacy: 0, paid: 0, exhausted: 0, total: 0 });
+        // "Free" here means free tier WITH allowance left; accounts that used it
+        // all up are broken out separately because they are the ones worth a
+        // subscribe nudge — the free tier's equivalent of "trial expired".
+        const free = Math.max(0, (mix.total || 0) - (mix.legacy || 0) - (mix.paid || 0) - (mix.exhausted || 0));
         // English labels — admin stays English/LTR regardless of site language (AdminShell).
         const accountMix = [
             { key: 'paid', label: 'Paid', value: mix.paid || 0 },
-            { key: 'trial', label: 'Trial', value: mix.trial || 0 },
-            { key: 'free', label: 'Free', value: free },
+            { key: 'free', label: 'Free (questions left)', value: free },
+            { key: 'exhausted', label: 'Free (used up)', value: mix.exhausted || 0 },
             { key: 'legacy', label: 'Legacy', value: mix.legacy || 0 }
         ];
 
@@ -1848,13 +1970,13 @@ app.get('/admin/analytics', adminAuth, async (req, res) => {
             totals: {
                 totalAccounts: mix.total || 0,
                 paid: mix.paid || 0,
-                trial: mix.trial || 0,
+                exhausted: mix.exhausted || 0,
                 legacy: mix.legacy || 0,
                 free,
-                trialsEver: conversion.totalTrialsGranted,
+                triedEver: conversion.totalTried,
                 payers: revenue.distinctPayers,
-                trialToPaid: conversion.trialToPaid,
-                trialToPaidRate: conversion.trialConversionRate
+                triedToPaid: conversion.triedToPaid,
+                triedToPaidRate: conversion.conversionRate
             },
             activeUsers: firstOf(activeRes, { dau: 0, wau: 0, mau: 0 }),
             logins: rowsOf(loginsRes),
@@ -1881,10 +2003,10 @@ app.get('/admin/users', adminAuth, async (req, res) => {
         const trackFilter = isValidTrack(req.query.track) ? 'WHERE a.track = $1' : '';
         const trackParams = trackFilter ? [req.query.track] : [];
         const usersResult = await db.query(`
-            SELECT 
+            SELECT
                 a.id, a.username, a.password, a.isactive, a.logged, a.logged_date,
                 a.terms_accepted, a.email, a.created_at, a.track,
-                a.subscription_status, a.subscription_expiry_date,
+                a.subscription_status, a.subscription_expiry_date, a.free_questions_used,
                 a.account_type, a.is_admin_created, a.grandfathered_at,
                 COUNT(DISTINCT q.id) as total_quizzes,
                 ROUND(AVG(q.quiz_accuracy)::numeric, 1) as avg_accuracy,
@@ -1895,7 +2017,7 @@ app.get('/admin/users', adminAuth, async (req, res) => {
             ${trackFilter}
             GROUP BY a.id, a.username, a.password, a.isactive, a.logged, a.logged_date,
                      a.terms_accepted, a.email, a.created_at, a.track,
-                     a.subscription_status, a.subscription_expiry_date,
+                     a.subscription_status, a.subscription_expiry_date, a.free_questions_used,
                      a.account_type, a.is_admin_created, a.grandfathered_at
             ORDER BY a.id DESC
         `, trackParams);
@@ -2565,9 +2687,14 @@ function dedupeByText(rows) {
     return out;
 }
 
-app.get('/api/questions', requireSubscriber, async (req, res) => {
+app.get('/api/questions', requireQuizAccess, async (req, res) => {
 
-    const limit = parseInt(req.query.limit) || 10;
+    // Free accounts are served at most what is left of their lifetime
+    // allowance. This clamp is the enforcement — the launcher also shows the
+    // remaining count, but a hand-rolled ?limit=500 must not outrun it.
+    const requested = parseInt(req.query.limit) || 10;
+    const remaining = req.quizAccess?.remaining ?? Infinity;
+    const limit = Math.max(1, Math.min(requested, remaining));
     const typesParam = req.query.types; // e.g., 'mix' or 'medicine,surgery'
     const sourceParam = req.query.source; // e.g., 'general', 'Midgard', 'GameBoy'
     const userId = req.query.userId; // User ID to filter completed questions
@@ -2586,7 +2713,7 @@ app.get('/api/questions', requireSubscriber, async (req, res) => {
     const categoryValues = [];
 
     // Track first: a student only ever sees their own bank. Derived from the
-    // session (requireSubscriber ran requireSession), never from the request.
+    // session (requireQuizAccess ran requireSession), never from the request.
     const track = resolveContentTrack(req);
     categoryConditions.push(`track = $${categoryValues.length + 1}`);
     categoryValues.push(track);
@@ -2685,7 +2812,12 @@ app.get('/api/questions', requireSubscriber, async (req, res) => {
         const endTime = Date.now();
         logger.debug(`Questions query executed in ${endTime - startTime}ms, returned ${rows.length} questions`);
 
-        res.json({ questions: dedupeByText(rows) });
+        // freeRemaining lets the quiz screen say "these are your last 5" without
+        // a second round-trip. null for paid/exempt accounts (unlimited).
+        const freeRemaining = Number.isFinite(req.quizAccess?.remaining)
+            ? req.quizAccess.remaining
+            : null;
+        res.json({ questions: dedupeByText(rows), freeRemaining });
     } catch (err) {
         logger.error('Error fetching questions', err);
         res.status(500).json({ message: 'Server error' });
@@ -2886,7 +3018,11 @@ app.post('/user-analysis', requireSession, async (req, res) => {
 });
 
 
-app.post('/quiz-sessions', requireSession, subscriberOnly, async (req, res) => {
+// Deliberately NOT behind quizAccessGuard. This is where a finished quiz is
+// SUBMITTED, and a free user who legitimately started their last five questions
+// must be able to save them — the gate belongs at /api/questions, where a quiz
+// is started. Submitting is also what spends the allowance (see below).
+app.post('/quiz-sessions', requireSession, async (req, res) => {
     const {
         user_id,
         total_questions,
@@ -2977,6 +3113,32 @@ app.post('/quiz-sessions', requireSession, subscriberOnly, async (req, res) => {
             id: result.rows[0].id,
             session_id: result.rows[0].session_id
         });
+
+        // Spend the free allowance. Only non-paying accounts have one, and the
+        // LEAST() clamp means the counter can never read above the allowance
+        // however many questions arrive in one submission.
+        let freeRemaining = null;
+        try {
+            const spend = await db.query(
+                `UPDATE accounts
+                    SET free_questions_used = LEAST($1::int, free_questions_used + $2::int)
+                  WHERE id = $3
+                    AND is_admin_created = FALSE
+                    AND grandfathered_at IS NULL
+                    AND NOT (subscription_status = 'active'
+                             AND subscription_expiry_date > NOW())
+                  RETURNING free_questions_used`,
+                [FREE_QUESTION_ALLOWANCE, Number(total_questions) || 0, user_id]
+            );
+            if (spend.rows.length > 0) {
+                freeRemaining = Math.max(0, FREE_QUESTION_ALLOWANCE - spend.rows[0].free_questions_used);
+            }
+        } catch (err) {
+            // Never fail a saved quiz over the counter — the worst case is a
+            // free user getting a few extra questions, which beats losing a
+            // session they already answered.
+            logger.error('Failed to spend free allowance', err);
+        }
 
         // Record question progress for each answered question (parallelized)
         let touchedCardinalities = [];
@@ -3103,6 +3265,9 @@ app.post('/quiz-sessions', requireSession, subscriberOnly, async (req, res) => {
             session_id: result.rows[0].session_id,
             completedCategories,
             milestones,
+            // null for paid/exempt accounts; a number for free-tier accounts so
+            // the results screen can update the allowance pill straight away.
+            freeRemaining,
             message: 'Quiz session created successfully'
         });
     } catch (err) {
@@ -3890,8 +4055,8 @@ app.get('/api/user-subscription/:userId', async (req, res) => {
         const columnsReady = await hasPaymentColumns();
         const selectCols = columnsReady
             ? `id, username, email, isactive,
-               subscription_status, subscription_expiry_date,
-               account_type, is_admin_created`
+               subscription_status, subscription_expiry_date, free_questions_used,
+               grandfathered_at, account_type, is_admin_created`
             : `id, username, email, isactive`;
 
         const result = await db.query(
@@ -3909,22 +4074,27 @@ app.get('/api/user-subscription/:userId', async (req, res) => {
 
         // Enforcement disabled => everyone is free with unlimited access.
         let daysRemaining = null;
-        let minutesRemaining = null;
-        if (enforcementEnabled && user.subscription_expiry_date) {
-            const ms = new Date(user.subscription_expiry_date).getTime() - Date.now();
-            daysRemaining = Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
-            minutesRemaining = Math.max(0, Math.ceil(ms / (1000 * 60)));
+        let freeQuestionsRemaining = null;
+        if (enforcementEnabled) {
+            if (user.subscription_expiry_date) {
+                const ms = new Date(user.subscription_expiry_date).getTime() - Date.now();
+                daysRemaining = Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
+            }
+            const quiz = checkQuizAccess(user);
+            freeQuestionsRemaining = Number.isFinite(quiz.remaining) ? quiz.remaining : null;
         }
 
         res.json({
             enforcement: enforcementEnabled,
+            allowance: FREE_QUESTION_ALLOWANCE,
             user: {
                 ...user,
                 isactive: user.isactive,
                 // While enforcement is off, report free access regardless of stored status.
                 subscription_status: enforcementEnabled ? user.subscription_status : 'free',
                 daysRemaining,
-                minutesRemaining
+                // null = unlimited (paid, admin-created or grandfathered).
+                freeQuestionsRemaining
             }
         });
     } catch (error) {
@@ -3941,6 +4111,20 @@ app.delete('/users/:userId', adminAuth, async (req, res) => {
     }
 
     try {
+        // Money always wins over an admin cleanup click — a paying customer's
+        // history must never be deletable by accident. See MONETIZATION_ANALYSIS_2026-08.md §6.1:
+        // account 231 was deleted four days after paying, and the payment_events
+        // row survived (ON DELETE SET NULL) but the account and its access didn't.
+        const paidCheck = await db.query(
+            `SELECT 1 FROM payment_events WHERE account_id = $1 AND status = 'paid' LIMIT 1`,
+            [userId]
+        );
+        if (paidCheck.rows.length > 0) {
+            return res.status(409).json({
+                message: 'This account has a paid payment on record and cannot be deleted. Refund or archive it instead.',
+            });
+        }
+
         // Start a transaction to ensure all deletions succeed or fail together
         const client = await db.connect();
 
@@ -4895,12 +5079,30 @@ app.post('/api/auth/reset-password', async (req, res) => {
 });
 
 // Create free account
+// Optional exam date offered at signup (see MONETIZATION_ANALYSIS_2026-08.md
+// P1 #4 — the reminder ladder in lifecycleJobs.js was fully built but never
+// fed, because nothing ever asked for the date). Deliberately lenient: an
+// invalid or unparsable date is just dropped rather than failing the signup
+// over an optional field. Mirrors the validation in routes/examDate.js,
+// which remains the place to CHANGE the date later.
+function parseSignupExamDate(value) {
+    const str = String(value || '').trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(str)) return null;
+    const d = new Date(`${str}T00:00:00Z`);
+    if (Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== str) return null;
+    const today = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate()));
+    const days = Math.round((d.getTime() - today.getTime()) / 86400000);
+    if (days < 0 || days > 730) return null;
+    return str;
+}
+
 app.post('/api/signup/free', async (req, res) => {
     try {
         const { email, password, otp_code } = req.body;
         // Study track is chosen once, at signup. Anything unrecognised falls
         // back to medical rather than failing the signup.
         const track = normalizeTrack(req.body.track);
+        const examDate = parseSignupExamDate(req.body.examDate);
 
         if (!email || !password || !otp_code) {
             return res.status(400).json({
@@ -4954,9 +5156,9 @@ app.post('/api/signup/free', async (req, res) => {
 
             // Create the account (username = email for backward compat)
             const accountResult = await client.query(
-                `INSERT INTO accounts (username, email, password, isactive, logged, terms_accepted, email_verified, track)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
-                [lowerEmail, lowerEmail, lowerPassword, true, false, false, true, track]
+                `INSERT INTO accounts (username, email, password, isactive, logged, terms_accepted, email_verified, track, exam_date)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
+                [lowerEmail, lowerEmail, lowerPassword, true, false, false, true, track, examDate]
             );
 
             const newUserId = accountResult.rows[0].id;
@@ -4979,39 +5181,18 @@ app.post('/api/signup/free', async (req, res) => {
             // "payment received" email is sent from paymentService when a
             // subscription is actually paid (webhook or /verify).
 
-            // One-hour free trial, bound to email — a `trial_grants` row is
-            // never deleted with the account, so a deleted+re-signed-up email
-            // can't claim a second trial.
-            let trial = { granted: false, expiresAt: null };
-            try {
-                const columnsReady = await hasPaymentColumns();
-                if (columnsReady) {
-                    const grantResult = await client.query(
-                        `INSERT INTO trial_grants (email, account_id, expires_at)
-                         VALUES ($1, $2, NOW() + interval '1 hour')
-                         ON CONFLICT (email) DO NOTHING
-                         RETURNING expires_at`,
-                        [lowerEmail, newUserId]
-                    );
-                    if (grantResult.rows.length > 0) {
-                        const expiresAt = grantResult.rows[0].expires_at;
-                        await client.query(
-                            `UPDATE accounts SET subscription_status = 'trial', subscription_expiry_date = $1 WHERE id = $2`,
-                            [expiresAt, newUserId]
-                        );
-                        trial = { granted: true, expiresAt };
-                    }
-                }
-            } catch (trialErr) {
-                console.error('Failed to grant free trial at signup:', trialErr);
-            }
-
+            // Every new account starts on the free tier: FREE_QUESTION_ALLOWANCE
+            // questions for life, plus the first lesson of every specialty, and
+            // an account that never locks. Nothing to grant and nothing to
+            // stamp — 'free' with free_questions_used = 0 is the column default,
+            // which also means there is no trial to re-claim by re-signing up.
             res.status(201).json({
                 success: true,
                 message: 'Account created successfully',
                 userId: newUserId,
                 track,
-                trial
+                freeQuestions: FREE_QUESTION_ALLOWANCE,
+                examDateSet: !!examDate
             });
 
         } finally {
@@ -5183,6 +5364,158 @@ app.post('/api/signup/temp-link', async (req, res) => {
     } catch (err) {
         console.error('Error creating account from temp link:', err);
         res.status(500).json({ message: 'Failed to create account' });
+    }
+});
+
+// Claim a paid group seat.
+//
+// Modelled on /api/signup/temp-link above — same FOR UPDATE claim inside a
+// transaction, same "the link is the trust anchor so OTP is optional" rule —
+// with three deliberate differences:
+//
+//   1. is_admin_created stays FALSE. That flag is checked FIRST in
+//      checkSubscriptionAccess and bypasses expiry forever; a paid 4-month seat
+//      set that way would never lapse.
+//   2. The expiry is the GROUP's expires_at, not now + 4 months. Every seat in
+//      a group ends on the same day, so claiming a link late does not extend it.
+//   3. The claimer picks their own track. A group can be mixed — one friend
+//      sitting SMLE, another SNLE — so the seat does not inherit the buyer's.
+app.post('/api/signup/group-seat', async (req, res) => {
+    try {
+        const { token, email, password, otp_code, track: requestedTrack } = req.body;
+
+        if (!token || !email || !password) {
+            return res.status(400).json({ success: false, message: 'Token, email, and password are required' });
+        }
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ success: false, message: 'Invalid email format' });
+        }
+        if (password.length < 8) {
+            return res.status(400).json({ success: false, message: 'Password must be at least 8 characters' });
+        }
+
+        const lowerEmail = email.toLowerCase().trim();
+        const lowerPassword = password.toLowerCase();
+        const seatTrack = normalizeTrack(requestedTrack);
+
+        // Optional OTP, same reasoning as the admin invite links: the token is
+        // unguessable and was paid for, so a broken mail provider must not stop
+        // a paying group from using the seats they already own.
+        let otpRow = null;
+        if (otp_code) {
+            const otpResult = await db.query(
+                `SELECT id FROM signup_otps
+                 WHERE email = $1 AND otp_code = $2 AND used = FALSE AND expires_at > NOW()
+                 ORDER BY created_at DESC LIMIT 1`,
+                [lowerEmail, otp_code]
+            );
+            if (otpResult.rows.length === 0) {
+                return res.status(400).json({ success: false, message: 'Invalid or expired OTP' });
+            }
+            otpRow = otpResult.rows[0];
+        }
+
+        const client = await db.connect();
+        try {
+            await client.query('BEGIN');
+
+            // FOR UPDATE on the seat row: two people opening the same link at
+            // the same instant must not both get an account from one seat.
+            const seatResult = await client.query(
+                `SELECT s.id, s.seat_index, s.claimed_by_account_id,
+                        g.id AS group_id, g.seats, g.expires_at, g.owner_account_id
+                   FROM group_seats s
+                   JOIN subscription_groups g ON g.id = s.group_id
+                  WHERE s.token = $1
+                    FOR UPDATE OF s`,
+                [token]
+            );
+            if (seatResult.rows.length === 0) {
+                await client.query('ROLLBACK');
+                return res.status(404).json({ success: false, message: 'This invite link is not valid.' });
+            }
+            const seat = seatResult.rows[0];
+            if (seat.claimed_by_account_id != null) {
+                await client.query('ROLLBACK');
+                return res.status(409).json({ success: false, message: 'This invite link has already been used.' });
+            }
+            if (new Date(seat.expires_at).getTime() <= Date.now()) {
+                await client.query('ROLLBACK');
+                return res.status(410).json({ success: false, message: 'This group subscription has ended.' });
+            }
+
+            const existingUser = await client.query(
+                'SELECT id FROM accounts WHERE email = $1 AND email_verified = TRUE',
+                [lowerEmail]
+            );
+            if (existingUser.rows.length > 0) {
+                await client.query('ROLLBACK');
+                return res.status(400).json({ success: false, message: 'This email is already registered' });
+            }
+
+            if (otpRow) {
+                await client.query('UPDATE signup_otps SET used = TRUE WHERE id = $1', [otpRow.id]);
+            }
+
+            const accountResult = await client.query(
+                `INSERT INTO accounts
+                    (username, email, password, isactive, logged, terms_accepted, email_verified,
+                     is_admin_created, account_type, track,
+                     subscription_status, subscription_expiry_date)
+                 VALUES ($1, $2, $3, TRUE, FALSE, FALSE, TRUE,
+                         FALSE, 'group_seat', $4,
+                         'active', $5)
+                 RETURNING id`,
+                [lowerEmail, lowerEmail, lowerPassword, seatTrack, seat.expires_at]
+            );
+            const newUserId = accountResult.rows[0].id;
+
+            await client.query(
+                `UPDATE group_seats
+                    SET claimed_by_account_id = $1, claimed_at = NOW()
+                  WHERE id = $2`,
+                [newUserId, seat.id]
+            );
+
+            await client.query('COMMIT');
+
+            // Tell the buyer their seat was used — seat number and count only,
+            // never the claimer's email. See routes/groups.js privacy rule.
+            try {
+                const owner = await db.query(
+                    'SELECT email, username, preferred_lang FROM accounts WHERE id = $1',
+                    [seat.owner_account_id]
+                );
+                const o = owner.rows[0];
+                if (o?.email) {
+                    await sendGroupSeatClaimedEmail(
+                        o.email,
+                        String(o.username).split('@')[0],
+                        { seatIndex: seat.seat_index, seats: seat.seats, expiresAt: seat.expires_at },
+                        { lang: o.preferred_lang, accountId: seat.owner_account_id }
+                    );
+                }
+            } catch (emailErr) {
+                console.error('Failed to notify group owner of seat claim:', emailErr);
+            }
+
+            res.status(201).json({
+                success: true,
+                message: 'Account created successfully',
+                userId: newUserId,
+                track: seatTrack,
+                expiresAt: seat.expires_at
+            });
+        } catch (error) {
+            await client.query('ROLLBACK');
+            throw error;
+        } finally {
+            client.release();
+        }
+    } catch (err) {
+        console.error('Error claiming group seat:', err);
+        res.status(500).json({ success: false, message: 'Failed to create account' });
     }
 });
 
@@ -5712,6 +6045,12 @@ app.use('/api/notifications', requireSession, (req, res, next) => { req.db = db;
 // The student's own sitting date — the anchor for the hub countdown and the
 // staged reminder emails.
 app.use('/api/exam-date', requireSession, (req, res, next) => { req.db = db; next(); }, examDateRouter);
+// Group subscriptions. No requireSession at mount: /seat/:token is a public
+// link check used before signup — each route inside applies its own guard.
+app.use('/api/groups', (req, res, next) => { req.db = db; next(); }, groupRoutes);
+// Retired trial heartbeat — answers 410 so tabs left open across the deploy
+// stop retrying. See routes/trial.js.
+app.use('/api/trial', requireSession, (req, res, next) => { req.db = db; next(); }, trialRouter);
 
 /**
  * GET /api/progress/weekly — this week vs last week, for the hub's progress

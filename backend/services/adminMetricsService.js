@@ -15,6 +15,7 @@
  */
 
 import { fetchPaidEvents, summarize } from './accountingService.js';
+import { FREE_QUESTION_ALLOWANCE } from './paymentService.js';
 
 /** Month key (YYYY-MM) in Riyadh time — KSA is a fixed UTC+3, no DST. */
 export function riyadhMonthKey(date) {
@@ -27,8 +28,13 @@ export function riyadhMonthKey(date) {
 // subscriber" splices in the exact same condition. A predicate defined twice
 // is how the dashboard and analytics page disagreed before.
 export const SQL_ACTIVE_SUBSCRIBER = `subscription_status = 'active' AND subscription_expiry_date > NOW()`;
-export const SQL_ACTIVE_TRIAL = `subscription_status = 'trial' AND subscription_expiry_date > NOW()`;
 export const SQL_HAS_ACCESS = `((${SQL_ACTIVE_SUBSCRIBER}) OR grandfathered_at IS NOT NULL OR is_admin_created = TRUE)`;
+// The free tier replaced the timed trial on 2026-08-08. "Still trying" means a
+// non-paying account with allowance left; "used up" is the conversion moment
+// the old SQL_ACTIVE_TRIAL / trial_expired pair used to mark.
+export const SQL_FREE_TIER = `NOT ${SQL_HAS_ACCESS}`;
+export const SQL_FREE_TRYING = `${SQL_FREE_TIER} AND free_questions_used < ${FREE_QUESTION_ALLOWANCE}`;
+export const SQL_FREE_EXHAUSTED = `${SQL_FREE_TIER} AND free_questions_used >= ${FREE_QUESTION_ALLOWANCE}`;
 
 /**
  * Revenue snapshot — wraps the canonical ledger. Every money figure the admin
@@ -84,9 +90,9 @@ export async function subscriptionSnapshot(db) {
     const { rows } = await db.query(`
         SELECT
             COUNT(*) FILTER (WHERE ${SQL_ACTIVE_SUBSCRIBER}) AS active_subscribers,
-            COUNT(*) FILTER (WHERE ${SQL_ACTIVE_TRIAL}) AS trial_active,
-            COUNT(*) FILTER (WHERE subscription_status = 'trial' AND subscription_expiry_date <= NOW()) AS trial_expired_unconverted,
-            COUNT(*) FILTER (WHERE subscription_status = 'free') AS free_no_trial,
+            COUNT(*) FILTER (WHERE ${SQL_FREE_TRYING}) AS free_trying,
+            COUNT(*) FILTER (WHERE ${SQL_FREE_EXHAUSTED}) AS free_exhausted_unconverted,
+            COUNT(*) FILTER (WHERE ${SQL_FREE_TIER} AND free_questions_used = 0) AS free_never_started,
             COUNT(*) FILTER (WHERE grandfathered_at IS NOT NULL) AS grandfathered,
             COUNT(*) FILTER (WHERE is_admin_created = true) AS admin_created,
             COUNT(*) FILTER (WHERE ${SQL_ACTIVE_SUBSCRIBER} AND subscription_expiry_date <= NOW() + INTERVAL '7 days') AS expiring_7d,
@@ -97,23 +103,30 @@ export async function subscriptionSnapshot(db) {
 }
 
 /**
- * Trial → paid conversion — the single definition. An account counts as
- * "converted" when it has a trial_grants row AND appears as a payer in the
- * deduped, live-only revenue ledger (payerAccountIds, from revenueSnapshot).
- * Previously the dashboard checked current subscription_status='active'
- * (misses anyone who paid once and later lapsed) while /admin/analytics
- * checked ledger membership (misses nothing) — two different rates on the
- * same screen.
+ * Tried → paid conversion — the single definition. An account counts as
+ * "converted" when it actually TRIED the product and then appears as a payer in
+ * the deduped, live-only revenue ledger (payerAccountIds, from revenueSnapshot).
+ * Membership of the ledger, not current subscription_status: someone who paid
+ * once and later lapsed still converted.
+ *
+ * "Tried" spans both eras deliberately — a trial_grants row (the retired 1-hour
+ * trial) or at least one question spent from the free allowance. Dropping the
+ * historical trial cohort would make the rate jump overnight for no real reason.
  */
 export async function conversionSnapshot(db, payerAccountIds) {
-    const { rows } = await db.query(`SELECT account_id FROM trial_grants`);
-    const trialAccountIds = rows.map((r) => r.account_id);
-    const totalTrialsGranted = trialAccountIds.length;
-    const trialToPaid = trialAccountIds.filter((id) => payerAccountIds.has(id)).length;
-    const trialConversionRate = totalTrialsGranted > 0
-        ? Math.round((trialToPaid / totalTrialsGranted) * 1000) / 10
+    const { rows } = await db.query(`
+        SELECT a.id
+          FROM accounts a
+         WHERE a.free_questions_used > 0
+            OR EXISTS (SELECT 1 FROM trial_grants g WHERE g.account_id = a.id)
+    `);
+    const triedAccountIds = rows.map((r) => r.id);
+    const totalTried = triedAccountIds.length;
+    const triedToPaid = triedAccountIds.filter((id) => payerAccountIds.has(id)).length;
+    const conversionRate = totalTried > 0
+        ? Math.round((triedToPaid / totalTried) * 1000) / 10
         : 0;
-    return { totalTrialsGranted, trialToPaid, trialConversionRate };
+    return { totalTried, triedToPaid, conversionRate };
 }
 
 /**

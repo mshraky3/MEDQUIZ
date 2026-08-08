@@ -106,6 +106,14 @@ export function settleEvent(row) {
         metadataAccountId: raw?.metadata?.account_id ?? null,
         gatewayRef: row.gateway_ref,
         receivedAt: row.received_at,
+        // Which plan was bought, and how many ACCOUNTS it activated. One
+        // payment is still one ledger row — but a group payment activates
+        // `seats` subscribers, so any per-subscriber figure that divides by the
+        // row count without reading this will be wrong. Revenue itself stays
+        // attributed to the buyer (and the buyer's track): they are the payer,
+        // and seat holders may be on either track.
+        planId: raw?.metadata?.plan ?? null,
+        seats: Math.max(1, Number(raw?.metadata?.seats) || 1),
         // username === email on every account, and both are NULL together when
         // the LEFT JOIN misses (deleted payer), so email alone says it all.
         subscriber: row.email || null,
@@ -123,10 +131,17 @@ export function settleEvent(row) {
     };
 }
 
-/** Roll a list of settled events into totals. */
+/**
+ * Roll a list of settled events into totals.
+ *
+ * `count` is PAYMENTS and `seatsSold` is ACCOUNTS. They were the same number
+ * until group plans existed; keeping both separate is what stops "revenue per
+ * subscriber" quietly meaning "revenue per payment".
+ */
 export function summarize(settled) {
     return settled.reduce((t, r) => ({
         count: t.count + 1,
+        seatsSold: t.seatsSold + (r.seats || 1),
         refundCount: t.refundCount + (r.isRefunded ? 1 : 0),
         estimatedCount: t.estimatedCount + (r.estimated ? 1 : 0),
         grossHalalas: t.grossHalalas + r.grossHalalas,
@@ -134,7 +149,7 @@ export function summarize(settled) {
         refundedHalalas: t.refundedHalalas + r.refundedHalalas,
         netHalalas: t.netHalalas + r.netHalalas,
     }), {
-        count: 0, refundCount: 0, estimatedCount: 0,
+        count: 0, seatsSold: 0, refundCount: 0, estimatedCount: 0,
         grossHalalas: 0, feeHalalas: 0, refundedHalalas: 0, netHalalas: 0,
     });
 }

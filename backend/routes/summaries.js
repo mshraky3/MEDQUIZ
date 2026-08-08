@@ -51,33 +51,43 @@ async function requireSession(req, res, next) {
 
 router.use(requireSession);
 
-// Paywall: summaries are paid content. No-op while PAYMENT_ENFORCEMENT_ENABLED
-// is off; once on, unpaid accounts get 402 (grandfathered/admin/active pass).
-// Uses req.userId, which requireSession derived from the validated session.
+// Resolve, but do NOT enforce, paid status: req.isSubscriber for the routes
+// below to use. Summaries are no longer all-or-nothing — the first sub-topic of
+// every specialty is free forever, so a blanket 402 here would lock free users
+// out of content we promise them on the landing page.
+//
+// Enforcement is per-route: requireSubscriber below guards the whole-deck
+// endpoints (the private R2 slide streams), while figures stay open to any
+// logged-in account because a figure inside a free lesson has to render.
 router.use(async (req, res, next) => {
-    if (!isPaymentEnforcementEnabled()) return next();
+    if (!isPaymentEnforcementEnabled()) {
+        req.isSubscriber = true;
+        return next();
+    }
     try {
         const r = await req.db.query(
             `SELECT id, subscription_status, subscription_expiry_date,
-                    is_admin_created, grandfathered_at
+                    is_admin_created, grandfathered_at, free_questions_used
              FROM accounts WHERE id = $1`,
             [req.userId]
         );
-        const { allowed, reason } = checkSubscriptionAccess(r.rows[0]);
-        if (!allowed) {
-            return res.status(402).json({
-                success: false,
-                expired: reason === 'subscription_required',
-                reason,
-                message: 'An active subscription is required to access summaries.',
-            });
-        }
+        req.isSubscriber = checkSubscriptionAccess(r.rows[0]).allowed;
         next();
     } catch (err) {
         console.error('[Summaries] subscription check failed:', err);
         res.status(500).json({ message: 'Subscription check failed' });
     }
 });
+
+/** Paid-only guard for whole-deck endpoints. */
+function requireSubscriber(req, res, next) {
+    if (req.isSubscriber) return next();
+    return res.status(402).json({
+        success: false,
+        reason: 'free_tier',
+        message: 'This deck is part of the subscription. The first lesson of every specialty stays free.',
+    });
+}
 
 const pad3 = (n) => String(n).padStart(3, '0');
 
@@ -219,7 +229,7 @@ router.get('/:slug', async (req, res) => {
 });
 
 // GET /api/summaries/:slug/questions — study list of all questions for the topic
-router.get('/:slug/questions', async (req, res) => {
+router.get('/:slug/questions', requireSubscriber, async (req, res) => {
     const { slug } = req.params;
     try {
         const sres = await req.db.query(
@@ -242,7 +252,7 @@ router.get('/:slug/questions', async (req, res) => {
 });
 
 // GET /api/summaries/:slug/page/:n — stream a private page image from R2
-router.get('/:slug/page/:n', async (req, res) => {
+router.get('/:slug/page/:n', requireSubscriber, async (req, res) => {
     const { slug, n } = req.params;
     const pageNum = parseInt(n, 10);
     if (!Number.isInteger(pageNum) || pageNum < 1) {
