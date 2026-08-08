@@ -259,6 +259,14 @@ const quizCopy = {
             errInvalidData: 'تعذر تحميل الأسئلة بسبب بيانات غير صالحة.',
             errNoQuestions: 'لم يتم إرجاع أي أسئلة.',
             errLoadFailed: 'فشل في تحميل الأسئلة.',
+
+            // 402 من الخادم — ليست حالة خطأ: لم يُسحب من الحساب شيء.
+            paywallSpentTitle: 'أنهيت أسئلتك الأربعين المجانية',
+            paywallSpentBody: 'حسابك وتقدّمك وتحليلاتك تبقى مفتوحة لك، وكذلك أول درس من كل تخصص. الاشتراك يفتح بقية بنك الأسئلة.',
+            paywallSubscriberTitle: 'هذه الميزة للمشتركين',
+            paywallSubscriberBody: 'الاختبار الشامل لتخصص كامل متاح للمشتركين فقط. يمكنك دائماً بدء اختبار عادي بأسئلتك المجانية.',
+            paywallCta: 'عرض خطط الاشتراك',
+            paywallBack: 'العودة إلى الاختبارات',
             errResetFailed: 'تعذر إعادة تعيين القسم. حاول مرة أخرى.',
 
             unansweredTitle: (n) => `لديك ${n} أسئلة بدون إجابة`,
@@ -563,6 +571,14 @@ const quizCopy = {
             errInvalidData: 'We could not load the questions because the data was invalid.',
             errNoQuestions: 'No questions were returned.',
             errLoadFailed: 'Failed to load the questions.',
+
+            // Server 402 — not an error state: nothing has been taken away.
+            paywallSpentTitle: "That's your 40 free questions",
+            paywallSpentBody: 'Your account, your progress and your analytics stay open, and so does the first lesson of every specialty. A subscription opens the rest of the question bank.',
+            paywallSubscriberTitle: 'This one is for subscribers',
+            paywallSubscriberBody: 'The full-specialty final quiz is a subscriber feature. You can always start a normal quiz with your free questions.',
+            paywallCta: 'See subscription plans',
+            paywallBack: 'Back to quizzes',
             errResetFailed: 'We could not reset this section. Please try again.',
 
             unansweredTitle: (n) => `You have ${n} unanswered questions`,

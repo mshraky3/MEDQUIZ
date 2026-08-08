@@ -100,13 +100,16 @@ const legalCopy = {
                 {
                     heading: '9. الاشتراك والدفع',
                     blocks: [
-                        { p: 'تعمل الخدمة باشتراك سنوي مدفوع:' },
+                        { p: 'تعمل الخدمة بنظام مجاني محدود مع اشتراكات مدفوعة اختيارية:' },
                         {
                             ul: [
-                                'تُحتسب على الحسابات الجديدة رسوم اشتراك سنوي قدرها **99 ريالاً سعودياً في السنة**.',
+                                'يحصل كل حساب جديد على **40 سؤالاً مجانياً** مدى الحياة، بالإضافة إلى **أول درس من كل تخصص** في الملخصات، ويبقى ذلك متاحاً دون حد زمني.',
+                                'استنفاد الأسئلة المجانية **لا يُغلق الحساب**: يظل بإمكانك تسجيل الدخول والاطلاع على تحليلاتك وتقدّمك ودروسك المجانية، ويقتصر الأثر على عدم إمكانية بدء اختبارات جديدة.',
+                                'الاشتراكات الفردية: **50 ريالاً سعودياً للشهر**، أو **129 ريالاً لأربعة أشهر**، أو **300 ريال للسنة**.',
+                                'الاشتراكات الجماعية: **250 ريالاً لثلاثة حسابات** أو **299 ريالاً لخمسة حسابات**، ومدتها أربعة أشهر. يُفعَّل حساب المشتري مباشرة، ويحصل على روابط دعوة أحادية الاستخدام لبقية المقاعد. وتنتهي جميع مقاعد المجموعة في تاريخ واحد يُحدَّد وقت الشراء، ولا يمدّد استخدام أي رابط هذا التاريخ.',
+                                'جميع الخطط **دفعة واحدة ولا تتجدّد تلقائياً**. لا نحفظ بيانات بطاقتك لخصم لاحق، ولن يُخصم منك أي مبلغ ما لم تقم بعملية شراء جديدة بنفسك.',
                                 'المستخدمون الذين سجّلوا قبل تفعيل الاشتراك المدفوع يحتفظون بوصولهم المجاني.',
                                 'الحسابات التي ينشئها المشرفون معفاة من رسوم الاشتراك.',
-                                'تحصل الحسابات الجديدة على **ساعة تجربة مجانية** بوصول كامل، تبدأ فور تأكيد البريد الإلكتروني. لكل بريد إلكتروني تجربة مجانية واحدة فقط.',
                                 'يخضع الاسترجاع، حيثما ينطبق، لـ[[/refund-policy|سياسة الاسترجاع]] الخاصة بنا.',
                             ],
                         },
@@ -148,16 +151,17 @@ const legalCopy = {
             sections: [
                 {
                     heading: '1. الاشتراك',
-                    blocks: [{ p: 'تقدّم SMLE Question Bank **اشتراكاً سنوياً بقيمة 99 ريالاً سعودياً في السنة** للحسابات الجديدة. أما المستخدمون الذين سجّلوا قبل تفعيل الاشتراك المدفوع والحسابات التي أنشأها المشرفون، فيحتفظون بوصولهم المجاني ولا تُحتسب عليهم أي رسوم.' }],
+                    blocks: [{ p: 'تقدّم SQB اشتراكاً مدفوعاً بثلاث مدد — **شهري، 4 أشهر، وسنوي** — بالأسعار المعروضة عند الاشتراك. أما المستخدمون الذين سجّلوا قبل تفعيل الاشتراك المدفوع والحسابات التي أنشأها المشرفون، فيحتفظون بوصولهم المجاني ولا تُحتسب عليهم أي رسوم.' }],
                 },
                 {
                     heading: '2. شروط الاسترجاع',
                     blocks: [
-                        { p: 'تنطبق شروط الاسترجاع التالية على مشتريات الاشتراك:' },
+                        { p: 'مهلة الاسترجاع الكامل تتناسب مع مدة الخطة نفسها، حتى لا تسمح خطة قصيرة باسترجاع شبه كامل بعد استخدامها كاملاً تقريباً:' },
                         {
                             ul: [
-                                '**مهلة استرجاع 14 يوماً:** يمكنك طلب استرجاع كامل خلال 14 يوماً من تاريخ شراء الاشتراك، بشرط أن يكون الطلب بحسن نيّة.',
-                                'طلبات الاسترجاع بعد مرور 14 يوماً على الشراء غير مؤهّلة عادةً، إلا في الحالات التي يوجبها نظام حماية المستهلك السعودي.',
+                                '**الخطة الشهرية:** يمكن طلب استرجاع كامل خلال **3 أيام** من تاريخ الشراء فقط.',
+                                '**خطة 4 أشهر والخطة السنوية:** يمكن طلب استرجاع كامل خلال **14 يوماً** من تاريخ الشراء.',
+                                'في جميع الحالات، يجب أن يكون طلب الاسترجاع بحسن نيّة، وطلبات الاسترجاع بعد انتهاء المهلة المذكورة أعلاه غير مؤهّلة عادةً، إلا في الحالات التي يوجبها نظام حماية المستهلك السعودي.',
                                 'يمكن إلغاء التجديد في أي وقت لمنع أي خصم مستقبلي؛ والإلغاء يوقف التجديد التالي ولا يسترجع قيمة الفترة الجارية بأثر رجعي.',
                                 'الحسابات التي حصلت على وصول مجاني (المستخدمون السابقون والحسابات التي أنشأها المشرفون) لا تُحتسب عليها رسوم، وبالتالي لا تنطبق عليها سياسة الاسترجاع.',
                             ],
@@ -391,7 +395,7 @@ const legalCopy = {
                                 '**اختبارات متنوّعة:** من جلسات قصيرة (10 أسئلة) إلى عدد مخصّص تختاره، إضافة إلى اختبار نهائي لكل تخصص.',
                                 '**تتبّع التقدّم:** تابع تطوّرك عبر الزمن بإحصائيات دقيقة.',
                                 '**مساران مستقلّان:** طب بشري (SMLE) وتمريض (SNLE)، لكلٍّ منهما أسئلته وملخّصاته وتحليلاته.',
-                                '**تجربة مجانية:** ساعة وصول كامل مجاناً بعد إنشاء الحساب وتأكيد بريدك.',
+                                '**بداية مجانية:** 40 سؤالاً مجانياً وأول درس من كل تخصص، بلا حد زمني وبلا بطاقة دفع.',
                             ],
                         },
                     ],
@@ -516,13 +520,16 @@ const legalCopy = {
                 {
                     heading: '9. Subscription and payment',
                     blocks: [
-                        { p: 'The Service operates on a paid annual subscription:' },
+                        { p: 'The Service operates on a limited free tier with optional paid subscriptions:' },
                         {
                             ul: [
-                                'New accounts are billed an annual subscription of **99 SAR per year**.',
+                                'Every new account receives **40 free questions** for the lifetime of the account, plus **the first lesson of every specialty** in the summaries, with no time limit on either.',
+                                'Using up the free questions **does not close the account**: you can still sign in and access your analytics, your progress and your free lessons. The only effect is that new quizzes cannot be started.',
+                                'Individual subscriptions: **50 SAR for one month**, **129 SAR for four months**, or **300 SAR for one year**.',
+                                'Group subscriptions: **250 SAR for three accounts** or **299 SAR for five accounts**, each for four months. The purchaser’s own account is activated immediately and they receive single-use invite links for the remaining seats. All seats in a group expire on one shared date fixed at the time of purchase; claiming a link later does not extend that date.',
+                                'All plans are **a single payment and do not renew automatically**. We do not retain your card details for future charges, and you will never be charged again unless you make a new purchase yourself.',
                                 'Users who registered before the paid rollout are grandfathered and retain free access.',
                                 'Accounts created by administrators are exempt from subscription charges.',
-                                'New accounts receive a one-time **1-hour free trial** with full access, starting once the account’s email is verified. Each email address is eligible for one free trial only.',
                                 'Refunds, where applicable, are governed by our [[/refund-policy|Refund Policy]].',
                             ],
                         },
@@ -564,16 +571,17 @@ const legalCopy = {
             sections: [
                 {
                     heading: '1. Subscription',
-                    blocks: [{ p: 'SMLE Question Bank offers a paid **annual subscription of 99 SAR per year** for new accounts. Users who registered before the paid rollout, and admin-created accounts, retain free access and are not billed.' }],
+                    blocks: [{ p: 'SQB offers a paid subscription in three terms — **monthly, 4-month, and annual** — at the prices shown at checkout. Users who registered before the paid rollout, and admin-created accounts, retain free access and are not billed.' }],
                 },
                 {
                     heading: '2. Refund terms',
                     blocks: [
-                        { p: 'The following refund terms apply to subscription purchases:' },
+                        { p: 'The full-refund window scales with the plan\'s own term, so a short plan cannot be refunded almost in full after being used nearly to the end:' },
                         {
                             ul: [
-                                '**14-day refund window:** you may request a full refund within 14 days of the initial subscription purchase, provided the request is made in good faith.',
-                                'Refund requests made more than 14 days after the purchase date are generally not eligible, except where required by applicable Saudi consumer protection law.',
+                                '**Monthly plan:** a full refund may be requested within **3 days** of purchase.',
+                                '**4-month and annual plans:** a full refund may be requested within **14 days** of purchase.',
+                                'In all cases the request must be made in good faith, and requests made after the window above are generally not eligible, except where required by applicable Saudi consumer protection law.',
                                 'Renewals may be cancelled at any time to prevent future billing; cancellation stops the next renewal but does not retroactively refund the current active period.',
                                 'Accounts that received access for free (grandfathered users and admin-created accounts) are not billed and are therefore not eligible for refunds.',
                             ],
@@ -805,7 +813,7 @@ const legalCopy = {
                                 '**Varied quizzes:** from short 10-question sessions to any custom length, plus a full final exam per specialty.',
                                 '**Progress tracking:** monitor your improvement over time with precise statistics.',
                                 '**Two independent tracks:** Medicine (SMLE) and Nursing (SNLE), each with its own questions, summaries and analytics.',
-                                '**A free trial:** one hour of full access, free, right after signing up and confirming your email.',
+                                '**A free start:** 40 free questions and the first lesson of every specialty, with no time limit and no payment card.',
                             ],
                         },
                     ],

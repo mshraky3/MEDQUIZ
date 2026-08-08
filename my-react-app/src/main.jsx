@@ -51,6 +51,8 @@ const ForgotPassword = lazy(() => import('./components/login/ForgotPassword'));
 const SummariesPage = lazy(() => import('./components/summaries/SummariesPage.jsx'));
 const Subscribe = lazy(() => import('./components/subscribe/Subscribe.jsx'));
 const PaymentCallback = lazy(() => import('./components/subscribe/PaymentCallback.jsx'));
+const GroupsPage = lazy(() => import('./components/groups/GroupsPage.jsx'));
+const AccountPage = lazy(() => import('./components/account/AccountPage.jsx'));
 
 import Globals from './global.js';
 import { UserProvider } from './UserContext.jsx';
@@ -98,6 +100,9 @@ const router = createBrowserRouter([
   pub('/login', <Login />),
   pub('/signup', <Signup />),
   pub('/signup/:token', <Signup />),
+  // Paid group seat. A separate path from /signup/:token so the page can tell
+  // an admin invite (free account) from a bought seat (paid, with an end date).
+  pub('/join/:token', <Signup />),
   pub('/forgot-password', <ForgotPassword />),
   pub('/contact', <Contact />),
   pub('/about', <About />),
@@ -120,6 +125,8 @@ const router = createBrowserRouter([
   authed('/summaries', <SummariesPage />),
   authed('/summaries/:slug', <SummariesPage />),
   authed('/subscribe', <Subscribe />),
+  authed('/groups', <GroupsPage />),
+  authed('/account', <AccountPage />),
   authed('/payment/callback', <PaymentCallback />),
 
   // Admin — one hub (/admin) with sub-sections. Old URLs redirect so any

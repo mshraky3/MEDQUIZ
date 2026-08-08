@@ -25,15 +25,15 @@ const landingCopy = {
             secondary: 'تسجيل الخروج',
         },
         hero: {
-            pill: 'مساران: طب بشري وتمريض · جرّب كل شيء مجاناً لمدة ساعة',
+            pill: 'مساران: طب بشري وتمريض · ابدأ بـ 40 سؤالاً مجاناً',
             title: 'تدرّب بذكاء، واجتَز اختبار الترخيص بثقة',
             body: 'بنك أسئلة محدّث على نمط البرومترك، مع تفسير واضح لكل إجابة وتحليل فوري يكشف نقاط ضعفك ويرتّب أولويات مراجعتك — كل ما تحتاجه للوصول إلى درجتك المستهدفة في مكان واحد.',
-            primary: 'سجّل وجرّب مجاناً لمدة ساعة',
+            primary: 'ابدأ بـ 40 سؤالاً مجاناً',
             secondary: 'تسجيل الدخول',
             trust: [
-                'ساعة وصول كامل مجاناً بعد تأكيد بريدك',
-                '99 ريال للسنة كاملة بعد التجربة',
-                'تفسير واضح لكل سؤال',
+                '40 سؤالاً مجاناً بلا حد زمني',
+                'أول درس من كل تخصص مجاني للأبد',
+                'من 50 ريالاً شهرياً',
                 'بدون تجديد تلقائي',
             ],
             // Rendered only when config/examDates.js has a real, verified future
@@ -52,7 +52,7 @@ const landingCopy = {
             medicalDesc: 'بنك أسئلة وملخصات كاملة للباطنة والجراحة والأطفال والنساء والولادة.',
             nursingDesc: 'مسار مستقل بأسئلته وملخصاته وتحليلات أدائه الخاصة — منفصل تماماً عن مسار الطب.',
             cta: 'اختر مسارك وابدأ مجاناً',
-            ctaNote: 'ساعة وصول كامل مجاناً · بدون بطاقة دفع',
+            ctaNote: '40 سؤالاً مجاناً · بدون بطاقة دفع',
         },
 
         // Replaces the old four-icon "features" grid. Instead of describing the
@@ -121,7 +121,7 @@ const landingCopy = {
                 wrongRight: 'الصحيحة',
             },
             cta: 'جرّب هذه الشاشات بنفسك',
-            ctaNote: 'ساعة وصول كامل مجاناً · بدون بطاقة دفع',
+            ctaNote: '40 سؤالاً مجاناً · بدون بطاقة دفع',
         },
 
         compare: {
@@ -137,13 +137,13 @@ const landingCopy = {
             colFiles: 'ملفات وتجميعات متناثرة',
             colCourses: 'الدورات التحضيرية',
             rows: [
-                { label: 'التكلفة', sqb: '99 ريالاً للسنة كاملة', files: 'مجانية لكن مبعثرة وغير موثوقة', courses: 'آلاف الريالات' },
+                { label: 'التكلفة', sqb: 'من 50 ريالاً شهرياً — و300 للسنة كاملة', files: 'مجانية لكن مبعثرة وغير موثوقة', courses: 'آلاف الريالات' },
                 { label: 'تحديث المحتوى', sqb: 'تجميعات شهرية مدقّقة', files: 'غير منتظم وبدون تدقيق', courses: 'ينتهي بانتهاء الدورة' },
                 { label: 'شرح الإجابات', sqb: 'تفسير لكل سؤال', files: 'إجابات بلا شرح غالباً', courses: 'يعتمد على المحاضر' },
                 { label: 'تحليل الأداء والأخطاء', sqb: 'تحليلات تلقائية بعد كل جلسة', files: 'يدوي — إن وُجد', courses: 'غير متوفر غالباً' },
-                { label: 'مدة الوصول', sqb: 'سنة كاملة، من أي جهاز', files: 'روابط تنتهي وملفات تضيع', courses: 'فترة محدودة' },
+                { label: 'مدة الوصول', sqb: 'شهر أو 4 أشهر أو سنة — تختار أنت', files: 'روابط تنتهي وملفات تضيع', courses: 'فترة محدودة' },
             ],
-            cta: 'جرّب SQB مجاناً لمدة ساعة',
+            cta: 'جرّب SQB بـ 40 سؤالاً مجاناً',
             ctaNote: 'قارن بنفسك قبل أن تدفع ريالاً واحداً',
         },
 
@@ -169,7 +169,7 @@ const landingCopy = {
                     desc: 'كل شهر تأخير في الترخيص هو شهر دخل مؤجَّل — التكلفة الأكبر، وإن كانت لا تظهر في أي فاتورة.',
                 },
             ],
-            note: '99 ريالاً لسنة كاملة من التحضير أقل بكثير من تكلفة محاولة واحدة إضافية.',
+            note: '300 ريال لسنة كاملة من التحضير أقل بكثير من تكلفة محاولة واحدة إضافية.',
             cta: 'ابدأ التحضير الآن مجاناً',
             ctaNote: 'ابدأ اليوم بدل أن تدفع ثمن التأجيل لاحقاً',
         },
@@ -181,19 +181,19 @@ const landingCopy = {
             // consequence named here is real and verifiable — a resit fee, a
             // limited sitting calendar, a delayed licence. Nothing invents a
             // deadline, a vanishing discount or a seat cap.
-            title: 'السؤال ليس «99 ريالاً كثيرة؟» — بل «كم يكلفني الرسوب؟»',
-            body: 'رسوب واحد يعني رسوم اختبار جديدة، وأشهراً حتى الدورة القادمة، وتأخراً في التوظيف والتدريب. اشتراك سنة كامل هنا يكلف أقل من ريالين في الأسبوع. الفرق بين الرقمين هو كل ما في الأمر.',
+            title: 'السؤال ليس «كم يكلفني الاشتراك؟» — بل «كم يكلفني الرسوب؟»',
+            body: 'رسوب واحد يعني رسوم اختبار جديدة، وأشهراً حتى الدورة القادمة، وتأخراً في التوظيف والتدريب. اشتراك سنة كامل هنا يكلف 300 ريال — أقل من ستة ريالات في الأسبوع. الفرق بين الرقمين هو كل ما في الأمر.',
             points: [
-                { icon: 'trending-down', title: 'ثمن المحاولة الثانية أعلى من الاشتراك بكثير', desc: 'إعادة الاختبار تعني دفع رسوم الاختبار كاملة من جديد، وشهوراً من الانتظار، وسنةً تُضاف إلى تخرجك قبل أن تبدأ عملك. 99 ريالاً في مقابل ذلك ليست تكلفة — بل تأمين.' },
+                { icon: 'trending-down', title: 'ثمن المحاولة الثانية أعلى من الاشتراك بكثير', desc: 'إعادة الاختبار تعني دفع رسوم الاختبار كاملة من جديد، وشهوراً من الانتظار، وسنةً تُضاف إلى تخرجك قبل أن تبدأ عملك. 300 ريال في مقابل ذلك ليست تكلفة — بل تأمين.' },
                 { icon: 'target', title: 'لا تدخل الاختبار وأنت تجهل نقاط ضعفك', desc: 'أكثر من يرسب لا يرسب لأنه لم يذاكر، بل لأنه ذاكر ما يتقنه أصلاً. التحليلات هنا تكشف التخصص الذي يخسّرك الدرجات وتعيد تدريبك عليه تحديداً.' },
                 { icon: 'refresh', title: 'أسئلة محدّثة، لا ملفات عمرها ثلاث سنوات', desc: 'التجميعات المتداولة مجاناً غالباً قديمة وغير مدقّقة — وقد تحفظ منها إجابة خاطئة. نضيف تجميعات مراجَعة تواكب أحدث نمط لأسئلة الهيئة السعودية.' },
-                { icon: 'check-circle', title: 'المخاطرة عليك صفر', desc: 'جرّب كل شيء مجاناً لمدة ساعة قبل الدفع. دفعة واحدة عبر ميسر، وبدون تجديد تلقائي.' },
+                { icon: 'check-circle', title: 'جرّب قبل أن تدفع', desc: '40 سؤالاً مجاناً بلا حد زمني، وأول درس من كل تخصص مفتوح لك للأبد. ثم دفعة واحدة عبر ميسر، وبدون تجديد تلقائي.' },
             ],
             priceCardLabel: 'تفاصيل الاشتراك',
-            plan: 'اشتراك سنوي — دفعة واحدة',
-            amount: '99',
-            currency: 'ريال / سنة',
-            perMonth: 'أي أقل من ريالين في الأسبوع — أرخص من كوب قهوة',
+            plan: 'شهر · 4 أشهر · سنة — دفعة واحدة في كل الحالات',
+            amount: '50',
+            currency: 'ريال / شهر',
+            perMonth: '129 ريالاً لأربعة أشهر · 300 ريال للسنة · واشتراكات جماعية للأصدقاء',
             included: [
                 'بنك أسئلة شامل محدّث بنمط اختبارك — SMLE أو SNLE — مع تجميعات جديدة باستمرار',
                 'تفسير واضح لكل إجابة — تعرف لماذا هي الصحيحة، ولماذا البقية خطأ',
@@ -203,8 +203,8 @@ const landingCopy = {
                 'مراجعة أسئلتك الخاطئة في أي وقت حتى تتقنها',
                 'يعمل على الجوال والكمبيوتر، وتقدّمك محفوظ ومتزامن دائماً',
             ],
-            cta: 'ابدأ بساعة مجانية',
-            note: 'ساعة تجربة مجانية أولاً · دفع آمن عبر ميسر · مدى / Visa / Mastercard / Apple Pay · بدون تجديد تلقائي',
+            cta: 'ابدأ بـ 40 سؤالاً مجاناً',
+            note: '40 سؤالاً مجاناً أولاً · دفع آمن عبر ميسر · مدى / Visa / Mastercard / Apple Pay · بدون تجديد تلقائي',
         },
 
 
@@ -213,7 +213,7 @@ const landingCopy = {
             title: 'ابدأ وتدرّب وراجع خلال دقائق',
             body: 'مسار بسيط يقودك من إنشاء الحساب إلى جلسات المراجعة الذكية دون تشتيت.',
             steps: [
-                { label: 'أنشئ حسابك وأكّد بريدك', hint: 'تحصل فوراً على ساعة وصول كامل مجاناً لتجربة كل شيء.' },
+                { label: 'أنشئ حسابك وأكّد بريدك', hint: 'تحصل فوراً على 40 سؤالاً مجانياً، وأول درس من كل تخصص.' },
                 { label: 'تمرن بدقة', hint: 'اختر المواضيع، اضبط الوقت، وركّز على المهارات المطلوبة.' },
                 { label: 'راجع وتحسّن', hint: 'تحليلات فورية، سلاسل إنجاز، وتوصيات مخصصة.' },
             ],
@@ -251,17 +251,17 @@ const landingCopy = {
             visitor: {
                 pill: 'جاهز للبدء؟',
                 title: 'كل يوم تأجيل هو يوم تدريب يكسبه غيرك عليك',
-                body: 'أنشئ حسابك، أكّد بريدك، واحصل فوراً على ساعة وصول كامل مجاناً — انضم إلى مئات الطلاب الذين اجتازوا اختبارهم بعد التدريب هنا.',
+                body: 'أنشئ حسابك، أكّد بريدك، وابدأ فوراً بـ 40 سؤالاً مجانياً — انضم إلى مئات الطلاب الذين اجتازوا اختبارهم بعد التدريب هنا.',
                 primary: 'إنشاء حساب',
                 secondary: 'تسجيل الدخول',
-                note: 'ساعة تجربة مجانية · ثم 99 ريال للسنة كاملة · دفع آمن عبر ميسر · بدون تجديد تلقائي',
+                note: '40 سؤالاً مجاناً · ثم من 50 ريالاً شهرياً · دفع آمن عبر ميسر · بدون تجديد تلقائي',
             },
         },
 
         mobileCta: {
             continue: 'متابعة',
             logout: 'خروج',
-            tryFree: 'جرّب مجاناً لمدة ساعة',
+            tryFree: 'ابدأ بـ 40 سؤالاً مجاناً',
             login: 'دخول',
         },
     },
@@ -278,14 +278,15 @@ const landingCopy = {
             secondary: 'Log out',
         },
         hero: {
-            pill: 'Two tracks: medicine and nursing · Try everything free for one hour',
+            pill: 'Two tracks: medicine and nursing · Start with 40 free questions',
             title: 'Practise smarter, and walk into your licensing exam confident',
             body: 'A question bank updated to the Prometric style, a clear explanation for every answer, and instant analytics that expose your weak spots and tell you what to revise next — everything you need to hit your target score, in one place.',
-            primary: 'Sign up and try free for an hour',
+            primary: 'Start with 40 free questions',
             secondary: 'Log in',
             trust: [
-                'One hour of full access, free, once you confirm your email',
-                'SAR 99 for the whole year after the trial',
+                '40 free questions, with no time limit',
+                'The first lesson of every specialty, free for good',
+                'From SAR 50 a month',
                 'A clear explanation for every question',
                 'No auto-renewal',
             ],
@@ -305,7 +306,7 @@ const landingCopy = {
             medicalDesc: 'A full question bank and summaries for internal medicine, surgery, paediatrics, and obstetrics & gynaecology.',
             nursingDesc: 'A standalone track with its own questions, summaries and performance analytics — completely separate from the medical track.',
             cta: 'Pick your track and start free',
-            ctaNote: 'One free hour of full access · No payment card',
+            ctaNote: '40 free questions · No payment card',
         },
 
         // Replaces the old four-icon "features" grid. Instead of describing the
@@ -374,7 +375,7 @@ const landingCopy = {
                 wrongRight: 'Correct',
             },
             cta: 'Try these screens yourself',
-            ctaNote: 'One free hour of full access · No payment card',
+            ctaNote: '40 free questions · No payment card',
         },
 
         compare: {
@@ -390,13 +391,13 @@ const landingCopy = {
             colFiles: 'Scattered files and collections',
             colCourses: 'Prep courses',
             rows: [
-                { label: 'Cost', sqb: 'SAR 99 for the whole year', files: 'Free, but scattered and unreliable', courses: 'Thousands of riyals' },
+                { label: 'Cost', sqb: 'From SAR 50 a month — SAR 300 for a whole year', files: 'Free, but scattered and unreliable', courses: 'Thousands of riyals' },
                 { label: 'Content updates', sqb: 'Verified monthly collections', files: 'Irregular, and unverified', courses: 'Ends when the course ends' },
                 { label: 'Answer explanations', sqb: 'An explanation for every question', files: 'Usually answers with no reasoning', courses: 'Depends on the lecturer' },
                 { label: 'Performance and error analysis', sqb: 'Automatic analytics after every session', files: 'Manual — if at all', courses: 'Usually not offered' },
                 { label: 'How long you keep access', sqb: 'A full year, from any device', files: 'Links expire and files get lost', courses: 'A limited window' },
             ],
-            cta: 'Try SQB free for an hour',
+            cta: 'Try SQB with 40 free questions',
             ctaNote: 'See it for yourself before you pay a riyal',
         },
 
@@ -422,7 +423,7 @@ const landingCopy = {
                     desc: 'Every month your licence is delayed is a month of income postponed — the biggest cost, even though it never shows up on an invoice.',
                 },
             ],
-            note: 'SAR 99 for a full year of preparation is far less than the cost of a single extra attempt.',
+            note: 'SAR 300 for a full year of preparation is far less than the cost of a single extra attempt.',
             cta: 'Start preparing now, free',
             ctaNote: 'Start today instead of paying for the delay later',
         },
@@ -434,19 +435,19 @@ const landingCopy = {
             // consequence named here is real and verifiable — a resit fee, a
             // limited sitting calendar, a delayed licence. Nothing invents a
             // deadline, a vanishing discount or a seat cap.
-            title: 'The question is not “is SAR 99 a lot?” — it is “what does failing cost me?”',
+            title: 'The question is not “what does a subscription cost?” — it is “what does failing cost me?”',
             body: 'One failed attempt means paying the exam fee again, months until the next sitting window, and a delayed start to your training and your income. A full year here costs less than two riyals a week. The gap between those two numbers is the whole argument.',
             points: [
-                { icon: 'trending-down', title: 'A second attempt costs far more than a subscription', desc: 'Resitting means the full exam fee again, months of waiting, and another year added before you start earning. Against that, SAR 99 is not a cost — it is insurance.' },
+                { icon: 'trending-down', title: 'A second attempt costs far more than a subscription', desc: 'Resitting means the full exam fee again, months of waiting, and another year added before you start earning. Against that, SAR 300 is not a cost — it is insurance.' },
                 { icon: 'target', title: "Don't walk in blind to your own weak spots", desc: 'Most people who fail did revise — they revised what they were already good at. The analytics here name the specialty that is losing you marks and drill you on that one.' },
                 { icon: 'refresh', title: 'Current questions, not files three years old', desc: 'The collections passed around for free are usually old and unverified — you can memorise a wrong answer from them. We add reviewed collections that track the latest SCFHS question style.' },
-                { icon: 'check-circle', title: 'The risk on you is zero', desc: 'Try everything free for an hour before you pay anything. One payment through Moyasar, and no auto-renewal.' },
+                { icon: 'check-circle', title: 'Try it before you pay', desc: '40 free questions with no time limit, and the first lesson of every specialty open to you for good. Then one payment through Moyasar, and no auto-renewal.' },
             ],
             priceCardLabel: 'Subscription details',
-            plan: 'Annual subscription — one payment',
-            amount: '99',
-            currency: 'SAR / year',
-            perMonth: 'Less than two riyals a week — cheaper than a cup of coffee',
+            plan: 'A month, four months or a year — one payment either way',
+            amount: '50',
+            currency: 'SAR / month',
+            perMonth: 'SAR 129 for four months · SAR 300 for a year · group plans for study partners',
             included: [
                 'A comprehensive question bank matched to your exam — SMLE or SNLE — with new collections added continually',
                 'A clear explanation for every answer: why it is right, and why the others are not',
@@ -456,8 +457,8 @@ const landingCopy = {
                 'Review your wrong questions any time until you own them',
                 'Works on mobile and desktop, with your progress always saved and in sync',
             ],
-            cta: 'Start with a free hour',
-            note: 'A free hour first · Secure payment via Moyasar · mada / Visa / Mastercard / Apple Pay · No auto-renewal',
+            cta: 'Start with 40 free questions',
+            note: '40 free questions first · Secure payment via Moyasar · mada / Visa / Mastercard / Apple Pay · No auto-renewal',
         },
 
 
@@ -466,7 +467,7 @@ const landingCopy = {
             title: 'Start, practise and review within minutes',
             body: 'A simple route that takes you from creating an account to smart review sessions, with nothing in the way.',
             steps: [
-                { label: 'Create your account and confirm your email', hint: 'You immediately get one free hour of full access to try everything.' },
+                { label: 'Create your account and confirm your email', hint: 'You immediately get 40 free questions, plus the first lesson of every specialty.' },
                 { label: 'Practise precisely', hint: 'Pick your topics, set the timer, and drill the skills you need.' },
                 { label: 'Review and improve', hint: 'Instant analytics, streaks, and recommendations made for you.' },
             ],
@@ -504,17 +505,17 @@ const landingCopy = {
             visitor: {
                 pill: 'Ready to start?',
                 title: 'Every day you put it off is a day of practice someone else gains on you',
-                body: 'Create your account, confirm your email, and get an hour of full access free — join the hundreds of students who passed their exam after training here.',
+                body: 'Create your account, confirm your email, and start with 40 free questions — join the hundreds of students who passed their exam after training here.',
                 primary: 'Create an account',
                 secondary: 'Log in',
-                note: 'A free hour · then SAR 99 for the whole year · Secure payment via Moyasar · No auto-renewal',
+                note: '40 free questions · then from SAR 50 a month · Secure payment via Moyasar · No auto-renewal',
             },
         },
 
         mobileCta: {
             continue: 'Continue',
             logout: 'Log out',
-            tryFree: 'Try free for an hour',
+            tryFree: 'Start with 40 free questions',
             login: 'Log in',
         },
     },

@@ -17,7 +17,7 @@ const faqCopy = {
             },
             {
                 question: 'هل يوجد مسار للتمريض؟',
-                answer: 'نعم. مسار التمريض متاح بالكامل وله بنك أسئلته وملخّصاته وتحليلات أدائه الخاصة، ويغطي:\n• أساسيات التمريض\n• التمريض الباطني والجراحي\n• تمريض الأمومة والمواليد\n• تمريض الأطفال\n• الصحة النفسية\n• الأدوية وحسابات الجرعات\n\nتختار مسارك عند إنشاء الحساب، وبعدها لن يظهر لك إلا محتوى مسارك. والاشتراك نفسه لكلا المسارين (99 ريالاً سنوياً).',
+                answer: 'نعم. مسار التمريض متاح بالكامل وله بنك أسئلته وملخّصاته وتحليلات أدائه الخاصة، ويغطي:\n• أساسيات التمريض\n• التمريض الباطني والجراحي\n• تمريض الأمومة والمواليد\n• تمريض الأطفال\n• الصحة النفسية\n• الأدوية وحسابات الجرعات\n\nتختار مسارك عند إنشاء الحساب، وبعدها لن يظهر لك إلا محتوى مسارك. والاشتراك نفسه لكلا المسارين.',
             },
             {
                 question: 'ما التخصصات التي يغطيها بنك الأسئلة؟',
@@ -25,11 +25,19 @@ const faqCopy = {
             },
             {
                 question: 'هل يمكنني تجربة المنصة مجاناً؟',
-                answer: 'نعم. عند إنشاء حسابك وتأكيد بريدك الإلكتروني تحصل فوراً على ساعة وصول كامل مجاناً لكل الأسئلة والتحليلات، بدون بطاقة دفع. وبعدها يمكنك الاشتراك السنوي مقابل 99 ريالاً للمتابعة.',
+                answer: 'نعم، وبدون بطاقة دفع وبدون حد زمني. كل حساب جديد يحصل على 40 سؤالاً مجانياً يستخدمها متى شاء، بالإضافة إلى أول درس من كل تخصص في الملخصات — وهذا الدرس يبقى مفتوحاً لك للأبد.\n\nوحتى بعد انتهاء الأسئلة الأربعين لا يُغلق حسابك: تبقى تحليلاتك وتقدّمك ودروسك المجانية متاحة، والاشتراك هو ما يفتح بقية بنك الأسئلة والملخصات كاملة.',
             },
             {
                 question: 'كم تكلفة الاشتراك؟',
-                answer: 'الاشتراك السنوي 99 ريالاً بدفعة واحدة، ويمنحك وصولاً كاملاً لمدة سنة بدون تجديد تلقائي. والدفع عبر بوابة ميسر السعودية المرخّصة (مدى، Visa، Mastercard، Apple Pay).',
+                answer: 'اختر المدة التي تناسبك — وكلها دفعة واحدة بدون تجديد تلقائي:\n• شهر واحد: 50 ريالاً\n• أربعة أشهر: 129 ريالاً\n• سنة كاملة: 300 ريال\n\nوالدفع عبر بوابة ميسر السعودية المرخّصة (مدى، Visa، Mastercard، Apple Pay).',
+            },
+            {
+                question: 'هل يوجد اشتراك جماعي لي ولأصدقائي؟',
+                answer: 'نعم، وبسعر أقل للحساب الواحد:\n• 3 حسابات: 250 ريالاً لأربعة أشهر\n• 5 حسابات: 299 ريالاً لأربعة أشهر\n\nمن يدفع يُفعَّل حسابه مباشرة، ويحصل على روابط دعوة لبقية المقاعد يوزّعها كما يشاء. كل رابط يفتح حساباً واحداً فقط، ويختار صاحبه مساره الدراسي بنفسه (طب أو تمريض)، وكل المقاعد تنتهي في نفس التاريخ. ويتابع المشتري من صفحة «مجموعتي» أي المقاعد استُخدم ومتى — دون أن نكشف له بريد أحد.',
+            },
+            {
+                question: 'هل يتجدّد الاشتراك تلقائياً؟',
+                answer: 'لا. كل الخطط دفعة واحدة فقط، ولا نحفظ بطاقتك ولا نخصم منها أي مبلغ لاحقاً. وعند انتهاء مدتك يعود حسابك إلى الوضع المجاني — مفتوحاً كما هو — وأنت من يقرر التجديد بنفسه.',
             },
             {
                 question: 'ما أنواع الاختبارات المتاحة؟',
@@ -45,7 +53,7 @@ const faqCopy = {
             },
             {
                 question: 'كيف أشترك في المنصة؟',
-                answer: 'يمكنك البدء فوراً بخطوات بسيطة:\n1. أنشئ حسابك وأكّد بريدك للحصول على ساعة تجربة مجانية\n2. ابدأ أول اختبار سريع خلال التجربة\n3. عند انتهاء الساعة، اشترك سنوياً مقابل 99 ريالاً للمتابعة\n4. واصل يومياً لرفع مستواك قبل الاختبار',
+                answer: 'يمكنك البدء فوراً بخطوات بسيطة:\n1. أنشئ حسابك وأكّد بريدك للحصول على 40 سؤالاً مجانياً\n2. ابدأ أول اختبار سريع\n3. عندما تنتهي أسئلتك المجانية، اختر الخطة التي تناسبك للمتابعة\n4. واصل يومياً لرفع مستواك قبل الاختبار',
             },
             {
                 question: 'هل المنصة تابعة للهيئة السعودية للتخصصات الصحية؟',
@@ -76,7 +84,7 @@ const faqCopy = {
             },
             {
                 question: 'Is there a nursing track?',
-                answer: 'Yes. The nursing track is fully available, with its own question bank, summaries and performance analytics. It covers:\n• Nursing fundamentals\n• Medical-surgical nursing\n• Maternal and newborn nursing\n• Paediatric nursing\n• Mental health nursing\n• Pharmacology and dosage calculations\n\nYou choose your track when you create your account, and from then on you only see content for that track. The subscription is the same for both (SAR 99 a year).',
+                answer: 'Yes. The nursing track is fully available, with its own question bank, summaries and performance analytics. It covers:\n• Nursing fundamentals\n• Medical-surgical nursing\n• Maternal and newborn nursing\n• Paediatric nursing\n• Mental health nursing\n• Pharmacology and dosage calculations\n\nYou choose your track when you create your account, and from then on you only see content for that track. The subscription is the same for both.',
             },
             {
                 question: 'Which specialties does the question bank cover?',
@@ -84,11 +92,19 @@ const faqCopy = {
             },
             {
                 question: 'Can I try the platform for free?',
-                answer: 'Yes. When you create your account and confirm your email you immediately get one hour of full free access to every question and every analytic — no payment card required. After that, the annual subscription is SAR 99 to continue.',
+                answer: 'Yes — no payment card, and no time limit. Every new account gets 40 free questions to use whenever it likes, plus the first lesson of every specialty in the summaries, which stays open to you for good.\n\nEven once the 40 are gone your account is not closed: your analytics, your progress and your free lessons stay available. A subscription is what opens the rest of the question bank and the full summaries.',
             },
             {
                 question: 'How much does the subscription cost?',
-                answer: 'The annual subscription is SAR 99 as a single payment, giving you full access for a year with no auto-renewal. Payment goes through Moyasar, the licensed Saudi gateway (mada, Visa, Mastercard, Apple Pay).',
+                answer: 'Pick the term that suits you — all of them are a single payment with no auto-renewal:\n• One month: SAR 50\n• Four months: SAR 129\n• A full year: SAR 300\n\nPayment goes through Moyasar, the licensed Saudi gateway (mada, Visa, Mastercard, Apple Pay).',
+            },
+            {
+                question: 'Is there a group subscription for me and my friends?',
+                answer: 'Yes, and it works out cheaper per account:\n• 3 accounts: SAR 250 for four months\n• 5 accounts: SAR 299 for four months\n\nWhoever pays has their own account activated immediately and receives invite links for the remaining seats to share however they like. Each link opens exactly one account, whoever uses it picks their own study track (medicine or nursing), and every seat ends on the same date. The buyer can see which seats have been used, and when, from their group page — without us revealing anyone\'s email address.',
+            },
+            {
+                question: 'Does the subscription renew automatically?',
+                answer: 'No. Every plan is a single payment. We do not store your card and we never charge it again. When your term ends your account simply returns to the free tier — still open, still yours — and renewing is entirely your decision.',
             },
             {
                 question: 'What kinds of quiz can I take?',
@@ -104,7 +120,7 @@ const faqCopy = {
             },
             {
                 question: 'How do I subscribe?',
-                answer: 'You can start right away:\n1. Create your account and confirm your email to get your free trial hour\n2. Take your first quick quiz during the trial\n3. When the hour ends, subscribe for SAR 99 a year to continue\n4. Keep going daily to build your score before the exam',
+                answer: 'You can start right away:\n1. Create your account and confirm your email to get your 40 free questions\n2. Take your first quick quiz\n3. When your free questions run out, pick the plan that suits you\n4. Keep going daily to build your score before the exam',
             },
             {
                 question: 'Is the platform affiliated with SCFHS?',

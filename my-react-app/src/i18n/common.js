@@ -73,9 +73,16 @@ const common = {
             necessaryOnly: 'الضرورية فقط',
             acceptAll: 'قبول الكل',
         },
-        trial: {
-            remaining: (time) => `تجربة مجانية — ${time} متبقية`,
-            ended: 'انتهت تجربتك المجانية — أكمل اختبارك الحالي وشاهد نتيجتك',
+        // Arabic counts questions in four buckets — see arDays in the backend's
+        // userEmailService for the same rule applied to days.
+        freeAllowance: {
+            remaining: (n) => (
+                n === 1 ? 'باقي لك سؤال مجاني واحد'
+                    : n === 2 ? 'باقي لك سؤالان مجانيان'
+                        : n <= 10 ? `باقي لك ${n} أسئلة مجانية`
+                            : `باقي لك ${n} سؤالاً مجانياً`
+            ),
+            spent: 'أنهيت أسئلتك المجانية — حسابك وملخصاتك المجانية تبقى مفتوحة',
             cta: 'اشترك الآن',
         },
         notifications: {
@@ -165,9 +172,9 @@ const common = {
             necessaryOnly: 'Necessary only',
             acceptAll: 'Accept all',
         },
-        trial: {
-            remaining: (time) => `Free trial — ${time} left`,
-            ended: 'Your free trial has ended — finish this quiz and see your result',
+        freeAllowance: {
+            remaining: (n) => `${n} free question${n === 1 ? '' : 's'} left`,
+            spent: "That's your free questions — your account and the free lessons stay open",
             cta: 'Subscribe now',
         },
         notifications: {

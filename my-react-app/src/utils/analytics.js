@@ -64,3 +64,40 @@ export function trackFunnel(event, props = {}) {
         /* ignore */
     }
 }
+
+const ATTRIBUTION_KEY = 'sqb_attribution_captured';
+const UTM_PARAMS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'gclid', 'fbclid'];
+
+/**
+ * Records where a visitor came from — once per browser, on their first ever
+ * landing-page hit. Until this, there was no UTM capture and no
+ * document.referrer capture anywhere in the frontend (see
+ * MONETIZATION_ANALYSIS_2026-08.md §3.5), so signups had no attributable
+ * cause and a single riyal spent on ads would have been untraceable.
+ *
+ * Deliberately fires only once (guarded by localStorage, the same mechanism
+ * anonId() uses) rather than on every landing visit — a returning visitor
+ * bouncing back to the landing page must never overwrite their true original
+ * source with "referrer: smle-question-bank.com".
+ */
+export function captureLandingAttribution() {
+    try {
+        if (safeGetItem(ATTRIBUTION_KEY)) return;
+        safeSetItem(ATTRIBUTION_KEY, '1');
+
+        const params = new URLSearchParams(window.location.search);
+        const utm = {};
+        for (const key of UTM_PARAMS) {
+            const value = params.get(key);
+            if (value) utm[key] = value.slice(0, 200);
+        }
+
+        trackFunnel('landing_view', {
+            referrer: document.referrer ? document.referrer.slice(0, 300) : null,
+            landingPath: window.location.pathname,
+            ...utm,
+        });
+    } catch (_) {
+        /* ignore — attribution is best-effort and must never affect the page */
+    }
+}

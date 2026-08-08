@@ -61,6 +61,12 @@ const summariesCopy = {
         stateDone: 'مكتملة',
         stateCurrent: 'أنت هنا',
         stateUpcoming: 'قادمة',
+        // الدرس الأول من كل تخصص مجاني دائماً؛ البقية ضمن الاشتراك.
+        lockedTag: 'ضمن الاشتراك',
+        lockedCta: 'افتحه بالاشتراك',
+        freeTag: 'مجاني دائماً',
+        freeBannerTitle: 'أول درس من كل تخصص مجاني لك',
+        freeBannerBody: 'اقرأه في أي وقت وبلا حد. بقية الدروس وأسئلتها تُفتح بالاشتراك.',
         stateResume: 'توقفت هنا',
         willLearn: 'ستتعلم',
         practiceQuestions: 'سؤال تدريبي',
@@ -177,6 +183,13 @@ const summariesCopy = {
         stateDone: 'Completed',
         stateCurrent: 'You are here',
         stateUpcoming: 'Upcoming',
+        // The first lesson of every specialty is free for good; the rest is
+        // part of the subscription.
+        lockedTag: 'In the subscription',
+        lockedCta: 'Unlock with a subscription',
+        freeTag: 'Always free',
+        freeBannerTitle: 'The first lesson of every specialty is yours free',
+        freeBannerBody: 'Read it any time, as often as you like. The remaining lessons and their questions open with a subscription.',
         stateResume: 'Left off here',
         willLearn: 'You’ll learn',
         practiceQuestions: 'practice questions',
