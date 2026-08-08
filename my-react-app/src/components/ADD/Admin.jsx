@@ -1,1044 +1,422 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import Icon from '../common/Icon.jsx';
+import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import {
+    ResponsiveContainer, LineChart, Line, BarChart, Bar,
+    XAxis, YAxis, CartesianGrid, Tooltip,
+} from 'recharts';
+import Icon from '../common/Icon.jsx';
 import axios from '../../utils/adminApi.js';
-import './Admin.css';
-import AdminNavbar from './AdminNavbar.jsx';
-import EngagementPanel from './EngagementPanel.jsx';
-import AdminAnalytics from './AdminAnalytics.jsx';
 import Globals from '../../global.js';
 import Spinner from '../common/Spinner.jsx';
+import AdminLayout from './AdminLayout.jsx';
+import EngagementPanel from './EngagementPanel.jsx';
+import Kpi from './ui/Kpi.jsx';
+import Panel from './ui/Panel.jsx';
+import ChartCard from './ui/ChartCard.jsx';
+import useAdminData from './ui/useAdminData.js';
+import { sar, num, pct, dayLabel, monthLabel, timeAgo } from './ui/format.js';
+import { PALETTE, AXIS_TICK, GRID, TOOLTIP } from './ui/chartTheme.js';
+import './Admin.css';
 
 const API = Globals.URL;
 
-// Simple animated number component
-const AnimatedNumber = ({ value, suffix = '', prefix = '' }) => {
-  const safeValue = (value != null && !isNaN(Number(value))) ? Number(value) : 0;
-  const [displayValue, setDisplayValue] = useState(0);
-
-  useEffect(() => {
-    const duration = 1000;
-    const steps = 30;
-    const stepValue = safeValue / steps;
-    let current = 0;
-
-    const timer = setInterval(() => {
-      current += stepValue;
-      if (current >= safeValue) {
-        setDisplayValue(safeValue);
-        clearInterval(timer);
-      } else {
-        setDisplayValue(Math.round(current));
-      }
-    }, duration / steps);
-
-    return () => clearInterval(timer);
-  }, [safeValue]);
-
-  return <span>{prefix}{displayValue.toLocaleString()}{suffix}</span>;
-};
-
-// Mini Bar Chart Component
-const MiniBarChart = ({ data, dataKey, labelKey, color = '#22d3ee', height = 120 }) => {
-  if (!data || data.length === 0) return <div className="no-chart-data">No data available</div>;
-
-  const maxValue = Math.max(...data.map(d => Number(d[dataKey]) || 0));
-
-  return (
-    <div className="mini-bar-chart" style={{ height }}>
-      {data.map((item, idx) => {
-        const value = Number(item[dataKey]) || 0;
-        const barHeight = maxValue > 0 ? (value / maxValue) * 100 : 0;
-        return (
-          <div key={idx} className="mini-bar-item">
-            <div className="mini-bar-wrapper">
-              <div
-                className="mini-bar"
-                style={{
-                  height: `${barHeight}%`,
-                  background: color
-                }}
-              >
-                <span className="mini-bar-value">{value}</span>
-              </div>
-            </div>
-            <span className="mini-bar-label">{item[labelKey]}</span>
-          </div>
-        );
-      })}
-    </div>
-  );
-};
-
-// Line Chart Component
-const LineChart = ({ data, dataKey, labelKey, color = '#22d3ee', height = 150 }) => {
-  if (!data || data.length === 0) return <div className="no-chart-data">No data available</div>;
-
-  const values = data.map(d => Number(d[dataKey]) || 0);
-  const maxValue = Math.max(...values);
-  const minValue = Math.min(...values);
-  const range = maxValue - minValue || 1;
-
-  const points = data.map((item, idx) => {
-    const x = (idx / (data.length - 1 || 1)) * 100;
-    const y = 100 - ((values[idx] - minValue) / range) * 80 - 10;
-    return { x, y, value: values[idx], label: item[labelKey] };
-  });
-
-  const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
-  const areaD = `${pathD} L ${points[points.length - 1]?.x || 0} 100 L 0 100 Z`;
-
-  return (
-    <div className="line-chart" style={{ height }}>
-      <svg viewBox="0 0 100 100" preserveAspectRatio="none">
-        <defs>
-          <linearGradient id={`gradient-${dataKey}`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={color} stopOpacity="0.3" />
-            <stop offset="100%" stopColor={color} stopOpacity="0.05" />
-          </linearGradient>
-        </defs>
-        <path d={areaD} fill={`url(#gradient-${dataKey})`} />
-        <path d={pathD} fill="none" stroke={color} strokeWidth="2" vectorEffect="non-scaling-stroke" />
-        {points.map((p, i) => (
-          <circle key={i} cx={p.x} cy={p.y} r="3" fill={color} className="chart-point">
-            <title>{p.label}: {p.value}</title>
-          </circle>
-        ))}
-      </svg>
-      <div className="line-chart-labels">
-        {/* The flex container already spaces these with space-between; an
-            additional left:% offset shifted the last label a full container
-            width past the edge, which is what gave the dashboard a horizontal
-            scrollbar. */}
-        {points.filter((_, i) => i === 0 || i === points.length - 1 || i === Math.floor(points.length / 2)).map((p, i) => (
-          <span key={i}>{p.label}</span>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-// Donut Chart Component
-const DonutChart = ({ data, valueKey, labelKey, colors, size = 120 }) => {
-  if (!data || data.length === 0) return <div className="no-chart-data">No data</div>;
-
-  const total = data.reduce((sum, d) => sum + (Number(d[valueKey]) || 0), 0);
-  const defaultColors = ['#22d3ee', '#06b6d4', '#0891b2', '#0e7490', '#155e75', '#164e63'];
-  const chartColors = colors || defaultColors;
-
-  let cumulative = 0;
-  const segments = data.map((item, idx) => {
-    const value = Number(item[valueKey]) || 0;
-    const percentage = total > 0 ? (value / total) * 100 : 0;
-    const startAngle = (cumulative / 100) * 360;
-    cumulative += percentage;
-    const endAngle = (cumulative / 100) * 360;
-    return { ...item, percentage, startAngle, endAngle, color: chartColors[idx % chartColors.length] };
-  });
-
-  const createArcPath = (startAngle, endAngle, radius, innerRadius) => {
-    const startRad = (startAngle - 90) * (Math.PI / 180);
-    const endRad = (endAngle - 90) * (Math.PI / 180);
-    const x1 = 50 + radius * Math.cos(startRad);
-    const y1 = 50 + radius * Math.sin(startRad);
-    const x2 = 50 + radius * Math.cos(endRad);
-    const y2 = 50 + radius * Math.sin(endRad);
-    const x3 = 50 + innerRadius * Math.cos(endRad);
-    const y3 = 50 + innerRadius * Math.sin(endRad);
-    const x4 = 50 + innerRadius * Math.cos(startRad);
-    const y4 = 50 + innerRadius * Math.sin(startRad);
-    const largeArc = endAngle - startAngle > 180 ? 1 : 0;
-    return `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} L ${x3} ${y3} A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${x4} ${y4} Z`;
-  };
-
-  return (
-    <div className="donut-chart-container">
-      <svg viewBox="0 0 100 100" width={size} height={size}>
-        {segments.map((seg, idx) => (
-          <path
-            key={idx}
-            d={createArcPath(seg.startAngle, seg.endAngle - 0.5, 45, 28)}
-            fill={seg.color}
-            className="donut-segment"
-          >
-            <title>{seg[labelKey]}: {seg[valueKey]} ({seg.percentage.toFixed(1)}%)</title>
-          </path>
-        ))}
-        <text x="50" y="50" textAnchor="middle" dominantBaseline="middle" className="donut-center-text">
-          {total}
-        </text>
-      </svg>
-      <div className="donut-legend">
-        {segments.slice(0, 5).map((seg, idx) => (
-          <div key={idx} className="legend-item">
-            <span className="legend-color" style={{ background: seg.color }} />
-            <span className="legend-label">{seg[labelKey]}</span>
-            <span className="legend-value">{seg.percentage.toFixed(0)}%</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-// Progress Ring Component
-const ProgressRing = ({ value, max = 100, size = 80, strokeWidth = 8, color = '#22d3ee' }) => {
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const percentage = Math.min((value / max) * 100, 100);
-  const offset = circumference - (percentage / 100) * circumference;
-
-  return (
-    <div className="progress-ring-container" style={{ width: size, height: size }}>
-      <svg width={size} height={size}>
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke="rgba(255,255,255,0.1)"
-          strokeWidth={strokeWidth}
-        />
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke={color}
-          strokeWidth={strokeWidth}
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-          strokeLinecap="round"
-          transform={`rotate(-90 ${size / 2} ${size / 2})`}
-          style={{ transition: 'stroke-dashoffset 1s ease' }}
-        />
-      </svg>
-      <div className="progress-ring-value">{percentage.toFixed(0)}%</div>
-    </div>
-  );
-};
-
-// Horizontal Bar Chart
-const HorizontalBarChart = ({ data, valueKey, labelKey, color = '#22d3ee' }) => {
-  if (!data || data.length === 0) return <div className="no-chart-data">No data</div>;
-
-  const maxValue = Math.max(...data.map(d => Number(d[valueKey]) || 0));
-
-  return (
-    <div className="horizontal-bar-chart">
-      {data.slice(0, 6).map((item, idx) => {
-        const value = Number(item[valueKey]) || 0;
-        const width = maxValue > 0 ? (value / maxValue) * 100 : 0;
-        return (
-          <div key={idx} className="h-bar-item">
-            <div className="h-bar-info">
-              <span className="h-bar-label">{item[labelKey]}</span>
-              <span className="h-bar-value">{value.toLocaleString()}</span>
-            </div>
-            <div className="h-bar-track">
-              <div className="h-bar-fill" style={{ width: `${width}%`, background: color }} />
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-};
-
-// Activity Heatmap (by hour)
-const HourlyHeatmap = ({ data, valueKey = 'count' }) => {
-  if (!data || data.length === 0) return <div className="no-chart-data">No data</div>;
-
-  const hours = Array.from({ length: 24 }, (_, i) => {
-    const found = data.find(d => Number(d.hour) === i);
-    return { hour: i, count: found ? Number(found[valueKey]) : 0 };
-  });
-
-  const maxValue = Math.max(...hours.map(h => h.count));
-
-  return (
-    <div className="hourly-heatmap">
-      <div className="heatmap-grid">
-        {hours.map((h, idx) => {
-          const intensity = maxValue > 0 ? h.count / maxValue : 0;
-          return (
-            <div
-              key={idx}
-              className="heatmap-cell"
-              style={{
-                background: `rgba(34, 211, 238, ${intensity * 0.8 + 0.1})`,
-                opacity: intensity > 0 ? 1 : 0.3
-              }}
-              title={`${h.hour}:00 - ${h.count} activities`}
-            >
-              <span className="heatmap-hour">{h.hour}</span>
-            </div>
-          );
-        })}
-      </div>
-      <div className="heatmap-labels">
-        <span>12 AM</span>
-        <span>6 AM</span>
-        <span>12 PM</span>
-        <span>6 PM</span>
-        <span>11 PM</span>
-      </div>
-    </div>
-  );
-};
-
+/**
+ * Admin Overview — the business's health at a glance.
+ *
+ * Every number here comes from GET /admin/stats, which in turn composes
+ * services/adminMetricsService.js — the same money/subscription logic the
+ * accounting page and Growth page read. "Net received" here is byte-identical
+ * to /admin/accounting's "Net received" because both derive from
+ * accountingService.fetchPaidEvents(); this page used to show a raw, inflated
+ * gross under a misleading "Total Revenue Received" label — that was the bug
+ * this whole rebuild started from.
+ */
 const Admin = () => {
-  const navigate = useNavigate();
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [refreshKey, setRefreshKey] = useState(0);
-  const [suggestions, setSuggestions] = useState([]);
-  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+    const navigate = useNavigate();
+    const { data: stats, loading, error, reload } = useAdminData(`${API}/admin/stats`, { pollMs: 120000 });
+    const [suggestions, setSuggestions] = useState([]);
+    const [suggestionsLoading, setSuggestionsLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(`${API}/admin/stats`);
-        setStats(response.data);
-        setError(null);
-      } catch (err) {
-        console.error('Failed to fetch stats:', err);
-        setError('Failed to load dashboard statistics');
-      } finally {
-        setLoading(false);
-      }
+    React.useEffect(() => {
+        (async () => {
+            try {
+                setSuggestionsLoading(true);
+                const res = await axios.get(`${API}/api/admin/suggestions`);
+                setSuggestions(res.data.suggestions || []);
+            } catch (err) {
+                console.error('Failed to fetch suggestions:', err);
+            } finally {
+                setSuggestionsLoading(false);
+            }
+        })();
+    }, []);
+
+    const updateSuggestionStatus = async (id, status) => {
+        try {
+            await axios.put(`${API}/api/admin/suggestions/${id}`, { status });
+            setSuggestions((prev) => prev.map((s) => (s.id === id ? { ...s, status } : s)));
+        } catch (err) {
+            console.error('Failed to update suggestion:', err);
+        }
     };
 
-    const fetchSuggestions = async () => {
-      try {
-        setSuggestionsLoading(true);
-        const response = await axios.get(`${API}/api/admin/suggestions`);
-        setSuggestions(response.data.suggestions || []);
-      } catch (err) {
-        console.error('Failed to fetch suggestions:', err);
-      } finally {
-        setSuggestionsLoading(false);
-      }
+    const deleteSuggestion = async (id) => {
+        if (!window.confirm('Delete this suggestion?')) return;
+        try {
+            await axios.delete(`${API}/api/admin/suggestions/${id}`);
+            setSuggestions((prev) => prev.filter((s) => s.id !== id));
+        } catch (err) {
+            console.error('Failed to delete suggestion:', err);
+        }
     };
 
-    fetchStats();
-    fetchSuggestions();
+    const getStatusBadge = (status) => ({
+        pending: { bg: '#fef3c7', color: '#d97706', label: 'Pending' },
+        reviewing: { bg: '#dbeafe', color: '#2563eb', label: 'Reviewing' },
+        planned: { bg: '#dcfce7', color: '#16a34a', label: 'Planned' },
+        implemented: { bg: '#d1fae5', color: '#059669', label: 'Done' },
+        rejected: { bg: '#fee2e2', color: '#dc2626', label: 'Rejected' },
+    }[status] || { bg: '#fef3c7', color: '#d97706', label: 'Pending' });
 
-    // Auto refresh every 2 minutes
-    const interval = setInterval(fetchStats, 120000);
-    return () => clearInterval(interval);
-  }, [refreshKey]);
-
-  const formatDate = (dateStr) => {
-    if (!dateStr) return 'N/A';
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  };
-
-  const formatTimeAgo = (dateStr) => {
-    if (!dateStr) return 'N/A';
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    return `${diffDays}d ago`;
-  };
-
-  // Process chart data
-  const processedLoginData = useMemo(() => {
-    if (!stats?.charts?.loginsByDay) return [];
-    return stats.charts.loginsByDay.map(d => ({
-      ...d,
-      label: formatDate(d.date),
-      count: Number(d.count)
-    }));
-  }, [stats]);
-
-  const processedUserGrowth = useMemo(() => {
-    if (!stats?.charts?.userGrowth) return [];
-    return stats.charts.userGrowth.map(d => ({
-      ...d,
-      label: formatDate(d.week),
-      count: Number(d.count)
-    }));
-  }, [stats]);
-
-  const processedQuizGrowth = useMemo(() => {
-    if (!stats?.charts?.quizGrowth) return [];
-    return stats.charts.quizGrowth.map(d => ({
-      ...d,
-      label: formatDate(d.week),
-      count: Number(d.count)
-    }));
-  }, [stats]);
-
-  const adminCards = [
-    {
-      icon: 'send',
-      title: 'Bulk Email',
-      description: 'Compose one email and drip it to every user, rate-limited',
-      buttonText: 'Send Email',
-      path: '/admin/email'
-    },
-    {
-      icon: 'user',
-      title: 'User Management',
-      description: 'Add new user accounts and manage existing users',
-      buttonText: 'Manage Users',
-      path: '/ADD_ACCOUNT'
-    },
-    {
-      icon: 'help-circle',
-      title: 'Question Bank',
-      description: 'Add new questions and manage the question database',
-      buttonText: 'Add Questions',
-      path: '/ADDQ'
-    },
-    {
-      icon: 'book-open',
-      title: 'Question Library',
-      description: 'View and browse all questions in the database',
-      buttonText: 'View All Questions',
-      path: '/Bank'
-    },
-    {
-      icon: 'link',
-      title: 'Temp Signup Links',
-      description: 'Create and manage temporary signup links for free accounts',
-      buttonText: 'Manage Links',
-      path: '/TEMP_LINKS'
-    }
-  ];
-
-  const updateSuggestionStatus = async (id, status) => {
-    try {
-      await axios.put(`${API}/api/admin/suggestions/${id}`, { status });
-      setSuggestions(prev => prev.map(s => s.id === id ? { ...s, status } : s));
-    } catch (err) {
-      console.error('Failed to update suggestion:', err);
-    }
-  };
-
-  const deleteSuggestion = async (id) => {
-    if (!window.confirm('Delete this suggestion?')) return;
-    try {
-      await axios.delete(`${API}/api/admin/suggestions/${id}`);
-      setSuggestions(prev => prev.filter(s => s.id !== id));
-    } catch (err) {
-      console.error('Failed to delete suggestion:', err);
-    }
-  };
-
-  const getCategoryIcon = (category) => {
-    const icons = {
-      feature: 'sparkles', improvement: 'rocket', ui: 'palette',
-      content: 'book-open', bug: 'bug', other: 'lightbulb'
-    };
-    return icons[category] || 'lightbulb';
-  };
-
-  const getPriorityColor = (priority) => {
-    const colors = { high: '#ef4444', medium: '#eab308', low: '#22c55e' };
-    return colors[priority] || '#64748b';
-  };
-
-  const getStatusBadge = (status) => {
-    const badges = {
-      pending: { bg: '#fef3c7', color: '#d97706', label: 'Pending' },
-      reviewing: { bg: '#dbeafe', color: '#2563eb', label: 'Reviewing' },
-      planned: { bg: '#dcfce7', color: '#16a34a', label: 'Planned' },
-      implemented: { bg: '#d1fae5', color: '#059669', label: 'Done' },
-      rejected: { bg: '#fee2e2', color: '#dc2626', label: 'Rejected' }
-    };
-    return badges[status] || badges.pending;
-  };
-
-  if (loading) {
-    return (
-      <div className="admin-page-wrapper">
-        <AdminNavbar />
-        <div className="admin-container">
-          <div className="dashboard-loading">
-            <Spinner size="lg" />
-            <p>Loading dashboard...</p>
-          </div>
-        </div>
-      </div>
+    const dailySignups = useMemo(
+        () => (stats?.charts?.dailySignups || []).map((d) => ({ ...d, label: dayLabel(d.date) })),
+        [stats]
     );
-  }
-
-  if (error) {
-    return (
-      <div className="admin-page-wrapper">
-        <AdminNavbar />
-        <div className="admin-container">
-          <div className="dashboard-error">
-            <span className="error-icon"><Icon name="alert-triangle" size={16} /></span>
-            <p>{error}</p>
-            <button onClick={() => setRefreshKey(k => k + 1)}>Retry</button>
-          </div>
-        </div>
-      </div>
+    const dailyActiveUsers = useMemo(
+        () => (stats?.charts?.dailyActiveUsers || []).map((d) => ({ ...d, label: dayLabel(d.date) })),
+        [stats]
     );
-  }
+    const revenueByMonth = useMemo(
+        () => (stats?.charts?.revenueByMonth || []).map((m) => ({ ...m, label: monthLabel(m.month) })),
+        [stats]
+    );
 
-  const overview = stats?.overview || {};
-  const sub = stats?.subscriptions || {};
-  // Every headline number on this page blends both student populations, so the
-  // split has to be stated explicitly rather than inferred.
-  const byTrack = stats?.byTrack || [];
+    if (loading && !stats) {
+        return (
+            <AdminLayout>
+                <div className="dashboard-loading">
+                    <Spinner size="lg" />
+                    <p>Loading dashboard...</p>
+                </div>
+            </AdminLayout>
+        );
+    }
 
-  return (
-    <div className="admin-page-wrapper">
-      <AdminNavbar />
-      <div className="admin-container dashboard-view">
+    if (error && !stats) {
+        return (
+            <AdminLayout>
+                <div className="dashboard-error">
+                    <span className="error-icon"><Icon name="alert-triangle" size={16} /></span>
+                    <p>{error}</p>
+                    <button onClick={reload}>Retry</button>
+                </div>
+            </AdminLayout>
+        );
+    }
 
-        {/* Quick Actions */}
-        <div className="quick-actions-row">
-          {adminCards.map((card, index) => (
-            <button
-              key={index}
-              className="quick-action-btn"
-              onClick={() => navigate(card.path)}
+    const overview = stats?.overview || {};
+    const sub = stats?.subscriptions || {};
+    const active = stats?.activeUsers || { dau: 0, wau: 0, mau: 0 };
+    const byTrack = stats?.byTrack || [];
+    const emptyTracks = byTrack.filter((t) => !t.contentReady);
+    const stickiness = active.mau > 0 ? Math.round((active.dau / active.mau) * 100) : 0;
+
+    return (
+        <AdminLayout containerClassName="dashboard-view">
+            {/* ── Money ── the point of this rebuild: one number, everywhere. */}
+            <Panel
+                icon="award"
+                title="Revenue"
+                subtitle="Net received — gross minus Moyasar fees minus refunds. Identical to the Accounting page."
+                actions={<button className="admin-link-btn" onClick={() => navigate('/admin/accounting')}>Open Accounting →</button>}
             >
-              <span className="quick-action-icon"><Icon name={card.icon} size={20} /></span>
-              <span className="quick-action-label">{card.title}</span>
-            </button>
-          ))}
-          <button
-            className="quick-action-btn refresh-btn"
-            onClick={() => setRefreshKey(k => k + 1)}
-          >
-            <span className="quick-action-icon"><Icon name="refresh" size={16} /></span>
-            <span className="quick-action-label">Refresh</span>
-          </button>
-        </div>
-
-        {/* Per-track split. Sits above everything else because every number
-            below it is a blend of both tracks — you need to know the mix
-            before reading the totals. */}
-        {byTrack.length > 0 && (
-          <section className="track-panel">
-            <div className="track-panel-head">
-              <h2>By study track</h2>
-              <span>Users, activity and content, split by the bank they belong to</span>
-            </div>
-            <div className="track-panel-grid">
-              {byTrack.map((t) => (
-                <div key={t.track} className={`track-card${t.contentReady ? '' : ' is-empty'}`}>
-                  <div className="track-card-head">
-                    <span className="track-card-name">{t.label}</span>
-                    <span className="track-card-key">{t.track}</span>
-                    {!t.contentReady && <span className="track-card-flag">No content yet</span>}
-                  </div>
-                  <div className="track-card-metrics">
-                    <div><b>{t.users}</b><span>users</span></div>
-                    <div><b>{t.activeUsers}</b><span>active 7d</span></div>
-                    <div><b>+{t.newUsersWeek}</b><span>new 7d</span></div>
-                    <div><b>{t.activeSubscribers}</b><span>subscribed</span></div>
-                    <div><b>{t.quizzes}</b><span>quizzes</span></div>
-                    <div><b>{t.avgAccuracy}%</b><span>accuracy</span></div>
-                  </div>
-                  <div className="track-card-content">
-                    <span><Icon name="clipboard" size={13} /> {t.questions} questions</span>
-                    <span><Icon name="book-open" size={13} /> {t.summaries} summaries</span>
-                    <span><Icon name="folder" size={13} /> {t.specialties.length} specialties</span>
-                  </div>
+                <div className="admin-strip">
+                    <Kpi icon="award" tone="positive" label="Net received (all time)" value={`${sar(sub.netSar)} SAR`} sub={`${num(sub.paymentCount)} payments · ${num(sub.payerCount)} payers`} />
+                    <Kpi icon="bar-chart" label="Gross collected" value={`${sar(sub.grossSar)} SAR`} sub="before fees & refunds" />
+                    <Kpi icon="trending-down" tone="warning" label="Gateway fees" value={`-${sar(sub.feeSar)} SAR`} />
+                    <Kpi icon="refresh" tone="negative" label="Refunded" value={`-${sar(sub.refundedSar)} SAR`} />
+                    <Kpi icon="trending-up" label="This month" value={`${sar(sub.thisMonthNetSar)} SAR`} sub={`last month: ${sar(sub.lastMonthNetSar)} SAR`} />
                 </div>
-              ))}
-            </div>
-          </section>
-        )}
+            </Panel>
 
-        {/* Where students actually spend their time — quizzes vs summaries
-            vs analytics. Sits next to the track split because both answer
-            "who is using this, and for what". */}
-        <EngagementPanel />
+            {/* ── Subscribers ── */}
+            <Panel icon="check-circle" title="Subscribers">
+                <div className="admin-strip">
+                    <Kpi icon="check-circle" tone="positive" label="Active subscribers" value={num(sub.activeSubscribers)} />
+                    <Kpi
+                        icon="clock"
+                        tone={sub.expiringIn7d > 0 ? 'warning' : 'neutral'}
+                        label="Expiring in 7 days"
+                        value={num(sub.expiringIn7d)}
+                        sub={`${num(sub.expiringIn30d)} in 30 days`}
+                    />
+                    <Kpi
+                        icon="hourglass"
+                        label="Free, still trying"
+                        value={num(sub.freeTrying)}
+                        sub={`${num(sub.freeExhaustedUnconverted)} used up their 40`}
+                    />
+                    <Kpi
+                        icon="target"
+                        label="Tried → paid"
+                        value={pct(sub.conversionRate, 1)}
+                        sub={`${num(sub.triedToPaid)}/${num(sub.totalTried)} converted`}
+                    />
+                    <Kpi
+                        icon="alert-triangle"
+                        tone={sub.paidButInactive > 0 ? 'negative' : 'positive'}
+                        label="Paid, no access"
+                        value={num(sub.paidButInactive)}
+                        sub={sub.paidButInactive > 0 ? 'needs fixing' : 'all clear'}
+                        to={sub.paidButInactive > 0 ? '/admin/users' : undefined}
+                    />
+                </div>
+            </Panel>
 
-        {/* Expanded analytics (account mix, active-login trends, growth, engagement) */}
-        <AdminAnalytics />
+            {/* ── Users ── */}
+            <Panel icon="users" title="Users">
+                <div className="admin-strip">
+                    <Kpi icon="users" label="Total users" value={num(overview.totalUsers)} sub={`+${num(overview.newUsersWeek)} this week`} />
+                    <Kpi icon="trending-up" label="New today" value={num(overview.newUsersToday)} sub={`+${num(overview.newUsersMonth)} this month`} />
+                    <Kpi icon="flame" label="Active now" value={num(overview.onlineNow)} />
+                    <Kpi icon="bar-chart" label="DAU / WAU / MAU" value={`${num(active.dau)} / ${num(active.wau)} / ${num(active.mau)}`} sub={`${stickiness}% stickiness`} />
+                    <Kpi icon="target" label="Avg accuracy" value={pct(overview.avgAccuracy, 1)} />
+                </div>
+            </Panel>
 
-        {/* Main Stats Grid */}
-        <div className="stats-grid-main">
-          <div className="stat-card-large primary">
-            <div className="stat-card-header">
-              <span className="stat-icon"><Icon name="users" size={16} /></span>
-              <span className="stat-label">Total Users</span>
-            </div>
-            <div className="stat-value-large">
-              <AnimatedNumber value={overview.totalUsers} />
-            </div>
-            <div className="stat-meta">
-              <span className="stat-badge positive">+{overview.newUsersWeek} this week</span>
-              <span className="stat-badge neutral">{overview.activeUsers} active (7d)</span>
-            </div>
-          </div>
+            {/* ── Needs attention ── */}
+            <Panel icon="alert-triangle" title="Needs attention">
+                <div className="admin-strip">
+                    <Kpi
+                        icon="alert-triangle"
+                        tone={overview.suspiciousCount > 0 ? 'warning' : 'positive'}
+                        label="Suspicious logins (30d)"
+                        value={num(overview.suspiciousCount)}
+                        to="/admin/users"
+                    />
+                    <Kpi
+                        icon="flag"
+                        tone={stats?.openReports > 0 ? 'warning' : 'positive'}
+                        label="Open question reports"
+                        value={num(stats?.openReports || 0)}
+                        to="/admin/reports"
+                    />
+                    <Kpi
+                        icon="book-open"
+                        tone={emptyTracks.length > 0 ? 'warning' : 'positive'}
+                        label="Tracks with no content"
+                        value={emptyTracks.length > 0 ? emptyTracks.map((t) => t.label).join(', ') : 'None'}
+                        to={emptyTracks.length > 0 ? '/admin/bank' : undefined}
+                    />
+                    <Kpi
+                        icon="alert-triangle"
+                        tone={sub.paidButInactive > 0 ? 'negative' : 'positive'}
+                        label="Paid but locked out"
+                        value={num(sub.paidButInactive)}
+                        to={sub.paidButInactive > 0 ? '/admin/users' : undefined}
+                    />
+                </div>
+            </Panel>
 
-          <div className="stat-card-large secondary">
-            <div className="stat-card-header">
-              <span className="stat-icon"><Icon name="pen" size={16} /></span>
-              <span className="stat-label">Total Quizzes</span>
-            </div>
-            <div className="stat-value-large">
-              <AnimatedNumber value={overview.totalQuizzes} />
-            </div>
-            <div className="stat-meta">
-              <span className="stat-badge positive">{overview.quizzesToday} today</span>
-              <span className="stat-badge neutral">{overview.quizzesThisWeek} this week</span>
-            </div>
-          </div>
+            {/* ── Charts ── */}
+            <div className="admin-grid-2">
+                <ChartCard
+                    icon="trending-up"
+                    title="Daily new users"
+                    subtitle="Last 30 days"
+                    height={240}
+                    empty={dailySignups.every((d) => !d.signups)}
+                >
+                    <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={dailySignups} margin={{ top: 8, right: 12, left: -8, bottom: 0 }}>
+                            <CartesianGrid stroke={GRID} vertical={false} />
+                            <XAxis dataKey="label" tick={AXIS_TICK} minTickGap={24} />
+                            <YAxis tick={AXIS_TICK} allowDecimals={false} width={30} />
+                            <Tooltip contentStyle={TOOLTIP} />
+                            <Bar dataKey="signups" name="New users" fill={PALETTE[1]} radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                    </ResponsiveContainer>
+                </ChartCard>
 
-          <div className="stat-card-large tertiary">
-            <div className="stat-card-header">
-              <span className="stat-icon"><Icon name="check-circle" size={16} /></span>
-              <span className="stat-label">Questions Answered</span>
-            </div>
-            <div className="stat-value-large">
-              <AnimatedNumber value={overview.totalQuestionsAnswered} />
-            </div>
-            <div className="stat-meta">
-              <span className="stat-badge neutral">~{overview.avgQuestionsPerQuiz ?? 0} per quiz</span>
-            </div>
-          </div>
+                <ChartCard
+                    icon="bar-chart"
+                    title="Net revenue by month"
+                    subtitle="Matches the Accounting page"
+                    height={240}
+                    empty={revenueByMonth.length === 0}
+                >
+                    <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={revenueByMonth} margin={{ top: 8, right: 12, left: -8, bottom: 0 }}>
+                            <CartesianGrid stroke={GRID} vertical={false} />
+                            <XAxis dataKey="label" tick={AXIS_TICK} minTickGap={24} />
+                            <YAxis tick={AXIS_TICK} width={40} />
+                            <Tooltip contentStyle={TOOLTIP} formatter={(v) => `${sar(v)} SAR`} />
+                            <Bar dataKey="netSar" name="Net SAR" fill={PALETTE[0]} radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                    </ResponsiveContainer>
+                </ChartCard>
 
-          <div className="stat-card-large highlight">
-            <div className="stat-card-header">
-              <span className="stat-icon"><Icon name="target" size={16} /></span>
-              <span className="stat-label">Avg Accuracy</span>
-            </div>
-            <div className="stat-value-large">
-              <AnimatedNumber value={overview.avgAccuracy} suffix="%" />
-            </div>
-            <div className="stat-progress">
-              <div className="progress-bar">
-                <div className="progress-fill" style={{ width: `${overview.avgAccuracy ?? 0}%` }} />
-              </div>
-            </div>
-          </div>
-        </div>
+                <ChartCard
+                    icon="flame"
+                    title="Daily active users"
+                    subtitle="Last 30 days"
+                    height={240}
+                    empty={dailyActiveUsers.every((d) => !d.active_users)}
+                >
+                    <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={dailyActiveUsers} margin={{ top: 8, right: 12, left: -8, bottom: 0 }}>
+                            <CartesianGrid stroke={GRID} vertical={false} />
+                            <XAxis dataKey="label" tick={AXIS_TICK} minTickGap={24} />
+                            <YAxis tick={AXIS_TICK} allowDecimals={false} width={30} />
+                            <Tooltip contentStyle={TOOLTIP} />
+                            <Line type="monotone" dataKey="active_users" name="Active users" stroke={PALETTE[0]} strokeWidth={2} dot={false} />
+                        </LineChart>
+                    </ResponsiveContainer>
+                </ChartCard>
 
-        {/* Secondary Stats Row */}
-        <div className="stats-grid-secondary">
-          <div className="stat-card-small">
-            <div className="stat-icon-small"><Icon name="circle" size={16} /></div>
-            <div className="stat-info">
-              <span className="stat-value-small">{overview.onlineNow ?? 0}</span>
-              <span className="stat-label-small">Online Now</span>
+                <div className="admin-chart-card-wrap">
+                    <EngagementPanel compact />
+                </div>
             </div>
-          </div>
-          <div className="stat-card-small">
-            <div className="stat-icon-small"><Icon name="trending-up" size={16} /></div>
-            <div className="stat-info">
-              <span className="stat-value-small">{overview.newUsersMonth ?? 0}</span>
-              <span className="stat-label-small">New Users (30d)</span>
-            </div>
-          </div>
-          <div className="stat-card-small">
-            <div className="stat-icon-small"><Icon name="refresh" size={16} /></div>
-            <div className="stat-info">
-              <span className="stat-value-small">{overview.retentionRate ?? 0}%</span>
-              <span className="stat-label-small">Retention Rate</span>
-            </div>
-          </div>
-          <div className="stat-card-small">
-            <div className="stat-icon-small"><Icon name="check" size={16} /></div>
-            <div className="stat-info">
-              <span className="stat-value-small">{overview.completionRate ?? 0}%</span>
-              <span className="stat-label-small">Quiz Completion</span>
-            </div>
-          </div>
-          <div className="stat-card-small warning">
-            <div className="stat-icon-small"><Icon name="alert-triangle" size={16} /></div>
-            <div className="stat-info">
-              <span className="stat-value-small">{overview.suspiciousCount ?? 0}</span>
-              <span className="stat-label-small">Suspicious Users</span>
-            </div>
-          </div>
-        </div>
 
-        {/* Subscriptions & Free Trial */}
-        <div className="stats-grid-main">
-          <div className="stat-card-large primary">
-            <div className="stat-card-header">
-              <span className="stat-icon"><Icon name="award" size={16} /></span>
-              <span className="stat-label">Total Revenue Received</span>
-            </div>
-            <div className="stat-value-large">
-              <AnimatedNumber value={sub.totalRevenueSar ?? 0} suffix=" SAR" />
-            </div>
-            <div className="stat-meta">
-              <span className="stat-badge neutral">{sub.paymentCount ?? 0} confirmed payments</span>
-              <span className="stat-badge positive">{sub.distinctPayers ?? 0} paying accounts</span>
-            </div>
-          </div>
-
-          <div className="stat-card-large secondary">
-            <div className="stat-card-header">
-              <span className="stat-icon"><Icon name="check-circle" size={16} /></span>
-              <span className="stat-label">Active Subscribers</span>
-            </div>
-            <div className="stat-value-large">
-              <AnimatedNumber value={sub.activeSubscribers ?? 0} />
-            </div>
-            <div className="stat-meta">
-              <span className="stat-badge neutral">paid access, not expired</span>
-            </div>
-          </div>
-
-          <div className="stat-card-large tertiary">
-            <div className="stat-card-header">
-              <span className="stat-icon"><Icon name="clock" size={16} /></span>
-              <span className="stat-label">Trials & Conversion</span>
-            </div>
-            <div className="stat-value-large">
-              <AnimatedNumber value={sub.trialActive ?? 0} />
-            </div>
-            <div className="stat-meta">
-              <span className="stat-badge neutral">{sub.trialActive ?? 0} active now</span>
-              <span className="stat-badge neutral">{sub.trialConversionRate ?? 0}% → paid ({sub.trialToPaid ?? 0}/{sub.totalTrialsGranted ?? 0})</span>
-            </div>
-          </div>
-
-          <div className={`stat-card-large ${(sub.paidButInactive ?? 0) > 0 ? 'warning' : 'highlight'}`}>
-            <div className="stat-card-header">
-              <span className="stat-icon"><Icon name="alert-triangle" size={16} /></span>
-              <span className="stat-label">Paid — No Active Access</span>
-            </div>
-            <div className="stat-value-large">
-              <AnimatedNumber value={sub.paidButInactive ?? 0} />
-            </div>
-            <div className="stat-meta">
-              {(sub.paidButInactive ?? 0) > 0 ? (
-                <span className="stat-badge negative">accounts paid but locked out — needs fixing</span>
-              ) : (
-                <span className="stat-badge positive">all payers have access</span>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {stats?.subscriptions?.recentPayments?.length > 0 && (
-          <div className="tables-section">
-            <div className="table-card">
-              <div className="table-header">
-                <h3><Icon name="check-circle" size={16} /> Recent Payments</h3>
-              </div>
-              <div className="mini-table">
-                {stats.subscriptions.recentPayments.map((p, idx) => (
-                  <div key={idx} className="mini-table-row">
-                    <span className="rank-badge">{idx + 1}</span>
-                    <div className="user-info-mini">
-                      <span className="username">{p.username || p.email || '(deleted account)'}</span>
-                      <span className="user-stats">
-                        {p.amountSar} {p.currency} • {new Date(p.receivedAt).toLocaleDateString()}
-                      </span>
+            {/* ── Recent activity ── */}
+            <div className="tables-section">
+                <div className="table-card">
+                    <div className="table-header">
+                        <h3><Icon name="check-circle" size={16} /> Recent Payments</h3>
+                        <button className="view-all-btn" onClick={() => navigate('/admin/accounting')}>View all →</button>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Charts Section */}
-        <div className="charts-section">
-          {/* Login Activity Chart - full width */}
-          <div className="chart-card wide">
-            <div className="chart-header">
-              <h3><Icon name="bar-chart" size={16} /> Login Activity (Last 14 Days)</h3>
-            </div>
-            <LineChart
-              data={processedLoginData}
-              dataKey="count"
-              labelKey="label"
-              color="#22d3ee"
-              height={160}
-            />
-          </div>
-
-          {/* Growth Charts - side by side */}
-          <div className="chart-card">
-            <div className="chart-header">
-              <h3><Icon name="users" size={16} /> User Growth (8 Weeks)</h3>
-            </div>
-            <MiniBarChart
-              data={processedUserGrowth}
-              dataKey="count"
-              labelKey="label"
-              color="#4ade80"
-              height={100}
-            />
-          </div>
-
-          <div className="chart-card">
-            <div className="chart-header">
-              <h3><Icon name="pen" size={16} /> Quiz Activity (8 Weeks)</h3>
-            </div>
-            <MiniBarChart
-              data={processedQuizGrowth}
-              dataKey="count"
-              labelKey="label"
-              color="#f59e0b"
-              height={100}
-            />
-          </div>
-
-          {/* Device & Browser Distribution - side by side */}
-          <div className="chart-card">
-            <div className="chart-header">
-              <h3><Icon name="phone" size={16} /> Device Distribution</h3>
-            </div>
-            <DonutChart
-              data={stats?.charts?.deviceStats || []}
-              valueKey="count"
-              labelKey="device_type"
-              colors={['#22d3ee', '#06b6d4', '#0891b2']}
-              size={100}
-            />
-          </div>
-
-          <div className="chart-card">
-            <div className="chart-header">
-              <h3><Icon name="globe" size={16} /> Browser Usage</h3>
-            </div>
-            <HorizontalBarChart
-              data={stats?.charts?.browserStats || []}
-              valueKey="count"
-              labelKey="browser"
-              color="#818cf8"
-            />
-          </div>
-
-          {/* Hourly Activity Heatmap - full width */}
-          <div className="chart-card wide">
-            <div className="chart-header">
-              <h3><Icon name="clock" size={16} /> Activity by Hour (30 Days)</h3>
-            </div>
-            <HourlyHeatmap
-              data={stats?.charts?.hourlyActivity || []}
-              valueKey="count"
-            />
-          </div>
-
-          {/* Topic Performance - side by side with Accuracy */}
-          <div className="chart-card">
-            <div className="chart-header">
-              <h3><Icon name="book-open" size={16} /> Questions by Topic</h3>
-            </div>
-            <HorizontalBarChart
-              data={stats?.quizzesByTopic || []}
-              valueKey="count"
-              labelKey="topic"
-              color="#22d3ee"
-            />
-          </div>
-
-          {/* Accuracy Distribution */}
-          <div className="chart-card">
-            <div className="chart-header">
-              <h3><Icon name="target" size={16} /> User Accuracy Distribution</h3>
-            </div>
-            <DonutChart
-              data={stats?.charts?.accuracyDistribution || []}
-              valueKey="user_count"
-              labelKey="range"
-              colors={['#ef4444', '#f59e0b', '#4ade80', '#22d3ee']}
-              size={100}
-            />
-          </div>
-        </div>
-
-        {/* Leaderboards & Activity Section */}
-        <div className="tables-section">
-          {/* Top Users */}
-          <div className="table-card">
-            <div className="table-header">
-              <h3><Icon name="trophy" size={16} /> Top Users by Activity</h3>
-            </div>
-            <div className="mini-table">
-              {stats?.topUsers?.slice(0, 8).map((user, idx) => (
-                <div key={user.id} className="mini-table-row">
-                  <span className="rank-badge">{idx + 1}</span>
-                  <div className="user-info-mini">
-                    <span className="username">{user.username}</span>
-                    <span className="user-stats">{user.quiz_count ?? 0} quizzes • {isNaN(Number(user.avg_accuracy)) ? 0 : (user.avg_accuracy ?? 0)}% avg</span>
-                  </div>
-                  <span className="questions-count">{user.total_questions_answered || 0} Q</span>
+                    <div className="mini-table">
+                        {(sub.recentPayments || []).map((p, idx) => (
+                            <div key={idx} className="mini-table-row">
+                                <span className="rank-badge">{idx + 1}</span>
+                                <div className="user-info-mini">
+                                    <span className="username">{p.username || '(deleted account)'}</span>
+                                    <span className="user-stats">{sar(p.amountSar)} {p.currency} · {new Date(p.receivedAt).toLocaleDateString()}</span>
+                                </div>
+                            </div>
+                        ))}
+                        {(!sub.recentPayments || sub.recentPayments.length === 0) && (
+                            <div className="empty-state">No payments yet</div>
+                        )}
+                    </div>
                 </div>
-              ))}
-              {(!stats?.topUsers || stats.topUsers.length === 0) && (
-                <div className="empty-state">No user activity yet</div>
-              )}
-            </div>
-          </div>
 
-          {/* Recent Logins */}
-          <div className="table-card">
-            <div className="table-header">
-              <h3><Icon name="lock" size={16} /> Recent Logins</h3>
-            </div>
-            <div className="mini-table">
-              {stats?.recentLogins?.slice(0, 8).map((login, idx) => (
-                <div key={idx} className="mini-table-row">
-                  <div className="login-info">
-                    <span className="username">{login.username}</span>
-                    <span className="login-device">
-                      {login.device_type === 'mobile' ? <Icon name="phone" size={14} /> : <Icon name="monitor" size={14} />} {login.browser}
-                    </span>
-                  </div>
-                  <div className="login-meta">
-                    <span className="login-time">{formatTimeAgo(login.login_time)}</span>
-                    {login.is_suspicious && <span className="suspicious-badge"><Icon name="alert-triangle" size={16} /></span>}
-                  </div>
+                <div className="table-card">
+                    <div className="table-header">
+                        <h3><Icon name="lock" size={16} /> Recent Logins</h3>
+                    </div>
+                    <div className="mini-table">
+                        {(stats?.recentLogins || []).slice(0, 8).map((login, idx) => (
+                            <div key={idx} className="mini-table-row">
+                                <div className="login-info">
+                                    <span className="username">{login.username}</span>
+                                    <span className="login-device">
+                                        {login.device_type === 'mobile' ? <Icon name="phone" size={14} /> : <Icon name="monitor" size={14} />} {login.browser}
+                                    </span>
+                                </div>
+                                <div className="login-meta">
+                                    <span className="login-time">{timeAgo(login.login_time)}</span>
+                                    {login.is_suspicious && <span className="suspicious-badge"><Icon name="alert-triangle" size={16} /></span>}
+                                </div>
+                            </div>
+                        ))}
+                        {(!stats?.recentLogins || stats.recentLogins.length === 0) && (
+                            <div className="empty-state">No login history</div>
+                        )}
+                    </div>
                 </div>
-              ))}
-              {(!stats?.recentLogins || stats.recentLogins.length === 0) && (
-                <div className="empty-state">No login history</div>
-              )}
-            </div>
-          </div>
 
-          {/* Suspicious Activity */}
-          <div className="table-card warning-card">
-            <div className="table-header">
-              <h3><Icon name="alert-triangle" size={16} /> Suspicious Activity</h3>
-              <button
-                className="view-all-btn"
-                onClick={() => navigate('/ADD_ACCOUNT')}
-              >
-                View All →
-              </button>
-            </div>
-            <div className="mini-table">
-              {stats?.suspiciousUsers?.slice(0, 5).map((user, idx) => (
-                <div key={idx} className="mini-table-row suspicious">
-                  <div className="user-info-mini">
-                    <span className="username">{user.username}</span>
-                    <span className="suspicious-reason">{user.reasons}</span>
-                  </div>
-                  <div className="suspicious-stats">
-                    <span className="ip-count">{user.unique_ips} IPs</span>
-                    <span className="device-count">{user.unique_devices} devices</span>
-                  </div>
-                </div>
-              ))}
-              {(!stats?.suspiciousUsers || stats.suspiciousUsers.length === 0) && (
-                <div className="empty-state success"><Icon name="check-circle" size={16} /> No suspicious activity detected</div>
-              )}
-            </div>
-          </div>
-
-          {/* Suggestions Panel */}
-          <div className="table-card suggestions-card">
-            <div className="table-header">
-              <h3><Icon name="lightbulb" size={16} /> User Suggestions</h3>
-              <span className="suggestions-count">
-                {suggestions.filter(s => s.status === 'pending').length} pending
-              </span>
-            </div>
-            <div className="mini-table suggestions-list">
-              {suggestionsLoading ? (
-                <div className="empty-state">Loading suggestions...</div>
-              ) : suggestions.length > 0 ? (
-                suggestions.slice(0, 6).map((suggestion) => {
-                  const statusBadge = getStatusBadge(suggestion.status);
-                  return (
-                    <div key={suggestion.id} className="suggestion-item">
-                      <div className="suggestion-header">
-                        <span className="suggestion-category">
-                          <Icon name={getCategoryIcon(suggestion.category)} size={18} />
+                <div className="table-card suggestions-card">
+                    <div className="table-header">
+                        <h3><Icon name="lightbulb" size={16} /> User Suggestions</h3>
+                        <span className="suggestions-count">
+                            {suggestions.filter((s) => s.status === 'pending').length} pending
                         </span>
-                        <span className="suggestion-title">{suggestion.title}</span>
-                        <span
-                          className="priority-dot"
-                          style={{ background: getPriorityColor(suggestion.priority) }}
-                          title={suggestion.priority}
-                        />
-                      </div>
-                      <p className="suggestion-desc">{suggestion.description?.substring(0, 100)}{suggestion.description?.length > 100 ? '...' : ''}</p>
-                      <div className="suggestion-footer">
-                        <span
-                          className="status-badge"
-                          style={{ background: statusBadge.bg, color: statusBadge.color }}
-                        >
-                          {statusBadge.label}
-                        </span>
-                        <div className="suggestion-actions">
-                          <select
-                            value={suggestion.status}
-                            onChange={(e) => updateSuggestionStatus(suggestion.id, e.target.value)}
-                            className="status-select"
-                          >
-                            <option value="pending">Pending</option>
-                            <option value="reviewing">Reviewing</option>
-                            <option value="planned">Planned</option>
-                            <option value="implemented">Implemented</option>
-                            <option value="rejected">Rejected</option>
-                          </select>
-                          <button
-                            className="delete-suggestion-btn"
-                            onClick={() => deleteSuggestion(suggestion.id)}
-                            title="Delete"
-                          >
-                            <Icon name="trash" size={16} />
-                          </button>
-                        </div>
-                      </div>
                     </div>
-                  );
-                })
-              ) : (
-                <div className="empty-state">No suggestions yet</div>
-              )}
-            </div>
-          </div>
-
-          {/* Topic Accuracy */}
-          <div className="table-card">
-            <div className="table-header">
-              <h3><Icon name="bar-chart" size={16} /> Topic Performance</h3>
-            </div>
-            <div className="mini-table">
-              {stats?.charts?.accuracyByTopic?.slice(0, 6).map((topic, idx) => (
-                <div key={idx} className="mini-table-row">
-                  <span className="topic-name">{topic.topic}</span>
-                  <div className="accuracy-bar-container">
-                    <div className="accuracy-bar">
-                      <div
-                        className="accuracy-fill"
-                        style={{
-                          width: `${topic.avg_accuracy || 0}%`,
-                          background: topic.avg_accuracy >= 70 ? '#4ade80' : topic.avg_accuracy >= 50 ? '#f59e0b' : '#ef4444'
-                        }}
-                      />
+                    <div className="mini-table suggestions-list">
+                        {suggestionsLoading ? (
+                            <div className="empty-state">Loading suggestions...</div>
+                        ) : suggestions.length > 0 ? (
+                            suggestions.slice(0, 6).map((suggestion) => {
+                                const badge = getStatusBadge(suggestion.status);
+                                return (
+                                    <div key={suggestion.id} className="suggestion-item">
+                                        <div className="suggestion-header">
+                                            <span className="suggestion-title">{suggestion.title}</span>
+                                        </div>
+                                        <p className="suggestion-desc">
+                                            {suggestion.description?.substring(0, 100)}{suggestion.description?.length > 100 ? '...' : ''}
+                                        </p>
+                                        <div className="suggestion-footer">
+                                            <span className="status-badge" style={{ background: badge.bg, color: badge.color }}>{badge.label}</span>
+                                            <div className="suggestion-actions">
+                                                <select
+                                                    value={suggestion.status}
+                                                    onChange={(e) => updateSuggestionStatus(suggestion.id, e.target.value)}
+                                                    className="status-select"
+                                                >
+                                                    <option value="pending">Pending</option>
+                                                    <option value="reviewing">Reviewing</option>
+                                                    <option value="planned">Planned</option>
+                                                    <option value="implemented">Implemented</option>
+                                                    <option value="rejected">Rejected</option>
+                                                </select>
+                                                <button className="delete-suggestion-btn" onClick={() => deleteSuggestion(suggestion.id)} title="Delete">
+                                                    <Icon name="trash" size={16} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        ) : (
+                            <div className="empty-state">No suggestions yet</div>
+                        )}
                     </div>
-                    <span className="accuracy-value">{topic.avg_accuracy || 0}%</span>
-                  </div>
                 </div>
-              ))}
-              {(!stats?.charts?.accuracyByTopic || stats.charts.accuracyByTopic.length === 0) && (
-                <div className="empty-state">No topic data</div>
-              )}
             </div>
-          </div>
-        </div>
 
-        {/* Footer with last update time */}
-        <div className="dashboard-footer">
-          <span>Last updated: {new Date().toLocaleTimeString()}</span>
-          <span>Auto-refresh every 2 minutes</span>
-        </div>
-      </div>
-    </div>
-  );
+            {/* ── Per-track split ── every number above blends both study tracks. */}
+            {byTrack.length > 0 && (
+                <section className="track-panel">
+                    <div className="track-panel-head">
+                        <h2>By study track</h2>
+                        <span>Users, activity and content, split by the bank they belong to</span>
+                    </div>
+                    <div className="track-panel-grid">
+                        {byTrack.map((t) => (
+                            <div key={t.track} className={`track-card${t.contentReady ? '' : ' is-empty'}`}>
+                                <div className="track-card-head">
+                                    <span className="track-card-name">{t.label}</span>
+                                    <span className="track-card-key">{t.track}</span>
+                                    {!t.contentReady && <span className="track-card-flag">No content yet</span>}
+                                </div>
+                                <div className="track-card-metrics">
+                                    <div><b>{t.users}</b><span>users</span></div>
+                                    <div><b>{t.activeUsers}</b><span>active 7d</span></div>
+                                    <div><b>+{t.newUsersWeek}</b><span>new 7d</span></div>
+                                    <div><b>{t.activeSubscribers}</b><span>subscribed</span></div>
+                                    <div><b>{t.quizzes}</b><span>quizzes</span></div>
+                                    <div><b>{t.avgAccuracy}%</b><span>accuracy</span></div>
+                                </div>
+                                <div className="track-card-content">
+                                    <span><Icon name="clipboard" size={13} /> {t.questions} questions</span>
+                                    <span><Icon name="book-open" size={13} /> {t.summaries} summaries</span>
+                                    <span><Icon name="folder" size={13} /> {t.specialties.length} specialties</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
+
+            <div className="dashboard-footer">
+                <span>Last updated: {new Date().toLocaleTimeString()}</span>
+                <span>Auto-refresh every 2 minutes</span>
+            </div>
+        </AdminLayout>
+    );
 };
 
 export default Admin;

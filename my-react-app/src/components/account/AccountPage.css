@@ -1,0 +1,176 @@
+/* /account — subscription details. Light theme, same shell language as the
+   rest of the student-facing app. */
+
+.account-page {
+    min-height: 100vh;
+    background: var(--bg-light, #f6f8fc);
+    padding: clamp(1.25rem, 4vw, 3rem) 1rem 4rem;
+}
+
+.account-wrap {
+    max-width: 620px;
+    margin: 0 auto;
+}
+
+.account-heading {
+    margin: 0 0 clamp(1rem, 3vw, 1.75rem);
+    text-align: center;
+    font-size: clamp(1.3rem, 4vw, 1.6rem);
+    font-weight: 800;
+    color: var(--text-dark, #0f1e3d);
+}
+
+.account-card {
+    background: var(--surface, #fff);
+    border: 1px solid var(--border, #d7dee9);
+    border-radius: 16px;
+    padding: 22px 20px;
+    margin-bottom: 16px;
+}
+
+.account-subheading {
+    margin: 0 0 12px;
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--text-dark, #0f1e3d);
+}
+
+.account-facts {
+    margin: 0;
+    display: grid;
+    gap: 14px;
+}
+
+.account-facts > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.account-facts dt {
+    font-size: 13px;
+    color: var(--muted, #64748b);
+}
+
+.account-facts dd {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-dark, #0f1e3d);
+    text-align: end;
+}
+
+/* An email is LTR text that must not reverse inside the Arabic layout. */
+.account-email {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    word-break: break-all;
+}
+
+.account-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 12.5px;
+    font-weight: 700;
+    background: rgba(100, 116, 139, 0.12);
+    color: var(--muted, #64748b);
+}
+
+.account-badge.is-paid {
+    background: rgba(22, 163, 74, 0.12);
+    color: var(--success-color, #16a34a);
+}
+
+.account-badge.is-legacy {
+    background: rgba(37, 99, 235, 0.12);
+    color: var(--primary-color, #2563eb);
+}
+
+.account-daysleft {
+    display: block;
+    margin-top: 2px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted, #64748b);
+}
+
+.account-note {
+    margin: 16px 0 0;
+    font-size: 12.5px;
+    line-height: 1.85;
+    color: var(--muted, #64748b);
+    text-align: start;
+}
+
+.account-norenew {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border, #d7dee9);
+    color: var(--success-color, #16a34a);
+    font-weight: 600;
+}
+
+/* Free-allowance meter: how much of the 40 has been spent. */
+.account-meter {
+    height: 10px;
+    border-radius: 999px;
+    background: rgba(37, 99, 235, 0.12);
+    overflow: hidden;
+}
+
+.account-meter-fill {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: var(--primary-color, #2563eb);
+    transition: width 0.3s ease;
+}
+
+.account-meter-label {
+    margin: 10px 0 0;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-dark, #0f1e3d);
+    text-align: start;
+}
+
+.account-actions {
+    display: grid;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.account-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1px solid var(--border, #d7dee9);
+    background: var(--surface, #fff);
+    color: var(--text-dark, #0f1e3d);
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 600;
+    padding: 11px 18px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.account-secondary:hover {
+    border-color: var(--primary-color, #2563eb);
+    color: var(--primary-color, #2563eb);
+}
+
+.account-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 40px 0;
+    color: var(--muted, #64748b);
+}

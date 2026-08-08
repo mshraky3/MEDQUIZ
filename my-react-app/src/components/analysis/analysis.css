@@ -18,7 +18,8 @@
     max-width: 1400px;
     margin: 0 auto;
     font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    direction: rtl;
+    /* Direction comes from the page's own dir attribute, which follows the
+       site language — see src/i18n. */
     min-height: 100vh;
 }
 
@@ -1718,7 +1719,6 @@
     min-width: 200px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
     animation: badgeSlideUp 0.25s ease-out;
-    direction: rtl;
 }
 
 @keyframes badgeSlideUp {
@@ -1883,3 +1883,120 @@
 .reset-modal-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; margin-top: 18px; }
 
 @media (prefers-reduced-motion: reduce) { .danger-button { transition: none; } }
+
+/* ── Wrong-questions search ──────────────────────────────────────────────
+   Search runs server-side over the whole history (see WrongQuestions.jsx),
+   so this bar is a query builder, not a client-side filter. Logical
+   properties throughout — the page renders RTL and LTR from these rules. */
+
+.wq-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.wq-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.wq-search-icon {
+  position: absolute;
+  inset-inline-start: 13px;
+  display: grid;
+  place-items: center;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.wq-search-input {
+  width: 100%;
+  min-height: 46px;
+  padding-block: 11px;
+  padding-inline: 40px 40px;
+  border: 1.5px solid #d4deee;
+  border-radius: 12px;
+  background: #fff;
+  font-family: inherit;
+  font-size: 0.93rem;
+  color: #0f1e3d;
+}
+
+.wq-search-input::placeholder { color: #a3b0c4; }
+
+.wq-search-input:focus-visible {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* Safari renders its own clear affordance on type="search"; we ship our own
+   so the control looks the same in every browser. */
+.wq-search-input::-webkit-search-decoration,
+.wq-search-input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+
+.wq-search-clear {
+  position: absolute;
+  inset-inline-end: 8px;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 50%;
+  background: #eef2f8;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.wq-search-clear:hover { background: #e2e8f0; color: #0f1e3d; }
+
+.wq-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.wq-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 13px;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  background: #fff;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #475569;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+
+.wq-chip:hover { border-color: #93b4f7; color: #2563eb; }
+
+.wq-chip.is-on {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+
+.wq-chip-n {
+  font-size: 0.72rem;
+  font-weight: 800;
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
+}
+
+.wq-results {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #64748b;
+}
+
+@media (max-width: 560px) {
+  .wq-search-input { font-size: 16px; } /* stops iOS zooming the page on focus */
+}

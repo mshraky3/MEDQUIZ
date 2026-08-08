@@ -1,150 +1,142 @@
-/* Unified Footer Component */
+/* Compact, mobile-first footer.
+   The previous version was four link columns with a heading each, which
+   unrolled into a very long block on a phone. This is one wrapping link row
+   plus three icon buttons — see Footer.jsx for the reasoning.
+   Logical properties throughout: the site renders RTL and LTR. */
+
 .footer {
   /* Explicitly stay in normal flow. Guards against stray global `footer`
      element rules elsewhere in the app (CSS here is unscoped/global). */
   position: static;
   inset: auto;
-  background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%);
-  border-top: 1px solid rgba(35, 109, 237, 0.2);
-  padding: 2rem 1.5rem;
+  background: #fff;
+  border-top: 1px solid rgba(35, 109, 237, 0.18);
+  padding: 1.4rem 1.25rem 1.1rem;
   width: 100%;
   margin-top: auto;
 }
 
-.footer-content {
-  max-width: 1200px;
+.footer-inner {
+  max-width: 1100px;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
 }
 
-.footer-brand {
-  text-align: center;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.10);
+/* ── Brand + reach ───────────────────────────────────────────── */
+.footer-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
 }
+
+.footer-brand { min-width: 0; }
 
 .footer-logo {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  font-size: 1.25rem;
+  gap: 7px;
+  font-size: 0.98rem;
   font-weight: 700;
   color: #236ded;
 }
 
 .footer-tagline {
+  margin: 0.2rem 0 0;
   color: #64748b;
-  font-size: 0.875rem;
-  margin-top: 0.5rem;
-}
-
-.footer-tagline-ar {
-  color: #64748b;
-  font-size: 0.85rem;
-  margin-top: 0.25rem;
-  direction: rtl;
-}
-
-.footer-links {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 2rem;
-  margin-bottom: 1.5rem;
-}
-
-.footer-section h4 {
-  color: #1e293b;
-  font-size: 0.9rem;
-  font-weight: 600;
-  margin-bottom: 0.75rem;
-}
-
-.footer-section a,
-.footer-section span {
-  display: block;
-  color: #64748b;
-  font-size: 0.85rem;
-  text-decoration: none;
-  margin-bottom: 0.5rem;
-  transition: color 0.2s ease;
-}
-
-.footer-section a:hover {
-  color: #236ded;
-}
-
-.footer-bottom {
-  text-align: center;
-  padding-top: 1rem;
-  border-top: 1px solid rgba(15, 23, 42, 0.10);
-}
-
-.footer-bottom p {
-  color: #475569;
-  font-size: 0.8rem;
-  margin: 0.25rem 0;
-}
-
-.footer-disclaimer {
-  font-size: 0.75rem !important;
-  color: #475569 !important;
-}
-
-.footer-legal-entity {
-  font-size: 0.875rem !important;
-  color: #1e293b !important;
-  font-weight: 600;
-  margin-top: 0.5rem !important;
-  padding-top: 0.6rem;
-  border-top: 1px solid rgba(35, 109, 237, 0.15);
-  display: inline-block;
-}
-
-/* Dedicated contact column (bilingual, RTL/LTR aware) */
-.footer-contact-line {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-  align-items: baseline;
-  margin: 0 0 0.5rem 0;
-  font-size: 0.85rem;
-  color: #64748b;
+  font-size: 0.78rem;
   line-height: 1.5;
 }
 
-.footer-contact-line span {
-  color: #1e293b;
+.footer-reach {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
 }
 
-.footer-contact-line a {
-  color: #236ded;
+.footer-icon-btn {
+  display: grid;
+  place-items: center;
+  /* 40px keeps every tap target at the accessible minimum on a phone, which
+     the old inline text links did not manage. */
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  background: #f8fafc;
+  color: #475569;
   text-decoration: none;
-  word-break: break-word;
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
 
-.footer-contact-line a:hover {
-  text-decoration: underline;
+.footer-icon-btn:hover {
+  color: #236ded;
+  border-color: rgba(35, 109, 237, 0.35);
+  background: rgba(35, 109, 237, 0.06);
 }
 
-/* Responsive footer adjustments */
-@media (max-width: 768px) {
-  .footer-links {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.5rem;
-    text-align: center;
-  }
+.footer-lang-toggle { margin-inline-start: 0.15rem; }
+
+/* ── Links ───────────────────────────────────────────────────── */
+.footer-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.1rem;
+  padding-block: 0.75rem;
+  border-block: 1px solid rgba(15, 23, 42, 0.08);
 }
 
-@media (max-width: 480px) {
-  .footer {
-    padding: 1.5rem 1rem;
+.footer-nav a {
+  color: #64748b;
+  font-size: 0.8rem;
+  text-decoration: none;
+  /* Comfortable hit area without turning the row into a stack of buttons. */
+  padding-block: 3px;
+  transition: color 0.2s ease;
+}
+
+.footer-nav a:hover { color: #236ded; }
+
+/* ── Legal ───────────────────────────────────────────────────── */
+.footer-bottom { text-align: center; }
+
+.footer-bottom p {
+  color: #64748b;
+  font-size: 0.74rem;
+  line-height: 1.6;
+  margin: 0.15rem 0;
+}
+
+.footer-legal-entity {
+  color: #334155;
+  font-weight: 600;
+}
+
+.footer-disclaimer { color: #94a3b8; }
+
+@media (max-width: 640px) {
+  .footer { padding: 1.15rem 1rem 1rem; }
+
+  .footer-top {
+    /* Brand above, reach row below — side by side at this width leaves the
+       tagline two words per line. */
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.7rem;
   }
 
-  .footer-links {
-    grid-template-columns: 1fr;
+  .footer-nav {
+    /* Two columns beat one long list and beat a ragged wrap. */
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.15rem 1rem;
   }
 
-  .footer-logo {
-    font-size: 1.1rem;
-  }
+  .footer-nav a { font-size: 0.82rem; padding-block: 5px; }
+
+  .footer-bottom p { font-size: 0.71rem; }
 }

@@ -1,22 +1,22 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import axios from '../../utils/adminApi.js';
 import Globals from '../../global.js';
 import Icon from '../common/Icon.jsx';
+import AdminLayout from './AdminLayout.jsx';
 import { TRACKS, TRACK_KEYS } from '../../utils/tracks.js';
 import './AdminBroadcast.css';
 
 const API = `${Globals.URL}/admin/broadcast`;
 
 const AUDIENCE_LABELS = {
-    all: 'كل المستخدمين',
-    paid: 'المشتركون المدفوعون',
-    trial: 'التجريبيون',
-    legacy: 'الحسابات القديمة',
-    free: 'المجانيون',
+    all: 'All users',
+    paid: 'Paid subscribers',
+    legacy: 'Legacy accounts',
+    free: 'Free — questions left',
+    exhausted: 'Free — used up their 40',
     // Track-targeted: most announcements only concern one student population.
     ...TRACK_KEYS.reduce((acc, t) => {
-        acc[`track:${t}`] = `مسار ${TRACKS[t].labelAr}`;
+        acc[`track:${t}`] = `${TRACKS[t].label.en} track`;
         return acc;
     }, {}),
 };
@@ -27,16 +27,16 @@ const AUDIENCE_LABELS = {
  * allowance. 0 = as fast as the cap safely permits.
  */
 const SPREAD_OPTIONS = [
-    { value: 0, label: 'بأسرع ما يسمح به الحد اليومي' },
-    { value: 2, label: 'موزّعة على ساعتين' },
-    { value: 6, label: 'موزّعة على 6 ساعات' },
-    { value: 12, label: 'موزّعة على 12 ساعة' },
-    { value: 24, label: 'موزّعة على يوم كامل' },
-    { value: 48, label: 'موزّعة على يومين (الأقصى)' },
+    { value: 0, label: 'As fast as the daily cap allows' },
+    { value: 2, label: 'Spread over 2 hours' },
+    { value: 6, label: 'Spread over 6 hours' },
+    { value: 12, label: 'Spread over 12 hours' },
+    { value: 24, label: 'Spread over a full day' },
+    { value: 48, label: 'Spread over 2 days (maximum)' },
 ];
 
 const STATUS_LABELS = {
-    draft: 'مسودة', sending: 'يُرسل الآن', paused: 'متوقف مؤقتاً', done: 'اكتمل', cancelled: 'ملغى'
+    draft: 'Draft', sending: 'Sending', paused: 'Paused', done: 'Done', cancelled: 'Cancelled'
 };
 
 /**
@@ -53,7 +53,6 @@ const STATUS_LABELS = {
  * from the first still-pending recipient.
  */
 const AdminBroadcast = () => {
-    const navigate = useNavigate();
 
     const [meta, setMeta] = useState(null);           // audience counts + quota
     const [campaigns, setCampaigns] = useState([]);
@@ -85,7 +84,7 @@ const AdminBroadcast = () => {
         const [a, c] = await Promise.allSettled([axios.get(`${API}/audiences`), axios.get(`${API}/campaigns`)]);
         if (a.status === 'fulfilled') setMeta(a.value.data);
         if (c.status === 'fulfilled') setCampaigns(c.value.data.campaigns || []);
-        if (a.status === 'rejected') setError(a.reason?.response?.data?.message || 'تعذّر تحميل البيانات.');
+        if (a.status === 'rejected') setError(a.reason?.response?.data?.message || 'Could not load the data.');
         setLoading(false);
     }, []);
 
@@ -96,7 +95,7 @@ const AdminBroadcast = () => {
         try {
             const { data } = await axios.get(`${API}/campaigns/${id}`);
             setActive(data);
-        } catch (e) { setError(e?.response?.data?.message || 'تعذّر فتح الحملة.'); }
+        } catch (e) { setError(e?.response?.data?.message || 'Could not open that campaign.'); }
     };
 
     const createCampaign = async () => {
@@ -111,11 +110,11 @@ const AdminBroadcast = () => {
                     ? { accountIds: selected.map((u) => u.id) }
                     : { audience }),
             });
-            setNotice(`تم إنشاء الحملة — ${data.recipients} مستلم.`);
+            setNotice(`Campaign created — ${data.recipients} recipients.`);
             setConfirmed(false);
             await loadMeta();
             await openCampaign(data.campaign.id);
-        } catch (e) { setError(e?.response?.data?.message || 'تعذّر إنشاء الحملة.'); }
+        } catch (e) { setError(e?.response?.data?.message || 'Could not create the campaign.'); }
         finally { setBusy(''); }
     };
 
@@ -125,7 +124,7 @@ const AdminBroadcast = () => {
         try {
             const { data } = await axios.post(`${API}/campaigns/${active.campaign.id}/test`, { to: testTo.trim() });
             setNotice(data.message);
-        } catch (e) { setError(e?.response?.data?.message || 'تعذّر إرسال رسالة الاختبار.'); }
+        } catch (e) { setError(e?.response?.data?.message || 'Could not send the test email.'); }
         finally { setBusy(''); }
     };
 
@@ -139,7 +138,7 @@ const AdminBroadcast = () => {
             );
             setResults(data.users || []);
         } catch (e) {
-            setError(e?.response?.data?.message || 'تعذّر البحث.');
+            setError(e?.response?.data?.message || 'Search failed.');
         } finally {
             setSearching(false);
         }
@@ -166,12 +165,12 @@ const AdminBroadcast = () => {
         try {
             // eslint-disable-next-line no-constant-condition
             while (true) {
-                if (stopRef.current) { setNotice('تم إيقاف الإرسال. التقدّم محفوظ ويمكنك المتابعة لاحقاً.'); break; }
+                if (stopRef.current) { setNotice('Sending paused. Progress is saved — you can resume later.'); break; }
                 const { data } = await axios.post(`${API}/campaigns/${campaignId}/batch`);
                 setActive((prev) => (prev ? { ...prev, progress: data.progress, quota: data.quota || prev.quota } : prev));
                 if (data.quotaExhausted) { setNotice(data.reason); break; }
                 if (data.stopped) { setNotice(data.reason); break; }
-                if (data.done) { setNotice('اكتمل الإرسال.'); break; }
+                if (data.done) { setNotice('Sending complete.'); break; }
                 if (data.waiting) {
                     // The campaign is paced: the server says nothing is due yet.
                     // Wait until the next recipient comes up rather than
@@ -188,7 +187,7 @@ const AdminBroadcast = () => {
                 await new Promise((r) => setTimeout(r, 400)); // breathe between batches
             }
         } catch (e) {
-            setError(e?.response?.data?.message || 'توقّف الإرسال بسبب خطأ. التقدّم محفوظ — يمكنك المتابعة.');
+            setError(e?.response?.data?.message || 'Sending stopped on an error. Progress is saved — you can resume.');
         } finally {
             setRunning(false);
             await loadMeta();
@@ -202,7 +201,7 @@ const AdminBroadcast = () => {
         try {
             await axios.post(`${API}/campaigns/${active.campaign.id}/start`);
             await runDrip(active.campaign.id);
-        } catch (e) { setError(e?.response?.data?.message || 'تعذّر بدء الإرسال.'); }
+        } catch (e) { setError(e?.response?.data?.message || 'Could not start sending.'); }
         finally { setBusy(''); }
     };
 
@@ -214,23 +213,21 @@ const AdminBroadcast = () => {
     const pct = (p) => (p && p.total ? Math.round(((p.sent + p.failed) / p.total) * 100) : 0);
     const quota = active?.quota || meta?.quota;
 
-    if (loading) return <div className="bc-wrap" dir="rtl"><p className="bc-muted">جارٍ التحميل…</p></div>;
+    if (loading) return <AdminLayout><div className="bc-wrap"><p className="bc-muted">Loading…</p></div></AdminLayout>;
 
     return (
-        <div className="bc-wrap" dir="rtl">
+        <AdminLayout>
+        <div className="bc-wrap">
             <header className="bc-head">
                 <div>
-                    <button type="button" className="bc-back" onClick={() => navigate('/admin')}>
-                        <Icon name="chevron-right" size={16} /> لوحة التحكم
-                    </button>
-                    <h1>رسائل جماعية</h1>
-                    <p className="bc-muted">اكتب رسالة واحدة وأرسلها لكل المستخدمين على دفعات صغيرة — بدون تجاوز حدود Resend أو مهلة Vercel.</p>
+                    <h1>Bulk email</h1>
+                    <p className="bc-muted">Write one message and send it to every user in small batches — without exceeding Resend's limits or the Vercel timeout.</p>
                 </div>
                 {quota && (
                     <div className={`bc-quota${quota.remaining <= 0 ? ' is-out' : ''}`}>
                         <span className="bc-quota-n"><bdi>{quota.remaining}</bdi></span>
-                        <span className="bc-quota-l">متبقٍ اليوم</span>
-                        <small>من <bdi>{quota.cap}</bdi> · أُرسل <bdi>{quota.used}</bdi></small>
+                        <span className="bc-quota-l">left today</span>
+                        <small>of <bdi>{quota.cap}</bdi> · <bdi>{quota.used}</bdi> sent</small>
                     </div>
                 )}
             </header>
@@ -241,33 +238,33 @@ const AdminBroadcast = () => {
             <div className="bc-grid">
                 {/* ── Composer ── */}
                 <section className="bc-card">
-                    <h2>رسالة جديدة</h2>
+                    <h2>New message</h2>
 
-                    <div className="bc-mode" role="tablist" aria-label="طريقة الاستهداف">
+                    <div className="bc-mode" role="tablist" aria-label="Targeting mode">
                         <button
                             type="button" role="tab"
                             aria-selected={mode === 'audience'}
                             className={`bc-mode-btn${mode === 'audience' ? ' is-on' : ''}`}
                             onClick={() => setMode('audience')}
-                        >فئة كاملة</button>
+                        >Whole audience</button>
                         <button
                             type="button" role="tab"
                             aria-selected={mode === 'selected'}
                             className={`bc-mode-btn${mode === 'selected' ? ' is-on' : ''}`}
                             onClick={() => setMode('selected')}
-                        >مستخدمون محدّدون</button>
+                        >Specific users</button>
                     </div>
 
                     {mode === 'selected' ? (
                         <>
-                            <label className="bc-label" htmlFor="bc-search">ابحث عن مستخدم</label>
+                            <label className="bc-label" htmlFor="bc-search">Find a user</label>
                             <input
                                 id="bc-search" className="bc-input" value={search}
                                 onChange={(e) => setSearch(e.target.value)}
-                                placeholder="بالبريد الإلكتروني أو اسم المستخدم…"
+                                placeholder="By email address or username…"
                                 dir="auto"
                             />
-                            {searching && <p className="bc-hint">جارٍ البحث…</p>}
+                            {searching && <p className="bc-hint">Searching…</p>}
 
                             {results.length > 0 && (
                                 <ul className="bc-results">
@@ -283,7 +280,7 @@ const AdminBroadcast = () => {
                                                     <Icon name={on ? 'check-circle' : 'circle'} size={15} />
                                                     <span className="bc-result-email" dir="ltr">{u.email}</span>
                                                     <span className="bc-result-meta">
-                                                        {TRACKS[u.track === 'nursing' ? 'nursing' : 'medical'].labelAr}
+                                                        {TRACKS[u.track === 'nursing' ? 'nursing' : 'medical'].label.en}
                                                         {u.subscription_status ? ` · ${u.subscription_status}` : ''}
                                                     </span>
                                                 </button>
@@ -293,21 +290,21 @@ const AdminBroadcast = () => {
                                 </ul>
                             )}
                             {search.trim().length >= 2 && !searching && results.length === 0 && (
-                                <p className="bc-hint">لا توجد نتائج مطابقة.</p>
+                                <p className="bc-hint">No matching users.</p>
                             )}
 
                             {selected.length > 0 && (
                                 <div className="bc-chosen">
                                     <div className="bc-chosen-head">
-                                        <strong>{selected.length} مستخدم محدّد</strong>
+                                        <strong>{selected.length} users selected</strong>
                                         <button type="button" className="bc-chosen-clear"
-                                            onClick={() => setSelected([])}>مسح الكل</button>
+                                            onClick={() => setSelected([])}>Clear all</button>
                                     </div>
                                     <ul>
                                         {selected.map((u) => (
                                             <li key={u.id}>
                                                 <span dir="ltr">{u.email}</span>
-                                                <button type="button" aria-label={`إزالة ${u.email}`}
+                                                <button type="button" aria-label={`Remove ${u.email}`}
                                                     onClick={() => toggleSelected(u)}>
                                                     <Icon name="x" size={13} />
                                                 </button>
@@ -319,18 +316,18 @@ const AdminBroadcast = () => {
                         </>
                     ) : (
                     <>
-                    <label className="bc-label" htmlFor="bc-aud">الفئة المستهدفة</label>
+                    <label className="bc-label" htmlFor="bc-aud">Audience</label>
                     <select id="bc-aud" className="bc-input" value={audience} onChange={(e) => setAudience(e.target.value)}>
                         {Object.entries(AUDIENCE_LABELS).map(([k, label]) => {
                             const n = meta?.audiences?.[k];
-                            return <option key={k} value={k} disabled={n === null}>{label}{n != null ? ` — ${n}` : ' — غير متاح'}</option>;
+                            return <option key={k} value={k} disabled={n === null}>{label}{n != null ? ` — ${n}` : ' — unavailable'}</option>;
                         })}
                     </select>
 
                     </>
                     )}
 
-                    <label className="bc-label" htmlFor="bc-spread">مدة توزيع الإرسال</label>
+                    <label className="bc-label" htmlFor="bc-spread">Send window</label>
                     <select id="bc-spread" className="bc-input" value={spreadHours}
                         onChange={(e) => setSpreadHours(Number(e.target.value))}>
                         {SPREAD_OPTIONS.map((o) => (
@@ -338,38 +335,41 @@ const AdminBroadcast = () => {
                         ))}
                     </select>
                     <p className="bc-hint">
-                        التوزيع يمنع إرسال كل الرسائل دفعة واحدة، فلا تتجاوز الحد اليومي للخطة المجانية.
-                        التقدّم محفوظ في قاعدة البيانات — يمكنك إغلاق الصفحة والعودة لاحقاً لإكمال الإرسال.
+                        Spreading the send stops everything going out at once, so you stay inside the free plan's daily cap.
+                        Progress is stored in the database — you can close this page and come back later to finish.
                     </p>
 
-                    <label className="bc-label" htmlFor="bc-subj">عنوان الرسالة</label>
+                    <label className="bc-label" htmlFor="bc-subj">Subject</label>
                     <input id="bc-subj" className="bc-input" value={subject} maxLength={200}
-                        onChange={(e) => setSubject(e.target.value)} placeholder="مثال: تحديث جديد في الملخصات" />
+                        onChange={(e) => setSubject(e.target.value)} placeholder="e.g. New update to the summaries" />
 
-                    <label className="bc-label" htmlFor="bc-body">نص الرسالة (HTML مسموح)</label>
+                    <label className="bc-label" htmlFor="bc-body">Body (HTML allowed)</label>
                     <textarea id="bc-body" className="bc-input bc-textarea" value={body} rows={9}
                         onChange={(e) => setBody(e.target.value)}
                         placeholder={'<p>أضفنا صوراً طبية حقيقية داخل الملخصات…</p>\n<p><a href="https://…">افتح الملخصات</a></p>'} />
-                    <p className="bc-hint">يُضاف تلقائياً: ترويسة SQB، تحية باسم المستخدم، ورابط إلغاء الاشتراك (إلزامي نظاماً).</p>
+                    <p className="bc-hint">Added automatically: the SQB header, a greeting by name, and an unsubscribe link (legally required).</p>
 
                     <button type="button" className="bc-btn bc-btn--primary"
                         disabled={!subject.trim() || !body.trim() || busy === 'create'
                             || (mode === 'selected' && selected.length === 0)}
                         onClick={createCampaign}>
-                        {busy === 'create' ? 'جارٍ الإنشاء…' : 'إنشاء الحملة (بدون إرسال)'}
+                        {busy === 'create' ? 'Creating…' : 'Create campaign (does not send)'}
                     </button>
                 </section>
 
                 {/* ── Live preview ── */}
                 <section className="bc-card">
-                    <h2>معاينة</h2>
-                    <div className="bc-preview">
+                    <h2>Preview</h2>
+                    {/* The preview mirrors the email the server actually sends,
+                        and those emails are Arabic — so the sample greeting and
+                        footer stay Arabic even though this page is English. */}
+                    <div className="bc-preview" dir="rtl">
                         <div className="bc-preview-bar">SQB</div>
                         <div className="bc-preview-body">
                             <p className="bc-preview-greet">مرحباً محمود،</p>
                             {body.trim()
                                 ? <div dangerouslySetInnerHTML={{ __html: body }} />
-                                : <p className="bc-muted">اكتب نص الرسالة لتظهر المعاينة هنا…</p>}
+                                : <p className="bc-muted">Write the body to see the preview here…</p>}
                         </div>
                         <div className="bc-preview-foot">SQB — بنك أسئلة SMLE<br /><u>إلغاء الاشتراك من رسائل SQB</u></div>
                     </div>
@@ -388,22 +388,22 @@ const AdminBroadcast = () => {
                             </p>
                         </div>
                         <div className="bc-counts">
-                            <span><bdi>{active.progress.sent}</bdi> أُرسلت</span>
-                            <span><bdi>{active.progress.pending}</bdi> متبقية</span>
-                            {active.progress.failed > 0 && <span className="bc-fail"><bdi>{active.progress.failed}</bdi> فشلت</span>}
+                            <span><bdi>{active.progress.sent}</bdi> sent</span>
+                            <span><bdi>{active.progress.pending}</bdi> pending</span>
+                            {active.progress.failed > 0 && <span className="bc-fail"><bdi>{active.progress.failed}</bdi> failed</span>}
                         </div>
                     </div>
 
                     <div className="bc-bar" role="progressbar" aria-valuenow={pct(active.progress)} aria-valuemin={0} aria-valuemax={100}>
                         <span className="bc-bar-fill" style={{ width: `${pct(active.progress)}%` }} />
                     </div>
-                    <p className="bc-hint">{pct(active.progress)}% — من <bdi>{active.progress.total}</bdi> مستلم</p>
+                    <p className="bc-hint">{pct(active.progress)}% of <bdi>{active.progress.total}</bdi> recipients</p>
 
                     <div className="bc-testrow">
                         <input className="bc-input" type="email" value={testTo} onChange={(e) => setTestTo(e.target.value)}
-                            placeholder="جرّبها على بريدك أولاً" aria-label="بريد الاختبار" />
+                            placeholder="Try it on your own address first" aria-label="Test email address" />
                         <button type="button" className="bc-btn" disabled={!testTo.includes('@') || busy === 'test'} onClick={sendTest}>
-                            {busy === 'test' ? 'جارٍ…' : 'إرسال اختبار'}
+                            {busy === 'test' ? 'Sending…' : 'Send test'}
                         </button>
                     </div>
 
@@ -411,27 +411,27 @@ const AdminBroadcast = () => {
                         <>
                             <label className="bc-confirm">
                                 <input type="checkbox" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} disabled={running} />
-                                <span>أؤكد إرسال هذه الرسالة إلى <b>{active.progress.pending}</b> شخص حقيقي.</span>
+                                <span>I confirm sending this to <b>{active.progress.pending}</b> real people.</span>
                             </label>
                             <div className="bc-actions">
                                 {!running ? (
                                     <button type="button" className="bc-btn bc-btn--send" disabled={!confirmed || busy === 'start' || quota?.remaining <= 0} onClick={startSending}>
-                                        <Icon name="send" size={16} /> {active.progress.sent > 0 ? 'متابعة الإرسال' : 'ابدأ الإرسال'}
+                                        <Icon name="send" size={16} /> {active.progress.sent > 0 ? 'Resume sending' : 'Start sending'}
                                     </button>
                                 ) : (
                                     <button type="button" className="bc-btn bc-btn--stop" onClick={pauseSending}>
-                                        <Icon name="ban" size={16} /> إيقاف
+                                        <Icon name="ban" size={16} /> Stop
                                     </button>
                                 )}
-                                {running && <span className="bc-live"><span className="bc-dot" /> يُرسل الآن… لا تغلق الصفحة</span>}
+                                {running && <span className="bc-live"><span className="bc-dot" /> Sending… keep this page open</span>}
                             </div>
-                            {quota?.remaining <= 0 && <p className="bc-hint bc-fail">بلغت الحد اليومي. تابع بعد ساعات — التقدّم محفوظ.</p>}
+                            {quota?.remaining <= 0 && <p className="bc-hint bc-fail">Daily cap reached. Resume in a few hours — progress is saved.</p>}
                         </>
                     )}
 
                     {active.failures?.length > 0 && (
                         <details className="bc-failures">
-                            <summary>آخر حالات الفشل ({active.failures.length})</summary>
+                            <summary>Recent failures ({active.failures.length})</summary>
                             <ul>{active.failures.map((f, i) => <li key={i}><bdi>{f.email}</bdi> — {f.error}</li>)}</ul>
                         </details>
                     )}
@@ -440,9 +440,9 @@ const AdminBroadcast = () => {
 
             {/* ── History ── */}
             <section className="bc-card">
-                <h2>الحملات السابقة</h2>
+                <h2>Past campaigns</h2>
                 {campaigns.length === 0 ? (
-                    <p className="bc-muted">لا توجد حملات بعد.</p>
+                    <p className="bc-muted">No campaigns yet.</p>
                 ) : (
                     <ul className="bc-list">
                         {campaigns.map((c) => (
@@ -458,6 +458,7 @@ const AdminBroadcast = () => {
                 )}
             </section>
         </div>
+        </AdminLayout>
     );
 };
 

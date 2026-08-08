@@ -4,6 +4,7 @@ import axios from "../../utils/adminApi.js";
 import "./Bank.css";
 import Globals from '../../global.js';
 import Spinner from '../common/Spinner.jsx';
+import AdminLayout from './AdminLayout.jsx';
 import { TRACKS, TRACK_KEYS, MEDICAL, specialtiesOf } from '../../utils/tracks.js';
 
 const Bank = () => {
@@ -133,6 +134,7 @@ const Bank = () => {
   const currentQuestion = questions[currentIndex];
 
   return (
+    <AdminLayout bare>
     <div className="app-container">
       <h1 className="title">Question Bank</h1>
 
@@ -154,7 +156,7 @@ const Bank = () => {
               setActiveTrack(key);
             }}
           >
-            {TRACKS[key].labelEn} <small>{TRACKS[key].labelAr}</small>
+            {TRACKS[key].label.en}
           </button>
         ))}
       </div>
@@ -184,7 +186,7 @@ const Bank = () => {
               <p>
                 {searchTerm.trim()
                   ? 'No questions match your search.'
-                  : `The ${TRACKS[activeTrack].labelEn} bank has no questions yet. Add them from "Add Question".`}
+                  : `The ${TRACKS[activeTrack].label.en} bank has no questions yet. Add them from "Add Question".`}
               </p>
             ) : (
               <div className="card-wrapper">
@@ -234,7 +236,7 @@ const Bank = () => {
                           <option value="">Select Type</option>
                           {questionTypes.map((type) => (
                             <option key={type.key} value={type.key}>
-                              {type.key} — {type.labelAr}
+                              {type.key} — {type.label.en}
                             </option>
                           ))}
                         </select>
@@ -326,6 +328,7 @@ const Bank = () => {
         </>
       )}
     </div>
+    </AdminLayout>
   );
 };
 

@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import Icon from '../common/Icon.jsx';
 import { getSourceLabel } from '../../utils/sourceLabels';
 import { getTypeLabel } from '../../utils/typeLabels';
+import { useCopy, useLang } from '../../i18n';
+import quizCopy from '../../i18n/copy/quiz.js';
 
 const Result = ({
   correctAnswers,
@@ -16,6 +18,8 @@ const Result = ({
   completedTopics = []
 }) => {
   const navigate = useNavigate();
+  const t = useCopy(quizCopy).result;
+  const { lang, dir } = useLang();
   const wrongCount = answers.filter(a => !a.isCorrect).length;
   // Students review mistakes first; fall back to everything on a perfect run.
   const [filter, setFilter] = useState(wrongCount > 0 ? 'wrong' : 'all');
@@ -35,58 +39,58 @@ const Result = ({
     .filter(({ answer }) => filter === 'all' || !answer.isCorrect);
 
   return (
-    <div className="quiz-result" dir="rtl">
+    <div className="quiz-result" dir={dir}>
       {completedTopics.length > 0 && (
-        <div className="result-completion-banner" dir="rtl">
+        <div className="result-completion-banner">
           <Icon name="trophy" size={20} />
           <span>
-            🎉 مبروك! أنهيت جميع أسئلة{' '}
+            {t.completedBannerBefore}{' '}
             {completedTopics
-              .map(c => `${getTypeLabel(c.type)} · ${getSourceLabel(c.source)}`)
-              .join('، ')}
+              .map(c => `${getTypeLabel(c.type, lang)} \u00b7 ${getSourceLabel(c.source, lang)}`)
+              .join(lang === 'ar' ? '\u060c ' : ', ')}
           </span>
         </div>
       )}
-      <h2>اكتمل الاختبار!</h2>
-      <p>أجبت على <strong>{correctAnswers}</strong> من أصل <strong>{totalQuestions}</strong> بشكل صحيح.</p>
-      <p>الدقة: <strong>{accuracy}%</strong></p>
-      <p>الوقت المستغرق: <strong>{Math.floor(duration / 60)}د {duration % 60}ث</strong></p>
+      <h2>{t.title}</h2>
+      <p>{t.scoreBefore} <strong>{correctAnswers}</strong> {t.scoreMiddle} <strong>{totalQuestions}</strong> {t.scoreAfter}</p>
+      <p>{t.accuracy} <strong>{accuracy}%</strong></p>
+      <p>{t.duration} <strong>{t.durationValue(Math.floor(duration / 60), duration % 60)}</strong></p>
 
       <div className="result-buttons">
         <button onClick={onRetry} className="restart-button">
-          اختبار آخر
+          {t.another}
         </button>
         <button onClick={handleViewAnalysis} className="home-button">
-          عرض التحليل
+          {t.viewAnalysis}
         </button>
       </div>
 
       {answers.length > 0 && (
         <section className="result-review">
           <div className="result-review-header">
-            <h3>مراجعة الأسئلة</h3>
-            <div className="result-review-filters" role="group" aria-label="تصفية الأسئلة">
+            <h3>{t.reviewTitle}</h3>
+            <div className="result-review-filters" role="group" aria-label={t.filterLabel}>
               <button
                 type="button"
                 className={`result-filter-btn ${filter === 'wrong' ? 'active' : ''}`}
                 onClick={() => setFilter('wrong')}
                 disabled={wrongCount === 0}
               >
-                الخاطئة ({wrongCount})
+                {t.filterWrong(wrongCount)}
               </button>
               <button
                 type="button"
                 className={`result-filter-btn ${filter === 'all' ? 'active' : ''}`}
                 onClick={() => setFilter('all')}
               >
-                الكل ({answers.length})
+                {t.filterAll(answers.length)}
               </button>
             </div>
           </div>
 
           {visibleAnswers.length === 0 ? (
             <p className="result-review-empty">
-              <Icon name="sparkles" size={16} /> لا توجد أسئلة خاطئة — أداء ممتاز!
+              <Icon name="sparkles" size={16} /> {t.noWrong}
             </p>
           ) : (
             <ul className="result-review-list">
@@ -96,28 +100,28 @@ const Result = ({
                   className={`result-review-item ${answer.isCorrect ? 'is-correct' : 'is-wrong'}`}
                 >
                   <div className="result-review-meta">
-                    <span className="result-review-num">سؤال {index + 1}</span>
-                    <span className="result-review-topic">{getTypeLabel(answer.topic)}</span>
+                    <span className="result-review-num">{t.questionNo(index + 1)}</span>
+                    <span className="result-review-topic">{getTypeLabel(answer.topic, lang)}</span>
                     <span className={`result-review-state ${answer.isCorrect ? 'ok' : 'bad'}`}>
                       {answer.isCorrect
-                        ? <><Icon name="check-circle" size={14} /> صحيحة</>
-                        : <><Icon name="x-circle" size={14} /> خاطئة</>}
+                        ? <><Icon name="check-circle" size={14} /> {t.correct}</>
+                        : <><Icon name="x-circle" size={14} /> {t.wrong}</>}
                     </span>
                   </div>
                   <p className="result-review-question" dir="auto">{answer.question}</p>
                   <div className="result-review-answers">
                     {answer.selected ? (
                       <div className={`result-review-answer ${answer.isCorrect ? 'ok' : 'bad'}`}>
-                        <span>إجابتك:</span> <bdi>{answer.selected}</bdi>
+                        <span>{t.yourAnswer}</span> <bdi>{answer.selected}</bdi>
                       </div>
                     ) : (
                       <div className="result-review-answer bad">
-                        <span>لم تُجب على هذا السؤال</span>
+                        <span>{t.unanswered}</span>
                       </div>
                     )}
                     {!answer.isCorrect && (
                       <div className="result-review-answer ok">
-                        <span>الإجابة الصحيحة:</span> <bdi>{answer.correct}</bdi>
+                        <span>{t.correctAnswer}</span> <bdi>{answer.correct}</bdi>
                       </div>
                     )}
                   </div>

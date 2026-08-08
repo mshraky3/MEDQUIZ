@@ -35,9 +35,13 @@ export const TRACKS = {
         key: MEDICAL,
         labelAr: 'طب بشري',
         labelEn: 'Medicine',
-        // Used in email copy and page headings.
+        // Used in email copy and page headings. The English variants exist
+        // because lifecycle mail is now sent in the student's own language
+        // (accounts.preferred_lang) — see services/userEmailService.js.
         examAr: 'اختبار الترخيص الطبي (SMLE)',
+        examEn: 'the Saudi Medical Licensing Exam (SMLE)',
         audienceAr: 'طلاب وأطباء الامتياز',
+        audienceEn: 'medical students and interns',
         specialties: [
             { key: 'medicine', labelAr: 'الباطنة', labelEn: 'Medicine', icon: 'stethoscope' },
             { key: 'surgery', labelAr: 'الجراحة', labelEn: 'Surgery', icon: 'scalpel' },
@@ -50,7 +54,9 @@ export const TRACKS = {
         labelAr: 'تمريض',
         labelEn: 'Nursing',
         examAr: 'اختبار SNLE للتمريض',
+        examEn: 'the Saudi Nursing Licensing Exam (SNLE)',
         audienceAr: 'طلاب وخريجي التمريض',
+        audienceEn: 'nursing students and graduates',
         specialties: [
             { key: 'nursing fundamentals', labelAr: 'أساسيات التمريض', labelEn: 'Fundamentals of Nursing', icon: 'shield-check' },
             { key: 'medical surgical nursing', labelAr: 'التمريض الباطني والجراحي', labelEn: 'Medical-Surgical Nursing', icon: 'stethoscope' },
@@ -103,4 +109,9 @@ export function trackForSpecialty(questionType) {
 
 export function trackLabelAr(track) {
     return TRACKS[normalizeTrack(track)].labelAr;
+}
+
+/** English label — for admin surfaces, which stay English/LTR regardless of site language. */
+export function trackLabelEn(track) {
+    return TRACKS[normalizeTrack(track)].labelEn;
 }

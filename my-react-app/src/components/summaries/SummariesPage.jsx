@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { findSubtopic } from './content/index.js';
-import { loadPath, EMPTY_PATH_SHAPE } from './pathMeta.js';
+import { loadPath, EMPTY_PATH_SHAPE, isStepUnlocked } from './pathMeta.js';
 import QuestionCard from './QuestionCard.jsx';
 import PathCheckpoint from './PathCheckpoint.jsx';
 import SummaryAnnotation from './SummaryAnnotation.jsx';
@@ -10,6 +10,8 @@ import Spinner from '../common/Spinner.jsx';
 import { UserContext } from '../../UserContext';
 import { safeGetItem, safeSetItem } from '../../utils/safeStorage.js';
 import { userTrack, trackLabel, examLabel } from '../../utils/tracks.js';
+import { useCopy, useLang } from '../../i18n';
+import summariesCopy from '../../i18n/copy/summaries.js';
 import Globals from '../../global.js';
 import './Summaries.css';
 
@@ -36,11 +38,13 @@ import './Summaries.css';
  * Deep links (/summaries/:slug) open the matching milestone and, when the slug
  * is a sub-topic, its study modal directly.
  */
+// `labelKey` indexes into the summaries copy so the tool names follow the UI
+// language; the ids are internal and never translated.
 const TOOLS = [
-    { id: 'move', icon: 'cursor', label: 'Browse' },
-    { id: 'pen', icon: 'pen', label: 'Pen' },
-    { id: 'highlighter', icon: 'highlighter', label: 'Highlighter' },
-    { id: 'eraser', icon: 'eraser', label: 'Eraser' },
+    { id: 'move', icon: 'cursor', labelKey: 'move' },
+    { id: 'pen', icon: 'pen', labelKey: 'pen' },
+    { id: 'highlighter', icon: 'highlighter', labelKey: 'highlighter' },
+    { id: 'eraser', icon: 'eraser', labelKey: 'eraser' },
 ];
 const COLORS = ['#2563eb', '#ef4444', '#16a34a', '#f59e0b', '#0f172a'];
 
@@ -65,7 +69,18 @@ const enLabel = (item) => {
 
 const SummariesPage = () => {
     const { slug } = useParams();
+    const navigate = useNavigate();
     const { user, sessionToken } = useContext(UserContext);
+    const t = useCopy(summariesCopy);
+    const { lang, dir } = useLang();
+
+    // Paid, admin-created or grandfathered accounts read every lesson; everyone
+    // else reads the first lesson of each specialty. `accessAllowed` is the
+    // login's answer to "is this a paying account", and is NOT a lockout flag —
+    // a free account reaches this page normally and always will.
+    const isSubscriber = user?.accessAllowed !== false;
+    // "Forward along the path" is leftwards in Arabic, rightwards in English.
+    const forwardChevron = dir === 'rtl' ? 'chevron-left' : 'chevron-right';
 
     // The guided path for this student's own track. `guide` is deliberately not
     // called `path` — that name is already taken by the stored resume point
@@ -269,7 +284,7 @@ const SummariesPage = () => {
         setOpenSub(null);
     };
     // Switching tab resets to the browse tool so questions are clickable by default.
-    const changeTab = (t) => { setTab(t); setTool('move'); };
+    const changeTab = (nextTab) => { setTab(nextTab); setTool('move'); };
 
     // Deep link → open the right milestone + sub-topic modal. Waits on the same
     // cached catalog promise as the path above, so it resolves as soon as the
@@ -281,7 +296,11 @@ const SummariesPage = () => {
             .then((hit) => {
                 if (!alive || !hit) return;
                 setOpenMs((prev) => new Set(prev).add(hit.section.id));
-                if (hit.subtopic) openSubtopic(hit.section, hit.subtopic);
+                // A deep link must obey the same rule as a click: only the free
+                // first lesson of a specialty opens for a non-subscriber. The
+                // milestone still expands, so the link lands somewhere useful.
+                const free = hit.subtopic && hit.subtopic.id === hit.section.subtopics[0]?.id;
+                if (hit.subtopic && (isSubscriber || free)) openSubtopic(hit.section, hit.subtopic);
             })
             .catch(() => { /* a bad slug is not an error worth surfacing */ });
         return () => { alive = false; };
@@ -400,6 +419,41 @@ const SummariesPage = () => {
     const renderStep = (step) => {
         const state = stepState(step);
         const isResumePoint = resuming && step.id === lastStep.id;
+        const unlocked = isStepUnlocked(step, isSubscriber);
+
+        // Locked steps still show their title and their "why": a student should
+        // be able to see exactly what the subscription contains before paying
+        // for it. What is withheld is the lesson itself and its questions.
+        if (!unlocked) {
+            return (
+                <li key={step.id} id={`step-${step.id}`} className="path-row path-step is-locked">
+                    <div className="path-rail">
+                        <span className="path-node step-node" aria-hidden="true">
+                            <Icon name="lock" size={13} />
+                        </span>
+                    </div>
+                    <div className="step-card">
+                        <div className="step-main">
+                            <div className="step-tags">
+                                <span className="step-no">{t.stepNo(step.no)}</span>
+                                <span className="step-state is-locked">
+                                    <Icon name="lock" size={12} /> {t.lockedTag}
+                                </span>
+                            </div>
+                            <h4 className="step-title" dir="ltr">{step.title}</h4>
+                            <p className="step-why" dir="ltr">{step.why}</p>
+                        </div>
+                        <div className="step-actions">
+                            <button type="button" className="step-cta is-locked" onClick={() => navigate('/subscribe')}>
+                                {t.lockedCta}
+                                <Icon name={forwardChevron} size={16} />
+                            </button>
+                        </div>
+                    </div>
+                </li>
+            );
+        }
+
         return (
             <li
                 key={step.id}
@@ -420,50 +474,57 @@ const SummariesPage = () => {
                 <div className="step-card">
                     <div className="step-main">
                         <div className="step-tags">
-                            <span className="step-no">Step {step.no}</span>
+                            <span className="step-no">{t.stepNo(step.no)}</span>
                             {state === 'done' && (
-                                <span className="step-state is-done"><Icon name="check" size={12} /> Completed</span>
+                                <span className="step-state is-done"><Icon name="check" size={12} /> {t.stateDone}</span>
                             )}
                             {state === 'current' && (
-                                <span className="step-state is-current"><Icon name="zap" size={12} /> You are here</span>
+                                <span className="step-state is-current"><Icon name="zap" size={12} /> {t.stateCurrent}</span>
                             )}
                             {state === 'upcoming' && (
-                                <span className="step-state is-upcoming">Upcoming</span>
+                                <span className="step-state is-upcoming">{t.stateUpcoming}</span>
                             )}
                             {isResumePoint && (
-                                <span className="step-state is-resume"><Icon name="clock" size={12} /> Left off here</span>
+                                <span className="step-state is-resume"><Icon name="clock" size={12} /> {t.stateResume}</span>
+                            )}
+                            {/* Only worth saying to someone for whom it is a
+                                distinction — a subscriber's steps are all open. */}
+                            {!isSubscriber && step.free && (
+                                <span className="step-state is-free">{t.freeTag}</span>
                             )}
                         </div>
 
-                        <h4 className="step-title">{step.title}</h4>
-                        <p className="step-why">{step.why}</p>
+                        {/* Title, "why" and "covers" are authored study material —
+                            English in both languages, so they carry dir="ltr". */}
+                        <h4 className="step-title" dir="ltr">{step.title}</h4>
+                        <p className="step-why" dir="ltr">{step.why}</p>
                         {step.covers && (
                             <p className="step-covers">
-                                <span className="step-covers-label">You&rsquo;ll learn</span> {step.covers}
+                                <span className="step-covers-label">{t.willLearn}</span> <span dir="ltr">{step.covers}</span>
                             </p>
                         )}
 
                         <div className="step-meta">
                             {step.questionCount > 0 && (
-                                <span><Icon name="target" size={13} /> {step.questionCount} practice questions</span>
+                                <span><Icon name="target" size={13} /> {step.questionCount} {t.practiceQuestions}</span>
                             )}
                         </div>
                     </div>
 
                     <div className="step-actions">
                         <button type="button" className="step-cta" onClick={() => openStep(step)}>
-                            {state === 'done' ? 'Review' : state === 'current' ? 'Continue' : 'Open'}
-                            <Icon name="chevron-right" size={16} />
+                            {state === 'done' ? t.ctaReview : state === 'current' ? t.ctaContinue : t.ctaOpen}
+                            <Icon name={forwardChevron} size={16} />
                         </button>
                         <button
                             type="button"
                             className={`step-tick ${state === 'done' ? 'on' : ''}`}
                             onClick={() => toggleDone(step.id)}
                             aria-pressed={state === 'done'}
-                            title={state === 'done' ? 'Marked as done — click to undo' : 'Mark this step as done'}
+                            title={state === 'done' ? t.markedTitle : t.markTitle}
                         >
                             <Icon name={state === 'done' ? 'check' : 'circle'} size={13} />
-                            {state === 'done' ? 'Done' : 'Mark done'}
+                            {state === 'done' ? t.marked : t.markDone}
                         </button>
                     </div>
                 </div>
@@ -474,8 +535,8 @@ const SummariesPage = () => {
     // The catalog chunk for this track is still in flight.
     if (guideState === 'loading') {
         return (
-            <div className="summaries-hub" dir="rtl">
-                <Spinner fullScreen label="جاري تحميل المحتوى الدراسي" />
+            <div className="summaries-hub" dir={dir}>
+                <Spinner fullScreen label={t.loading} />
             </div>
         );
     }
@@ -483,13 +544,13 @@ const SummariesPage = () => {
     // The chunk failed to load (offline, or a stale asset hash after a deploy).
     if (guideState === 'error') {
         return (
-            <div className="summaries-hub" dir="rtl">
+            <div className="summaries-hub" dir={dir}>
                 <div className="hub-comingsoon">
                     <span className="hub-comingsoon-icon" aria-hidden="true"><Icon name="alert-triangle" size={34} /></span>
-                    <h1>تعذّر تحميل المحتوى الدراسي</h1>
-                    <p>تحقّق من اتصالك بالإنترنت ثم أعد المحاولة.</p>
+                    <h1>{t.errorTitle}</h1>
+                    <p>{t.errorBody}</p>
                     <button type="button" className="hub-search-clear" onClick={() => window.location.reload()}>
-                        إعادة المحاولة
+                        {t.retry}
                     </button>
                 </div>
             </div>
@@ -501,46 +562,43 @@ const SummariesPage = () => {
     // none of the progress/resume machinery has to cope with an empty set.
     if (noContent) {
         return (
-            <div className="summaries-hub" dir="rtl">
+            <div className="summaries-hub" dir={dir}>
                 <div className="hub-comingsoon">
                     <span className="hub-comingsoon-icon" aria-hidden="true"><Icon name="hourglass" size={34} /></span>
-                    <h1>المحتوى الدراسي لمسار {trackLabel(myTrack)} قيد الإعداد</h1>
-                    <p>
-                        نعمل حالياً على تجهيز المحتوى الدراسي المصوّر الخاص بـ{examLabel(myTrack)}،
-                        مرتّبة كمسار دراسي متسلسل تماماً كبقية المسارات.
-                    </p>
-                    <p className="hub-comingsoon-note">
-                        سنرسل لك بريداً فور جاهزيتها. في هذه الأثناء يمكنك متابعة التدرب على الأسئلة من صفحة الاختبارات.
-                    </p>
+                    <h1>{t.comingSoonTitle(trackLabel(myTrack, lang))}</h1>
+                    <p>{t.comingSoonBody(examLabel(myTrack, lang))}</p>
+                    <p className="hub-comingsoon-note">{t.comingSoonNote}</p>
                 </div>
             </div>
         );
     }
 
     return (
-        /* The page chrome is Arabic/RTL like the rest of the site. The study
-           material itself is English-only, so every element that renders
-           authored content carries dir="ltr" explicitly. */
-        <div className="summaries-hub" dir="rtl">
+        /* The page chrome follows the site language. The study material itself
+           is English-only, so every element that renders authored content
+           carries dir="ltr" explicitly. */
+        <div className="summaries-hub" dir={dir}>
             {/* ---------------- header: what this path is, and where you are ------ */}
             <header className="hub-head">
-                <span className="hub-eyebrow"><Icon name="rocket" size={14} /> مسار مذاكرة مرتّب</span>
-                <h1>المحتوى الدراسي، مرتّب بترتيب دراسته</h1>
+                <span className="hub-eyebrow"><Icon name="rocket" size={14} /> {t.eyebrow}</span>
+                <h1>{t.title}</h1>
                 <div className="hub-facts">
-                    <span className="hub-fact"><Icon name="flag" size={15} /><b>{MILESTONES.length}</b> مراحل</span>
-                    <span className="hub-fact"><Icon name="book-open" size={15} /><b>{TOTAL_STEPS}</b> خطوة</span>
-                    <span className="hub-fact"><Icon name="target" size={15} /><b>{TOTAL_QUESTIONS}</b> سؤال تدريبي</span>
+                    <span className="hub-fact"><Icon name="flag" size={15} /><b>{MILESTONES.length}</b> {t.factMilestones}</span>
+                    <span className="hub-fact"><Icon name="book-open" size={15} /><b>{TOTAL_STEPS}</b> {t.factSteps}</span>
+                    <span className="hub-fact"><Icon name="target" size={15} /><b>{TOTAL_QUESTIONS}</b> {t.factQuestions}</span>
                 </div>
 
                 {/* position on the path */}
                 <div className="hub-track">
                     <div className="hub-track-top">
                         <span className="hub-track-pos">
-                            {finished ? 'اكتمل المسار' : <>الخطوة <b>{position}</b> من {TOTAL_STEPS}</>}
+                            {finished
+                                ? t.pathComplete
+                                : <>{t.stepXofYBefore} <b>{position}</b> {t.stepXofYAfter(TOTAL_STEPS)}</>}
                         </span>
                         <span className="hub-track-sep" aria-hidden="true">·</span>
-                        <span className="hub-track-pct"><b>{pct}%</b> مكتمل</span>
-                        <span className="hub-track-done"><Icon name="check" size={12} /> {doneTotal} خطوة منجزة</span>
+                        <span className="hub-track-pct"><b>{pct}%</b> {t.pctComplete}</span>
+                        <span className="hub-track-done"><Icon name="check" size={12} /> {doneTotal} {t.stepsDone}</span>
                     </div>
                     <div
                         className="hub-track-bar"
@@ -548,11 +606,11 @@ const SummariesPage = () => {
                         aria-valuenow={pct}
                         aria-valuemin={0}
                         aria-valuemax={100}
-                        aria-label="تقدّمك في مسار المذاكرة"
+                        aria-label={t.progressAria}
                     >
                         <div className="hub-track-fill" style={{ width: `${pct}%` }} />
-                        {TRACK_TICKS.map((t) => (
-                            <span key={t.id} className="hub-track-tick" style={{ insetInlineStart: `${t.pos}%` }} />
+                        {TRACK_TICKS.map((tick) => (
+                            <span key={tick.id} className="hub-track-tick" style={{ insetInlineStart: `${tick.pos}%` }} />
                         ))}
                     </div>
                     <div className="hub-track-legend">
@@ -569,7 +627,7 @@ const SummariesPage = () => {
                                         setScrollTo(`ms-${m.id}`);
                                     }}
                                 >
-                                    <i aria-hidden="true" />{m.title} <b>{nDone}/{m.steps.length}</b>
+                                    <i aria-hidden="true" /><span dir="ltr">{m.title}</span> <b>{nDone}/{m.steps.length}</b>
                                 </button>
                             );
                         })}
@@ -581,9 +639,9 @@ const SummariesPage = () => {
                     <div className="hub-resume is-finished">
                         <span className="hub-resume-node"><Icon name="trophy" size={22} /></span>
                         <div className="hub-resume-text">
-                            <span className="hub-resume-kicker">اكتمل المسار</span>
-                            <strong className="hub-resume-title">أنجزت كل الخطوات ({TOTAL_STEPS})</strong>
-                            <span className="hub-resume-why">ارجع لأي خطوة بالأسفل — كل شيء يبقى مفتوحاً للمراجعة.</span>
+                            <span className="hub-resume-kicker">{t.pathComplete}</span>
+                            <strong className="hub-resume-title">{t.finishedTitle(TOTAL_STEPS)}</strong>
+                            <span className="hub-resume-why">{t.finishedWhy}</span>
                         </div>
                     </div>
                 ) : resumeStep && (
@@ -593,24 +651,24 @@ const SummariesPage = () => {
                         </span>
                         <div className="hub-resume-text">
                             <span className="hub-resume-kicker">
-                                {resuming ? 'أكمل من حيث توقفت' : freshStart ? 'ابدأ من هنا' : 'التالي'}
+                                {resuming ? t.resumeKicker : freshStart ? t.startKicker : t.nextKicker}
                             </span>
                             <strong className="hub-resume-title">
-                                الخطوة {resumeStep.no} · <span dir="ltr">{resumeStep.title}</span>
+                                {t.resumeStepPrefix} {resumeStep.no} · <span dir="ltr">{resumeStep.title}</span>
                             </strong>
                             <span className="hub-resume-why" dir="ltr">{resumeStep.why}</span>
                             <span className="hub-resume-meta">
                                 <span dir="ltr">{resumeStep.section.title}</span>
-                                {resumeStep.questionCount > 0 ? ` · ${resumeStep.questionCount} سؤال` : ''}
+                                {resumeStep.questionCount > 0 ? ` · ${resumeStep.questionCount} ${t.questionsSuffix}` : ''}
                             </span>
                         </div>
                         <div className="hub-resume-actions">
                             <button type="button" className="hub-resume-cta" onClick={() => openStep(resumeStep)}>
-                                {resuming ? 'متابعة' : freshStart ? 'ابدأ الخطوة الأولى' : 'متابعة'}
-                                <Icon name="chevron-left" size={17} />
+                                {resuming || !freshStart ? t.resumeCta : t.startCta}
+                                <Icon name={forwardChevron} size={17} />
                             </button>
                             <button type="button" className="hub-resume-link" onClick={() => revealStep(resumeStep)}>
-                                أظهرها على المسار
+                                {t.revealOnPath}
                             </button>
                         </div>
                     </div>
@@ -622,14 +680,14 @@ const SummariesPage = () => {
                     <input
                         type="text"
                         className="hub-search-input"
-                        placeholder="ابحث عن موضوع — مثل asthma أو DKA أو breast cancer…"
+                        placeholder={t.searchPlaceholder}
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
-                        aria-label="ابحث في الخطوات"
+                        aria-label={t.searchAria}
                         dir="auto"
                     />
                     {query && (
-                        <button type="button" className="hub-search-clear" onClick={() => setQuery('')} aria-label="مسح البحث">
+                        <button type="button" className="hub-search-clear" onClick={() => setQuery('')} aria-label={t.clearSearch}>
                             <Icon name="x" size={16} />
                         </button>
                     )}
@@ -640,16 +698,16 @@ const SummariesPage = () => {
             {searching ? (
                 <div className="path-search">
                     <p className="path-search-head">
-                        {results.length} خطوة مطابقة لـ &ldquo;<span dir="ltr">{query.trim()}</span>&rdquo;
+                        {t.resultsCount(results.length)} &ldquo;<span dir="ltr">{query.trim()}</span>&rdquo;
                         <button type="button" className="path-search-back" onClick={() => setQuery('')}>
-                            <Icon name="x" size={14} /> العودة إلى المسار
+                            <Icon name="x" size={14} /> {t.backToPath}
                         </button>
                     </p>
                     {results.length === 0 ? (
                         <div className="hub-empty">
                             <Icon name="search" size={30} />
-                            <p>لا توجد خطوات مطابقة لـ &ldquo;<span dir="ltr">{query.trim()}</span>&rdquo;.</p>
-                            <button type="button" className="hub-empty-clear" onClick={() => setQuery('')}>مسح البحث</button>
+                            <p>{t.noResultsBefore} &ldquo;<span dir="ltr">{query.trim()}</span>&rdquo;.</p>
+                            <button type="button" className="hub-empty-clear" onClick={() => setQuery('')}>{t.clearSearch}</button>
                         </div>
                     ) : (
                         <ul className="path-search-list">
@@ -670,10 +728,10 @@ const SummariesPage = () => {
                                                 <span className="search-step-title">{step.title}</span>
                                                 <span className="search-step-covers">{step.covers}</span>
                                             </span>
-                                            <span className="search-step-spec">
+                                            <span className="search-step-spec" dir="ltr">
                                                 <Icon name={step.section.icon} size={13} /> {step.section.title}
                                             </span>
-                                            <Icon name="chevron-right" size={16} className="search-step-chev" />
+                                            <Icon name={forwardChevron} size={16} className="search-step-chev" />
                                         </button>
                                     </li>
                                 );
@@ -715,8 +773,8 @@ const SummariesPage = () => {
                                     >
                                         <span className="ms-head-main">
                                             <span className="ms-kicker">
-                                                المرحلة {m.order} من {MILESTONES.length} · <span dir="ltr">{m.tagline}</span>
-                                                {isCurrent && <em className="ms-here">أنت هنا</em>}
+                                                {t.milestoneKicker(m.order, MILESTONES.length)} · <span dir="ltr">{m.tagline}</span>
+                                                {isCurrent && <em className="ms-here">{t.youAreHere}</em>}
                                             </span>
                                             <span className="ms-title" dir="ltr">
                                                 <span className="ms-icon"><Icon name={m.icon} size={22} /></span>
@@ -724,8 +782,8 @@ const SummariesPage = () => {
                                             </span>
                                             <span className="ms-goal" dir="ltr">{m.goal}</span>
                                             <span className="ms-meta">
-                                                <span><Icon name="book-open" size={13} /> {nTotal} خطوة</span>
-                                                <span><Icon name="target" size={13} /> {m.questionCount} سؤال</span>
+                                                <span><Icon name="book-open" size={13} /> {nTotal} {t.milestoneSteps}</span>
+                                                <span><Icon name="target" size={13} /> {m.questionCount} {t.milestoneQuestions}</span>
                                             </span>
                                         </span>
 
@@ -733,7 +791,7 @@ const SummariesPage = () => {
                                             <span className="ms-ring" style={{ '--p': msPct }}>
                                                 <i>{msPct}%</i>
                                             </span>
-                                            <span className="ms-count">{nDone}/{nTotal} منجزة</span>
+                                            <span className="ms-count">{nDone}/{nTotal} {t.milestoneDone}</span>
                                             <span className={`ms-chev ${isOpen ? 'open' : ''}`} aria-hidden="true">▾</span>
                                         </span>
                                     </button>
@@ -745,14 +803,21 @@ const SummariesPage = () => {
                                             {m.steps.map(renderStep)}
                                         </ol>
 
-                                        <PathCheckpoint
-                                            milestone={m}
-                                            nextMilestone={next}
-                                            passed={!!path.checkpoints?.[m.id]}
-                                            doneCount={nDone}
-                                            onPass={() => passCheckpoint(m, next)}
-                                            onRedo={() => redoCheckpoint(m)}
-                                        />
+                                        {/* A checkpoint quizzes the whole
+                                            milestone, most of which a free
+                                            account has not been shown. Offering
+                                            it would be a test on unread
+                                            material, so it is subscribers only. */}
+                                        {isSubscriber && (
+                                            <PathCheckpoint
+                                                milestone={m}
+                                                nextMilestone={next}
+                                                passed={!!path.checkpoints?.[m.id]}
+                                                doneCount={nDone}
+                                                onPass={() => passCheckpoint(m, next)}
+                                                onRedo={() => redoCheckpoint(m)}
+                                            />
+                                        )}
                                     </div>
                                 </div>
                             </li>
@@ -764,11 +829,11 @@ const SummariesPage = () => {
                             <span className="path-node end-node" aria-hidden="true"><Icon name="trophy" size={18} /></span>
                         </div>
                         <div className="end-card">
-                            <h3>{finished ? 'أنهيت المسار' : 'خط النهاية'}</h3>
+                            <h3>{finished ? t.endTitleDone : t.endTitle}</h3>
                             <p>
                                 {finished
-                                    ? `أنجزت كل الخطوات (${TOTAL_STEPS}) وكل محطات التقييم (${MILESTONES.length}). ارجع لأي خطوة للمراجعة — لا شيء يُغلق.`
-                                    : `تبقّت ${TOTAL_STEPS - doneTotal} خطوة. واصل خطوة بخطوة — كل خطوة تعلّمها تحرّك الخط للأمام.`}
+                                    ? t.endBodyDone(TOTAL_STEPS, MILESTONES.length)
+                                    : t.endBody(TOTAL_STEPS - doneTotal)}
                             </p>
                         </div>
                     </li>
@@ -779,24 +844,24 @@ const SummariesPage = () => {
             {openSub && (
                 <div
                     className="summary-panel"
-                    dir="ltr"
+                    dir={dir}
                     ref={panelRef}
                     style={openSub.section.accent ? { '--accent': openSub.section.accent } : undefined}
                 >
                     <header className="panel-head">
                         <div className="panel-head-text">
-                            <span className="panel-spec">
+                            <span className="panel-spec" dir="ltr">
                                 <Icon name={openSub.section.icon} size={18} /> {enLabel(openSub.section).primary}
-                                {STEP_BY_ID[openSub.subtopic.id] && (
-                                    <em className="panel-step">Step {STEP_BY_ID[openSub.subtopic.id].no} of {TOTAL_STEPS}</em>
-                                )}
                             </span>
-                            <h2 className="panel-title">{enLabel(openSub.subtopic).primary}</h2>
+                            {STEP_BY_ID[openSub.subtopic.id] && (
+                                <em className="panel-step">{t.panelStep(STEP_BY_ID[openSub.subtopic.id].no, TOTAL_STEPS)}</em>
+                            )}
+                            <h2 className="panel-title" dir="ltr">{enLabel(openSub.subtopic).primary}</h2>
                             {enLabel(openSub.subtopic).secondary && (
-                                <span className="panel-title-en">{enLabel(openSub.subtopic).secondary}</span>
+                                <span className="panel-title-en" dir="ltr">{enLabel(openSub.subtopic).secondary}</span>
                             )}
                         </div>
-                        <button type="button" className="panel-close" onClick={closePanel} aria-label="Close">
+                        <button type="button" className="panel-close" onClick={closePanel} aria-label={t.close}>
                             <Icon name="x" size={20} />
                         </button>
                     </header>
@@ -807,7 +872,7 @@ const SummariesPage = () => {
                             className={`panel-tab ${tab === 'summary' ? 'active' : ''}`}
                             onClick={() => changeTab('summary')}
                         >
-                            Summary
+                            {t.tabSummary}
                         </button>
                         {questions.length > 0 && (
                             <button
@@ -815,7 +880,7 @@ const SummariesPage = () => {
                                 className={`panel-tab ${tab === 'questions' ? 'active' : ''}`}
                                 onClick={() => changeTab('questions')}
                             >
-                                Test yourself <span className="panel-tab-badge">{questions.length}</span>
+                                {t.tabQuestions} <span className="panel-tab-badge">{questions.length}</span>
                             </button>
                         )}
                         <button
@@ -823,10 +888,10 @@ const SummariesPage = () => {
                             className={`panel-done-btn ${isDone(openSub.subtopic.id) ? 'on' : ''}`}
                             onClick={() => toggleDone(openSub.subtopic.id)}
                             aria-pressed={isDone(openSub.subtopic.id)}
-                            title={isDone(openSub.subtopic.id) ? 'Marked as done — click to undo' : 'Mark this step as done'}
+                            title={isDone(openSub.subtopic.id) ? t.markedTitle : t.markTitle}
                         >
                             <Icon name={isDone(openSub.subtopic.id) ? 'check' : 'circle'} size={16} />
-                            <span className="label">{isDone(openSub.subtopic.id) ? 'Step done' : 'Mark step done'}</span>
+                            <span className="label">{isDone(openSub.subtopic.id) ? t.panelStepDone : t.panelMarkDone}</span>
                         </button>
                     </div>
 
@@ -863,26 +928,26 @@ const SummariesPage = () => {
                             type="button"
                             className="summary-fab-toggle"
                             onClick={() => setToolsOpen(true)}
-                            aria-label="Open study tools"
+                            aria-label={t.tools.openAria}
                             aria-expanded="false"
-                            title="Study tools — pen, highlighter, full screen"
+                            title={t.tools.openTitle}
                         >
                             <Icon name="pen" size={17} />
-                            <span className="label">Study tools</span>
+                            <span className="label">{t.tools.open}</span>
                         </button>
                     ) : (
-                        <div className="summary-fab" dir="ltr" role="toolbar" aria-label="Study tools">
+                        <div className="summary-fab" role="toolbar" aria-label={t.tools.toolbar}>
                             <div className="stb-group">
-                                {TOOLS.map((t) => (
+                                {TOOLS.map((toolDef) => (
                                     <button
-                                        key={t.id}
+                                        key={toolDef.id}
                                         type="button"
-                                        className={`stb-btn ${tool === t.id ? 'on' : ''}`}
-                                        title={t.label}
-                                        aria-label={t.label}
-                                        aria-pressed={tool === t.id}
-                                        onClick={() => setTool(t.id)}
-                                    ><Icon name={t.icon} size={18} /></button>
+                                        className={`stb-btn ${tool === toolDef.id ? 'on' : ''}`}
+                                        title={t.tools[toolDef.labelKey]}
+                                        aria-label={t.tools[toolDef.labelKey]}
+                                        aria-pressed={tool === toolDef.id}
+                                        onClick={() => setTool(toolDef.id)}
+                                    ><Icon name={toolDef.icon} size={18} /></button>
                                 ))}
                             </div>
                             <div className="stb-sep" />
@@ -893,7 +958,7 @@ const SummariesPage = () => {
                                         type="button"
                                         className={`stb-color ${color === c ? 'on' : ''}`}
                                         style={{ background: c }}
-                                        aria-label={`Color ${c}`}
+                                        aria-label={t.tools.color(c)}
                                         aria-pressed={color === c}
                                         onClick={() => pickColor(c)}
                                     />
@@ -901,12 +966,12 @@ const SummariesPage = () => {
                             </div>
                             <div className="stb-sep" />
                             <div className="stb-group">
-                                <button type="button" className="stb-btn" title="Undo" aria-label="Undo" onClick={() => annotationRef.current?.undo()}><Icon name="undo" size={18} /></button>
-                                <button type="button" className="stb-btn" title="Clear all" aria-label="Clear all" onClick={() => annotationRef.current?.clear()}><Icon name="trash" size={18} /></button>
-                                <button type="button" className="stb-btn" title={isFs ? 'Exit full screen' : 'Full screen'} aria-label={isFs ? 'Exit full screen' : 'Full screen'} onClick={toggleFs}><Icon name="maximize" size={18} /></button>
+                                <button type="button" className="stb-btn" title={t.tools.undo} aria-label={t.tools.undo} onClick={() => annotationRef.current?.undo()}><Icon name="undo" size={18} /></button>
+                                <button type="button" className="stb-btn" title={t.tools.clear} aria-label={t.tools.clear} onClick={() => annotationRef.current?.clear()}><Icon name="trash" size={18} /></button>
+                                <button type="button" className="stb-btn" title={isFs ? t.tools.exitFullscreen : t.tools.fullscreen} aria-label={isFs ? t.tools.exitFullscreen : t.tools.fullscreen} onClick={toggleFs}><Icon name="maximize" size={18} /></button>
                             </div>
                             <div className="stb-sep" />
-                            <button type="button" className="stb-btn stb-collapse" title="Hide tools" aria-label="Hide study tools" onClick={closeTools}><Icon name="x" size={18} /></button>
+                            <button type="button" className="stb-btn stb-collapse" title={t.tools.hide} aria-label={t.tools.hide} onClick={closeTools}><Icon name="x" size={18} /></button>
                         </div>
                     )}
                 </div>

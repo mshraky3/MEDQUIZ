@@ -15,8 +15,6 @@ const SEO = ({
   structuredData = [],
   siteName = 'SQB',
   robots = 'index, follow',
-  lang = 'ar',
-  dir = 'rtl',
   locale = 'ar_SA',
   alternates = []
 }) => {
@@ -58,8 +56,9 @@ const SEO = ({
     };
 
     document.title = fullTitle;
-    document.documentElement.lang = lang;
-    document.documentElement.dir = dir;
+    // `lang`/`dir` on <html> belong to LanguageProvider (src/i18n) — the site
+    // language is a user choice, not a per-route SEO fact, and writing them
+    // here would silently undo the language toggle on every navigation.
 
     setMeta('meta[name="description"]', { name: 'description' }, description);
     setMeta('meta[name="keywords"]', { name: 'keywords' }, keywords || defaultKeywords);
@@ -108,7 +107,7 @@ const SEO = ({
       script.textContent = JSON.stringify(item);
       document.head.appendChild(script);
     });
-  }, [alternates, description, dir, image, imageAlt, keywords, lang, locale, robots, siteName, structuredData, title, type, url]);
+  }, [alternates, description, image, imageAlt, keywords, locale, robots, siteName, structuredData, title, type, url]);
 
   return null;
 };

@@ -1,0 +1,431 @@
+/* Animated "add to home screen" walkthrough.
+   The phone is markup, not an image — see InstallShowcase.jsx. Step state is
+   carried by `.is-step-N` on the phone, so every layer below just declares
+   what it looks like at each step and CSS interpolates between them.
+
+   COLOUR: only two things here are allowed to be dark — the phone's bezel and
+   its home-screen wallpaper — because that is what a phone actually looks
+   like. Everything else uses the app's own light palette: the screen inside
+   the bezel is the real #eef2fb page background, and the tabs/steps beside it
+   are white cards on the white landing page. They used to be slate-900 with
+   cyan accents, which left the written steps as grey text on grey blocks. */
+
+.ish-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
+  gap: 40px;
+  align-items: center;
+  margin-top: 34px;
+}
+
+.ish-stage { display: grid; place-items: center; }
+
+/* ── The phone ───────────────────────────────────────────────── */
+.ish-phone {
+  position: relative;
+  width: 240px;
+  height: 480px;
+  border-radius: 34px;
+  padding: 10px;
+  background: linear-gradient(160deg, #334155, #0f172a);
+  border: 1px solid #1e293b;
+  box-shadow: 0 30px 70px rgba(15, 23, 42, 0.32), inset 0 0 0 2px #020617;
+}
+
+.ish-notch {
+  position: absolute;
+  inset-block-start: 10px;
+  inset-inline-start: 50%;
+  transform: translateX(-50%);
+  width: 84px;
+  height: 18px;
+  border-radius: 0 0 12px 12px;
+  background: #020617;
+  z-index: 5;
+}
+
+/* The app's real page background — this is the product, not a mock-up. */
+.ish-screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 26px;
+  overflow: hidden;
+  background: #eef2fb;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Browser chrome ──────────────────────────────────────────── */
+.ish-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #f5f8fd;
+  color: #64748b;
+  flex: 0 0 auto;
+}
+
+.ish-bar--top { padding-block-start: 30px; border-bottom: 1px solid #e2e8f2; }
+.ish-bar--bottom { border-top: 1px solid #e2e8f2; }
+
+.ish-url {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid #e6ecf6;
+  font-size: 0.6rem;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  direction: ltr;
+  text-align: center;
+}
+
+.ish-ctrl {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  border-radius: 8px;
+  color: #64748b;
+  transition: background 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Step 1 lights up the control the student has to find. */
+.is-step-0 .ish-ctrl {
+  background: rgba(37, 99, 235, 0.12);
+  color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+}
+
+/* ── Page content behind the chrome ──────────────────────────── */
+.ish-content {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 24px 16px;
+  align-items: flex-start;
+}
+
+.ish-logo {
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: #2563eb;
+  margin-bottom: 6px;
+}
+
+.ish-line {
+  display: block;
+  height: 7px;
+  width: var(--w, 70%);
+  border-radius: 999px;
+  background: #dbe4f3;
+  flex: 0 0 auto;
+}
+
+/* ── The tap ripple (step 1) ─────────────────────────────────── */
+.ish-tap {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid #2563eb;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 4;
+  /* Positioned over whichever control this platform uses. */
+  inset-inline-end: 14px;
+}
+
+.ish-phone--ios .ish-tap { inset-block-end: 14px; }
+.ish-phone--android .ish-tap { inset-block-start: 34px; }
+
+.is-step-0 .ish-tap { animation: ish-tap 1.6s ease-out 0.4s infinite; }
+
+@keyframes ish-tap {
+  0% { opacity: 0.9; transform: scale(0.5); }
+  70% { opacity: 0; transform: scale(1.5); }
+  100% { opacity: 0; transform: scale(1.5); }
+}
+
+/* ── The share / menu sheet (step 2) ─────────────────────────── */
+.ish-sheet {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  z-index: 6;
+  padding: 10px 14px 18px;
+  border-radius: 18px 18px 26px 26px;
+  background: #ffffff;
+  border-top: 1px solid #e6ecf6;
+  box-shadow: 0 -8px 28px rgba(15, 23, 42, 0.12);
+  transform: translateY(105%);
+  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.is-step-1 .ish-sheet, .is-step-2 .ish-sheet { transform: translateY(0); }
+/* Once the icon has landed, the sheet is gone — it was dismissed. */
+.is-step-2 .ish-sheet { transform: translateY(105%); transition-delay: 0s; }
+
+.ish-sheet-grab {
+  display: block;
+  width: 36px;
+  height: 4px;
+  margin: 0 auto 10px;
+  border-radius: 999px;
+  background: #cbd5e1;
+}
+
+.ish-sheet-title {
+  margin: 0 0 10px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.ish-sheet-rows { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 7px; }
+
+.ish-sheet-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  border-radius: 9px;
+  background: #f5f8fd;
+  border: 1px solid transparent;
+}
+
+.ish-sheet-ic {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  border-radius: 6px;
+  background: #e8eefb;
+  color: #2563eb;
+}
+
+.ish-sheet-label {
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.4;
+}
+
+/* The row the student is looking for pulses once the sheet has settled. */
+.is-step-1 .ish-sheet-row.is-target {
+  border-color: rgba(37, 99, 235, 0.45);
+  background: rgba(37, 99, 235, 0.08);
+  animation: ish-glow 1.5s ease-in-out 0.6s 2;
+}
+
+.is-step-1 .ish-sheet-row.is-target .ish-sheet-ic { background: #2563eb; color: #ffffff; }
+
+@keyframes ish-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+  50% { box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.18); }
+}
+
+.ish-sheet-confirm {
+  display: block;
+  padding: 8px;
+  border-radius: 9px;
+  background: #2563eb;
+  color: #ffffff;
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+/* ── The home screen (step 3) ────────────────────────────────── */
+/* A wallpaper, so it is dark — but brand-blue rather than near-black, and the
+   SQB tile is the white/blue icon the installed app actually gets. */
+.ish-home {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+  padding: 26px 20px;
+  background: linear-gradient(165deg, #1d4ed8, #0f1e3d);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.5s ease, visibility 0.5s;
+}
+
+.is-step-2 .ish-home { opacity: 1; visibility: visible; }
+
+.ish-home-label {
+  margin: 0;
+  text-align: center;
+  font-size: 0.64rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.ish-home-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.ish-app {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.14);
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.ish-app--sqb {
+  background: #ffffff;
+  color: #2563eb;
+  box-shadow: 0 6px 18px rgba(2, 6, 23, 0.35);
+  transform: scale(0.2);
+  opacity: 0;
+}
+
+.is-step-2 .ish-app--sqb {
+  animation: ish-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.35s forwards;
+}
+
+@keyframes ish-pop {
+  to { transform: scale(1); opacity: 1; }
+}
+
+.ish-home-done {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 0.66rem;
+  font-weight: 800;
+  color: #4ade80;
+  opacity: 0;
+  transition: opacity 0.4s ease 0.9s;
+}
+
+.is-step-2 .ish-home-done { opacity: 1; }
+
+/* ── Side: platform tabs and the written steps ───────────────── */
+.ish-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+
+.ish-tab {
+  padding: 8px 15px;
+  border-radius: 999px;
+  border: 1px solid #dbe4f3;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #475569;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+}
+
+.ish-tab:hover { border-color: #b9cdf0; color: #0f1e3d; }
+
+.ish-tab.is-on {
+  background: rgba(37, 99, 235, 0.08);
+  border-color: rgba(37, 99, 235, 0.38);
+  color: #2563eb;
+}
+
+.ish-steps { list-style: none; margin: 0 0 22px; padding: 0; display: grid; gap: 10px; }
+
+.ish-step-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid #e6ecf6;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  font-family: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition: border-color 0.3s ease, background 0.3s ease;
+}
+
+.ish-step.is-on .ish-step-btn {
+  border-color: rgba(37, 99, 235, 0.38);
+  background: rgba(37, 99, 235, 0.06);
+}
+
+.ish-step-n {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #eef2f8;
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: #64748b;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.ish-step.is-on .ish-step-n { background: #2563eb; color: #ffffff; }
+.ish-step.is-done .ish-step-n { background: rgba(22, 163, 74, 0.14); color: #15803d; }
+
+.ish-step-text {
+  font-size: 0.86rem;
+  line-height: 1.65;
+  color: #475569;
+}
+
+.ish-step.is-on .ish-step-text { color: #0f1e3d; font-weight: 600; }
+
+.ish-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+
+.ish-replay {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  border-radius: 999px;
+  border: 1px solid #dbe4f3;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #475569;
+  cursor: pointer;
+}
+
+.ish-replay:hover { border-color: #b9cdf0; color: #0f1e3d; }
+
+/* ── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 880px) {
+  .ish-grid { grid-template-columns: 1fr; gap: 28px; margin-top: 26px; }
+  .ish-phone { width: 210px; height: 420px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ish-sheet, .ish-home, .ish-home-done, .ish-ctrl, .ish-step-btn, .ish-step-n {
+    transition: none !important;
+  }
+  .ish-tap, .is-step-1 .ish-sheet-row.is-target, .is-step-2 .ish-app--sqb {
+    animation: none !important;
+  }
+  /* Without motion the final state is the useful one. */
+  .ish-app--sqb { transform: none; opacity: 1; }
+}

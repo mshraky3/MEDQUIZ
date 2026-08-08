@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useContext } from 'react';
 import Icon from '../common/Icon.jsx';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams, useLocation, Link } from 'react-router-dom';
 import axios from 'axios';
-import { track } from '@vercel/analytics';
+import { safeTrack, trackFunnel } from '../../utils/analytics.js';
 import Globals from '../../global.js';
 import Spinner from '../common/Spinner.jsx';
 import { UserContext } from '../../UserContext';
-import { TRACKS, TRACK_KEYS, normalizeTrack } from '../../utils/tracks.js';
+import { TRACKS, TRACK_KEYS, normalizeTrack, pick } from '../../utils/tracks.js';
+import { useCopy, useLang } from '../../i18n';
+import { formatDate } from '../../i18n/format.js';
+import authCopy from '../../i18n/copy/auth.js';
 import '../login/Login.css';
 import './Signup.css';
 
@@ -15,7 +18,12 @@ const Signup = () => {
     const [form, setForm] = useState({
         email: '',
         password: '',
-        confirmPassword: ''
+        confirmPassword: '',
+        // Optional. Feeds the exam-date reminder ladder (lifecycleJobs.js) and
+        // the hub countdown — asked here because almost nobody sets it later
+        // from settings (see MONETIZATION_ANALYSIS_2026-08.md §3.3). Never
+        // required: plenty of students sign up before they have a sitting date.
+        examDate: ''
     });
     const [termsAgreed, setTermsAgreed] = useState(false);
     const [otp, setOtp] = useState('');
@@ -23,9 +31,14 @@ const Signup = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
-    const [trialGranted, setTrialGranted] = useState(false);
     const [tempLinkInfo, setTempLinkInfo] = useState(null);
     const [isTempLink, setIsTempLink] = useState(false);
+    // A PAID group seat (/join/:token), as opposed to an admin invite
+    // (/signup/:token). Both are token links and both skip the email OTP, but a
+    // seat creates a paying account with the group's end date, and its claimer
+    // picks their own track — a group can be mixed medical/nursing.
+    const [seatExpiresAt, setSeatExpiresAt] = useState(null);
+    const [seatError, setSeatError] = useState(null);
     // An invite link that came back invalid/expired. Rendered as its own screen
     // with explicit choices — never as an automatic redirect (see below).
     const [linkInvalid, setLinkInvalid] = useState(false);
@@ -42,16 +55,56 @@ const Signup = () => {
     const [showTrackModal, setShowTrackModal] = useState(false);
     const navigate = useNavigate();
     const { token } = useParams();
+    const location = useLocation();
+    const t = useCopy(authCopy).signup;
+    const { lang, dir } = useLang();
+
+    const isGroupSeat = location.pathname.startsWith('/join/');
+    const entryType = isGroupSeat ? 'group-seat' : token ? 'temp-link' : 'free-account';
 
     useEffect(() => {
-        if (token) {
+        if (token && isGroupSeat) {
+            validateGroupSeat();
+            // The seat holder chooses their own track, so the same modal a
+            // regular signup gets applies here.
+            setShowTrackModal(true);
+        } else if (token) {
             validateTempLink();
         } else {
             // Regular signup: ask which kind of student this is, first thing.
             setShowTrackModal(true);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [token]);
+    }, [token, isGroupSeat]);
+
+    useEffect(() => {
+        trackFunnel('signup_view', { entryType });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const validateGroupSeat = async () => {
+        try {
+            setLoading(true);
+            const { data } = await axios.get(`${Globals.URL}/api/groups/seat/${token}`);
+            if (data.valid) {
+                setSeatExpiresAt(data.expiresAt);
+                setSeatError(null);
+                setError('');
+            } else {
+                // Keep the specific reason: "already used" and "expired" call
+                // for very different next steps from whoever sent the link.
+                setSeatError(data.reason || 'error');
+                setLinkInvalid(true);
+                setShowTrackModal(false);
+            }
+        } catch (err) {
+            setSeatError('error');
+            setLinkInvalid(true);
+            setShowTrackModal(false);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const validateTempLink = async () => {
         try {
@@ -84,34 +137,34 @@ const Signup = () => {
         // Belt and braces: the modal blocks the form, but a track must never be
         // guessed on the way to the server.
         if (!isTempLink && !studyTrack) {
-            setError('يرجى اختيار مسارك الدراسي أولاً');
+            setError(t.errTrackFirst);
             setShowTrackModal(true);
             return false;
         }
 
         if (!form.email || !form.password || !form.confirmPassword) {
-            setError('جميع الحقول مطلوبة');
+            setError(t.errAllFields);
             return false;
         }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(form.email.trim())) {
-            setError('يرجى إدخال بريد إلكتروني صحيح');
+            setError(t.errEmail);
             return false;
         }
 
         if (form.password.length < 8) {
-            setError('كلمة المرور يجب أن تكون 8 أحرف على الأقل');
+            setError(t.errPasswordLength);
             return false;
         }
 
         if (form.password !== form.confirmPassword) {
-            setError('كلمات المرور غير متطابقة');
+            setError(t.errPasswordMatch);
             return false;
         }
 
         if (!termsAgreed) {
-            setError('يجب الموافقة على شروط الاستخدام للمتابعة');
+            setError(t.errTerms);
             return false;
         }
 
@@ -137,19 +190,18 @@ const Signup = () => {
 
             setUser(loginRes.data.user || { username }, loginRes.data.sessionToken);
 
-            const sub = loginRes.data.subscription;
+            // Straight into the app, whatever the subscription state. A brand
+            // new free account has 40 questions to spend — sending it to the
+            // paywall before it has seen a single question is how the old trial
+            // flow lost people.
             setTimeout(() => {
-                if (sub && sub.enforced && !sub.active) {
-                    navigate('/subscribe', { replace: true });
-                } else {
-                    navigate('/quizs', { replace: true, state: loginRes.data });
-                }
+                navigate('/quizs', { replace: true, state: loginRes.data });
             }, 1200);
         } catch (err) {
             setTimeout(() => {
                 navigate('/login', {
                     state: {
-                        message: 'تم إنشاء الحساب بنجاح! يمكنك تسجيل الدخول الآن.',
+                        message: t.createdFallback,
                         username
                     }
                 });
@@ -162,6 +214,7 @@ const Signup = () => {
             email: form.email.trim().toLowerCase(),
             purpose: 'signup'
         });
+        trackFunnel('signup_otp_sent', { track: studyTrack });
     };
 
     // Create the account. `otpCode` is null for temp/invite-link signups, which
@@ -170,36 +223,44 @@ const Signup = () => {
     const createAccount = async (otpCode) => {
         setLoading(true);
         try {
-            const endpoint = isTempLink ? '/api/signup/temp-link' : '/api/signup/free';
-            const payload = isTempLink
-                ? { token, email: form.email.trim().toLowerCase(), password: form.password }
-                : {
+            const endpoint = isGroupSeat
+                ? '/api/signup/group-seat'
+                : isTempLink ? '/api/signup/temp-link' : '/api/signup/free';
+            const payload = isGroupSeat
+                ? {
+                    token,
                     email: form.email.trim().toLowerCase(),
                     password: form.password,
-                    otp_code: otpCode,
+                    // The seat does NOT inherit the buyer's track.
                     track: studyTrack,
-                };
+                }
+                : isTempLink
+                    ? { token, email: form.email.trim().toLowerCase(), password: form.password }
+                    : {
+                        email: form.email.trim().toLowerCase(),
+                        password: form.password,
+                        otp_code: otpCode,
+                        track: studyTrack,
+                        examDate: form.examDate || undefined,
+                    };
 
             const response = await axios.post(`${Globals.URL}${endpoint}`, payload);
 
             if (response.data.success) {
-                try {
-                    track('signup_success', {
-                        entryType: isTempLink ? 'temp-link' : 'free-account',
-                        studyTrack: response.data.track || studyTrack,
-                    });
-                } catch (trackError) {
-                    console.debug('Analytics track skipped:', trackError);
-                }
+                safeTrack('signup_success', {
+                    entryType,
+                    studyTrack: response.data.track || studyTrack,
+                });
+                if (!token) trackFunnel('signup_otp_verified', { track: response.data.track || studyTrack });
 
-                setTrialGranted(!!response.data.trial?.granted);
                 setSuccess(true);
                 await autoLogin();
             } else {
-                throw new Error(response.data.message || 'فشل في إنشاء الحساب');
+                throw new Error(response.data.message || t.errCreate);
             }
         } catch (error) {
-            setError(error.response?.data?.message || error.message || 'فشل في إنشاء الحساب');
+            if (!token) trackFunnel('signup_otp_failed', { message: error.response?.data?.message || error.message });
+            setError(error.response?.data?.message || error.message || t.errCreate);
         } finally {
             setLoading(false);
         }
@@ -214,7 +275,9 @@ const Signup = () => {
 
         if (!validateCredentials()) return;
 
-        if (isTempLink) {
+        // Both token flows are OTP-free: the link itself is the trust anchor,
+        // so invites keep working even while transactional email is down.
+        if (isTempLink || isGroupSeat) {
             await createAccount(null);
             return;
         }
@@ -224,7 +287,7 @@ const Signup = () => {
             await sendOtp();
             setStep('otp');
         } catch (err) {
-            setError(err.response?.data?.message || 'فشل إرسال رمز التحقق. حاول مرة أخرى.');
+            setError(err.response?.data?.message || t.errSendOtp);
         } finally {
             setLoading(false);
         }
@@ -236,7 +299,7 @@ const Signup = () => {
         try {
             await sendOtp();
         } catch (err) {
-            setError(err.response?.data?.message || 'فشل إرسال رمز التحقق. حاول مرة أخرى.');
+            setError(err.response?.data?.message || t.errSendOtp);
         } finally {
             setLoading(false);
         }
@@ -247,7 +310,7 @@ const Signup = () => {
         setError('');
 
         if (!otp || otp.length !== 4) {
-            setError('يرجى إدخال الرمز المكون من 4 أرقام');
+            setError(t.errOtpLength);
             return;
         }
 
@@ -256,31 +319,29 @@ const Signup = () => {
 
     if (success) {
         return (
-            <div className="login-body" dir="rtl">
+            <div className="login-body" dir={dir}>
                 <div className="login-wrapper signup-wide">
                     <div className="login-card signup-short" style={{ textAlign: 'center' }}>
                         <div className="success-icon" style={{ color: 'var(--success-color, #16a34a)', marginBottom: 20 }}><Icon name="check-circle" size={56} /></div>
-                        <h2 style={{ color: 'var(--text-dark, #0f1e3d)', fontWeight: 700, marginBottom: 12 }}>تم إنشاء الحساب بنجاح!</h2>
-                        {trialGranted && (
-                            <p style={{ color: 'var(--text-dark, #0f1e3d)', fontWeight: 600, marginBottom: 8 }}>
-                                لديك الآن ساعة وصول كامل مجاناً لكل الأسئلة والملخصات والتحليلات 🎉
-                            </p>
-                        )}
-                        <p style={{ color: 'var(--muted)' }}>جاري تسجيل دخولك وتحويلك للمنصة...</p>
+                        <h2 style={{ color: 'var(--text-dark, #0f1e3d)', fontWeight: 700, marginBottom: 12 }}>{t.successTitle}</h2>
+                        <p style={{ color: 'var(--text-dark, #0f1e3d)', fontWeight: 600, marginBottom: 8 }}>
+                            {isGroupSeat ? t.successSeat : isTempLink ? t.successInvite : t.successFree}
+                        </p>
+                        <p style={{ color: 'var(--muted)' }}>{t.successRedirect}</p>
                     </div>
                 </div>
             </div>
         );
     }
 
-    if (token && loading && !tempLinkInfo && !linkInvalid) {
+    if (token && loading && !tempLinkInfo && !seatExpiresAt && !linkInvalid) {
         return (
-            <div className="login-body" dir="rtl">
+            <div className="login-body" dir={dir}>
                 <div className="login-wrapper signup-wide">
                     <div className="login-card signup-short">
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '24px 0' }}>
                             <Spinner size="md" />
-                            <span>جاري التحقق من الرابط...</span>
+                            <span>{t.validatingLink}</span>
                         </div>
                     </div>
                 </div>
@@ -294,13 +355,16 @@ const Signup = () => {
     // dead end is now a screen the visitor leaves deliberately.
     if (linkInvalid) {
         return (
-            <div className="login-body" dir="rtl">
+            <div className="login-body" dir={dir}>
                 <div className="login-wrapper signup-wide">
                     <div className="login-card signup-short" style={{ textAlign: 'center' }}>
                         <div className="login-header">
-                            <div className="login-title">رابط الدعوة غير صالح</div>
+                            <div className="login-title">{t.invalidLinkTitle}</div>
                             <div className="login-subtitle">
-                                انتهت صلاحية هذا الرابط أو تم استخدامه من قبل. يمكنك إنشاء حساب عادي الآن والبدء بتجربة مجانية.
+                                {/* A paid seat gets the specific reason — "already
+                                    used" and "expired" need different answers from
+                                    whoever sent the link. */}
+                                {seatError ? (t.seatReasons[seatError] || t.seatReasons.error) : t.invalidLinkBody}
                             </div>
                         </div>
                         <div className="login-form">
@@ -316,11 +380,11 @@ const Signup = () => {
                                     navigate('/signup', { replace: true });
                                 }}
                             >
-                                إنشاء حساب والبدء مجاناً
+                                {t.invalidLinkCta}
                             </button>
                             <div className="login-footer-text">
-                                تعتقد أن هذا خطأ؟{' '}
-                                <Link to="/contact" className="link-primary">تواصل مع الدعم</Link>
+                                {t.invalidLinkThinkError}{' '}
+                                <Link to="/contact" className="link-primary">{t.contactSupport}</Link>
                             </div>
                         </div>
                     </div>
@@ -330,31 +394,43 @@ const Signup = () => {
     }
 
     return (
-        <div className="login-body" dir="rtl">
+        <div className="login-body" dir={dir}>
             <div className="login-wrapper signup-wide">
                 <div className="login-card signup-short">
                     <div className="login-header">
-                        <div className="pill">{isTempLink ? 'إنشاء حساب' : '🎁 تجربة مجانية — ساعة كاملة'}</div>
+                        <div className="pill">
+                            {isGroupSeat ? t.pillSeat : isTempLink ? t.pillInvite : t.pillFree}
+                        </div>
                         <div className="login-title">
-                            {isTempLink ? 'أنشئ حسابك' : 'ابدأ تجربتك المجانية'}
+                            {isGroupSeat ? t.titleSeat : isTempLink ? t.titleInvite : t.titleFree}
                         </div>
                         <div className="login-subtitle">
                             {step === 'credentials'
-                                ? (isTempLink
-                                    ? 'أنشئ حسابك المجاني ثم ابدأ اختباراً سريعاً من 10 أسئلة'
-                                    : 'أنشئ حسابك وأكّد بريدك لتبدأ فوراً ساعة وصول كامل مجاناً')
+                                ? (isGroupSeat
+                                    ? t.subtitleSeat
+                                    : isTempLink ? t.subtitleInvite : t.subtitleFree)
                                 : (isTempLink
-                                    ? `أدخل رمز التحقق المرسل إلى ${form.email}`
-                                    : `أدخل الرمز المرسل إلى ${form.email} — وبتأكيده تبدأ ساعتك المجانية`)}
+                                    ? t.subtitleOtpInvite(form.email)
+                                    : t.subtitleOtpFree(form.email))}
                         </div>
                     </div>
 
-                    {!isTempLink && (
+                    {isGroupSeat && seatExpiresAt && (
                         <div className="trial-callout">
-                            <span className="trial-callout-icon" aria-hidden="true"><Icon name="clock" size={20} /></span>
+                            <span className="trial-callout-icon" aria-hidden="true"><Icon name="users" size={20} /></span>
                             <div className="trial-callout-body">
-                                <strong>ساعة كاملة مجاناً بعد تأكيد بريدك</strong>
-                                <span>وصول كامل لكل الأسئلة والتحليلات — بدون بطاقة دفع، وبدون التزام.</span>
+                                <strong>{t.seatCalloutTitle}</strong>
+                                <span>{t.seatCalloutBody(formatDate(seatExpiresAt, lang))}</span>
+                            </div>
+                        </div>
+                    )}
+
+                    {!token && (
+                        <div className="trial-callout">
+                            <span className="trial-callout-icon" aria-hidden="true"><Icon name="help-circle" size={20} /></span>
+                            <div className="trial-callout-body">
+                                <strong>{t.freeCalloutTitle}</strong>
+                                <span>{t.freeCalloutBody}</span>
                             </div>
                         </div>
                     )}
@@ -364,7 +440,7 @@ const Signup = () => {
                             {isTempLink ? (
                                 <div className="track-locked">
                                     <Icon name={TRACKS[studyTrack].icon} size={18} />
-                                    <span>مسار الدراسة: <strong>{TRACKS[studyTrack].labelAr}</strong> — محدَّد مسبقاً في رابط الدعوة.</span>
+                                    <span>{t.trackLockedPrefix} <strong>{pick(TRACKS[studyTrack].label, lang)}</strong> {t.trackLockedSuffix}</span>
                                 </div>
                             ) : (
                                 <div className="track-chosen">
@@ -372,9 +448,9 @@ const Signup = () => {
                                         <Icon name={studyTrack ? TRACKS[studyTrack].icon : 'help-circle'} size={20} />
                                     </span>
                                     <span className="track-chosen-body">
-                                        <span className="track-chosen-label">مسارك الدراسي</span>
+                                        <span className="track-chosen-label">{t.trackLabel}</span>
                                         <strong className="track-chosen-value">
-                                            {studyTrack ? TRACKS[studyTrack].labelAr : 'لم يُحدَّد بعد'}
+                                            {studyTrack ? pick(TRACKS[studyTrack].label, lang) : t.trackUnset}
                                         </strong>
                                     </span>
                                     <button
@@ -382,12 +458,12 @@ const Signup = () => {
                                         className="track-chosen-change"
                                         onClick={() => setShowTrackModal(true)}
                                     >
-                                        {studyTrack ? 'تغيير' : 'اختر الآن'}
+                                        {studyTrack ? t.trackChange : t.trackChoose}
                                     </button>
                                 </div>
                             )}
                             <div className="form-group">
-                                <label className="form-label" htmlFor="email">البريد الإلكتروني</label>
+                                <label className="form-label" htmlFor="email">{t.emailLabel}</label>
                                 <input
                                     type="email"
                                     id="email"
@@ -395,12 +471,12 @@ const Signup = () => {
                                     className="form-input"
                                     value={form.email}
                                     onChange={handleInputChange}
-                                    placeholder="أدخل بريدك الإلكتروني"
+                                    placeholder={t.emailPlaceholder}
                                     required
                                 />
                             </div>
                             <div className="form-group">
-                                <label className="form-label" htmlFor="password">كلمة المرور</label>
+                                <label className="form-label" htmlFor="password">{t.passwordLabel}</label>
                                 <input
                                     type="password"
                                     id="password"
@@ -408,12 +484,12 @@ const Signup = () => {
                                     className="form-input"
                                     value={form.password}
                                     onChange={handleInputChange}
-                                    placeholder="8 أحرف على الأقل"
+                                    placeholder={t.passwordPlaceholder}
                                     required
                                 />
                             </div>
                             <div className="form-group">
-                                <label className="form-label" htmlFor="confirmPassword">تأكيد كلمة المرور</label>
+                                <label className="form-label" htmlFor="confirmPassword">{t.confirmLabel}</label>
                                 <input
                                     type="password"
                                     id="confirmPassword"
@@ -421,10 +497,27 @@ const Signup = () => {
                                     className="form-input"
                                     value={form.confirmPassword}
                                     onChange={handleInputChange}
-                                    placeholder="أعد كتابة كلمة المرور"
+                                    placeholder={t.confirmPlaceholder}
                                     required
                                 />
                             </div>
+                            {!token && (
+                                <div className="form-group">
+                                    <label className="form-label" htmlFor="examDate">
+                                        {t.examDateLabel} <span className="form-label-optional">{t.examDateOptional}</span>
+                                    </label>
+                                    <input
+                                        type="date"
+                                        id="examDate"
+                                        name="examDate"
+                                        className="form-input"
+                                        value={form.examDate}
+                                        onChange={handleInputChange}
+                                        min={new Date().toISOString().slice(0, 10)}
+                                    />
+                                    <p className="form-hint">{t.examDateHint}</p>
+                                </div>
+                            )}
                             <label className="terms-agree-row">
                                 <input
                                     type="checkbox"
@@ -432,10 +525,10 @@ const Signup = () => {
                                     onChange={(e) => setTermsAgreed(e.target.checked)}
                                 />
                                 <span>
-                                    أوافق على{' '}
-                                    <Link to="/terms" target="_blank" rel="noopener" className="link-primary">شروط الاستخدام</Link>
-                                    {' '}و{' '}
-                                    <Link to="/privacy" target="_blank" rel="noopener" className="link-primary">سياسة الخصوصية</Link>
+                                    {t.agreePrefix}{' '}
+                                    <Link to="/terms" target="_blank" rel="noopener" className="link-primary">{t.termsLink}</Link>
+                                    {' '}{t.and}{' '}
+                                    <Link to="/privacy" target="_blank" rel="noopener" className="link-primary">{t.privacyLink}</Link>
                                 </span>
                             </label>
                             {error && <div className="alert-box error">{error}</div>}
@@ -445,24 +538,24 @@ const Signup = () => {
                                 disabled={loading}
                             >
                                 {loading ? (
-                                    <div className="loading-spinner"><Spinner size="sm" />{isTempLink ? 'جاري إنشاء الحساب...' : 'جاري الإرسال...'}</div>
-                                ) : (isTempLink ? 'إنشاء الحساب' : 'إرسال رمز التحقق')}
+                                    <div className="loading-spinner"><Spinner size="sm" />{token ? t.creatingAccount : t.sending}</div>
+                                ) : (isGroupSeat ? t.submitSeat : isTempLink ? t.submitInvite : t.submitFree)}
                             </button>
                             <div className="login-footer-text">
-                                لديك حساب بالفعل؟{' '}
-                                <Link to="/login" className="link-primary">تسجيل الدخول</Link>
+                                {t.haveAccount}{' '}
+                                <Link to="/login" className="link-primary">{t.loginLink}</Link>
                             </div>
                             <div className="login-footer-text">
-                                تواجه مشكلة؟{' '}
+                                {t.troubleQuestion}{' '}
                                 <a className="link-primary" href="mailto:alshraky3@gmail.com?subject=Account Support">
-                                    تواصل مع الدعم
+                                    {t.contactSupport}
                                 </a>
                             </div>
                         </form>
                     ) : (
                         <form onSubmit={handleSubmit} className="login-form">
                             <div className="form-group">
-                                <label className="form-label" htmlFor="otp">رمز التحقق</label>
+                                <label className="form-label" htmlFor="otp">{t.otpLabel}</label>
                                 <input
                                     type="text"
                                     id="otp"
@@ -470,21 +563,21 @@ const Signup = () => {
                                     className="form-input"
                                     value={otp}
                                     onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                                    placeholder="أدخل الرمز المكون من 4 أرقام"
+                                    placeholder={t.otpPlaceholder}
                                     maxLength={4}
                                     inputMode="numeric"
                                     required
                                     style={{ textAlign: 'center', fontSize: '24px', letterSpacing: '8px' }}
                                 />
                                 <p className="form-hint" style={{ marginTop: 8, fontSize: '13px', color: 'var(--muted)', lineHeight: 1.6 }}>
-                                    ⚠️ إذا لم تجد الرمز في بريدك، تحقّق من مجلد <strong>الرسائل غير المرغوب فيها (Spam)</strong> أو <strong>المهملات</strong>.
+                                    {t.otpSpamHintBefore} <strong>{t.otpSpamFolder}</strong> {t.otpSpamOr} <strong>{t.otpTrashFolder}</strong>.
                                 </p>
                             </div>
                             {error && <div className="alert-box error">{error}</div>}
                             <button type="submit" className="btn primary large" disabled={loading}>
                                 {loading ? (
-                                    <div className="loading-spinner"><Spinner size="sm" />جاري إنشاء الحساب...</div>
-                                ) : 'تأكيد وبدء التجربة المجانية'}
+                                    <div className="loading-spinner"><Spinner size="sm" />{t.creatingAccount}</div>
+                                ) : t.otpSubmit}
                             </button>
                             <button
                                 type="button"
@@ -493,10 +586,10 @@ const Signup = () => {
                                 onClick={() => { setStep('credentials'); setOtp(''); setError(''); }}
                                 disabled={loading}
                             >
-                                ← تغيير البريد الإلكتروني
+                                {t.changeEmail}
                             </button>
                             <div className="login-footer-text">
-                                لم يصلك الرمز؟{' '}
+                                {t.noCode}{' '}
                                 <button
                                     type="button"
                                     className="link-primary"
@@ -504,7 +597,7 @@ const Signup = () => {
                                     onClick={handleResendOtp}
                                     disabled={loading}
                                 >
-                                    أعد الإرسال
+                                    {t.resend}
                                 </button>
                             </div>
                         </form>
@@ -520,20 +613,17 @@ const Signup = () => {
                 radio with a default was quietly sending nursing students into
                 the medical bank. */}
             {showTrackModal && !isTempLink && (
-                <div className="track-modal" dir="rtl" role="dialog" aria-modal="true" aria-labelledby="track-modal-title">
+                <div className="track-modal" dir={dir} role="dialog" aria-modal="true" aria-labelledby="track-modal-title">
                     <div className="track-modal-card">
                         <div className="track-modal-head">
-                            <span className="track-modal-eyebrow">الخطوة الأولى</span>
-                            <h2 id="track-modal-title">هل أنت طالب/خريج تمريض أم طب بشري؟</h2>
-                            <p>
-                                اختيارك يحدّد بنك الأسئلة والملخصات وتحليل الأداء الذي ستستخدمه.
-                                اختر بدقّة — لا يمكن تغييره لاحقاً إلا عبر الدعم.
-                            </p>
+                            <span className="track-modal-eyebrow">{t.trackModal.eyebrow}</span>
+                            <h2 id="track-modal-title">{t.trackModal.title}</h2>
+                            <p>{t.trackModal.body}</p>
                         </div>
 
                         <div className="track-modal-options">
                             {TRACK_KEYS.map((key) => {
-                                const t = TRACKS[key];
+                                const trackDef = TRACKS[key];
                                 const selected = studyTrack === key;
                                 return (
                                     <button
@@ -541,14 +631,14 @@ const Signup = () => {
                                         key={key}
                                         className={`track-modal-option${selected ? ' is-selected' : ''}`}
                                         aria-pressed={selected}
-                                        onClick={() => setStudyTrack(key)}
+                                        onClick={() => { setStudyTrack(key); trackFunnel('signup_track_selected', { track: key }); }}
                                     >
                                         <span className="track-modal-option-icon" aria-hidden="true">
-                                            <Icon name={t.icon} size={26} />
+                                            <Icon name={trackDef.icon} size={26} />
                                         </span>
-                                        <span className="track-modal-option-title">{t.labelAr}</span>
-                                        <span className="track-modal-option-exam">{t.examAr}</span>
-                                        <span className="track-modal-option-desc">{t.blurbAr}</span>
+                                        <span className="track-modal-option-title">{pick(trackDef.label, lang)}</span>
+                                        <span className="track-modal-option-exam">{pick(trackDef.exam, lang)}</span>
+                                        <span className="track-modal-option-desc">{pick(trackDef.blurb, lang)}</span>
                                         <span className="track-modal-option-mark" aria-hidden="true">
                                             <Icon name="check" size={15} />
                                         </span>
@@ -564,12 +654,12 @@ const Signup = () => {
                             onClick={() => { setError(''); setShowTrackModal(false); }}
                         >
                             {studyTrack
-                                ? `متابعة كـ«${TRACKS[studyTrack].labelAr}»`
-                                : 'اختر مسارك للمتابعة'}
+                                ? t.trackModal.confirm(pick(TRACKS[studyTrack].label, lang))
+                                : t.trackModal.confirmEmpty}
                         </button>
 
                         <p className="track-modal-note">
-                            <Icon name="info" size={14} /> اخترت المسار الخطأ؟ راسل الدعم قبل الاشتراك ونحوّل حسابك مجاناً.
+                            <Icon name="info" size={14} /> {t.trackModal.note}
                         </p>
                     </div>
                 </div>

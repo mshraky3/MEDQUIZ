@@ -582,7 +582,26 @@ export async function sendErrorNotification(errorData) {
       // Resolved per send (not at import time) so dotenv has already run.
       to: developerEmails().join(', '),
       subject: subject,
-      html: htmlContent
+      html: htmlContent,
+
+      // ── routed through the central gateway ──────────────────────────────
+      // audience is 'owner' on this event, so it goes over Gmail and costs
+      // ZERO Resend quota, and repeats collapse into an hourly digest
+      // ("DATABASE_ERROR x47") instead of one email each. CRITICAL still
+      // escalates and arrives immediately.
+      event: 'medqize.owner.backend_error',
+      severity: severity.level,
+
+      // THE LOCALHOST FIX. errorData.page is the browser origin
+      // (req.headers.referer || req.headers.origin). When the frontend is
+      // running on localhost against the PRODUCTION backend, the gateway sees
+      // a non-production origin and DROPS the mail — recorded on the dashboard,
+      // never sent, no quota spent. That is what stops a dev session filling
+      // the inbox with stack traces.
+      sourceOrigin: errorData.page,
+
+      // Same error, same hour, same alert -> one message, not N.
+      idempotencyKey: `err:${errorKey}:${new Date().toISOString().slice(0, 13)}`,
     });
 
     // Update trackers

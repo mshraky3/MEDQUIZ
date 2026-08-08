@@ -11,12 +11,12 @@ const obgyn = {
     title_en: 'OB / GYN — Comprehensive Modern Summary',
     icon: 'venus',
     accent: '#f472b6',
-    intro: 'OB/GYN comprehensive modern summary — all topics covered: 01 Obstetrics · 02 Labor & Delivery · 03 Obstetric Complications · 04 Antenatal Care & Fetal Medicine · 05 Gynecology · 06 Urogynecology · 07 Infertility, Contraception, Menopause & More.',
+    intro: 'OB/GYN comprehensive modern summary — all topics covered: 01 Obstetrics & Postpartum · 02 Labor, Delivery & Shoulder Dystocia · 03 Obstetric Complications & Medical Conditions in Pregnancy · 04 Antenatal Care & Fetal Medicine · 05 Gynecology (incl. Adenomyosis, Adnexal Masses, Asherman) · 06 Urogynecology · 07 Infertility, Contraception, Menopause & Primary Amenorrhea.',
     subtopics: [
         {
             id: 'obgyn-obstetrics',
             title: '01 — Obstetrics',
-            title_en: 'Cervical Incompetence · Abortion/IUFD · Hemorrhage · Preterm Labor',
+            title_en: 'Cervical Incompetence · Abortion/IUFD · Hemorrhage · Postpartum Complications',
             summaryHtml: `
                 <h3>1.1 Cervical Incompetence</h3>
                 <ul>
@@ -168,7 +168,20 @@ const obgyn = {
                     <li><b>RF</b>: Lactating mother with cracked nipples</li>
                     <li><b>Management</b>: Clinical diagnosis → Anti-staph antibiotics (dicloxacillin/flucloxacillin); US to rule out abscess; CONTINUE breastfeeding</li>
                 </ul>
-            
+
+                <h3>1.6 Other Postpartum Complications</h3>
+                <table>
+                    <thead><tr><th>Problem</th><th>Presentation</th><th>Management</th></tr></thead>
+                    <tbody>
+                        <tr><td>Vaginal / perineal hematoma</td><td>Bluish, painful perineal collection after episiotomy or laceration</td><td>Surgical evacuation if ≥5 cm, expanding or symptomatic; otherwise RICE (rest, ice, compression, elevation) + observation</td></tr>
+                        <tr><td>Postpartum DVT</td><td>Unilateral leg swelling/pain, often after C-section</td><td>Therapeutic anticoagulation — LMWH (enoxaparin). NOT thrombolysis, NOT IVC filter first line</td></tr>
+                        <tr><td>Postpartum PE (already anticoagulated)</td><td>Sudden dyspnea, pleuritic pain, loud P2, respiratory alkalosis on ABG</td><td>If <b>stable</b> → continue the same therapeutic dose. Thrombolysis only if <b>unstable</b> (hypotensive)</td></tr>
+                        <tr><td>Placenta accreta managed conservatively (placenta left in situ)</td><td>Placenta fails to separate; hysterectomy declined → cord ligated + methotrexate</td><td>Watch for the commonest complication: <b>severe vaginal bleeding</b> (~53%), then sepsis (~6%) which may progress to DIC</td></tr>
+                        <tr><td>Sheehan syndrome</td><td>Failure to lactate, fatigue, dizziness months after a PPH</td><td>Pituitary necrosis after severe PPH → hormone replacement</td></tr>
+                    </tbody>
+                </table>
+                <div class="sum-callout"><b>Exam trap:</b> a postpartum PE in a woman <b>already on a therapeutic dose</b> and haemodynamically stable needs <b>no change in management</b> — switching heparins or adding a thrombolytic is the wrong answer unless she is hypotensive.</div>
+
                 
                 <div class="topic-deck">
 <h4 class="deck-topic">Mastitis / abscess</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Tender, indurated, swollen, erythematous breast Malaise, fever chills</li><li>Pain during breast feeding</li><li>Fluctuant mass, skin changes (beside redness) → Abscess</li><li>Most common organism causes mastitis → staphylococcus aureus Risk factors: Lactating mother → cracked nipples</li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Mastitis is clinical diagnosis Mastitis → Anti-staph Antibiotics (dicloxacillin, flucloxacillin)</li><li>US to rule out abscess</li><li>Continue breastfeeding</li></ul></div></div>
@@ -181,6 +194,24 @@ const obgyn = {
                 </section>
             `,
             questions: [
+                {
+                    q: 'A woman had a normal vaginal delivery with an episiotomy. She now has a painful, bluish perineal collection measuring 5 x 3 cm. What is the treatment?',
+                    options: ['Packing', 'Needle aspiration', 'Surgical evacuation', 'Observation only'],
+                    answer: 2,
+                    explanation: 'A vaginal or perineal haematoma is evacuated surgically when it is large (5 cm or more), expanding, or symptomatic. Smaller, stable, asymptomatic haematomas are managed with rest, ice, compression and elevation.'
+                },
+                {
+                    q: 'After a vaginal delivery the placenta fails to separate and cannot be extracted. The patient refuses hysterectomy, so the cord is ligated, the placenta is left in situ and methotrexate is started. What is the commonest complication of this approach?',
+                    options: ['Severe vaginal bleeding', 'Infection', 'Disseminated intravascular coagulation', 'Uterine inversion'],
+                    answer: 0,
+                    explanation: 'Conservative management of placenta accreta with the placenta left in situ is complicated most often by severe vaginal bleeding (about 53%), followed by sepsis (about 6%), which may then progress to DIC.'
+                },
+                {
+                    q: 'A woman 10 days after caesarean section was admitted with a right leg DVT on therapeutic enoxaparin. She develops sudden dyspnoea and pleuritic chest pain; she is normotensive, chest clear, loud P2, and CT confirms a right lower pulmonary artery thrombus. What is the most appropriate next step?',
+                    options: ['Switch enoxaparin to unfractionated heparin', 'Thrombolytic therapy', 'Continue the same management', 'Surgical thrombectomy'],
+                    answer: 2,
+                    explanation: 'She is already anticoagulated at a therapeutic dose and is haemodynamically stable, so no change is needed. Thrombolysis is reserved for the unstable (hypotensive) patient.'
+                },
                 {
                     q: 'A 32-year-old at 34 weeks has painless vaginal bleeding with a non-tender abdomen and no rupture of membranes. Ultrasound shows the placenta covering the internal os. Which action is contraindicated?',
                     options: ['Cardiotocography for fetal heart rate', 'Digital vaginal examination', 'Administration of antenatal steroids', 'Admission for observation'],
@@ -216,7 +247,7 @@ const obgyn = {
         {
             id: 'obgyn-labor-delivery',
             title: '02 — Labor & Delivery',
-            title_en: 'Stages · CTG · Cord Prolapse · Bishop Score · Episiotomy',
+            title_en: 'Stages · CTG · Labor Arrest · Bishop Score · Cord Prolapse · Shoulder Dystocia',
             summaryHtml: `
                 <h3>2.1 Normal Delivery — Stages</h3>
                 <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> The four stages of labour</div>
@@ -295,6 +326,30 @@ const obgyn = {
                     </tbody>
                 </table>
 
+                <h3>2.4 Labor Progress Disorders, Instrumental Delivery &amp; Induction</h3>
+                <table>
+                    <thead><tr><th>Disorder</th><th>Definition</th><th>Management</th></tr></thead>
+                    <tbody>
+                        <tr><td>Prolonged active phase</td><td>≥6 cm dilation AND either no cervical change after <b>6 h of inadequate</b> contractions, or after <b>4 h of adequate</b> contractions</td><td>Oxytocin augmentation for hypotonic contractions (with cervical ripening if the cervix is unfavourable) · Amniotomy</td></tr>
+                        <tr><td>Arrested active phase</td><td>≥6 cm dilation <b>with ruptured membranes</b> AND no cervical change after ≥4 h of adequate contractions, or &gt;6 h of inadequate contractions despite oxytocin</td><td><b>Cesarean section</b></td></tr>
+                        <tr><td>Prolonged 2nd stage</td><td>&gt;3 h in nulliparous, &gt;2 h in multiparous — <b>add 1 extra hour if an epidural is running</b></td><td>Instrumental delivery if criteria met; otherwise C-section</td></tr>
+                        <tr><td>Obstructed labor</td><td>Arrest of dilation/descent with a palpable <b>retraction (Bandl) ring</b></td><td>Immediate delivery — C-section</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="sum-callout"><b>Instrumental delivery (ventouse / forceps) has two non-negotiable prerequisites:</b><ul><li>Cervix <b>fully dilated</b>, AND</li><li>Head engaged at <b>station +2 or beyond</b></li></ul>Never choose ventouse or forceps at a station less than +2. Abandon after <b>3 failed attempts</b> and go to C-section.</div>
+
+                <figure class="deck-block algo-flow"><figcaption><span class="deck-tag tag-algo">Algorithm</span> Prolonged second stage / non-reassuring CTG at full dilation</figcaption><p class="deck-subcap">the station is what decides between an instrument and a knife</p><div class="algo-row"><div class="algo-node start" style="animation-delay:0.00s">Delivery indicated in the second stage</div></div><div class="algo-arrow" style="animation-delay:0.05s"></div><div class="algo-row"><div class="algo-node dec" style="animation-delay:0.12s">Cervix fully dilated AND head at station +2 or beyond?</div></div><div class="algo-arrow" style="animation-delay:0.17s"></div><div class="algo-fork"><div class="algo-branch"><span class="algo-label" style="animation-delay:0.24s">Yes</span><div class="algo-node proc" style="animation-delay:0.24s">Instrumental delivery — ventouse or forceps</div><div class="algo-arrow mini" style="animation-delay:0.38s"></div><div class="algo-node end" style="animation-delay:0.34s">Failed after 3 attempts → C-section</div></div><div class="algo-branch"><span class="algo-label" style="animation-delay:0.44s">No (not fully dilated or station &lt; +2)</span><div class="algo-node end" style="animation-delay:0.44s">Cesarean section</div></div></div></figure>
+
+                <p><b>Meconium-stained liquor</b>: induction of labor + continuous fetal monitoring (expectant management is acceptable if the CTG is reassuring). Meconium alone is not an indication for C-section — the <b>CTG category</b> drives the decision.</p>
+
+                <div class="sum-algo"><div class="sum-algo-title">Late-term &amp; post-term pregnancy — timing of induction (ACOG)</div>
+                <ul>
+                    <li><b>41+0 → 42+0 weeks</b>: induction <b>may be considered</b></li>
+                    <li><b>After 42+0 and by 42+6 weeks</b>: induction is <b>recommended</b> — perinatal morbidity and mortality rise beyond this point</li>
+                    <li>Induce earlier if there is hypertension, reduced fetal movements or oligohydramnios</li>
+                </ul></div>
+
                 <h3>2.5 Bishop Score</h3>
                 <table>
                     <thead><tr><th>Score</th><th>Interpretation</th><th>Action</th></tr></thead>
@@ -328,7 +383,26 @@ const obgyn = {
                     <li><b>Incomplete breech</b>: Partially extended/flexed hips + extended knees</li>
                     <li><b>Mediolateral episiotomy advantage</b>: Reduces risk of anal sphincter injury (incision angled away from sphincters)</li>
                 </ul>
-            
+
+                <h3>2.8 Shoulder Dystocia — HELPERR</h3>
+                <ul>
+                    <li><b>Recognition</b>: the head delivers then retracts against the perineum with each contraction (<b>turtle sign</b>), and the shoulders do not follow</li>
+                    <li><b>RF</b>: fetal macrosomia, maternal diabetes (including diet-controlled GDM), prolonged second stage, instrumental delivery, prior shoulder dystocia</li>
+                </ul>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> HELPERR — the shoulder dystocia drill, in order</div>
+                <svg viewBox="0 0 700 302" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="HELPERR sequence: H call for help, E evaluate for episiotomy, L legs McRoberts manoeuvre, P suprapubic pressure, E enter rotational manoeuvres, R remove the posterior arm, R roll the patient onto hands and knees.">
+                <g font-family="system-ui,Arial">
+                <rect x="20" y="8" width="660" height="34" rx="9" fill="#eff6ff" stroke="#bfdbfe"/><circle cx="44" cy="25" r="13" fill="#2563eb"/><text x="44" y="30" text-anchor="middle" font-size="14" font-weight="800" fill="#fff">H</text><text x="70" y="30" font-size="12.5" fill="#1e293b"><tspan font-weight="700">Help</tspan> — call for help (obstetrician, paediatrician, anaesthetist)</text>
+                <rect x="20" y="46" width="660" height="34" rx="9" fill="#f5f3ff" stroke="#ddd6fe"/><circle cx="44" cy="63" r="13" fill="#7c3aed"/><text x="44" y="68" text-anchor="middle" font-size="14" font-weight="800" fill="#fff">E</text><text x="70" y="68" font-size="12.5" fill="#1e293b"><tspan font-weight="700">Evaluate</tspan> for episiotomy — makes room for the internal manoeuvres</text>
+                <rect x="20" y="84" width="660" height="34" rx="9" fill="#ecfdf5" stroke="#a7f3d0"/><circle cx="44" cy="101" r="13" fill="#059669"/><text x="44" y="106" text-anchor="middle" font-size="14" font-weight="800" fill="#fff">L</text><text x="70" y="106" font-size="12.5" fill="#1e293b"><tspan font-weight="700">Legs</tspan> — McRoberts manoeuvre: hyperflex the thighs onto the abdomen and abduct</text>
+                <rect x="20" y="122" width="660" height="34" rx="9" fill="#fffbeb" stroke="#fde68a"/><circle cx="44" cy="139" r="13" fill="#d97706"/><text x="44" y="144" text-anchor="middle" font-size="14" font-weight="800" fill="#fff">P</text><text x="70" y="144" font-size="12.5" fill="#1e293b"><tspan font-weight="700">Pressure</tspan> — SUPRAPUBIC pressure (never fundal)</text>
+                <rect x="20" y="160" width="660" height="34" rx="9" fill="#f5f3ff" stroke="#ddd6fe"/><circle cx="44" cy="177" r="13" fill="#7c3aed"/><text x="44" y="182" text-anchor="middle" font-size="14" font-weight="800" fill="#fff">E</text><text x="70" y="182" font-size="12.5" fill="#1e293b"><tspan font-weight="700">Enter</tspan> — internal rotational manoeuvres (Rubin, Woods screw)</text>
+                <rect x="20" y="198" width="660" height="34" rx="9" fill="#fef2f2" stroke="#fecaca"/><circle cx="44" cy="215" r="13" fill="#dc2626"/><text x="44" y="220" text-anchor="middle" font-size="14" font-weight="800" fill="#fff">R</text><text x="70" y="220" font-size="12.5" fill="#1e293b"><tspan font-weight="700">Remove</tspan> the posterior arm</text>
+                <rect x="20" y="236" width="660" height="34" rx="9" fill="#fef2f2" stroke="#fecaca"/><circle cx="44" cy="253" r="13" fill="#dc2626"/><text x="44" y="258" text-anchor="middle" font-size="14" font-weight="800" fill="#fff">R</text><text x="70" y="258" font-size="12.5" fill="#1e293b"><tspan font-weight="700">Roll</tspan> the patient onto her hands and knees (Gaskin manoeuvre)</text>
+                <text x="350" y="290" text-anchor="middle" font-size="11.5" fill="#b91c1c" font-weight="700">Fundal pressure is NOT part of the drill — it worsens the impaction</text>
+                </g></svg>
+                <figcaption>Work down the list in order. <b>Suprapubic</b> pressure helps; <b>fundal</b> pressure drives the anterior shoulder harder into the symphysis and delays delivery.</figcaption></figure>
+
                 <section class="topic deck-enrich">
                     <h3>More from the study deck</h3>
                     <p class="deck-intro">Extra material for this step that spans more than one topic above.</p>
@@ -337,6 +411,30 @@ const obgyn = {
                 </section>
             `,
             questions: [
+                {
+                    q: 'A multiparous woman has been in the second stage of labour for more than 2 hours without an epidural. The cervix is fully dilated but the head is at 0 station. What is the most appropriate management?',
+                    options: ['Caesarean delivery', 'Wait another 2 hours', 'Ventouse delivery', 'Forceps delivery'],
+                    answer: 0,
+                    explanation: 'This is a prolonged second stage (over 2 hours in a multipara, over 3 hours in a nullipara, plus one extra hour with an epidural). Instrumental delivery requires a fully dilated cervix AND a head at station +2 or beyond; at 0 station it is contraindicated, so caesarean section is the answer.'
+                },
+                {
+                    q: 'A primigravida with diet-controlled gestational diabetes has shoulder dystocia. The hips are maximally flexed, one nurse applies suprapubic pressure, another applies fundal pressure, and the doctor performs an episiotomy and delivers the posterior shoulder. Which of these will DELAY delivery?',
+                    options: ['Suprapubic pressure', 'Fundal pressure', 'Hip flexion (McRoberts)', 'Delivery of the posterior shoulder'],
+                    answer: 1,
+                    explanation: 'Fundal pressure is not part of HELPERR - it drives the anterior shoulder harder against the symphysis and worsens the impaction. Suprapubic pressure, McRoberts hip hyperflexion, episiotomy and delivery of the posterior arm are all correct steps.'
+                },
+                {
+                    q: 'A woman induced at 42 weeks is now fully dilated with the head at +2 station. The fetal heart rate falls to 75 bpm and does not recover with in-utero resuscitation. What should be done?',
+                    options: ['Caesarean section', 'Start pushing and consider a ventouse', 'Increase oxytocin', 'Continue observation'],
+                    answer: 1,
+                    explanation: 'Delivery is indicated when resuscitative measures fail to correct the bradycardia. Because the cervix is fully dilated and the head is at +2, the criteria for instrumental delivery are met, and that is faster than a caesarean.'
+                },
+                {
+                    q: 'A woman is 7 cm dilated with ruptured membranes. Despite 4 hours of adequate contractions on oxytocin there has been no cervical change. What is the management?',
+                    options: ['Amniotomy', 'More oxytocin for another 6 hours', 'Caesarean section', 'Ventouse delivery'],
+                    answer: 2,
+                    explanation: 'Arrested active phase - 6 cm or more with ruptured membranes and no cervical change after 4 hours of adequate contractions (or over 6 hours of inadequate contractions on oxytocin) - is managed by caesarean section. A prolonged active phase, in contrast, is managed with augmentation and amniotomy.'
+                },
                 {
                     q: 'A 35-year-old at 34 wks, cervix 4 cm, CTG done (image showing pattern), BP 135/88. Which best explains the CTG finding?',
                     options: ['Placenta previa', 'Head compression', 'Umbilical cord compression', 'Uteroplacental insufficiency'],
@@ -378,7 +476,7 @@ const obgyn = {
         {
             id: 'obgyn-complications',
             title: '03 — Obstetric Complications',
-            title_en: 'Pre-eclampsia · GDM · DM · Multiple Gestation · Immunization',
+            title_en: 'Pre-eclampsia · GDM · Multiple Gestation · Immunization · Medical Conditions in Pregnancy',
             summaryHtml: `
                 <h3>3.1 Pre-eclampsia / Eclampsia / Gestational Hypertension</h3>
                 <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Hypertension in pregnancy — the 20-week line</div>
@@ -512,7 +610,22 @@ const obgyn = {
                     <li><b>SVD</b>: Cephalic–Cephalic or Cephalic–Breech presentation</li>
                     <li><b>C-Section</b>: If Twin A is non-cephalic</li>
                 </ul>
-            
+
+                <h3>3.6 Medical &amp; Surgical Conditions in Pregnancy</h3>
+                <table>
+                    <thead><tr><th>Condition</th><th>Key point</th><th>Management</th></tr></thead>
+                    <tbody>
+                        <tr><td>Subclinical hypothyroidism, trying to conceive</td><td>High TSH with a <b>normal free T4</b></td><td>Start <b>levothyroxine now</b> — before conception, not once she is pregnant — in women with ovulatory dysfunction or infertility</td></tr>
+                        <tr><td>Chloasma</td><td>Brown facial pigmentation appearing <b>during pregnancy</b>; melasma is the same lesion outside pregnancy</td><td>Reassurance; sun protection</td></tr>
+                        <tr><td>Hyperemesis gravidarum</td><td>Persistent vomiting → dehydration, dry mouth, oral thrush, ↓ skin turgor</td><td>Diagnosis is confirmed by <b>urine ketones</b> (glycogen depletion → lipolysis → ketonuria). IV fluids + antiemetics</td></tr>
+                        <tr><td>Mitral stenosis</td><td>Worsens as cardiac output rises. The dominant physiological driver is the <b>increase in plasma volume</b> (plasma rises far more than red cell mass → physiological anaemia of pregnancy)</td><td>Rate control, diuresis for congestion; risk of pulmonary oedema peaks late 2nd–3rd trimester and in labour</td></tr>
+                        <tr><td>Sickle cell disease</td><td>Commonest <b>antenatal</b> complication is <b>IUGR / low birth weight</b></td><td>Serial growth scans, folate, hydration, infection prophylaxis</td></tr>
+                        <tr><td>Hepatitis B (HBsAg positive mother)</td><td>Newborn needs <b>passive + active</b> immunisation</td><td><b>Hepatitis B vaccine AND HBIG within 12 hours of delivery</b> — not either one alone</td></tr>
+                        <tr><td>Adnexal mass in pregnancy</td><td>51–92% resolve spontaneously; most carry a low risk of malignancy</td><td><b>Expectant management / reassurance</b>. Operate only for an acute abdomen or features suggesting malignancy (see 5.3)</td></tr>
+                    </tbody>
+                </table>
+                <div class="sum-callout"><b>If “increased plasma volume” is not among the options</b> for the pregnancy change that decompensates mitral stenosis, choose <b>increased red cell mass</b> — both raise cardiac output, but plasma volume rises far more.</div>
+
                 
                 <div class="topic-deck">
 <h4 class="deck-topic">Multiple gestation</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Dizygotic twins → always dichorionic diamniotic twins, can be same same or different sex.</li><li>Monozygotic twins → membranes vary based on timing of division:<ul class="sub"><li>0-3 days → Dichorionic Diamniotic twins</li><li>4-8 days → Monochorionic Diamniotic twins</li><li>9-12 days → Monochorionic Monoamniotic twins</li><li>&gt;13 days → conjoined twins</li></ul></li><li>Based on fetal presentation:<ul class="sub"><li>Spontaneous vaginal delivery → Cephalic - Cephalic or Cephalic - Breech presentation</li><li>Cesarean section → if twin A is presenting in non-cephalic presentation</li></ul></li></ul></div></div>
@@ -525,6 +638,36 @@ const obgyn = {
                 </section>
             `,
             questions: [
+                {
+                    q: 'A woman who wants to conceive has a raised TSH with a normal free T4. What is the most appropriate management?',
+                    options: ['Follow-up only', 'Start thyroxine now', 'Start thyroxine once she is pregnant', 'Proceed to pregnancy with no treatment'],
+                    answer: 1,
+                    explanation: 'Levothyroxine replacement is started before conception in subclinical hypothyroidism (raised TSH with normal free T4) in women who are trying to conceive and who have ovulatory dysfunction or infertility. Waiting until she is pregnant is too late.'
+                },
+                {
+                    q: 'A pregnant woman has repeated vomiting, a dry mouth, oral thrush and reduced skin turgor. Which urinalysis finding confirms the diagnosis?',
+                    options: ['Leucocytes', 'Protein', 'Ketones', 'Glucose'],
+                    answer: 2,
+                    explanation: 'Hyperemesis gravidarum: persistent vomiting causes dehydration and poor intake, glycogen depletion, a shift to lipolysis, and therefore ketonaemia with ketonuria. Urine ketones are the confirmatory finding.'
+                },
+                {
+                    q: 'Which physiological change of pregnancy is most likely to precipitate heart failure in a woman with mitral stenosis?',
+                    options: ['Increased minute ventilation', 'Increased red cell mass', 'Increased renal plasma flow', 'Increased plasma volume'],
+                    answer: 3,
+                    explanation: 'Mitral stenosis decompensates as cardiac output rises. Plasma volume increases far more than red cell mass (which is why pregnancy causes a physiological anaemia), so increased plasma volume is the best answer. If it is not offered, choose increased red cell mass.'
+                },
+                {
+                    q: 'A mother is HBsAg positive. What should the newborn receive within the first 12 hours of life?',
+                    options: ['Hepatitis B vaccine plus hepatitis B immunoglobulin', 'Hepatitis B vaccine only', 'Hepatitis B immunoglobulin only', 'Nothing until 6 weeks of age'],
+                    answer: 0,
+                    explanation: 'Newborns of HBsAg-positive mothers need passive-active immunisation: the first dose of the hepatitis B vaccine series AND one dose of HBIG, both within 12 hours of delivery.'
+                },
+                {
+                    q: 'A pregnant woman with sickle cell disease is counselled about antenatal risks. Which complication is most associated with her condition?',
+                    options: ['Low birth weight (IUGR)', 'Chest infection', 'Urinary tract infection', 'Gestational diabetes'],
+                    answer: 0,
+                    explanation: 'Intrauterine growth restriction with low birth weight is the antenatal complication most linked to sickle cell disease in pregnancy, so serial growth scans are needed.'
+                },
                 {
                     q: 'An Rh-negative woman is pregnant with an Rh-positive fetus. When should anti-D immunoglobulin be given?',
                     options: ['At 28 weeks, and again within 72 hours of delivery if the newborn is Rh positive', 'Only at delivery', 'Only in the first trimester', 'Every month throughout the pregnancy'],
@@ -680,7 +823,7 @@ const obgyn = {
         {
             id: 'obgyn-gynecology',
             title: '05 — Gynecology',
-            title_en: 'PCOS · Endometriosis · Fibroids · Cervical Cancer · Ectopic',
+            title_en: 'PCOS · Endometriosis · Fibroids · Adenomyosis · Adnexal Masses · Cervical Cancer · Asherman',
             summaryHtml: `
                 <h3>5.1 Polycystic Ovarian Syndrome (PCOS)</h3>
                 <p><b>Clinical Features:</b></p>
@@ -759,6 +902,19 @@ const obgyn = {
                     </tbody>
                 </table>
 
+                <p><b>Adnexal masses — reading the ultrasound</b></p>
+                <table>
+                    <thead><tr><th>Suggests MALIGNANCY</th><th>Reassuring / benign</th></tr></thead>
+                    <tbody>
+                        <tr><td>Cyst <b>&gt;10 cm</b></td><td>Simple, thin-walled, unilocular</td></tr>
+                        <tr><td><b>Papillary or solid components</b> (a hypoechoic mass = more solid tissue)</td><td>Anechoic, purely cystic</td></tr>
+                        <tr><td>Irregularity of the wall or septa</td><td>Smooth outline</td></tr>
+                        <tr><td>Ascites</td><td>No free fluid</td></tr>
+                        <tr><td>High colour Doppler flow</td><td>Low or absent internal flow</td></tr>
+                    </tbody>
+                </table>
+                <div class="sum-callout"><b>Bilaterality and a thin septation alone do not make a mass malignant</b> — solid/hypoechoic tissue does. <b>In pregnancy</b>: manage expectantly (most resolve); operate only for an acute abdomen, or a cyst &gt;10 cm / imaging or tumour markers suggesting malignancy.</div>
+
                 
                 <div class="topic-deck">
 <h4 class="deck-topic">Ovarian torsion</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>sudden onset of unilateral pelvic pain</li><li>Nausea, vomiting On examination: Adnexal tenderness No vaginal bleeding</li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Diagnosis:<ul class="sub"><li>Pelvic US with doppler: • Absent or decreased ovarian blood flow • Enlarged, edematous ovary</li></ul></li><li>Treatment: • Detorsion (if viable) • Cystectomy or oophorectomy (if malignant mass suspected)</li></ul></div></div>
@@ -791,6 +947,11 @@ const obgyn = {
                     <li>Hyperplasia WITH atypia → TAH; or oral progesterone + F/U (if fertility desired)</li>
                 </ul>
                 <p><b>Endometrial Cancer</b>: C/P: Abnormal uterine bleeding; enlarged uterus on exam. Diagnosis: Endometrial biopsy. Staging: Laparoscopy + para-aortic LN dissection.</p>
+                <ul>
+                    <li><b>Risk factors — anything that means unopposed estrogen</b>: obesity, nulliparity, chronic anovulation/PCOS, early menarche, late menopause, diabetes, unopposed estrogen therapy</li>
+                    <li><b>Tamoxifen</b> for breast cancer — antagonist in the breast but a partial <b>agonist on the endometrium</b> → endometrial polyps, hyperplasia and carcinoma</li>
+                    <li><b>Lynch syndrome (HNPCC)</b> — a hereditary risk factor; endometrial cancer is often the sentinel cancer</li>
+                </ul>
                 <p><b>Fibroid (Leiomyoma)</b></p>
                 <table>
                     <thead><tr><th>Type</th><th>Symptoms</th></tr></thead>
@@ -809,10 +970,14 @@ const obgyn = {
                 <p><b>Adenomyosis</b></p>
                 <ul>
                     <li><b>Definition</b>: Endometrial glands/stroma invade myometrium</li>
-                    <li><b>C/P (3 Ds + Menorrhagia)</b>: Dysmenorrhea, Dyspareunia, Diffuse uterine enlargement, Menorrhagia</li>
-                    <li><b>Diagnosis</b>: Pelvic exam: diffuse boggy uterus; TVUS: myometrial thickening</li>
-                    <li><b>Management</b>: Medical: IUD/OCP; Definitive: Hysterectomy</li>
+                    <li><b>RF</b>: Multiparity · age 40–50 · <b>prior uterine surgery (C-section, myomectomy, D&amp;C)</b> · uterine leiomyomas · endometriosis</li>
+                    <li><b>C/P (3 Ds + Menorrhagia)</b>: Dysmenorrhea (secondary), Dyspareunia, Diffuse uterine enlargement, Menorrhagia with clots</li>
+                    <li><b>Examination</b>: diffusely enlarged, <b>globular / boggy</b> uterus, symmetrically enlarged, tender immediately before and during menstruation — but <b>the uterus can be normal-sized in some patients</b>, so a normal exam does not exclude it</li>
+                    <li><b>Investigations</b>: TVUS <b>first line</b> (and the correct “next step” in an exam stem) → MRI second line → <b>histopathology is definitive</b></li>
+                    <li><b>Management — conservative</b> (symptom relief): NSAIDs · LNG-IUD · combined oral contraceptives · uterine artery embolisation</li>
+                    <li><b>Management — definitive</b>: <b>Hysterectomy</b>, for women who have completed childbearing, decline or cannot have hormonal therapy, or have failed it</li>
                 </ul>
+                <div class="sum-callout"><b>Adenomyosis vs leiomyoma:</b> adenomyosis gives a <b>symmetrically</b> enlarged, boggy, <b>tender</b> uterus; fibroids give an <b>irregular, firm, non-tender</b> uterus. The classic adenomyosis stem is a parous woman in her 40s, prior uterine surgery, secondary dysmenorrhoea and heavy menses.</div>
                 <p><b>Endometrial Polyp</b></p>
                 <ul>
                     <li><b>C/P</b>: Menorrhagia or intermenstrual bleeding</li>
@@ -905,6 +1070,23 @@ const obgyn = {
                 </ul>
                 <p><b>Complete Mole:</b> 1st trimester painless vaginal bleeding, uterus larger than GA, hyperemesis, passage of vesicles. β-hCG: &gt;100,000 IU/L (very high). US: Snowstorm / cluster of grapes appearance. Treatment: Suction + evacuation → β-hCG surveillance (baseline → weekly until undetectable ×3 weeks → monthly ×6 months).</p>
                 <p><b>Choriocarcinoma:</b> Persistent irregular vaginal bleeding after pregnancy; Metastasis: Lungs → hemoptysis; Vagina → fragile bleeding mass. Diagnosis: Clinical (NO biopsy). Staging: Chest X-ray (lung metastasis). Treatment: Chemotherapy.</p>
+
+                <h3>5.10 Asherman Syndrome (Intrauterine Adhesions)</h3>
+                <ul>
+                    <li><b>Definition</b>: intrauterine adhesions / synechiae (IUAs) that have become <b>symptomatic</b> — infertility, amenorrhoea, hypomenorrhoea, recurrent pregnancy loss</li>
+                    <li><b>Mechanism</b>: trauma to the <b>stratum basalis</b> of the endometrium — the regenerative layer. The stratum functionalis is shed every cycle anyway; losing it is not what causes Asherman</li>
+                    <li><b>RF</b>: <b>repeated D&amp;C</b> (risk rises with the number of procedures), postpartum curettage, uterine surgery, genital TB</li>
+                    <li><b>Diagnosis</b>: hysteroscopy (gold standard); HSG or saline infusion sonography as initial imaging; no withdrawal bleed after a progesterone challenge with normal FSH</li>
+                    <li><b>Treatment</b>: hysteroscopic adhesiolysis + oestrogen to re-epithelialise, ± intrauterine barrier to prevent re-adhesion</li>
+                </ul>
+                <table>
+                    <thead><tr><th>Post-D&amp;C amenorrhea — which one?</th><th>Discriminator</th></tr></thead>
+                    <tbody>
+                        <tr><td><b>Asherman syndrome</b></td><td>Preceded by <b>D&amp;C / uterine instrumentation</b>. Normal FSH, no withdrawal bleed with progesterone</td></tr>
+                        <tr><td><b>Sheehan syndrome</b></td><td>Preceded by <b>severe PPH</b>. Failure to lactate + panhypopituitarism, low gonadotropins</td></tr>
+                    </tbody>
+                </table>
+                <div class="sum-callout"><b>Early pregnancy loss stem — read the D&amp;C count.</b> ~50% of early losses are due to <b>fetal chromosomal abnormalities</b>, so a woman with only one prior D&amp;C bleeding at 5 weeks is a chromosomal-abnormality answer. A woman with <b>multiple</b> D&amp;Cs is the Asherman answer — the risk scales with the number of curettages.</div>
             
                 <section class="topic deck-enrich">
                     <h3>More from the study deck</h3>
@@ -916,6 +1098,42 @@ const obgyn = {
                 </section>
             `,
             questions: [
+                {
+                    q: 'Which ultrasound feature best distinguishes a malignant from a benign ovarian mass?',
+                    options: ['A hypoechoic (solid) component', 'Bilateral masses', 'A cyst with a septation', 'A thin, smooth wall'],
+                    answer: 0,
+                    explanation: 'Features suggesting malignancy are a cyst larger than 10 cm, papillary or solid components (a hypoechoic mass means more solid tissue), irregularity, ascites, and high colour Doppler flow. Bilaterality or a single thin septation alone do not establish malignancy.'
+                },
+                {
+                    q: 'A pregnant woman has vague abdominal pain. Ultrasound shows an ovarian cyst measuring 9 x 7 cm. Her abdomen is soft with no peritonism. How should she be managed?',
+                    options: ['Reassurance and expectant management', 'Laparoscopic drainage', 'Immediate laparotomy', 'Analgesia and serial observation'],
+                    answer: 0,
+                    explanation: 'Most adnexal masses in pregnancy carry a low risk of malignancy or acute complication, and 51-92% resolve during the pregnancy. Surgery is reserved for a symptomatic acute abdomen or imaging or markers suggesting malignancy (for example a cyst over 10 cm).'
+                },
+                {
+                    q: 'A 42-year-old with heavy menstrual bleeding and dysmenorrhoea has a bulky, tender uterus on examination. How is the diagnosis confirmed?',
+                    options: ['Transvaginal ultrasound', 'MRI', 'Histopathology', 'Hysterosalpingography'],
+                    answer: 2,
+                    explanation: 'In adenomyosis transvaginal ultrasound is the first-line investigation and MRI is second line, but histopathology is the definitive (confirmatory) test. Note the wording: "confirm" asks for the definitive test, whereas "next step" asks for the transvaginal ultrasound.'
+                },
+                {
+                    q: 'A 45-year-old with heavy menstrual bleeding and clots, a previous myomectomy and a bulky uterus on examination. What is the NEXT step?',
+                    options: ['CT scan', 'Transvaginal ultrasound', 'MRI', 'Hysterectomy'],
+                    answer: 1,
+                    explanation: 'Transvaginal ultrasound is the first-line investigation for suspected adenomyosis. Hysterectomy is the definitive treatment, not the next diagnostic step.'
+                },
+                {
+                    q: 'A woman with recurrent miscarriages managed by multiple dilatation and curettage procedures is now unable to conceive. Which endometrial layer has been damaged?',
+                    options: ['Stratum compactum', 'Stratum spongiosum', 'Stratum functionalis', 'Stratum basalis'],
+                    answer: 3,
+                    explanation: 'Intrauterine adhesions (Asherman syndrome) result from trauma to the stratum basalis, the regenerative layer. The stratum functionalis is shed physiologically each cycle, so losing it does not cause adhesions.'
+                },
+                {
+                    q: 'A woman at 5 weeks gestation has heavy bleeding with clots. She has had 5 previous second-trimester abortions and multiple dilatation and curettage procedures. What is the most likely cause of her current bleeding?',
+                    options: ['Asherman syndrome', 'Cervical incompetence', 'Fetal chromosomal abnormality', 'Ectopic pregnancy'],
+                    answer: 0,
+                    explanation: 'The risk of Asherman syndrome rises with the number of curettages, and multiple D and C procedures point to it. With only a single prior D and C, fetal chromosomal abnormality would be the better answer, since about 50% of early pregnancy losses are chromosomal.'
+                },
                 {
                     q: 'A 34-year-old woman is due for cervical cancer screening. Which schedule is appropriate?',
                     options: ['Co-testing (PAP + HPV) every 5 years, or a PAP smear alone every 3 years', 'A PAP smear every year', 'No screening is required until age 40', 'HPV testing every 10 years'],
@@ -1052,7 +1270,7 @@ const obgyn = {
         {
             id: 'obgyn-infertility',
             title: '07 — Infertility, Contraception, Menopause & More',
-            title_en: 'Infertility · Contraception · Menopause · GTD · Infections',
+            title_en: 'Infertility · Contraception · Menopause · Primary Amenorrhea · Infections',
             summaryHtml: `
                 <h3>7.1 Infertility</h3>
                 <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Infertility workup — the order of investigation</div>
@@ -1149,6 +1367,21 @@ const obgyn = {
                     </tbody>
                 </table>
 
+                <h3>7.6 Puberty, Adolescent Gynecology &amp; Primary Amenorrhea</h3>
+                <p>All four classic causes present as a 16–17-year-old who has <b>never</b> menstruated. Breast development, pubic/axillary hair and the <b>testosterone level</b> separate them.</p>
+                <table>
+                    <thead><tr><th>Diagnosis</th><th>Breasts</th><th>Pubic / axillary hair</th><th>Testosterone</th><th>Other clues</th></tr></thead>
+                    <tbody>
+                        <tr><td><b>MRKH (Müllerian / vaginal agenesis)</b></td><td>Normal</td><td><b>Normal</b></td><td><b>Normal female</b></td><td>46,XX with normal ovaries and normal ovarian function — the only complaint is primary amenorrhoea. Absent/short vagina, absent uterus</td></tr>
+                        <tr><td><b>Complete androgen insensitivity (CAIS)</b></td><td>Normal</td><td><b>Little or none</b></td><td><b>High</b> (male range)</td><td>46,XY, testes present, absent uterus</td></tr>
+                        <tr><td><b>Functional hypothalamic hypogonadism</b></td><td>Normal (Tanner 5)</td><td>Normal</td><td>Normal</td><td>Athlete / low body weight / dietary restriction / eating disorder → hypogonadotropic hypogonadism. Uterus and vagina are present</td></tr>
+                        <tr><td><b>Transverse vaginal septum</b> (outflow obstruction)</td><td>Normal</td><td>Normal</td><td>Normal</td><td><b>Cyclical lower abdominal pain</b>, urinary retention, bulging bluish membrane at the introitus (cryptomenorrhoea)</td></tr>
+                    </tbody>
+                </table>
+                <div class="sum-callout"><b>The single discriminator between MRKH and CAIS is testosterone.</b> Both have normal breasts and no uterus. <b>Normal</b> testosterone with normal pubic hair → MRKH. <b>High</b> (male-range) testosterone with sparse or absent pubic hair → complete androgen insensitivity.</div>
+
+                <figure class="deck-block algo-flow"><figcaption><span class="deck-tag tag-algo">Algorithm</span> Primary amenorrhea with normal breast development</figcaption><p class="deck-subcap">breasts present means oestrogen is working — so ask about the outflow tract and the androgen axis</p><div class="algo-row"><div class="algo-node start" style="animation-delay:0.00s">16–17 y, never menstruated, breasts Tanner 4–5</div></div><div class="algo-arrow" style="animation-delay:0.05s"></div><div class="algo-row"><div class="algo-node dec" style="animation-delay:0.12s">Uterus present on ultrasound?</div></div><div class="algo-arrow" style="animation-delay:0.17s"></div><div class="algo-fork"><div class="algo-branch"><span class="algo-label" style="animation-delay:0.24s">Uterus ABSENT → check testosterone</span><div class="algo-node proc" style="animation-delay:0.24s">Normal female testosterone + normal pubic hair</div><div class="algo-arrow mini" style="animation-delay:0.38s"></div><div class="algo-node end" style="animation-delay:0.34s">MRKH / Müllerian agenesis (46,XX)</div><div class="algo-arrow mini" style="animation-delay:0.48s"></div><div class="algo-node proc" style="animation-delay:0.44s">High (male-range) testosterone + scant pubic hair</div><div class="algo-arrow mini" style="animation-delay:0.58s"></div><div class="algo-node end" style="animation-delay:0.54s">Complete androgen insensitivity (46,XY)</div></div><div class="algo-branch"><span class="algo-label" style="animation-delay:0.64s">Uterus PRESENT</span><div class="algo-node proc" style="animation-delay:0.64s">Cyclical pain, retention, bulging bluish membrane</div><div class="algo-arrow mini" style="animation-delay:0.78s"></div><div class="algo-node end" style="animation-delay:0.74s">Outflow obstruction — imperforate hymen / transverse vaginal septum</div><div class="algo-arrow mini" style="animation-delay:0.88s"></div><div class="algo-node proc" style="animation-delay:0.84s">No pain; athlete, low weight, dietary restriction</div><div class="algo-arrow mini" style="animation-delay:0.98s"></div><div class="algo-node end" style="animation-delay:0.94s">Functional hypothalamic hypogonadism (low FSH/LH)</div></div></div></figure>
+
                 <h3>7.7 Vulvar Lesions — Quick Reference</h3>
                 <table>
                     <thead><tr><th>Lesion</th><th>Key Features</th></tr></thead>
@@ -1166,6 +1399,24 @@ const obgyn = {
                 
             `,
             questions: [
+                {
+                    q: 'A 17-year-old has never menstruated. She has normal breast development, sparse pubic and axillary hair, and a testosterone level in the male range. What is the diagnosis?',
+                    options: ['Mayer-Rokitansky-Kuster-Hauser syndrome (Mullerian agenesis)', 'Complete androgen insensitivity', 'Congenital hypothyroidism', 'Polycystic ovary syndrome'],
+                    answer: 1,
+                    explanation: 'Complete androgen insensitivity: 46,XY with primary amenorrhoea, normal breasts, little or no pubic and axillary hair, and a testosterone level within or above the male range. The raised testosterone is what separates it from MRKH.'
+                },
+                {
+                    q: 'A 17-year-old has never menstruated. Breast development, pubic hair and axillary hair are all normal, and her testosterone level is normal for a woman. What is the diagnosis?',
+                    options: ['Mayer-Rokitansky-Kuster-Hauser syndrome (Mullerian agenesis)', 'Complete androgen insensitivity', 'Congenital hypothyroidism', 'Turner syndrome'],
+                    answer: 0,
+                    explanation: 'MRKH (vaginal or Mullerian agenesis): a normal 46,XX karyotype with normal ovaries and normal ovarian function, so secondary sexual characteristics develop normally. It presents with primary amenorrhoea alone, and the testosterone level is normal.'
+                },
+                {
+                    q: 'A 17-year-old competitive gymnast is medically free, Tanner stage 5 on examination, and has never menstruated. What is the most likely diagnosis?',
+                    options: ['Hypothalamic hypogonadism', 'Transverse vaginal septum', 'Gonadal agenesis', 'Testicular feminisation'],
+                    answer: 0,
+                    explanation: 'Amenorrhoea in a young athlete is commonly functional hypothalamic hypogonadism from energy deficit or dietary restriction, giving hypogonadotropic hypogonadism. A transverse vaginal septum would also cause cyclical lower abdominal pain, urinary retention and a bulging bluish membrane.'
+                },
                 {
                     q: 'A 45-year-old post-TAH + BSO (benign reason) — acute vasomotor symptoms. Most appropriate HRT?',
                     options: ['Transdermal estrogen only patches', 'Levonorgestrel IUD', 'Cyclical E+P', 'Continuous E+P'],

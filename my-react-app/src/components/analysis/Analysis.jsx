@@ -15,10 +15,16 @@ import Spinner from '../common/Spinner.jsx';
 import { UserContext } from '../../UserContext';
 import { getTypeLabel } from '../../utils/typeLabels';
 import { userTrack } from '../../utils/tracks.js';
+import { useCopy, useLang } from '../../i18n';
+import analysisCopy from '../../i18n/copy/analysis.js';
 
-const BestWorstTopic = ({ best, worst }) => (
+const BestWorstTopic = ({ best, worst }) => {
+  const t = useCopy(analysisCopy).bestWorst;
+  const { lang } = useLang();
+
+  return (
   <section className="streak-section">
-    <h3 className="section-header">أفضل وأضعف المواضيع</h3>
+    <h3 className="section-header">{t.title}</h3>
     <div className="questions-grid">
       <div className="question-card">
         <div className="question-header">
@@ -27,36 +33,36 @@ const BestWorstTopic = ({ best, worst }) => (
               background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
               color: 'white'
             }}>
-              <Icon name="trophy" size={15} /> الأفضل
+              <Icon name="trophy" size={15} /> {t.best}
             </span>
             <span className="accuracy-badge" style={{
               background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
               color: 'white'
             }}>
-              <Icon name="bar-chart" size={15} /> {best ? `${Number(best.accuracy).toFixed(1)}%` : 'N/A'}
+              <Icon name="bar-chart" size={15} /> {best ? `${Number(best.accuracy).toFixed(1)}%` : '—'}
             </span>
           </div>
         </div>
 
         <div className="question-content">
           <div className="topic-performance-text">
-            <h4>أقوى مادة لديك</h4>
-            <p>استمر في التميز!</p>
+            <h4>{t.strongest}</h4>
+            <p>{t.strongestHint}</p>
           </div>
 
           <div className="answers-section">
             <div className="answer-row">
-              <span className="answer-label correct">الموضوع:</span>
-              <span className="answer-text correct">{best ? getTypeLabel(best.question_type) : 'لا توجد بيانات'}</span>
+              <span className="answer-label correct">{t.topic}</span>
+              <span className="answer-text correct">{best ? getTypeLabel(best.question_type, lang) : t.noData}</span>
             </div>
 
             <div className="answer-row">
-              <span className="answer-label accuracy">الدقة:</span>
-              <span className="answer-text accuracy">{best ? `${Number(best.accuracy).toFixed(1)}%` : 'N/A'}</span>
+              <span className="answer-label accuracy">{t.accuracy}</span>
+              <span className="answer-text accuracy">{best ? `${Number(best.accuracy).toFixed(1)}%` : '—'}</span>
             </div>
 
             <div className="answer-row">
-              <span className="answer-label primary">الأسئلة:</span>
+              <span className="answer-label primary">{t.questions}</span>
               <span className="answer-text primary">{best?.total_answered || 0}</span>
             </div>
           </div>
@@ -70,36 +76,36 @@ const BestWorstTopic = ({ best, worst }) => (
               background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
               color: 'white'
             }}>
-              <Icon name="trending-down" size={15} /> يحتاج تحسين
+              <Icon name="trending-down" size={15} /> {t.needsWork}
             </span>
             <span className="accuracy-badge" style={{
               background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
               color: 'white'
             }}>
-              <Icon name="bar-chart" size={15} /> {worst ? `${Number(worst.accuracy).toFixed(1)}%` : 'N/A'}
+              <Icon name="bar-chart" size={15} /> {worst ? `${Number(worst.accuracy).toFixed(1)}%` : '—'}
             </span>
           </div>
         </div>
 
         <div className="question-content">
           <div className="topic-performance-text">
-            <h4>منطقة التركيز</h4>
-            <p>حاول تخصيص وقت أكثر لهذا الموضوع!</p>
+            <h4>{t.focus}</h4>
+            <p>{t.focusHint}</p>
           </div>
 
           <div className="answers-section">
             <div className="answer-row">
-              <span className="answer-label wrong">الموضوع:</span>
-              <span className="answer-text wrong">{worst ? getTypeLabel(worst.question_type) : 'لا توجد بيانات'}</span>
+              <span className="answer-label wrong">{t.topic}</span>
+              <span className="answer-text wrong">{worst ? getTypeLabel(worst.question_type, lang) : t.noData}</span>
             </div>
 
             <div className="answer-row">
-              <span className="answer-label accuracy">الدقة:</span>
-              <span className="answer-text accuracy">{worst ? `${Number(worst.accuracy).toFixed(1)}%` : 'N/A'}</span>
+              <span className="answer-label accuracy">{t.accuracy}</span>
+              <span className="answer-text accuracy">{worst ? `${Number(worst.accuracy).toFixed(1)}%` : '—'}</span>
             </div>
 
             <div className="answer-row">
-              <span className="answer-label primary">الأسئلة:</span>
+              <span className="answer-label primary">{t.questions}</span>
               <span className="answer-text primary">{worst?.total_answered || 0}</span>
             </div>
           </div>
@@ -107,10 +113,12 @@ const BestWorstTopic = ({ best, worst }) => (
       </div>
     </div>
   </section>
-);
+  );
+};
 
 // Floating Streak Badge component
 const FloatingStreakBadge = ({ streakData, loading: streakLoading }) => {
+  const t = useCopy(analysisCopy).streak;
   const [expanded, setExpanded] = useState(false);
   const currentStreak = streakData?.current_streak ?? 0;
   const longestStreak = streakData?.longest_streak ?? 0;
@@ -126,15 +134,15 @@ const FloatingStreakBadge = ({ streakData, loading: streakLoading }) => {
       {expanded && (
         <div className="streak-badge-details">
           <div className="streak-badge-row">
-            <span><Icon name="flame" size={15} /> السَّلسلة الحالية</span>
-            <strong>{currentStreak} يوم</strong>
+            <span><Icon name="flame" size={15} /> {t.current}</span>
+            <strong>{currentStreak} {t.days}</strong>
           </div>
           <div className="streak-badge-row">
-            <span><Icon name="trophy" size={15} /> أطول سلسلة</span>
-            <strong>{longestStreak} يوم</strong>
+            <span><Icon name="trophy" size={15} /> {t.longest}</span>
+            <strong>{longestStreak} {t.days}</strong>
           </div>
           <div className="streak-badge-hint">
-            {currentStreak > 0 ? <>استمر! أنت في سلسلة رائعة <Icon name="flame" size={14} /></> : 'ابدأ سلسلتك اليوم!'}
+            {currentStreak > 0 ? <>{t.keepGoing} <Icon name="flame" size={14} /></> : t.startToday}
           </div>
         </div>
       )}
@@ -144,6 +152,8 @@ const FloatingStreakBadge = ({ streakData, loading: streakLoading }) => {
 
 const Analysis = () => {
   const { user, setUser, sessionToken } = useContext(UserContext);
+  const t = useCopy(analysisCopy);
+  const { dir } = useLang();
   const [showResetModal, setShowResetModal] = useState(false);
   const [resetConfirm, setResetConfirm] = useState('');
   const [resetting, setResetting] = useState(false);
@@ -248,7 +258,7 @@ const Analysis = () => {
 
   /**
    * Wipe every performance record and start over. Irreversible, so it is gated
-   * behind a modal that requires typing the word حذف — a plain "are you sure"
+   * behind a modal that requires typing a confirmation word — a plain "are you sure"
    * is too easy to click through for something with no undo.
    */
   const handleResetAnalytics = async () => {
@@ -260,7 +270,7 @@ const Analysis = () => {
       setResetConfirm('');
       window.location.reload(); // simplest way to guarantee every panel re-reads
     } catch (err) {
-      setResetError(err?.response?.data?.message || 'تعذّر تنفيذ إعادة التعيين. لم يُحذف شيء.');
+      setResetError(err?.response?.data?.message || t.reset.failed);
       setResetting(false);
     }
   };
@@ -274,7 +284,7 @@ const Analysis = () => {
       const res = await protectedGet(`${Globals.URL}/user-analysis/${id}?_=${timestamp}`);
       setData(prev => ({ ...prev, userAnalysis: res.data }));
     } catch (err) {
-      setErrors(prev => ({ ...prev, userAnalysis: 'فشل في تحميل تحليل المستخدم.' }));
+      setErrors(prev => ({ ...prev, userAnalysis: t.errUserAnalysis }));
     } finally {
       setLoading(prev => ({ ...prev, userAnalysis: false }));
     }
@@ -288,7 +298,7 @@ const Analysis = () => {
       const res = await protectedGet(`${Globals.URL}/user-streaks/${id}?_=${timestamp}`);
       setData(prev => ({ ...prev, streakData: res.data }));
     } catch (err) {
-      setErrors(prev => ({ ...prev, streakData: 'فشل في تحميل بيانات السلسلة.' }));
+      setErrors(prev => ({ ...prev, streakData: t.errStreak }));
     } finally {
       setLoading(prev => ({ ...prev, streakData: false }));
     }
@@ -302,7 +312,7 @@ const Analysis = () => {
       const res = await protectedGet(`${Globals.URL}/topic-analysis/user/${id}?_=${timestamp}`);
       setData(prev => ({ ...prev, topicAnalysis: res.data || [] }));
     } catch (err) {
-      setErrors(prev => ({ ...prev, topicAnalysis: 'فشل في تحميل تحليل المواضيع.' }));
+      setErrors(prev => ({ ...prev, topicAnalysis: t.errTopics }));
     } finally {
       setLoading(prev => ({ ...prev, topicAnalysis: false }));
     }
@@ -322,8 +332,8 @@ const Analysis = () => {
       setErrors(prev => ({
         ...prev,
         questionAttempts: err.code === 'ECONNABORTED'
-          ? 'Request timed out. Please try again.'
-          : 'فشل في تحميل محاولات الأسئلة.'
+          ? t.errTimeout
+          : t.errAttempts
       }));
     } finally {
       setLoading(prev => ({ ...prev, questionAttempts: false }));
@@ -340,7 +350,7 @@ const Analysis = () => {
       const res = await protectedGet(`${Globals.URL}/api/all-questions?_=${timestamp}`);
       setData(prev => ({ ...prev, questions: res.data.questions || [] }));
     } catch (err) {
-      setErrors(prev => ({ ...prev, questions: 'فشل في تحميل الأسئلة.' }));
+      setErrors(prev => ({ ...prev, questions: t.errQuestions }));
     } finally {
       setLoading(prev => ({ ...prev, questions: false }));
     }
@@ -359,7 +369,7 @@ const Analysis = () => {
       const res = await protectedGet(`${Globals.URL}/question-attempts/session/${latestQuizId}`);
       setData(prev => ({ ...prev, lastQuizAttempts: res.data || [] }));
     } catch (err) {
-      setErrors(prev => ({ ...prev, lastQuizAttempts: 'فشل في تحميل محاولات آخر اختبار.' }));
+      setErrors(prev => ({ ...prev, lastQuizAttempts: t.errLastQuiz }));
     } finally {
       setLoading(prev => ({ ...prev, lastQuizAttempts: false }));
     }
@@ -381,7 +391,7 @@ const Analysis = () => {
           setLoading(prev => ({ ...prev, userAnalysis: false }));
           return res;
         }).catch(err => {
-          setErrors(prev => ({ ...prev, userAnalysis: 'فشل في تحميل تحليل المستخدم.' }));
+          setErrors(prev => ({ ...prev, userAnalysis: t.errUserAnalysis }));
           setLoading(prev => ({ ...prev, userAnalysis: false }));
           throw err;
         }),
@@ -462,7 +472,7 @@ const Analysis = () => {
           cursor: 'pointer'
         }}
       >
-        إعادة المحاولة
+        {t.retry}
       </button>
     </div>
   );
@@ -472,12 +482,12 @@ const Analysis = () => {
 
   // Tab configuration
   const tabs = [
-    { id: 'final-exams', label: 'الاختبارات النهائية', icon: 'graduation-cap' },
-    { id: 'progress', label: 'التقدم', icon: 'target' },
-    { id: 'history', label: 'السجل', icon: 'chart-line' },
-    { id: 'recent', label: 'آخر اختبار', icon: 'clock' },
-    { id: 'topics', label: 'المواضيع', icon: 'book-open' },
-    { id: 'overview', label: 'نظرة عامة', icon: 'chart-bar' }
+    { id: 'final-exams', label: t.tabs.finalExams, icon: 'graduation-cap' },
+    { id: 'progress', label: t.tabs.progress, icon: 'target' },
+    { id: 'history', label: t.tabs.history, icon: 'chart-line' },
+    { id: 'recent', label: t.tabs.recent, icon: 'clock' },
+    { id: 'topics', label: t.tabs.topics, icon: 'book-open' },
+    { id: 'overview', label: t.tabs.overview, icon: 'chart-bar' }
   ];
 
   // Render tab content
@@ -487,7 +497,7 @@ const Analysis = () => {
         return (
           <>
             {loading.userAnalysis ? (
-              <SectionLoader message="جاري تحميل الإحصائيات العامة..." />
+              <SectionLoader message={t.loadingOverall} />
             ) : errors.userAnalysis ? (
               <ErrorWithRetry
                 error={errors.userAnalysis}
@@ -507,7 +517,7 @@ const Analysis = () => {
         return (
           <>
             {loading.topicAnalysis ? (
-              <SectionLoader message="جاري تحميل تحليل المواضيع..." />
+              <SectionLoader message={t.loadingTopics} />
             ) : errors.topicAnalysis ? (
               <ErrorWithRetry
                 error={errors.topicAnalysis}
@@ -524,13 +534,13 @@ const Analysis = () => {
         return (
           <>
             {loading.userAnalysis ? (
-              <SectionLoader message="جاري تحميل ملخص آخر اختبار..." />
+              <SectionLoader message={t.loadingLastQuiz} />
             ) : errors.userAnalysis ? null : (
               <LastQuizSummary latest_quiz={data.userAnalysis?.latest_quiz} />
             )}
 
             {loading.lastQuizAttempts || loading.questions ? (
-              <SectionLoader message="جاري تحميل أسئلة آخر اختبار..." />
+              <SectionLoader message={t.loadingLastQuizQuestions} />
             ) : errors.lastQuizAttempts || errors.questions ? (
               <ErrorWithRetry
                 error={errors.lastQuizAttempts || errors.questions}
@@ -581,7 +591,7 @@ const Analysis = () => {
         if (!user?.username || !sessionToken) {
           return (
             <div className="analysis-container">
-              <Spinner fullScreen label="جاري تحميل بيانات المستخدم..." />
+              <Spinner fullScreen label={t.loadingUser} />
             </div>
           );
         }
@@ -599,8 +609,8 @@ const Analysis = () => {
   };
 
   return (
-    <div className="analysis-wrapper fade-in">
-        <h2 className="screen-title">تقرير الأداء</h2>
+    <div className="analysis-wrapper fade-in" dir={dir}>
+        <h2 className="screen-title">{t.title}</h2>
 
         {/* Tab Navigation */}
         <div className="tab-navigation-container">
@@ -630,49 +640,46 @@ const Analysis = () => {
             onClick={() => navigate("/wrong-questions")}
             className="secondary-button"
           >
-            <Icon name="book-open" size={15} /> مراجعة الأسئلة الخاطئة
+            <Icon name="book-open" size={15} /> {t.actions.reviewWrong}
           </button>
           <button
             onClick={handleRefresh}
             className="secondary-button"
             disabled={refreshing}
           >
-            {refreshing ? <><Icon name="refresh" size={14} /> جاري التحديث...</> : <><Icon name="refresh" size={14} /> تحديث البيانات</>}
+            {refreshing ? <><Icon name="refresh" size={14} /> {t.actions.refreshing}</> : <><Icon name="refresh" size={14} /> {t.actions.refresh}</>}
           </button>
           <button
             onClick={() => navigate("/quizs", { state: { id } })}
             className="primary-button"
           >
-            ابدأ اختبار جديد
+            {t.actions.newQuiz}
           </button>
         </div>
 
         {/* Danger zone — irreversible, so it sits apart from the normal actions */}
         <div className="danger-zone">
           <div className="danger-zone-text">
-            <strong>إعادة تعيين التحليل</strong>
-            <span>حذف كل سجلّ أدائك والبدء من الصفر. لا يمكن التراجع.</span>
+            <strong>{t.reset.zoneTitle}</strong>
+            <span>{t.reset.zoneBody}</span>
           </div>
           <button type="button" className="danger-button" onClick={() => { setResetError(''); setResetConfirm(''); setShowResetModal(true); }}>
-            <Icon name="trash" size={15} /> إعادة تعيين
+            <Icon name="trash" size={15} /> {t.reset.zoneButton}
           </button>
         </div>
 
         {showResetModal && (
           <div className="reset-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="reset-modal-title">
             <div className="reset-modal">
-              <h2 id="reset-modal-title"><Icon name="alert-triangle" size={19} /> إعادة تعيين التحليل</h2>
-              <p className="reset-modal-lead">سيُحذف نهائياً، ولا يمكن استرجاعه:</p>
+              <h2 id="reset-modal-title"><Icon name="alert-triangle" size={19} /> {t.reset.modalTitle}</h2>
+              <p className="reset-modal-lead">{t.reset.lead}</p>
               <ul className="reset-modal-list">
-                <li>كل الاختبارات السابقة وسجلّ إجاباتك</li>
-                <li>الدقة والإحصائيات وتحليل التخصصات</li>
-                <li>تقدّمك في الأسئلة (ستعود الأسئلة التي حللتها للظهور)</li>
-                <li>سلسلة الأيام المتتالية</li>
+                {t.reset.items.map((item) => <li key={item}>{item}</li>)}
               </ul>
-              <p className="reset-modal-keep"><Icon name="check-circle" size={14} /> إنجازاتك المكتسبة ستبقى محفوظة.</p>
+              <p className="reset-modal-keep"><Icon name="check-circle" size={14} /> {t.reset.keep}</p>
 
               <label className="reset-modal-label" htmlFor="reset-confirm">
-                اكتب <b>حذف</b> للتأكيد
+                {t.reset.confirmLabelBefore} <b>{t.reset.confirmWord}</b> {t.reset.confirmLabelAfter}
               </label>
               <input
                 id="reset-confirm"
@@ -687,15 +694,15 @@ const Analysis = () => {
 
               <div className="reset-modal-actions">
                 <button type="button" className="secondary-button" onClick={() => setShowResetModal(false)} disabled={resetting}>
-                  إلغاء
+                  {t.reset.cancel}
                 </button>
                 <button
                   type="button"
                   className="danger-button"
                   onClick={handleResetAnalytics}
-                  disabled={resetConfirm.trim() !== 'حذف' || resetting}
+                  disabled={resetConfirm.trim() !== t.reset.confirmWord || resetting}
                 >
-                  {resetting ? 'جارٍ الحذف…' : 'احذف كل شيء'}
+                  {resetting ? t.reset.deleting : t.reset.deleteAll}
                 </button>
               </div>
             </div>

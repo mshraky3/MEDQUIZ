@@ -5,9 +5,13 @@ import Globals from '../../global.js';
 import Spinner from '../common/Spinner.jsx';
 import { getSourceLabel } from '../../utils/sourceLabels';
 import { getTypeLabel } from '../../utils/typeLabels';
+import { useCopy, useLang, formatDateTime } from '../../i18n';
+import analysisCopy from '../../i18n/copy/analysis.js';
 import './FinalExams.css';
 
 const FinalExams = ({ userId, username, sessionToken }) => {
+    const t = useCopy(analysisCopy).finals;
+    const { lang, dir } = useLang();
     const [sessions, setSessions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -25,7 +29,7 @@ const FinalExams = ({ userId, username, sessionToken }) => {
     const fetchSessions = async (page = 1, limit = 10) => {
         if (!userId || !username || !sessionToken) {
             console.error('Missing required props:', { userId, username, sessionToken });
-            setError('بيانات المصادقة مفقودة');
+            setError(t.missingAuth);
             setLoading(false);
             return;
         }
@@ -41,7 +45,7 @@ const FinalExams = ({ userId, username, sessionToken }) => {
             setPagination(response.data.pagination);
         } catch (err) {
             console.error('Error fetching final quiz sessions:', err);
-            setError('فشل في تحميل جلسات الاختبار النهائي');
+            setError(t.error);
         } finally {
             setLoading(false);
         }
@@ -107,15 +111,13 @@ const FinalExams = ({ userId, username, sessionToken }) => {
     };
 
     // Format date
-    const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    };
+    const formatDate = (dateString) => formatDateTime(dateString, lang, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
 
     // Format duration
     const formatDuration = (seconds) => {
@@ -155,7 +157,7 @@ const FinalExams = ({ userId, username, sessionToken }) => {
         return (
             <div className="final-exams-container">
                 <div className="error-message">
-                    <p>بيانات المصادقة مفقودة. يرجى تحديث الصفحة.</p>
+                    <p>{t.missingAuthBody}</p>
                 </div>
             </div>
         );
@@ -164,7 +166,7 @@ const FinalExams = ({ userId, username, sessionToken }) => {
     if (loading) {
         return (
             <div className="final-exams-container">
-                <Spinner fullScreen label="جاري تحميل جلسات الاختبار النهائي..." />
+                <Spinner fullScreen label={t.loading} />
             </div>
         );
     }
@@ -175,7 +177,7 @@ const FinalExams = ({ userId, username, sessionToken }) => {
                 <div className="error-message">
                     <p>{error}</p>
                     <button onClick={() => fetchSessions()} className="retry-button">
-                        Try Again
+                        {t.retry}
                     </button>
                 </div>
             </div>
@@ -187,20 +189,20 @@ const FinalExams = ({ userId, username, sessionToken }) => {
             <div className="final-exams-container">
                 <div className="no-data">
                     <div className="no-data-icon"><Icon name="target" size={40} /></div>
-                    <h3>لا توجد جلسات اختبار نهائي</h3>
-                    <p>لم تكمل أي جلسة اختبار نهائي بعد.</p>
-                    <p>ابدأ مراجعة شاملة باختبار نهائي!</p>
+                    <h3>{t.emptyTitle}</h3>
+                    <p>{t.emptyBody}</p>
+                    <p>{t.emptyHint}</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="final-exams-container">
+        <div className="final-exams-container" dir={dir}>
             <div className="final-exams-header">
-                <h2><Icon name="target" size={15} /> جلسات الاختبار النهائي</h2>
+                <h2><Icon name="target" size={15} /> {t.title}</h2>
                 <p className="final-exams-description">
-                    جلسات مراجعة شاملة لجميع الأسئلة من المعايير المختارة
+                    {t.description}
                 </p>
             </div>
 
@@ -210,7 +212,7 @@ const FinalExams = ({ userId, username, sessionToken }) => {
                         <div className="session-header">
                             <div className="session-info">
                                 <h3 className="session-title">
-                                    {getTypeLabel(session.question_type)} - {getSourceLabel(session.source)}
+                                    {getTypeLabel(session.question_type, lang)} — {getSourceLabel(session.source, lang)}
                                 </h3>
                                 <p className="session-date">
                                     {formatDate(session.start_time)}
@@ -218,7 +220,7 @@ const FinalExams = ({ userId, username, sessionToken }) => {
                             </div>
                             <div className="session-stats">
                                 <div className="stat-item">
-                                    <span className="stat-label">النتيجة</span>
+                                    <span className="stat-label">{t.score}</span>
                                     <span
                                         className="stat-value score"
                                         style={{ color: getScoreColor(session.score) }}
@@ -227,13 +229,13 @@ const FinalExams = ({ userId, username, sessionToken }) => {
                                     </span>
                                 </div>
                                 <div className="stat-item">
-                                    <span className="stat-label">الأسئلة</span>
+                                    <span className="stat-label">{t.questions}</span>
                                     <span className="stat-value">
                                         {session.correct_answers}/{session.total_questions}
                                     </span>
                                 </div>
                                 <div className="stat-item">
-                                    <span className="stat-label">الوقت</span>
+                                    <span className="stat-label">{t.time}</span>
                                     <span className="stat-value">
                                         {formatDuration(session.time_taken)}
                                     </span>
@@ -246,7 +248,7 @@ const FinalExams = ({ userId, username, sessionToken }) => {
                                 onClick={() => toggleSessionExpansion(session.id)}
                                 className="view-details-btn"
                             >
-                                {expandedSessionId === session.id ? 'إخفاء التفاصيل' : 'عرض التفاصيل'}
+                                {expandedSessionId === session.id ? t.hideDetails : t.showDetails}
                             </button>
                         </div>
 
@@ -258,37 +260,37 @@ const FinalExams = ({ userId, username, sessionToken }) => {
                                         <div className="session-details-grid">
                                             {/* Performance Summary Container */}
                                             <div className="performance-summary-container">
-                                                <h4>ملخص الأداء</h4>
+                                                <h4>{t.performanceSummary}</h4>
                                                 <div className="performance-stats">
                                                     <div className="performance-item">
-                                                        <span className="performance-label">الإجابات الصحيحة</span>
+                                                        <span className="performance-label">{t.correctAnswers}</span>
                                                         <span className="performance-value correct">
                                                             {session.correct_answers}
                                                         </span>
                                                     </div>
                                                     <div className="performance-item">
-                                                        <span className="performance-label">الإجابات الخاطئة</span>
+                                                        <span className="performance-label">{t.wrongAnswers}</span>
                                                         <span className="performance-value incorrect">
                                                             {session.total_questions - session.correct_answers}
                                                         </span>
                                                     </div>
                                                     <div className="performance-item">
-                                                        <span className="performance-label">كفاءة الوقت</span>
+                                                        <span className="performance-label">{t.timeEfficiency}</span>
                                                         <span className="performance-value">
                                                             {session.time_taken > 0 ?
-                                                                (session.total_questions / (session.time_taken / 60)).toFixed(1) + ' q/min' :
-                                                                'N/A'
+                                                                (session.total_questions / (session.time_taken / 60)).toFixed(1) + ' ' + t.perMinute :
+                                                                '\u2014'
                                                             }
                                                         </span>
                                                     </div>
                                                     <div className="performance-item">
-                                                        <span className="performance-label">حد الوقت</span>
+                                                        <span className="performance-label">{t.timeLimit}</span>
                                                         <span className="performance-value">
                                                             {formatDuration(session.time_limit)}
                                                         </span>
                                                     </div>
                                                     <div className="performance-item">
-                                                        <span className="performance-label">وقت الإكمال</span>
+                                                        <span className="performance-label">{t.completedAt}</span>
                                                         <span className="performance-value">
                                                             {formatDate(session.end_time)}
                                                         </span>
@@ -298,7 +300,7 @@ const FinalExams = ({ userId, username, sessionToken }) => {
 
                                             {/* Quiz Questions Container */}
                                             <div className="quiz-questions-container">
-                                                <h4>أسئلة الاختبار ({sessionQuestions[session.id]?.length || 0})</h4>
+                                                <h4>{t.quizQuestions(sessionQuestions[session.id]?.length || 0)}</h4>
                                                 {sessionQuestions[session.id] && sessionQuestions[session.id].length > 0 ? (
                                                     <div className="questions-grid">
                                                         {sessionQuestions[session.id].map((question, index) => (
@@ -307,10 +309,10 @@ const FinalExams = ({ userId, username, sessionToken }) => {
                                                                     <div className="question-header">
                                                                         <div className="question-meta">
                                                                             <span className="type-badge">
-                                                                                <Icon name="book" size={15} /> {getTypeLabel(question.question_type)}
+                                                                                <Icon name="book" size={15} /> {getTypeLabel(question.question_type, lang)}
                                                                             </span>
                                                                             <span className={`result-badge ${question.is_correct ? 'correct' : 'wrong'}`}>
-                                                                                {question.is_correct ? <><Icon name="check-circle" size={13} /> صحيح</> : <><Icon name="x-circle" size={13} /> خطأ</>}
+                                                                                {question.is_correct ? <><Icon name="check-circle" size={13} /> {t.correctBadge}</> : <><Icon name="x-circle" size={13} /> {t.wrongBadge}</>}
                                                                             </span>
                                                                         </div>
                                                                     </div>
@@ -322,19 +324,19 @@ const FinalExams = ({ userId, username, sessionToken }) => {
 
                                                                         <div className="answers-section">
                                                                             <div className="answer-row">
-                                                                                <span className="answer-label wrong">إجابتك:</span>
+                                                                                <span className="answer-label wrong">{t.yourAnswer}</span>
                                                                                 <span className={`answer-text ${question.is_correct ? 'correct' : 'wrong'}`}>
-                                                                                    {question.user_answer || 'لم تجب'}
+                                                                                    {question.user_answer || t.noAnswer}
                                                                                 </span>
                                                                             </div>
                                                                             <div className="answer-row">
-                                                                                <span className="answer-label correct">الإجابة الصحيحة:</span>
+                                                                                <span className="answer-label correct">{t.correctAnswer}</span>
                                                                                 <span className="answer-text correct">{question.correct_option}</span>
                                                                             </div>
                                                                         </div>
 
                                                                         <div className="question-meta">
-                                                                            <span className="question-number">سؤال {index + 1}</span>
+                                                                            <span className="question-number">{t.questionNo(index + 1)}</span>
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -343,7 +345,7 @@ const FinalExams = ({ userId, username, sessionToken }) => {
                                                     </div>
                                                 ) : (
                                                     <div className="no-questions">
-                                                        <p>لا توجد أسئلة لهذه الجلسة.</p>
+                                                        <p>{t.noQuestions}</p>
                                                     </div>
                                                 )}
                                             </div>
@@ -352,7 +354,7 @@ const FinalExams = ({ userId, username, sessionToken }) => {
                                 ) : (
                                     <div className="loading-details">
                                         <Spinner size="sm" />
-                                        <span>جاري التحميل...</span>
+                                        <span>{t.loadingDetails}</span>
                                     </div>
                                 )}
                             </div>
@@ -369,11 +371,11 @@ const FinalExams = ({ userId, username, sessionToken }) => {
                         disabled={pagination.current_page === 1}
                         className="pagination-btn"
                     >
-                        السابق
+                        {t.previous}
                     </button>
 
                     <span className="pagination-info">
-                        صفحة {pagination.current_page} من {pagination.total_pages}
+                        {t.pageOf(pagination.current_page, pagination.total_pages)}
                     </span>
 
                     <button
@@ -381,7 +383,7 @@ const FinalExams = ({ userId, username, sessionToken }) => {
                         disabled={pagination.current_page === pagination.total_pages}
                         className="pagination-btn"
                     >
-                        التالي
+                        {t.next}
                     </button>
                 </div>
             )}

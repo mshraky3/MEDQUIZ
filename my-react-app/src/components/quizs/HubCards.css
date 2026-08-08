@@ -1,0 +1,259 @@
+/* Exam-date and streak cards on the study hub.
+   Deliberately share GoalCard.css's primitives (.goalx-btn, .goalx-link,
+   .goalx-label, .goalx-error, .goalx-actions) rather than redefining them —
+   three cards sitting in a row must not have three different button styles.
+   Logical properties throughout: the hub renders both RTL and LTR. */
+
+.hub-cards-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.hubcard {
+  background: #fff;
+  border: 1px solid #e6ecf6;
+  border-radius: 18px;
+  padding: 18px 20px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+  /* Cards in the row are equal height with their content pinned to the top. */
+  display: flex;
+  flex-direction: column;
+}
+
+.hubcard-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.hubcard-head h3 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 800;
+  color: #0f1e3d;
+}
+
+/* ── The big number ──────────────────────────────────────────── */
+.hubcard-count {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.hubcard-count-n {
+  font-size: 40px;
+  font-weight: 800;
+  line-height: 1;
+  color: #0f1e3d;
+  font-variant-numeric: tabular-nums;
+}
+
+.hubcard-count-unit {
+  font-size: 13px;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.hubcard-headline {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f1e3d;
+  line-height: 1.4;
+}
+
+.hubcard-sub {
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  color: #64748b;
+}
+
+.hubcard-dot { color: #94a3b8; }
+
+.hubcard-pace {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #2563eb;
+}
+
+.hubcard-note {
+  margin: 10px 0 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #94a3b8;
+}
+
+/* ── Exam card urgency. Earned by the real date, never invented. ── */
+.hubcard--exam.is-soon {
+  border-color: rgba(245, 158, 11, 0.4);
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.07), #fff 62%);
+}
+.hubcard--exam.is-soon .hubcard-count-n { color: #b45309; }
+
+.hubcard--exam.is-urgent {
+  border-color: rgba(239, 68, 68, 0.45);
+  background: linear-gradient(180deg, rgba(239, 68, 68, 0.08), #fff 62%);
+}
+.hubcard--exam.is-urgent .hubcard-count-n,
+.hubcard--exam.is-urgent .hubcard-headline { color: #b91c1c; }
+
+.hubcard--exam.is-passed .hubcard-note { color: #64748b; }
+
+.hubcard-date {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f1e3d;
+  margin-bottom: 14px;
+  /* Dates are always Latin digits in a date input; keep them LTR so the
+     picker's internal ordering doesn't reverse inside an RTL page. */
+  direction: ltr;
+  text-align: start;
+}
+
+.hubcard-date:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* ── Streak ──────────────────────────────────────────────────── */
+.hubcard--streak.is-at-risk {
+  border-color: rgba(249, 115, 22, 0.4);
+  background: linear-gradient(180deg, rgba(249, 115, 22, 0.06), #fff 62%);
+}
+
+.hubcard-count-n--flame { color: #ea580c; }
+
+.hubcard-best {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.streak-week {
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+  margin: 14px 0 0;
+  padding: 0;
+}
+
+.streak-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.streak-day-dot {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #fff;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.streak-day.is-done .streak-day-dot {
+  background: #ea580c;
+  border-color: #ea580c;
+}
+
+/* Today gets a ring whether or not it is filled — it is the actionable day. */
+.streak-day.is-today .streak-day-dot {
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.22);
+}
+
+.streak-day-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #94a3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.streak-day.is-done .streak-day-label { color: #64748b; }
+
+.streak-status {
+  margin: 14px 0 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.streak-status--safe { color: #047857; }
+.streak-status--risk { color: #b45309; }
+.streak-cta { font-size: 12.5px; }
+
+/* ── Shared empty state (both cards) ─────────────────────────── */
+.hubcard.is-empty {
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.hubcard-empty-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: linear-gradient(150deg, rgba(59, 130, 246, 0.18), rgba(99, 102, 241, 0.14));
+  border: 1px solid rgba(59, 130, 246, 0.26);
+  color: #2563eb;
+  flex: 0 0 auto;
+}
+
+.hubcard-empty-icon--flame {
+  background: linear-gradient(150deg, rgba(249, 115, 22, 0.18), rgba(239, 68, 68, 0.12));
+  border-color: rgba(249, 115, 22, 0.3);
+  color: #ea580c;
+}
+
+.hubcard-empty-body { flex: 1 1 180px; min-width: 0; }
+
+.hubcard-empty-body h3 {
+  margin: 0 0 3px;
+  font-size: 14.5px;
+  font-weight: 800;
+  color: #0f1e3d;
+}
+
+.hubcard-empty-body p {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #64748b;
+}
+
+@media (max-width: 560px) {
+  .hub-cards-row { grid-template-columns: 1fr; gap: 14px; margin-bottom: 18px; }
+  .hubcard { padding: 16px; }
+  .hubcard-count-n { font-size: 34px; }
+  .streak-day-dot { width: 24px; height: 24px; }
+}

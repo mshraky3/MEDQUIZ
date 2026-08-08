@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import Icon from './Icon.jsx';
 import './CookieConsent.css';
 import { safeGetItem, safeSetItem } from '../../utils/safeStorage.js';
+import { useCommon, useLang } from '../../i18n';
 
 const CookieConsent = () => {
     const [showBanner, setShowBanner] = useState(false);
+    const t = useCommon();
+    const { dir } = useLang();
 
     useEffect(() => {
         const consent = safeGetItem('cookie-consent');
@@ -30,22 +33,21 @@ const CookieConsent = () => {
     if (!showBanner) return null;
 
     return (
-        <div className="cookie-consent-overlay" role="dialog" aria-label="ملفات تعريف الارتباط | Cookies">
-            <div className="cookie-consent-banner" dir="rtl">
+        <div className="cookie-consent-overlay" role="dialog" aria-label={t.cookies.dialogLabel}>
+            <div className="cookie-consent-banner" dir={dir}>
                 <div className="cookie-consent-text">
                     <span className="cookie-consent-icon" aria-hidden="true"><Icon name="cookie" size={18} /></span>
                     <p>
-                        نستخدم الكوكيز لتحسين تجربتك وعرض إعلانات مخصصة.
-                        {' '}<bdi>We use cookies to improve your experience.</bdi>{' '}
-                        <a href="/privacy" className="cookie-consent-link">سياسة الخصوصية</a>
+                        {t.cookies.text}{' '}
+                        <a href="/privacy" className="cookie-consent-link">{t.cookies.privacyLink}</a>
                     </p>
                 </div>
                 <div className="cookie-consent-actions">
                     <button onClick={acceptNecessary} className="cookie-btn cookie-btn-necessary">
-                        الضرورية فقط
+                        {t.cookies.necessaryOnly}
                     </button>
                     <button onClick={acceptAll} className="cookie-btn cookie-btn-accept">
-                        قبول الكل
+                        {t.cookies.acceptAll}
                     </button>
                 </div>
             </div>

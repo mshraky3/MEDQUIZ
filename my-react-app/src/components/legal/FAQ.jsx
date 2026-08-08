@@ -1,79 +1,35 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useCommon, useCopy, useLang } from '../../i18n';
+import faqCopy from '../../i18n/copy/faq.js';
 import './FAQ.css';
 
 const FAQ = () => {
     const [openIndex, setOpenIndex] = useState(null);
-
-    const faqs = [
-        {
-            question: 'ما هي منصة SQB؟',
-            answer: 'SQB هي منصة تعليمية متخصصة في التحضير لاختبارات الهيئة السعودية للتخصصات الصحية والبرومترك، بمسارين مستقلين: الطب البشري (SMLE) والتمريض (SNLE). توفر المنصة بنك أسئلة شاملاً محدّثاً باستمرار مع ملخصات وتحليلات مفصلة وتتبع أداء شامل.'
-        },
-        {
-            question: 'هل يوجد مسار للتمريض؟',
-            answer: 'نعم. مسار التمريض متاح بالكامل وله بنك أسئلته وملخصاته وتحليلات أدائه الخاصة، ويغطي:\n• أساسيات التمريض\n• التمريض الباطني والجراحي\n• تمريض الأمومة والمواليد\n• تمريض الأطفال\n• الصحة النفسية\n• الأدوية وحسابات الجرعات\n\nتختار مسارك عند إنشاء الحساب، وبعدها لن يظهر لك إلا محتوى مسارك. الاشتراك نفسه لكلا المسارين (99 ريالاً سنوياً).'
-        },
-        {
-            question: 'ما التخصصات التي يغطيها بنك الأسئلة؟',
-            answer: 'مسار الطب البشري يغطي الباطنة (Internal Medicine) والجراحة (Surgery) والأطفال (Pediatrics) والنساء والولادة (OB/GYN).\n\nمسار التمريض يغطي أساسيات التمريض والتمريض الباطني والجراحي وتمريض الأمومة والمواليد وتمريض الأطفال والصحة النفسية والأدوية وحسابات الجرعات.'
-        },
-        {
-            question: 'هل يمكنني تجربة المنصة مجاناً؟',
-            answer: 'نعم. عند إنشاء حسابك وتأكيد بريدك الإلكتروني تحصل فوراً على ساعة وصول كامل مجاناً لكل الأسئلة والتحليلات، بدون بطاقة دفع. بعدها يمكنك الاشتراك السنوي مقابل 99 ريالاً للمتابعة.'
-        },
-        {
-            question: 'كم تكلفة الاشتراك؟',
-            answer: 'الاشتراك السنوي 99 ريالاً بدفعة واحدة، ويمنحك وصولاً كاملاً لمدة سنة بدون تجديد تلقائي. الدفع عبر بوابة ميسر السعودية المرخّصة (مدى، Visa، Mastercard، Apple Pay).'
-        },
-        {
-            question: 'ما هي أنواع الاختبارات المتاحة؟',
-            answer: 'تختار حجم الاختبار وتخصصاته ومؤقّته كما تريد:\n• اختبار سريع: 10 أسئلة مختلطة بضغطة واحدة\n• اختبار من 50 سؤالاً\n• عدد مخصص: من سؤال واحد حتى 500 سؤال\n• اختبار نهائي: كل أسئلة تخصص معيّن دفعة واحدة، بما فيها ما أجبت عليه سابقاً\n\nويمكنك ضبط مؤقّت لكل اختبار أو تركه بلا وقت محدد.'
-        },
-        {
-            question: 'كيف يعمل نظام التحليلات؟',
-            answer: 'يوفر نظام التحليلات معلومات مفصلة عن أداءك تشمل:\n• نسبة الإجابات الصحيحة لكل تخصص\n• تتبع التقدم عبر الزمن\n• تحديد المواضيع الضعيفة التي تحتاج مراجعة\n• تاريخ الاختبارات السابقة والنتائج\n• الأسئلة الخاطئة لمراجعتها'
-        },
-        {
-            question: 'هل الأسئلة محدّثة؟',
-            answer: 'نعم، يتم تحديث بنك الأسئلة بشكل دوري لضمان توافقه مع أحدث المعايير والمحتوى الطبي. فريقنا يعمل باستمرار على إضافة أسئلة جديدة وتحسين الأسئلة الحالية.'
-        },
-        {
-            question: 'كيف أشترك في المنصة؟',
-            answer: 'يمكنك البدء فوراً بخطوات بسيطة:\n1. أنشئ حسابك وأكّد بريدك للحصول على ساعة تجربة مجانية\n2. ابدأ أول اختبار سريع خلال التجربة\n3. عند انتهاء الساعة، اشترك سنوياً مقابل 99 ريالاً للمتابعة\n4. استمر يومياً لتحسين مستواك قبل الاختبار'
-        },
-        {
-            question: 'هل المنصة تابعة للهيئة السعودية للتخصصات الصحية؟',
-            answer: 'لا، SQB هي منصة تعليمية مستقلة وغير تابعة للهيئة السعودية للتخصصات الصحية (SCFHS) أو شركة Prometric أو أي جهة رسمية. الأسئلة المقدمة هي للتدريب والممارسة فقط.'
-        },
-        {
-            question: 'كيف أتواصل مع الدعم؟',
-            answer: 'يمكنك التواصل معنا عبر:\n• واتساب: 0582619119\n• البريد الإلكتروني: alshraky3@gmail.com\n• صفحة الاتصال على الموقع'
-        },
-        {
-            question: 'هل يمكنني استخدام المنصة على الجوال؟',
-            answer: 'نعم! المنصة مصممة لتعمل بشكل ممتاز على جميع الأجهزة بما في ذلك الهواتف الذكية والأجهزة اللوحية وأجهزة الكمبيوتر. لا تحتاج لتحميل أي تطبيق - استخدم المنصة مباشرة من المتصفح.'
-        }
-    ];
+    const t = useCopy(faqCopy);
+    const common = useCommon();
+    const { dir } = useLang();
 
     const toggleFAQ = (index) => {
         setOpenIndex(openIndex === index ? null : index);
     };
 
     return (
-        <div className="faq-page">
+        <div className="faq-page" dir={dir}>
             <div className="faq-container">
-                <Link to="/" className="faq-back">الرئيسية →</Link>
+                <Link to="/" className="faq-back">
+                    {common.nav.home} <span aria-hidden="true">{dir === 'rtl' ? '←' : '→'}</span>
+                </Link>
 
                 <div className="faq-header">
-                    <h1>الأسئلة الشائعة</h1>
-                    <p>إجابات على الأسئلة الأكثر شيوعاً حول منصة SQB</p>
+                    <h1>{t.title}</h1>
+                    <p>{t.subtitle}</p>
                 </div>
 
                 <div className="faq-list">
-                    {faqs.map((faq, index) => (
+                    {t.items.map((faq, index) => (
                         <div
-                            key={index}
+                            key={faq.question}
                             className={`faq-item ${openIndex === index ? 'faq-item-open' : ''}`}
                         >
                             <button
@@ -86,6 +42,8 @@ const FAQ = () => {
                             </button>
                             {openIndex === index && (
                                 <div className="faq-answer">
+                                    {/* Answers keep their line breaks — the bulleted
+                                        ones are unreadable as one paragraph. */}
                                     {faq.answer.split('\n').map((line, i) => (
                                         <p key={i}>{line}</p>
                                     ))}
@@ -96,14 +54,14 @@ const FAQ = () => {
                 </div>
 
                 <div className="faq-contact-cta">
-                    <h2>لم تجد إجابة لسؤالك؟</h2>
-                    <p>تواصل معنا وسنكون سعداء بمساعدتك</p>
+                    <h2>{t.ctaTitle}</h2>
+                    <p>{t.ctaBody}</p>
                     <div className="faq-cta-buttons">
                         <Link to="/contact" className="faq-cta-btn">
-                            اتصل بنا
+                            {t.ctaContact}
                         </Link>
                         <a href="https://wa.link/gqafib" className="faq-cta-btn faq-cta-whatsapp" target="_blank" rel="noopener noreferrer">
-                            واتساب
+                            {t.ctaWhatsapp}
                         </a>
                     </div>
                 </div>

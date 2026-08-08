@@ -1,14 +1,18 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useContext } from 'react';
 import Icon from '../common/Icon.jsx';
 import Spinner from '../common/Spinner.jsx';
 import { UserContext } from '../../UserContext';
 import { userTrack } from '../../utils/tracks.js';
 import Globals from '../../global.js';
+import { useCopy, useLang } from '../../i18n';
+import supportCopy from '../../i18n/copy/support.js';
 import './Suggestions.css';
 
 const Suggestions = () => {
     // Best-effort attribution — the page is reachable signed out.
     const { user } = useContext(UserContext);
+    const t = useCopy(supportCopy).suggestions;
+    const { dir } = useLang();
     const [form, setForm] = useState({
         category: 'feature',
         title: '',
@@ -19,27 +23,21 @@ const Suggestions = () => {
     const [success, setSuccess] = useState(false);
     const [charCount, setCharCount] = useState(0);
 
-    useEffect(() => {
-        document.documentElement.dir = 'rtl';
-        return () => {
-            document.documentElement.dir = 'ltr';
-        };
-    }, []);
-
+    // The `value`s are stable keys stored server-side; only labels are localised.
     const categories = [
-        { value: 'feature', label: 'ميزة جديدة' },
-        { value: 'improvement', label: 'تحسين' },
-        { value: 'ui', label: 'واجهة/تصميم' },
-        { value: 'content', label: 'محتوى/أسئلة' },
-        { value: 'bug', label: 'إبلاغ عن خطأ' },
-        { value: 'other', label: 'أخرى' }
-    ];
+        { value: 'feature' },
+        { value: 'improvement' },
+        { value: 'ui' },
+        { value: 'content' },
+        { value: 'bug' },
+        { value: 'other' }
+    ].map((c) => ({ ...c, label: t.categories[c.value] }));
 
     const priorities = [
-        { value: 'low', label: 'من الجيد وجودها', color: '#22c55e' },
-        { value: 'medium', label: 'ستكون مفيدة', color: '#eab308' },
-        { value: 'high', label: 'أحتاجها حقاً', color: '#ef4444' }
-    ];
+        { value: 'low', color: '#22c55e' },
+        { value: 'medium', color: '#eab308' },
+        { value: 'high', color: '#ef4444' }
+    ].map((p) => ({ ...p, label: t.priorities[p.value] }));
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -76,7 +74,7 @@ const Suggestions = () => {
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('حدث خطأ. يرجى المحاولة مرة أخرى.');
+            alert(t.failed);
         } finally {
             setLoading(false);
         }
@@ -84,7 +82,7 @@ const Suggestions = () => {
 
     if (success) {
         return (
-            <div className="suggestions-container" dir="rtl">
+            <div className="suggestions-container" dir={dir}>
                 <div className="suggestions-card success-card">
                     <div className="success-animation">
                         <div className="success-checkmark">
@@ -94,13 +92,13 @@ const Suggestions = () => {
                             </svg>
                         </div>
                     </div>
-                    <h2>شكراً لاقتراحك! <Icon name="sparkles" size={20} /></h2>
-                    <p>نقدر مساهمتك في تحسين التطبيق. سنراجع اقتراحك ونأخذه بعين الاعتبار.</p>
+                    <h2>{t.successTitle} <Icon name="sparkles" size={20} /></h2>
+                    <p>{t.successBody}</p>
                     <button
                         className="submit-another-btn"
                         onClick={() => setSuccess(false)}
                     >
-                        <Icon name="pen" size={15} /> إرسال اقتراح آخر
+                        <Icon name="pen" size={15} /> {t.another}
                     </button>
                 </div>
             </div>
@@ -108,19 +106,19 @@ const Suggestions = () => {
     }
 
     return (
-        <div className="suggestions-container" dir="rtl">
+        <div className="suggestions-container" dir={dir}>
             <div className="suggestions-card">
                 {/* Header */}
                 <div className="suggestions-header">
                     <div className="header-icon"><Icon name="lightbulb" size={32} /></div>
-                    <h1>الاقتراحات والأفكار</h1>
-                    <p>ساعدنا في تحسين التطبيق! شاركنا أفكارك واقتراحاتك</p>
+                    <h1>{t.title}</h1>
+                    <p>{t.subtitle}</p>
                 </div>
 
                 {/* Info Banner */}
                 <div className="info-banner">
                     <span className="info-icon"><Icon name="info" size={16} /></span>
-                    <span>اقتراحاتك مهمة جداً لنا ونقوم بمراجعتها بشكل دوري</span>
+                    <span>{t.banner}</span>
                 </div>
 
                 {/* Form */}
@@ -128,7 +126,7 @@ const Suggestions = () => {
                     {/* Category Selection */}
                     <div className="form-section">
                         <label className="section-label">
-                            <Icon name="folder" size={14} /> نوع الاقتراح
+                            <Icon name="folder" size={14} /> {t.categoryLabel}
                         </label>
                         <div className="category-grid">
                             {categories.map(cat => (
@@ -147,7 +145,7 @@ const Suggestions = () => {
                     {/* Title Input */}
                     <div className="form-section">
                         <label className="section-label" htmlFor="title">
-                            <Icon name="pen" size={14} /> عنوان الاقتراح *
+                            <Icon name="pen" size={14} /> {t.titleLabel}
                         </label>
                         <input
                             type="text"
@@ -155,7 +153,7 @@ const Suggestions = () => {
                             name="title"
                             value={form.title}
                             onChange={handleInputChange}
-                            placeholder="مثال: إضافة وضع ليلي للتطبيق"
+                            placeholder={t.titlePlaceholder}
                             required
                             maxLength={100}
                         />
@@ -164,14 +162,14 @@ const Suggestions = () => {
                     {/* Description */}
                     <div className="form-section">
                         <label className="section-label" htmlFor="description">
-                            <Icon name="clipboard" size={14} /> وصف تفصيلي *
+                            <Icon name="clipboard" size={14} /> {t.descriptionLabel}
                         </label>
                         <textarea
                             id="description"
                             name="description"
                             value={form.description}
                             onChange={handleInputChange}
-                            placeholder="اشرح اقتراحك بالتفصيل... كيف سيحسن هذا تجربة الاستخدام؟"
+                            placeholder={t.descriptionPlaceholder}
                             required
                             rows="4"
                             maxLength={1000}
@@ -184,7 +182,7 @@ const Suggestions = () => {
                     {/* Priority Selection */}
                     <div className="form-section">
                         <label className="section-label">
-                            <Icon name="star" size={14} /> مدى الأهمية
+                            <Icon name="star" size={14} /> {t.priorityLabel}
                         </label>
                         <div className="priority-options">
                             {priorities.map(pri => (
@@ -216,12 +214,12 @@ const Suggestions = () => {
                         {loading ? (
                             <div className="btn-loading">
                                 <Spinner size="sm" />
-                                <span>جاري الإرسال...</span>
+                                <span>{t.sending}</span>
                             </div>
                         ) : (
                             <>
                                 <span><Icon name="rocket" size={16} /></span>
-                                <span>إرسال الاقتراح</span>
+                                <span>{t.send}</span>
                             </>
                         )}
                     </button>
@@ -229,7 +227,7 @@ const Suggestions = () => {
 
                 {/* Back Link */}
                 <a href="/quizs" className="back-link">
-                    العودة للاختبارات →
+                    {t.back} <span aria-hidden="true">{dir === 'rtl' ? '\u2190' : '\u2192'}</span>
                 </a>
             </div>
         </div>

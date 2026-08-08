@@ -1,4 +1,5 @@
 import React from 'react';
+import { useCommon } from '../../i18n';
 import './Spinner.css';
 
 /**
@@ -14,8 +15,9 @@ import './Spinner.css';
  *  - fullScreen: center it in a tall padded block (page-level loading)
  */
 const Spinner = ({ size = 'md', label, fullScreen = false }) => {
+    const t = useCommon();
     const spinner = (
-        <span className={`sqb-spinner sqb-spinner-${size}`} role="status" aria-label={label || 'جاري التحميل'}>
+        <span className={`sqb-spinner sqb-spinner-${size}`} role="status" aria-label={label || t.loading}>
             <span className="sqb-spinner-ring" />
             <span className="sqb-spinner-ring" />
             <span className="sqb-spinner-core" />

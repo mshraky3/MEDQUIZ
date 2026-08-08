@@ -5,6 +5,9 @@
  * the raw questions.question_type values stored in the DB). The server is the
  * authority — it filters every content query by the caller's own track — so
  * this file only drives what the UI *offers* and how it is labelled.
+ *
+ * Every user-facing label is `{ ar, en }`; the `key` fields are DB values and
+ * never translated. Exam names (SMLE, SNLE) stay in English in both languages.
  */
 
 export const MEDICAL = 'medical';
@@ -14,41 +17,50 @@ export const DEFAULT_TRACK = MEDICAL;
 export const TRACKS = {
     [MEDICAL]: {
         key: MEDICAL,
-        labelAr: 'طب بشري',
-        labelEn: 'Medicine',
-        examAr: 'اختبار الترخيص الطبي (SMLE)',
+        label: { ar: 'طب بشري', en: 'Medicine' },
+        exam: { ar: 'اختبار الترخيص الطبي (SMLE)', en: 'Saudi Medical Licensing Exam (SMLE)' },
         // Shown on the signup track picker.
-        blurbAr: 'بنك أسئلة وملخصات SMLE للباطنة والجراحة والأطفال والنساء.',
+        blurb: {
+            ar: 'بنك أسئلة وملخصات SMLE للباطنة والجراحة والأطفال والنساء.',
+            en: 'SMLE questions and summaries for medicine, surgery, paediatrics and OB/GYN.',
+        },
         // Display name of the track's question bank, shown on the launcher.
-        bankAr: 'Midgard & GameBoy2026',
+        // Names all three 2026H2 collections, same convention as nursing's
+        // bank label below — proper names, identical in both languages.
+        bank: { ar: 'GameBoy وConfirmed وMidgard', en: 'GameBoy, Confirmed & Midgard questions' },
         icon: 'stethoscope',
         specialties: [
-            { key: 'medicine', labelAr: 'الباطنة', icon: 'stethoscope' },
-            { key: 'surgery', labelAr: 'الجراحة', icon: 'scalpel' },
-            { key: 'pediatric', labelAr: 'الأطفال', icon: 'baby' },
-            { key: 'obstetrics and gynecology', labelAr: 'النساء والولادة', icon: 'venus' },
+            { key: 'medicine', label: { ar: 'الباطنة', en: 'Internal Medicine' }, icon: 'stethoscope' },
+            { key: 'surgery', label: { ar: 'الجراحة', en: 'Surgery' }, icon: 'scalpel' },
+            { key: 'pediatric', label: { ar: 'الأطفال', en: 'Paediatrics' }, icon: 'baby' },
+            { key: 'obstetrics and gynecology', label: { ar: 'النساء والولادة', en: 'Obstetrics & Gynaecology' }, icon: 'venus' },
         ],
     },
     [NURSING]: {
         key: NURSING,
-        labelAr: 'تمريض',
-        labelEn: 'Nursing',
-        examAr: 'اختبار SNLE للتمريض',
-        blurbAr: 'مسار التمريض: الأساسيات، الباطني والجراحي، الأمومة، الأطفال، الصحة النفسية والأدوية.',
-        bankAr: 'الأسئلة المؤكدة والأكثر تكراراً',
+        label: { ar: 'تمريض', en: 'Nursing' },
+        exam: { ar: 'اختبار SNLE للتمريض', en: 'Saudi Nursing Licensure Exam (SNLE)' },
+        blurb: {
+            ar: 'مسار التمريض: الأساسيات، الباطني والجراحي، الأمومة، الأطفال، الصحة النفسية والأدوية.',
+            en: 'The nursing track: fundamentals, med-surg, maternal, paediatric, mental health and pharmacology.',
+        },
+        bank: { ar: 'الأسئلة المؤكدة والأكثر تكراراً', en: 'Confirmed & Most Repeated questions' },
         icon: 'shield-check',
         specialties: [
-            { key: 'nursing fundamentals', labelAr: 'أساسيات التمريض', icon: 'shield-check' },
-            { key: 'medical surgical nursing', labelAr: 'التمريض الباطني والجراحي', icon: 'stethoscope' },
-            { key: 'maternal and newborn nursing', labelAr: 'تمريض الأمومة والمواليد', icon: 'venus' },
-            { key: 'pediatric nursing', labelAr: 'تمريض الأطفال', icon: 'baby' },
-            { key: 'mental health nursing', labelAr: 'الصحة النفسية', icon: 'brain' },
-            { key: 'nursing pharmacology', labelAr: 'الأدوية وحسابات الجرعات', icon: 'pill' },
+            { key: 'nursing fundamentals', label: { ar: 'أساسيات التمريض', en: 'Nursing Fundamentals' }, icon: 'shield-check' },
+            { key: 'medical surgical nursing', label: { ar: 'التمريض الباطني والجراحي', en: 'Medical-Surgical Nursing' }, icon: 'stethoscope' },
+            { key: 'maternal and newborn nursing', label: { ar: 'تمريض الأمومة والمواليد', en: 'Maternal & Newborn Nursing' }, icon: 'venus' },
+            { key: 'pediatric nursing', label: { ar: 'تمريض الأطفال', en: 'Paediatric Nursing' }, icon: 'baby' },
+            { key: 'mental health nursing', label: { ar: 'الصحة النفسية', en: 'Mental Health Nursing' }, icon: 'brain' },
+            { key: 'nursing pharmacology', label: { ar: 'الأدوية وحسابات الجرعات', en: 'Pharmacology & Dosage Calculations' }, icon: 'pill' },
         ],
     },
 };
 
 export const TRACK_KEYS = Object.keys(TRACKS);
+
+/** Picks a language out of an `{ ar, en }` label, defaulting to Arabic. */
+export const pick = (label, lang = 'ar') => (label ? (label[lang] ?? label.ar) : '');
 
 export function normalizeTrack(value) {
     if (typeof value !== 'string') return DEFAULT_TRACK;
@@ -61,7 +73,7 @@ export function userTrack(user) {
     return normalizeTrack(user?.track);
 }
 
-/** Specialty descriptors ({key, labelAr, icon}) for a track, in display order. */
+/** Specialty descriptors ({key, label, icon}) for a track, in display order. */
 export function specialtiesOf(track) {
     return TRACKS[normalizeTrack(track)].specialties;
 }
@@ -71,14 +83,14 @@ export function specialtyKeys(track) {
     return specialtiesOf(track).map((s) => s.key);
 }
 
-export function trackLabel(track) {
-    return TRACKS[normalizeTrack(track)].labelAr;
+export function trackLabel(track, lang) {
+    return pick(TRACKS[normalizeTrack(track)].label, lang);
 }
 
-export function examLabel(track) {
-    return TRACKS[normalizeTrack(track)].examAr;
+export function examLabel(track, lang) {
+    return pick(TRACKS[normalizeTrack(track)].exam, lang);
 }
 
-export function bankLabel(track) {
-    return TRACKS[normalizeTrack(track)].bankAr;
+export function bankLabel(track, lang) {
+    return pick(TRACKS[normalizeTrack(track)].bank, lang);
 }

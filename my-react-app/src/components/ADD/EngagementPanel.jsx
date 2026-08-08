@@ -13,16 +13,16 @@ import './EngagementPanel.css';
  * to invest in.
  */
 const SECTION_META = {
-    quizzes: { label: 'الأسئلة', icon: 'clipboard', color: '#2563eb' },
-    summaries: { label: 'المحتوى الدراسي', icon: 'book-open', color: '#7c3aed' },
-    analytics: { label: 'تحليل الأداء', icon: 'bar-chart', color: '#0891b2' },
-    other: { label: 'صفحات أخرى', icon: 'folder', color: '#94a3b8' },
+    quizzes: { label: 'Questions', icon: 'clipboard', color: '#2563eb' },
+    summaries: { label: 'Study material', icon: 'book-open', color: '#7c3aed' },
+    analytics: { label: 'Analytics', icon: 'bar-chart', color: '#0891b2' },
+    other: { label: 'Other pages', icon: 'folder', color: '#94a3b8' },
 };
 
 const RANGES = [
-    { days: 7, label: '7 أيام' },
-    { days: 30, label: '30 يوم' },
-    { days: 90, label: '90 يوم' },
+    { days: 7, label: '7 days' },
+    { days: 30, label: '30 days' },
+    { days: 90, label: '90 days' },
 ];
 
 /** Seconds → "2h 14m" / "14m" / "45s" */
@@ -34,7 +34,12 @@ const dur = (s) => {
     return h ? `${h}h ${m}m` : `${m}m`;
 };
 
-const EngagementPanel = () => {
+/**
+ * @param {boolean} [compact] - Overview page embeds a condensed version: no
+ * range switcher (fixed 30 days), no per-track split, no top-users list. The
+ * full version (range switcher + breakdowns) lives on the Growth page.
+ */
+const EngagementPanel = ({ compact = false }) => {
     const [days, setDays] = useState(30);
     const [data, setData] = useState(null);
     const [state, setState] = useState('loading');
@@ -55,8 +60,8 @@ const EngagementPanel = () => {
     if (state === 'loading' && !data) {
         return (
             <section className="eng-panel">
-                <div className="eng-head"><h2>ما الذي يستخدمه الطلاب؟</h2></div>
-                <p className="eng-muted">جارٍ التحميل…</p>
+                <div className="eng-head"><h2>What are students actually using?</h2></div>
+                <p className="eng-muted">Loading…</p>
             </section>
         );
     }
@@ -64,9 +69,9 @@ const EngagementPanel = () => {
     if (state === 'error') {
         return (
             <section className="eng-panel">
-                <div className="eng-head"><h2>ما الذي يستخدمه الطلاب؟</h2></div>
-                <p className="eng-muted">تعذّر تحميل البيانات.
-                    <button type="button" className="eng-retry" onClick={load}>إعادة المحاولة</button>
+                <div className="eng-head"><h2>What are students actually using?</h2></div>
+                <p className="eng-muted">Could not load the data.
+                    <button type="button" className="eng-retry" onClick={load}>Try again</button>
                 </p>
             </section>
         );
@@ -79,29 +84,31 @@ const EngagementPanel = () => {
         <section className="eng-panel">
             <div className="eng-head">
                 <div>
-                    <h2>ما الذي يستخدمه الطلاب؟</h2>
-                    <span>الوقت الفعلي داخل كل قسم — يُحتسب فقط عندما تكون الصفحة مفتوحة أمام المستخدم</span>
+                    <h2>What are students actually using?</h2>
+                    {!compact && <span>Real time spent in each section — counted only while the page is visible to the user</span>}
                 </div>
-                <div className="eng-ranges">
-                    {RANGES.map((r) => (
-                        <button
-                            key={r.days}
-                            type="button"
-                            className={`eng-range${days === r.days ? ' is-on' : ''}`}
-                            onClick={() => setDays(r.days)}
-                        >{r.label}</button>
-                    ))}
-                </div>
+                {!compact && (
+                    <div className="eng-ranges">
+                        {RANGES.map((r) => (
+                            <button
+                                key={r.days}
+                                type="button"
+                                className={`eng-range${days === r.days ? ' is-on' : ''}`}
+                                onClick={() => setDays(r.days)}
+                            >{r.label}</button>
+                        ))}
+                    </div>
+                )}
             </div>
 
             {!data?.hasData ? (
                 <div className="eng-empty">
                     <Icon name="hourglass" size={22} />
                     <div>
-                        <strong>لا توجد بيانات بعد</strong>
+                        <strong>No data yet</strong>
                         <span>
-                            التتبّع بدأ للتو — ستظهر الأرقام هنا بعد أن يتصفّح المستخدمون الموقع.
-                            لا يُسجَّل أي شيء عن الزوّار غير المسجّلين.
+                            Tracking has only just started — numbers appear here once users browse the site.
+                            Nothing is recorded for signed-out visitors.
                         </span>
                     </div>
                 </div>
@@ -109,10 +116,10 @@ const EngagementPanel = () => {
                 <>
                     {leader && leader.seconds > 0 && (
                         <p className="eng-verdict">
-                            الأكثر استخداماً: <b style={{ color: SECTION_META[leader.section]?.color }}>
+                            Most used: <b style={{ color: SECTION_META[leader.section]?.color }}>
                                 {SECTION_META[leader.section]?.label}
-                            </b> — <b>{leader.sharePct}%</b> من إجمالي وقت الاستخدام
-                            ({dur(data.grandTotalSeconds)} خلال {days} يوم).
+                            </b> — <b>{leader.sharePct}%</b> of total time on the platform
+                            ({dur(data.grandTotalSeconds)} over {days} days).
                         </p>
                     )}
 
@@ -132,16 +139,16 @@ const EngagementPanel = () => {
                                     </div>
                                     <span className="eng-row-pct">{s.sharePct}%</span>
                                     <span className="eng-row-meta">
-                                        {dur(s.seconds)} · {s.users} مستخدم · {dur(s.avgSecondsPerUser)}/مستخدم
+                                        {dur(s.seconds)} · {s.users} users · {dur(s.avgSecondsPerUser)}/user
                                     </span>
                                 </div>
                             );
                         })}
                     </div>
 
-                    {(data.byTrack || []).some((t) => t.sections.some((s) => s.seconds > 0)) && (
+                    {!compact && (data.byTrack || []).some((t) => t.sections.some((s) => s.seconds > 0)) && (
                         <div className="eng-track-split">
-                            <h3>حسب المسار</h3>
+                            <h3>By track</h3>
                             {data.byTrack.map((t) => {
                                 const total = t.sections.reduce((n, s) => n + s.seconds, 0);
                                 if (!total) return null;
@@ -167,9 +174,9 @@ const EngagementPanel = () => {
                         </div>
                     )}
 
-                    {(data.topUsers || []).length > 0 && (
+                    {!compact && (data.topUsers || []).length > 0 && (
                         <details className="eng-top">
-                            <summary>أكثر المستخدمين نشاطاً ({data.topUsers.length})</summary>
+                            <summary>Most active users ({data.topUsers.length})</summary>
                             <ul>
                                 {data.topUsers.map((u) => (
                                     <li key={u.who}>

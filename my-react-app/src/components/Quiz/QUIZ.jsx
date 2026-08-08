@@ -13,6 +13,8 @@ import QuizComplete from './QuizComplete';
 import Globals from '../../global.js';
 import { getSourceLabel } from '../../utils/sourceLabels';
 import { UserContext } from '../../UserContext';
+import { useCopy, useLang } from '../../i18n';
+import quizCopy from '../../i18n/copy/quiz.js';
 
 const isValidQuestion = (question) => {
   return (
@@ -23,10 +25,28 @@ const isValidQuestion = (question) => {
   );
 };
 
+// Runs each task, retries only the ones that failed once, and reports how
+// many are still failing after that — used for the per-question-attempt and
+// topic-analysis submissions so one flaky request doesn't silently drop the
+// rest (Promise.all would reject the whole batch on a single failure).
+const settleWithRetry = async (tasks) => {
+  const firstPass = await Promise.allSettled(tasks.map((task) => task()));
+  const failedIndexes = firstPass
+    .map((result, index) => (result.status === 'rejected' ? index : -1))
+    .filter((index) => index !== -1);
+  if (failedIndexes.length === 0) return { failures: 0 };
+
+  const retryPass = await Promise.allSettled(failedIndexes.map((index) => tasks[index]()));
+  const stillFailing = retryPass.filter((result) => result.status === 'rejected').length;
+  return { failures: stillFailing };
+};
+
 const QUIZ = () => {
   const { numQuestions } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const t = useCopy(quizCopy).quiz;
+  const { lang, dir } = useLang();
   const id = location.state?.id;
   const [questions, setQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -56,6 +76,9 @@ const QUIZ = () => {
   const [unansweredCount, setUnansweredCount] = useState(0);
   const [countdown, setCountdown] = useState(2);
   const [finalDuration, setFinalDuration] = useState(null);
+  // Set when the server answers 402: the free allowance is spent, or this quiz
+  // type is subscriber-only. Rendered as an upsell screen, never a redirect.
+  const [paywalled, setPaywalled] = useState(null);
 
   const protectedGet = async (url, config = {}) => {
     if (!user || !sessionToken) throw new Error('Not authenticated');
@@ -135,7 +158,7 @@ const QUIZ = () => {
         if (isFinalQuiz) {
           // Final quiz is only for authenticated users
           if (!user || !sessionToken) {
-            setError("الاختبار النهائي متاح فقط للمستخدمين المسجلين.");
+            setError(t.errFinalAuth);
             setLoading(false);
             return;
           }
@@ -162,19 +185,28 @@ const QUIZ = () => {
           if (sanitizedQuestions.length > 0) {
             setQuestions(sanitizedQuestions);
           } else {
-            setError("تعذر تحميل الأسئلة بسبب بيانات غير صالحة.");
+            setError(t.errInvalidData);
           }
         } else if (response.data.completed) {
           // No unseen questions left because the whole category is finished —
           // show the completion screen instead of an error.
           setCategoryDone({ total: response.data.totalInCategory || 0 });
         } else {
-          setError("لم يتم إرجاع أي أسئلة.");
+          setError(t.errNoQuestions);
         }
       } catch (err) {
-        console.error('Error fetching questions:', err);
-        setError("فشل في تحميل الأسئلة.");
-        // Don't auto-redirect, let user retry
+        // 402 = the free question allowance is spent (or this is a
+        // subscriber-only quiz type). NOT a lockout and NOT an error: the
+        // account is fine, there are simply no free questions left to serve.
+        // Shown in place as an upsell rather than redirected — apiClient no
+        // longer bounces the window on 402, deliberately.
+        if (err.response?.status === 402) {
+          setPaywalled(err.response.data?.reason || 'free_allowance_exhausted');
+        } else {
+          console.error('Error fetching questions:', err);
+          setError(t.errLoadFailed);
+          // Don't auto-redirect, let user retry
+        }
       } finally {
         setLoading(false);
       }
@@ -207,7 +239,7 @@ const QUIZ = () => {
       setRetryCount(prev => prev + 1); // refetch — questions are available again
     } catch (err) {
       console.error('Error resetting category progress:', err);
-      setError('تعذر إعادة تعيين القسم. حاول مرة أخرى.');
+      setError(t.errResetFailed);
       setCategoryDone(null);
     } finally {
       setResettingCategory(false);
@@ -248,28 +280,11 @@ const QUIZ = () => {
     });
 
     if (unansweredQuestions.length > 0) {
-      // Show popup with count of unanswered questions and auto-redirect
+      // Show popup with count of unanswered questions; the countdown itself
+      // and its redirect run in the effect below.
       setUnansweredCount(unansweredQuestions.length);
       setCountdown(2);
       setShowUnansweredPopup(true);
-
-      // Start countdown
-      const countdownInterval = setInterval(() => {
-        setCountdown(prev => {
-          if (prev <= 1) {
-            clearInterval(countdownInterval);
-            // Redirect to first unanswered question
-            const firstUnansweredIndex = questions.findIndex((_, index) => !questionAnswers[index]);
-            if (firstUnansweredIndex !== -1) {
-              setCurrentQuestionIndex(firstUnansweredIndex);
-              setShowUnansweredPopup(false);
-            }
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-
       return;
     }
     // Store the final duration when quiz is finished
@@ -277,6 +292,31 @@ const QUIZ = () => {
     setFinalDuration(duration);
     setQuizFinished(true);
   };
+
+  // Drives the unanswered-questions popup's redirect countdown as a proper
+  // effect, so the interval is always cleared — on unmount if the user
+  // navigates away mid-countdown, and if the popup is retriggered — instead of
+  // a timer started inline in an event handler that only clears itself on
+  // reaching 0 and otherwise leaks, calling setState after the component is gone.
+  useEffect(() => {
+    if (!showUnansweredPopup) return;
+
+    const interval = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          const firstUnansweredIndex = questions.findIndex((_, index) => !questionAnswers[index]);
+          if (firstUnansweredIndex !== -1) {
+            setCurrentQuestionIndex(firstUnansweredIndex);
+          }
+          setShowUnansweredPopup(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [showUnansweredPopup, questions, questionAnswers]);
 
 
   // Sync selected answer when question changes
@@ -384,9 +424,10 @@ const QUIZ = () => {
           setCompletedTopics(sessionRes.data.completedCategories);
         }
 
-        // Send individual question attempts (skip for final quiz)
+        // Send individual question attempts (skip for final quiz). One failed
+        // request no longer drops the rest of the batch — see settleWithRetry.
         if (!isFinalQuiz) {
-          const attemptPromises = finalAnswers.map((answer, index) => {
+          const attemptTasks = finalAnswers.map((answer, index) => () => {
             const question = validQuestions[index];
             const attemptData = {
               user_id: id,
@@ -400,12 +441,15 @@ const QUIZ = () => {
             return protectedPost(`${Globals.URL}/question-attempts`, attemptData);
           });
 
-          await Promise.all(attemptPromises);
+          const { failures } = await settleWithRetry(attemptTasks);
+          if (failures > 0) {
+            console.warn(`${failures} question attempt(s) failed to sync after retry.`);
+          }
         }
 
         // Update topic analysis (skip for final quiz)
         if (!isFinalQuiz) {
-          const topicAnalysisPromises = topicsCovered.map(topic => {
+          const topicAnalysisTasks = topicsCovered.map(topic => () => {
             const topicQuestions = validQuestions.filter(q => q.question_type === topic);
             const topicAnswers = finalAnswers.filter((_, index) => validQuestions[index].question_type === topic);
             const topicCorrect = topicAnswers.filter(a => a.isCorrect).length;
@@ -421,7 +465,10 @@ const QUIZ = () => {
             });
           });
 
-          await Promise.all(topicAnalysisPromises);
+          const { failures: topicFailures } = await settleWithRetry(topicAnalysisTasks);
+          if (topicFailures > 0) {
+            console.warn(`${topicFailures} topic-analysis update(s) failed to sync after retry.`);
+          }
         }
 
       } catch (error) {
@@ -436,10 +483,30 @@ const QUIZ = () => {
     return <Loading />;
   }
 
+  // Out of free questions. Deliberately its own screen, not ErrorScreen:
+  // nothing failed, and nothing about the account has been taken away.
+  if (paywalled) {
+    return (
+      <div className="quiz-paywall" dir={dir}>
+        <div className="quiz-paywall-card">
+          <span className="quiz-paywall-icon" aria-hidden="true"><Icon name="lock" size={40} /></span>
+          <h2>{paywalled === 'free_allowance_exhausted' ? t.paywallSpentTitle : t.paywallSubscriberTitle}</h2>
+          <p>{paywalled === 'free_allowance_exhausted' ? t.paywallSpentBody : t.paywallSubscriberBody}</p>
+          <button type="button" className="quiz-paywall-cta" onClick={() => navigate('/subscribe')}>
+            {t.paywallCta}
+          </button>
+          <button type="button" className="quiz-paywall-secondary" onClick={() => navigate('/quizs', { state: { id } })}>
+            {t.paywallBack}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (categoryDone) {
     return (
       <QuizComplete
-        sourceLabel={getSourceLabel(source)}
+        sourceLabel={getSourceLabel(source, lang)}
         total={categoryDone.total}
         resetting={resettingCategory}
         onRestart={handleResetCategory}
@@ -514,7 +581,7 @@ const QUIZ = () => {
   if (!isValidQuestion(currentQuestion)) {
     return (
       <ErrorScreen
-        message="حدث خلل أثناء تحميل السؤال الحالي. حاول إعادة المحاولة."
+        message={t.errInvalidData}
         navigate={navigate}
         id={id}
         onRetry={handleRetry}
@@ -525,6 +592,9 @@ const QUIZ = () => {
   return (
     <>
       <Question
+        // Remounts per question so the question-card's entrance fade
+        // (QUIZ.css) actually plays on every question change, not just once.
+        key={currentQuestionIndex}
         question={currentQuestion}
         questionNumber={currentQuestionIndex + 1}
         totalQuestions={questions.length}
@@ -542,10 +612,10 @@ const QUIZ = () => {
       {/* Unanswered Questions Popup */}
       {showUnansweredPopup && (
         <div className="unanswered-popup-overlay">
-          <div className="unanswered-popup" dir="rtl">
-            <h3><Icon name="alert-triangle" size={18} /> لديك {unansweredCount} أسئلة بدون إجابة</h3>
+          <div className="unanswered-popup" dir={dir}>
+            <h3><Icon name="alert-triangle" size={18} /> {t.unansweredTitle(unansweredCount)}</h3>
             <p className="redirect-message">
-              سننقلك لأول سؤال غير مُجاب خلال <span className="countdown">{countdown}</span>...
+              {t.unansweredRedirectBefore} <span className="countdown">{countdown}</span>...
             </p>
           </div>
         </div>

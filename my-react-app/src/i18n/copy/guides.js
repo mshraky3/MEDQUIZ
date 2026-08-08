@@ -1,0 +1,403 @@
+/**
+ * The public study guides (hub + four articles).
+ *
+ * Rendered by components/guides/GuideArticle.jsx from the same block shapes as
+ * the legal documents: `{ p }`, `{ h3 }`, `{ ul }`, plus `{ ad: true }` for the
+ * in-article ad slot. `**bold**` and `[[/path|label]]` work inside any string.
+ *
+ * Clinical terms that candidates meet in English on the real exam — stem,
+ * high-yield, mixed blocks, timed sets, Internal Medicine, OB/GYN — stay in
+ * English in the Arabic version too. That is how these guides were written and
+ * how students actually talk about the exam.
+ */
+const guidesCopy = {
+    ar: {
+        hub: {
+            kicker: 'SMLE Guides',
+            title: 'أدلة التحضير لاختبار SMLE والبرومترك',
+            intro: 'مكتبة مخصّصة للمحتوى التعليمي العميق: خطط مذاكرة، استراتيجيات حل الأسئلة، إدارة الوقت، ومناهج مراجعة موجّهة لطلاب الطب والأطباء في السعودية.',
+            listLabel: 'أدلة التحضير',
+            readMore: 'اقرأ الدليل الكامل',
+            notesTitle: 'كيف تستفيد من الأدلة؟',
+            notes: [
+                'ابدأ بخطة زمنية واقعية حسب وقتك اليومي.',
+                'اربط كل جلسة حل أسئلة بمراجعة أخطائك مباشرة.',
+                'حافظ على التوازن بين Internal Medicine والجراحة وPediatrics وOB/GYN.',
+                'لا تقِس التقدّم بعدد الساعات فقط، بل بجودة التكرار وتصحيح القرار السريري.',
+            ],
+            cards: [
+                {
+                    path: '/guides/smle-study-plan',
+                    title: 'خطة SMLE من 12 أسبوعاً: من الصفر إلى الجاهزية',
+                    excerpt: 'خطة أسبوعية واضحة لتغطية التخصصات الأساسية، مع توزيع يومي للمذاكرة، ومراجعة الأخطاء، وحل أسئلة عالية العائد.',
+                },
+                {
+                    path: '/guides/wrong-questions-method',
+                    title: 'طريقة مراجعة الأسئلة الخاطئة بدون تكرار نفس الخطأ',
+                    excerpt: 'دليل عملي لبناء دفتر أخطاء ذكي وتحويل كل خطأ إلى قاعدة تشخيصية أو علاجية ثابتة قبل يوم الاختبار.',
+                },
+                {
+                    path: '/guides/smle-vs-prometric-differences',
+                    title: 'الفرق بين SMLE وPrometric: ما الذي يجب أن تغيّره في مذاكرتك؟',
+                    excerpt: 'مقارنة عملية بين طبيعة الأسئلة، وأسلوب التفكير السريري، وإدارة الوقت في SMLE وبرومترك، مع خطة تنفيذية واضحة.',
+                },
+                {
+                    path: '/guides/smle-high-yield-topics',
+                    title: 'أهم مواضيع SMLE عالية العائد: كيف توزّع وقتك بذكاء؟',
+                    excerpt: 'خريطة أولويات للمواضيع الأكثر تأثيراً على أدائك، مع توزيع أسبوعي يقلّل الهدر ويرفع نسبة إجاباتك الصحيحة.',
+                },
+            ],
+        },
+
+        studyPlan: {
+            kicker: 'SMLE Study Plan',
+            title: 'خطة SMLE من 12 أسبوعاً: برنامج مذاكرة عملي قابل للتنفيذ',
+            intro: 'هذا الدليل مكتوب للأطباء وطلاب الطب الذين يريدون خطة واضحة للتحضير لاختبار الهيئة السعودية للتخصصات الصحية. الهدف ليس الدراسة العشوائية، بل تحويل كل أسبوع إلى نتائج قابلة للقياس: دقة أعلى، ووقت أقل لكل سؤال، وفهم سريري أقوى في القرار التشخيصي والعلاجي.',
+            sections: [
+                {
+                    heading: '1) تقسيم الأسابيع إلى مراحل',
+                    blocks: [{ p: 'قسّم التحضير إلى ثلاث مراحل: تأسيس، ورفع سرعة، ومحاكاة اختبار. في مرحلة التأسيس (أسابيع 1–4) ركّز على المواضيع الأعلى تكراراً في Internal Medicine وPediatrics مع مراجعة مبادئ OB/GYN والجراحة. في مرحلة رفع السرعة (أسابيع 5–8) زد حجم الأسئلة اليومية وابدأ جلسات timed sets. وفي مرحلة المحاكاة (أسابيع 9–12) اجعل أغلب مذاكرتك اختبارات كاملة مع تحليل دقيق بعد كل محاولة.' }],
+                },
+                {
+                    heading: '2) نموذج يوم مذاكرة فعّال',
+                    blocks: [{ p: 'اليوم الفعّال ثلاث كتل: كتلة تعلّم قصيرة، وكتلة حل أسئلة، وكتلة مراجعة أخطاء. مثال عملي: 45 دقيقة مراجعة مرجعية مركّزة، ثم 40 إلى 60 سؤالاً بنظام زمني، ثم 60 دقيقة تحليل أخطاء. ولا تنتقل لموضوع جديد قبل أن تكتب سبب الخطأ: نقص معلومة، أو سوء قراءة stem، أو تسرّع في استبعاد الخيارات.' }],
+                },
+                {
+                    heading: '3) كيف تراجع السؤال الخاطئ بطريقة تمنع تكراره',
+                    blocks: [{ p: 'كل سؤال خاطئ يجب أن ينتج ملاحظة قابلة للاستخدام لاحقاً. اكتب الجملة السريرية المفتاحية التي كان يجب أن توجّهك للإجابة الصحيحة، ثم اكتب قاعدة قرار قصيرة. مثال: إذا ذكر الـstem علامة خطر (red flag) مع تدهور سريع، فالأولوية لتشخيص أو تدخل محدّد حتى قبل التفاصيل الثانوية. بهذه الطريقة يتحول الخطأ إلى قرار واضح يُستدعى تلقائياً.' }],
+                },
+                { ad: true },
+                {
+                    heading: '4) إدارة الوقت داخل الاختبار',
+                    blocks: [{ p: 'الهدف الواقعي متوسط ثابت لكل سؤال مع مساحة للمراجعة النهائية. استخدم قاعدة المرور الواحد: أجب على الأسئلة المباشرة فوراً، وعلّم الأسئلة المترددة، ثم ارجع لها في الجولة الثانية. ولا تسمح لسؤال واحد أن يسحب دقيقتين أو أكثر بلا قرار، لأن ذلك يضغطك في آخر البلوك ويزيد أخطاء التركيز.' }],
+                },
+                {
+                    heading: '5) خطة أسبوعية مختصرة (عدّلها حسب وقتك)',
+                    blocks: [
+                        {
+                            ul: [
+                                'السبت – الاثنين: موضوع رئيسي + جلسات أسئلة موجّهة.',
+                                'الثلاثاء: مراجعة الأخطاء المتراكمة وبناء قائمة high-yield.',
+                                'الأربعاء – الخميس: mixed blocks لمحاكاة الواقع.',
+                                'الجمعة: اختبار قصير + تقييم الأداء + ضبط خطة الأسبوع التالي.',
+                            ],
+                        },
+                        { p: 'الثبات أهم من المثالية. حتى لو كان وقتك محدوداً، الالتزام بخطة واضحة لمدة 12 أسبوعاً يعطي نتيجة أفضل من الدراسة المتقطّعة بلا قياس حقيقي للأداء.' },
+                    ],
+                },
+                {
+                    heading: '6) مؤشرات الجاهزية قبل يوم الاختبار',
+                    blocks: [{ p: 'راقب ثلاثة مؤشرات: دقة مستقرة في mixed sets، وانخفاض الأخطاء المتكررة في المحاور نفسها، وثبات إدارة الوقت عبر أكثر من محاكاة كاملة. إذا كانت هذه المؤشرات تتحسّن أسبوعياً فأنت على المسار الصحيح، حتى لو بقيت بعض الثغرات في مواضيع محدّدة.' }],
+                },
+            ],
+        },
+
+        wrongQuestions: {
+            kicker: 'Error Review Method',
+            title: 'طريقة مراجعة الأسئلة الخاطئة: حوّل أخطاءك إلى نقاط قوة قبل SMLE',
+            intro: 'كثير من الطلاب يحلّون مئات الأسئلة ومع ذلك تتكرر الأخطاء نفسها. السبب غالباً ليس قلة المذاكرة، بل ضعف منهجية المراجعة. هذا الدليل يشرح طريقة عملية لتحويل كل خطأ إلى قاعدة قرار سريرية تمنع تكراره.',
+            sections: [
+                {
+                    heading: '1) صنّف الخطأ قبل أن تحفظ الإجابة',
+                    blocks: [{ p: 'لا تكتفِ بقراءة الإجابة الصحيحة. اسأل: لماذا أخطأت؟ صنّف الخطأ إلى واحد من أربعة أنواع: نقص معرفي، أو سوء فهم للـstem، أو خطأ في استبعاد الخيارات، أو سوء إدارة وقت. هذا التصنيف مهم لأن علاج كل نوع مختلف.' }],
+                },
+                {
+                    heading: '2) سجّل «إشارة القرار» بدل النص الطويل',
+                    blocks: [{ p: 'بدل كتابة شرح طويل، اكتب جملة قصيرة تحدّد الإشارة السريرية التي تقود للإجابة. مثال: «progressive dyspnea + edema + orthopnea ← فكّر أولاً في heart failure pattern». هذه الإشارات تستدعيها داخل الاختبار أسرع بكثير من الفقرات المطوّلة.' }],
+                },
+                {
+                    heading: '3) راجع الأخطاء بنظام التكرار المتباعد',
+                    blocks: [{ p: 'راجع خطأ اليوم بعد 24 ساعة، ثم بعد 3 أيام، ثم بعد أسبوع. وإذا تكرر الخطأ نفسه مرتين، اجعله «أولوية حمراء» وخصّص له جلسة قصيرة مستقلة. الهدف أن ترى أخطاءك المتكررة تقلّ أسبوعاً بعد أسبوع.' }],
+                },
+                { ad: true },
+                {
+                    heading: '4) أنشئ قائمة «Top 20 Mistakes»',
+                    blocks: [{ p: 'احتفظ بقائمة صغيرة تضم أكثر 20 خطأ تكراراً لديك، واقرأها قبل كل جلسة timed block. بهذه الطريقة تدخل الاختبار وعقلك مهيّأ لتجنّب أنماط خطئك أنت، لا لحفظ معلومات عامة فقط.' }],
+                },
+                {
+                    heading: '5) اربط الخطأ بخطة عملية للجلسة القادمة',
+                    blocks: [{ p: 'كل خطأ يجب أن ينتج إجراءً واضحاً: زيادة أسئلة موضوع معيّن، أو مراجعة مرجع مختصر، أو تدريب على قراءة الـstem. بدون هذا الإجراء تتحول مراجعة الأخطاء إلى نشاط نظري بلا أثر على أدائك الحقيقي.' }],
+                },
+            ],
+        },
+
+        vsPrometric: {
+            kicker: 'SMLE vs Prometric',
+            title: 'الفرق بين SMLE وPrometric: ما الذي يجب أن تغيّره في طريقة المذاكرة؟',
+            intro: 'كثير من المتدرّبين يستخدمون الخطة نفسها لكل اختبار، ثم يتفاجؤون أن الأداء لا يعكس حجم الجهد. السبب أن SMLE وبرومترك يتقاطعان في المحتوى لكنهما يختلفان في صياغة الأسئلة، وتوزيع الصعوبة، وطريقة اختبار التفكير السريري. هذا الدليل يساعدك على تعديل تحضيرك عملياً.',
+            sections: [
+                {
+                    heading: '1) التشابه: قاعدة معرفية مشتركة',
+                    blocks: [{ p: 'يعتمد الاختباران على أساسيات الطب السريري: التشخيص التفريقي، واختيار الفحوصات، ثم اتخاذ القرار العلاجي المناسب. لذلك لا تحتاج خطة منفصلة بالكامل، بل خطة ذكية بنواة معرفية واحدة مع تعديلات حسب نمط كل اختبار.' }],
+                },
+                {
+                    heading: '2) الاختلاف في نمط السؤال',
+                    blocks: [{ p: 'في SMLE قد تواجه أسئلة تتطلب قراءة دقيقة للسياق وللتفاصيل الصغيرة في الـstem. أما في برومترك فالتركيز غالباً على القرار السريري المباشر تحت ضغط الوقت. والنتيجة: إذا كنت تتدرّب على الحفظ وحده أو على أسئلة قصيرة فقط، ستخسر درجات في التحليل.' }],
+                },
+                {
+                    heading: '3) كيف تعدّل مذاكرتك حسب الهدف',
+                    blocks: [
+                        {
+                            ul: [
+                                'إذا كان هدفك SMLE: زد وقت قراءة السؤال وتحليل المفاتيح السريرية.',
+                                'إذا كان هدفك برومترك: ركّز على سرعة القرار مع دقة ثابتة في الجلسات الزمنية.',
+                                'في الحالتين: خصّص يومياً وقتاً لمراجعة الأخطاء المتكررة، لا لحل أسئلة جديدة فقط.',
+                            ],
+                        },
+                    ],
+                },
+                { ad: true },
+                {
+                    heading: '4) إدارة الوقت داخل البلوك',
+                    blocks: [{ p: 'أفضل طريقة هي المرور على الأسئلة في جولتين: الجولة الأولى للأسئلة المباشرة، والثانية للأسئلة التي تحتاج مقارنة بين خيارين. ولا تسمح لسؤال واحد بسحب وقت غير متوازن، لأن ذلك يضعف تركيزك في نهاية البلوك.' }],
+                },
+                {
+                    heading: '5) خطة أسبوعية مختصرة للاختبارين',
+                    blocks: [{ p: 'اعمل 3 أيام موضوعية (topic-focused) + يومين mixed blocks + يوم مراجعة أخطاء + يوم اختبار محاكاة. هذا التوزيع يحافظ على عمق الفهم ويدرّبك في الوقت نفسه على نمط الاختبار الحقيقي.' }],
+                },
+                {
+                    heading: '6) متى تعرف أنك جاهز؟',
+                    blocks: [{ p: 'عندما تلاحظ ثلاثة مؤشرات: ثبات الدقة في الجلسات المختلطة، وانخفاض الأخطاء المتكررة، وتحسّناً واضحاً في سرعة اتخاذ القرار. عندها تكون خطة تحضيرك مناسبة لنوع الاختبار، لا مجرد ساعات دراسة.' }],
+                },
+            ],
+        },
+
+        highYield: {
+            kicker: 'High-Yield Topics',
+            title: 'أهم مواضيع SMLE عالية العائد: كيف توزّع وقتك بذكاء؟',
+            intro: 'المشكلة ليست قلّة المصادر، بل توزيع الوقت على مواضيع لا تعطي العائد نفسه في الدرجة. هذا الدليل يقدّم طريقة عملية لترتيب أولوياتك حتى تركّز على المواضيع الأعلى تأثيراً في أدائك.',
+            sections: [
+                {
+                    heading: '1) ما معنى High-Yield فعلياً؟',
+                    blocks: [{ p: 'الموضوع عالي العائد هو الذي يتكرر أكثر أو يرتبط بأنماط قرار سريري متعدّدة. لذلك لا تقيس أهمية الموضوع بعدد صفحاته، بل بعدد الأسئلة التي يمكن أن يولّدها وبمدى تأثيره على دقتك في الاختبار.' }],
+                },
+                {
+                    heading: '2) أولويات مقترحة لمعظم المتدرّبين',
+                    blocks: [
+                        {
+                            ul: [
+                                'Internal Medicine: لأنه يغطي طيفاً واسعاً من الحالات الشائعة والحرجة.',
+                                'Pediatrics: أسئلة متكررة تتطلّب انتباهاً للتفاصيل العمرية والجرعات.',
+                                'OB/GYN: قرارات سريرية متسلسلة ومفاهيم عالية التكرار.',
+                                'Surgery & Emergency: إدارة الحالات الحادة وترتيب التدخلات.',
+                            ],
+                        },
+                    ],
+                },
+                {
+                    heading: '3) نموذج توزيع أسبوعي حسب العائد',
+                    blocks: [{ p: 'اجعل 60% من وقتك للمواضيع عالية العائد، و25% للمواضيع المتوسطة، و15% للأقل تكراراً. وراجع هذا التوزيع كل أسبوعين بناءً على نتائجك في الجلسات المختلطة، لا على انطباعك الشخصي.' }],
+                },
+                { ad: true },
+                {
+                    heading: '4) كيف تكتشف نقاط ضعفك الحقيقية؟',
+                    blocks: [{ p: 'لا تعتمد على نسبة الإجابات الصحيحة العامة وحدها. تتبّع أداءك حسب الموضوع، ونوع الخطأ، وزمن الإجابة. فقد تكون دقتك جيدة لكن زمنك بطيء في محور معيّن، وهذا ينعكس سلباً يوم الاختبار.' }],
+                },
+                {
+                    heading: '5) قاعدة 20/80 في بنك الأسئلة',
+                    blocks: [{ p: 'عادةً يوجد عدد محدود من الأنماط السريرية يفسّر نسبة كبيرة من أخطائك المتكررة. حدّد هذه الأنماط مبكراً وخصّص لها مراجعة قصيرة متكررة؛ هذا يرفع دقتك أسرع من التنقّل العشوائي بين مواضيع كثيرة.' }],
+                },
+                {
+                    heading: '6) قبل الاختبار بأسبوعين',
+                    blocks: [{ p: 'خفّف إدخال مواضيع جديدة، وركّز على mixed blocks ومراجعة أخطاء high-yield. الهدف في هذه المرحلة تثبيت القرار السريري تحت الضغط، لا جمع معلومات جديدة بكثافة.' }],
+                },
+            ],
+        },
+    },
+
+    en: {
+        hub: {
+            kicker: 'SMLE Guides',
+            title: 'Study guides for the SMLE and Prometric exams',
+            intro: 'A library for the deeper material: study plans, question-solving strategy, time management, and review methods aimed at medical students and doctors in Saudi Arabia.',
+            listLabel: 'Study guides',
+            readMore: 'Read the full guide',
+            notesTitle: 'How to get the most from these guides',
+            notes: [
+                'Start with a timeline that is realistic for the hours you actually have.',
+                'Pair every question session with an immediate review of your mistakes.',
+                'Keep Internal Medicine, Surgery, Paediatrics and OB/GYN in balance.',
+                'Do not measure progress in hours — measure it in the quality of your repetition and in better clinical decisions.',
+            ],
+            cards: [
+                {
+                    path: '/guides/smle-study-plan',
+                    title: 'The 12-week SMLE plan: from zero to exam-ready',
+                    excerpt: 'A clear week-by-week plan covering the core specialties, with a daily split between studying, reviewing mistakes and working through high-yield questions.',
+                },
+                {
+                    path: '/guides/wrong-questions-method',
+                    title: 'How to review wrong questions without repeating the same mistake',
+                    excerpt: 'A practical method for building a smart error log and turning every mistake into a fixed diagnostic or management rule before exam day.',
+                },
+                {
+                    path: '/guides/smle-vs-prometric-differences',
+                    title: 'SMLE vs Prometric: what you should change in how you study',
+                    excerpt: 'A practical comparison of question style, clinical reasoning and time management across the two exams, with a concrete plan to act on.',
+                },
+                {
+                    path: '/guides/smle-high-yield-topics',
+                    title: 'High-yield SMLE topics: how to spend your time wisely',
+                    excerpt: 'A priority map of the topics that move your score most, with a weekly split that cuts wasted effort and lifts your accuracy.',
+                },
+            ],
+        },
+
+        studyPlan: {
+            kicker: 'SMLE Study Plan',
+            title: 'The 12-week SMLE plan: a study programme you can actually follow',
+            intro: 'This guide is written for doctors and medical students who want a clear plan for the SCFHS licensing exam. The aim is not to study at random, but to turn every week into something measurable: higher accuracy, less time per question, and stronger clinical reasoning in diagnosis and management.',
+            sections: [
+                {
+                    heading: '1) Split the weeks into phases',
+                    blocks: [{ p: 'Divide your preparation into three phases: foundation, speed, and exam simulation. In the foundation phase (weeks 1–4), focus on the highest-frequency topics in Internal Medicine and Paediatrics while reviewing the principles of OB/GYN and Surgery. In the speed phase (weeks 5–8), increase your daily question volume and start timed sets. In the simulation phase (weeks 9–12), make most of your study full-length exams, with a careful analysis after every attempt.' }],
+                },
+                {
+                    heading: '2) What an effective study day looks like',
+                    blocks: [{ p: 'An effective day has three blocks: a short learning block, a question block, and an error-review block. In practice: 45 minutes of focused reference review, then 40 to 60 questions under time, then 60 minutes analysing your mistakes. Do not move on to a new topic before you have written down why you got it wrong — a knowledge gap, a misread stem, or rushing the elimination of options.' }],
+                },
+                {
+                    heading: '3) Reviewing a wrong question so it does not come back',
+                    blocks: [{ p: 'Every wrong question should produce a note you can actually use later. Write the key clinical sentence that should have pointed you to the right answer, then write a short decision rule. For example: if the stem mentions a red flag plus rapid progression, a specific diagnosis or intervention takes priority over the secondary detail. That way the mistake becomes a clear trigger rather than a fact to memorise.' }],
+                },
+                { ad: true },
+                {
+                    heading: '4) Managing time inside the exam',
+                    blocks: [{ p: 'The realistic goal is a steady average per question with room for a final review. Use the single-pass rule: answer the straightforward questions immediately, flag the ones you are unsure about, and come back to them on a second pass. Never let one question take two minutes or more without a decision — it squeezes you at the end of the block and multiplies careless errors.' }],
+                },
+                {
+                    heading: '5) A short weekly plan (adapt it to your own time)',
+                    blocks: [
+                        {
+                            ul: [
+                                'Saturday–Monday: one main topic plus targeted question sessions.',
+                                'Tuesday: review the mistakes you have accumulated and build your high-yield list.',
+                                'Wednesday–Thursday: mixed blocks, to simulate the real thing.',
+                                'Friday: a short exam, a performance review, and adjustments to next week’s plan.',
+                            ],
+                        },
+                        { p: 'Consistency beats perfection. Even with limited hours, sticking to a clear plan for 12 weeks produces a better result than studying in bursts with no real measurement of performance.' },
+                    ],
+                },
+                {
+                    heading: '6) Signs you are ready before exam day',
+                    blocks: [{ p: 'Watch three indicators: stable accuracy in mixed sets, a fall in repeated errors within the same areas, and consistent time management across more than one full simulation. If those are improving week to week you are on track, even if some gaps remain in specific topics.' }],
+                },
+            ],
+        },
+
+        wrongQuestions: {
+            kicker: 'Error Review Method',
+            title: 'How to review wrong questions: turn your mistakes into strengths before the SMLE',
+            intro: 'Many students work through hundreds of questions and still make the same mistakes. The cause is usually not a lack of studying — it is a weak review method. This guide sets out a practical way to turn every mistake into a clinical decision rule that stops it recurring.',
+            sections: [
+                {
+                    heading: '1) Classify the mistake before you memorise the answer',
+                    blocks: [{ p: 'Do not simply read the correct answer. Ask why you got it wrong, and classify the mistake into one of four types: a knowledge gap, a misread stem, a bad elimination of options, or poor time management. The classification matters, because each type has a different fix.' }],
+                },
+                {
+                    heading: '2) Record the “decision signal”, not a long explanation',
+                    blocks: [{ p: 'Instead of writing a long note, write one short sentence naming the clinical signal that leads to the answer. For example: “progressive dyspnoea + oedema + orthopnoea → think heart failure pattern first”. Signals like that come back to you inside the exam far faster than paragraphs.' }],
+                },
+                {
+                    heading: '3) Review mistakes on a spaced-repetition schedule',
+                    blocks: [{ p: 'Review today’s mistake after 24 hours, then after 3 days, then after a week. If the same mistake recurs twice, make it a “red priority” and give it its own mini-session. The aim is to watch your repeated errors shrink week by week.' }],
+                },
+                { ad: true },
+                {
+                    heading: '4) Build a “Top 20 Mistakes” list',
+                    blocks: [{ p: 'Keep a short list of your 20 most frequent mistakes, and read it before every timed block. That way you go into the exam primed to avoid your own error patterns, rather than just holding general facts in your head.' }],
+                },
+                {
+                    heading: '5) Tie every mistake to an action for the next session',
+                    blocks: [{ p: 'Each mistake should produce a clear action: more questions in a specific topic, a short reference review, or practice at reading the stem. Without that action, reviewing errors becomes a theoretical exercise with no effect on real performance.' }],
+                },
+            ],
+        },
+
+        vsPrometric: {
+            kicker: 'SMLE vs Prometric',
+            title: 'SMLE vs Prometric: what you should change in how you study',
+            intro: 'Many candidates use the same plan for every exam, then find their performance does not reflect the effort. The reason is that the SMLE and Prometric overlap in content but differ in how questions are written, how difficulty is distributed, and how they test clinical reasoning. This guide helps you adjust your preparation in practical terms.',
+            sections: [
+                {
+                    heading: '1) The overlap: a shared knowledge base',
+                    blocks: [{ p: 'Both exams rest on the fundamentals of clinical medicine: the differential diagnosis, choosing investigations, and then making the right management decision. So you do not need two entirely separate plans — you need one smart plan with a single knowledge core and adjustments for each exam’s style.' }],
+                },
+                {
+                    heading: '2) The difference in question style',
+                    blocks: [{ p: 'In the SMLE you will meet questions that demand careful reading of the context and the small details in the stem. In Prometric the emphasis is usually on the direct clinical decision under time pressure. The consequence: if you only train on memorisation, or only on short questions, you will lose marks on analysis.' }],
+                },
+                {
+                    heading: '3) Adjusting your study to your target',
+                    blocks: [
+                        {
+                            ul: [
+                                'If your target is the SMLE: spend more time reading the question and analysing the clinical clues.',
+                                'If your target is Prometric: focus on decision speed while holding your accuracy steady in timed sessions.',
+                                'In both cases: set aside time every day for reviewing recurring mistakes, not just for new questions.',
+                            ],
+                        },
+                    ],
+                },
+                { ad: true },
+                {
+                    heading: '4) Managing time inside the block',
+                    blocks: [{ p: 'The best approach is two passes: the first for the straightforward questions, the second for the ones that need a comparison between two options. Never let a single question take a disproportionate share of your time — it weakens your concentration at the end of the block.' }],
+                },
+                {
+                    heading: '5) A short weekly plan for either exam',
+                    blocks: [{ p: 'Run 3 topic-focused days + 2 days of mixed blocks + 1 error-review day + 1 simulation day. That split keeps your understanding deep while training you on the real exam format at the same time.' }],
+                },
+                {
+                    heading: '6) How do you know you are ready?',
+                    blocks: [{ p: 'When you see three indicators: stable accuracy in mixed sessions, fewer repeated mistakes, and a clear improvement in decision speed. At that point your preparation actually fits the exam, rather than just adding up study hours.' }],
+                },
+            ],
+        },
+
+        highYield: {
+            kicker: 'High-Yield Topics',
+            title: 'High-yield SMLE topics: how to spend your time wisely',
+            intro: 'The problem is not a shortage of resources — it is spending your time on topics that do not pay back the same number of marks. This guide gives you a practical way to order your priorities so you focus on what actually moves your score.',
+            sections: [
+                {
+                    heading: '1) What “high-yield” really means',
+                    blocks: [{ p: 'A high-yield topic is one that recurs more often, or that connects to several patterns of clinical decision-making. So do not judge a topic’s importance by its page count — judge it by how many questions it can generate and how much it affects your accuracy in the exam.' }],
+                },
+                {
+                    heading: '2) Suggested priorities for most candidates',
+                    blocks: [
+                        {
+                            ul: [
+                                'Internal Medicine: it covers a wide spectrum of common and critical presentations.',
+                                'Paediatrics: frequent questions that demand attention to age-specific detail and dosing.',
+                                'OB/GYN: sequential clinical decisions and high-frequency concepts.',
+                                'Surgery & Emergency: managing acute presentations and sequencing interventions.',
+                            ],
+                        },
+                    ],
+                },
+                {
+                    heading: '3) A weekly split weighted by yield',
+                    blocks: [{ p: 'Give 60% of your time to high-yield topics, 25% to mid-tier ones and 15% to the least frequent. Revisit the split every two weeks based on your results in mixed sessions, not on how you feel you are doing.' }],
+                },
+                { ad: true },
+                {
+                    heading: '4) Finding your real weak spots',
+                    blocks: [{ p: 'Do not rely on your overall percentage alone. Track your performance by topic, by type of mistake, and by time per question. Your accuracy in an area can look fine while your speed there is slow — and that shows up badly on exam day.' }],
+                },
+                {
+                    heading: '5) The 20/80 rule in a question bank',
+                    blocks: [{ p: 'Usually a limited set of clinical patterns explains a large share of your repeated mistakes. Identify those patterns early and give them short, frequent review; that lifts your accuracy faster than moving randomly between many topics.' }],
+                },
+                {
+                    heading: '6) The last two weeks',
+                    blocks: [{ p: 'Ease off introducing new topics and concentrate on mixed blocks and reviewing high-yield errors. At this stage the goal is to lock in clinical decision-making under pressure, not to pile on new information.' }],
+                },
+            ],
+        },
+    },
+};
+
+export default guidesCopy;

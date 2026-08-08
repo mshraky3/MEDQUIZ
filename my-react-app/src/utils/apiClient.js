@@ -56,26 +56,31 @@ apiClient.interceptors.request.use(
     }
 );
 
-// 402 = subscription required / trial ended (see subscriptionGuard on the
-// backend). Route the user to the paywall from wherever the request fired,
-// since components don't handle 402 individually. A client-side timer is
-// only cosmetic — this is the real enforcement point.
-function handleSubscriptionExpired(error) {
+// 402 = this specific feature needs a subscription (see the guards in
+// middleware/subscriptionGuard.js). It is NOT a lockout, and must never be
+// treated as one: a free-tier account that has spent its 40 questions still
+// owns its analytics, its history and the free lessons.
+//
+// This used to redirect the whole window to /subscribe and stamp
+// accessAllowed:false into localStorage, which turned one refused request into
+// an app-wide eviction. Now the rejection simply propagates and the screen that
+// made the call decides what to show — normally an upsell, in place.
+//
+// The one thing kept centrally is the record of remaining allowance, so any
+// screen can read it without another round-trip.
+function handleSubscriptionRequired(error) {
     if (error.response?.status !== 402) return;
     if (typeof window === 'undefined') return;
 
-    const path = window.location.pathname;
-    if (path.startsWith('/subscribe') || path.startsWith('/payment')) return;
-
     try {
         const user = JSON.parse(localStorage.getItem('user') || '{}');
-        localStorage.setItem('user', JSON.stringify({ ...user, accessAllowed: false }));
+        localStorage.setItem('user', JSON.stringify({
+            ...user,
+            free_questions_remaining: error.response.data?.remaining ?? 0,
+        }));
     } catch (e) {
         // Ignore localStorage errors
     }
-
-    const reason = error.response.data?.reason || 'subscription_required';
-    window.location.assign(`/subscribe?reason=${encodeURIComponent(reason)}`);
 }
 
 // Add response interceptor for error tracking
@@ -84,7 +89,7 @@ apiClient.interceptors.response.use(
     (error) => {
         // Report the error to the error tracking system
         reportApiError(error, error.config, error.response);
-        handleSubscriptionExpired(error);
+        handleSubscriptionRequired(error);
 
         // Re-throw to let the application handle it
         return Promise.reject(error);
@@ -97,7 +102,7 @@ setupAxiosInterceptor(axios);
 axios.interceptors.response.use(
     (response) => response,
     (error) => {
-        handleSubscriptionExpired(error);
+        handleSubscriptionRequired(error);
         return Promise.reject(error);
     }
 );

@@ -11,21 +11,15 @@ import { UserContext } from '../../UserContext';
 import { getTypeLabel } from '../../utils/typeLabels';
 import { getSourceLabel } from '../../utils/sourceLabels';
 import { specialtyKeys, bankLabel, userTrack, trackLabel, examLabel } from '../../utils/tracks.js';
+import { useCopy, useLang } from '../../i18n';
+import quizCopy from '../../i18n/copy/quiz.js';
 
 // Sentinel meaning "the whole of my track's bank". The backend resolves it to
-// the medical kept-source allowlist, and to no source filter at all for other
-// tracks — so it is always the right thing to send when no collection is picked.
+// all three medical sources, and to no source filter at all for nursing — so
+// it is always the right thing to send when no collection is picked.
 const WHOLE_BANK = 'MidgardGameBoy';
 
 const quizOptions = [10, 50, 'custom'];
-
-const timerOptions = [
-    { label: '5 دقائق', value: 5 },
-    { label: '10 دقائق', value: 10 },
-    { label: '30 دقيقة', value: 30 },
-    { label: 'ساعة', value: 60 },
-    { label: 'مخصص', value: 'custom' }
-];
 
 /**
  * The quiz launch flow, extracted from the old QUIZS page. Compared with the
@@ -35,6 +29,10 @@ const timerOptions = [
 const QuizLauncher = ({ id }) => {
     const { user, setUser, sessionToken } = useContext(UserContext);
     const navigate = useNavigate();
+    const copy = useCopy(quizCopy);
+    const t = copy.launcher;
+    const { lang, dir } = useLang();
+    const timerOptions = t.timerOptions;
 
     // The specialties offered are the ones belonging to this student's track.
     // The server enforces the same restriction, so this only decides what the
@@ -54,6 +52,10 @@ const QuizLauncher = ({ id }) => {
     // The nursing bank has two — "Most Repeated" and "Confirmed" — and the
     // picker below only appears when there is genuinely a choice to make.
     const [sources, setSources] = useState([]);
+    // How much of each specialty this user has already answered, as a 0-100
+    // percentage straight from the server ({type: pct}) — shown as a small
+    // badge next to each checkbox so the user knows how much is left.
+    const [progressByType, setProgressByType] = useState({});
     // null = the whole bank (both collections mixed).
     const [selectedSource, setSelectedSource] = useState(null);
     const activeSource = selectedSource || WHOLE_BANK;
@@ -122,6 +124,7 @@ const QuizLauncher = ({ id }) => {
                 if (!alive || !res) return;
                 setBankEmpty(!res.data.hasQuestions);
                 setSources(Array.isArray(res.data.selectableSources) ? res.data.selectableSources : []);
+                setProgressByType(res.data.progressByType || {});
             })
             .catch(() => { /* advisory only — never block the launcher on this */ });
         return () => { alive = false; };
@@ -263,8 +266,8 @@ const QuizLauncher = ({ id }) => {
         if (!user || !sessionToken) return;
         try {
             const achievementKey = `${type}_${source}`;
-            const achievementName = `متمكن في ${getTypeLabel(type)} من ${getSourceLabel(source)}`;
-            const achievementDescription = `أكملت جميع أسئلة ${getTypeLabel(type)} من مصدر ${getSourceLabel(source)}`;
+            const achievementName = t.achievementName(getTypeLabel(type, lang), getSourceLabel(source, lang));
+            const achievementDescription = t.achievementDesc(getTypeLabel(type, lang), getSourceLabel(source, lang));
             await protectedPost(`${Globals.URL}/api/award-achievement`, {
                 userId: id,
                 achievementType: 'cardinality_completion',
@@ -330,15 +333,12 @@ const QuizLauncher = ({ id }) => {
 
     if (bankEmpty) {
         return (
-            <div dir="rtl">
+            <div dir={dir}>
                 <div className="quiz-main">
-                    <h1>أسئلة مسار {trackLabel(myTrack)} قيد الإعداد</h1>
-                    <p className="quiz-subtitle">
-                        نعمل حالياً على تجهيز بنك الأسئلة الخاص بـ{examLabel(myTrack)}.
-                        سنرسل لك بريداً فور جاهزيته.
-                    </p>
+                    <h1>{t.emptyTitle(trackLabel(myTrack, lang))}</h1>
+                    <p className="quiz-subtitle">{t.emptyBody(examLabel(myTrack, lang))}</p>
                     <button className="quick-start-btn" onClick={() => navigate('/quizs')}>
-                        العودة إلى لوحتي
+                        {t.emptyBack}
                     </button>
                 </div>
             </div>
@@ -346,10 +346,10 @@ const QuizLauncher = ({ id }) => {
     }
 
     return (
-        <div dir="rtl">
+        <div dir={dir}>
             <div className={`quiz-main${anyModalOpen ? ' is-dimmed' : ''}`}>
-                <h1>اختر اختبارك</h1>
-                <p className="quiz-subtitle">ابدأ سريعاً الآن أو خصّص الاختبار كما تريد — من <bdi>{bankLabel(myTrack)}</bdi>.</p>
+                <h1>{t.title}</h1>
+                <p className="quiz-subtitle">{t.subtitlePrefix}<bdi>{bankLabel(myTrack, lang)}</bdi>.</p>
 
                 {/* Collection picker. Only rendered when the track's bank really
                     has more than one collection to choose between, so the
@@ -357,9 +357,9 @@ const QuizLauncher = ({ id }) => {
                     choice applies to everything started from this screen —
                     quick start, custom quizzes and the final quiz. */}
                 {sources.length > 1 && (
-                    <div className="bank-source-picker" role="group" aria-label="مصدر الأسئلة">
+                    <div className="bank-source-picker" role="group" aria-label={t.sourceGroupLabel}>
                         <span className="bank-source-legend">
-                            <Icon name="book-open" size={15} /> مصدر الأسئلة
+                            <Icon name="book-open" size={15} /> {t.sourceLegend}
                         </span>
                         <div className="bank-source-options">
                             <button
@@ -368,9 +368,9 @@ const QuizLauncher = ({ id }) => {
                                 aria-pressed={selectedSource === null}
                                 onClick={() => setSelectedSource(null)}
                             >
-                                <span className="bank-source-chip-name">الكل</span>
+                                <span className="bank-source-chip-name">{t.sourceAll}</span>
                                 <span className="bank-source-chip-count">
-                                    <bdi>{totalSourceQuestions}</bdi> سؤال
+                                    <bdi>{totalSourceQuestions}</bdi> {t.questionsUnit}
                                 </span>
                             </button>
                             {sources.map((s) => (
@@ -382,11 +382,19 @@ const QuizLauncher = ({ id }) => {
                                     onClick={() => setSelectedSource(s.key)}
                                 >
                                     <span className="bank-source-chip-name">
-                                        <bdi>{getSourceLabel(s.key)}</bdi>
+                                        <bdi>{getSourceLabel(s.key, lang)}</bdi>
                                     </span>
                                     <span className="bank-source-chip-count">
-                                        <bdi>{s.total}</bdi> سؤال
+                                        <bdi>{s.total}</bdi> {t.questionsUnit}
                                     </span>
+                                    {s.priority && (
+                                        <span
+                                            className="bank-source-chip-priority"
+                                            aria-label={t.sourcePriorityLabel(s.priority)}
+                                        >
+                                            {t.sourcePriorityBadge(s.priority)}
+                                        </span>
+                                    )}
                                 </button>
                             ))}
                         </div>
@@ -394,7 +402,7 @@ const QuizLauncher = ({ id }) => {
                 )}
 
                 <button className="quick-start-btn" onClick={handleQuickStart}>
-                    ابدأ سريعاً: 10 أسئلة مختلطة
+                    {t.quickStart}
                 </button>
 
                 <div className="options-container">
@@ -405,7 +413,7 @@ const QuizLauncher = ({ id }) => {
                             style={{ animationDelay: `${0.28 + i * 0.08}s` }}
                             onClick={() => handleOptionClick(num)}
                         >
-                            {num === 'custom' ? 'عدد مخصص' : `${num} سؤال`}
+                            {num === 'custom' ? t.customCount : t.questionsCount(num)}
                         </button>
                     ))}
                     {user && sessionToken && (
@@ -414,7 +422,7 @@ const QuizLauncher = ({ id }) => {
                             style={{ animationDelay: `${0.28 + quizOptions.length * 0.08}s` }}
                             onClick={handleFinalQuizClick}
                         >
-                            <Icon name="target" size={18} /> اختبار نهائي
+                            <Icon name="target" size={18} /> {t.finalQuiz}
                         </button>
                     )}
                 </div>
@@ -422,13 +430,13 @@ const QuizLauncher = ({ id }) => {
 
             {/* Type Selector Modal */}
             {showTypeSelector && (
-                <div className="custom-type-selector-modal" dir="rtl">
+                <div className="custom-type-selector-modal" dir={dir}>
                     <div className="custom-modal-content">
-                        <h2>اختر نوع الأسئلة</h2>
+                        <h2>{t.typeTitle}</h2>
                         <p className="source-info">
-                            <Icon name="book-open" size={16} /> البنك:{' '}
+                            <Icon name="book-open" size={16} /> {t.bankLabel}{' '}
                             <strong>
-                                <bdi>{selectedSource ? getSourceLabel(selectedSource) : bankLabel(myTrack)}</bdi>
+                                <bdi>{selectedSource ? getSourceLabel(selectedSource, lang) : bankLabel(myTrack, lang)}</bdi>
                             </strong>
                         </p>
                         <div className="custom-checkbox-group">
@@ -439,16 +447,19 @@ const QuizLauncher = ({ id }) => {
                                         checked={selectedTypes.includes(type)}
                                         onChange={() => handleCheckboxChange(type)}
                                     />
-                                    {getTypeLabel(type)}
+                                    <span>{getTypeLabel(type, lang)}</span>
+                                    <span className="checkbox-type-count">
+                                        <bdi>{progressByType[type] || 0}%</bdi>
+                                    </span>
                                 </label>
                             ))}
                         </div>
                         <div className="custom-modal-buttons">
                             <button onClick={handleStartQuiz} disabled={selectedTypes.length === 0} className="custom-start-btn">
-                                ابدأ الاختبار
+                                {t.startQuiz}
                             </button>
-                            <button onClick={handleMixAll} className="custom-mix-btn">خلط جميع الأنواع</button>
-                            <button onClick={() => setShowTypeSelector(false)} className="custom-cancel-btn">إلغاء</button>
+                            <button onClick={handleMixAll} className="custom-mix-btn">{t.mixAll}</button>
+                            <button onClick={() => setShowTypeSelector(false)} className="custom-cancel-btn">{t.cancel}</button>
                         </div>
                     </div>
                 </div>
@@ -456,18 +467,18 @@ const QuizLauncher = ({ id }) => {
 
             {/* Timer Selector Modal */}
             {showTimerSelector && (
-                <div className="custom-timer-selector-modal" dir="rtl">
+                <div className="custom-timer-selector-modal" dir={dir}>
                     <div className="custom-modal-content">
-                        <h2>ضبط المؤقت</h2>
+                        <h2>{t.timerTitle}</h2>
                         <p className="timer-info">
-                            <Icon name="clock" size={16} /> اختر مدة المؤقت أو "بدون مؤقت" لوقت غير محدود
+                            <Icon name="clock" size={16} /> {t.timerInfo}
                         </p>
                         <div className="timer-options">
                             <button
                                 className={`timer-option-btn ${selectedTimer === null ? 'selected' : ''}`}
                                 onClick={() => handleTimerSelect(null)}
                             >
-                                بدون مؤقت
+                                {t.noTimer}
                             </button>
                             {timerOptions.map((timer) => (
                                 <button
@@ -481,7 +492,7 @@ const QuizLauncher = ({ id }) => {
                         </div>
                         {selectedTimer === 'custom' && (
                             <div className="custom-timer-input">
-                                <label htmlFor="customMinutes">مدة مخصصة (دقائق):</label>
+                                <label htmlFor="customMinutes">{t.customMinutesLabel}</label>
                                 <input
                                     id="customMinutes"
                                     type="number"
@@ -494,8 +505,8 @@ const QuizLauncher = ({ id }) => {
                             </div>
                         )}
                         <div className="custom-modal-buttons">
-                            <button onClick={handleTimerConfirm} className="custom-start-btn">ابدأ الاختبار</button>
-                            <button onClick={() => setShowTimerSelector(false)} className="custom-cancel-btn">العودة للأنواع</button>
+                            <button onClick={handleTimerConfirm} className="custom-start-btn">{t.startQuiz}</button>
+                            <button onClick={() => setShowTimerSelector(false)} className="custom-cancel-btn">{t.backToTypes}</button>
                         </div>
                     </div>
                 </div>
@@ -503,14 +514,14 @@ const QuizLauncher = ({ id }) => {
 
             {/* Custom Questions Modal */}
             {showCustomQuestions && (
-                <div className="custom-questions-modal" dir="rtl">
+                <div className="custom-questions-modal" dir={dir}>
                     <div className="custom-modal-content">
-                        <h2>عدد أسئلة مخصص</h2>
+                        <h2>{t.customQuestionsTitle}</h2>
                         <p className="questions-info">
-                            <Icon name="pen" size={16} /> أدخل عدد الأسئلة المطلوب (1-500)
+                            <Icon name="pen" size={16} /> {t.customQuestionsInfo}
                         </p>
                         <div className="custom-questions-input">
-                            <label htmlFor="customQuestions">عدد الأسئلة:</label>
+                            <label htmlFor="customQuestions">{t.customQuestionsLabel}</label>
                             <div className="quick-preset-buttons">
                                 {[15, 25, 50, 75].map((n) => (
                                     <button key={n} type="button" className="preset-btn" onClick={() => setCustomQuestionsCount(n)}>
@@ -527,7 +538,7 @@ const QuizLauncher = ({ id }) => {
                                     value={customQuestionsCount}
                                     onChange={(e) => setCustomQuestionsCount(parseInt(e.target.value) || 25)}
                                     className="custom-questions-number-input"
-                                    placeholder="Enter number"
+                                    placeholder={t.customQuestionsPlaceholder}
                                     inputMode="numeric"
                                     pattern="[0-9]*"
                                 />
@@ -537,7 +548,7 @@ const QuizLauncher = ({ id }) => {
                                 </div>
                             </div>
                             <div className="range-slider-container">
-                                <label htmlFor="questionsRange">أو استخدم الشريط:</label>
+                                <label htmlFor="questionsRange">{t.orUseSlider}</label>
                                 <input
                                     id="questionsRange"
                                     type="range"
@@ -551,8 +562,8 @@ const QuizLauncher = ({ id }) => {
                             </div>
                         </div>
                         <div className="custom-modal-buttons">
-                            <button onClick={handleCustomQuestionsConfirm} className="custom-start-btn">متابعة</button>
-                            <button onClick={() => setShowCustomQuestions(false)} className="custom-cancel-btn">إلغاء</button>
+                            <button onClick={handleCustomQuestionsConfirm} className="custom-start-btn">{t.continue}</button>
+                            <button onClick={() => setShowCustomQuestions(false)} className="custom-cancel-btn">{t.cancel}</button>
                         </div>
                     </div>
                 </div>
@@ -560,19 +571,19 @@ const QuizLauncher = ({ id }) => {
 
             {/* Final Quiz Type Selection Modal */}
             {showFinalQuizType && (
-                <div className="custom-source-selector-modal" dir="rtl">
+                <div className="custom-source-selector-modal" dir={dir}>
                     <div className="custom-modal-content">
-                        <h2><Icon name="target" size={20} /> اختبار نهائي - اختر النوع</h2>
-                        <p className="final-quiz-description">مراجعة شاملة لجميع أسئلة النوع المختار</p>
+                        <h2><Icon name="target" size={20} /> {t.finalTypeTitle}</h2>
+                        <p className="final-quiz-description">{t.finalTypeDesc}</p>
                         <div className="custom-source-buttons">
                             {availableTypes.map((type) => (
                                 <button key={type} onClick={() => handleFinalTypeSelect(type)} className="custom-source-btn">
-                                    {getTypeLabel(type)}
+                                    {getTypeLabel(type, lang)}
                                 </button>
                             ))}
                         </div>
                         <div className="custom-modal-buttons">
-                            <button onClick={() => setShowFinalQuizType(false)} className="custom-cancel-btn">إلغاء</button>
+                            <button onClick={() => setShowFinalQuizType(false)} className="custom-cancel-btn">{t.cancel}</button>
                         </div>
                     </div>
                 </div>
@@ -580,34 +591,34 @@ const QuizLauncher = ({ id }) => {
 
             {/* Final Quiz Time Selection Modal */}
             {showFinalQuizTime && (
-                <div className="custom-timer-selector-modal" dir="rtl">
+                <div className="custom-timer-selector-modal" dir={dir}>
                     <div className="custom-modal-content">
-                        <h2><Icon name="target" size={20} /> اختبار نهائي - ضبط الوقت</h2>
+                        <h2><Icon name="target" size={20} /> {t.finalTimeTitle}</h2>
                         <p className="final-quiz-description">
                             {loadingFinalCount
-                                ? 'جارٍ حساب عدد الأسئلة…'
-                                : `${finalQuizQuestionsCount} سؤال متاح من ${getTypeLabel(selectedFinalType)}`}
+                                ? t.finalCounting
+                                : t.finalAvailable(finalQuizQuestionsCount, getTypeLabel(selectedFinalType, lang))}
                         </p>
                         {!loadingFinalCount && finalQuizQuestionsCount < 1 ? (
                             <>
-                                <p className="final-quiz-note">لا توجد أسئلة كافية لهذا النوع حالياً. جرّب نوعاً آخر.</p>
+                                <p className="final-quiz-note">{t.finalNotEnough}</p>
                                 <div className="custom-modal-buttons">
                                     <button onClick={() => { setShowFinalQuizTime(false); setShowFinalQuizType(true); }} className="custom-cancel-btn">
-                                        اختيار نوع آخر
+                                        {t.finalPickOther}
                                     </button>
                                 </div>
                             </>
                         ) : (
                             <>
-                                <p className="final-quiz-note">سيشمل جميع الأسئلة، حتى التي أجبت عليها سابقاً.</p>
+                                <p className="final-quiz-note">{t.finalIncludesAll}</p>
                                 <div className="timer-options">
-                                    <button onClick={() => handleFinalTimeSelect(30)} className="timer-option-btn" disabled={loadingFinalCount}>30 دقيقة</button>
-                                    <button onClick={() => handleFinalTimeSelect(60)} className="timer-option-btn" disabled={loadingFinalCount}>ساعة</button>
-                                    <button onClick={() => handleFinalTimeSelect(90)} className="timer-option-btn" disabled={loadingFinalCount}>ساعة ونص</button>
-                                    <button onClick={() => handleFinalTimeSelect(120)} className="timer-option-btn" disabled={loadingFinalCount}>ساعتان</button>
+                                    <button onClick={() => handleFinalTimeSelect(30)} className="timer-option-btn" disabled={loadingFinalCount}>{t.final30}</button>
+                                    <button onClick={() => handleFinalTimeSelect(60)} className="timer-option-btn" disabled={loadingFinalCount}>{t.final60}</button>
+                                    <button onClick={() => handleFinalTimeSelect(90)} className="timer-option-btn" disabled={loadingFinalCount}>{t.final90}</button>
+                                    <button onClick={() => handleFinalTimeSelect(120)} className="timer-option-btn" disabled={loadingFinalCount}>{t.final120}</button>
                                 </div>
                                 <div className="custom-timer-input">
-                                    <label htmlFor="finalQuizTime">أو حدد وقت مخصص (30 دقيقة كحد أدنى):</label>
+                                    <label htmlFor="finalQuizTime">{t.finalCustomLabel}</label>
                                     <div className="timer-input-container">
                                         <input
                                             id="finalQuizTime"
@@ -617,16 +628,16 @@ const QuizLauncher = ({ id }) => {
                                             value={finalQuizTimeLimit}
                                             onChange={(e) => setFinalQuizTimeLimit(parseInt(e.target.value) || 30)}
                                             className="custom-timer-number-input"
-                                            placeholder="Enter minutes"
+                                            placeholder={t.finalCustomPlaceholder}
                                         />
-                                        <span className="time-unit">دقيقة</span>
+                                        <span className="time-unit">{t.minutes}</span>
                                     </div>
                                 </div>
                                 <div className="custom-modal-buttons">
                                     <button onClick={handleFinalTimeConfirm} className="custom-start-btn" disabled={loadingFinalCount}>
-                                        ابدأ الاختبار النهائي
+                                        {t.startFinal}
                                     </button>
-                                    <button onClick={() => setShowFinalQuizTime(false)} className="custom-cancel-btn">إلغاء</button>
+                                    <button onClick={() => setShowFinalQuizTime(false)} className="custom-cancel-btn">{t.cancel}</button>
                                 </div>
                             </>
                         )}
@@ -639,10 +650,10 @@ const QuizLauncher = ({ id }) => {
                 isOpen={showCongratulations}
                 onClose={handleCloseCongratulations}
                 onRestart={handleRestart}
-                achievementName={congratulationsData ? `متمكن في ${getTypeLabel(congratulationsData.type)} من ${getSourceLabel(congratulationsData.source)}` : ''}
-                achievementDescription={congratulationsData ? `أكملت جميع أسئلة ${getTypeLabel(congratulationsData.type)} من مصدر ${getSourceLabel(congratulationsData.source)}!` : ''}
-                type={congratulationsData?.type || ''}
-                source={congratulationsData?.source || ''}
+                achievementName={congratulationsData ? t.achievementName(getTypeLabel(congratulationsData.type, lang), getSourceLabel(congratulationsData.source, lang)) : ''}
+                achievementDescription={congratulationsData ? t.achievementDesc(getTypeLabel(congratulationsData.type, lang), getSourceLabel(congratulationsData.source, lang)) : ''}
+                type={congratulationsData ? getTypeLabel(congratulationsData.type, lang) : ''}
+                source={congratulationsData ? getSourceLabel(congratulationsData.source, lang) : ''}
             />
         </div>
     );

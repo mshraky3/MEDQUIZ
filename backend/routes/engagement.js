@@ -20,7 +20,7 @@
  */
 import express from 'express';
 import { adminAuth } from '../middleware/adminAuth.js';
-import { normalizeTrack, TRACK_KEYS, trackLabelAr } from '../config/tracks.js';
+import { normalizeTrack, TRACK_KEYS, trackLabelEn } from '../config/tracks.js';
 
 const router = express.Router();
 
@@ -174,7 +174,7 @@ router.get('/admin', adminAuth, async (req, res) => {
             })),
             byTrack: TRACK_KEYS.map((t) => ({
                 track: t,
-                label: trackLabelAr(t),
+                label: trackLabelEn(t),
                 sections: SECTIONS.map((s) => ({
                     section: s,
                     seconds: Number(byTrack.rows.find(

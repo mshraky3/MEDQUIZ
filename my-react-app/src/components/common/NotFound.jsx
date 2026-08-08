@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Icon from './Icon.jsx';
+import { useCommon, useLang } from '../../i18n';
 import './ErrorScreens.css';
 
 /**
@@ -14,35 +15,36 @@ import './ErrorScreens.css';
  */
 const NotFound = () => {
     const navigate = useNavigate();
+    const t = useCommon();
+    const { dir } = useLang();
 
     return (
-        <div className="errscreen" dir="rtl">
+        <div className="errscreen" dir={dir}>
             <div className="errscreen-card">
                 <span className="errscreen-code" aria-hidden="true">404</span>
-                <h1>الصفحة غير موجودة</h1>
-                <p>
-                    الرابط الذي فتحته غير صحيح أو لم يعد متاحاً.
-                    يمكنك العودة للرئيسية أو الانتقال مباشرة إلى ما تبحث عنه.
-                </p>
+                <h1>{t.errors.notFoundTitle}</h1>
+                <p>{t.errors.notFoundBody}</p>
                 <div className="errscreen-actions">
                     <Link to="/" className="errscreen-btn errscreen-btn--primary">
-                        <Icon name="home" size={17} /> العودة للرئيسية
+                        <Icon name="home" size={17} /> {t.actions.backHome}
                     </Link>
                     <button
                         type="button"
                         className="errscreen-btn errscreen-btn--ghost"
                         onClick={() => navigate(-1)}
                     >
-                        <Icon name="chevron-right" size={17} /> رجوع
+                        {/* "Back" points toward where the page came from, which
+                            is the start edge — it flips with the language. */}
+                        <Icon name={dir === 'rtl' ? 'chevron-right' : 'chevron-left'} size={17} /> {t.nav.back}
                     </button>
                 </div>
-                <nav className="errscreen-links" aria-label="روابط سريعة">
-                    <Link to="/quizs">حسابي</Link>
-                    <Link to="/signup">إنشاء حساب</Link>
-                    <Link to="/login">تسجيل الدخول</Link>
-                    <Link to="/guides">أدلة التحضير</Link>
-                    <Link to="/faq">الأسئلة الشائعة</Link>
-                    <Link to="/contact">تواصل معنا</Link>
+                <nav className="errscreen-links" aria-label={t.actions.quickLinks}>
+                    <Link to="/quizs">{t.nav.account}</Link>
+                    <Link to="/signup">{t.nav.signup}</Link>
+                    <Link to="/login">{t.nav.login}</Link>
+                    <Link to="/guides">{t.nav.guides}</Link>
+                    <Link to="/faq">{t.nav.faq}</Link>
+                    <Link to="/contact">{t.nav.contact}</Link>
                 </nav>
             </div>
         </div>

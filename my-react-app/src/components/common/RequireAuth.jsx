@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { UserContext } from '../../UserContext';
 import Spinner from './Spinner.jsx';
-import TrialBanner from './TrialBanner.jsx';
+import FreeAllowanceBanner from './FreeAllowanceBanner.jsx';
 
 /**
  * Route guard for authenticated-only pages.
@@ -43,20 +43,17 @@ const RequireAuth = ({ children }) => {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
-  // Subscription gate. `accessAllowed === false` is set only by a fresh login
-  // under payment enforcement for an unpaid/expired account; it funnels the
-  // user to the paywall. `undefined` (legacy stored sessions, and the
-  // grandfathered/admin/active cases) passes through untouched, so no one is
-  // locked out mid-session. Never redirect while already on the paywall flow.
-  const onPaywall =
-    location.pathname.startsWith('/subscribe') || location.pathname.startsWith('/payment');
-  if (user.accessAllowed === false && !onPaywall) {
-    return <Navigate to="/subscribe" replace />;
-  }
+  // NOTE: there is deliberately no subscription redirect here.
+  //
+  // This used to bounce any account with `accessAllowed === false` to
+  // /subscribe, which meant an unpaid student could not reach their own
+  // analytics, their wrong-question list or the free lessons. The free tier
+  // replaced that: not paying limits QUIZZES (enforced by the server's 402 on
+  // /api/questions), never the account. Do not reintroduce a redirect here.
 
   return (
     <>
-      <TrialBanner />
+      <FreeAllowanceBanner />
       {children}
     </>
   );

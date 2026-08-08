@@ -2,9 +2,10 @@
  * Assertions for config/sources.js — the source-resolution rules that decide
  * which questions a quiz can draw from.
  *
- * The medical cases matter most: KEPT_SOURCES is the guard that keeps the
- * retired 2025 collections from being served, and a regression there would
- * silently put deleted content back in front of students.
+ * Both tracks now offer a real picker: medical's three 2026H2 collections
+ * (GameBoy, Confirmed, Midgard) and nursing's two. A regression that widens
+ * MEDICAL_SOURCES/NURSING_SOURCES to include a retired or foreign source would
+ * silently let a quiz draw from the wrong bank, which is what this guards.
  *
  *   node scripts/checkSources.js
  */
@@ -12,18 +13,20 @@
 import assert from 'node:assert/strict';
 import { MEDICAL, NURSING } from '../config/tracks.js';
 import {
-    KEPT_SOURCES, NURSING_SOURCES, PICKABLE_SOURCES, SELECTABLE_SOURCES, resolveSources,
+    MEDICAL_SOURCES, NURSING_SOURCES, PICKABLE_SOURCES, SELECTABLE_SOURCES, resolveSources,
 } from '../config/sources.js';
 
 const cases = [
-    // --- medical: always constrained to the kept allowlist ------------------
-    ['medical, no source', undefined, MEDICAL, KEPT_SOURCES],
-    ['medical, "mix"', 'mix', MEDICAL, KEPT_SOURCES],
-    ['medical, unified sentinel', 'MidgardGameBoy', MEDICAL, KEPT_SOURCES],
-    ['medical, a kept collection', 'May26', MEDICAL, ['May26']],
-    ['medical, RETIRED collection', 'October25', MEDICAL, KEPT_SOURCES],
-    ['medical, unknown junk', 'nonsense', MEDICAL, KEPT_SOURCES],
-    ['medical, other track\'s source', 'NursingConfirmed', MEDICAL, KEPT_SOURCES],
+    // --- medical: always constrained to the current 2026H2 collections ------
+    ['medical, no source', undefined, MEDICAL, MEDICAL_SOURCES],
+    ['medical, "mix"', 'mix', MEDICAL, MEDICAL_SOURCES],
+    ['medical, unified sentinel', 'MidgardGameBoy', MEDICAL, MEDICAL_SOURCES],
+    ['medical, GameBoy', 'MedicalGameBoy', MEDICAL, ['MedicalGameBoy']],
+    ['medical, Confirmed', 'MedicalConfirmed', MEDICAL, ['MedicalConfirmed']],
+    ['medical, Midgard', 'MedicalMidgard', MEDICAL, ['MedicalMidgard']],
+    ['medical, RETIRED monthly collection', 'May26', MEDICAL, MEDICAL_SOURCES],
+    ['medical, unknown junk', 'nonsense', MEDICAL, MEDICAL_SOURCES],
+    ['medical, other track\'s source', 'NursingConfirmed', MEDICAL, MEDICAL_SOURCES],
 
     // --- nursing: null means "no source condition", i.e. the whole bank -----
     // Rows still on the pre-split NursingEMS label stay servable that way.
@@ -32,10 +35,10 @@ const cases = [
     ['nursing, Most Repeated', 'NursingMostRepeated', NURSING, ['NursingMostRepeated']],
     ['nursing, Confirmed', 'NursingConfirmed', NURSING, ['NursingConfirmed']],
     ['nursing, legacy label', 'NursingEMS', NURSING, null],
-    ['nursing, other track\'s source', 'May26', NURSING, null],
+    ['nursing, other track\'s source', 'MedicalGameBoy', NURSING, null],
 
     // --- unknown track normalizes to medical --------------------------------
-    ['unknown track', undefined, 'wat', KEPT_SOURCES],
+    ['unknown track', undefined, 'wat', MEDICAL_SOURCES],
 ];
 
 let failed = 0;
@@ -51,11 +54,10 @@ for (const [name, source, track, expected] of cases) {
 }
 
 // --- what the launcher is allowed to OFFER -------------------------------
-// Distinct from what resolveSources will honour. Medical must stay empty: that
-// bank was deliberately unified in 2026 and the monthly collections behind it
-// are an implementation detail students are not meant to choose between.
+// Distinct from what resolveSources will honour, though both tracks now offer
+// exactly their full selectable set (a real picker on both sides).
 const pickableCases = [
-    ['medical offers no picker', PICKABLE_SOURCES[MEDICAL], []],
+    ['medical offers all three collections', PICKABLE_SOURCES[MEDICAL], MEDICAL_SOURCES],
     ['nursing offers both collections', PICKABLE_SOURCES[NURSING], NURSING_SOURCES],
 ];
 

@@ -28,6 +28,9 @@ const pool = new Pool({
 });
 
 // Inactive = no email/unverified + 0 quizzes + last login > 30 days ago or never
+// Money always wins over a cleanup rule: never touch an account with a paid
+// payment_events row, however it looks otherwise. See deleteNoEmailAccounts.js
+// for the same guard and MONETIZATION_ANALYSIS_2026-08.md §6.1 for why it matters.
 const FIND_INACTIVE = `
   SELECT a.id, a.username
   FROM accounts a
@@ -41,6 +44,10 @@ const FIND_INACTIVE = `
     AND (
       a.logged_date IS NULL
       OR a.logged_date < NOW() - INTERVAL '30 days'
+    )
+    AND NOT EXISTS (
+      SELECT 1 FROM payment_events pe
+       WHERE pe.account_id = a.id AND pe.status = 'paid'
     )
   ORDER BY a.id
 `;

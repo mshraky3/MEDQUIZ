@@ -83,8 +83,9 @@
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    text-align: right;
-    direction: rtl;
+    /* `start`, not `right`: the question hugs whichever edge the reading
+       direction begins on. */
+    text-align: start;
     gap: 16px;
     transition: color 0.2s ease;
 }
@@ -117,8 +118,7 @@
     font-size: 0.95rem;
     line-height: 1.7;
     margin: 0.25rem 0;
-    direction: rtl;
-    text-align: right;
+    text-align: start;
 }
 
 .faq-answer p:empty {

@@ -1,4 +1,4 @@
-.trial-banner {
+.allowance-banner {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -9,7 +9,7 @@
     color: #fff;
 }
 
-.trial-banner-text {
+.allowance-banner-text {
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -19,8 +19,8 @@
 }
 
 /* Solid white pill rather than a ghost button — this is the conversion CTA of
-   the whole trial, so it outweighs the countdown next to it. */
-.trial-banner-cta {
+   the whole free tier, so it outweighs the count next to it. */
+.allowance-banner-cta {
     border: none;
     background: #fff;
     color: var(--primary-dark, #1d4ed8);
@@ -33,43 +33,36 @@
     transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.trial-banner-cta:hover {
+.allowance-banner-cta:hover {
     transform: translateY(-1px);
     box-shadow: 0 5px 16px rgba(0, 0, 0, 0.26);
 }
 
-.trial-banner-cta:active {
+.allowance-banner-cta:active {
     transform: translateY(0);
 }
 
-.trial-banner-urgent .trial-banner-cta {
+/* Spent, not expired: an amber note, deliberately NOT the old pulsing alarm.
+   Nothing has been taken away — the account still works — so the banner should
+   read as information, not as an emergency. */
+.allowance-banner-spent {
+    background: linear-gradient(135deg, var(--warning-color), #b45309);
+}
+
+.allowance-banner-spent .allowance-banner-cta {
     color: #b45309;
 }
 
-.trial-banner-urgent {
-    background: linear-gradient(135deg, var(--warning-color), #b45309);
-    animation: trial-banner-pulse 1.6s ease-in-out infinite;
-}
-
-@keyframes trial-banner-pulse {
-    0%, 100% { filter: brightness(1); }
-    50% { filter: brightness(1.12); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .trial-banner-urgent { animation: none; }
-}
-
 @media (max-width: 480px) {
-    .trial-banner {
+    .allowance-banner {
         gap: 0.5rem;
         padding: 0.5rem 0.75rem;
     }
-    .trial-banner-text {
+    .allowance-banner-text {
         font-size: var(--text-xs, 0.75rem);
     }
-    /* Stays comfortably tappable even as the countdown text shrinks. */
-    .trial-banner-cta {
+    /* Stays comfortably tappable even as the text shrinks. */
+    .allowance-banner-cta {
         font-size: var(--text-sm, 0.875rem);
         padding: 0.5rem 1.25rem;
     }

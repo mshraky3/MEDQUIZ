@@ -1,5 +1,12 @@
 # Moyasar Go‑Live Runbook (SQB / SMLE Question Bank)
 
+> **⚠ Historical — the go-live it describes happened on 2026-07-12.** Prices and
+> the single-plan model below are out of date: the ladder is now 50 / 129 / 300
+> SAR plus two group plans, and `SUBSCRIPTION_PRICE_HALALAS` no longer exists.
+> **For anything you need to do on Moyasar today, read `MOYASAR_CHECKLIST.txt`
+> in the repo root.** This file is kept for the compliance-review and
+> domain/webhook setup steps, which have not changed.
+
 How to take the implemented Moyasar integration from local code to a **publicly
 reachable, fully testable** site that passes Moyasar's compliance review, then
 flip to **live** payments.
@@ -7,7 +14,7 @@ flip to **live** payments.
 - **Frontend (site):** `https://www.smle-question-bank.com` (Vercel, SPA)
 - **Backend (API):** `https://medquiz.vercel.app` (Vercel, Express serverless)
 - **Legal entity:** شركة دار الخبرة التجارية — CR **7040567922** (docs in `payment-data/`)
-- **Plan:** annual subscription **99 SAR / year** (one‑time charge, no auto‑renew)
+- **Plan (superseded):** at the time, a single annual subscription of 99 SAR
 
 ---
 

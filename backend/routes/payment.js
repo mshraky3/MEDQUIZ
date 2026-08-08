@@ -11,11 +11,13 @@
 import express from 'express';
 import {
     isPaymentEnforcementEnabled,
-    getPriceHalalas,
+    listPlans,
     getCurrency,
     verifyWebhookToken,
     handleWebhookEvent,
     verifyAndActivate,
+    checkQuizAccess,
+    FREE_QUESTION_ALLOWANCE,
 } from '../services/paymentService.js';
 
 const router = express.Router();
@@ -77,13 +79,27 @@ function requirePaymentEnabled(req, res, next) {
  * GET /api/payment/config
  * Always-available probe for the frontend. The publishable key is safe to
  * expose by design; the secret key is never sent to the client.
+ *
+ * Returns a plan ladder (not one price) so the price pickers can render.
+ * `plans` carries {id, kind, months, seats, priceHalalas} for each tier.
+ *
+ * ?kind=individual (default) — the three personal terms, for /subscribe.
+ * ?kind=group                — the two multi-seat plans, for /groups.
+ * ?kind=all                  — everything, for admin tooling.
+ *
+ * The default is `individual` on purpose: a group plan must never appear in
+ * the ordinary checkout, where nothing explains the invite links.
  */
 router.get('/config', (req, res) => {
     const enabled = isPaymentEnforcementEnabled();
+    const kind = ['individual', 'group', 'all'].includes(req.query.kind)
+        ? req.query.kind
+        : 'individual';
     res.json({
         enabled,
         currency: getCurrency(),
-        priceHalalas: getPriceHalalas(),
+        kind,
+        plans: listPlans(kind),
         publishableKey: enabled ? (process.env.MOYASAR_PUBLISHABLE_KEY || null) : null,
     });
 });
@@ -148,7 +164,7 @@ router.get('/status/:userId', requirePaymentEnabled, requireOwnSession, async (r
         const { userId } = req.params;
         const r = await req.db.query(
             `SELECT id, subscription_status, subscription_expiry_date,
-                    is_admin_created, grandfathered_at
+                    is_admin_created, grandfathered_at, free_questions_used
              FROM accounts WHERE id = $1`,
             [userId]
         );
@@ -156,19 +172,22 @@ router.get('/status/:userId', requirePaymentEnabled, requireOwnSession, async (r
             return res.status(404).json({ success: false, message: 'User not found.' });
         }
         const a = r.rows[0];
+        const quiz = checkQuizAccess(a);
         let daysRemaining = null;
-        let minutesRemaining = null;
         if (a.subscription_expiry_date) {
             const ms = new Date(a.subscription_expiry_date).getTime() - Date.now();
             daysRemaining = Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
-            minutesRemaining = Math.max(0, Math.ceil(ms / (1000 * 60)));
         }
         return res.json({
             success: true,
             status: a.subscription_status,
             expiryDate: a.subscription_expiry_date,
             daysRemaining,
-            minutesRemaining,
+            // null = unlimited (paid, admin-created or grandfathered).
+            freeQuestionsRemaining: Number.isFinite(quiz.remaining) ? quiz.remaining : null,
+            allowance: FREE_QUESTION_ALLOWANCE,
+            // Nothing renews automatically — every plan is a single charge.
+            autoRenew: false,
             isAdminCreated: a.is_admin_created,
             grandfathered: !!a.grandfathered_at,
         });

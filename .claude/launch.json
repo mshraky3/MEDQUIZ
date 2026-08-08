@@ -9,6 +9,20 @@
       "autoPort": false
     },
     {
+      "name": "web-b",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--prefix", "my-react-app", "--", "--port", "5191", "--strictPort"],
+      "port": 5191,
+      "autoPort": false
+    },
+    {
+      "name": "web-c",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--prefix", "my-react-app", "--", "--port", "5192", "--strictPort"],
+      "port": 5192,
+      "autoPort": false
+    },
+    {
       "name": "api",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "--prefix", "backend"],

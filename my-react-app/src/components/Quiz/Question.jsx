@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import Icon from '../common/Icon.jsx';
 import ReportModal from './ReportModal';
+import { useCopy, useLang } from '../../i18n';
+import quizCopy from '../../i18n/copy/quiz.js';
 import './ReportModal.css';
 
 const Question = ({
@@ -18,6 +20,8 @@ const Question = ({
   userEmail,
 }) => {
   const [showReport, setShowReport] = useState(false);
+  const t = useCopy(quizCopy).quiz;
+  const { dir } = useLang();
   const formatTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
@@ -31,12 +35,16 @@ const Question = ({
     return '#28a745'; // Green
   };
 
-  const safeQuestionText = question?.question_text || 'محتوى السؤال غير متوفر.';
+  // The question, its options and the correct answer are exam material: they
+  // stay in the language they are stored in (English) whatever the UI language.
+  const safeQuestionText = question?.question_text || t.questionUnavailable;
   const optionKeys = ['option1', 'option2', 'option3', 'option4'];
 
   return (
     <>
-      <div className="quiz-container-card">
+      {/* The card's chrome follows the site language; the stem and the four
+          options are pinned LTR in QUIZ.css because they are exam material. */}
+      <div className="quiz-container-card" dir={dir}>
         {/* Timer Display */}
         {timerMinutes && (
           <div className="timer-display" style={{ color: getTimerColor() }}>
@@ -48,7 +56,7 @@ const Question = ({
         <div className="question-card">
           <div className="question-header">
             <div className="header-top">
-              <h3>سؤال {questionNumber}</h3>
+              <h3>{t.questionLabel(questionNumber)}</h3>
               <div className="progress-compact">{questionNumber}/{totalQuestions}</div>
             </div>
           </div>
@@ -56,23 +64,23 @@ const Question = ({
             <div className="question-text">{safeQuestionText}</div>
 
             <div className="options">
-              {optionKeys.map((optKey, index) => (
+              {optionKeys.map((optKey) => (
                 <button
-                  key={index}
+                  key={optKey}
                   className={`option-button ${selectedAnswer === question?.[optKey] ? "selected" : ""}`}
                   onClick={() => question?.[optKey] && onSelectOption(question[optKey])}
                   disabled={!question?.[optKey]}
                 >
-                  {question?.[optKey] || 'الخيار غير متوفر'}
+                  {question?.[optKey] || t.optionUnavailable}
                 </button>
               ))}
             </div>
 
             {/* Report button */}
             {userId && userEmail && (
-              <div style={{ textAlign: 'right' }}>
+              <div style={{ textAlign: 'start' }}>
                 <button className="report-question-btn" onClick={() => setShowReport(true)}>
-                  <Icon name="flag" size={15} /> الإبلاغ عن خطأ
+                  <Icon name="flag" size={15} /> {t.report}
                 </button>
               </div>
             )}
@@ -84,7 +92,7 @@ const Question = ({
                 onClick={onPreviousQuestion}
                 disabled={questionNumber === 1}
               >
-                → السابق
+                {dir === 'rtl' ? '\u2192 ' : '\u2190 '}{t.previous}
               </button>
 
               <button
@@ -92,7 +100,9 @@ const Question = ({
                 onClick={questionNumber === totalQuestions ? onFinishQuiz : onNextQuestion}
                 disabled={questionNumber === totalQuestions && !selectedAnswer}
               >
-                {questionNumber === totalQuestions ? "إنهاء الاختبار" : "التالي ←"}
+                {questionNumber === totalQuestions
+                  ? t.finish
+                  : <>{t.next}{dir === 'rtl' ? ' \u2190' : ' \u2192'}</>}
               </button>
             </div>
           </div>

@@ -47,6 +47,71 @@ export function invoiceNumberFor(payment) {
 
 const fmtDate = (d) => new Date(d).toISOString().slice(0, 10);
 
+/**
+ * What this payment actually bought, for the invoice line item.
+ *
+ * The line used to be the literal string "SQB annual subscription — 12 months",
+ * printed on every invoice regardless of plan: a 50 SAR monthly payment came
+ * with a receipt claiming a year. The plan id and seat count travel in the
+ * Moyasar metadata and are carried onto the settled event by
+ * accountingService.settleEvent, so the receipt can now say what was sold.
+ *
+ * Falls back to a plan-neutral description rather than guessing a term — an
+ * invoice that is vague is recoverable; one that is confidently wrong is not.
+ */
+export function describeTerm(payment) {
+    const months = PLAN_MONTHS[payment.planId] ?? null;
+    const seats = Math.max(1, Number(payment.seats) || 1);
+    const monthPart = months
+        ? `${months} month${months === 1 ? '' : 's'} full access`
+        : 'full access';
+
+    if (seats > 1) {
+        return {
+            title: `SQB group subscription — ${seats} accounts, ${monthPart}`,
+            detail: 'Question bank, summaries and performance analytics, for every seat',
+        };
+    }
+    return {
+        title: `SQB subscription — ${monthPart}`,
+        detail: 'Question bank, summaries and performance analytics',
+    };
+}
+
+// Months per plan id. Duplicated from paymentService.PLANS on purpose: an
+// invoice is a financial record of what was sold at the time, and must keep
+// rendering correctly for an old plan id long after that plan is retired from
+// the live ladder. Add retired ids here, never remove them.
+const PLAN_MONTHS = {
+    monthly: 1,
+    four_month: 4,
+    annual: 12,
+    group_3: 4,
+    group_5: 4,
+};
+
+/**
+ * The same fact as describeTerm, in Arabic, for the email body. The PDF stays
+ * English-only (pdfkit cannot shape Arabic — see the file header); the email
+ * around it is the part the customer actually reads first.
+ */
+export function arTerm(payment) {
+    const months = PLAN_MONTHS[payment.planId] ?? null;
+    const seats = Math.max(1, Number(payment.seats) || 1);
+    const monthAr = months === 1 ? 'شهر واحد'
+        : months === 4 ? 'أربعة أشهر'
+        : months === 12 ? 'سنة كاملة'
+        : null;
+    if (seats > 1) {
+        return monthAr
+            ? `اشتراك مجموعتك (${seats} حسابات) مفعّل الآن لمدة ${monthAr}، وستجد روابط دعوة بقية المقاعد في صفحة «مجموعتي».`
+            : `اشتراك مجموعتك (${seats} حسابات) مفعّل الآن، وستجد روابط دعوة بقية المقاعد في صفحة «مجموعتي».`;
+    }
+    return monthAr
+        ? `اشتراكك مفعّل الآن لمدة ${monthAr}.`
+        : 'اشتراكك مفعّل الآن.';
+}
+
 const methodLabel = (payment) => {
     const company = (payment.company || '').toUpperCase();
     if (payment.method === 'applepay') return `Apple Pay${company ? ` · ${company}` : ''}`;
@@ -115,12 +180,11 @@ export function buildInvoicePdf(payment) {
             .text('AMOUNT', left, tableTop + 7, { width: usable - 10, align: 'right' });
 
         const rowY = tableTop + 32;
+        const term = describeTerm(payment);
         doc.font('Helvetica').fontSize(11).fillColor(INK)
-            .text('SQB annual subscription — 12 months full access',
-                left + 10, rowY, { width: usable - 140 });
+            .text(term.title, left + 10, rowY, { width: usable - 140 });
         doc.font('Helvetica').fontSize(9).fillColor(MUTED)
-            .text('Question bank, summaries and performance analytics',
-                left + 10, rowY + 15, { width: usable - 140 });
+            .text(term.detail, left + 10, rowY + 15, { width: usable - 140 });
         doc.font('Helvetica').fontSize(11).fillColor(INK)
             .text(`${sar(payment.grossHalalas)} ${payment.currency}`,
                 left, rowY, { width: usable - 10, align: 'right' });
@@ -215,7 +279,7 @@ function invoiceEmailHtml(payment, number) {
             <h1 style="margin:0 0 8px;font-size:21px;font-weight:800;color:#f8fafc;">تم استلام دفعتك بنجاح</h1>
             <p style="margin:0 0 22px;font-size:14px;color:#94a3b8;line-height:1.8;">
               شكراً لاشتراكك في <strong style="color:#22d3ee;">SQB</strong>.
-              اشتراكك مفعّل الآن لمدة سنة كاملة، وتجد فاتورتك مرفقة بهذا البريد بصيغة PDF.
+              ${arTerm(payment)} وتجد فاتورتك مرفقة بهذا البريد بصيغة PDF.
             </p>
             <table cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:24px;">
               <tr><td style="background:#0b1021;border-radius:12px;padding:18px 22px;border:1px solid #1e293b;text-align:right;">
@@ -262,12 +326,16 @@ export async function sendInvoiceEmail(payment) {
         }
         const pdf = await buildInvoicePdf(payment);
         await sendMail({
+            // Carries a PDF. The gateway takes attachments as base64 and
+            // mailer.js converts the Buffer below on the way out.
+            event: 'medqize.invoice',
+            idempotencyKey: `invoice:${number}`,
             name: 'SQB',
             to: payment.subscriber,
             subject: `🧾 فاتورة اشتراكك في SQB — ${number}`,
             text: `تم استلام دفعتك بنجاح.\nرقم الفاتورة: ${number}\n`
                 + `المبلغ: ${sar(payment.grossHalalas)} ${payment.currency}\n`
-                + `اشتراكك مفعّل لمدة سنة. الفاتورة مرفقة بصيغة PDF.`,
+                + `${arTerm(payment)} الفاتورة مرفقة بصيغة PDF.`,
             html: invoiceEmailHtml(payment, number),
             attachments: [
                 { filename: `${number}.pdf`, content: pdf, contentType: 'application/pdf' },
