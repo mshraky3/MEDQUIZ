@@ -53,6 +53,15 @@ assets/
 
 # User-data exports (emails etc.) produced by backend scripts.
 backend/exports/
+/exports/
+
+# Personal working notes and one-off audit pages, not app code.
+/MOYASAR_CHECKLIST.txt
+/question-source-map.html
+
+# Accidental crash-dump artifacts from local tool runs (e.g. grep.exe on
+# Windows/MSYS) — never source, never meant to be committed.
+backend/scripts/*.stackdump
 
 # Stray local notes / debug artifacts, not part of the app. Consolidated
 # under notes/: blob.txt, moyasar.certificateSigningRequest,
