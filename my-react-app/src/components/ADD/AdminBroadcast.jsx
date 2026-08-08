@@ -11,9 +11,9 @@ const API = `${Globals.URL}/admin/broadcast`;
 const AUDIENCE_LABELS = {
     all: 'All users',
     paid: 'Paid subscribers',
-    trial: 'On free trial',
     legacy: 'Legacy accounts',
-    free: 'Free accounts',
+    free: 'Free — questions left',
+    exhausted: 'Free — used up their 40',
     // Track-targeted: most announcements only concern one student population.
     ...TRACK_KEYS.reduce((acc, t) => {
         acc[`track:${t}`] = `${TRACKS[t].label.en} track`;

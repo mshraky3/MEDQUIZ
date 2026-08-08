@@ -113,7 +113,7 @@ const Growth = () => {
                         <Kpi icon="flame" label="Active today" value={num(data.activeUsers.dau)} />
                         <Kpi icon="calendar" label="Active this week" value={num(data.activeUsers.wau)} />
                         <Kpi icon="trending-up" label="Active this month" value={num(data.activeUsers.mau)} />
-                        <Kpi icon="target" label="Trial → paid" value={pct(data.totals.trialToPaidRate, 1)} sub={`${num(data.totals.payers)} total payers`} />
+                        <Kpi icon="target" label="Tried → paid" value={pct(data.totals.triedToPaidRate, 1)} sub={`${num(data.totals.payers)} total payers`} />
                         <Kpi icon="clock" label="Avg session" value={dur(data.engagement.avgSessionSeconds)} />
                     </div>
                 )}

@@ -12,10 +12,16 @@ import { TRACKS, TRACK_KEYS, MEDICAL, normalizeTrack } from '../../utils/tracks.
  * that still valid today? `subscription_status` alone is not enough, since an
  * 'active' row whose expiry has passed is no longer paid.
  */
+// Mirrors paymentService.FREE_QUESTION_ALLOWANCE. Kept in sync manually since
+// this is a read-only admin display, not a gate.
+const FREE_QUESTION_ALLOWANCE = 40;
+
 const subscriptionInfo = (user) => {
     const expiry = user.subscription_expiry_date ? new Date(user.subscription_expiry_date) : null;
     const expired = expiry ? expiry.getTime() <= Date.now() : false;
     const status = user.subscription_status || 'free';
+    const used = Number(user.free_questions_used) || 0;
+    const left = Math.max(0, FREE_QUESTION_ALLOWANCE - used);
 
     // Checked first, mirroring checkSubscriptionAccess: this flag short-circuits
     // the paywall, so subscription_status is meaningless on these rows. Calling
@@ -34,12 +40,18 @@ const subscriptionInfo = (user) => {
             ? { key: 'expired', label: 'Expired', cls: 'expired', detail: `Ended ${expiry.toLocaleDateString()}` }
             : { key: 'paid', label: 'Paid', cls: 'paid', detail: expiry ? `Until ${expiry.toLocaleDateString()}` : 'No expiry set' };
     }
-    if (status === 'trial') {
-        return expired
-            ? { key: 'trial_expired', label: 'Trial ended', cls: 'expired', detail: `Ended ${expiry.toLocaleString()}` }
-            : { key: 'trial', label: 'Trial', cls: 'trial', detail: expiry ? `Until ${expiry.toLocaleString()}` : 'Active' };
+    // Free tier. Split by whether the allowance is spent: an account with 0 left
+    // is the one worth a nudge, and an account that never answered a question is
+    // a different problem entirely.
+    if (left <= 0) {
+        return { key: 'spent', label: 'Free — used up', cls: 'expired', detail: `Spent all ${FREE_QUESTION_ALLOWANCE} free questions` };
     }
-    return { key: 'free', label: 'Free', cls: 'free', detail: 'Never subscribed' };
+    return {
+        key: 'free',
+        label: 'Free',
+        cls: used > 0 ? 'trial' : 'free',
+        detail: used > 0 ? `${left} of ${FREE_QUESTION_ALLOWANCE} free questions left` : 'Has not started yet',
+    };
 };
 
 /**
@@ -52,8 +64,8 @@ const adminMade = (user) => Boolean(user.is_admin_created) || user.account_type 
 const PLAN_FILTERS = [
     { value: 'all', label: 'All plans' },
     { value: 'paid', label: 'Paid' },
-    { value: 'trial', label: 'On trial' },
-    { value: 'free', label: 'Free' },
+    { value: 'free', label: 'Free — questions left' },
+    { value: 'spent', label: 'Free — used up' },
     { value: 'expired', label: 'Expired / refunded' },
     { value: 'exempt', label: 'Free forever (admin)' },
     { value: 'legacy', label: 'Legacy' },
@@ -250,8 +262,7 @@ const ADD = (props) => {
         if (planFilter !== 'all') {
             filtered = filtered.filter((user) => {
                 const { key } = subscriptionInfo(user);
-                if (planFilter === 'expired') return key === 'expired' || key === 'trial_expired' || key === 'refunded';
-                if (planFilter === 'trial') return key === 'trial';
+                if (planFilter === 'expired') return key === 'expired' || key === 'refunded';
                 return key === planFilter;
             });
         }

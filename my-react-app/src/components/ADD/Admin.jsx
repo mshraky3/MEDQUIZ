@@ -150,12 +150,17 @@ const Admin = () => {
                         value={num(sub.expiringIn7d)}
                         sub={`${num(sub.expiringIn30d)} in 30 days`}
                     />
-                    <Kpi icon="hourglass" label="Active trials" value={num(sub.trialActive)} />
+                    <Kpi
+                        icon="hourglass"
+                        label="Free, still trying"
+                        value={num(sub.freeTrying)}
+                        sub={`${num(sub.freeExhaustedUnconverted)} used up their 40`}
+                    />
                     <Kpi
                         icon="target"
-                        label="Trial → paid"
-                        value={pct(sub.trialConversionRate, 1)}
-                        sub={`${num(sub.trialToPaid)}/${num(sub.totalTrialsGranted)} converted`}
+                        label="Tried → paid"
+                        value={pct(sub.conversionRate, 1)}
+                        sub={`${num(sub.triedToPaid)}/${num(sub.totalTried)} converted`}
                     />
                     <Kpi
                         icon="alert-triangle"

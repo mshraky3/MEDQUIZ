@@ -4,7 +4,7 @@ import Globals from '../../global.js';
 import Panel from './ui/Panel.jsx';
 
 /**
- * Landing → signup → trial → paywall → subscribe → payment — the part of the
+ * Landing → signup → free tier → paywall → subscribe → payment — the part of the
  * journey that used to be invisible (Vercel Analytics events can't be joined
  * to accounts, and page_engagement only tracks logged-in users). Backed by
  * funnel_events, written by the client beacon (POST /api/funnel) and, for
@@ -17,8 +17,11 @@ const FUNNEL_ORDER = [
     { event: 'signup_otp_sent', label: 'OTP sent' },
     { event: 'signup_otp_verified', label: 'OTP verified — account created' },
     { event: 'signup_otp_failed', label: 'OTP failed' },
-    { event: 'trial_started', label: 'Free trial started' },
-    { event: 'paywall_hit', label: 'Hit the paywall (402)' },
+    // Historical: the 1-hour trial was retired on 2026-08-08 and nothing emits
+    // this any more. Kept so past cohorts still render rather than vanishing
+    // from the funnel — a step with a count and no new events is the truth.
+    { event: 'trial_started', label: 'Free trial started (retired)' },
+    { event: 'paywall_hit', label: 'Ran out of free questions (402)' },
     { event: 'subscribe_view', label: 'Viewed /subscribe' },
     { event: 'subscribe_pay_click', label: 'Clicked "Pay and subscribe"' },
     { event: 'payment_success', label: 'Payment succeeded' },
