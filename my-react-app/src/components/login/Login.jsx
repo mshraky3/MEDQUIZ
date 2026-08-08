@@ -68,13 +68,10 @@ const Login = () => {
       )
         .then(res => {
           if (res.data.valid) {
-            // Respect the subscription gate: unpaid/expired accounts belong on
-            // the paywall, everyone else on the quizzes dashboard.
-            if (stored.accessAllowed === false) {
-              navigate('/subscribe', { replace: true });
-            } else {
-              navigate('/quizs', { replace: true, state: { id: stored.id } });
-            }
+            // Everyone lands on the quizzes dashboard. Not paying is not a
+            // reason to be sent to the paywall instead of your own account —
+            // the free tier limits quizzes, not access.
+            navigate('/quizs', { replace: true, state: { id: stored.id } });
           }
         })
         .catch(() => {
@@ -131,11 +128,10 @@ const Login = () => {
       .then((response) => {
         const username = cleanedUsername;
 
-        // Subscription gate: when payment enforcement is on, the backend returns
-        // a `subscription` object. Unpaid / expired accounts are funnelled to the
-        // /subscribe paywall (handled in the redirect below); grandfathered,
-        // admin, and active accounts pass straight through. RequireAuth is the
-        // safety net for the terms popup path that follows.
+        // The backend returns a `subscription` object when enforcement is on,
+        // but logging in is NOT gated on it: a free-tier account signs in to
+        // its own dashboard like everyone else. What subscription state
+        // affects is the allowance banner and the quiz gate, both downstream.
 
         if (response.data.showTerms) {
           setShowTermsPopup(true);
@@ -148,12 +144,6 @@ const Login = () => {
         setUser(loggedUser, response.data.sessionToken);
 
         setLoading(false);
-        // Unpaid / expired subscription → paywall.
-        const sub = response.data.subscription;
-        if (sub && sub.enforced && !sub.active) {
-          navigate('/subscribe', { replace: true });
-          return;
-        }
         // Return the user to the protected page they were sent here from
         // (set by RequireAuth), defaulting to the quizzes dashboard.
         const redirectTo = location.state?.from || '/quizs';

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import Icon from '../common/Icon.jsx';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams, useLocation, Link } from 'react-router-dom';
 import axios from 'axios';
 import { safeTrack, trackFunnel } from '../../utils/analytics.js';
 import Globals from '../../global.js';
@@ -8,6 +8,7 @@ import Spinner from '../common/Spinner.jsx';
 import { UserContext } from '../../UserContext';
 import { TRACKS, TRACK_KEYS, normalizeTrack, pick } from '../../utils/tracks.js';
 import { useCopy, useLang } from '../../i18n';
+import { formatDate } from '../../i18n/format.js';
 import authCopy from '../../i18n/copy/auth.js';
 import '../login/Login.css';
 import './Signup.css';
@@ -17,7 +18,12 @@ const Signup = () => {
     const [form, setForm] = useState({
         email: '',
         password: '',
-        confirmPassword: ''
+        confirmPassword: '',
+        // Optional. Feeds the exam-date reminder ladder (lifecycleJobs.js) and
+        // the hub countdown — asked here because almost nobody sets it later
+        // from settings (see MONETIZATION_ANALYSIS_2026-08.md §3.3). Never
+        // required: plenty of students sign up before they have a sitting date.
+        examDate: ''
     });
     const [termsAgreed, setTermsAgreed] = useState(false);
     const [otp, setOtp] = useState('');
@@ -25,9 +31,14 @@ const Signup = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
-    const [trialGranted, setTrialGranted] = useState(false);
     const [tempLinkInfo, setTempLinkInfo] = useState(null);
     const [isTempLink, setIsTempLink] = useState(false);
+    // A PAID group seat (/join/:token), as opposed to an admin invite
+    // (/signup/:token). Both are token links and both skip the email OTP, but a
+    // seat creates a paying account with the group's end date, and its claimer
+    // picks their own track — a group can be mixed medical/nursing.
+    const [seatExpiresAt, setSeatExpiresAt] = useState(null);
+    const [seatError, setSeatError] = useState(null);
     // An invite link that came back invalid/expired. Rendered as its own screen
     // with explicit choices — never as an automatic redirect (see below).
     const [linkInvalid, setLinkInvalid] = useState(false);
@@ -44,23 +55,56 @@ const Signup = () => {
     const [showTrackModal, setShowTrackModal] = useState(false);
     const navigate = useNavigate();
     const { token } = useParams();
+    const location = useLocation();
     const t = useCopy(authCopy).signup;
     const { lang, dir } = useLang();
 
+    const isGroupSeat = location.pathname.startsWith('/join/');
+    const entryType = isGroupSeat ? 'group-seat' : token ? 'temp-link' : 'free-account';
+
     useEffect(() => {
-        if (token) {
+        if (token && isGroupSeat) {
+            validateGroupSeat();
+            // The seat holder chooses their own track, so the same modal a
+            // regular signup gets applies here.
+            setShowTrackModal(true);
+        } else if (token) {
             validateTempLink();
         } else {
             // Regular signup: ask which kind of student this is, first thing.
             setShowTrackModal(true);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [token]);
+    }, [token, isGroupSeat]);
 
     useEffect(() => {
-        trackFunnel('signup_view', { entryType: token ? 'temp-link' : 'free-account' });
+        trackFunnel('signup_view', { entryType });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    const validateGroupSeat = async () => {
+        try {
+            setLoading(true);
+            const { data } = await axios.get(`${Globals.URL}/api/groups/seat/${token}`);
+            if (data.valid) {
+                setSeatExpiresAt(data.expiresAt);
+                setSeatError(null);
+                setError('');
+            } else {
+                // Keep the specific reason: "already used" and "expired" call
+                // for very different next steps from whoever sent the link.
+                setSeatError(data.reason || 'error');
+                setLinkInvalid(true);
+                setShowTrackModal(false);
+            }
+        } catch (err) {
+            setSeatError('error');
+            setLinkInvalid(true);
+            setShowTrackModal(false);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const validateTempLink = async () => {
         try {
@@ -146,13 +190,12 @@ const Signup = () => {
 
             setUser(loginRes.data.user || { username }, loginRes.data.sessionToken);
 
-            const sub = loginRes.data.subscription;
+            // Straight into the app, whatever the subscription state. A brand
+            // new free account has 40 questions to spend — sending it to the
+            // paywall before it has seen a single question is how the old trial
+            // flow lost people.
             setTimeout(() => {
-                if (sub && sub.enforced && !sub.active) {
-                    navigate('/subscribe', { replace: true });
-                } else {
-                    navigate('/quizs', { replace: true, state: loginRes.data });
-                }
+                navigate('/quizs', { replace: true, state: loginRes.data });
             }, 1200);
         } catch (err) {
             setTimeout(() => {
@@ -180,34 +223,43 @@ const Signup = () => {
     const createAccount = async (otpCode) => {
         setLoading(true);
         try {
-            const endpoint = isTempLink ? '/api/signup/temp-link' : '/api/signup/free';
-            const payload = isTempLink
-                ? { token, email: form.email.trim().toLowerCase(), password: form.password }
-                : {
+            const endpoint = isGroupSeat
+                ? '/api/signup/group-seat'
+                : isTempLink ? '/api/signup/temp-link' : '/api/signup/free';
+            const payload = isGroupSeat
+                ? {
+                    token,
                     email: form.email.trim().toLowerCase(),
                     password: form.password,
-                    otp_code: otpCode,
+                    // The seat does NOT inherit the buyer's track.
                     track: studyTrack,
-                };
+                }
+                : isTempLink
+                    ? { token, email: form.email.trim().toLowerCase(), password: form.password }
+                    : {
+                        email: form.email.trim().toLowerCase(),
+                        password: form.password,
+                        otp_code: otpCode,
+                        track: studyTrack,
+                        examDate: form.examDate || undefined,
+                    };
 
             const response = await axios.post(`${Globals.URL}${endpoint}`, payload);
 
             if (response.data.success) {
                 safeTrack('signup_success', {
-                    entryType: isTempLink ? 'temp-link' : 'free-account',
+                    entryType,
                     studyTrack: response.data.track || studyTrack,
                 });
-                if (!isTempLink) trackFunnel('signup_otp_verified', { track: response.data.track || studyTrack });
-                if (response.data.trial?.granted) trackFunnel('trial_started', { track: response.data.track || studyTrack });
+                if (!token) trackFunnel('signup_otp_verified', { track: response.data.track || studyTrack });
 
-                setTrialGranted(!!response.data.trial?.granted);
                 setSuccess(true);
                 await autoLogin();
             } else {
                 throw new Error(response.data.message || t.errCreate);
             }
         } catch (error) {
-            if (!isTempLink) trackFunnel('signup_otp_failed', { message: error.response?.data?.message || error.message });
+            if (!token) trackFunnel('signup_otp_failed', { message: error.response?.data?.message || error.message });
             setError(error.response?.data?.message || error.message || t.errCreate);
         } finally {
             setLoading(false);
@@ -223,7 +275,9 @@ const Signup = () => {
 
         if (!validateCredentials()) return;
 
-        if (isTempLink) {
+        // Both token flows are OTP-free: the link itself is the trust anchor,
+        // so invites keep working even while transactional email is down.
+        if (isTempLink || isGroupSeat) {
             await createAccount(null);
             return;
         }
@@ -270,11 +324,9 @@ const Signup = () => {
                     <div className="login-card signup-short" style={{ textAlign: 'center' }}>
                         <div className="success-icon" style={{ color: 'var(--success-color, #16a34a)', marginBottom: 20 }}><Icon name="check-circle" size={56} /></div>
                         <h2 style={{ color: 'var(--text-dark, #0f1e3d)', fontWeight: 700, marginBottom: 12 }}>{t.successTitle}</h2>
-                        {trialGranted && (
-                            <p style={{ color: 'var(--text-dark, #0f1e3d)', fontWeight: 600, marginBottom: 8 }}>
-                                {t.successTrial}
-                            </p>
-                        )}
+                        <p style={{ color: 'var(--text-dark, #0f1e3d)', fontWeight: 600, marginBottom: 8 }}>
+                            {isGroupSeat ? t.successSeat : isTempLink ? t.successInvite : t.successFree}
+                        </p>
                         <p style={{ color: 'var(--muted)' }}>{t.successRedirect}</p>
                     </div>
                 </div>
@@ -282,7 +334,7 @@ const Signup = () => {
         );
     }
 
-    if (token && loading && !tempLinkInfo && !linkInvalid) {
+    if (token && loading && !tempLinkInfo && !seatExpiresAt && !linkInvalid) {
         return (
             <div className="login-body" dir={dir}>
                 <div className="login-wrapper signup-wide">
@@ -309,7 +361,10 @@ const Signup = () => {
                         <div className="login-header">
                             <div className="login-title">{t.invalidLinkTitle}</div>
                             <div className="login-subtitle">
-                                {t.invalidLinkBody}
+                                {/* A paid seat gets the specific reason — "already
+                                    used" and "expired" need different answers from
+                                    whoever sent the link. */}
+                                {seatError ? (t.seatReasons[seatError] || t.seatReasons.error) : t.invalidLinkBody}
                             </div>
                         </div>
                         <div className="login-form">
@@ -343,25 +398,39 @@ const Signup = () => {
             <div className="login-wrapper signup-wide">
                 <div className="login-card signup-short">
                     <div className="login-header">
-                        <div className="pill">{isTempLink ? t.pillInvite : t.pillFree}</div>
+                        <div className="pill">
+                            {isGroupSeat ? t.pillSeat : isTempLink ? t.pillInvite : t.pillFree}
+                        </div>
                         <div className="login-title">
-                            {isTempLink ? t.titleInvite : t.titleFree}
+                            {isGroupSeat ? t.titleSeat : isTempLink ? t.titleInvite : t.titleFree}
                         </div>
                         <div className="login-subtitle">
                             {step === 'credentials'
-                                ? (isTempLink ? t.subtitleInvite : t.subtitleFree)
+                                ? (isGroupSeat
+                                    ? t.subtitleSeat
+                                    : isTempLink ? t.subtitleInvite : t.subtitleFree)
                                 : (isTempLink
                                     ? t.subtitleOtpInvite(form.email)
                                     : t.subtitleOtpFree(form.email))}
                         </div>
                     </div>
 
-                    {!isTempLink && (
+                    {isGroupSeat && seatExpiresAt && (
                         <div className="trial-callout">
-                            <span className="trial-callout-icon" aria-hidden="true"><Icon name="clock" size={20} /></span>
+                            <span className="trial-callout-icon" aria-hidden="true"><Icon name="users" size={20} /></span>
                             <div className="trial-callout-body">
-                                <strong>{t.trialCalloutTitle}</strong>
-                                <span>{t.trialCalloutBody}</span>
+                                <strong>{t.seatCalloutTitle}</strong>
+                                <span>{t.seatCalloutBody(formatDate(seatExpiresAt, lang))}</span>
+                            </div>
+                        </div>
+                    )}
+
+                    {!token && (
+                        <div className="trial-callout">
+                            <span className="trial-callout-icon" aria-hidden="true"><Icon name="help-circle" size={20} /></span>
+                            <div className="trial-callout-body">
+                                <strong>{t.freeCalloutTitle}</strong>
+                                <span>{t.freeCalloutBody}</span>
                             </div>
                         </div>
                     )}
@@ -432,6 +501,23 @@ const Signup = () => {
                                     required
                                 />
                             </div>
+                            {!token && (
+                                <div className="form-group">
+                                    <label className="form-label" htmlFor="examDate">
+                                        {t.examDateLabel} <span className="form-label-optional">{t.examDateOptional}</span>
+                                    </label>
+                                    <input
+                                        type="date"
+                                        id="examDate"
+                                        name="examDate"
+                                        className="form-input"
+                                        value={form.examDate}
+                                        onChange={handleInputChange}
+                                        min={new Date().toISOString().slice(0, 10)}
+                                    />
+                                    <p className="form-hint">{t.examDateHint}</p>
+                                </div>
+                            )}
                             <label className="terms-agree-row">
                                 <input
                                     type="checkbox"
@@ -452,8 +538,8 @@ const Signup = () => {
                                 disabled={loading}
                             >
                                 {loading ? (
-                                    <div className="loading-spinner"><Spinner size="sm" />{isTempLink ? t.creatingAccount : t.sending}</div>
-                                ) : (isTempLink ? t.submitInvite : t.submitFree)}
+                                    <div className="loading-spinner"><Spinner size="sm" />{token ? t.creatingAccount : t.sending}</div>
+                                ) : (isGroupSeat ? t.submitSeat : isTempLink ? t.submitInvite : t.submitFree)}
                             </button>
                             <div className="login-footer-text">
                                 {t.haveAccount}{' '}

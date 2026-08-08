@@ -1,6 +1,6 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { safeTrack, trackFunnel } from '../../utils/analytics.js';
+import { safeTrack, trackFunnel, captureLandingAttribution } from '../../utils/analytics.js';
 import Icon from '../common/Icon.jsx';
 import HeroArt from './HeroArt.jsx';
 import ExamCountdown from './ExamCountdown.jsx';
@@ -48,6 +48,11 @@ const Landing = () => {
       ready: true,
     },
   ];
+
+  // First-touch attribution — fires once per browser ever, not on every visit.
+  useEffect(() => {
+    captureLandingAttribution();
+  }, []);
 
   // Mirrors Navbar's definition so both agree on what counts as "logged in".
   const isAuthenticated = !!(user && user.id && sessionToken);

@@ -60,12 +60,24 @@ const PaymentCallback = () => {
                     { headers: { Authorization: `Bearer ${sessionToken}` } },
                 );
                 if (data.success) {
-                    // Persist so RequireAuth lets the user into the app immediately.
-                    setUser({ ...user, accessAllowed: true, subscription_status: 'active' }, sessionToken);
+                    // Reflect the new state locally so the allowance banner and
+                    // the account page are right before the next server sync.
+                    setUser({
+                        ...user,
+                        accessAllowed: true,
+                        subscription_status: 'active',
+                        free_questions_remaining: null,
+                    }, sessionToken);
                     setState('success');
-                    setMessage(t.successMessage);
+                    setMessage(data.seats > 1 ? t.successMessageGroup(data.seats) : t.successMessage);
                     trackFunnel('payment_success', { amountHalalas: data.amountHalalas ?? data.amount_halalas ?? null });
-                    setTimeout(() => navigate('/quizs', { replace: true }), 1800);
+                    // A group buyer goes to /groups, where the invite links they
+                    // just paid for are waiting. `next` is set by the checkout;
+                    // only same-site paths are accepted so the redirect can
+                    // never be pointed off-site by a crafted callback URL.
+                    const requested = params.get('next');
+                    const next = requested && /^\/[a-z0-9/-]*$/i.test(requested) ? requested : '/quizs';
+                    setTimeout(() => navigate(next, { replace: true }), 1800);
                 } else {
                     setState('failed');
                     setMessage(reasonText(data.reason));

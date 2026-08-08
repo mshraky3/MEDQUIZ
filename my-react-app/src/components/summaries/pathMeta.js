@@ -4,8 +4,12 @@
 // per study track. This module turns a track's set into an ordered study path —
 // milestones (specialties) made of numbered steps (subtopics), with a
 // checkpoint after each milestone — without touching the content files
-// themselves. Nothing here filters or hides content within a track: every step
-// stays open at all times, the ordering is guidance only.
+// themselves.
+//
+// Free vs paid: step 1 of EVERY milestone is free forever (`free: true` below),
+// the rest belong to the subscription. That rule lives here, in one place, so
+// the page, the checkpoints and anything added later cannot disagree about it.
+// Ordering itself is still only guidance — a subscriber may read in any order.
 //
 // Use loadPath(track). It is async because the catalog itself is now loaded per
 // track on demand (see ./content/index.js). The result is built once per track
@@ -167,6 +171,22 @@ export const formatMinutes = (mins, lang = 'ar') => {
 const stripIndex = (title) => (title || '').replace(/^\s*\d+\s*[—–-]\s*/, '').trim();
 
 /* ------------------------------------------------------------------ */
+/* Entitlement                                                         */
+/* ------------------------------------------------------------------ */
+
+/**
+ * May this account read this step in full?
+ *
+ * Subscribers read everything. Everyone else reads the first lesson of every
+ * specialty — 4 lessons on the medical track, 6 on nursing — for as long as
+ * their account exists, with no time limit and no question cost.
+ *
+ * One function, one rule. Anything that renders or links to a step asks this;
+ * nothing re-derives it from an index.
+ */
+export const isStepUnlocked = (step, isSubscriber) => Boolean(isSubscriber) || Boolean(step?.free);
+
+/* ------------------------------------------------------------------ */
 /* Checkpoints                                                         */
 /* ------------------------------------------------------------------ */
 
@@ -204,6 +224,9 @@ const buildMilestones = (sections) => {
             id: subtopic.id,
             no: stepNo,                       // global position on the path (1-based)
             indexInMilestone: i,
+            // The first lesson of every specialty is free, for good. The single
+            // definition of that rule — see isFreeStep below.
+            free: i === 0,
             subtopic,
             section,
             milestoneId: section.id,

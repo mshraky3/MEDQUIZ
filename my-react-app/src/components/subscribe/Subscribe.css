@@ -30,6 +30,73 @@
     color: var(--muted, #64748b);
 }
 
+/* Plan picker. Three tiers for the personal ladder, two for groups —
+   auto-fit rather than a fixed 3 so the group page doesn't leave a gap. */
+.subscribe-plans {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+    gap: 8px;
+    margin: 4px 0 16px;
+}
+
+.subscribe-plan {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 14px 6px 12px;
+    border-radius: 12px;
+    border: 1.5px solid var(--border, #d7dee9);
+    background: var(--surface, #fff);
+    cursor: pointer;
+    transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+    font-family: inherit;
+}
+
+.subscribe-plan:hover {
+    border-color: var(--primary-color, #2563eb);
+}
+
+.subscribe-plan.selected {
+    border-color: var(--primary-color, #2563eb);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+    transform: translateY(-2px);
+}
+
+.subscribe-plan-badge {
+    position: absolute;
+    top: -11px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--primary-color, #2563eb);
+    color: #fff;
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+.subscribe-plan-label {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--muted, #64748b);
+    margin-top: 4px;
+}
+
+.subscribe-plan-amount {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text-dark, #0f1e3d);
+    line-height: 1.15;
+}
+
+.subscribe-plan-permonth {
+    font-size: 10.5px;
+    color: var(--muted, #64748b);
+}
+
 .subscribe-perks {
     list-style: none;
     margin: 0 0 14px;
@@ -61,6 +128,17 @@
     font-weight: 900;
     background: rgba(37, 99, 235, 0.12);
     color: var(--primary-color, #2563eb);
+}
+
+/* The no-auto-renewal promise. Quiet, but never omitted — it is the reason
+   there is no "cancel subscription" flow anywhere in the product. */
+.subscribe-norenew {
+    margin: 0 0 14px;
+    text-align: center;
+    font-size: 12.5px;
+    font-weight: 600;
+    line-height: 1.7;
+    color: var(--success-color, #16a34a);
 }
 
 .subscribe-loading {

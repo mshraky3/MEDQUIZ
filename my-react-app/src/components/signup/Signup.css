@@ -10,7 +10,9 @@
 
 /* Signup now uses login/landing styles for full glassmorphism redesign */
 
-/* Free-trial callout — makes it unmistakable that signup = 1 free hour */
+/* Callout above the signup form. Class name kept (`trial-callout`) because it
+   is referenced from several places; the content is now the free-question
+   allowance, or the paid-seat notice on a group invite. */
 .trial-callout {
     display: flex;
     align-items: flex-start;
@@ -48,6 +50,20 @@
 
 .trial-callout-body span {
     font-size: 13px;
+    line-height: 1.6;
+    color: var(--muted, #64748b);
+}
+
+.form-label-optional {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--muted, #64748b);
+    text-transform: none;
+}
+
+.form-hint {
+    margin: 6px 0 0;
+    font-size: 12.5px;
     line-height: 1.6;
     color: var(--muted, #64748b);
 }

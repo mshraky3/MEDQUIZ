@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { findSubtopic } from './content/index.js';
-import { loadPath, EMPTY_PATH_SHAPE } from './pathMeta.js';
+import { loadPath, EMPTY_PATH_SHAPE, isStepUnlocked } from './pathMeta.js';
 import QuestionCard from './QuestionCard.jsx';
 import PathCheckpoint from './PathCheckpoint.jsx';
 import SummaryAnnotation from './SummaryAnnotation.jsx';
@@ -69,9 +69,16 @@ const enLabel = (item) => {
 
 const SummariesPage = () => {
     const { slug } = useParams();
+    const navigate = useNavigate();
     const { user, sessionToken } = useContext(UserContext);
     const t = useCopy(summariesCopy);
     const { lang, dir } = useLang();
+
+    // Paid, admin-created or grandfathered accounts read every lesson; everyone
+    // else reads the first lesson of each specialty. `accessAllowed` is the
+    // login's answer to "is this a paying account", and is NOT a lockout flag —
+    // a free account reaches this page normally and always will.
+    const isSubscriber = user?.accessAllowed !== false;
     // "Forward along the path" is leftwards in Arabic, rightwards in English.
     const forwardChevron = dir === 'rtl' ? 'chevron-left' : 'chevron-right';
 
@@ -289,7 +296,11 @@ const SummariesPage = () => {
             .then((hit) => {
                 if (!alive || !hit) return;
                 setOpenMs((prev) => new Set(prev).add(hit.section.id));
-                if (hit.subtopic) openSubtopic(hit.section, hit.subtopic);
+                // A deep link must obey the same rule as a click: only the free
+                // first lesson of a specialty opens for a non-subscriber. The
+                // milestone still expands, so the link lands somewhere useful.
+                const free = hit.subtopic && hit.subtopic.id === hit.section.subtopics[0]?.id;
+                if (hit.subtopic && (isSubscriber || free)) openSubtopic(hit.section, hit.subtopic);
             })
             .catch(() => { /* a bad slug is not an error worth surfacing */ });
         return () => { alive = false; };
@@ -408,6 +419,41 @@ const SummariesPage = () => {
     const renderStep = (step) => {
         const state = stepState(step);
         const isResumePoint = resuming && step.id === lastStep.id;
+        const unlocked = isStepUnlocked(step, isSubscriber);
+
+        // Locked steps still show their title and their "why": a student should
+        // be able to see exactly what the subscription contains before paying
+        // for it. What is withheld is the lesson itself and its questions.
+        if (!unlocked) {
+            return (
+                <li key={step.id} id={`step-${step.id}`} className="path-row path-step is-locked">
+                    <div className="path-rail">
+                        <span className="path-node step-node" aria-hidden="true">
+                            <Icon name="lock" size={13} />
+                        </span>
+                    </div>
+                    <div className="step-card">
+                        <div className="step-main">
+                            <div className="step-tags">
+                                <span className="step-no">{t.stepNo(step.no)}</span>
+                                <span className="step-state is-locked">
+                                    <Icon name="lock" size={12} /> {t.lockedTag}
+                                </span>
+                            </div>
+                            <h4 className="step-title" dir="ltr">{step.title}</h4>
+                            <p className="step-why" dir="ltr">{step.why}</p>
+                        </div>
+                        <div className="step-actions">
+                            <button type="button" className="step-cta is-locked" onClick={() => navigate('/subscribe')}>
+                                {t.lockedCta}
+                                <Icon name={forwardChevron} size={16} />
+                            </button>
+                        </div>
+                    </div>
+                </li>
+            );
+        }
+
         return (
             <li
                 key={step.id}
@@ -440,6 +486,11 @@ const SummariesPage = () => {
                             )}
                             {isResumePoint && (
                                 <span className="step-state is-resume"><Icon name="clock" size={12} /> {t.stateResume}</span>
+                            )}
+                            {/* Only worth saying to someone for whom it is a
+                                distinction — a subscriber's steps are all open. */}
+                            {!isSubscriber && step.free && (
+                                <span className="step-state is-free">{t.freeTag}</span>
                             )}
                         </div>
 
@@ -752,14 +803,21 @@ const SummariesPage = () => {
                                             {m.steps.map(renderStep)}
                                         </ol>
 
-                                        <PathCheckpoint
-                                            milestone={m}
-                                            nextMilestone={next}
-                                            passed={!!path.checkpoints?.[m.id]}
-                                            doneCount={nDone}
-                                            onPass={() => passCheckpoint(m, next)}
-                                            onRedo={() => redoCheckpoint(m)}
-                                        />
+                                        {/* A checkpoint quizzes the whole
+                                            milestone, most of which a free
+                                            account has not been shown. Offering
+                                            it would be a test on unread
+                                            material, so it is subscribers only. */}
+                                        {isSubscriber && (
+                                            <PathCheckpoint
+                                                milestone={m}
+                                                nextMilestone={next}
+                                                passed={!!path.checkpoints?.[m.id]}
+                                                doneCount={nDone}
+                                                onPass={() => passCheckpoint(m, next)}
+                                                onRedo={() => redoCheckpoint(m)}
+                                            />
+                                        )}
                                     </div>
                                 </div>
                             </li>

@@ -76,6 +76,9 @@ const QUIZ = () => {
   const [unansweredCount, setUnansweredCount] = useState(0);
   const [countdown, setCountdown] = useState(2);
   const [finalDuration, setFinalDuration] = useState(null);
+  // Set when the server answers 402: the free allowance is spent, or this quiz
+  // type is subscriber-only. Rendered as an upsell screen, never a redirect.
+  const [paywalled, setPaywalled] = useState(null);
 
   const protectedGet = async (url, config = {}) => {
     if (!user || !sessionToken) throw new Error('Not authenticated');
@@ -192,9 +195,18 @@ const QUIZ = () => {
           setError(t.errNoQuestions);
         }
       } catch (err) {
-        console.error('Error fetching questions:', err);
-        setError(t.errLoadFailed);
-        // Don't auto-redirect, let user retry
+        // 402 = the free question allowance is spent (or this is a
+        // subscriber-only quiz type). NOT a lockout and NOT an error: the
+        // account is fine, there are simply no free questions left to serve.
+        // Shown in place as an upsell rather than redirected — apiClient no
+        // longer bounces the window on 402, deliberately.
+        if (err.response?.status === 402) {
+          setPaywalled(err.response.data?.reason || 'free_allowance_exhausted');
+        } else {
+          console.error('Error fetching questions:', err);
+          setError(t.errLoadFailed);
+          // Don't auto-redirect, let user retry
+        }
       } finally {
         setLoading(false);
       }
@@ -469,6 +481,26 @@ const QUIZ = () => {
 
   if (loading) {
     return <Loading />;
+  }
+
+  // Out of free questions. Deliberately its own screen, not ErrorScreen:
+  // nothing failed, and nothing about the account has been taken away.
+  if (paywalled) {
+    return (
+      <div className="quiz-paywall" dir={dir}>
+        <div className="quiz-paywall-card">
+          <span className="quiz-paywall-icon" aria-hidden="true"><Icon name="lock" size={40} /></span>
+          <h2>{paywalled === 'free_allowance_exhausted' ? t.paywallSpentTitle : t.paywallSubscriberTitle}</h2>
+          <p>{paywalled === 'free_allowance_exhausted' ? t.paywallSpentBody : t.paywallSubscriberBody}</p>
+          <button type="button" className="quiz-paywall-cta" onClick={() => navigate('/subscribe')}>
+            {t.paywallCta}
+          </button>
+          <button type="button" className="quiz-paywall-secondary" onClick={() => navigate('/quizs', { state: { id } })}>
+            {t.paywallBack}
+          </button>
+        </div>
+      </div>
+    );
   }
 
   if (categoryDone) {
