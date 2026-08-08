@@ -9,21 +9,33 @@ import questionReportsRouter from './routes/question-reports.js';
 import emailCampaignsRouter from './routes/email-campaigns.js';
 import adminBroadcastRouter, { unsubToken } from './routes/admin-broadcast.js';
 import paymentRoutes from './routes/payment.js';
-import { checkSubscriptionAccess, isPaymentEnforcementEnabled } from './services/paymentService.js';
+import { checkSubscriptionAccess, checkQuizAccess, isPaymentEnforcementEnabled, FREE_QUESTION_ALLOWANCE, getPlan } from './services/paymentService.js';
 import { adminAuth, isAdminRequest } from './middleware/adminAuth.js';
-import { subscriptionGuard } from './middleware/subscriptionGuard.js';
+import { subscriptionGuard, quizAccessGuard } from './middleware/subscriptionGuard.js';
 import summariesRouter from './routes/summaries.js';
 import accountingRouter from './routes/accounting.js';
 import engagementRouter from './routes/engagement.js';
+import funnelRouter from './routes/funnel.js';
+import goalsRouter from './routes/goals.js';
+import notificationsRouter from './routes/notifications.js';
+import examDateRouter from './routes/examDate.js';
+import groupRoutes from './routes/groups.js';
+import trialRouter from './routes/trial.js';
+import { checkMilestones } from './services/notificationService.js';
+import {
+    revenueSnapshot, subscriptionSnapshot, conversionSnapshot,
+    paidButInactiveCount, userSnapshot, activeUserSnapshot, dailySignups,
+    dailyActiveUsers, openReportsCount, SQL_FREE_EXHAUSTED,
+} from './services/adminMetricsService.js';
 import summaryContent from './content/summaryHtml/index.js';
 import { notifyBackendError } from './services/errorNotificationService.js';
-import { sendWelcomeEmail } from './services/userEmailService.js';
+import { sendWelcomeEmail, sendGroupSeatClaimedEmail } from './services/userEmailService.js';
 import { OWNER_EMAIL } from './config/recipients.js';
 import {
     DEFAULT_TRACK, TRACK_KEYS, TRACKS, isValidTrack, normalizeTrack,
-    specialtyKeys, trackLabelAr, trackForSpecialty,
+    specialtyKeys, trackLabelAr, trackLabelEn, trackForSpecialty,
 } from './config/tracks.js';
-import { PICKABLE_SOURCES, resolveSources } from './config/sources.js';
+import { PICKABLE_SOURCES, SOURCE_PRIORITY, resolveSources } from './config/sources.js';
 
 dotenv.config();
 // Logging configuration
@@ -98,6 +110,138 @@ function ensureSchema() {
                     UNIQUE(user_id, achievement_type, achievement_key)
                 )
             `);
+            // Pre-signup/pre-login funnel events (landing → signup → trial →
+            // paywall → subscribe → payment). account_id is nullable and set
+            // only once an event can be tied to a session; anon_id is a stable
+            // per-browser id so the whole funnel is joinable even before an
+            // account exists — the gap page_engagement (logged-in only) and
+            // Vercel Analytics (un-joinable to accounts) both leave open.
+            await db.query(`
+                CREATE TABLE IF NOT EXISTS funnel_events (
+                    id         BIGSERIAL PRIMARY KEY,
+                    account_id INTEGER REFERENCES accounts(id) ON DELETE SET NULL,
+                    anon_id    VARCHAR(64),
+                    event      VARCHAR(60) NOT NULL,
+                    props      JSONB NOT NULL DEFAULT '{}',
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                )
+            `);
+            // Lifecycle-email dedupe stamps. Each column is "when we last sent
+            // this campaign to this account", so the cron can find who is due
+            // without a separate send-log table.
+            await db.query(`
+                ALTER TABLE accounts
+                    ADD COLUMN IF NOT EXISTS trial_ended_email_sent_at  TIMESTAMPTZ DEFAULT NULL,
+                    ADD COLUMN IF NOT EXISTS progress_digest_sent_at    TIMESTAMPTZ DEFAULT NULL,
+                    ADD COLUMN IF NOT EXISTS expiry_reminder_sent_at    TIMESTAMPTZ DEFAULT NULL
+            `);
+            // DEAD COLUMNS — the engaged-time trial they backed was retired on
+            // 2026-08-08 in favour of the 40-question allowance (see
+            // free_questions_used in ensurePaymentSchema). Kept, not dropped,
+            // because they are the only record of how much the old trial cohort
+            // actually used, which the conversion analysis still reads. Nothing
+            // writes to them any more.
+            await db.query(`
+                ALTER TABLE accounts
+                    ADD COLUMN IF NOT EXISTS trial_active_seconds    INTEGER     NOT NULL DEFAULT 0,
+                    ADD COLUMN IF NOT EXISTS trial_last_heartbeat_at TIMESTAMPTZ DEFAULT NULL
+            `);
+            // Day-1/Day-3 win-back for anyone stuck at exactly one quiz session —
+            // see lifecycleJobs.runComebackJob. Stores the highest COMEBACK_STAGE
+            // already mailed (1 or 3), same "ladder only moves down/up once"
+            // idempotency pattern as exam_reminder_stage above.
+            await db.query(`
+                ALTER TABLE accounts
+                    ADD COLUMN IF NOT EXISTS comeback_email_stage INTEGER DEFAULT NULL
+            `);
+            // The student's own exam date, and how far the reminder ladder has
+            // been walked for it. A DATE (not a timestamp) because a sitting is
+            // a day, not a moment, and the countdown must read the same whether
+            // the student opens the app at 08:00 in Riyadh or 23:00 in Cairo.
+            //
+            // exam_reminder_stage stores the LAST milestone mailed (30, 14, 7,
+            // 3, 1 days out). Storing the stage rather than a timestamp is what
+            // makes the ladder idempotent: a job that runs hourly can only ever
+            // move the stage down, so each milestone mails exactly once — and
+            // setting a new date resets it to NULL, which restarts the ladder.
+            await db.query(`
+                ALTER TABLE accounts
+                    ADD COLUMN IF NOT EXISTS exam_date           DATE    DEFAULT NULL,
+                    ADD COLUMN IF NOT EXISTS exam_reminder_stage INTEGER DEFAULT NULL
+            `);
+            // Which language to write to this student in. The whole site has
+            // been bilingual since 2026-08-01, but lifecycle mail was still
+            // Arabic-only — an English-speaking user got an Arabic welcome to a
+            // product they were reading in English. Defaults to 'ar' because
+            // that is what every existing account was already being sent, so
+            // nobody's mail changes language underneath them; the client PUTs
+            // the real preference on first authenticated page view.
+            await db.query(`
+                ALTER TABLE accounts
+                    ADD COLUMN IF NOT EXISTS preferred_lang VARCHAR(5) NOT NULL DEFAULT 'ar'
+            `);
+            // Partial index: the reminder job scans only rows that HAVE a date,
+            // which is a small minority of accounts.
+            await db.query(`
+                CREATE INDEX IF NOT EXISTS idx_accounts_exam_date
+                    ON accounts(exam_date) WHERE exam_date IS NOT NULL
+            `);
+            // Study goals. One ACTIVE goal per user at a time (enforced by the
+            // partial unique index) so the hub always has exactly one thing to
+            // show; completed/abandoned goals stay as history.
+            await db.query(`
+                CREATE TABLE IF NOT EXISTS user_goals (
+                    id          SERIAL PRIMARY KEY,
+                    user_id     INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+                    goal_type   VARCHAR(20) NOT NULL,
+                    target_value INTEGER NOT NULL,
+                    period      VARCHAR(10) NOT NULL DEFAULT 'weekly',
+                    baseline    INTEGER NOT NULL DEFAULT 0,
+                    is_active   BOOLEAN NOT NULL DEFAULT TRUE,
+                    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    achieved_at TIMESTAMPTZ DEFAULT NULL
+                )
+            `);
+            await db.query(`
+                CREATE UNIQUE INDEX IF NOT EXISTS uq_user_goals_one_active
+                    ON user_goals(user_id) WHERE is_active = TRUE
+            `);
+            // Scope: a goal can be narrowed to one specialty and/or one
+            // collection ("200 paediatrics questions", "finish the Confirmed
+            // source"). NULL in either column means "the whole bank", which is
+            // exactly what every pre-existing row already meant — so no
+            // backfill, and old goals keep computing identically.
+            await db.query(`
+                ALTER TABLE user_goals
+                    ADD COLUMN IF NOT EXISTS question_type VARCHAR(50) DEFAULT NULL,
+                    ADD COLUMN IF NOT EXISTS source        VARCHAR(50) DEFAULT NULL
+            `);
+            // In-app notifications, written by real events (goal reached,
+            // streak milestone, trial ending) — never a marketing queue.
+            await db.query(`
+                CREATE TABLE IF NOT EXISTS user_notifications (
+                    id         BIGSERIAL PRIMARY KEY,
+                    user_id    INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+                    type       VARCHAR(40) NOT NULL,
+                    title      VARCHAR(200) NOT NULL,
+                    body       TEXT,
+                    cta_url    VARCHAR(200),
+                    dedupe_key VARCHAR(120),
+                    read_at    TIMESTAMPTZ DEFAULT NULL,
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                )
+            `);
+            await db.query(`CREATE INDEX IF NOT EXISTS idx_user_notifications_user ON user_notifications(user_id, created_at DESC)`);
+            // A milestone fires once. The dedupe key carries what happened
+            // ("goal:12:done", "streak:7"), so re-running the check is safe.
+            await db.query(`
+                CREATE UNIQUE INDEX IF NOT EXISTS uq_user_notifications_dedupe
+                    ON user_notifications(user_id, dedupe_key) WHERE dedupe_key IS NOT NULL
+            `);
+            await db.query(`CREATE INDEX IF NOT EXISTS idx_funnel_events_event ON funnel_events(event)`);
+            await db.query(`CREATE INDEX IF NOT EXISTS idx_funnel_events_created ON funnel_events(created_at)`);
+            await db.query(`CREATE INDEX IF NOT EXISTS idx_funnel_events_anon ON funnel_events(anon_id)`);
+            await db.query(`CREATE INDEX IF NOT EXISTS idx_funnel_events_account ON funnel_events(account_id)`);
             // Columns that used to be ensured with ALTER TABLE on EVERY request in
             // the hot paths (/quiz-sessions, /user-analysis, /api/all-questions,
             // /get_all_users). Ensuring them once here removes 10-15 DDL round-trips
@@ -150,6 +294,48 @@ function ensureSchema() {
             // this index is the one that keeps /api/questions off a seq scan
             // once the nursing bank is loaded alongside the medical one.
             await db.query(`CREATE INDEX IF NOT EXISTS idx_questions_track_type_source ON questions(track, question_type, source)`);
+
+            // Auth resolves accounts by email (/login, /session-validate), but
+            // the only unique index was on `username` — so email lookups were
+            // heading for a seq scan on every sign-in and every session check.
+            // Deliberately NOT unique: uniqueness is already guaranteed by
+            // UNIQUE(username) plus the parity below, and a UNIQUE index that
+            // failed to build would take the whole schema bootstrap down.
+            await db.query(`CREATE INDEX IF NOT EXISTS idx_accounts_email ON accounts(email)`);
+
+            // ── username === email ─────────────────────────────────────────
+            // Sign-in has been email-only for a long time (see /login), but a
+            // handful of pre-email accounts still carried a separate handle
+            // like 'albaraa1'. That split identity is what forced every auth
+            // query into a `(email = $1 OR username = $1)` dual-lookup, and it
+            // leaked into the client, which stores `user.username` and sends it
+            // back on every session check.
+            //
+            // Collapsing the two here — at boot, before any request is served —
+            // is what makes dropping that dual-lookup safe regardless of deploy
+            // order. Idempotent: after the first run it matches zero rows.
+            //
+            // Guarded against the UNIQUE(username) constraint: an account is
+            // only rewritten when no OTHER account already holds that email as
+            // its username, so a would-be collision is skipped rather than
+            // crashing boot.
+            const parity = await db.query(`
+                UPDATE accounts a
+                   SET username = a.email, updated_at = NOW()
+                 WHERE a.email IS NOT NULL
+                   AND btrim(a.email) <> ''
+                   AND a.username IS DISTINCT FROM a.email
+                   AND NOT EXISTS (
+                       SELECT 1 FROM accounts b
+                        WHERE b.id <> a.id AND b.username = a.email
+                   )
+                RETURNING a.id
+            `);
+            if (parity.rowCount > 0) {
+                logger.info(`username→email parity applied to ${parity.rowCount} account(s)`,
+                    { ids: parity.rows.map((r) => r.id) });
+            }
+
             logger.info('Schema bootstrap complete (tables + performance indexes ensured)');
         } catch (err) {
             _schemaReady = null; // allow a retry on a later invocation
@@ -242,6 +428,57 @@ function ensurePaymentSchema() {
                 )
             `);
 
+            // ── Group subscriptions ────────────────────────────────────────
+            // One payment buys `seats` accounts. The payer is seat 1 (their own
+            // account is activated directly); seats 2..N are single-use invite
+            // links. Every seat in a group shares ONE end date, `expires_at`,
+            // fixed at purchase — so an unclaimed link cannot quietly extend
+            // the group's life by being claimed late.
+            //
+            // gateway_ref UNIQUE is the idempotency lock, the same trick as
+            // uq_payment_events_paid_ref above: /verify and the webhook both
+            // run activation and must not mint two sets of links.
+            await db.query(`
+                CREATE TABLE IF NOT EXISTS subscription_groups (
+                  id               BIGSERIAL PRIMARY KEY,
+                  owner_account_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+                  plan_id          VARCHAR(50)  NOT NULL,
+                  seats            INTEGER      NOT NULL,
+                  months           INTEGER      NOT NULL,
+                  gateway_ref      VARCHAR(255) UNIQUE NOT NULL,
+                  expires_at       TIMESTAMPTZ  NOT NULL,
+                  created_at       TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+                )
+            `);
+            // token is NULL for seat 1 (the buyer's own account — there is no
+            // link to claim), and a 32-char crypto token for every other seat.
+            await db.query(`
+                CREATE TABLE IF NOT EXISTS group_seats (
+                  id                    BIGSERIAL PRIMARY KEY,
+                  group_id              BIGINT  NOT NULL REFERENCES subscription_groups(id) ON DELETE CASCADE,
+                  seat_index            INTEGER NOT NULL,
+                  token                 VARCHAR(64) UNIQUE,
+                  claimed_by_account_id INTEGER REFERENCES accounts(id) ON DELETE SET NULL,
+                  claimed_at            TIMESTAMPTZ DEFAULT NULL,
+                  UNIQUE (group_id, seat_index)
+                )
+            `);
+            await db.query(`CREATE INDEX IF NOT EXISTS idx_group_seats_group ON group_seats(group_id)`);
+            await db.query(`CREATE INDEX IF NOT EXISTS idx_subscription_groups_owner ON subscription_groups(owner_account_id)`);
+
+            // ── Free tier: 40 questions, for life ──────────────────────────
+            // Replaces the 1-hour engaged-time trial. A lifetime counter, not a
+            // window: a free account keeps its login, its analytics and the
+            // free lessons forever, and only quiz STARTS are gated on it.
+            //
+            // Deliberately NOT derived from user_question_progress, which
+            // POST /api/reset-progress wipes on demand — that would hand every
+            // free user an unlimited refill button.
+            await db.query(`
+                ALTER TABLE accounts
+                    ADD COLUMN IF NOT EXISTS free_questions_used INTEGER NOT NULL DEFAULT 0
+            `);
+
             // Grandfather pre-rollout accounts EXACTLY ONCE.
             await db.query(`CREATE TABLE IF NOT EXISTS schema_migrations (name TEXT PRIMARY KEY, applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
             const applied = await db.query(`SELECT 1 FROM schema_migrations WHERE name = '001_grandfather_existing'`);
@@ -270,6 +507,35 @@ function ensurePaymentSchema() {
                 await db.query(`INSERT INTO schema_migrations (name) VALUES ('002_grandfather_all_current') ON CONFLICT DO NOTHING`);
                 logger.info(`Grandfathered ${r2.rowCount} existing account(s) so only new signups pay (one-time)`);
             }
+
+            // The 1-hour trial is retired; everyone holding one moves to the
+            // 40-question free tier. Runs EXACTLY ONCE.
+            const applied3 = await db.query(`SELECT 1 FROM schema_migrations WHERE name = '003_free_tier_40q'`);
+            if (applied3.rows.length === 0) {
+                // Seed the counter from what each account has actually answered,
+                // so a heavy trial user does not receive 40 MORE on top. Capped
+                // at the allowance: the number is a budget, not a score.
+                const seeded = await db.query(`
+                    UPDATE accounts a
+                       SET free_questions_used = LEAST($1::int, p.answered)
+                      FROM (
+                          SELECT user_id, COUNT(*)::int AS answered
+                            FROM user_question_progress
+                           GROUP BY user_id
+                      ) p
+                     WHERE p.user_id = a.id
+                       AND a.free_questions_used = 0
+                `, [FREE_QUESTION_ALLOWANCE]);
+                // Grandfathered accounts are untouched on purpose — they stay
+                // free-for-good, which is a promise already made to them.
+                const freed = await db.query(`
+                    UPDATE accounts
+                       SET subscription_status = 'free'
+                     WHERE subscription_status IN ('trial', 'trial_pending')
+                `);
+                await db.query(`INSERT INTO schema_migrations (name) VALUES ('003_free_tier_40q') ON CONFLICT DO NOTHING`);
+                logger.info(`Free tier: seeded ${seeded.rowCount} counter(s), moved ${freed.rowCount} trial account(s) to 'free' (one-time)`);
+            }
             _paymentColumnsExist = true; // prime the lazy cache used elsewhere
             logger.info('Payment/subscription schema ensured');
         } catch (err) {
@@ -283,14 +549,22 @@ function ensurePaymentSchema() {
 ensurePaymentSchema();
 
 // Email notification functions (shared transport — see services/mailer.js)
-const sendEmail = async (to, subject, text, html = null) => {
+//
+// `opts` is optional and additive, so every existing call site keeps working
+// unchanged. Pass { event } where you can: the central gateway uses it to pick
+// the priority, decide whether the mail is digested, and route owner-facing
+// mail over Gmail (which costs no Resend quota). Omitting it is safe — the
+// gateway falls back to cautious defaults — but the rationing works better
+// when it knows what the message actually is.
+const sendEmail = async (to, subject, text, html = null, opts = {}) => {
     try {
         const result = await sendMail({
             name: 'SQB',
             to: to,
             subject: subject,
             text: text,
-            html: html
+            html: html,
+            ...opts,
         });
         logger.info('Email sent successfully', { messageId: result.messageId });
         return result;
@@ -339,22 +613,31 @@ app.use(cors({
 app.use(express.json());
 
 // ── Access-control helpers ─────────────────────────────────────────────
-// subscriberOnly: 402s unpaid accounts once PAYMENT_ENFORCEMENT_ENABLED=true
-// (transparent pass-through while the flag is off). Must run after
-// requireSession — it trusts the session username, not client-sent ids.
+// Two levels, both transparent pass-throughs while PAYMENT_ENFORCEMENT_ENABLED
+// is off. Both must run after requireSession — they trust the session
+// username, not client-sent ids.
+//
+// quizOnly       — free accounts pass while they still have allowance left,
+//                  and req.quizAccess.remaining tells the handler how many
+//                  questions it may serve.
+// subscriberOnly — paid accounts only, for features with no free slice.
+const quizOnly = quizAccessGuard(db);
 const subscriberOnly = subscriptionGuard(db);
 
-// requireSession + subscriberOnly in one hop, for routes that had no
-// middleware before (e.g. GET /api/questions).
+// requireSession + a guard in one hop, for routes that had no middleware
+// before (e.g. GET /api/questions).
+function requireQuizAccess(req, res, next) {
+    requireSession(req, res, () => quizOnly(req, res, next));
+}
 function requireSubscriber(req, res, next) {
     requireSession(req, res, () => subscriberOnly(req, res, next));
 }
 
-// Admin key OR a valid subscriber session. Used on endpoints shared by the
-// admin panel (Bank) and the student app (Analysis), like /api/all-questions.
+// Admin key OR a valid session with quiz access. Used on endpoints shared by
+// the admin panel (Bank) and the student app (Analysis), like /api/all-questions.
 function adminOrSubscriber(req, res, next) {
     if (isAdminRequest(req)) return next();
-    return requireSubscriber(req, res, next);
+    return requireQuizAccess(req, res, next);
 }
 
 // Health check (previously read a scratch "test" table — no DB needed).
@@ -374,9 +657,8 @@ app.post('/add_account', adminAuth, async (req, res) => {
     const lowercaseUsername = username.toLowerCase();
     const lowercasePassword = password.toLowerCase();
 
-    // /login rejects any account whose username is not also its email, so an
-    // account created with a non-email username can never be signed into.
-    // Refuse up front instead of silently creating a dead account.
+    // Sign-in is by email, so an account whose username is not an email could
+    // never be signed into. Refuse up front rather than create a dead account.
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(lowercaseUsername)) {
         return res.status(400).json({
             message: 'Username must be a valid email address — sign-in is by email.',
@@ -384,8 +666,10 @@ app.post('/add_account', adminAuth, async (req, res) => {
     }
 
     try {
-        // Match /login's dual lookup: an existing row under either column would
-        // collide, so both have to be free.
+        // Both columns are still checked even though they now always hold the
+        // same value: UNIQUE(username) is the constraint an insert would
+        // actually violate, and checking email too keeps this correct for any
+        // row the boot-time parity pass had to skip.
         const check = await db.query(
             "SELECT id FROM accounts WHERE username = $1 OR email = $1",
             [lowercaseUsername]
@@ -448,7 +732,7 @@ This account has been activated and is ready for use.
                 <p><strong>Status:</strong> Active and ready for use</p>
             `;
 
-            await sendEmail(OWNER_EMAIL, emailSubject, emailText, emailHtml);
+            await sendEmail(OWNER_EMAIL, emailSubject, emailText, emailHtml, { event: 'medqize.owner.admin_account_created' });
             console.log('📧 Admin account creation email sent for user:', username);
         } catch (emailError) {
             console.error('❌ Failed to send admin account creation email:', emailError);
@@ -909,9 +1193,14 @@ app.post('/login', async (req, res) => {
     const client = await db.connect();
     try {
         await client.query('BEGIN');
-        // Dual-lookup: match by email OR username (for existing users)
+        // Sign-in is by email, full stop. This used to be a
+        // `(email = $1 OR username = $1)` dual-lookup followed by a guard that
+        // rejected the row whenever the match came from `username` — i.e. the
+        // username branch could never succeed. Every account now has
+        // username === email (enforced at boot), so matching on email alone is
+        // the same set of rows minus the dead branch.
         const userResult = await client.query(
-            "SELECT * FROM accounts WHERE (email = $1 OR username = $1) FOR UPDATE",
+            "SELECT * FROM accounts WHERE email = $1 FOR UPDATE",
             [lowercaseUsername]
         );
         const userRow = userResult.rows[0];
@@ -920,17 +1209,8 @@ app.post('/login', async (req, res) => {
         if (!userRow) {
             await client.query('ROLLBACK');
             client.release();
-            logger.warn(`No user found for username: ${lowercaseUsername}`);
+            logger.warn(`No user found for email: ${lowercaseUsername}`);
             return res.status(401).json({ message: 'Invalid credentials' });
-        }
-
-        // Sign-in is by email. Legacy username-only accounts were removed, and
-        // every signup path has required a verified email since.
-        if (lowercaseUsername !== userRow.email) {
-            await client.query('ROLLBACK');
-            client.release();
-            logger.warn(`Non-email login attempt: ${lowercaseUsername}`);
-            return res.status(401).json({ message: 'Please sign in with your email address.' });
         }
 
         if (lowercasePassword !== userRow.password) {
@@ -950,6 +1230,21 @@ app.post('/login', async (req, res) => {
                 expired: false,
                 user: userRow
             });
+        }
+
+        // Legacy trial statuses land on the free tier. The 1-hour trial is
+        // retired (migration 003_free_tier_40q converts everyone at boot); this
+        // catches the stragglers — an account restored from a backup, or one an
+        // old admin script marked 'trial_pending' before it was rewritten.
+        // Nothing is taken away: the free tier keeps their account open, which
+        // the trial did not.
+        if (userRow.subscription_status === 'trial' || userRow.subscription_status === 'trial_pending') {
+            await client.query(
+                `UPDATE accounts SET subscription_status = 'free' WHERE id = $1`,
+                [userRow.id]
+            );
+            userRow.subscription_status = 'free';
+            logger.info(`Moved legacy trial account ${lowercaseUsername} to the free tier`);
         }
 
         // Session timeout logic
@@ -983,13 +1278,22 @@ app.post('/login', async (req, res) => {
         // Detect suspicious activity
         const suspiciousCheck = await detectSuspiciousLogin(userRow.id, ipAddress, userAgent);
 
-        // Record login history
+        // Record login history. country/city come from Vercel's edge geo headers
+        // (present on requests that hit Vercel's network; absent in local dev,
+        // where they're simply NULL) — see MONETIZATION_ANALYSIS_2026-08.md §3.5:
+        // these columns existed but were NULL on all 192 logins because nothing
+        // ever wrote to them.
+        const geoCountry = req.headers['x-vercel-ip-country'] || null;
+        let geoCity = null;
+        try {
+            geoCity = req.headers['x-vercel-ip-city'] ? decodeURIComponent(req.headers['x-vercel-ip-city']) : null;
+        } catch (_) { /* malformed header — leave city NULL rather than fail the login */ }
         try {
             await client.query(`
-                INSERT INTO login_history (user_id, username, ip_address, user_agent, device_type, browser, os, session_token, is_suspicious, suspicious_reason)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-            `, [userRow.id, lowercaseUsername, ipAddress, userAgent, device, browser, os, sessionToken, suspiciousCheck.isSuspicious, suspiciousCheck.reasons]);
-            logger.info(`Login history recorded for ${lowercaseUsername}`, { ip: ipAddress, device, suspicious: suspiciousCheck.isSuspicious });
+                INSERT INTO login_history (user_id, username, ip_address, user_agent, device_type, browser, os, session_token, is_suspicious, suspicious_reason, country, city)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+            `, [userRow.id, lowercaseUsername, ipAddress, userAgent, device, browser, os, sessionToken, suspiciousCheck.isSuspicious, suspiciousCheck.reasons, geoCountry, geoCity]);
+            logger.info(`Login history recorded for ${lowercaseUsername}`, { ip: ipAddress, device, suspicious: suspiciousCheck.isSuspicious, country: geoCountry });
         } catch (historyErr) {
             logger.error('Failed to record login history', historyErr);
             // Don't fail login if history recording fails
@@ -1009,20 +1313,25 @@ app.post('/login', async (req, res) => {
             active: true,
             expiryDate: null,
             daysRemaining: null,
-            minutesRemaining: null,
-            trial: false,
+            freeQuestionsRemaining: null,
+            allowance: FREE_QUESTION_ALLOWANCE,
             reason: 'enforcement_disabled',
         };
+        let freeQuestionsRemaining = null;
         try {
             const columnsReady = await hasPaymentColumns();
             if (columnsReady && isPaymentEnforcementEnabled()) {
                 const { allowed, reason } = checkSubscriptionAccess(userRow);
                 let daysRemaining = null;
-                let minutesRemaining = null;
-                if (userRow.subscription_expiry_date) {
+                if (allowed && userRow.subscription_expiry_date) {
                     const ms = new Date(userRow.subscription_expiry_date).getTime() - Date.now();
                     daysRemaining = Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
-                    minutesRemaining = Math.max(0, Math.ceil(ms / (1000 * 60)));
+                }
+                if (!allowed) {
+                    // Free tier. `active:false` no longer means "locked out" —
+                    // the account stays fully usable, this is only how much
+                    // quiz allowance is left.
+                    freeQuestionsRemaining = checkQuizAccess(userRow).remaining;
                 }
                 subscription = {
                     enforced: true,
@@ -1030,8 +1339,8 @@ app.post('/login', async (req, res) => {
                     active: allowed,
                     expiryDate: userRow.subscription_expiry_date || null,
                     daysRemaining,
-                    minutesRemaining,
-                    trial: userRow.subscription_status === 'trial',
+                    freeQuestionsRemaining,
+                    allowance: FREE_QUESTION_ALLOWANCE,
                     reason,
                 };
             }
@@ -1045,20 +1354,25 @@ app.post('/login', async (req, res) => {
             logged_date: now,
             sessionToken,
             terms_accepted: userRow.terms_accepted,
-            // Persisted client-side and read by the route guard. Undefined on
-            // legacy stored sessions is treated as allowed (no mid-session lockout).
+            // "Is this a PAYING account?" — no longer a lockout flag. Nothing
+            // in the app may redirect on it; only quiz starts are gated, and
+            // that gate is the server's 402, not this field.
             accessAllowed: subscription.active,
-            // While enforcement is off, hide the raw stored status/expiry (e.g. a
-            // stamped 'trial') from the client so UI like the trial countdown
-            // banner never appears when nothing is actually being gated.
+            // While enforcement is off, hide the raw stored status/expiry from
+            // the client so paid-only UI never appears when nothing is gated.
             subscription_status: subscription.enforced ? userRow.subscription_status : 'free',
             subscription_expiry_date: subscription.enforced ? userRow.subscription_expiry_date : null,
+            // Drives the free-allowance pill. null = unlimited (paid/exempt).
+            free_questions_remaining: subscription.enforced ? freeQuestionsRemaining : null,
+            free_question_allowance: FREE_QUESTION_ALLOWANCE,
         };
 
         return res.status(200).json({
             message: 'Login successful',
-            expired: subscription.enforced && !subscription.active &&
-                (subscription.reason === 'subscription_required' || subscription.reason === 'trial_expired'),
+            // Nobody is "expired" any more — an account without a subscription
+            // is a free-tier account, not a locked one. Kept as a field because
+            // older clients still read it; it is now always false.
+            expired: false,
             subscription,
             user: updatedUser,
             sessionToken,
@@ -1083,9 +1397,12 @@ app.post('/session-validate', async (req, res) => {
     // token from the Authorization header (preferred) or the body.
     const { sessionToken } = getSessionCredentials(req);
     try {
-        // Match by email OR username (existing accounts may sign in by either).
+        // username === email for every account, so the old
+        // `(username = $1 OR email = $1)` pair matched the same row twice.
+        // The client still labels this field `username` in its stored session
+        // object; the value it holds is the email.
         const user = await db.query(
-            "SELECT id, logged, logged_date, session_token FROM accounts WHERE (username = $1 OR email = $1)",
+            "SELECT id, logged, logged_date, session_token FROM accounts WHERE email = $1",
             [username]
         );
         const userRow = user.rows[0];
@@ -1142,12 +1459,12 @@ app.post('/logout', async (req, res) => {
 // Get comprehensive admin statistics
 app.get('/admin/stats', adminAuth, async (req, res) => {
     try {
-        // Run all queries in parallel for performance
+        // Run all queries in parallel for performance. Money, subscriptions,
+        // users and active-user counts are NOT queried here directly — they
+        // come from services/adminMetricsService.js, the single definition
+        // shared with /admin/analytics and /api/accounting/summary, so this
+        // endpoint can no longer drift from the accounting page.
         const [
-            totalUsersRes,
-            activeUsersRes,
-            newUsersWeekRes,
-            newUsersMonthRes,
             totalQuizzesRes,
             quizzesTodayRes,
             quizzesWeekRes,
@@ -1158,12 +1475,11 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
             quizzesByTopicRes,
             recentLoginsRes,
             totalQuestionsAnsweredRes,
-            onlineUsersRes,
             userGrowthRes,
             quizGrowthRes,
             accuracyByTopicRes,
             hourlyActivityRes,
-            retentionRateRes,
+            wowActiveRatioRes,
             avgQuestionsPerQuizRes,
             deviceStatsRes,
             browserStatsRes,
@@ -1171,22 +1487,17 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
             quizCompletionRateRes,
             streakLeadersRes,
             accuracyDistributionRes,
-            subscriptionBreakdownRes,
-            trialFunnelRes,
-            revenueRes,
-            paidButInactiveRes,
-            recentPaymentsRes,
             trackBreakdownRes,
-            trackContentRes
+            trackContentRes,
+            users,
+            activeUsers,
+            revenue,
+            subs,
+            paidButInactive,
+            signups30d,
+            activeUsers30d,
+            openReports,
         ] = await Promise.all([
-            // Total users
-            db.query('SELECT COUNT(*) as count FROM accounts'),
-            // Active users (logged in last 7 days)
-            db.query(`SELECT COUNT(*) as count FROM accounts WHERE logged_date > NOW() - INTERVAL '7 days'`),
-            // New users this week
-            db.query(`SELECT COUNT(*) as count FROM accounts WHERE created_at > NOW() - INTERVAL '7 days'`),
-            // New users this month
-            db.query(`SELECT COUNT(*) as count FROM accounts WHERE created_at > NOW() - INTERVAL '30 days'`),
             // Total quizzes taken
             db.query('SELECT COUNT(*) as count FROM user_quiz_sessions'),
             // Quizzes today
@@ -1197,15 +1508,15 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
             db.query('SELECT ROUND(AVG(quiz_accuracy)::numeric, 1) as avg FROM user_quiz_sessions WHERE quiz_accuracy IS NOT NULL'),
             // Logins by day (last 14 days)
             db.query(`
-                SELECT DATE(login_time) as date, COUNT(*) as count 
-                FROM login_history 
+                SELECT DATE(login_time) as date, COUNT(*) as count
+                FROM login_history
                 WHERE login_time > NOW() - INTERVAL '14 days'
-                GROUP BY DATE(login_time) 
+                GROUP BY DATE(login_time)
                 ORDER BY date
             `),
             // Top 10 most active users
             db.query(`
-                SELECT a.id, a.username, COUNT(q.id) as quiz_count, 
+                SELECT a.id, a.username, COUNT(q.id) as quiz_count,
                        ROUND(AVG(q.quiz_accuracy)::numeric, 1) as avg_accuracy,
                        SUM(q.total_questions) as total_questions_answered,
                        MAX(q.start_time) as last_activity
@@ -1218,7 +1529,7 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
             `),
             // Users flagged for suspicious activity
             db.query(`
-                SELECT DISTINCT lh.user_id, a.username, 
+                SELECT DISTINCT lh.user_id, a.username,
                        COUNT(DISTINCT lh.ip_address) as unique_ips,
                        COUNT(DISTINCT CONCAT(lh.device_type, '-', lh.browser)) as unique_devices,
                        MAX(lh.login_time) as last_login,
@@ -1248,8 +1559,6 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
             `),
             // Total questions answered across all users
             db.query('SELECT SUM(total_questions) as count FROM user_quiz_sessions'),
-            // Currently online users (active session in last 30 min)
-            db.query(`SELECT COUNT(*) as count FROM accounts WHERE logged = true AND logged_date > NOW() - INTERVAL '30 minutes'`),
             // User growth by week (last 8 weeks)
             db.query(`
                 SELECT DATE_TRUNC('week', created_at) as week, COUNT(*) as count
@@ -1268,7 +1577,7 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
             `),
             // Accuracy by topic (for radar chart)
             db.query(`
-                SELECT question_type as topic, 
+                SELECT question_type as topic,
                        ROUND(AVG(accuracy)::numeric, 1) as avg_accuracy,
                        SUM(total_answered) as total_questions
                 FROM user_topic_analysis
@@ -1284,9 +1593,11 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
                 GROUP BY EXTRACT(HOUR FROM start_time)
                 ORDER BY hour
             `),
-            // User retention rate (users active in last 7 days who were also active in previous 7 days)
+            // Week-over-week active ratio: NOT retention (it can exceed 100% —
+            // it's a raw week-to-week comparison, not a cohort that was
+            // tracked over time). Previously mislabelled "Retention Rate".
             db.query(`
-                SELECT 
+                SELECT
                     COUNT(DISTINCT CASE WHEN logged_date > NOW() - INTERVAL '7 days' THEN id END) as active_this_week,
                     COUNT(DISTINCT CASE WHEN logged_date BETWEEN NOW() - INTERVAL '14 days' AND NOW() - INTERVAL '7 days' THEN id END) as active_last_week
                 FROM accounts
@@ -1320,23 +1631,23 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
             `),
             // Quiz completion rate (quizzes with results vs started)
             db.query(`
-                SELECT 
+                SELECT
                     COUNT(*) as total_started,
                     COUNT(CASE WHEN quiz_accuracy IS NOT NULL THEN 1 END) as completed
                 FROM user_quiz_sessions
             `),
-            // Streak leaders (users with highest current streaks from user_stats table if exists)
+            // Streak leaders (users with highest current streaks from user_streaks)
             db.query(`
                 SELECT a.username, COALESCE(us.current_streak, 0) as streak
                 FROM accounts a
-                LEFT JOIN user_stats us ON a.id = us.user_id
+                LEFT JOIN user_streaks us ON a.id = us.user_id
                 ORDER BY COALESCE(us.current_streak, 0) DESC
                 LIMIT 5
             `).catch(() => ({ rows: [] })),
             // Accuracy distribution (group users by accuracy ranges)
             db.query(`
-                SELECT 
-                    CASE 
+                SELECT
+                    CASE
                         WHEN avg_acc < 40 THEN '0-40%'
                         WHEN avg_acc < 60 THEN '40-60%'
                         WHEN avg_acc < 80 THEN '60-80%'
@@ -1352,67 +1663,6 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
                 GROUP BY range
                 ORDER BY range
             `),
-            // Accounts by subscription status (active/trial/free/grandfathered/admin-created)
-            db.query(`
-                SELECT
-                    COUNT(*) FILTER (WHERE subscription_status = 'active' AND subscription_expiry_date > NOW()) as active_subscribers,
-                    COUNT(*) FILTER (WHERE subscription_status = 'trial' AND subscription_expiry_date > NOW()) as trial_active,
-                    COUNT(*) FILTER (WHERE subscription_status = 'trial' AND subscription_expiry_date <= NOW()) as trial_expired_unconverted,
-                    COUNT(*) FILTER (WHERE subscription_status = 'free') as free_no_trial,
-                    COUNT(*) FILTER (WHERE grandfathered_at IS NOT NULL) as grandfathered,
-                    COUNT(*) FILTER (WHERE is_admin_created = true) as admin_created
-                FROM accounts
-            `).catch(() => ({ rows: [{}] })),
-            // Trial funnel: how many trials were ever granted vs how many of those
-            // accounts are now paying (the number that matters for the free-trial bet).
-            db.query(`
-                SELECT
-                    (SELECT COUNT(*) FROM trial_grants) as total_trials_granted,
-                    (SELECT COUNT(*) FROM trial_grants tg
-                       JOIN accounts a ON a.id = tg.account_id
-                      WHERE a.subscription_status = 'active') as trial_to_paid
-            `).catch(() => ({ rows: [{ total_trials_granted: 0, trial_to_paid: 0 }] })),
-            // Revenue from confirmed Moyasar payments. Three DIFFERENT numbers,
-            // kept separate so the dashboard can't conflate them:
-            //   payment_count       = raw paid events (includes renewals + a
-            //                         pre-launch test row + payments whose
-            //                         account was later deleted)
-            //   distinct_payers     = distinct still-present accounts that paid
-            //                         (the real "how many customers paid" count)
-            //   total_halalas       = actual money received (sum of all paid rows)
-            db.query(`
-                SELECT
-                    COUNT(*) as payment_count,
-                    COUNT(DISTINCT account_id) FILTER (WHERE account_id IS NOT NULL) as distinct_payers,
-                    COALESCE(SUM(amount_halalas), 0) as total_halalas
-                FROM payment_events WHERE status = 'paid'
-            `).catch(() => ({ rows: [{ payment_count: 0, distinct_payers: 0, total_halalas: 0 }] })),
-            // Money/access-at-risk: accounts that HAVE a confirmed payment but do
-            // NOT currently have access (not active-unexpired, not grandfathered,
-            // not admin). These are the soft-launch payers whose payment recorded
-            // before activation logic was wired — they paid but hit the paywall.
-            db.query(`
-                SELECT COUNT(*) as n FROM accounts a
-                WHERE EXISTS (SELECT 1 FROM payment_events pe
-                              WHERE pe.account_id = a.id AND pe.status = 'paid')
-                  AND NOT (
-                        (a.subscription_status = 'active' AND a.subscription_expiry_date > NOW())
-                        OR a.grandfathered_at IS NOT NULL
-                        OR a.is_admin_created = true
-                  )
-            `).catch(() => ({ rows: [{ n: 0 }] })),
-            // Last 10 confirmed payments for a quick recent-activity table.
-            // LEFT JOIN on purpose: payment_events.account_id is ON DELETE SET
-            // NULL, so a payment whose account was later deleted must still
-            // show up here — the money happened even if the account didn't survive.
-            db.query(`
-                SELECT pe.received_at, pe.amount_halalas, pe.currency, a.username, a.email
-                FROM payment_events pe
-                LEFT JOIN accounts a ON a.id = pe.account_id
-                WHERE pe.status = 'paid'
-                ORDER BY pe.received_at DESC
-                LIMIT 10
-            `).catch(() => ({ rows: [] })),
             // ── Per-track rollup ──
             // The platform serves two student populations from one deployment,
             // so every headline number above is a blend. This splits users,
@@ -1443,28 +1693,37 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
                        ON q.track = t.track
                 LEFT JOIN (SELECT track, COUNT(*)::int AS n FROM summaries WHERE is_published = TRUE GROUP BY track) s
                        ON s.track = t.track
-            `).catch(() => ({ rows: [] }))
+            `).catch(() => ({ rows: [] })),
+            userSnapshot(db),
+            activeUserSnapshot(db),
+            revenueSnapshot(db),
+            subscriptionSnapshot(db),
+            paidButInactiveCount(db),
+            dailySignups(db, {
+                from: new Date(Date.now() - 29 * 86400000).toISOString().slice(0, 10),
+                to: new Date().toISOString().slice(0, 10),
+            }),
+            dailyActiveUsers(db, {
+                from: new Date(Date.now() - 29 * 86400000).toISOString().slice(0, 10),
+                to: new Date().toISOString().slice(0, 10),
+            }),
+            openReportsCount(db),
         ]);
 
+        // conversionSnapshot needs revenue's resolved payer set, so it can't
+        // join the Promise.all above.
+        const conversion = await conversionSnapshot(db, revenue.payerAccountIds);
+
         // Calculate derived metrics
-        const retentionData = retentionRateRes.rows[0];
-        const retentionRate = retentionData.active_last_week > 0
-            ? Math.round((retentionData.active_this_week / retentionData.active_last_week) * 100)
+        const wowData = wowActiveRatioRes.rows[0];
+        const wowActiveRatio = wowData.active_last_week > 0
+            ? Math.round((wowData.active_this_week / wowData.active_last_week) * 100)
             : 0;
 
         const completionData = quizCompletionRateRes.rows[0];
         const completionRate = completionData.total_started > 0
             ? Math.round((completionData.completed / completionData.total_started) * 100)
             : 0;
-
-        const subBreakdown = subscriptionBreakdownRes.rows[0] || {};
-        const funnel = trialFunnelRes.rows[0] || {};
-        const totalTrialsGranted = parseInt(funnel.total_trials_granted) || 0;
-        const trialToPaid = parseInt(funnel.trial_to_paid) || 0;
-        const trialConversionRate = totalTrialsGranted > 0
-            ? Math.round((trialToPaid / totalTrialsGranted) * 100)
-            : 0;
-        const revenue = revenueRes.rows[0] || {};
 
         // Per-track rollup: one row per track the platform knows about, even
         // when it has no users or content yet — the dashboard should show a
@@ -1478,7 +1737,8 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
             const c = contentRows[key] || {};
             return {
                 track: key,
-                label: trackLabelAr(key),
+                // English — this feeds the admin panel, which stays English/LTR.
+                label: trackLabelEn(key),
                 users: parseInt(u.users) || 0,
                 activeUsers: parseInt(u.active_users) || 0,
                 newUsersWeek: parseInt(u.new_users_week) || 0,
@@ -1496,42 +1756,49 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
         res.json({
             byTrack,
             overview: {
-                totalUsers: parseInt(totalUsersRes.rows[0]?.count) || 0,
-                activeUsers: parseInt(activeUsersRes.rows[0]?.count) || 0,
-                onlineNow: parseInt(onlineUsersRes.rows[0]?.count) || 0,
-                newUsersWeek: parseInt(newUsersWeekRes.rows[0]?.count) || 0,
-                newUsersMonth: parseInt(newUsersMonthRes.rows[0]?.count) || 0,
+                totalUsers: users.totalUsers,
+                activeUsers: users.activeUsers,
+                onlineNow: users.onlineNow,
+                newUsersToday: users.newUsersToday,
+                newUsersWeek: users.newUsersWeek,
+                newUsersMonth: users.newUsersMonth,
                 totalQuizzes: parseInt(totalQuizzesRes.rows[0]?.count) || 0,
                 quizzesToday: parseInt(quizzesTodayRes.rows[0]?.count) || 0,
                 quizzesThisWeek: parseInt(quizzesWeekRes.rows[0]?.count) || 0,
                 avgAccuracy: parseFloat(avgAccuracyRes.rows[0]?.avg) || 0,
                 totalQuestionsAnswered: parseInt(totalQuestionsAnsweredRes.rows[0]?.count) || 0,
                 avgQuestionsPerQuiz: parseFloat(avgQuestionsPerQuizRes.rows[0]?.avg) || 0,
-                retentionRate: retentionRate,
+                wowActiveRatio,
                 completionRate: completionRate,
                 suspiciousCount: suspiciousUsersRes.rows.length
             },
+            activeUsers,
             subscriptions: {
-                activeSubscribers: parseInt(subBreakdown.active_subscribers) || 0,
-                trialActive: parseInt(subBreakdown.trial_active) || 0,
-                trialExpiredUnconverted: parseInt(subBreakdown.trial_expired_unconverted) || 0,
-                freeNoTrial: parseInt(subBreakdown.free_no_trial) || 0,
-                grandfathered: parseInt(subBreakdown.grandfathered) || 0,
-                adminCreated: parseInt(subBreakdown.admin_created) || 0,
-                totalTrialsGranted,
-                trialToPaid,
-                trialConversionRate,
-                paymentCount: parseInt(revenue.payment_count) || 0,
-                distinctPayers: parseInt(revenue.distinct_payers) || 0,
-                paidButInactive: parseInt(paidButInactiveRes.rows[0]?.n) || 0,
-                totalRevenueSar: (parseInt(revenue.total_halalas) || 0) / 100,
-                recentPayments: recentPaymentsRes.rows.map(p => ({
-                    receivedAt: p.received_at,
-                    amountSar: (parseInt(p.amount_halalas) || 0) / 100,
-                    currency: p.currency,
-                    username: p.username,
-                    email: p.email
-                }))
+                // Net received is the headline everywhere: gross minus Moyasar
+                // fees minus refunds, i.e. what actually reached the bank.
+                // Identical to /api/accounting/summary's totals because both
+                // read the same ledger via adminMetricsService.revenueSnapshot.
+                netSar: revenue.netHalalas / 100,
+                grossSar: revenue.grossHalalas / 100,
+                feeSar: revenue.feeHalalas / 100,
+                refundedSar: revenue.refundedHalalas / 100,
+                thisMonthNetSar: revenue.thisMonthNetHalalas / 100,
+                lastMonthNetSar: revenue.lastMonthNetHalalas / 100,
+                paymentCount: revenue.count,
+                payerCount: revenue.distinctPayers,
+                activeSubscribers: parseInt(subs.active_subscribers) || 0,
+                freeTrying: parseInt(subs.free_trying) || 0,
+                freeExhaustedUnconverted: parseInt(subs.free_exhausted_unconverted) || 0,
+                freeNeverStarted: parseInt(subs.free_never_started) || 0,
+                grandfathered: parseInt(subs.grandfathered) || 0,
+                adminCreated: parseInt(subs.admin_created) || 0,
+                expiringIn7d: parseInt(subs.expiring_7d) || 0,
+                expiringIn30d: parseInt(subs.expiring_30d) || 0,
+                totalTried: conversion.totalTried,
+                triedToPaid: conversion.triedToPaid,
+                conversionRate: conversion.conversionRate,
+                paidButInactive,
+                recentPayments: revenue.recentPayments,
             },
             charts: {
                 loginsByDay: loginsByDayRes.rows,
@@ -1542,13 +1809,22 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
                 deviceStats: deviceStatsRes.rows,
                 browserStats: browserStatsRes.rows,
                 accuracyByTopic: accuracyByTopicRes.rows,
-                accuracyDistribution: accuracyDistributionRes.rows
+                accuracyDistribution: accuracyDistributionRes.rows,
+                dailySignups: signups30d,
+                dailyActiveUsers: activeUsers30d,
+                revenueByMonth: revenue.byMonth.map((m) => ({
+                    month: m.month,
+                    count: m.count,
+                    netSar: m.netHalalas / 100,
+                    grossSar: m.grossHalalas / 100,
+                })),
             },
             topUsers: topUsersRes.rows,
             suspiciousUsers: suspiciousUsersRes.rows,
             quizzesByTopic: quizzesByTopicRes.rows,
             recentLogins: recentLoginsRes.rows,
-            streakLeaders: streakLeadersRes.rows
+            streakLeaders: streakLeadersRes.rows,
+            openReports,
         });
     } catch (err) {
         logger.error('Error fetching admin stats', err);
@@ -1592,12 +1868,12 @@ app.get('/admin/analytics', adminAuth, async (req, res) => {
     try {
         const [
             mixRes, activeRes, loginsRes, signupsRes, growthRes,
-            specialtyRes, sessionRes, summaryRes, conversionRes
+            specialtyRes, sessionRes, summaryRes
         ] = await Promise.allSettled([
             q(`SELECT
                     COUNT(*) FILTER (WHERE grandfathered_at IS NOT NULL OR subscription_status = 'grandfathered')::int AS legacy,
                     COUNT(*) FILTER (WHERE grandfathered_at IS NULL AND subscription_status = 'active')::int AS paid,
-                    COUNT(*) FILTER (WHERE grandfathered_at IS NULL AND subscription_status = 'trial')::int AS trial,
+                    COUNT(*) FILTER (WHERE ${SQL_FREE_EXHAUSTED})::int AS exhausted,
                     COUNT(*)::int AS total
                 FROM accounts`),
             q(`SELECT
@@ -1663,24 +1939,27 @@ app.get('/admin/analytics', adminAuth, async (req, res) => {
                 FROM user_quiz_sessions`),
             q(`SELECT COUNT(*)::int AS total_views, COUNT(DISTINCT user_id)::int AS distinct_users
                 FROM summary_progress`),
-            q(`SELECT
-                    (SELECT COUNT(*) FROM trial_grants)::int AS trials_ever,
-                    (SELECT COUNT(DISTINCT account_id) FROM payment_events WHERE status = 'paid' AND account_id IS NOT NULL)::int AS payers`)
         ]);
 
-        const mix = firstOf(mixRes, { legacy: 0, paid: 0, trial: 0, total: 0 });
-        const free = Math.max(0, (mix.total || 0) - (mix.legacy || 0) - (mix.paid || 0) - (mix.trial || 0));
+        const mix = firstOf(mixRes, { legacy: 0, paid: 0, exhausted: 0, total: 0 });
+        // "Free" here means free tier WITH allowance left; accounts that used it
+        // all up are broken out separately because they are the ones worth a
+        // subscribe nudge — the free tier's equivalent of "trial expired".
+        const free = Math.max(0, (mix.total || 0) - (mix.legacy || 0) - (mix.paid || 0) - (mix.exhausted || 0));
+        // English labels — admin stays English/LTR regardless of site language (AdminShell).
         const accountMix = [
-            { key: 'paid', label: 'مدفوع', value: mix.paid || 0 },
-            { key: 'trial', label: 'تجريبي', value: mix.trial || 0 },
-            { key: 'free', label: 'مجاني', value: free },
-            { key: 'legacy', label: 'قديم (Legacy)', value: mix.legacy || 0 }
+            { key: 'paid', label: 'Paid', value: mix.paid || 0 },
+            { key: 'free', label: 'Free (questions left)', value: free },
+            { key: 'exhausted', label: 'Free (used up)', value: mix.exhausted || 0 },
+            { key: 'legacy', label: 'Legacy', value: mix.legacy || 0 }
         ];
 
-        const conv = firstOf(conversionRes, { trials_ever: 0, payers: 0 });
-        const trialToPaidRate = conv.trials_ever > 0
-            ? Math.round((conv.payers / conv.trials_ever) * 1000) / 10
-            : 0;
+        // Shared with /admin/stats: same ledger, same trial→paid definition —
+        // this used to be its own "distinct payers / trials ever" ratio,
+        // which read differently from the dashboard's number for the same
+        // metric on the same screen.
+        const revenue = await revenueSnapshot(db);
+        const conversion = await conversionSnapshot(db, revenue.payerAccountIds);
 
         const sess = firstOf(sessionRes, { total_sessions: 0, avg_session_seconds: 0 });
         const summary = firstOf(summaryRes, { total_views: 0, distinct_users: 0 });
@@ -1691,12 +1970,13 @@ app.get('/admin/analytics', adminAuth, async (req, res) => {
             totals: {
                 totalAccounts: mix.total || 0,
                 paid: mix.paid || 0,
-                trial: mix.trial || 0,
+                exhausted: mix.exhausted || 0,
                 legacy: mix.legacy || 0,
                 free,
-                trialsEver: conv.trials_ever || 0,
-                payers: conv.payers || 0,
-                trialToPaidRate
+                triedEver: conversion.totalTried,
+                payers: revenue.distinctPayers,
+                triedToPaid: conversion.triedToPaid,
+                triedToPaidRate: conversion.conversionRate
             },
             activeUsers: firstOf(activeRes, { dau: 0, wau: 0, mau: 0 }),
             logins: rowsOf(loginsRes),
@@ -1723,22 +2003,34 @@ app.get('/admin/users', adminAuth, async (req, res) => {
         const trackFilter = isValidTrack(req.query.track) ? 'WHERE a.track = $1' : '';
         const trackParams = trackFilter ? [req.query.track] : [];
         const usersResult = await db.query(`
-            SELECT 
+            SELECT
                 a.id, a.username, a.password, a.isactive, a.logged, a.logged_date,
                 a.terms_accepted, a.email, a.created_at, a.track,
-                a.subscription_status, a.subscription_expiry_date,
+                a.subscription_status, a.subscription_expiry_date, a.free_questions_used,
                 a.account_type, a.is_admin_created, a.grandfathered_at,
+                latest_plan.plan_id,
                 COUNT(DISTINCT q.id) as total_quizzes,
                 ROUND(AVG(q.quiz_accuracy)::numeric, 1) as avg_accuracy,
                 SUM(q.total_questions) as total_questions,
                 MAX(q.start_time) as last_quiz_date
             FROM accounts a
             LEFT JOIN user_quiz_sessions q ON a.id = q.user_id
+            -- Most recently purchased plan, if any — payment_events keeps this
+            -- even after a subscription lapses, so it's "what did they buy",
+            -- not "what's active right now" (subscription_status covers that).
+            LEFT JOIN LATERAL (
+                SELECT pe.raw_payload->'metadata'->>'plan' AS plan_id
+                FROM payment_events pe
+                WHERE pe.account_id = a.id AND pe.status = 'paid'
+                ORDER BY pe.received_at DESC
+                LIMIT 1
+            ) latest_plan ON true
             ${trackFilter}
             GROUP BY a.id, a.username, a.password, a.isactive, a.logged, a.logged_date,
                      a.terms_accepted, a.email, a.created_at, a.track,
-                     a.subscription_status, a.subscription_expiry_date,
-                     a.account_type, a.is_admin_created, a.grandfathered_at
+                     a.subscription_status, a.subscription_expiry_date, a.free_questions_used,
+                     a.account_type, a.is_admin_created, a.grandfathered_at,
+                     latest_plan.plan_id
             ORDER BY a.id DESC
         `, trackParams);
 
@@ -2093,14 +2385,42 @@ app.get('/question-attempts/session/:sessionId', requireSession, async (req, res
     }
 });
 
+/**
+ * The student's wrong answers, newest first.
+ *
+ * Searching happens HERE rather than in the browser because the page is
+ * paginated: filtering the 20 rows already loaded would search a window, not a
+ * history, and a student with 400 wrong answers looking for "myasthenia" would
+ * be told there are none. `q` matches the question text and both answers, and
+ * `type` narrows to one specialty; the count query carries the same filters so
+ * "142 results" always describes what pagination will actually walk through.
+ */
 app.get('/wrong-questions/user/:userId', requireSession, async (req, res) => {
     const { userId } = req.params;
     const { limit = 50, offset = 0 } = req.query;
+    const search = String(req.query.q || '').trim().slice(0, 120);
+    const type = String(req.query.type || '').trim().slice(0, 50);
 
     try {
-        // Get wrong question attempts with question details
+        // Built once and shared by both queries so they can never disagree.
+        // $1 is always the user; search/type append in a fixed order.
+        const where = [`uqa.user_id = $1`, `uqa.is_correct = false`];
+        const params = [userId];
+        if (search) {
+            params.push(`%${search}%`);
+            const p = `$${params.length}`;
+            // ILIKE (not to_tsvector) on purpose: students type fragments and
+            // drug-name prefixes, which a stemmed full-text match would miss.
+            where.push(`(q.question_text ILIKE ${p} OR q.correct_option ILIKE ${p} OR uqa.selected_option ILIKE ${p})`);
+        }
+        if (type) {
+            params.push(type);
+            where.push(`q.question_type = $${params.length}`);
+        }
+        const whereSql = where.join(' AND ');
+
         const result = await db.query(`
-            SELECT 
+            SELECT
                 uqa.*,
                 q.question_text,
                 q.correct_option,
@@ -2108,23 +2428,38 @@ app.get('/wrong-questions/user/:userId', requireSession, async (req, res) => {
                 q.source
             FROM user_question_attempts uqa
             JOIN questions q ON uqa.question_id = q.id
-            WHERE uqa.user_id = $1 
-            AND uqa.is_correct = false
+            WHERE ${whereSql}
             ORDER BY uqa.attempted_at DESC
-            LIMIT $2 OFFSET $3
-        `, [userId, parseInt(limit), parseInt(offset)]);
+            LIMIT $${params.length + 1} OFFSET $${params.length + 2}
+        `, [...params, parseInt(limit), parseInt(offset)]);
 
-        // Get total count for pagination
+        // Total for pagination, plus the per-specialty breakdown that fills the
+        // filter chips — computed over the search results, so a chip never
+        // offers a specialty the current search has nothing in.
         const countResult = await db.query(`
-            SELECT COUNT(*) as total
+            SELECT COUNT(*)::int AS total
             FROM user_question_attempts uqa
-            WHERE uqa.user_id = $1 
-            AND uqa.is_correct = false
-        `, [userId]);
+            JOIN questions q ON uqa.question_id = q.id
+            WHERE ${whereSql}
+        `, params);
+
+        // Specialty facets ignore the type filter itself — otherwise selecting
+        // one specialty would hide every other chip and trap the student there.
+        const facetWhere = where.filter((clause) => !clause.startsWith('q.question_type ='));
+        const facetParams = type ? params.slice(0, -1) : params;
+        const facets = await db.query(`
+            SELECT q.question_type, COUNT(*)::int AS total
+            FROM user_question_attempts uqa
+            JOIN questions q ON uqa.question_id = q.id
+            WHERE ${facetWhere.join(' AND ')}
+            GROUP BY q.question_type
+            ORDER BY total DESC
+        `, facetParams);
 
         res.json({
             wrongQuestions: result.rows,
-            total: parseInt(countResult.rows[0].total),
+            total: countResult.rows[0].total,
+            byType: facets.rows,
             limit: parseInt(limit),
             offset: parseInt(offset)
         });
@@ -2174,7 +2509,12 @@ app.get('/api/all-questions', adminOrSubscriber, async (req, res) => {
 app.get('/api/track-content-status', requireSession, async (req, res) => {
     try {
         const track = resolveContentTrack(req);
-        const [byType, bySource, summaryCount] = await Promise.all([
+        // Types are namespaced per track (specialtyKeys(track) never overlaps
+        // across tracks), so filtering the user's progress by that list is
+        // enough to scope it to this track without a track column on
+        // user_question_progress — same pattern the /quiz route uses.
+        const trackTypes = specialtyKeys(track);
+        const [byType, bySource, summaryCount, completedByType] = await Promise.all([
             db.query(
                 `SELECT question_type, COUNT(*)::int AS total
                  FROM questions WHERE track = $1 GROUP BY question_type`,
@@ -2190,6 +2530,13 @@ app.get('/api/track-content-status', requireSession, async (req, res) => {
                  WHERE track = $1 AND is_published = TRUE`,
                 [track]
             ),
+            db.query(
+                `SELECT question_type, COUNT(*)::int AS completed
+                 FROM user_question_progress
+                 WHERE user_id = $1 AND question_type = ANY($2::text[])
+                 GROUP BY question_type`,
+                [req.accountId, trackTypes]
+            ),
         ]);
 
         const questionsByType = {};
@@ -2199,21 +2546,32 @@ app.get('/api/track-content-status', requireSession, async (req, res) => {
             totalQuestions += r.total;
         });
 
+        const completedCountByType = {};
+        completedByType.rows.forEach((r) => { completedCountByType[r.question_type] = r.completed; });
+        const progressByType = {};
+        trackTypes.forEach((type) => {
+            const total = questionsByType[type] || 0;
+            const completed = Math.min(completedCountByType[type] || 0, total);
+            progressByType[type] = total > 0 ? Math.round((completed / total) * 100) : 0;
+        });
+
         // The collections the launcher should offer for this track, each with
-        // its live count. Intersected with the rows actually present, so the
-        // launcher never offers a collection that would come back empty (and
-        // starts offering one the moment its questions are uploaded).
-        // Medical's list is empty by design — that bank is unified.
+        // its live count and its recommended-study-order rank. Intersected with
+        // the rows actually present, so the launcher never offers a collection
+        // that would come back empty (and starts offering one the moment its
+        // questions are uploaded).
         const countBySource = {};
         bySource.rows.forEach((r) => { countBySource[r.source] = r.total; });
+        const priorityOrder = SOURCE_PRIORITY[track] || [];
         const selectableSources = (PICKABLE_SOURCES[track] || [])
             .filter((s) => (countBySource[s] || 0) > 0)
-            .map((s) => ({ key: s, total: countBySource[s] }));
+            .map((s) => ({ key: s, total: countBySource[s], priority: priorityOrder.indexOf(s) + 1 || undefined }));
 
         res.json({
             track,
             specialties: specialtyKeys(track),
             questionsByType,
+            progressByType,
             // Only meaningful when there is more than one — a single collection
             // is "the bank" and the client skips the choice.
             selectableSources,
@@ -2286,10 +2644,34 @@ app.get('/user-streaks/:user_id', requireSession, async (req, res) => {
             lastActiveDate = dates[dates.length - 1];
         }
 
+        // The calendar behind the number. A bare "5" says nothing about whether
+        // today is already safe or about to break the run, which is the only
+        // thing a streak counter is actually for — so the client gets the raw
+        // active days for the last CALENDAR_DAYS and renders the week itself.
+        //
+        // Formatted from the local Y/M/D parts rather than toISOString(), which
+        // would shift a date backwards for any timezone east of UTC and make
+        // "today" look unstudied to a student in Riyadh until 03:00.
+        const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        const CALENDAR_DAYS = 35;
+        const todayMidnight = new Date();
+        todayMidnight.setHours(0, 0, 0, 0);
+        const windowStart = todayMidnight.getTime() - (CALENDAR_DAYS - 1) * 86400000;
+        const activeDays = quizDates.rows
+            .map((row) => new Date(row.quiz_date))
+            .map((d) => { d.setHours(0, 0, 0, 0); return d; })
+            .filter((d) => d.getTime() >= windowStart)
+            .map(ymd);
+
         res.json({
             current_streak: currentStreak,
             longest_streak: longestStreak,
-            last_active_date: lastActiveDate
+            last_active_date: lastActiveDate,
+            // Ascending, de-duplicated, last 35 days only — enough for a week
+            // strip and a month heat row without shipping a full history.
+            active_days: activeDays,
+            today: ymd(todayMidnight),
+            studied_today: activeDays.includes(ymd(todayMidnight)),
         });
 
     } catch (err) {
@@ -2317,9 +2699,14 @@ function dedupeByText(rows) {
     return out;
 }
 
-app.get('/api/questions', requireSubscriber, async (req, res) => {
+app.get('/api/questions', requireQuizAccess, async (req, res) => {
 
-    const limit = parseInt(req.query.limit) || 10;
+    // Free accounts are served at most what is left of their lifetime
+    // allowance. This clamp is the enforcement — the launcher also shows the
+    // remaining count, but a hand-rolled ?limit=500 must not outrun it.
+    const requested = parseInt(req.query.limit) || 10;
+    const remaining = req.quizAccess?.remaining ?? Infinity;
+    const limit = Math.max(1, Math.min(requested, remaining));
     const typesParam = req.query.types; // e.g., 'mix' or 'medicine,surgery'
     const sourceParam = req.query.source; // e.g., 'general', 'Midgard', 'GameBoy'
     const userId = req.query.userId; // User ID to filter completed questions
@@ -2338,7 +2725,7 @@ app.get('/api/questions', requireSubscriber, async (req, res) => {
     const categoryValues = [];
 
     // Track first: a student only ever sees their own bank. Derived from the
-    // session (requireSubscriber ran requireSession), never from the request.
+    // session (requireQuizAccess ran requireSession), never from the request.
     const track = resolveContentTrack(req);
     categoryConditions.push(`track = $${categoryValues.length + 1}`);
     categoryValues.push(track);
@@ -2437,7 +2824,12 @@ app.get('/api/questions', requireSubscriber, async (req, res) => {
         const endTime = Date.now();
         logger.debug(`Questions query executed in ${endTime - startTime}ms, returned ${rows.length} questions`);
 
-        res.json({ questions: dedupeByText(rows) });
+        // freeRemaining lets the quiz screen say "these are your last 5" without
+        // a second round-trip. null for paid/exempt accounts (unlimited).
+        const freeRemaining = Number.isFinite(req.quizAccess?.remaining)
+            ? req.quizAccess.remaining
+            : null;
+        res.json({ questions: dedupeByText(rows), freeRemaining });
     } catch (err) {
         logger.error('Error fetching questions', err);
         res.status(500).json({ message: 'Server error' });
@@ -2638,7 +3030,11 @@ app.post('/user-analysis', requireSession, async (req, res) => {
 });
 
 
-app.post('/quiz-sessions', requireSession, subscriberOnly, async (req, res) => {
+// Deliberately NOT behind quizAccessGuard. This is where a finished quiz is
+// SUBMITTED, and a free user who legitimately started their last five questions
+// must be able to save them — the gate belongs at /api/questions, where a quiz
+// is started. Submitting is also what spends the allowance (see below).
+app.post('/quiz-sessions', requireSession, async (req, res) => {
     const {
         user_id,
         total_questions,
@@ -2729,6 +3125,32 @@ app.post('/quiz-sessions', requireSession, subscriberOnly, async (req, res) => {
             id: result.rows[0].id,
             session_id: result.rows[0].session_id
         });
+
+        // Spend the free allowance. Only non-paying accounts have one, and the
+        // LEAST() clamp means the counter can never read above the allowance
+        // however many questions arrive in one submission.
+        let freeRemaining = null;
+        try {
+            const spend = await db.query(
+                `UPDATE accounts
+                    SET free_questions_used = LEAST($1::int, free_questions_used + $2::int)
+                  WHERE id = $3
+                    AND is_admin_created = FALSE
+                    AND grandfathered_at IS NULL
+                    AND NOT (subscription_status = 'active'
+                             AND subscription_expiry_date > NOW())
+                  RETURNING free_questions_used`,
+                [FREE_QUESTION_ALLOWANCE, Number(total_questions) || 0, user_id]
+            );
+            if (spend.rows.length > 0) {
+                freeRemaining = Math.max(0, FREE_QUESTION_ALLOWANCE - spend.rows[0].free_questions_used);
+            }
+        } catch (err) {
+            // Never fail a saved quiz over the counter — the worst case is a
+            // free user getting a few extra questions, which beats losing a
+            // session they already answered.
+            logger.error('Failed to spend free allowance', err);
+        }
 
         // Record question progress for each answered question (parallelized)
         let touchedCardinalities = [];
@@ -2839,10 +3261,25 @@ app.post('/quiz-sessions', requireSession, subscriberOnly, async (req, res) => {
                 .map(({ type, source }) => ({ type, source }));
         }
 
+        // Goal completion and streak milestones. Awaited (not fire-and-forget)
+        // so the response can tell the client something was earned and the hub
+        // can celebrate it immediately — but wrapped, because a notification
+        // must never turn a successfully recorded quiz into a 500.
+        let milestones = [];
+        try {
+            milestones = await checkMilestones(db, user_id);
+        } catch (e) {
+            logger.warn('Milestone check failed', { error: e.message });
+        }
+
         res.status(201).json({
             id: result.rows[0].id,
             session_id: result.rows[0].session_id,
             completedCategories,
+            milestones,
+            // null for paid/exempt accounts; a number for free-tier accounts so
+            // the results screen can update the allowance pill straight away.
+            freeRemaining,
             message: 'Quiz session created successfully'
         });
     } catch (err) {
@@ -3630,8 +4067,8 @@ app.get('/api/user-subscription/:userId', async (req, res) => {
         const columnsReady = await hasPaymentColumns();
         const selectCols = columnsReady
             ? `id, username, email, isactive,
-               subscription_status, subscription_expiry_date,
-               account_type, is_admin_created`
+               subscription_status, subscription_expiry_date, free_questions_used,
+               grandfathered_at, account_type, is_admin_created`
             : `id, username, email, isactive`;
 
         const result = await db.query(
@@ -3649,22 +4086,72 @@ app.get('/api/user-subscription/:userId', async (req, res) => {
 
         // Enforcement disabled => everyone is free with unlimited access.
         let daysRemaining = null;
-        let minutesRemaining = null;
-        if (enforcementEnabled && user.subscription_expiry_date) {
-            const ms = new Date(user.subscription_expiry_date).getTime() - Date.now();
-            daysRemaining = Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
-            minutesRemaining = Math.max(0, Math.ceil(ms / (1000 * 60)));
+        let freeQuestionsRemaining = null;
+        let purchase = null;
+        if (enforcementEnabled) {
+            if (user.subscription_expiry_date) {
+                const ms = new Date(user.subscription_expiry_date).getTime() - Date.now();
+                daysRemaining = Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
+            }
+            const quiz = checkQuizAccess(user);
+            freeQuestionsRemaining = Number.isFinite(quiz.remaining) ? quiz.remaining : null;
+
+            // WHICH plan they bought, and when. The accounts table only stores
+            // an expiry date, so "you are subscribed until March" was all the
+            // account page could ever say — not whether that was a 50 SAR month
+            // or a 300 SAR year. The plan id lives in the payment's metadata,
+            // so the most recent paid event is the record of what was sold.
+            //
+            // livemode IS DISTINCT FROM FALSE keeps Moyasar test payments out,
+            // the same filter the accounting ledger uses.
+            try {
+                const paid = await db.query(
+                    `SELECT gateway_ref, amount_halalas, currency, received_at,
+                            raw_payload->'metadata'->>'plan' AS plan_id
+                       FROM payment_events
+                      WHERE account_id = $1 AND status = 'paid'
+                        AND livemode IS DISTINCT FROM FALSE
+                      ORDER BY received_at DESC
+                      LIMIT 1`,
+                    [userId]
+                );
+                if (paid.rows.length > 0) {
+                    const row = paid.rows[0];
+                    const plan = getPlan(row.plan_id);
+                    purchase = {
+                        planId: row.plan_id || null,
+                        months: plan?.months ?? null,
+                        seats: plan?.seats ?? 1,
+                        isGroup: plan?.kind === 'group',
+                        amountSar: Number(row.amount_halalas || 0) / 100,
+                        currency: row.currency || 'SAR',
+                        startedAt: row.received_at,
+                    };
+                }
+            } catch (err) {
+                // A missing payment history must never break the account page —
+                // the subscription state above is the part that matters.
+                logger.warn('Could not resolve last purchase', { userId, error: err.message });
+            }
         }
 
         res.json({
             enforcement: enforcementEnabled,
+            allowance: FREE_QUESTION_ALLOWANCE,
+            // Every plan is a single charge. Stated by the API too, so any
+            // client showing subscription details says the same thing.
+            autoRenew: false,
+            // null when this account has never paid (free tier, grandfathered,
+            // or admin-created).
+            purchase,
             user: {
                 ...user,
                 isactive: user.isactive,
                 // While enforcement is off, report free access regardless of stored status.
                 subscription_status: enforcementEnabled ? user.subscription_status : 'free',
                 daysRemaining,
-                minutesRemaining
+                // null = unlimited (paid, admin-created or grandfathered).
+                freeQuestionsRemaining
             }
         });
     } catch (error) {
@@ -3681,6 +4168,20 @@ app.delete('/users/:userId', adminAuth, async (req, res) => {
     }
 
     try {
+        // Money always wins over an admin cleanup click — a paying customer's
+        // history must never be deletable by accident. See MONETIZATION_ANALYSIS_2026-08.md §6.1:
+        // account 231 was deleted four days after paying, and the payment_events
+        // row survived (ON DELETE SET NULL) but the account and its access didn't.
+        const paidCheck = await db.query(
+            `SELECT 1 FROM payment_events WHERE account_id = $1 AND status = 'paid' LIMIT 1`,
+            [userId]
+        );
+        if (paidCheck.rows.length > 0) {
+            return res.status(409).json({
+                message: 'This account has a paid payment on record and cannot be deleted. Refund or archive it instead.',
+            });
+        }
+
         // Start a transaction to ensure all deletions succeed or fail together
         const client = await db.connect();
 
@@ -3882,7 +4383,7 @@ If you receive this email, the notification system is working correctly.
             <p>If you receive this email, the notification system is working correctly.</p>
         `;
 
-        await sendEmail(OWNER_EMAIL, emailSubject, emailText, emailHtml);
+        await sendEmail(OWNER_EMAIL, emailSubject, emailText, emailHtml, { event: 'medqize.owner.test_email' });
 
         res.status(200).json({
             success: true,
@@ -3952,7 +4453,10 @@ Please respond to the user as soon as possible.
                 <p>Please respond to the user as soon as possible.</p>
             `;
 
-            await sendEmail(OWNER_EMAIL, emailSubject, emailText, emailHtml);
+            await sendEmail(OWNER_EMAIL, emailSubject, emailText, emailHtml, {
+                event: 'medqize.owner.contact_form',
+                sourceOrigin: req.headers.referer || req.headers.origin,
+            });
             console.log('📧 Contact form email sent for:', name);
         } catch (emailError) {
             console.error('❌ Failed to send contact form email:', emailError);
@@ -4149,7 +4653,11 @@ app.post('/api/suggestions', async (req, res) => {
                 OWNER_EMAIL,
                 `💡 New Suggestion: ${title} [${req.body.track || 'unknown'}]`,
                 `New suggestion received:\n\nCategory: ${category}\nPriority: ${priority}\nTitle: ${title}\n\nDescription:\n${description}`,
-                emailHtml
+                emailHtml,
+                {
+                    event: 'medqize.owner.suggestion',
+                    sourceOrigin: req.headers.referer || req.headers.origin,
+                }
             );
             console.log('📧 Suggestion email sent for:', title);
         } catch (emailError) {
@@ -4558,7 +5066,13 @@ app.post('/api/auth/send-otp', async (req, res) => {
             ? `رمز تفعيل حسابك في SQB هو: ${otp} — صالح لمدة 5 دقائق. بعد التأكيد تبدأ ساعة تجربتك المجانية.`
             : `رمز إعادة تعيين كلمة المرور في SQB هو: ${otp} — صالح لمدة 5 دقائق.`;
 
-        await sendEmail(lowerEmail, subject, text, html);
+        // P0 on the gateway: sent inline, never queued behind bulk mail, and
+        // guaranteed a reserved slice of the daily budget.
+        await sendEmail(lowerEmail, subject, text, html, {
+            event: isSignup ? 'medqize.otp.signup' : 'medqize.otp.reset',
+            idempotencyKey: `otp:${lowerEmail}:${otp}`,
+            sourceOrigin: req.headers.referer || req.headers.origin,
+        });
 
         return res.status(200).json({ success: true, message: 'OTP sent successfully' });
 
@@ -4622,12 +5136,30 @@ app.post('/api/auth/reset-password', async (req, res) => {
 });
 
 // Create free account
+// Optional exam date offered at signup (see MONETIZATION_ANALYSIS_2026-08.md
+// P1 #4 — the reminder ladder in lifecycleJobs.js was fully built but never
+// fed, because nothing ever asked for the date). Deliberately lenient: an
+// invalid or unparsable date is just dropped rather than failing the signup
+// over an optional field. Mirrors the validation in routes/examDate.js,
+// which remains the place to CHANGE the date later.
+function parseSignupExamDate(value) {
+    const str = String(value || '').trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(str)) return null;
+    const d = new Date(`${str}T00:00:00Z`);
+    if (Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== str) return null;
+    const today = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate()));
+    const days = Math.round((d.getTime() - today.getTime()) / 86400000);
+    if (days < 0 || days > 730) return null;
+    return str;
+}
+
 app.post('/api/signup/free', async (req, res) => {
     try {
         const { email, password, otp_code } = req.body;
         // Study track is chosen once, at signup. Anything unrecognised falls
         // back to medical rather than failing the signup.
         const track = normalizeTrack(req.body.track);
+        const examDate = parseSignupExamDate(req.body.examDate);
 
         if (!email || !password || !otp_code) {
             return res.status(400).json({
@@ -4681,9 +5213,9 @@ app.post('/api/signup/free', async (req, res) => {
 
             // Create the account (username = email for backward compat)
             const accountResult = await client.query(
-                `INSERT INTO accounts (username, email, password, isactive, logged, terms_accepted, email_verified, track)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
-                [lowerEmail, lowerEmail, lowerPassword, true, false, false, true, track]
+                `INSERT INTO accounts (username, email, password, isactive, logged, terms_accepted, email_verified, track, exam_date)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
+                [lowerEmail, lowerEmail, lowerPassword, true, false, false, true, track, examDate]
             );
 
             const newUserId = accountResult.rows[0].id;
@@ -4706,39 +5238,18 @@ app.post('/api/signup/free', async (req, res) => {
             // "payment received" email is sent from paymentService when a
             // subscription is actually paid (webhook or /verify).
 
-            // One-hour free trial, bound to email — a `trial_grants` row is
-            // never deleted with the account, so a deleted+re-signed-up email
-            // can't claim a second trial.
-            let trial = { granted: false, expiresAt: null };
-            try {
-                const columnsReady = await hasPaymentColumns();
-                if (columnsReady) {
-                    const grantResult = await client.query(
-                        `INSERT INTO trial_grants (email, account_id, expires_at)
-                         VALUES ($1, $2, NOW() + interval '1 hour')
-                         ON CONFLICT (email) DO NOTHING
-                         RETURNING expires_at`,
-                        [lowerEmail, newUserId]
-                    );
-                    if (grantResult.rows.length > 0) {
-                        const expiresAt = grantResult.rows[0].expires_at;
-                        await client.query(
-                            `UPDATE accounts SET subscription_status = 'trial', subscription_expiry_date = $1 WHERE id = $2`,
-                            [expiresAt, newUserId]
-                        );
-                        trial = { granted: true, expiresAt };
-                    }
-                }
-            } catch (trialErr) {
-                console.error('Failed to grant free trial at signup:', trialErr);
-            }
-
+            // Every new account starts on the free tier: FREE_QUESTION_ALLOWANCE
+            // questions for life, plus the first lesson of every specialty, and
+            // an account that never locks. Nothing to grant and nothing to
+            // stamp — 'free' with free_questions_used = 0 is the column default,
+            // which also means there is no trial to re-claim by re-signing up.
             res.status(201).json({
                 success: true,
                 message: 'Account created successfully',
                 userId: newUserId,
                 track,
-                trial
+                freeQuestions: FREE_QUESTION_ALLOWANCE,
+                examDateSet: !!examDate
             });
 
         } finally {
@@ -4888,7 +5399,7 @@ app.post('/api/signup/temp-link', async (req, res) => {
             try {
                 const emailSubject = `🔗 Account Created via Temp Link - ${lowerEmail}`;
                 const emailText = `New account created via temp link:\nEmail: ${lowerEmail}\nUser ID: ${newUserId}\nTrack: ${trackLabelAr(linkTrack)}\nLink Token: ${token}\nCreated: ${new Date().toLocaleString()}\nLink Usage: ${link.current_uses + 1}/${link.max_uses}`;
-                await sendEmail(OWNER_EMAIL, emailSubject, emailText);
+                await sendEmail(OWNER_EMAIL, emailSubject, emailText, { event: 'medqize.owner.temp_link_account' });
             } catch (emailError) {
                 console.error('Failed to send temp link account creation email:', emailError);
             }
@@ -4910,6 +5421,158 @@ app.post('/api/signup/temp-link', async (req, res) => {
     } catch (err) {
         console.error('Error creating account from temp link:', err);
         res.status(500).json({ message: 'Failed to create account' });
+    }
+});
+
+// Claim a paid group seat.
+//
+// Modelled on /api/signup/temp-link above — same FOR UPDATE claim inside a
+// transaction, same "the link is the trust anchor so OTP is optional" rule —
+// with three deliberate differences:
+//
+//   1. is_admin_created stays FALSE. That flag is checked FIRST in
+//      checkSubscriptionAccess and bypasses expiry forever; a paid 4-month seat
+//      set that way would never lapse.
+//   2. The expiry is the GROUP's expires_at, not now + 4 months. Every seat in
+//      a group ends on the same day, so claiming a link late does not extend it.
+//   3. The claimer picks their own track. A group can be mixed — one friend
+//      sitting SMLE, another SNLE — so the seat does not inherit the buyer's.
+app.post('/api/signup/group-seat', async (req, res) => {
+    try {
+        const { token, email, password, otp_code, track: requestedTrack } = req.body;
+
+        if (!token || !email || !password) {
+            return res.status(400).json({ success: false, message: 'Token, email, and password are required' });
+        }
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ success: false, message: 'Invalid email format' });
+        }
+        if (password.length < 8) {
+            return res.status(400).json({ success: false, message: 'Password must be at least 8 characters' });
+        }
+
+        const lowerEmail = email.toLowerCase().trim();
+        const lowerPassword = password.toLowerCase();
+        const seatTrack = normalizeTrack(requestedTrack);
+
+        // Optional OTP, same reasoning as the admin invite links: the token is
+        // unguessable and was paid for, so a broken mail provider must not stop
+        // a paying group from using the seats they already own.
+        let otpRow = null;
+        if (otp_code) {
+            const otpResult = await db.query(
+                `SELECT id FROM signup_otps
+                 WHERE email = $1 AND otp_code = $2 AND used = FALSE AND expires_at > NOW()
+                 ORDER BY created_at DESC LIMIT 1`,
+                [lowerEmail, otp_code]
+            );
+            if (otpResult.rows.length === 0) {
+                return res.status(400).json({ success: false, message: 'Invalid or expired OTP' });
+            }
+            otpRow = otpResult.rows[0];
+        }
+
+        const client = await db.connect();
+        try {
+            await client.query('BEGIN');
+
+            // FOR UPDATE on the seat row: two people opening the same link at
+            // the same instant must not both get an account from one seat.
+            const seatResult = await client.query(
+                `SELECT s.id, s.seat_index, s.claimed_by_account_id,
+                        g.id AS group_id, g.seats, g.expires_at, g.owner_account_id
+                   FROM group_seats s
+                   JOIN subscription_groups g ON g.id = s.group_id
+                  WHERE s.token = $1
+                    FOR UPDATE OF s`,
+                [token]
+            );
+            if (seatResult.rows.length === 0) {
+                await client.query('ROLLBACK');
+                return res.status(404).json({ success: false, message: 'This invite link is not valid.' });
+            }
+            const seat = seatResult.rows[0];
+            if (seat.claimed_by_account_id != null) {
+                await client.query('ROLLBACK');
+                return res.status(409).json({ success: false, message: 'This invite link has already been used.' });
+            }
+            if (new Date(seat.expires_at).getTime() <= Date.now()) {
+                await client.query('ROLLBACK');
+                return res.status(410).json({ success: false, message: 'This group subscription has ended.' });
+            }
+
+            const existingUser = await client.query(
+                'SELECT id FROM accounts WHERE email = $1 AND email_verified = TRUE',
+                [lowerEmail]
+            );
+            if (existingUser.rows.length > 0) {
+                await client.query('ROLLBACK');
+                return res.status(400).json({ success: false, message: 'This email is already registered' });
+            }
+
+            if (otpRow) {
+                await client.query('UPDATE signup_otps SET used = TRUE WHERE id = $1', [otpRow.id]);
+            }
+
+            const accountResult = await client.query(
+                `INSERT INTO accounts
+                    (username, email, password, isactive, logged, terms_accepted, email_verified,
+                     is_admin_created, account_type, track,
+                     subscription_status, subscription_expiry_date)
+                 VALUES ($1, $2, $3, TRUE, FALSE, FALSE, TRUE,
+                         FALSE, 'group_seat', $4,
+                         'active', $5)
+                 RETURNING id`,
+                [lowerEmail, lowerEmail, lowerPassword, seatTrack, seat.expires_at]
+            );
+            const newUserId = accountResult.rows[0].id;
+
+            await client.query(
+                `UPDATE group_seats
+                    SET claimed_by_account_id = $1, claimed_at = NOW()
+                  WHERE id = $2`,
+                [newUserId, seat.id]
+            );
+
+            await client.query('COMMIT');
+
+            // Tell the buyer their seat was used — seat number and count only,
+            // never the claimer's email. See routes/groups.js privacy rule.
+            try {
+                const owner = await db.query(
+                    'SELECT email, username, preferred_lang FROM accounts WHERE id = $1',
+                    [seat.owner_account_id]
+                );
+                const o = owner.rows[0];
+                if (o?.email) {
+                    await sendGroupSeatClaimedEmail(
+                        o.email,
+                        String(o.username).split('@')[0],
+                        { seatIndex: seat.seat_index, seats: seat.seats, expiresAt: seat.expires_at },
+                        { lang: o.preferred_lang, accountId: seat.owner_account_id }
+                    );
+                }
+            } catch (emailErr) {
+                console.error('Failed to notify group owner of seat claim:', emailErr);
+            }
+
+            res.status(201).json({
+                success: true,
+                message: 'Account created successfully',
+                userId: newUserId,
+                track: seatTrack,
+                expiresAt: seat.expires_at
+            });
+        } catch (error) {
+            await client.query('ROLLBACK');
+            throw error;
+        } finally {
+            client.release();
+        }
+    } catch (err) {
+        console.error('Error claiming group seat:', err);
+        res.status(500).json({ success: false, message: 'Failed to create account' });
     }
 });
 
@@ -5426,6 +6089,125 @@ app.use('/api/accounting', (req, res, next) => { req.db = db; next(); }, account
 
 // Page engagement: POST /api/engagement (students) + GET /api/engagement/admin.
 app.use('/api/engagement', (req, res, next) => { req.db = db; next(); }, engagementRouter);
+
+// Pre-signup/pre-login funnel events: POST /api/funnel (unauthenticated,
+// rate-limited) + GET /api/funnel/admin.
+app.use('/api/funnel', (req, res, next) => { req.db = db; next(); }, funnelRouter);
+
+// Study goals and the in-app notification feed. Both resolve the account from
+// the validated session (req.accountId set by requireSession), never from the
+// request body.
+app.use('/api/goals', requireSession, (req, res, next) => { req.db = db; next(); }, goalsRouter);
+app.use('/api/notifications', requireSession, (req, res, next) => { req.db = db; next(); }, notificationsRouter);
+// The student's own sitting date — the anchor for the hub countdown and the
+// staged reminder emails.
+app.use('/api/exam-date', requireSession, (req, res, next) => { req.db = db; next(); }, examDateRouter);
+// Group subscriptions. No requireSession at mount: /seat/:token is a public
+// link check used before signup — each route inside applies its own guard.
+app.use('/api/groups', (req, res, next) => { req.db = db; next(); }, groupRoutes);
+// Retired trial heartbeat — answers 410 so tabs left open across the deploy
+// stop retrying. See routes/trial.js.
+app.use('/api/trial', requireSession, (req, res, next) => { req.db = db; next(); }, trialRouter);
+
+/**
+ * GET /api/progress/weekly — this week vs last week, for the hub's progress
+ * panel. Deliberately a comparison rather than a running total: "you answered
+ * 340 questions" is a fact, "you are 8% more accurate than last week" is a
+ * reason to come back. Same 7-day windows the digest email uses.
+ */
+app.get('/api/progress/weekly', requireSession, async (req, res) => {
+    try {
+        const { rows } = await db.query(`
+            SELECT
+                COALESCE(SUM(total_questions) FILTER (WHERE start_time > NOW() - INTERVAL '7 days'), 0)::int  AS q_now,
+                COALESCE(SUM(correct_answers) FILTER (WHERE start_time > NOW() - INTERVAL '7 days'), 0)::int  AS c_now,
+                COUNT(*) FILTER (WHERE start_time > NOW() - INTERVAL '7 days' AND end_time IS NOT NULL)::int  AS quizzes_now,
+                COALESCE(SUM(total_questions) FILTER (WHERE start_time > NOW() - INTERVAL '14 days'
+                                                        AND start_time <= NOW() - INTERVAL '7 days'), 0)::int AS q_prev,
+                COALESCE(SUM(correct_answers) FILTER (WHERE start_time > NOW() - INTERVAL '14 days'
+                                                        AND start_time <= NOW() - INTERVAL '7 days'), 0)::int AS c_prev
+              FROM user_quiz_sessions WHERE user_id = $1
+        `, [req.accountId]);
+        const r = rows[0] || {};
+        const qNow = r.q_now || 0;
+        const qPrev = r.q_prev || 0;
+        res.json({
+            success: true,
+            questionsThisWeek: qNow,
+            quizzesThisWeek: r.quizzes_now || 0,
+            accuracyThisWeek: qNow > 0 ? Math.round(((r.c_now || 0) / qNow) * 100) : null,
+            // null (not 0) when there is no prior week to compare against, so the
+            // UI can say "not enough history" instead of implying a 100% drop.
+            accuracyLastWeek: qPrev > 0 ? Math.round(((r.c_prev || 0) / qPrev) * 100) : null,
+            questionsLastWeek: qPrev,
+        });
+    } catch (err) {
+        logger.error('Failed to compute weekly progress', err);
+        res.status(500).json({ success: false, message: 'Failed to load progress' });
+    }
+});
+
+/**
+ * PUT /api/preferences/language — remember which language to email in.
+ *
+ * The site language lives in localStorage (see i18n/LanguageContext), which the
+ * cron jobs obviously cannot read. This mirrors it onto the account so lifecycle
+ * mail is written in the language the student actually reads the site in.
+ * Deliberately tiny and idempotent: the client fires it on every authenticated
+ * page load, and the UPDATE is a no-op when nothing changed.
+ */
+app.put('/api/preferences/language', requireSession, async (req, res) => {
+    const lang = String(req.body?.lang || '').toLowerCase().startsWith('en') ? 'en' : 'ar';
+    try {
+        await db.query(
+            `UPDATE accounts SET preferred_lang = $2 WHERE id = $1 AND preferred_lang IS DISTINCT FROM $2`,
+            [req.accountId, lang]
+        );
+        res.json({ success: true, lang });
+    } catch (err) {
+        logger.error('Failed to save language preference', err);
+        res.status(500).json({ success: false });
+    }
+});
+
+/**
+ * GET /api/public/stats — live usage numbers for the landing page's social
+ * proof (real activity, not question-bank inventory — the site never states
+ * bank size). Unauthenticated, read-only, no PII: three counts, nothing else.
+ *
+ * Cached in memory for CACHE_MS so a viral landing page can't turn this into
+ * three COUNT(*) queries per pageview. Failures fall back to whatever was
+ * last cached (or null, if the process just started) — the landing page's
+ * job is to fall back to static copy rather than show a broken number.
+ */
+const PUBLIC_STATS_CACHE_MS = 15 * 60 * 1000;
+let _publicStatsCache = null; // { data, at }
+app.get('/api/public/stats', async (req, res) => {
+    const now = Date.now();
+    if (_publicStatsCache && now - _publicStatsCache.at < PUBLIC_STATS_CACHE_MS) {
+        return res.json({ success: true, ...(_publicStatsCache.data), cached: true });
+    }
+    try {
+        const [activeWeek, questionsMonth, quizzesMonth] = await Promise.all([
+            db.query(`SELECT COUNT(DISTINCT user_id)::int AS n FROM login_history WHERE login_time > NOW() - INTERVAL '7 days'`),
+            db.query(`SELECT COUNT(*)::int AS n FROM user_question_attempts WHERE quiz_session_id IN (
+                          SELECT id FROM user_quiz_sessions WHERE start_time > NOW() - INTERVAL '30 days'
+                      )`),
+            db.query(`SELECT COUNT(*)::int AS n FROM user_quiz_sessions WHERE start_time > NOW() - INTERVAL '30 days' AND end_time IS NOT NULL`),
+        ]);
+        const data = {
+            activeStudentsThisWeek: activeWeek.rows[0]?.n || 0,
+            questionsAnsweredThisMonth: questionsMonth.rows[0]?.n || 0,
+            quizzesCompletedThisMonth: quizzesMonth.rows[0]?.n || 0,
+        };
+        _publicStatsCache = { data, at: now };
+        res.json({ success: true, ...data, cached: false });
+    } catch (err) {
+        logger.error('Failed to compute public stats', err);
+        if (_publicStatsCache) return res.json({ success: true, ...(_publicStatsCache.data), cached: true, stale: true });
+        res.status(503).json({ success: false });
+    }
+});
 
 // Admin broadcast — compose one email and drip it to every user in small,
 // resumable batches. See routes/admin-broadcast.js for why it is queue-based.

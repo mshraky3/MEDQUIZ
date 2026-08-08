@@ -3,7 +3,7 @@ import axios, { getAdminKey } from '../../utils/adminApi.js';
 import Globals from '../../global.js';
 import Icon from '../common/Icon.jsx';
 import Spinner from '../common/Spinner.jsx';
-import AdminNavbar from './AdminNavbar.jsx';
+import AdminLayout from './AdminLayout.jsx';
 import './Accounting.css';
 
 /**
@@ -23,6 +23,17 @@ const sar = (halalas) => (Number(halalas || 0) / 100).toLocaleString('en-US', {
 });
 
 const fmtDate = (d) => new Date(d).toISOString().slice(0, 10);
+
+// English labels for payment plan ids — admin is English/LTR only.
+const PLAN_LABELS = {
+    monthly: 'Monthly',
+    four_month: '4-month',
+    annual: 'Annual',
+    group_3: 'Group (3 seats)',
+    group_5: 'Group (5 seats)',
+    unknown: 'Unknown',
+};
+const planLabel = (planId) => PLAN_LABELS[planId] || planId;
 
 const MONTH_LABEL = (key) => {
     const [y, m] = key.split('-');
@@ -92,27 +103,21 @@ const Accounting = () => {
 
     if (state === 'loading' && !data) {
         return (
-            <div className="admin-page-wrapper">
-                <AdminNavbar />
-                <div className="admin-container">
-                    <div className="acc-loading"><Spinner size="lg" /><p>Loading accounting…</p></div>
-                </div>
-            </div>
+            <AdminLayout>
+                <div className="acc-loading"><Spinner size="lg" /><p>Loading accounting…</p></div>
+            </AdminLayout>
         );
     }
 
     if (state === 'error' && !data) {
         return (
-            <div className="admin-page-wrapper">
-                <AdminNavbar />
-                <div className="admin-container">
-                    <div className="acc-error">
-                        <Icon name="alert-triangle" size={28} />
-                        <p>{error}</p>
-                        <button className="acc-btn" onClick={load}>Retry</button>
-                    </div>
+            <AdminLayout>
+                <div className="acc-error">
+                    <Icon name="alert-triangle" size={28} />
+                    <p>{error}</p>
+                    <button className="acc-btn" onClick={load}>Retry</button>
                 </div>
-            </div>
+            </AdminLayout>
         );
     }
 
@@ -120,9 +125,7 @@ const Accounting = () => {
     const tag = fmtDate(new Date());
 
     return (
-        <div className="admin-page-wrapper">
-            <AdminNavbar />
-            <div className="admin-container">
+        <AdminLayout>
 
                 <header className="acc-head">
                     <div>
@@ -301,6 +304,36 @@ const Accounting = () => {
                     </div>
                 </section>
 
+                {/* ── Per-plan revenue ── */}
+                <section className="acc-panel">
+                    <h2>By plan</h2>
+                    <div className="acc-table-wrap">
+                        <table className="acc-table">
+                            <thead>
+                                <tr>
+                                    <th>Plan</th><th className="num">Payments</th><th className="num">Seats</th>
+                                    <th className="num">Gross</th><th className="num">Fees</th><th className="num">Net</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {(data?.byPlan || []).map((b) => (
+                                    <tr key={b.plan}>
+                                        <td>{planLabel(b.plan)}</td>
+                                        <td className="num">{b.count}</td>
+                                        <td className="num">{b.seats}</td>
+                                        <td className="num">{sar(b.gross)}</td>
+                                        <td className="num cost">−{sar(b.fee)}</td>
+                                        <td className="num net">{sar(b.net)}</td>
+                                    </tr>
+                                ))}
+                                {(data?.byPlan || []).length === 0 && (
+                                    <tr><td colSpan={6} className="acc-empty">No data.</td></tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
                 {/* ── Every payment ── */}
                 <section className="acc-panel">
                     <h2>All payments</h2>
@@ -311,7 +344,7 @@ const Accounting = () => {
                         <table className="acc-table">
                             <thead>
                                 <tr>
-                                    <th>Invoice</th><th>Date</th><th>Subscriber</th><th>Method</th>
+                                    <th>Invoice</th><th>Date</th><th>Subscriber</th><th>Plan</th><th className="num">Seats</th><th>Method</th>
                                     <th className="num">Gross</th><th className="num">Fee</th><th className="num">Net</th>
                                 </tr>
                             </thead>
@@ -330,6 +363,8 @@ const Accounting = () => {
                                         </td>
                                         <td>{fmtDate(p.receivedAt)}</td>
                                         <td className="acc-sub-cell" title={p.subscriberLabel}>{p.subscriberLabel}</td>
+                                        <td>{p.planId ? planLabel(p.planId) : '—'}</td>
+                                        <td className="num">{p.seats || 1}</td>
                                         <td>
                                             {p.company || '—'}
                                             {p.method === 'applepay' && <span className="acc-tag">Apple Pay</span>}
@@ -343,14 +378,13 @@ const Accounting = () => {
                                     </tr>
                                 ))}
                                 {(data?.payments || []).length === 0 && (
-                                    <tr><td colSpan={7} className="acc-empty">No payments in this range.</td></tr>
+                                    <tr><td colSpan={9} className="acc-empty">No payments in this range.</td></tr>
                                 )}
                             </tbody>
                         </table>
                     </div>
                 </section>
-            </div>
-        </div>
+        </AdminLayout>
     );
 };
 

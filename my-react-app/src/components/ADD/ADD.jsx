@@ -3,7 +3,7 @@ import Icon from '../common/Icon.jsx';
 import axios from "../../utils/adminApi.js";
 import "./add.css";
 import "./Admin.css";
-import AdminNavbar from "./AdminNavbar.jsx";
+import AdminLayout from "./AdminLayout.jsx";
 import { TRACKS, TRACK_KEYS, MEDICAL, normalizeTrack } from '../../utils/tracks.js';
 
 /**
@@ -12,10 +12,16 @@ import { TRACKS, TRACK_KEYS, MEDICAL, normalizeTrack } from '../../utils/tracks.
  * that still valid today? `subscription_status` alone is not enough, since an
  * 'active' row whose expiry has passed is no longer paid.
  */
+// Mirrors paymentService.FREE_QUESTION_ALLOWANCE. Kept in sync manually since
+// this is a read-only admin display, not a gate.
+const FREE_QUESTION_ALLOWANCE = 40;
+
 const subscriptionInfo = (user) => {
     const expiry = user.subscription_expiry_date ? new Date(user.subscription_expiry_date) : null;
     const expired = expiry ? expiry.getTime() <= Date.now() : false;
     const status = user.subscription_status || 'free';
+    const used = Number(user.free_questions_used) || 0;
+    const left = Math.max(0, FREE_QUESTION_ALLOWANCE - used);
 
     // Checked first, mirroring checkSubscriptionAccess: this flag short-circuits
     // the paywall, so subscription_status is meaningless on these rows. Calling
@@ -34,12 +40,18 @@ const subscriptionInfo = (user) => {
             ? { key: 'expired', label: 'Expired', cls: 'expired', detail: `Ended ${expiry.toLocaleDateString()}` }
             : { key: 'paid', label: 'Paid', cls: 'paid', detail: expiry ? `Until ${expiry.toLocaleDateString()}` : 'No expiry set' };
     }
-    if (status === 'trial') {
-        return expired
-            ? { key: 'trial_expired', label: 'Trial ended', cls: 'expired', detail: `Ended ${expiry.toLocaleString()}` }
-            : { key: 'trial', label: 'Trial', cls: 'trial', detail: expiry ? `Until ${expiry.toLocaleString()}` : 'Active' };
+    // Free tier. Split by whether the allowance is spent: an account with 0 left
+    // is the one worth a nudge, and an account that never answered a question is
+    // a different problem entirely.
+    if (left <= 0) {
+        return { key: 'spent', label: 'Free — used up', cls: 'expired', detail: `Spent all ${FREE_QUESTION_ALLOWANCE} free questions` };
     }
-    return { key: 'free', label: 'Free', cls: 'free', detail: 'Never subscribed' };
+    return {
+        key: 'free',
+        label: 'Free',
+        cls: used > 0 ? 'trial' : 'free',
+        detail: used > 0 ? `${left} of ${FREE_QUESTION_ALLOWANCE} free questions left` : 'Has not started yet',
+    };
 };
 
 /**
@@ -49,11 +61,23 @@ const subscriptionInfo = (user) => {
  */
 const adminMade = (user) => Boolean(user.is_admin_created) || user.account_type === 'admin_created';
 
+// English labels for payment plan ids — admin is pinned English/LTR, mirrors
+// the ar/en copy in src/i18n/copy/account.js (kept separate since that file
+// is student-facing and this is a read-only admin display).
+const PLAN_LABELS = {
+    monthly: 'Monthly',
+    four_month: '4-month',
+    annual: 'Annual',
+    group_3: 'Group (3 seats)',
+    group_5: 'Group (5 seats)',
+};
+const planLabel = (planId) => (planId ? (PLAN_LABELS[planId] || planId) : null);
+
 const PLAN_FILTERS = [
     { value: 'all', label: 'All plans' },
     { value: 'paid', label: 'Paid' },
-    { value: 'trial', label: 'On trial' },
-    { value: 'free', label: 'Free' },
+    { value: 'free', label: 'Free — questions left' },
+    { value: 'spent', label: 'Free — used up' },
     { value: 'expired', label: 'Expired / refunded' },
     { value: 'exempt', label: 'Free forever (admin)' },
     { value: 'legacy', label: 'Legacy' },
@@ -72,13 +96,11 @@ const ADD = (props) => {
     const [loading, setLoading] = useState(false);
 
     // State for dashboard data
-    const [stats, setStats] = useState(null);
     const [users, setUsers] = useState([]);
-    const [, setLoadingStats] = useState(true);
     const [, setLoadingUsers] = useState(true);
 
     // State for UI
-    const [activeTab, setActiveTab] = useState('overview'); // overview, users, suspicious
+    const [activeTab, setActiveTab] = useState('users'); // users, suspicious, add
     const [searchQuery, setSearchQuery] = useState("");
     const [planFilter, setPlanFilter] = useState("all");
     const [sortBy, setSortBy] = useState("id");
@@ -87,19 +109,6 @@ const ADD = (props) => {
     const [showLoginHistory, setShowLoginHistory] = useState(false);
     const [loginHistory, setLoginHistory] = useState([]);
     const [deletingUser, setDeletingUser] = useState(null);
-
-    // Fetch dashboard stats
-    const fetchStats = async () => {
-        try {
-            setLoadingStats(true);
-            const response = await axios.get(`${props.host}/admin/stats`);
-            setStats(response.data);
-        } catch (err) {
-            console.error("Failed to fetch stats:", err);
-        } finally {
-            setLoadingStats(false);
-        }
-    };
 
     // Fetch users with activity data
     const fetchUsers = async () => {
@@ -134,14 +143,10 @@ const ADD = (props) => {
 
     // Initial data fetch
     useEffect(() => {
-        fetchStats();
         fetchUsers();
 
         // Refresh every 60 seconds
-        const interval = setInterval(() => {
-            fetchStats();
-            fetchUsers();
-        }, 60000);
+        const interval = setInterval(fetchUsers, 60000);
 
         return () => clearInterval(interval);
     }, []);
@@ -199,8 +204,8 @@ const ADD = (props) => {
         const current = normalizeTrack(user.track);
         const next = TRACK_KEYS.find((k) => k !== current) || current;
         if (!window.confirm(
-            `Move "${user.username}" from ${TRACKS[current].labelEn} to ${TRACKS[next].labelEn}?\n\n`
-            + `They will immediately see the ${TRACKS[next].labelEn} question bank and summaries. `
+            `Move "${user.username}" from ${TRACKS[current].label.en} to ${TRACKS[next].label.en}?\n\n`
+            + `They will immediately see the ${TRACKS[next].label.en} question bank and summaries. `
             + `Their existing history is kept but stops being counted, since it belongs to the other bank.`
         )) return;
 
@@ -208,7 +213,7 @@ const ADD = (props) => {
         setError("");
         try {
             await axios.post(`${props.host}/admin/users/${user.id}/track`, { track: next });
-            setMessage(`Moved ${user.username} to the ${TRACKS[next].labelEn} track.`);
+            setMessage(`Moved ${user.username} to the ${TRACKS[next].label.en} track.`);
             fetchUsers();
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to change track.');
@@ -269,8 +274,7 @@ const ADD = (props) => {
         if (planFilter !== 'all') {
             filtered = filtered.filter((user) => {
                 const { key } = subscriptionInfo(user);
-                if (planFilter === 'expired') return key === 'expired' || key === 'trial_expired' || key === 'refunded';
-                if (planFilter === 'trial') return key === 'trial';
+                if (planFilter === 'expired') return key === 'expired' || key === 'refunded';
                 return key === planFilter;
             });
         }
@@ -314,49 +318,10 @@ const ADD = (props) => {
         return users.filter(user => user.suspicious?.hasSuspiciousActivity);
     }, [users]);
 
-    // Simple bar chart component
-    const SimpleBarChart = ({ data, labelKey, valueKey, maxBars = 7 }) => {
-        if (!data || data.length === 0) return <div className="no-data">No data available</div>;
-
-        const slicedData = data.slice(0, maxBars);
-        const maxValue = Math.max(...slicedData.map(d => parseInt(d[valueKey]) || 0));
-
-        return (
-            <div className="simple-chart">
-                {slicedData.map((item, index) => {
-                    const value = parseInt(item[valueKey]) || 0;
-                    const percentage = maxValue > 0 ? (value / maxValue) * 100 : 0;
-                    const label = item[labelKey] || 'Unknown';
-
-                    return (
-                        <div key={index} className="chart-bar-container">
-                            <div className="chart-label">{typeof label === 'string' ? label.slice(0, 10) : label}</div>
-                            <div className="chart-bar-wrapper">
-                                <div
-                                    className="chart-bar"
-                                    style={{ width: `${percentage}%` }}
-                                />
-                            </div>
-                            <div className="chart-value">{value}</div>
-                        </div>
-                    );
-                })}
-            </div>
-        );
-    };
-
     return (
-        <div className="admin-page-wrapper">
-            <AdminNavbar />
-            <div className="admin-dashboard">
+        <AdminLayout containerClassName="admin-dashboard">
                 {/* Tab Navigation */}
                 <div className="dashboard-tabs">
-                    <button
-                        className={`tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('overview')}
-                    >
-                        <Icon name="bar-chart" size={16} /> Overview
-                    </button>
                     <button
                         className={`tab-btn ${activeTab === 'users' ? 'active' : ''}`}
                         onClick={() => setActiveTab('users')}
@@ -380,114 +345,6 @@ const ADD = (props) => {
                 {/* Messages */}
                 {error && <div className="alert alert-error">{error}</div>}
                 {message && <div className="alert alert-success">{message}</div>}
-
-                {/* Overview Tab */}
-                {activeTab === 'overview' && (
-                    <div className="tab-content">
-                        {/* Stats Cards */}
-                        <div className="stats-grid">
-                            <div className="stat-card-mini">
-                                <div className="stat-icon"><Icon name="users" size={16} /></div>
-                                <div className="stat-info">
-                                    <span className="stat-value">{stats?.overview?.totalUsers || 0}</span>
-                                    <span className="stat-label">Total Users</span>
-                                </div>
-                            </div>
-                            <div className="stat-card-mini">
-                                <div className="stat-icon"><Icon name="circle" size={16} /></div>
-                                <div className="stat-info">
-                                    <span className="stat-value">{stats?.overview?.activeUsers || 0}</span>
-                                    <span className="stat-label">Active (7 days)</span>
-                                </div>
-                            </div>
-                            <div className="stat-card-mini">
-                                <div className="stat-icon">🆕</div>
-                                <div className="stat-info">
-                                    <span className="stat-value">{stats?.overview?.newUsersWeek || 0}</span>
-                                    <span className="stat-label">New This Week</span>
-                                </div>
-                            </div>
-                            <div className="stat-card-mini">
-                                <div className="stat-icon"><Icon name="pen" size={16} /></div>
-                                <div className="stat-info">
-                                    <span className="stat-value">{stats?.overview?.totalQuizzes || 0}</span>
-                                    <span className="stat-label">Total Quizzes</span>
-                                </div>
-                            </div>
-                            <div className="stat-card-mini">
-                                <div className="stat-icon"><Icon name="target" size={16} /></div>
-                                <div className="stat-info">
-                                    <span className="stat-value">{stats?.overview?.avgAccuracy || 0}%</span>
-                                    <span className="stat-label">Avg Accuracy</span>
-                                </div>
-                            </div>
-                            <div className="stat-card-mini warning">
-                                <div className="stat-icon"><Icon name="alert-triangle" size={16} /></div>
-                                <div className="stat-info">
-                                    <span className="stat-value">{suspiciousUsers.length}</span>
-                                    <span className="stat-label">Suspicious</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Charts Section */}
-                        <div className="charts-grid">
-                            <div className="chart-card">
-                                <h3><Icon name="trending-up" size={16} /> Logins (Last 7 Days)</h3>
-                                <SimpleBarChart
-                                    data={stats?.charts?.loginsByDay || []}
-                                    labelKey="date"
-                                    valueKey="count"
-                                />
-                            </div>
-                            <div className="chart-card">
-                                <h3><Icon name="trophy" size={16} /> Top Users</h3>
-                                <SimpleBarChart
-                                    data={stats?.topUsers || []}
-                                    labelKey="username"
-                                    valueKey="quiz_count"
-                                    maxBars={5}
-                                />
-                            </div>
-                            <div className="chart-card">
-                                <h3><Icon name="book-open" size={16} /> Questions by Topic</h3>
-                                <SimpleBarChart
-                                    data={stats?.quizzesByTopic || []}
-                                    labelKey="topic"
-                                    valueKey="count"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Recent Logins */}
-                        <div className="recent-section">
-                            <h3><Icon name="clock" size={16} /> Recent Logins</h3>
-                            <div className="recent-logins-list">
-                                {stats?.recentLogins?.slice(0, 5).map((login, idx) => (
-                                    <div key={idx} className={`recent-login-item ${login.is_suspicious ? 'suspicious' : ''}`}>
-                                        <div className="login-user">
-                                            <span className="login-avatar"><Icon name="user" size={16} /></span>
-                                            <span className="login-username">{login.username}</span>
-                                        </div>
-                                        <div className="login-details">
-                                            <span className="login-device">{login.device_type} • {login.browser}</span>
-                                            <span className="login-ip">{login.ip_address}</span>
-                                        </div>
-                                        <div className="login-time">
-                                            {new Date(login.login_time).toLocaleString()}
-                                        </div>
-                                        {login.is_suspicious && (
-                                            <span className="suspicious-badge"><Icon name="alert-triangle" size={16} /></span>
-                                        )}
-                                    </div>
-                                ))}
-                                {(!stats?.recentLogins || stats.recentLogins.length === 0) && (
-                                    <div className="no-data">No recent logins recorded</div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                )}
 
                 {/* Users Tab */}
                 {activeTab === 'users' && (
@@ -538,7 +395,7 @@ const ADD = (props) => {
                             </div>
                             <button
                                 className="refresh-btn"
-                                onClick={() => { fetchUsers(); fetchStats(); }}
+                                onClick={fetchUsers}
                             >
                                 <Icon name="refresh" size={16} /> Refresh
                             </button>
@@ -551,6 +408,7 @@ const ADD = (props) => {
                                     <tr>
                                         <th>User</th>
                                         <th>Subscription</th>
+                                        <th>Plan</th>
                                         <th>Origin</th>
                                         <th>Status</th>
                                         <th>Activity</th>
@@ -578,7 +436,7 @@ const ADD = (props) => {
                                                         <div className="user-id">
                                                             ID: {user.id}
                                                             <span className={`track-chip track-chip--${normalizeTrack(user.track)}`}>
-                                                                {TRACKS[normalizeTrack(user.track)].labelEn}
+                                                                {TRACKS[normalizeTrack(user.track)].label.en}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -587,6 +445,11 @@ const ADD = (props) => {
                                             <td className="plan-cell">
                                                 <span className={`plan-badge plan-badge--${plan.cls}`}>{plan.label}</span>
                                                 <div className="plan-detail">{plan.detail}</div>
+                                            </td>
+                                            <td className="plan-cell">
+                                                {planLabel(user.plan_id)
+                                                    ? <span className="plan-badge plan-badge--paid">{planLabel(user.plan_id)}</span>
+                                                    : <span className="plan-detail">Never purchased</span>}
                                             </td>
                                             <td className="origin-cell">
                                                 <span className={`origin-badge ${adminMade(user) ? 'admin' : 'self'}`}>
@@ -808,7 +671,7 @@ const ADD = (props) => {
                                     >
                                         {TRACK_KEYS.map((key) => (
                                             <option key={key} value={key}>
-                                                {TRACKS[key].labelEn} ({TRACKS[key].labelAr})
+                                                {TRACKS[key].label.en}
                                             </option>
                                         ))}
                                     </select>
@@ -862,8 +725,7 @@ const ADD = (props) => {
                         </div>
                     </div>
                 )}
-            </div>
-        </div>
+        </AdminLayout>
     );
 };
 

@@ -79,7 +79,7 @@ function buildReportPdf(rows, totals, periodStart, periodEnd) {
         doc.font('Helvetica').fontSize(9.5).fillColor('#374151')
             .text(`Period:  ${fmtDate(periodStart)}  →  ${fmtDate(periodEnd)}`)
             .text(`Generated: ${fmtDate(new Date())}`)
-            .text(`Plan: annual subscription — amounts in SAR`);
+            .text(`All plans — amounts in SAR`);
         doc.moveDown(0.8);
 
         const drawHeaderRow = () => {
@@ -239,6 +239,8 @@ export async function sendSubscriptionReport(db, opts = {}) {
         </div>`;
 
     await sendMail({
+        // Carries a PDF, and goes to the owner.
+        event: 'medqize.owner.subscriptions_report',
         name: 'SQB Reports',
         to: REPORT_RECIPIENT,
         subject: `📈 Subscriptions Report — ${rows.length} new (${sar(totals.net)} SAR net) — ${dateTag}`,

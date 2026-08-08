@@ -11,17 +11,12 @@ import { adminAuth } from '../middleware/adminAuth.js';
 import {
     fetchPaidEvents, summarize, sar, vatConfig, splitVat, reconcileWithGateway,
 } from '../services/accountingService.js';
-import { TRACK_KEYS, trackLabelAr } from '../config/tracks.js';
+import { riyadhMonthKey } from '../services/adminMetricsService.js';
+import { TRACK_KEYS, trackLabelEn } from '../config/tracks.js';
 import { buildInvoicePdf, invoiceNumberFor } from '../services/invoiceService.js';
 
 const router = express.Router();
 router.use(adminAuth);
-
-/** Month key (YYYY-MM) in Riyadh time — KSA is a fixed UTC+3, no DST. */
-function riyadhMonthKey(date) {
-    const d = new Date(new Date(date).getTime() + 3 * 3600 * 1000);
-    return d.toISOString().slice(0, 7);
-}
 
 /**
  * GET /api/accounting/summary?from=&to=
@@ -69,13 +64,29 @@ router.get('/summary', async (req, res) => {
             const tr = rows.filter((r) => (r.track || 'medical') === t);
             return {
                 track: t,
-                label: trackLabelAr(t),
+                label: trackLabelEn(t),
                 count: tr.length,
                 gross: tr.reduce((n, r) => n + r.grossHalalas, 0),
                 fee: tr.reduce((n, r) => n + r.feeHalalas, 0),
                 net: tr.reduce((n, r) => n + r.netHalalas, 0),
             };
         });
+
+        // ── By plan ── which of the 5 plans (or "unknown", for pre-plan-model
+        // rows) generated this revenue. `seats` sums the accounts each plan's
+        // payments activated, not the payment count — a group_5 payment is 1
+        // row but 5 seats.
+        const planMap = new Map();
+        rows.forEach((r) => {
+            const key = r.planId || 'unknown';
+            if (!planMap.has(key)) {
+                planMap.set(key, { plan: key, count: 0, seats: 0, gross: 0, fee: 0, net: 0 });
+            }
+            const p = planMap.get(key);
+            p.count += 1; p.seats += r.seats || 1;
+            p.gross += r.grossHalalas; p.fee += r.feeHalalas; p.net += r.netHalalas;
+        });
+        const byPlan = [...planMap.values()].sort((a, b) => b.gross - a.gross);
 
         const vat = vatConfig();
         res.json({
@@ -91,6 +102,7 @@ router.get('/summary', async (req, res) => {
             months,
             schemes,
             byTrack,
+            byPlan,
             payments: rows.map((r) => ({
                 ...r,
                 invoiceNumber: invoiceNumberFor(r),
