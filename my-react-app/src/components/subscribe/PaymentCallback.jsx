@@ -122,7 +122,7 @@ const PaymentCallback = () => {
                             <h2>{t.failedTitle}</h2>
                             <p>{message}</p>
                             <button
-                                className="btn primary large"
+                                className="btn btn-primary large"
                                 style={{ marginTop: 8 }}
                                 onClick={() => navigate('/subscribe', { replace: true })}
                             >

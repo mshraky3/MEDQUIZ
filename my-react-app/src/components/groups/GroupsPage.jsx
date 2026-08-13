@@ -147,7 +147,7 @@ const GroupsPage = () => {
                                         ))}
                                     </ul>
 
-                                    <button type="button" className="btn primary groups-buy-cta" onClick={() => buy(plan.id)}>
+                                    <button type="button" className="btn btn-primary groups-buy-cta" onClick={() => buy(plan.id)}>
                                         {isAuthenticated
                                             ? t.buyCta(t.priceWithCurrency(plan.priceHalalas / 100))
                                             : t.buyCtaGuest(t.priceWithCurrency(plan.priceHalalas / 100))}

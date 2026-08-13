@@ -262,7 +262,7 @@ const Login = () => {
                 </div>
               )}
 
-              <button type="submit" className="btn primary large" disabled={loading}>
+              <button type="submit" className="btn btn-primary large" disabled={loading}>
                 {loading ? copy.submitting : copy.submit}
               </button>
 

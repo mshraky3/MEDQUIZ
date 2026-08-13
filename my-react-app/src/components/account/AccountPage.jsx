@@ -181,7 +181,7 @@ const AccountPage = () => {
 
                         <div className="account-actions">
                             {!isLegacy && (
-                                <button type="button" className="btn primary" onClick={() => navigate('/subscribe')}>
+                                <button type="button" className="btn btn-primary" onClick={() => navigate('/subscribe')}>
                                     {isPaid ? t.renewCta : t.subscribeCta}
                                 </button>
                             )}

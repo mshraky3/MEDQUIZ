@@ -209,7 +209,7 @@ const InstallShowcase = () => {
                             <Icon name="refresh" size={15} /> {m.replay}
                         </button>
                         {canInstallAndroid && (
-                            <button className="btn primary" onClick={promptInstall}>
+                            <button className="btn btn-primary" onClick={promptInstall}>
                                 <Icon name="home" size={17} /> {t.installNow}
                             </button>
                         )}

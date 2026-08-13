@@ -373,7 +373,7 @@ const Signup = () => {
                         <div className="login-form">
                             <button
                                 type="button"
-                                className="btn primary large"
+                                className="btn btn-primary large"
                                 onClick={() => {
                                     // Both /signup and /signup/:token render this same
                                     // component, so the router may reuse the instance —
@@ -540,7 +540,7 @@ const Signup = () => {
                             {error && <div className="alert-box error">{error}</div>}
                             <button
                                 type="submit"
-                                className="btn primary large"
+                                className="btn btn-primary large"
                                 disabled={loading}
                             >
                                 {loading ? (
@@ -581,7 +581,7 @@ const Signup = () => {
                                 </p>
                             </div>
                             {error && <div className="alert-box error">{error}</div>}
-                            <button type="submit" className="btn primary large" disabled={loading}>
+                            <button type="submit" className="btn btn-primary large" disabled={loading}>
                                 {loading ? (
                                     <div className="loading-spinner"><Spinner size="sm" />{t.creatingAccount}</div>
                                 ) : t.otpSubmit}
@@ -656,7 +656,7 @@ const Signup = () => {
 
                         <button
                             type="button"
-                            className="btn primary large track-modal-confirm"
+                            className="btn btn-primary large track-modal-confirm"
                             disabled={!studyTrack}
                             onClick={() => { setError(''); setShowTrackModal(false); }}
                         >

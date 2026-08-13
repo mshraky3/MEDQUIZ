@@ -113,7 +113,7 @@ const ForgotPassword = () => {
                                 />
                             </div>
                             {error && <div className="alert-box error">{error}</div>}
-                            <button type="submit" className="btn primary large" disabled={loading}>
+                            <button type="submit" className="btn btn-primary large" disabled={loading}>
                                 {loading ? t.sending : t.sendOtp}
                             </button>
                             <div className="login-footer-text">
@@ -147,7 +147,7 @@ const ForgotPassword = () => {
                                 {t.spamHintBefore} <strong>{t.spamFolder}</strong> {t.spamOr} <strong>{t.trashFolder}</strong>.
                             </p>
                             {error && <div className="alert-box error">{error}</div>}
-                            <button type="submit" className="btn primary large">{t.next}</button>
+                            <button type="submit" className="btn btn-primary large">{t.next}</button>
                             <div className="login-footer-text">
                                 <button
                                     type="button"
@@ -189,7 +189,7 @@ const ForgotPassword = () => {
                                 />
                             </div>
                             {error && <div className="alert-box error">{error}</div>}
-                            <button type="submit" className="btn primary large" disabled={loading}>
+                            <button type="submit" className="btn btn-primary large" disabled={loading}>
                                 {loading ? t.submitting : t.submit}
                             </button>
                         </form>
