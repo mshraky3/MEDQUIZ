@@ -150,6 +150,7 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
+    min-height: 44px;
     border: 1px solid var(--border, #d7dee9);
     background: var(--surface, #fff);
     color: var(--text-dark, #0f1e3d);

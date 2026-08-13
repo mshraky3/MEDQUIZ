@@ -26,7 +26,11 @@ const Footer = () => {
     { to: '/about', label: t.nav.about },
     { to: '/guides', label: t.nav.guides },
     { to: '/faq', label: t.nav.faq },
-    { to: '/suggestions', label: t.footer.suggestions },
+    // Group plans are otherwise advertised in exactly one place (the landing
+    // band). This is the link that reaches them from every other page.
+    { to: '/groups', label: t.footer.groupPlans },
+    // Suggestions is reachable from /contact only now (a button there) — not
+    // its own nav entry. Its route and SEO stay published; just the link.
     { to: '/contact', label: t.footer.contactUs },
     { to: '/login', label: t.nav.login },
     { to: '/signup', label: t.nav.signup },

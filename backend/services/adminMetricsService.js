@@ -114,15 +114,20 @@ export async function subscriptionSnapshot(db) {
  * historical trial cohort would make the rate jump overnight for no real reason.
  */
 export async function conversionSnapshot(db, payerAccountIds) {
+    // Both counts computed in SQL — this used to fetch every "tried" account's
+    // id (a number that grows with the whole userbase) just to count them and
+    // intersect with payerAccountIds in JS. Passing that set into the query
+    // as an array lets COUNT(*) FILTER do the intersection instead.
     const { rows } = await db.query(`
-        SELECT a.id
+        SELECT
+            COUNT(*)::int AS total_tried,
+            COUNT(*) FILTER (WHERE a.id = ANY($1::int[]))::int AS tried_to_paid
           FROM accounts a
          WHERE a.free_questions_used > 0
             OR EXISTS (SELECT 1 FROM trial_grants g WHERE g.account_id = a.id)
-    `);
-    const triedAccountIds = rows.map((r) => r.id);
-    const totalTried = triedAccountIds.length;
-    const triedToPaid = triedAccountIds.filter((id) => payerAccountIds.has(id)).length;
+    `, [[...payerAccountIds]]);
+    const totalTried = rows[0]?.total_tried ?? 0;
+    const triedToPaid = rows[0]?.tried_to_paid ?? 0;
     const conversionRate = totalTried > 0
         ? Math.round((triedToPaid / totalTried) * 1000) / 10
         : 0;

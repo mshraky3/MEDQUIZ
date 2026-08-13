@@ -5,7 +5,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
+    /* Was a hardcoded 1000 — same layer as the navbar's old hardcoded value.
+       Now that the navbar sits at --z-navbar (1030), this modal has to be
+       above the modal-backdrop layer (1040) explicitly or it renders under
+       the navbar. */
+    z-index: var(--z-modal-backdrop, 1040);
     padding: 16px;
 }
 
@@ -22,14 +26,18 @@
 
 .report-modal-close {
     position: absolute;
-    top: 12px;
-    right: 12px;
+    top: 8px;
+    inset-inline-end: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
     background: none;
     border: none;
     color: #64748b;
     font-size: 16px;
     cursor: pointer;
-    padding: 4px 8px;
     border-radius: 4px;
     transition: color 0.2s;
 }
@@ -76,7 +84,8 @@
     border-radius: 8px;
     color: #1e293b;
     padding: 10px 12px;
-    font-size: 14px;
+    /* 16px — below that, iOS Safari zooms the page on focus. */
+    font-size: 16px;
     resize: vertical;
     box-sizing: border-box;
     font-family: inherit;
@@ -101,6 +110,10 @@
 }
 
 .report-btn-cancel {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
     background: none;
     border: 1px solid #d4deee;
     color: #64748b;
@@ -117,6 +130,10 @@
 }
 
 .report-btn-submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
     background: #236ded;
     border: none;
     color: #ffffff;
@@ -155,6 +172,7 @@
     color: #475569;
     font-size: 12px;
     padding: 4px 10px;
+    min-height: 44px;
     border-radius: 6px;
     cursor: pointer;
     display: inline-flex;
@@ -167,4 +185,23 @@
 .report-question-btn:hover {
     color: #f87171;
     border-color: #f87171;
+}
+
+/* No media queries at all previously. The modal is already fluid
+   (max-width + width:100%), but its 24px padding plus the overlay's own 16px
+   leaves very little room for the question preview + textarea on a 320px
+   phone. */
+@media (max-width: 380px) {
+    .report-modal {
+        padding: 18px 16px;
+    }
+
+    .report-modal-actions {
+        flex-direction: column-reverse;
+    }
+
+    .report-btn-cancel,
+    .report-btn-submit {
+        width: 100%;
+    }
 }

@@ -31,6 +31,7 @@ const landingCopy = {
             primary: 'ابدأ بـ 40 سؤالاً مجاناً',
             secondary: 'تسجيل الدخول',
             trust: [
+                'تفسير كامل لكل سؤال',
                 '40 سؤالاً مجاناً بلا حد زمني',
                 'أول درس من كل تخصص مجاني للأبد',
                 'من 50 ريالاً شهرياً',
@@ -40,6 +41,37 @@ const landingCopy = {
             // date — otherwise ExamCountdown renders nothing.
             examCountdown: (days) => `الاختبار القادم بعد ${days} ${days === 1 ? 'يوم' : 'يوماً'}`,
             scrollCue: 'تصفّح',
+        },
+
+        // The explanations section. This is the platform's strongest single
+        // claim, so the wording stays concrete: what a student actually reads
+        // after answering, and what the two quiz modes do. No question counts —
+        // the number is deliberately kept out of all landing copy.
+        explain: {
+            sectionLabel: 'تفسير كل إجابة',
+            pill: 'أقوى ما في المنصة',
+            title: 'لا تحفظ الإجابة — افهم لماذا هي الصحيحة',
+            body: 'كل سؤال في البنك له تفسير مكتوب ومراجَع، لا سطر واحد يخبرك «الجواب ب». تقرأ الفكرة الأساسية خلف السؤال، والعرض السريري الذي يميّزه، وكيف يُشخَّص، وكيف يُعالج — فتخرج من السؤال بمعلومة تنفعك في عشرة أسئلة أخرى، لا بإجابة واحدة محفوظة.',
+            points: [
+                {
+                    icon: 'lightbulb',
+                    title: 'تفسير لكل سؤال، بلا استثناء',
+                    desc: 'ليست تفسيرات لبعض الأسئلة الصعبة فقط — كل سؤال في بنكك له تفسير كامل، مكتوب بنفس البنية: الفكرة، العرض السريري، التشخيص، العلاج.',
+                },
+                {
+                    icon: 'target',
+                    title: 'ولماذا بقية الخيارات خاطئة',
+                    desc: 'التفسير يبيّن ما الذي يميّز التشخيص الصحيح عن أقرب البدائل له — وهذا بالضبط ما يُختبر فيه سؤال الاختبار الحقيقي.',
+                },
+                {
+                    icon: 'refresh',
+                    title: 'وضع مذاكرة ووضع اختبار',
+                    desc: 'في وضع المذاكرة يظهر التفسير فور اختيارك للإجابة. وفي وضع الاختبار لا يظهر شيء حتى تنتهي — تماماً كأجواء الاختبار الحقيقي. أنت من يختار.',
+                },
+            ],
+            sampleTitle: 'شرح الإجابة',
+            cta: 'اقرأ تفسيراتك الأولى مجاناً',
+            ctaNote: '40 سؤالاً مجاناً · كل واحد منها بتفسيره',
         },
 
         tracks: {
@@ -139,7 +171,7 @@ const landingCopy = {
             rows: [
                 { label: 'التكلفة', sqb: 'من 50 ريالاً شهرياً — و300 للسنة كاملة', files: 'مجانية لكن مبعثرة وغير موثوقة', courses: 'آلاف الريالات' },
                 { label: 'تحديث المحتوى', sqb: 'تجميعات شهرية مدقّقة', files: 'غير منتظم وبدون تدقيق', courses: 'ينتهي بانتهاء الدورة' },
-                { label: 'شرح الإجابات', sqb: 'تفسير لكل سؤال', files: 'إجابات بلا شرح غالباً', courses: 'يعتمد على المحاضر' },
+                { label: 'شرح الإجابات', sqb: 'تفسير كامل لكل سؤال: الفكرة والتشخيص والعلاج', files: 'إجابات بلا شرح غالباً', courses: 'يعتمد على المحاضر' },
                 { label: 'تحليل الأداء والأخطاء', sqb: 'تحليلات تلقائية بعد كل جلسة', files: 'يدوي — إن وُجد', courses: 'غير متوفر غالباً' },
                 { label: 'مدة الوصول', sqb: 'شهر أو 4 أشهر أو سنة — تختار أنت', files: 'روابط تنتهي وملفات تضيع', courses: 'فترة محدودة' },
             ],
@@ -193,7 +225,7 @@ const landingCopy = {
             plan: 'شهر · 4 أشهر · سنة — دفعة واحدة في كل الحالات',
             amount: '50',
             currency: 'ريال / شهر',
-            perMonth: '129 ريالاً لأربعة أشهر · 300 ريال للسنة · واشتراكات جماعية للأصدقاء',
+            perMonth: 'أربعة أشهر بـ 129 ريالاً بدلاً من 200 · 300 ريال للسنة · واشتراكات جماعية للأصدقاء',
             included: [
                 'بنك أسئلة شامل محدّث بنمط اختبارك — SMLE أو SNLE — مع تجميعات جديدة باستمرار',
                 'تفسير واضح لكل إجابة — تعرف لماذا هي الصحيحة، ولماذا البقية خطأ',
@@ -205,6 +237,17 @@ const landingCopy = {
             ],
             cta: 'ابدأ بـ 40 سؤالاً مجاناً',
             note: '40 سؤالاً مجاناً أولاً · دفع آمن عبر ميسر · مدى / Visa / Mastercard / Apple Pay · بدون تجديد تلقائي',
+            // The public shop window for the group plans. Prices here must stay
+            // in step with PLANS.group_3 / group_5 in backend/services/paymentService.js.
+            group: {
+                title: 'تذاكرون مجموعة؟ الاشتراك الجماعي أرخص بكثير',
+                body: 'دفعة واحدة تفعّل حسابك فوراً وتعطيك روابط دعوة لبقية المقاعد، توزّعها على أصدقائك. كل المقاعد تنتهي في نفس التاريخ، وكل رابط يفتح حساباً واحداً فقط.',
+                tiers: [
+                    { label: '3 حسابات · 4 أشهر', price: '250 ريال', each: '83 ريالاً للحساب' },
+                    { label: '5 حسابات · 4 أشهر', price: '299 ريال', each: '60 ريالاً للحساب' },
+                ],
+                cta: 'اعرض الاشتراكات الجماعية',
+            },
         },
 
 
@@ -284,16 +327,47 @@ const landingCopy = {
             primary: 'Start with 40 free questions',
             secondary: 'Log in',
             trust: [
+                'A full explanation for every question',
                 '40 free questions, with no time limit',
                 'The first lesson of every specialty, free for good',
                 'From SAR 50 a month',
-                'A clear explanation for every question',
                 'No auto-renewal',
             ],
             // Rendered only when config/examDates.js has a real, verified future
             // date — otherwise ExamCountdown renders nothing.
             examCountdown: (days) => `Next exam window in ${days} day${days === 1 ? '' : 's'}`,
             scrollCue: 'Scroll',
+        },
+
+        // The explanations section. This is the platform's strongest single
+        // claim, so the wording stays concrete: what a student actually reads
+        // after answering, and what the two quiz modes do. No question counts —
+        // the number is deliberately kept out of all landing copy.
+        explain: {
+            sectionLabel: 'An explanation for every answer',
+            pill: 'The strongest thing we do',
+            title: 'Do not memorise the answer — understand why it is the answer',
+            body: 'Every question in the bank carries a written, reviewed explanation — not a one-liner telling you the answer was B. You get the core concept behind the question, the presentation that distinguishes it, how it is diagnosed and how it is managed. You leave each question with something that works on ten more, instead of one answer you have memorised.',
+            points: [
+                {
+                    icon: 'lightbulb',
+                    title: 'Every question, not just the hard ones',
+                    desc: 'These are not explanations on a selected few. Every question in your bank has a full one, written to the same structure: concept, presentation, diagnosis, management.',
+                },
+                {
+                    icon: 'target',
+                    title: 'And why the other options are wrong',
+                    desc: 'The explanation names what separates the right diagnosis from its nearest look-alike — which is precisely what the real exam question is testing.',
+                },
+                {
+                    icon: 'refresh',
+                    title: 'Study mode and exam mode',
+                    desc: 'In study mode the explanation opens the moment you answer. In exam mode nothing is revealed until you finish, exactly like the real thing. You choose which.',
+                },
+            ],
+            sampleTitle: 'Why this answer',
+            cta: 'Read your first explanations free',
+            ctaNote: '40 free questions · every one of them explained',
         },
 
         tracks: {
@@ -393,9 +467,9 @@ const landingCopy = {
             rows: [
                 { label: 'Cost', sqb: 'From SAR 50 a month — SAR 300 for a whole year', files: 'Free, but scattered and unreliable', courses: 'Thousands of riyals' },
                 { label: 'Content updates', sqb: 'Verified monthly collections', files: 'Irregular, and unverified', courses: 'Ends when the course ends' },
-                { label: 'Answer explanations', sqb: 'An explanation for every question', files: 'Usually answers with no reasoning', courses: 'Depends on the lecturer' },
+                { label: 'Answer explanations', sqb: 'A full explanation for every question: concept, diagnosis, management', files: 'Usually answers with no reasoning', courses: 'Depends on the lecturer' },
                 { label: 'Performance and error analysis', sqb: 'Automatic analytics after every session', files: 'Manual — if at all', courses: 'Usually not offered' },
-                { label: 'How long you keep access', sqb: 'A full year, from any device', files: 'Links expire and files get lost', courses: 'A limited window' },
+                { label: 'How long you keep access', sqb: 'A month, four months or a year — your choice', files: 'Links expire and files get lost', courses: 'A limited window' },
             ],
             cta: 'Try SQB with 40 free questions',
             ctaNote: 'See it for yourself before you pay a riyal',
@@ -447,7 +521,7 @@ const landingCopy = {
             plan: 'A month, four months or a year — one payment either way',
             amount: '50',
             currency: 'SAR / month',
-            perMonth: 'SAR 129 for four months · SAR 300 for a year · group plans for study partners',
+            perMonth: 'Four months for SAR 129, down from 200 · SAR 300 for a year · group plans for study partners',
             included: [
                 'A comprehensive question bank matched to your exam — SMLE or SNLE — with new collections added continually',
                 'A clear explanation for every answer: why it is right, and why the others are not',
@@ -459,6 +533,17 @@ const landingCopy = {
             ],
             cta: 'Start with 40 free questions',
             note: '40 free questions first · Secure payment via Moyasar · mada / Visa / Mastercard / Apple Pay · No auto-renewal',
+            // The public shop window for the group plans. Prices here must stay
+            // in step with PLANS.group_3 / group_5 in backend/services/paymentService.js.
+            group: {
+                title: 'Studying as a group? A group plan costs far less each',
+                body: 'One payment activates your own account straight away and gives you invite links for the other seats to hand out. Every seat ends on the same date, and each link opens exactly one account.',
+                tiers: [
+                    { label: '3 accounts · 4 months', price: 'SAR 250', each: 'SAR 83 per account' },
+                    { label: '5 accounts · 4 months', price: 'SAR 299', each: 'SAR 60 per account' },
+                ],
+                cta: 'See the group plans',
+            },
         },
 
 

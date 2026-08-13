@@ -3,9 +3,9 @@ import Icon from '../common/Icon.jsx';
 import { getSourceLabel } from '../../utils/sourceLabels';
 import { useCopy, useLang } from '../../i18n';
 import analysisCopy from '../../i18n/copy/analysis.js';
-import './analysis.css';
+import './analysisShared.css';
 
-const LastQuizSummary = ({ latest_quiz }) => {
+const LastQuizSummary = ({ latest_quiz, onRefresh }) => {
     const t = useCopy(analysisCopy).lastQuiz;
     const { lang } = useLang();
 
@@ -86,7 +86,7 @@ const LastQuizSummary = ({ latest_quiz }) => {
 
                             <div className="question-actions">
                                 <button
-                                    onClick={() => window.location.reload()}
+                                    onClick={onRefresh || (() => window.location.reload())}
                                     className="see-more-button"
                                 >
                                     <Icon name="refresh" size={15} /> {t.refresh}

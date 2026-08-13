@@ -1,35 +1,29 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import Icon from '../common/Icon.jsx';
+import ExplanationPanel from '../common/ExplanationPanel.jsx';
 import { getSourceLabel } from '../../utils/sourceLabels';
 import { getTypeLabel } from '../../utils/typeLabels';
 import { useCopy, useLang } from '../../i18n';
 import analysisCopy from '../../i18n/copy/analysis.js';
-import './analysis.css';
+import './analysisShared.css';
 
-const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz }) => {
+/**
+ * questionAttempts is already scoped to one quiz session and carries its own
+ * question fields (question_text, source, question_type, correct_option,
+ * explanation) joined in server-side — see GET /question-attempts/session/:id.
+ * This used to cross-reference a separately-fetched full question bank
+ * (/api/all-questions, ~5,000 rows) just to label a handful of attempts.
+ */
+const QuestionAttemptsTable = ({ questionAttempts }) => {
     const t = useCopy(analysisCopy).attempts;
     const { lang } = useLang();
     const [showAll, setShowAll] = useState(false);
 
-    // Memoize expensive filtering and sorting operations
-    const lastQuizAttempts = useMemo(() => {
-        if (!latestQuiz || !latestQuiz.id) return [];
-
-        return questionAttempts
-            .filter(a => a.quiz_session_id === latestQuiz.id)
-            .sort((a, b) => new Date(a.attempted_at) - new Date(b.attempted_at));
-    }, [questionAttempts, latestQuiz]);
+    const attempts = useMemo(() => questionAttempts || [], [questionAttempts]);
 
     const displayedAttempts = useMemo(() => {
-        return showAll ? lastQuizAttempts : lastQuizAttempts.slice(0, 5);
-    }, [lastQuizAttempts, showAll]);
-
-    // Memoize questions lookup for better performance
-    const questionsMap = useMemo(() => {
-        const map = new Map();
-        questions.forEach(q => map.set(q.id, q));
-        return map;
-    }, [questions]);
+        return showAll ? attempts : attempts.slice(0, 5);
+    }, [attempts, showAll]);
 
     const toggleShowAll = useCallback(() => {
         setShowAll(prev => !prev);
@@ -39,16 +33,15 @@ const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz }) => {
         <section className="streak-section">
             <h3 className="section-header">{t.title}</h3>
 
-            {lastQuizAttempts.length > 0 ? (
+            {attempts.length > 0 ? (
                 <>
                     <div className="questions-grid">
                         {displayedAttempts.map((attempt, index) => {
-                            const questionRow = questionsMap.get(attempt.question_id);
-                            const questionText = questionRow?.question_text || t.unknownQuestion;
-                            const correctAnswer = questionRow?.correct_option || '—';
-                            const questionSource = getSourceLabel(questionRow?.source, lang);
-                            const questionType = questionRow?.question_type
-                                ? getTypeLabel(questionRow.question_type, lang)
+                            const questionText = attempt.question_text || t.unknownQuestion;
+                            const correctAnswer = attempt.correct_option || '—';
+                            const questionSource = getSourceLabel(attempt.source, lang);
+                            const questionType = attempt.question_type
+                                ? getTypeLabel(attempt.question_type, lang)
                                 : '';
                             const isCorrect = attempt.is_correct;
                             return (
@@ -84,19 +77,21 @@ const QuestionAttemptsTable = ({ questionAttempts, questions, latestQuiz }) => {
                                                 <span className="answer-text correct">{correctAnswer}</span>
                                             </div>
                                         </div>
+
+                                        <ExplanationPanel explanation={attempt.explanation} />
                                     </div>
                                 </div>
                             );
                         })}
                     </div>
 
-                    {lastQuizAttempts.length > 5 && (
+                    {attempts.length > 5 && (
                         <div className="see-all-container">
                             <button
                                 onClick={toggleShowAll}
                                 className="see-all-button"
                             >
-                                {showAll ? t.showLess : t.showAll(lastQuizAttempts.length)}
+                                {showAll ? t.showLess : t.showAll(attempts.length)}
                             </button>
                         </div>
                     )}

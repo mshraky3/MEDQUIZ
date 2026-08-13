@@ -18,6 +18,7 @@ const ADDQ = () => {
     const [questionTrack, setQuestionTrack] = useState(MEDICAL);
     const [questionType, setQuestionType] = useState(specialtiesOf(MEDICAL)[0].key);
     const [source, setSource] = useState('');
+    const [explanation, setExplanation] = useState('');
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
 
@@ -59,7 +60,8 @@ const ADDQ = () => {
             question_type: questionType,
             correct_option: correctAnswer,
             source,
-            track: questionTrack
+            track: questionTrack,
+            explanation: explanation.trim() || null
         };
         try {
             const response = await axios.post(`${Globals.URL}/api/questions`, newQuestion);
@@ -73,6 +75,7 @@ const ADDQ = () => {
             setCorrectAnswer('');
             setQuestionType(specialtiesOf(questionTrack)[0].key);
             setSource('');
+            setExplanation('');
         } catch {
             setError("Failed to add question. Please try again.");
         }
@@ -208,6 +211,20 @@ const ADDQ = () => {
                         value={source}
                         onChange={(e) => setSource(e.target.value)}
                         placeholder="e.g., NBME, UWorld, Kaplan..."
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck="false"
+                        autoComplete="off"
+                    />
+                </label>
+
+                <label>
+                    Explanation (optional):
+                    <textarea
+                        value={explanation}
+                        onChange={(e) => setExplanation(e.target.value)}
+                        rows={10}
+                        placeholder={"Why the correct answer is correct. Markdown subset:\n**Core Concept:** …\n\n**Clinical Presentation:**\n- …"}
                         autoCorrect="off"
                         autoCapitalize="off"
                         spellCheck="false"

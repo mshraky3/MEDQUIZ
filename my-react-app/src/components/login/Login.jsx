@@ -10,7 +10,7 @@ import { useCopy, useLang } from '../../i18n';
 import authCopy from '../../i18n/copy/auth.js';
 
 const Login = () => {
-  const { setUser, user } = useContext(UserContext);
+  const { setUser, user, sessionToken } = useContext(UserContext);
   const [form, setForm] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
   const [showPopup, setShowPopup] = useState(false);
@@ -123,7 +123,6 @@ const Login = () => {
       .post(`${Globals.URL}/login`, {
         username: cleanedUsername,
         password: password,
-        deviceId: 'placeholder-device-id', // TODO: Replace with real device ID
       })
       .then((response) => {
         const username = cleanedUsername;
@@ -171,7 +170,11 @@ const Login = () => {
     setShowTermsPopup(false);
     setLoading(true);
     try {
-      await axios.post(`${Globals.URL}/accept-terms`, { username: form.username.trim().toLowerCase() });
+      await axios.post(
+        `${Globals.URL}/accept-terms`,
+        { username: form.username.trim().toLowerCase() },
+        { headers: { Authorization: `Bearer ${sessionToken}` } }
+      );
       setLoading(false);
       navigate('/quizs');
     } catch (err) {
@@ -209,8 +212,9 @@ const Login = () => {
 
             <form onSubmit={handleSubmit} className="login-form">
               <div className="form-group">
-                <label className="form-label">{copy.emailLabel}</label>
+                <label className="form-label" htmlFor="login-username">{copy.emailLabel}</label>
                 <input
+                  id="login-username"
                   type="text"
                   name="username"
                   placeholder={copy.emailPlaceholder}
@@ -222,15 +226,17 @@ const Login = () => {
               </div>
 
               <div className="form-group">
-                <label className="form-label">{copy.passwordLabel}</label>
+                <label className="form-label" htmlFor="login-password">{copy.passwordLabel}</label>
                 <div className="password-input-wrapper">
                   <input
+                    id="login-password"
                     type={showPassword ? "text" : "password"}
                     name="password"
                     placeholder={copy.passwordPlaceholder}
                     value={form.password}
                     onChange={handleChange}
                     className="form-input"
+                    autoComplete="current-password"
                   />
                   <button
                     type="button"

@@ -8,6 +8,14 @@
   --secondary-dark: #15803d;
   --accent-color: #2563eb;
   --accent-light: #3b82f6;
+  /* Short aliases: several stylesheets (Summaries.css, Signup.jsx, and more)
+     already read var(--accent)/var(--muted) directly. These used to resolve
+     only by accident — whichever page's own unscoped `:root { --accent: ... }`
+     happened to load last in the session — so the same page could render a
+     different accent color depending on navigation history. One real
+     definition here removes that. */
+  --accent: var(--accent-light);
+  --muted: var(--text-light);
 
   /* Neutral Colors - Light Theme */
   --text-dark: #0f1e3d;
@@ -41,10 +49,35 @@
   --radius-lg: 16px;
   --radius-xl: 24px;
 
-  /* Typography */
-  --font-family-primary: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-family-secondary: 'Inter', system-ui, -apple-system, sans-serif;
+  /* Typography — both faces are self-hosted via @fontsource (see main.jsx).
+     --font-family-primary switches between them on [lang] below, so every
+     existing var(--font-family-primary) consumer gets the right face for
+     the current site language without being touched individually. */
+  --font-family-latin: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-family-ar: 'Cairo', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-family-primary: var(--font-family-latin);
+  --font-family-secondary: var(--font-family-latin);
   --font-family-inter: 'Inter', sans-serif;
+
+  /* Elevation: the layer a fixed navbar sits at. Kept distinct from
+     --z-modal-backdrop/--z-modal (below) specifically so the two can never
+     collide — a modal opened on any page is guaranteed to render above the
+     navbar, never under it. */
+  --z-navbar: 1030;
+
+  /* Accuracy ramp — one shared source for "how well is this student doing",
+     instead of the five different hardcoded palettes (three different greens,
+     three different reds) previously scattered across quiz review screens. */
+  --accuracy-high: #16a34a;
+  --accuracy-high-bg: rgba(22, 163, 74, 0.12);
+  --accuracy-mid: #d97706;
+  --accuracy-mid-bg: rgba(217, 119, 6, 0.12);
+  --accuracy-low: #dc2626;
+  --accuracy-low-bg: rgba(220, 38, 38, 0.12);
+
+  /* Shared keyboard-focus ring, for every interactive element that currently
+     sets outline:none with nothing to replace it. */
+  --focus-ring: 0 0 0 3px rgba(59, 130, 246, 0.35);
 
   /* Font Sizes */
   --text-xs: 0.75rem;
@@ -105,6 +138,11 @@
   --z-tooltip: 1070;
 }
 
+html[lang="ar"] {
+  --font-family-primary: var(--font-family-ar);
+  --font-family-secondary: var(--font-family-ar);
+}
+
 /* Reset and Base Styles */
 * {
   box-sizing: border-box;
@@ -131,7 +169,17 @@ body {
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  direction: ltr;
+  /* No explicit direction here — it inherits from <html dir>, which
+     LanguageContext keeps in sync with the site language. Hardcoding ltr used
+     to win over that inheritance for anything mounted outside the React dir
+     wrapper (the cookie-consent banner is mounted at the app root, not inside
+     a page), so it rendered Arabic text left-to-right regardless of language. */
+}
+
+/* Arabic script reads comfortably looser than Latin at the same size — this
+   is the one adjustment @fontsource's per-weight CSS can't make for us. */
+html[lang="ar"] body {
+  line-height: 1.85; /* ~1.15x the Latin 1.6 above */
 }
 
 /* Typography */
@@ -189,13 +237,30 @@ p {
   cursor: pointer;
   transition: all var(--transition-normal);
   text-decoration: none;
-  white-space: nowrap;
+  /* No white-space: nowrap — a long Arabic label must be able to wrap onto a
+     second line instead of overflowing or forcing the button wider than its
+     column. */
   user-select: none;
 }
 
 .btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* Shared keyboard-focus ring. Several screens set outline:none on buttons,
+   inputs and links with nothing in its place — this is what should show up
+   instead wherever an element hasn't defined its own focus style. Only
+   :focus-visible (not :focus) so a mouse click never shows a ring, just
+   keyboard/switch-device navigation. */
+.btn:focus-visible,
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
 .btn-primary {

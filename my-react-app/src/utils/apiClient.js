@@ -6,6 +6,7 @@
 import axios from 'axios';
 import Globals from '../global.js';
 import { setupAxiosInterceptor, reportApiError } from './errorTracking';
+import { safeRemoveItem } from './safeStorage.js';
 
 // Create axios instance with base configuration
 const apiClient = axios.create({
@@ -83,6 +84,24 @@ function handleSubscriptionRequired(error) {
     }
 }
 
+// 401 = the session is gone (expired, or superseded by a login elsewhere —
+// see requireSession/invalidateSessionCache on the backend). This was the one
+// place apiClient.js was empty despite existing specifically to hold this;
+// every caller instead carried its own copy-pasted try/catch for it. Matches
+// the copy-pasted version exactly (clear storage, hard-redirect) — a full
+// reload is required here because this file has no React Router context to
+// call navigate() from, and a stale UserContext must not survive the client
+// side of a session that no longer exists server-side.
+function handleSessionExpired(error) {
+    if (error.response?.status !== 401) return;
+    if (typeof window === 'undefined') return;
+    safeRemoveItem('user');
+    safeRemoveItem('sessionToken');
+    if (!window.location.pathname.startsWith('/login')) {
+        window.location.href = '/login?session=expired';
+    }
+}
+
 // Add response interceptor for error tracking
 apiClient.interceptors.response.use(
     (response) => response,
@@ -90,6 +109,7 @@ apiClient.interceptors.response.use(
         // Report the error to the error tracking system
         reportApiError(error, error.config, error.response);
         handleSubscriptionRequired(error);
+        handleSessionExpired(error);
 
         // Re-throw to let the application handle it
         return Promise.reject(error);
@@ -103,6 +123,7 @@ axios.interceptors.response.use(
     (response) => response,
     (error) => {
         handleSubscriptionRequired(error);
+        handleSessionExpired(error);
         return Promise.reject(error);
     }
 );

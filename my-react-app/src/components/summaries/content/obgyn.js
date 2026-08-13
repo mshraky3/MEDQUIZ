@@ -58,13 +58,13 @@ const obgyn = {
                 <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Placenta previa vs abruption</div>
                 <div class="deck-imgrow">
                     <div class="deck-imgcell">
-                        <img class="deck-img" src="/summaries/placenta-previa-openstax.jpg" width="1200" height="763" loading="lazy" decoding="async"
+                        <img class="deck-img" src="/summaries/placenta-previa-openstax.webp" width="1200" height="763" loading="lazy" decoding="async"
                              alt="Two cross-sections of a pregnant uterus. On the left the placenta lies along the upper uterine wall and the cervix is not obstructed. On the right the placenta lies over the internal os, covering the cervix." />
                         <p class="deck-imgcap"><b>Placenta previa</b> — the placenta covers the internal os
                         <br><span class="deck-hi deck-hi--red">PAINLESS · bright red · NO vaginal exam</span></p>
                     </div>
                     <div class="deck-imgcell">
-                        <img class="deck-img" src="/summaries/placental-abruption-blausen.jpg" width="954" height="665" loading="lazy" decoding="async"
+                        <img class="deck-img" src="/summaries/placental-abruption-blausen.webp" width="954" height="665" loading="lazy" decoding="async"
                              alt="Two cross-sections of a pregnant uterus with placental abruption. On the left the placenta has separated near the cervix and blood escapes externally; on the right the separation is high on the uterine wall and the blood is trapped behind the placenta as concealed internal bleeding." />
                         <p class="deck-imgcap"><b>Placental abruption</b> — premature separation from the uterine wall
                         <br><span class="deck-hi deck-hi--amber">PAINFUL · dark · may be CONCEALED</span></p>

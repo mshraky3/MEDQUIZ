@@ -29,7 +29,7 @@ const RequireAuth = ({ children }) => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: 'var(--bg, #0f172a)',
+          background: 'var(--bg, #eef2fb)',
         }}
         aria-busy="true"
         aria-live="polite"

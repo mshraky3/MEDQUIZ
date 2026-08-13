@@ -1,50 +1,33 @@
 import React, { useState, useEffect, useContext } from 'react';
 import Icon from './Icon.jsx';
-import axios from 'axios';
-import Globals from '../../global.js';
+import apiClient from '../../utils/apiClient.js';
 import { UserContext } from '../../UserContext';
 import './AchievementBadges.css';
 
 const AchievementBadges = ({ userId }) => {
     const [achievements, setAchievements] = useState([]);
     const [loading, setLoading] = useState(true);
-    const { user, setUser, sessionToken } = useContext(UserContext);
+    const { user, sessionToken } = useContext(UserContext);
 
     useEffect(() => {
-        if (userId && user && sessionToken) {
-            fetchAchievements();
-        } else {
+        if (!userId || !user || !sessionToken) {
             setLoading(false);
+            return undefined;
         }
-    }, [userId, user, sessionToken]);
-
-    // Helper for protected GET requests
-    const protectedGet = async (url, config = {}) => {
-        if (!user || !sessionToken) throw new Error('Not authenticated');
-        const urlWithUser = url + (url.includes('?') ? '&' : '?') + `username=${encodeURIComponent(user.username)}`;
-        try {
-            return await axios.get(urlWithUser, { ...config, headers: { ...(config.headers || {}), Authorization: `Bearer ${sessionToken}` } });
-        } catch (err) {
-            if (err.response && err.response.status === 401) {
-                setUser(null, null);
-                localStorage.removeItem('user'); localStorage.removeItem('sessionToken');
-                window.location.href = '/login?session=expired';
-                return;
+        const controller = new AbortController();
+        (async () => {
+            try {
+                const response = await apiClient.get(`/api/user-achievements/${userId}`, { signal: controller.signal });
+                setAchievements(response.data.achievements || []);
+            } catch (error) {
+                if (error.code === 'ERR_CANCELED' || error.name === 'CanceledError') return;
+                console.error('Error fetching achievements:', error);
+            } finally {
+                setLoading(false);
             }
-            throw err;
-        }
-    };
-
-    const fetchAchievements = async () => {
-        try {
-            const response = await protectedGet(`${Globals.URL}/api/user-achievements/${userId}`);
-            setAchievements(response.data.achievements || []);
-        } catch (error) {
-            console.error('Error fetching achievements:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
+        })();
+        return () => controller.abort();
+    }, [userId, user, sessionToken]);
 
     if (loading) {
         return null; // Don't show loading state for small badges

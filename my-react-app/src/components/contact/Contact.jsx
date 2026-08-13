@@ -1,4 +1,5 @@
 import React, { useState, useContext } from 'react';
+import { Link } from 'react-router-dom';
 import Icon from '../common/Icon.jsx';
 import Spinner from '../common/Spinner.jsx';
 import { UserContext } from '../../UserContext';
@@ -94,13 +95,13 @@ ${t.mailFooter}
 
     const contactInfo = [
         {
-            icon: 'https://img.icons8.com/?size=100&id=yY3YzfabynRr&format=png&color=000000',
+            icon: 'phone',
             title: t.whatsappSupport,
             value: '0582619119',
             link: WHATSAPP_LINK
         },
         {
-            icon: 'https://img.icons8.com/?size=100&id=yY3YzfabynRr&format=png&color=000000',
+            icon: 'mail',
             title: t.email,
             value: 'alshraky3@gmail.com',
             link: 'mailto:alshraky3@gmail.com'
@@ -156,7 +157,7 @@ ${t.mailFooter}
                             {contactInfo.map((info, index) => (
                                 <div key={index} className="contact-info-item">
                                     <div className="info-icon">
-                                        <img src={info.icon} alt={info.title} />
+                                        <Icon name={info.icon} size={22} />
                                     </div>
                                     <div className="info-content">
                                         <h3>{info.title}</h3>
@@ -172,15 +173,18 @@ ${t.mailFooter}
                             ))}
                         </div>
 
-                        {/* Suggestions Button */}
-                        <a href="/suggestions" className="suggestions-button">
-                            <span className="suggestions-icon"><Icon name="lightbulb" size={18} /></span>
+                        {/* The one entry point to /suggestions left in the app —
+                            the footer link and the /quizs hub button are gone.
+                            A real <Link>, not <a href>, so it's a client-side
+                            navigation instead of a full page reload. */}
+                        <Link to="/suggestions" className="suggestions-button">
+                            <span className="suggestions-icon" aria-hidden="true"><Icon name="lightbulb" size={20} /></span>
                             <div className="suggestions-text">
                                 <span className="suggestions-title">{t.suggestionsTitle}</span>
                                 <span className="suggestions-subtitle">{t.suggestionsSubtitle}</span>
                             </div>
                             <span className="suggestions-arrow" aria-hidden="true">{arrow}</span>
-                        </a>
+                        </Link>
                     </div>
 
                     {/* Contact Form */}

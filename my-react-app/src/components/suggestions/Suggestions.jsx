@@ -1,4 +1,5 @@
 import React, { useState, useContext } from 'react';
+import { Link } from 'react-router-dom';
 import Icon from '../common/Icon.jsx';
 import Spinner from '../common/Spinner.jsx';
 import { UserContext } from '../../UserContext';
@@ -225,10 +226,11 @@ const Suggestions = () => {
                     </button>
                 </form>
 
-                {/* Back Link */}
-                <a href="/quizs" className="back-link">
+                {/* Back Link - /contact, now that it's the only page that
+                    links here (the footer link and /quizs hub button are gone). */}
+                <Link to="/contact" className="back-link">
                     {t.back} <span aria-hidden="true">{dir === 'rtl' ? '\u2190' : '\u2192'}</span>
-                </a>
+                </Link>
             </div>
         </div>
     );

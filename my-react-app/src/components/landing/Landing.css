@@ -22,15 +22,18 @@
   }
 }
 
-:root {
-  --bg: #ffffff;
+/* Scoped to the page's own root class, not :root — this used to redefine
+   --bg/--text/--shadow/etc. for the WHOLE document the instant this chunk
+   loaded, fighting Login.css and QUIZS.css's identical mistake for the same
+   names. --bg was never even read within this file; it existed only to
+   overwrite body's background globally. --accent and --muted now come from
+   the real global tokens in index.css instead of being redeclared here. */
+.landing-body {
   --card: rgba(255, 255, 255, 0.9);
   --card-strong: #ffffff;
   --glass: rgba(255, 255, 255, 0.7);
   --text: #1e293b;
-  --muted: #64748b;
   --dim: #475569;
-  --accent: #3b82f6;
   --accent-strong: #2563eb;
   --accent-2: #1d4ed8;
   --accent-3: #6366f1;
@@ -41,7 +44,6 @@
   --border: rgba(37, 99, 235, 0.12);
   --border-strong: rgba(37, 99, 235, 0.22);
   --shadow: 0 25px 80px rgba(37, 99, 235, 0.16);
-  --focus-ring: 0 0 0 3px rgba(59, 130, 246, 0.28);
   --radius: 18px;
   /* Crisp white cards with a whisper of blue — depth without muddiness. */
   --card-grad: linear-gradient(165deg, #ffffff 0%, #f6f9ff 100%);
@@ -60,6 +62,11 @@
   position: relative;
   display: flex;
   flex-direction: column;
+  /* Load-bearing beyond decoration: .compare-section below full-bleeds with
+     width:100vw, which is wider than this box by a scrollbar's width on any
+     browser with a classic (non-overlay) scrollbar. This overflow:hidden is
+     what clips that gap instead of it becoming a page-wide horizontal
+     scrollbar — do not remove without giving compare-section its own fix. */
   overflow: hidden;
   background:
     radial-gradient(1100px 700px at 12% -5%, rgba(59, 130, 246, 0.12), transparent 60%),
@@ -487,7 +494,7 @@
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -727,7 +734,7 @@
   border-radius: 999px;
   background: var(--accent-strong);
   color: #ffffff;
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.2px;
   vertical-align: 2px;
@@ -881,6 +888,138 @@
   line-height: 1.75;
 }
 
+/* ── Explanations section ─────────────────────────────────────────
+   Copy on one side, a replica of the real explanation panel on the other.
+   The replica reuses .value-point's card language so it reads as part of the
+   same page, but its body is pinned LTR because the content inside it is
+   English study material in both site languages. */
+
+.explain-grid {
+  margin-top: 28px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.explain-points {
+  display: grid;
+  gap: 16px;
+}
+
+.explain-point {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 16px;
+  align-items: start;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card-grad);
+  box-shadow: var(--card-shadow);
+}
+
+.explain-point .feature-icon {
+  margin-bottom: 0;
+  animation: none;
+}
+
+.explain-point:nth-child(2) .feature-icon {
+  background: linear-gradient(150deg, rgba(124, 58, 237, 0.22), rgba(99, 102, 241, 0.16));
+  border-color: rgba(124, 58, 237, 0.30);
+  color: var(--accent-violet);
+}
+
+.explain-point:nth-child(3) .feature-icon {
+  background: linear-gradient(150deg, rgba(16, 185, 129, 0.22), rgba(14, 165, 233, 0.16));
+  border-color: rgba(16, 185, 129, 0.30);
+  color: var(--accent-emerald);
+}
+
+.explain-point h3 {
+  margin: 0 0 5px;
+  color: #0f1e3d;
+  font-size: 17px;
+}
+
+.explain-point p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14.5px;
+  line-height: 1.75;
+}
+
+.explain-sample {
+  margin: 0;
+  border: 1px solid rgba(37, 99, 235, 0.3);
+  border-radius: var(--radius);
+  background: #fff;
+  box-shadow: var(--card-shadow);
+  overflow: hidden;
+}
+
+.explain-sample-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 18px;
+  background: rgba(37, 99, 235, 0.08);
+  border-bottom: 1px solid rgba(37, 99, 235, 0.18);
+  color: var(--primary-color, #2563eb);
+  font-size: 13.5px;
+  font-weight: 800;
+}
+
+.explain-sample-stem {
+  margin: 0;
+  padding: 14px 18px 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f1e3d;
+}
+
+.explain-sample-body {
+  padding: 12px 18px 20px;
+  display: grid;
+  gap: 12px;
+  text-align: left;
+}
+
+.explain-sample-block strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--primary-color, #2563eb);
+}
+
+.explain-sample-block ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+}
+
+.explain-sample-block li {
+  position: relative;
+  padding-left: 15px;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: #334155;
+}
+
+.explain-sample-block li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 9px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(37, 99, 235, 0.5);
+}
+
 /* Pricing card — same family as the cta-band so it reads as "the offer". */
 .price-card {
   position: sticky;
@@ -960,7 +1099,7 @@
   border-radius: 50%;
   display: grid;
   place-items: center;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 900;
   background: rgba(255, 255, 255, 0.2);
   color: #ffffff;
@@ -1005,7 +1144,7 @@
 .price-card-guarantee-note {
   display: block;
   margin-top: 2px;
-  font-size: 11.5px;
+  font-size: 12px;
   line-height: 1.55;
   color: rgba(255, 255, 255, 0.8);
 }
@@ -1015,6 +1154,98 @@
   text-align: center;
   font-size: 12px;
   color: rgba(255, 255, 255, 0.78);
+}
+
+/* ── Group-plan band — the only public entry point to /groups ────── */
+
+.group-band {
+  margin-top: 28px;
+  padding: clamp(20px, 3vw, 28px);
+  border: 1px solid rgba(37, 99, 235, 0.28);
+  border-radius: calc(var(--radius) + 4px);
+  background: rgba(37, 99, 235, 0.05);
+  display: grid;
+  gap: 18px;
+}
+
+.group-band-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.group-band-icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(37, 99, 235, 0.12);
+  color: var(--primary-color, #2563eb);
+}
+
+.group-band-head h3 {
+  margin: 0 0 6px;
+  font-size: clamp(18px, 2.2vw, 21px);
+  font-weight: 800;
+  color: var(--text-dark);
+}
+
+.group-band-head p {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.75;
+  color: var(--muted);
+}
+
+.group-band-tiers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.group-tier {
+  display: grid;
+  gap: 2px;
+  padding: 14px 16px;
+  border: 1px solid rgba(37, 99, 235, 0.22);
+  border-radius: 12px;
+  background: #fff;
+  text-align: start;
+}
+
+.group-tier-label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.group-tier-price {
+  font-size: 24px;
+  font-weight: 900;
+  color: var(--text-dark);
+  line-height: 1.2;
+}
+
+.group-tier-each {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--primary-color, #2563eb);
+}
+
+.group-band-cta.btn {
+  justify-self: start;
+  background: var(--primary-color, #2563eb);
+  color: #fff;
+  font-weight: 700;
+}
+
+@media (max-width: 560px) {
+  .group-band-cta.btn {
+    justify-self: stretch;
+    text-align: center;
+  }
 }
 
 /* ── Purchase-objection FAQ — 2×2 card grid near the offer ───────── */
@@ -1253,7 +1484,8 @@
 
   .flow-section,
   .cta-band-content,
-  .value-grid {
+  .value-grid,
+  .explain-grid {
     grid-template-columns: 1fr;
   }
 
@@ -1311,7 +1543,7 @@
   }
 
   .hero .pill {
-    font-size: 11.5px;
+    font-size: 12px;
     padding: 8px 14px;
   }
 

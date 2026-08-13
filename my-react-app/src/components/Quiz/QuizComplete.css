@@ -149,3 +149,21 @@
 @keyframes quizCompleteSpin {
     to { transform: rotate(360deg); }
 }
+
+/* No media queries at all previously — the card is already fluid (max-width
+   + width:100%), but its padding was sized for a ~400px+ card. On the
+   smallest real phones (320–360px) that padding alone eats a third of the
+   viewport width; this gives content room back without changing the layout. */
+@media (max-width: 380px) {
+    .quiz-complete-card {
+        padding: 32px 18px;
+    }
+
+    .quiz-complete-stat {
+        padding: 12px 18px;
+    }
+
+    .quiz-complete-card h2 {
+        font-size: 21px;
+    }
+}

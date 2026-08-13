@@ -1,8 +1,11 @@
 import express from 'express';
 import cors from 'cors';
+import compression from 'compression';
+import helmet from 'helmet';
 import dotenv from 'dotenv';
 import { Pool } from 'pg';
 import crypto from 'crypto';
+import { rateLimit } from './middleware/rateLimit.js';
 import { sendMail } from './services/mailer.js';
 import errorReportRoutes from './routes/error-report.js';
 import questionReportsRouter from './routes/question-reports.js';
@@ -67,16 +70,56 @@ const db = new Pool({
     database: process.env.DBNAME,
     password: process.env.DBPASSWORD,
     port: process.env.DBPORT,
+    // Verifies the server certificate against Node's trusted CA store — was
+    // `rejectUnauthorized: false`, which accepts ANY certificate (including
+    // one from an attacker performing a MITM on the DB connection) and
+    // defeats the point of using TLS at all. The managed Postgres host this
+    // points to (Koyeb, backed by Neon) uses a publicly-trusted certificate,
+    // so this should need no CA bundle — but verify connectivity right after
+    // this deploys, since it can't be tested without a live connection.
     ssl: {
-        rejectUnauthorized: false
+        rejectUnauthorized: true
     },
     // Connection pooling optimizations (serverless-safe settings)
-    max: 5, // Keep low on serverless — each invocation has its own pool
+    // Was 5. The /login connection leak (client acquired outside its own
+    // try/finally, so a thrown error skipped release()) meant this pool could
+    // exhaust itself on its own under load; that leak is fixed now, but 5 is
+    // still thin for a warm instance serving several concurrent requests, and
+    // the DB behind DBHOST is Neon-backed (via Koyeb), whose pooler is built
+    // for more logical connections per app instance than raw Postgres would
+    // tolerate. Modest increase, not a large blind guess — revisit with real
+    // Vercel concurrency numbers if this still isn't enough.
+    max: 10,
     idleTimeoutMillis: 10000, // Close idle clients after 10 seconds
     connectionTimeoutMillis: 10000, // Wait up to 10 seconds for a connection (Vercel cold starts need more time)
     allowExitOnIdle: true, // Allow process to exit when pool is idle (important for serverless)
     maxUses: 7500, // Close (and replace) a connection after it has been used 7500 times
+    // Without this, one runaway query (a missing index, an accidental
+    // cross-join) holds its connection — and on a 10-connection pool, enough
+    // of them stall every other request behind it, the same class of outage
+    // the /login leak caused. statement_timeout is enforced by Postgres
+    // itself; query_timeout is node-postgres's own client-side backstop in
+    // case the server doesn't honor it. 15s sits comfortably under this
+    // pool's connectionTimeoutMillis-driven queueing and gives the slowest
+    // legitimate route (the admin stats dashboard) room to finish.
+    statement_timeout: 15000,
+    query_timeout: 15000,
 });
+
+// Every ensure*() bootstrap below runs fire-and-forget at module load and
+// swallows its own errors (so one failed CREATE TABLE can't stop the process
+// from serving the requests that don't need it) — but a swallowed error was
+// ALSO a silent one: a failed bootstrap (a bad migration statement, a
+// permissions issue) left the server serving requests against a schema that
+// was never actually ensured, with the only trace a log line that may never
+// get read. This still logs, but also reaches notifyBackendError, the same
+// path the global error handler uses — so a bootstrap failure is noticed
+// instead of surfacing later as a confusing "column does not exist" on
+// whatever request happens to hit it first.
+function reportBootstrapFailure(name, err) {
+    logger.error(`${name} failed`, err);
+    notifyBackendError(err, null, { middleware: name }).catch(() => { /* already logged above */ });
+}
 
 // One-time, idempotent schema bootstrap. Runs once per process (cold start) and
 // is safe to re-run thanks to IF NOT EXISTS. Replaces the old manual
@@ -262,6 +305,11 @@ function ensureSchema() {
             `);
             await db.query(`ALTER TABLE questions ADD COLUMN IF NOT EXISTS source VARCHAR(50) DEFAULT 'general'`);
             await db.query(`UPDATE questions SET source = 'general' WHERE source IS NULL`);
+            // Why the correct answer is correct, shown after a student answers.
+            // Authored offline and loaded by scripts/importExplanations.js; NULL
+            // is a legitimate value (the panel simply doesn't render), so there
+            // is no default and no backfill here.
+            await db.query(`ALTER TABLE questions ADD COLUMN IF NOT EXISTS explanation TEXT`);
             await db.query(`
                 ALTER TABLE accounts
                     ADD COLUMN IF NOT EXISTS email VARCHAR(255),
@@ -339,7 +387,7 @@ function ensureSchema() {
             logger.info('Schema bootstrap complete (tables + performance indexes ensured)');
         } catch (err) {
             _schemaReady = null; // allow a retry on a later invocation
-            logger.error('Schema bootstrap failed', err);
+            reportBootstrapFailure('ensureSchema', err);
         }
     })();
     return _schemaReady;
@@ -540,7 +588,7 @@ function ensurePaymentSchema() {
             logger.info('Payment/subscription schema ensured');
         } catch (err) {
             _paymentSchemaReady = null; // allow a retry on a later invocation
-            logger.error('Payment schema bootstrap failed', err);
+            reportBootstrapFailure('ensurePaymentSchema', err);
         }
     })();
     return _paymentSchemaReady;
@@ -590,6 +638,29 @@ function writeQuestionsCache(track, data) {
 
 const app = express();
 
+// Sensible default security headers (HSTS, X-Content-Type-Options,
+// X-Frame-Options, a same-origin CSP, etc.) that nothing here was setting
+// before. Its CSP only governs pages this server renders itself (the
+// handful of inline-HTML routes like /api/unsubscribe) — a JSON API
+// response's CSP header is inert to the browser tab that fetched it, so
+// this cannot affect how the actual frontend app renders or executes.
+//
+// crossOriginResourcePolicy is the one default that must be overridden, not
+// left alone: Helmet defaults it to 'same-origin', which the browser
+// enforces as an ADDITIONAL check on top of (not replaced by) the CORS
+// allowlist above. The frontend (smle-question-bank.com) and this API
+// (medquiz.vercel.app) are deliberately different origins — 'same-origin'
+// would have blocked every fetch from the site the moment this deployed.
+// Access control is already handled correctly by the CORS origin allowlist;
+// this only stops Helmet's own default from fighting it.
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+}));
+
+// Already a dependency, never wired in — every response (the 5,033-row
+// question payloads especially) went over the wire uncompressed.
+app.use(compression());
+
 // Performance monitoring middleware
 app.use((req, res, next) => {
     const start = Date.now();
@@ -603,9 +674,32 @@ app.use((req, res, next) => {
     next();
 });
 
+// Reflected any origin with credentials:true until now — any website could
+// make authenticated cross-origin calls carrying a visitor's own session
+// token in the Authorization header (the browser will happily attach it; CORS
+// is what's supposed to stop the *response* from being readable cross-site).
+// The site's pages are served from smle-question-bank.com; the API itself
+// lives on a different Vercel project (medquiz.vercel.app — see global.js),
+// which is why that host is allowed too. CORS_ALLOWED_ORIGINS adds any others
+// (a Vercel preview URL, a staging domain) without a code change.
+const ALLOWED_ORIGINS = new Set([
+    'https://www.smle-question-bank.com',
+    'https://smle-question-bank.com',
+    'https://medquiz.vercel.app',
+    ...(process.env.CORS_ALLOWED_ORIGINS || '').split(',').map(o => o.trim()).filter(Boolean),
+]);
 app.use(cors({
     origin: (origin, callback) => {
-        callback(null, true);
+        // No Origin header = same-origin, curl, server-to-server or a native
+        // app — none of these are what CORS defends against. Only a browser
+        // sends Origin, and only cross-origin browser reads are the risk.
+        if (!origin || ALLOWED_ORIGINS.has(origin)) return callback(null, true);
+        // Local development: any localhost/127.0.0.1 port, any scheme.
+        if (!isProduction && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+            return callback(null, true);
+        }
+        logger.warn('Blocked cross-origin request', { origin });
+        return callback(null, false);
     },
     credentials: true
 }));
@@ -848,7 +942,7 @@ const ensureLoginHistoryTable = async () => {
 
         logger.info('Login history table ensured');
     } catch (err) {
-        logger.error('Error creating login_history table', err);
+        reportBootstrapFailure('ensureLoginHistoryTable', err);
     }
 };
 
@@ -864,7 +958,7 @@ const ensureOtpTable = async () => {
             CREATE TABLE IF NOT EXISTS signup_otps (
                 id SERIAL PRIMARY KEY,
                 email VARCHAR(255) NOT NULL,
-                otp_code VARCHAR(4) NOT NULL,
+                otp_code VARCHAR(6) NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 expires_at TIMESTAMP NOT NULL,
                 used BOOLEAN DEFAULT FALSE
@@ -873,9 +967,15 @@ const ensureOtpTable = async () => {
         await db.query(`
             ALTER TABLE accounts ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT FALSE
         `);
+        // 6-digit code (was 4 — 10,000 combinations with no attempt limit was
+        // guessable in seconds). `attempts` backs the per-code lockout in
+        // verifyOtp below: 5 wrong guesses burns the code, forcing a fresh
+        // send-otp round-trip instead of letting a script grind the same row.
+        await db.query(`ALTER TABLE signup_otps ALTER COLUMN otp_code TYPE VARCHAR(6)`);
+        await db.query(`ALTER TABLE signup_otps ADD COLUMN IF NOT EXISTS attempts INTEGER NOT NULL DEFAULT 0`);
         logger.info('OTP table and email_verified column ensured');
     } catch (err) {
-        logger.error('Error ensuring OTP table', err);
+        reportBootstrapFailure('ensureOtpTable', err);
     }
 };
 ensureOtpTable();
@@ -902,7 +1002,7 @@ const ensureEmailCampaignColumns = async () => {
         `);
         logger.info('Email campaign columns ensured');
     } catch (err) {
-        logger.error('Error ensuring email campaign columns', err);
+        reportBootstrapFailure('ensureEmailCampaignColumns', err);
     }
 };
 ensureEmailCampaignColumns();
@@ -945,7 +1045,7 @@ const ensureTempLinksTables = async () => {
         await db.query(`CREATE INDEX IF NOT EXISTS idx_temp_link_accounts_user_id ON temp_link_accounts(user_id)`);
         logger.info('Temporary signup links tables ensured');
     } catch (err) {
-        logger.error('Error ensuring temp links tables', err);
+        reportBootstrapFailure('ensureTempLinksTables', err);
     }
 };
 ensureTempLinksTables();
@@ -969,7 +1069,7 @@ const ensureQuestionReportsTable = async () => {
         `);
         logger.info('question_reports table ensured');
     } catch (err) {
-        logger.error('Error ensuring question_reports table', err);
+        reportBootstrapFailure('ensureQuestionReportsTable', err);
     }
 };
 ensureQuestionReportsTable();
@@ -1067,7 +1167,7 @@ const ensureSummariesTables = async () => {
         }
         logger.info('summaries tables ensured');
     } catch (err) {
-        logger.error('Error ensuring summaries tables', err);
+        reportBootstrapFailure('ensureSummariesTables', err);
     }
 };
 ensureSummariesTables();
@@ -1169,7 +1269,7 @@ const detectSuspiciousLogin = async (userId, ipAddress, userAgent) => {
     }
 };
 
-app.post('/login', async (req, res) => {
+app.post('/login', rateLimit(db, 'login', { windowMs: 5 * 60_000, max: 15 }), async (req, res) => {
     logger.info("Login request received", { username: req.body.username });
     const { username, password } = req.body;
 
@@ -1190,8 +1290,18 @@ app.post('/login', async (req, res) => {
     const lowercaseUsername = username.toLowerCase();
     const lowercasePassword = password.toLowerCase();
 
-    const client = await db.connect();
+    // client is declared outside the try so the catch/finally below can reach
+    // it, but the CONNECT itself now happens INSIDE the try — on a 5-connection
+    // pool, db.connect() rejecting when the pool is exhausted used to throw
+    // before this function's own try/catch even started, so no response was
+    // ever sent (the request just hung) and nothing was released because
+    // there was nothing to release yet. Every exit path below now goes through
+    // one catch (which rolls back only if a client exists) and one finally
+    // (which releases only if a client exists) — a client acquired here is
+    // guaranteed to be released exactly once, however this function returns.
+    let client;
     try {
+        client = await db.connect();
         await client.query('BEGIN');
         // Sign-in is by email, full stop. This used to be a
         // `(email = $1 OR username = $1)` dual-lookup followed by a guard that
@@ -1208,14 +1318,12 @@ app.post('/login', async (req, res) => {
 
         if (!userRow) {
             await client.query('ROLLBACK');
-            client.release();
             logger.warn(`No user found for email: ${lowercaseUsername}`);
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
         if (lowercasePassword !== userRow.password) {
             await client.query('ROLLBACK');
-            client.release();
             logger.warn(`Invalid password for username: ${lowercaseUsername}`);
             return res.status(401).json({ message: 'Invalid credentials' });
         }
@@ -1223,7 +1331,6 @@ app.post('/login', async (req, res) => {
         // Check if account is active (before writing anything to DB)
         if (!userRow.isactive) {
             await client.query('ROLLBACK');
-            client.release();
             logger.warn(`Account inactive for username: ${lowercaseUsername}`);
             return res.status(403).json({
                 message: 'Account is inactive. Please contact support.',
@@ -1300,7 +1407,6 @@ app.post('/login', async (req, res) => {
         }
 
         await client.query('COMMIT');
-        client.release();
         logger.debug(`Transaction committed for username: ${lowercaseUsername}`);
 
         // --- Subscription state (payment readiness) ---
@@ -1380,10 +1486,20 @@ app.post('/login', async (req, res) => {
         });
 
     } catch (error) {
-        await client.query('ROLLBACK');
-        client.release();
+        // client may be undefined (db.connect() itself failed) or already
+        // broken (the error came from inside the transaction) — either way,
+        // a ROLLBACK that itself throws must not stop the 500 from being sent.
+        if (client) {
+            try {
+                await client.query('ROLLBACK');
+            } catch (rollbackErr) {
+                logger.error('Rollback failed during login', rollbackErr);
+            }
+        }
         logger.error('Error during login transaction', error);
         res.status(500).json({ message: 'Internal server error' });
+    } finally {
+        if (client) client.release();
     }
 });
 
@@ -2107,7 +2223,7 @@ app.post('/admin/users/:userId/clear-suspicious', adminAuth, async (req, res) =>
 });
 
 
-app.get('/user-analysis/:userId', requireSession, async (req, res) => {
+app.get('/user-analysis/:userId', requireSession, requireOwnUser('userId'), async (req, res) => {
     const { userId } = req.params;
     try {
         // Columns are ensured once at startup by ensureSchema() — no per-request DDL.
@@ -2293,19 +2409,22 @@ app.get('/user-analysis/:userId', requireSession, async (req, res) => {
  * Wipe one user's performance history so they can start over.
  *
  * DESTRUCTIVE AND IRREVERSIBLE — there is no undo and no backup taken.
- *
- * SECURITY: requireSession only proves the caller holds a valid session for
- * SOME account; it does not attach that account's id to the request. Without
- * the ownership check below, any logged-in user could wipe anyone else's data
- * just by putting their id in the URL. Do not remove it.
+ * Ownership is enforced by requireOwnUser — without it, any signed-in user
+ * could wipe anyone else's data just by putting their id in the URL.
  *
  * Achievements are deliberately KEPT — they are earned badges, not analytics,
  * and silently deleting them would feel like data loss rather than a reset.
  * The UI states this explicitly.
+ *
+ * SUBSCRIBERS ONLY. Starting over is a paid convenience: a free account has one
+ * lifetime run at 40 questions, so there is nothing there worth clearing and
+ * offering the button only invites confusion. Note this route does NOT reset
+ * accounts.free_questions_used, and must not — that counter is deliberately
+ * kept outside every table wiped here so no reset can ever refill the free
+ * allowance. Same rule as POST /api/reset-progress.
  */
-app.post('/user-analysis/:userId/reset', requireSession, async (req, res) => {
+app.post('/user-analysis/:userId/reset', requireSession, requireOwnUser('userId'), subscriberOnly, async (req, res) => {
     const { userId } = req.params;
-    const { username } = getSessionCredentials(req);
 
     const TABLES = [
         'user_question_attempts',
@@ -2318,12 +2437,6 @@ app.post('/user-analysis/:userId/reset', requireSession, async (req, res) => {
 
     const client = await db.connect();
     try {
-        const owner = await client.query('SELECT id FROM accounts WHERE username = $1', [username]);
-        if (!owner.rows.length || String(owner.rows[0].id) !== String(userId)) {
-            logger.warn('Blocked cross-account analytics reset', { username, targetUserId: userId });
-            return res.status(403).json({ success: false, message: 'You can only reset your own data.' });
-        }
-
         await client.query('BEGIN');
         const deleted = {};
         for (const t of TABLES) {
@@ -2349,7 +2462,7 @@ app.post('/user-analysis/:userId/reset', requireSession, async (req, res) => {
     }
 });
 
-app.get('/topic-analysis/user/:userId', requireSession, async (req, res) => {
+app.get('/topic-analysis/user/:userId', requireSession, requireOwnUser('userId'), async (req, res) => {
     const { userId } = req.params;
     try {
         const result = await db.query("SELECT * FROM user_topic_analysis WHERE user_id = $1", [userId]);
@@ -2359,7 +2472,7 @@ app.get('/topic-analysis/user/:userId', requireSession, async (req, res) => {
     }
 });
 
-app.get('/question-attempts/user/:userId', requireSession, async (req, res) => {
+app.get('/question-attempts/user/:userId', requireSession, requireOwnUser('userId'), async (req, res) => {
     const { userId } = req.params;
     try {
         const result = await db.query(
@@ -2372,11 +2485,23 @@ app.get('/question-attempts/user/:userId', requireSession, async (req, res) => {
     }
 });
 
-app.get('/question-attempts/session/:sessionId', requireSession, async (req, res) => {
+// Joins the question in — this is what lets the Analysis page's "last quiz"
+// review render without downloading the entire question bank just to label a
+// handful of attempt rows (previously /api/all-questions, ~5,000 rows, for
+// every single visit). A session's attempt count is small (one quiz's worth),
+// so including explanation here — unlike the bulk /api/all-questions route,
+// which deliberately omits it — costs nothing.
+app.get('/question-attempts/session/:sessionId', requireSession, requireOwnSession('sessionId'), async (req, res) => {
     const { sessionId } = req.params;
     try {
         const result = await db.query(
-            "SELECT * FROM user_question_attempts WHERE quiz_session_id = $1 ORDER BY attempted_at ASC",
+            `SELECT a.*,
+                    q.question_text, q.option1, q.option2, q.option3, q.option4,
+                    q.question_type, q.source, q.correct_option, q.explanation
+               FROM user_question_attempts a
+               JOIN questions q ON q.id = a.question_id
+              WHERE a.quiz_session_id = $1
+              ORDER BY a.attempted_at ASC`,
             [sessionId]
         );
         res.json(result.rows);
@@ -2395,7 +2520,7 @@ app.get('/question-attempts/session/:sessionId', requireSession, async (req, res
  * `type` narrows to one specialty; the count query carries the same filters so
  * "142 results" always describes what pagination will actually walk through.
  */
-app.get('/wrong-questions/user/:userId', requireSession, async (req, res) => {
+app.get('/wrong-questions/user/:userId', requireSession, requireOwnUser('userId'), async (req, res) => {
     const { userId } = req.params;
     const { limit = 50, offset = 0 } = req.query;
     const search = String(req.query.q || '').trim().slice(0, 120);
@@ -2425,7 +2550,8 @@ app.get('/wrong-questions/user/:userId', requireSession, async (req, res) => {
                 q.question_text,
                 q.correct_option,
                 q.question_type,
-                q.source
+                q.source,
+                q.explanation
             FROM user_question_attempts uqa
             JOIN questions q ON uqa.question_id = q.id
             WHERE ${whereSql}
@@ -2469,6 +2595,35 @@ app.get('/wrong-questions/user/:userId', requireSession, async (req, res) => {
     }
 });
 
+/**
+ * One question's explanation, on demand.
+ *
+ * The review screens that build their question map from /api/all-questions
+ * (which omits the column, see below) use this to fetch an explanation only
+ * when the student actually opens the panel. Scoped to the caller's own track
+ * so it cannot be used to read the other bank.
+ */
+app.get('/api/questions/:id/explanation', requireSession, async (req, res) => {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id)) {
+        return res.status(400).json({ message: 'Invalid question ID' });
+    }
+    try {
+        const track = resolveContentTrack(req);
+        const result = await db.query(
+            'SELECT id, explanation FROM questions WHERE id = $1 AND track = $2',
+            [id, track]
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Question not found' });
+        }
+        res.json({ id: result.rows[0].id, explanation: result.rows[0].explanation || null });
+    } catch (err) {
+        console.error('Error fetching question explanation:', err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 app.get('/api/all-questions', adminOrSubscriber, async (req, res) => {
     try {
         // Scoped to the caller's own bank. Students get their track; the admin
@@ -2482,7 +2637,11 @@ app.get('/api/all-questions', adminOrSubscriber, async (req, res) => {
 
         // questions.source/track are ensured once at startup by ensureSchema().
 
-        // Fetch all necessary fields for question library
+        // Fetch all necessary fields for question library.
+        // `explanation` is deliberately NOT selected here: it averages ~1 KB a
+        // row, which would add several megabytes to a payload that is held in
+        // process memory AND shipped whole to the browser. Screens that need it
+        // fetch one at a time from /api/questions/:id/explanation.
         const result = await db.query(
             `SELECT id, question_text, option1, option2, option3, option4, question_type, correct_option, source, track
              FROM questions WHERE track = $1`,
@@ -2586,7 +2745,7 @@ app.get('/api/track-content-status', requireSession, async (req, res) => {
     }
 });
 
-app.get('/user-streaks/:user_id', requireSession, async (req, res) => {
+app.get('/user-streaks/:user_id', requireSession, requireOwnUser('user_id'), async (req, res) => {
     try {
         const { user_id } = req.params;
 
@@ -2709,7 +2868,10 @@ app.get('/api/questions', requireQuizAccess, async (req, res) => {
     const limit = Math.max(1, Math.min(requested, remaining));
     const typesParam = req.query.types; // e.g., 'mix' or 'medicine,surgery'
     const sourceParam = req.query.source; // e.g., 'general', 'Midgard', 'GameBoy'
-    const userId = req.query.userId; // User ID to filter completed questions
+    // Progress is always the caller's own — taken from the validated session
+    // (requireQuizAccess ran requireSession), never a client-supplied id, or a
+    // crafted userId could pull another account's seen/unseen split.
+    const userId = req.accountId;
 
     // Two-step random selection instead of ORDER BY RANDOM(): sorting the full
     // matching row set (with all its text columns) by a random key is an
@@ -2762,10 +2924,14 @@ app.get('/api/questions', requireQuizAccess, async (req, res) => {
     // Exclude questions the user has already been shown: a question appears once
     // and won't reappear until the whole category has been completed and reset.
     if (userId) {
-        conditions.push(`id NOT IN (
-            SELECT DISTINCT question_id
-            FROM user_question_progress
-            WHERE user_id = $${values.length + 1}
+        // NOT EXISTS, not NOT IN: NOT IN's subquery plan can't use the
+        // (user_id, question_id) unique index as an anti-join the way NOT
+        // EXISTS can, and re-evaluates worse as a user's answered-question
+        // history grows. Same result — question_id is NOT NULL, so there's
+        // no NOT IN/NULL correctness gap to trade away here, only performance.
+        conditions.push(`NOT EXISTS (
+            SELECT 1 FROM user_question_progress uqp
+            WHERE uqp.user_id = $${values.length + 1} AND uqp.question_id = questions.id
         )`);
         values.push(userId);
     }
@@ -2824,12 +2990,41 @@ app.get('/api/questions', requireQuizAccess, async (req, res) => {
         const endTime = Date.now();
         logger.debug(`Questions query executed in ${endTime - startTime}ms, returned ${rows.length} questions`);
 
-        // freeRemaining lets the quiz screen say "these are your last 5" without
-        // a second round-trip. null for paid/exempt accounts (unlimited).
-        const freeRemaining = Number.isFinite(req.quizAccess?.remaining)
-            ? req.quizAccess.remaining
-            : null;
-        res.json({ questions: dedupeByText(rows), freeRemaining });
+        const served = dedupeByText(rows);
+
+        // Spend the free allowance HERE, for what is actually handed out — not
+        // on submit. A quiz that is fetched and then abandoned (closed tab, no
+        // POST /quiz-sessions ever sent) used to cost nothing, so a free
+        // account could take unlimited quizzes by simply never finishing one.
+        // Only accounts being metered (a finite `remaining`) are debited —
+        // paid/admin/grandfathered accounts and enforcement-disabled installs
+        // all report Infinity and are skipped. The WHERE clause is a second,
+        // server-side confirmation of the same free-tier condition so a stale
+        // `req.quizAccess` can never spend a paid account's non-existent budget.
+        let freeRemaining = Number.isFinite(req.quizAccess?.remaining) ? req.quizAccess.remaining : null;
+        if (Number.isFinite(req.quizAccess?.remaining) && served.length > 0) {
+            try {
+                const spend = await db.query(
+                    `UPDATE accounts
+                        SET free_questions_used = LEAST($1::int, free_questions_used + $2::int)
+                      WHERE id = $3
+                        AND is_admin_created = FALSE
+                        AND grandfathered_at IS NULL
+                        AND NOT (subscription_status = 'active'
+                                 AND subscription_expiry_date > NOW())
+                      RETURNING free_questions_used`,
+                    [FREE_QUESTION_ALLOWANCE, served.length, req.accountId]
+                );
+                if (spend.rows.length > 0) {
+                    freeRemaining = Math.max(0, FREE_QUESTION_ALLOWANCE - spend.rows[0].free_questions_used);
+                }
+            } catch (err) {
+                // Never fail a served batch over the counter — worst case a
+                // free user gets a few extra questions this one time.
+                logger.error('Failed to spend free allowance on serve', err);
+            }
+        }
+        res.json({ questions: served, freeRemaining });
     } catch (err) {
         logger.error('Error fetching questions', err);
         res.status(500).json({ message: 'Server error' });
@@ -2838,11 +3033,11 @@ app.get('/api/questions', requireQuizAccess, async (req, res) => {
 
 
 
-app.post('/user-streaks', async (req, res) => {
-    const { user_id } = req.body;
-    if (!user_id) {
-        return res.status(400).json({ message: "User ID is required" });
-    }
+// Was unauthenticated: any caller could write (and inflate) any account's
+// streak by putting its id in the body. Now requires a session and is always
+// scoped to that session's own account.
+app.post('/user-streaks', requireSession, async (req, res) => {
+    const user_id = req.accountId;
     try {
         const todayStart = new Date();
         todayStart.setHours(0, 0, 0, 0);
@@ -2904,8 +3099,14 @@ app.post('/user-streaks', async (req, res) => {
 
 app.post('/topic-analysis', requireSession, async (req, res) => {
 
-    const { user_id, question_type, total_answered, total_correct, accuracy, avg_time } = req.body;
-    if (!user_id || !question_type || typeof accuracy !== 'number') {
+    const { user_id: bodyUserId, question_type, total_answered, total_correct, accuracy, avg_time } = req.body;
+    // Always the authenticated session's own account — see the identical
+    // guard on POST /quiz-sessions for why a body id is never trusted.
+    const user_id = req.accountId;
+    if (bodyUserId != null && Number(bodyUserId) !== user_id) {
+        return res.status(400).json({ message: 'user_id does not match the authenticated session' });
+    }
+    if (!question_type || typeof accuracy !== 'number') {
         return res.status(400).json({ message: "Invalid or missing topic analysis data" });
     }
     // Reject 'general' BEFORE writing — previously this was checked after the
@@ -2937,8 +3138,12 @@ app.post('/topic-analysis', requireSession, async (req, res) => {
 });
 
 app.post('/question-attempts', requireSession, async (req, res) => {
-    const { user_id, question_id, selected_option, is_correct, time_taken, quiz_session_id } = req.body;
-    if (!user_id || !question_id || selected_option === undefined || is_correct === undefined || time_taken === undefined || quiz_session_id === undefined) {
+    const { user_id: bodyUserId, question_id, selected_option, is_correct, time_taken, quiz_session_id } = req.body;
+    const user_id = req.accountId;
+    if (bodyUserId != null && Number(bodyUserId) !== user_id) {
+        return res.status(400).json({ message: 'user_id does not match the authenticated session' });
+    }
+    if (!question_id || selected_option === undefined || is_correct === undefined || time_taken === undefined || quiz_session_id === undefined) {
         return res.status(400).json({ message: "Missing required attempt data" });
     }
     try {
@@ -2957,9 +3162,10 @@ app.post('/question-attempts', requireSession, async (req, res) => {
 });
 
 app.post('/user-analysis', requireSession, async (req, res) => {
-    const { user_id } = req.body;
-    if (!user_id) {
-        return res.status(400).json({ message: "User ID is required" });
+    const { user_id: bodyUserId } = req.body;
+    const user_id = req.accountId;
+    if (bodyUserId != null && Number(bodyUserId) !== user_id) {
+        return res.status(400).json({ message: 'user_id does not match the authenticated session' });
     }
 
     try {
@@ -3036,7 +3242,7 @@ app.post('/user-analysis', requireSession, async (req, res) => {
 // is started. Submitting is also what spends the allowance (see below).
 app.post('/quiz-sessions', requireSession, async (req, res) => {
     const {
-        user_id,
+        user_id: bodyUserId,
         total_questions,
         correct_answers,
         quiz_accuracy,
@@ -3054,7 +3260,18 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
         session_metadata = {}
     } = req.body;
 
-    if (!user_id || !total_questions || typeof quiz_accuracy !== 'number') {
+    // The account this session is written to is always the authenticated
+    // session's own id (requireSession sets req.accountId) — never the body's
+    // user_id. Otherwise any signed-in user could write a quiz session, its
+    // attempts and its progress rows onto another account just by putting its
+    // id in the request. A disagreeing body id is rejected, not silently
+    // overridden, since that would hide a client bug instead of surfacing it.
+    const user_id = req.accountId;
+    if (bodyUserId != null && Number(bodyUserId) !== user_id) {
+        return res.status(400).json({ message: 'user_id does not match the authenticated session' });
+    }
+
+    if (!total_questions || typeof quiz_accuracy !== 'number') {
         return res.status(400).json({ message: "Missing required fields" });
     }
 
@@ -3126,31 +3343,9 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
             session_id: result.rows[0].session_id
         });
 
-        // Spend the free allowance. Only non-paying accounts have one, and the
-        // LEAST() clamp means the counter can never read above the allowance
-        // however many questions arrive in one submission.
-        let freeRemaining = null;
-        try {
-            const spend = await db.query(
-                `UPDATE accounts
-                    SET free_questions_used = LEAST($1::int, free_questions_used + $2::int)
-                  WHERE id = $3
-                    AND is_admin_created = FALSE
-                    AND grandfathered_at IS NULL
-                    AND NOT (subscription_status = 'active'
-                             AND subscription_expiry_date > NOW())
-                  RETURNING free_questions_used`,
-                [FREE_QUESTION_ALLOWANCE, Number(total_questions) || 0, user_id]
-            );
-            if (spend.rows.length > 0) {
-                freeRemaining = Math.max(0, FREE_QUESTION_ALLOWANCE - spend.rows[0].free_questions_used);
-            }
-        } catch (err) {
-            // Never fail a saved quiz over the counter — the worst case is a
-            // free user getting a few extra questions, which beats losing a
-            // session they already answered.
-            logger.error('Failed to spend free allowance', err);
-        }
+        // The free allowance is spent when questions are SERVED (see
+        // GET /api/questions), not here — submitting no longer touches
+        // free_questions_used at all, so there is nothing to spend or report.
 
         // Record question progress for each answered question (parallelized)
         let touchedCardinalities = [];
@@ -3277,9 +3472,6 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
             session_id: result.rows[0].session_id,
             completedCategories,
             milestones,
-            // null for paid/exempt accounts; a number for free-tier accounts so
-            // the results screen can update the allowance pill straight away.
-            freeRemaining,
             message: 'Quiz session created successfully'
         });
     } catch (err) {
@@ -3289,7 +3481,7 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
 });
 
 // Get quiz session history for a user
-app.get('/quiz-sessions/history/:userId', requireSession, async (req, res) => {
+app.get('/quiz-sessions/history/:userId', requireSession, requireOwnUser('userId'), async (req, res) => {
     const { userId } = req.params;
     const { page = 1, limit = 10, source, quiz_type, start_date, end_date } = req.query;
 
@@ -3391,7 +3583,7 @@ app.get('/quiz-sessions/history/:userId', requireSession, async (req, res) => {
 });
 
 // Get detailed quiz session by ID
-app.get('/quiz-sessions/:sessionId', requireSession, async (req, res) => {
+app.get('/quiz-sessions/:sessionId', requireSession, requireOwnSession('sessionId'), async (req, res) => {
     const { sessionId } = req.params;
 
     logger.debug('Fetching quiz session details', { sessionId });
@@ -3531,7 +3723,7 @@ app.get('/quiz-sessions/:sessionId', requireSession, async (req, res) => {
 });
 
 // Get quiz session statistics for a user
-app.get('/quiz-sessions/stats/:userId', requireSession, async (req, res) => {
+app.get('/quiz-sessions/stats/:userId', requireSession, requireOwnUser('userId'), async (req, res) => {
     const { userId } = req.params;
     const { period = 'all' } = req.query; // all, week, month, year
 
@@ -3613,7 +3805,8 @@ app.post('/api/questions', adminAuth, async (req, res) => {
         question_type,
         correct_option,
         source = 'general',
-        track
+        track,
+        explanation = null
     } = req.body;
     try {
         // The specialty determines the bank — every known question_type belongs
@@ -3629,9 +3822,9 @@ app.post('/api/questions', adminAuth, async (req, res) => {
         }
         const resolvedTrack = impliedTrack || normalizeTrack(track);
         const result = await db.query(
-            `INSERT INTO questions (question_text, option1, option2, option3, option4, question_type, correct_option, source, track)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
-            [question_text, option1, option2, option3, option4, question_type, correct_option, source, resolvedTrack]
+            `INSERT INTO questions (question_text, option1, option2, option3, option4, question_type, correct_option, source, track, explanation)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
+            [question_text, option1, option2, option3, option4, question_type, correct_option, source, resolvedTrack, explanation]
         );
 
         // Invalidate every track's cache — a question can move between banks
@@ -3665,7 +3858,7 @@ app.get('/questions', adminAuth, async (req, res) => {
 });
 
 // Check if user has completed all questions in a cardinality (type + source combination)
-app.get('/api/check-completion/:userId', requireSession, async (req, res) => {
+app.get('/api/check-completion/:userId', requireSession, requireOwnUser('userId'), async (req, res) => {
     const { userId } = req.params;
     const { type, source } = req.query;
 
@@ -3703,7 +3896,13 @@ app.get('/api/check-completion/:userId', requireSession, async (req, res) => {
 
 // Award achievement when user completes a cardinality
 app.post('/api/award-achievement', requireSession, async (req, res) => {
-    const { userId, achievementType, achievementKey, achievementName, achievementDescription } = req.body;
+    const { userId: bodyUserId, achievementType, achievementKey, achievementName, achievementDescription } = req.body;
+    // Always the authenticated session's own account — see the identical
+    // guard on POST /quiz-sessions.
+    const userId = req.accountId;
+    if (bodyUserId != null && Number(bodyUserId) !== userId) {
+        return res.status(400).json({ message: 'userId does not match the authenticated session' });
+    }
 
     try {
         const result = await db.query(`
@@ -3721,7 +3920,7 @@ app.post('/api/award-achievement', requireSession, async (req, res) => {
 });
 
 // Get user achievements
-app.get('/api/user-achievements/:userId', requireSession, async (req, res) => {
+app.get('/api/user-achievements/:userId', requireSession, requireOwnUser('userId'), async (req, res) => {
     const { userId } = req.params;
 
     try {
@@ -3742,11 +3941,23 @@ app.get('/api/user-achievements/:userId', requireSession, async (req, res) => {
 // Accepts either a single `type` (legacy) or a `types` array (the whole
 // selection the user was quizzing on). An empty/omitted types list resets
 // every type for that source.
-app.post('/api/reset-progress', requireSession, async (req, res) => {
-    const { userId, type, types, source } = req.body;
+//
+// SUBSCRIBERS ONLY. Wiping user_question_progress puts already-answered
+// questions back in the pool, which is a subscriber convenience — a free
+// account has one lifetime run at 40 questions and nothing to re-practise.
+// The 40 are counted in accounts.free_questions_used, which this route does
+// NOT touch, so resetting was never an unlimited-questions exploit; the gate
+// is here because "practise this category again" is a paid feature, not
+// because the counter needs defending. Keep both properties true.
+app.post('/api/reset-progress', requireSession, subscriberOnly, async (req, res) => {
+    const { type, types, source } = req.body;
 
+    // The account comes from the validated session, never from the body — a
+    // client-supplied userId here would let any signed-in user wipe anyone
+    // else's progress.
+    const userId = req.accountId;
     if (!userId) {
-        return res.status(400).json({ message: 'userId is required' });
+        return res.status(401).json({ message: 'Session could not be resolved' });
     }
 
     // Normalise to a list; `type` kept for older clients.
@@ -3903,7 +4114,8 @@ app.put('/questions/:id', adminAuth, async (req, res) => {
         option4,
         question_type,
         correct_option,
-        source
+        source,
+        explanation
     } = req.body;
 
     // Input validation
@@ -3922,6 +4134,13 @@ app.put('/questions/:id', adminAuth, async (req, res) => {
     // such rows editable instead of 400ing on every save.
     const impliedTrack = trackForSpecialty(question_type);
 
+    // The explanation is only touched when the caller actually sent the field.
+    // Older tooling (and the mobile admin path) posts the eight original fields
+    // and nothing else — treating a missing key as null would silently wipe an
+    // explanation on every unrelated edit. Sending an empty string still clears
+    // it, so the admin form can remove one deliberately.
+    const setsExplanation = Object.prototype.hasOwnProperty.call(req.body, 'explanation');
+
     try {
         const result = await db.query(
             `UPDATE questions
@@ -3933,11 +4152,13 @@ app.put('/questions/:id', adminAuth, async (req, res) => {
                  question_type = $6,
                  correct_option = $7,
                  source = $8,
-                 track = COALESCE($9, track)
-             WHERE id = $10
+                 track = COALESCE($9, track),
+                 explanation = CASE WHEN $10::boolean THEN $11 ELSE explanation END
+             WHERE id = $12
              RETURNING *`,
             [question_text, option1, option2, option3, option4,
-                question_type, correct_option, source, impliedTrack, id]
+                question_type, correct_option, source, impliedTrack,
+                setsExplanation, explanation || null, id]
         );
 
         if (result.rows.length === 0) {
@@ -3961,7 +4182,7 @@ app.put('/questions/:id', adminAuth, async (req, res) => {
 // Free trial endpoints removed - accounts are now free
 
 // Get user progress data
-app.get('/quiz-sessions/progress/:userId', requireSession, async (req, res) => {
+app.get('/quiz-sessions/progress/:userId', requireSession, requireOwnUser('userId'), async (req, res) => {
     const { userId } = req.params;
 
     try {
@@ -4058,7 +4279,14 @@ app.get('/quiz-sessions/progress/:userId', requireSession, async (req, res) => {
 
 // Get user account/subscription status — surfaces real subscription state
 // (status, expiry, days remaining) while enforcement is enabled.
-app.get('/api/user-subscription/:userId', async (req, res) => {
+//
+// Was completely unauthenticated: username, email, subscription status/expiry
+// and the last purchase amount for ANY account id, no session required — a
+// full customer list to anyone willing to iterate ids. Both real callers
+// (AccountPage, FreeAllowanceBanner) already send session credentials for
+// their own id, so requireSession plus this ownership check changes nothing
+// for legitimate use.
+app.get('/api/user-subscription/:userId', requireSession, requireOwnUser('userId'), async (req, res) => {
     const { userId } = req.params;
 
     try {
@@ -4274,9 +4502,36 @@ function getSessionCredentials(req) {
 // /login and /logout evict the entry so a rotated token is never served stale.
 const sessionCache = new Map(); // username -> { token, expiresAt, track, userId }
 const SESSION_CACHE_TTL = 30_000; // 30 seconds
+// An entry only ever leaves via invalidateSessionCache (login/logout) or a
+// token mismatch — a username that authenticates once and never returns
+// keeps its (long-expired) entry forever, so a warm instance's memory grows
+// with every distinct visitor it has ever served. Sweep before it matters.
+const SESSION_CACHE_MAX = 2000;
 
 function invalidateSessionCache(username) {
     if (username) sessionCache.delete(username);
+}
+
+function pruneSessionCacheIfNeeded() {
+    if (sessionCache.size <= SESSION_CACHE_MAX) return;
+    const now = Date.now();
+    for (const [key, val] of sessionCache) {
+        if (val.expiresAt <= now) sessionCache.delete(key);
+    }
+    // Still over the cap after clearing expired entries (a burst of distinct,
+    // still-live sessions) — drop the oldest ones. Map iterates in insertion
+    // order, which .set() on an existing key does NOT refresh, so this is an
+    // insertion-order sweep rather than a true LRU. Good enough here: the
+    // worst case of evicting an active session's entry is one extra DB round
+    // trip on its next request, which re-caches it immediately.
+    if (sessionCache.size > SESSION_CACHE_MAX) {
+        const excess = sessionCache.size - SESSION_CACHE_MAX;
+        let i = 0;
+        for (const key of sessionCache.keys()) {
+            if (i++ >= excess) break;
+            sessionCache.delete(key);
+        }
+    }
 }
 
 function requireSession(req, res, next) {
@@ -4308,6 +4563,7 @@ function requireSession(req, res, next) {
             }
             const track = normalizeTrack(result.rows[0].track);
             const userId = result.rows[0].id;
+            pruneSessionCacheIfNeeded();
             sessionCache.set(username, {
                 token: sessionToken, expiresAt: Date.now() + SESSION_CACHE_TTL, track, userId,
             });
@@ -4319,6 +4575,72 @@ function requireSession(req, res, next) {
             logger.error('[SESSION] Error checking session:', err);
             res.status(500).json({ message: 'Internal server error' });
         });
+}
+
+/**
+ * Ownership guards for routes keyed by a path param.
+ *
+ * requireSession only proves the caller holds a valid session for SOME
+ * account (and attaches it as req.accountId) — it does not check that the
+ * account id in the URL is that same account. Every route reading or writing
+ * another table by a client-supplied :userId or :sessionId must run one of
+ * these AFTER requireSession, or any signed-in user can read (or, on a write
+ * route, corrupt) any other account's data just by changing the id in the URL.
+ *
+ * Two shapes, because the two kinds of param can't share one check:
+ *
+ *   requireOwnUser(param)    — the param IS an accounts.id. Compared directly
+ *                               against req.accountId.
+ *   requireOwnSession(param) — the param is a quiz *session* id. Ownership is
+ *                               indirect: it must be looked up in
+ *                               user_quiz_sessions to find whose session it
+ *                               is, then compared against req.accountId. A
+ *                               direct id comparison is structurally wrong
+ *                               here — the two id spaces are unrelated.
+ */
+function requireOwnUser(paramName) {
+    return (req, res, next) => {
+        const requested = req.params[paramName];
+        if (Number(requested) !== req.accountId) {
+            logger.warn('Blocked cross-account access', {
+                accountId: req.accountId, requested, param: paramName, path: req.originalUrl,
+            });
+            return res.status(403).json({ message: 'Forbidden' });
+        }
+        next();
+    };
+}
+
+// table: which sessions table owns this id space — practice quizzes live in
+// user_quiz_sessions, mock/final exams in final_review_sessions. The two are
+// unrelated id spaces, so the caller must say which one a given route means.
+function requireOwnSession(paramName, table = 'user_quiz_sessions') {
+    return async (req, res, next) => {
+        const sessionId = req.params[paramName];
+        // A session id in this app is either the numeric <table>.id or its
+        // UUID session_id — several routes accept either form, so the
+        // ownership lookup has to try the same column the handler itself will
+        // use, or a legitimate UUID lookup would be rejected as not-owned.
+        const isNumeric = !isNaN(sessionId) && !isNaN(parseFloat(sessionId));
+        try {
+            const result = await db.query(
+                isNumeric
+                    ? `SELECT user_id FROM ${table} WHERE id = $1`
+                    : `SELECT user_id FROM ${table} WHERE session_id = $1`,
+                [isNumeric ? parseInt(sessionId, 10) : sessionId]
+            );
+            if (!result.rows.length || result.rows[0].user_id !== req.accountId) {
+                logger.warn('Blocked cross-account session access', {
+                    accountId: req.accountId, requested: sessionId, table, path: req.originalUrl,
+                });
+                return res.status(403).json({ message: 'Forbidden' });
+            }
+            next();
+        } catch (err) {
+            logger.error('[requireOwnSession] lookup failed', err);
+            res.status(500).json({ message: 'Internal server error' });
+        }
+    };
 }
 
 /**
@@ -4339,7 +4661,11 @@ function resolveContentTrack(req) {
 }
 
 // Endpoint to accept terms
-app.post('/accept-terms', async (req, res) => {
+// Was unauthenticated: any caller could flip terms_accepted for any username.
+// requireSession already proves the body username belongs to the caller (it
+// checks that account's own session_token), so no extra ownership check is
+// needed beyond the middleware itself.
+app.post('/accept-terms', requireSession, async (req, res) => {
     const { username } = req.body;
     if (!username) return res.status(400).json({ message: 'Username required' });
     try {
@@ -4402,7 +4728,7 @@ If you receive this email, the notification system is working correctly.
 // ===== CONTACT FORM FEATURE =====
 
 // Contact form endpoint
-app.post('/api/contact', async (req, res) => {
+app.post('/api/contact', rateLimit(db, 'contact', { windowMs: 60 * 60_000, max: 5 }), async (req, res) => {
     try {
         const { name, mobile, subject, message } = req.body;
         // Attribution is best-effort: the contact form is reachable signed out,
@@ -4503,7 +4829,7 @@ app.post('/api/admin/init-suggestions-table', adminAuth, async (req, res) => {
 });
 
 // Submit a suggestion
-app.post('/api/suggestions', async (req, res) => {
+app.post('/api/suggestions', rateLimit(db, 'suggestions', { windowMs: 60 * 60_000, max: 5 }), async (req, res) => {
     try {
         const { category, title, description, priority } = req.body;
         const senderTrack = isValidTrack(req.body.track)
@@ -4825,8 +5151,12 @@ app.post('/api/admin/generate-temp-link', adminAuth, async (req, res) => {
             return res.status(400).json({ message: 'Max uses must be at least 1' });
         }
 
-        // Generate a unique token (similar to your preferred format)
-        const token = Math.random().toString(36).substring(2, 8);
+        // crypto, not Math.random(): this token mints a permanently
+        // paywall-exempt account for anyone who has it, so it needs to be
+        // unguessable, not just unique. Math.random() is neither
+        // cryptographically secure nor, at 6 base-36 chars, long enough to
+        // resist brute-forcing.
+        const token = crypto.randomBytes(16).toString('base64url');
         const linkTrack = normalizeTrack(req.body.track);
 
         // Insert the new link
@@ -4957,10 +5287,36 @@ app.get('/api/validate-temp-link/:token', async (req, res) => {
     }
 });
 
+// Verify an OTP by email, enforcing a per-code lockout.
+//
+// Looks up the most recent ACTIVE (unused, unexpired) OTP for the email
+// regardless of the code supplied, rather than `WHERE otp_code = $2` — a
+// lookup keyed on the guessed code touches nothing on a miss, so nothing
+// stops an attacker retrying the other 999,999 six-digit combinations against
+// the same window. Keying on email instead means every wrong guess increments
+// THAT row's attempts, and the 6th guess (right or wrong) is refused outright.
+const OTP_MAX_ATTEMPTS = 5;
+async function verifyOtp(email, code) {
+    const active = await db.query(
+        `SELECT id, otp_code, attempts FROM signup_otps
+         WHERE email = $1 AND used = FALSE AND expires_at > NOW()
+         ORDER BY created_at DESC LIMIT 1`,
+        [email]
+    );
+    if (active.rows.length === 0) return { ok: false, reason: 'no_active_code' };
+    const row = active.rows[0];
+    if (row.attempts >= OTP_MAX_ATTEMPTS) return { ok: false, reason: 'locked' };
+    if (row.otp_code !== code) {
+        await db.query('UPDATE signup_otps SET attempts = attempts + 1 WHERE id = $1', [row.id]);
+        return { ok: false, reason: 'mismatch' };
+    }
+    return { ok: true, id: row.id };
+}
+
 // ============================================
 // AUTH — SEND OTP
 // ============================================
-app.post('/api/auth/send-otp', async (req, res) => {
+app.post('/api/auth/send-otp', rateLimit(db, 'send-otp', { windowMs: 15 * 60_000, max: 10 }), async (req, res) => {
     try {
         const { email, purpose } = req.body;
 
@@ -4998,14 +5354,30 @@ app.post('/api/auth/send-otp', async (req, res) => {
             }
         }
 
+        // Per-identifier throttle: without this, requesting a fresh code is a
+        // free reset of the 5-attempt lockout above, so an attacker just asks
+        // for a new code every 5 guesses and keeps grinding forever.
+        const recentSends = await db.query(
+            `SELECT COUNT(*)::int AS c FROM signup_otps
+             WHERE email = $1 AND created_at > NOW() - INTERVAL '15 minutes'`,
+            [lowerEmail]
+        );
+        if (recentSends.rows[0].c >= 5) {
+            return res.status(429).json({
+                success: false,
+                message: 'Too many codes requested. Please wait a few minutes and try again.',
+            });
+        }
+
         // Invalidate previous unused OTPs for this email
         await db.query(
             'UPDATE signup_otps SET used = TRUE WHERE email = $1 AND used = FALSE',
             [lowerEmail]
         );
 
-        // Generate 4-digit OTP
-        const otp = Math.floor(1000 + Math.random() * 9000).toString();
+        // 6-digit OTP (1,000,000 combinations, vs 10,000 for 4 digits — see
+        // verifyOtp for the attempt lockout this is paired with).
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
         const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
         await db.query(
@@ -5090,7 +5462,7 @@ app.post('/api/auth/send-otp', async (req, res) => {
 // ============================================
 // AUTH — RESET PASSWORD
 // ============================================
-app.post('/api/auth/reset-password', async (req, res) => {
+app.post('/api/auth/reset-password', rateLimit(db, 'reset-password', { windowMs: 15 * 60_000, max: 10 }), async (req, res) => {
     try {
         const { email, otp_code, new_password } = req.body;
 
@@ -5106,19 +5478,13 @@ app.post('/api/auth/reset-password', async (req, res) => {
         const lowerPassword = new_password.toLowerCase();
 
         // Verify OTP
-        const otpResult = await db.query(
-            `SELECT id FROM signup_otps
-             WHERE email = $1 AND otp_code = $2 AND used = FALSE AND expires_at > NOW()
-             ORDER BY created_at DESC LIMIT 1`,
-            [lowerEmail, otp_code]
-        );
-
-        if (otpResult.rows.length === 0) {
+        const otpCheck = await verifyOtp(lowerEmail, otp_code);
+        if (!otpCheck.ok) {
             return res.status(400).json({ success: false, message: 'Invalid or expired code' });
         }
 
         // Mark OTP used
-        await db.query('UPDATE signup_otps SET used = TRUE WHERE id = $1', [otpResult.rows[0].id]);
+        await db.query('UPDATE signup_otps SET used = TRUE WHERE id = $1', [otpCheck.id]);
 
         // Update password
         await db.query(
@@ -5182,14 +5548,8 @@ app.post('/api/signup/free', async (req, res) => {
         const lowerPassword = password.toLowerCase();
 
         // Verify OTP
-        const otpResult = await db.query(
-            `SELECT id FROM signup_otps 
-             WHERE email = $1 AND otp_code = $2 AND used = FALSE AND expires_at > NOW()
-             ORDER BY created_at DESC LIMIT 1`,
-            [lowerEmail, otp_code]
-        );
-
-        if (otpResult.rows.length === 0) {
+        const otpCheck = await verifyOtp(lowerEmail, otp_code);
+        if (!otpCheck.ok) {
             return res.status(400).json({ success: false, message: 'Invalid or expired OTP' });
         }
 
@@ -5209,7 +5569,7 @@ app.post('/api/signup/free', async (req, res) => {
             }
 
             // Mark OTP used
-            await db.query('UPDATE signup_otps SET used = TRUE WHERE id = $1', [otpResult.rows[0].id]);
+            await db.query('UPDATE signup_otps SET used = TRUE WHERE id = $1', [otpCheck.id]);
 
             // Create the account (username = email for backward compat)
             const accountResult = await client.query(
@@ -5295,17 +5655,11 @@ app.post('/api/signup/temp-link', async (req, res) => {
         // invited accounts are never swept by the grace-login cleanup.)
         let otpRow = null;
         if (otp_code) {
-            const otpResult = await db.query(
-                `SELECT id FROM signup_otps
-                 WHERE email = $1 AND otp_code = $2 AND used = FALSE AND expires_at > NOW()
-                 ORDER BY created_at DESC LIMIT 1`,
-                [lowerEmail, otp_code]
-            );
-
-            if (otpResult.rows.length === 0) {
+            const otpCheck = await verifyOtp(lowerEmail, otp_code);
+            if (!otpCheck.ok) {
                 return res.status(400).json({ message: 'Invalid or expired OTP' });
             }
-            otpRow = otpResult.rows[0];
+            otpRow = { id: otpCheck.id };
         }
 
         const client = await db.connect();
@@ -5461,16 +5815,11 @@ app.post('/api/signup/group-seat', async (req, res) => {
         // a paying group from using the seats they already own.
         let otpRow = null;
         if (otp_code) {
-            const otpResult = await db.query(
-                `SELECT id FROM signup_otps
-                 WHERE email = $1 AND otp_code = $2 AND used = FALSE AND expires_at > NOW()
-                 ORDER BY created_at DESC LIMIT 1`,
-                [lowerEmail, otp_code]
-            );
-            if (otpResult.rows.length === 0) {
+            const otpCheck = await verifyOtp(lowerEmail, otp_code);
+            if (!otpCheck.ok) {
                 return res.status(400).json({ success: false, message: 'Invalid or expired OTP' });
             }
-            otpRow = otpResult.rows[0];
+            otpRow = { id: otpCheck.id };
         }
 
         const client = await db.connect();
@@ -5835,7 +6184,7 @@ app.post('/final-quiz/submit', requireSession, subscriberOnly, async (req, res) 
 });
 
 // Get final quiz sessions history
-app.get('/final-quiz/sessions/:userId', requireSession, async (req, res) => {
+app.get('/final-quiz/sessions/:userId', requireSession, requireOwnUser('userId'), async (req, res) => {
     const { userId } = req.params;
     const { page = 1, limit = 10 } = req.query;
 
@@ -5910,7 +6259,7 @@ app.get('/final-quiz/sessions/:userId', requireSession, async (req, res) => {
 });
 
 // Get detailed final quiz session
-app.get('/final-quiz/session/:sessionId', requireSession, async (req, res) => {
+app.get('/final-quiz/session/:sessionId', requireSession, requireOwnSession('sessionId', 'final_review_sessions'), async (req, res) => {
     const { sessionId } = req.params;
 
     try {
@@ -5986,7 +6335,7 @@ app.get('/final-quiz/session/:sessionId', requireSession, async (req, res) => {
 });
 
 // Get questions for a specific final quiz session
-app.get('/final-quiz/session/:sessionId/questions', requireSession, async (req, res) => {
+app.get('/final-quiz/session/:sessionId/questions', requireSession, requireOwnSession('sessionId', 'final_review_sessions'), async (req, res) => {
     const { sessionId } = req.params;
 
     try {
@@ -6036,6 +6385,7 @@ app.get('/final-quiz/session/:sessionId/questions', requireSession, async (req, 
                 q.correct_option,
                 q.question_type,
                 q.source,
+                q.explanation,
                 fqa.user_answer,
                 fqa.is_correct,
                 fqa.time_taken
@@ -6068,7 +6418,7 @@ app.get('/api/admin/verify-key', adminAuth, (req, res) => {
 });
 
 // Error Report Routes
-app.use('/api/error-report', errorReportRoutes);
+app.use('/api/error-report', rateLimit(db, 'error-report', { windowMs: 60 * 60_000, max: 30 }), errorReportRoutes);
 
 // Question Reports Routes
 app.use('/api/question-reports', (req, res, next) => { req.db = db; next(); }, questionReportsRouter);
@@ -6244,25 +6594,57 @@ app.get('/api/unsubscribe', async (req, res) => {
 app.use(async (err, req, res, next) => {
     logger.error('Unhandled error:', err);
 
-    // Send error notification for 500+ errors
-    if (!res.headersSent) {
-        try {
-            await notifyBackendError(err, req, {
-                middleware: 'globalErrorHandler',
-                route: req.originalUrl,
-                method: req.method
-            });
-        } catch (notifyError) {
-            logger.error('Failed to send error notification:', notifyError);
-        }
+    // A response already in flight can't be re-sent — calling res.status().json()
+    // here would throw "Cannot set headers after they are sent", which Express
+    // has no handler for at that point and which crashes the process. Delegating
+    // to Express's built-in final handler is what res/next are for in this case.
+    if (res.headersSent) {
+        return next(err);
     }
 
-    // Send error response
+    // Send error notification for 500+ errors
+    try {
+        await notifyBackendError(err, req, {
+            middleware: 'globalErrorHandler',
+            route: req.originalUrl,
+            method: req.method
+        });
+    } catch (notifyError) {
+        logger.error('Failed to send error notification:', notifyError);
+    }
+
+    // Only relay err.message when the throw site explicitly set a status —
+    // that's the signal it's a deliberate, client-safe error (e.g.
+    // PaymentDisabledError, "Payment not found."). An error that reaches here
+    // WITHOUT one is an unexpected exception (DB driver error, TypeError...)
+    // whose .message can contain internal detail — SQL text, file paths,
+    // hostnames — that should never reach a client.
+    const hasExplicitStatus = typeof err.statusCode === 'number' || typeof err.status === 'number';
     const statusCode = err.statusCode || err.status || 500;
+    const message = hasExplicitStatus && err.message ? err.message : 'Internal server error';
     res.status(statusCode).json({
-        message: err.message || 'Internal server error',
-        ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
+        message,
+        ...(!isProduction && { stack: err.stack })
     });
+});
+
+// Without these, an unhandled promise rejection or a thrown exception outside
+// any request handler (a fire-and-forget cron tick, a timer callback) crashes
+// the process silently with no notification and, for unhandledRejection, no
+// log line at all under some Node versions. Logging isn't enough to keep
+// going safely after an uncaughtException (the process may be in an
+// inconsistent state), so it still exits — but now notified, not silent.
+process.on('unhandledRejection', (reason) => {
+    logger.error('Unhandled promise rejection:', reason);
+    notifyBackendError(reason instanceof Error ? reason : new Error(String(reason)), null, {
+        middleware: 'unhandledRejection',
+    }).catch(() => { /* already logged above; don't let the notifier itself crash the process */ });
+});
+process.on('uncaughtException', (err) => {
+    logger.error('Uncaught exception:', err);
+    notifyBackendError(err, null, { middleware: 'uncaughtException' })
+        .catch(() => { /* already logged above */ })
+        .finally(() => process.exit(1));
 });
 
 // Single listen at the very end so every route/middleware above is registered

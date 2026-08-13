@@ -30,6 +30,28 @@
     color: var(--muted, #64748b);
 }
 
+/* The struck-through former price. `unicode-bidi: plaintext` keeps the number
+   reading left-to-right inside the Arabic layout, and the strike is coloured
+   red so it reads as "no longer this" at a glance rather than as a second
+   price sitting next to the real one. */
+.subscribe-price-was {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--muted, #64748b);
+    text-decoration: line-through;
+    text-decoration-thickness: 2px;
+    text-decoration-color: var(--error-color, #dc2626);
+    unicode-bidi: plaintext;
+}
+
+.subscribe-save-note {
+    margin: -10px 0 16px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--success-color, #16a34a);
+}
+
 /* Plan picker. Three tiers for the personal ladder, two for groups —
    auto-fit rather than a fixed 3 so the group page doesn't leave a gap. */
 .subscribe-plans {
@@ -86,10 +108,33 @@
 }
 
 .subscribe-plan-amount {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 5px;
     font-size: 20px;
     font-weight: 800;
     color: var(--text-dark, #0f1e3d);
     line-height: 1.15;
+}
+
+.subscribe-plan-was {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted, #64748b);
+    text-decoration-thickness: 1.5px;
+    text-decoration-color: var(--error-color, #dc2626);
+    unicode-bidi: plaintext;
+}
+
+/* A discounted tile gets a warmer border than the plain "selected" blue, so
+   the offer is legible before you tap anything. */
+.subscribe-plan.on-offer {
+    border-color: rgba(22, 163, 74, 0.55);
+}
+
+.subscribe-plan-badge.offer {
+    background: var(--success-color, #16a34a);
 }
 
 .subscribe-plan-permonth {
@@ -206,12 +251,6 @@
     text-decoration: underline;
 }
 
-/* Primary "go pay" CTA — the one unmissable next step on the page. */
-.subscribe-cta {
-    width: 100%;
-    margin-bottom: 6px;
-}
-
 /* Shown when the embedded form cannot render: an explanation plus two real
    ways forward, never a bare error. */
 .subscribe-fallback {
@@ -266,4 +305,33 @@
     margin: 0;
     color: var(--muted, #64748b);
     line-height: 1.7;
+}
+
+/* This whole file had no media queries at all — a revenue page relying
+   entirely on .login-*'s own responsive rules for anything below the card
+   shell itself. The plan grid (minmax(96px,1fr)) already wraps safely, but
+   the price digits and plan padding were sized for the 460px card, not the
+   ~280px of usable width left on a 320–360px phone once the shell's own
+   padding is subtracted. */
+@media (max-width: 380px) {
+    .subscribe-price-amount {
+        font-size: 34px;
+    }
+
+    .subscribe-price-was {
+        font-size: 18px;
+    }
+
+    .subscribe-plans {
+        grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+        gap: 6px;
+    }
+
+    .subscribe-plan {
+        padding: 12px 4px 10px;
+    }
+
+    .subscribe-plan-amount {
+        font-size: 17px;
+    }
 }

@@ -203,7 +203,7 @@ router.get('/export.csv', async (req, res) => {
 router.get('/invoice/:gatewayRef.pdf', async (req, res) => {
     try {
         const { gatewayRef } = req.params;
-        const rows = await fetchPaidEvents(req.db);
+        const rows = await fetchPaidEvents(req.db, { gatewayRef });
         const payment = rows.find((r) => r.gatewayRef === gatewayRef);
         if (!payment) {
             return res.status(404).json({ success: false, message: 'Payment not found' });

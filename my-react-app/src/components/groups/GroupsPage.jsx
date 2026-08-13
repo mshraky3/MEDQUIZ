@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import Globals from '../../global.js';
 import { UserContext } from '../../UserContext';
@@ -22,6 +22,13 @@ import './GroupsPage.css';
  *
  * The owner never sees who claimed a seat — the API does not return it. See the
  * privacy rule in backend/routes/groups.js.
+ *
+ * Readable WITHOUT a session. It used to bounce logged-out visitors straight to
+ * /login, which made group plans invisible to everyone who had not already been
+ * told they exist — the landing page, the footer and search engines all had
+ * nowhere to point. A guest now gets the same plan cards and seat preview from
+ * the public /api/payment/config probe, and only hits the login wall when they
+ * choose to buy.
  */
 const GroupsPage = () => {
     const { user, sessionToken } = useContext(UserContext);
@@ -34,16 +41,21 @@ const GroupsPage = () => {
     const [groups, setGroups] = useState([]);
     const [copiedToken, setCopiedToken] = useState(null);
 
+    const isAuthenticated = Boolean(user?.username && sessionToken);
+
     useEffect(() => {
-        if (!user?.username || !sessionToken) {
-            navigate('/login', { replace: true, state: { from: '/groups' } });
-            return undefined;
-        }
         let cancelled = false;
-        axios.get(`${Globals.URL}/api/groups/mine`, {
-            params: { username: user.username },
-            headers: { Authorization: `Bearer ${sessionToken}` },
-        }).then(({ data }) => {
+        // Signed in → the private view, which also carries any group they own.
+        // Signed out → the public plan ladder only. Same shape either way; the
+        // guest response simply has no `groups`.
+        const request = isAuthenticated
+            ? axios.get(`${Globals.URL}/api/groups/mine`, {
+                params: { username: user.username },
+                headers: { Authorization: `Bearer ${sessionToken}` },
+            })
+            : axios.get(`${Globals.URL}/api/payment/config`, { params: { kind: 'group' } });
+
+        request.then(({ data }) => {
             if (cancelled) return;
             setPlans(data.plans || []);
             setGroups(data.groups || []);
@@ -52,7 +64,7 @@ const GroupsPage = () => {
             if (!cancelled) setState('error');
         });
         return () => { cancelled = true; };
-    }, [user?.username, sessionToken, navigate]);
+    }, [isAuthenticated, user?.username, sessionToken]);
 
     const copyLink = async (link, key) => {
         try {
@@ -66,12 +78,27 @@ const GroupsPage = () => {
         }
     };
 
-    const buy = (planId) => navigate(`/subscribe?kind=group&plan=${encodeURIComponent(planId)}`);
+    const checkoutPath = (planId) => `/subscribe?kind=group&plan=${encodeURIComponent(planId)}`;
+    // A guest picking a plan is sent to sign up, not silently to a login wall.
+    // Login keeps `from`, so someone who already has an account lands back on
+    // the checkout for the exact plan they clicked.
+    const buy = (planId) => {
+        if (!isAuthenticated) {
+            navigate('/login', { state: { from: checkoutPath(planId) } });
+            return;
+        }
+        navigate(checkoutPath(planId));
+    };
 
     return (
         <div className="groups-page" dir={dir}>
-            {/* A private, per-account page — never indexed. */}
-            <SEO title={t.pageTitle} robots="noindex, nofollow" />
+            {/* The signed-in view lists a person's own seats and links, so it is
+                never indexed. The guest view is a plain price page and is one of
+                the few ways anyone discovers group plans at all — let it in. */}
+            <SEO
+                title={t.pageTitle}
+                robots={isAuthenticated ? 'noindex, nofollow' : 'index, follow'}
+            />
             <div className="groups-wrap">
                 <header className="groups-header">
                     <span className="groups-pill">{t.pill}</span>
@@ -121,12 +148,20 @@ const GroupsPage = () => {
                                     </ul>
 
                                     <button type="button" className="btn primary groups-buy-cta" onClick={() => buy(plan.id)}>
-                                        {t.buyCta(t.priceWithCurrency(plan.priceHalalas / 100))}
+                                        {isAuthenticated
+                                            ? t.buyCta(t.priceWithCurrency(plan.priceHalalas / 100))
+                                            : t.buyCtaGuest(t.priceWithCurrency(plan.priceHalalas / 100))}
                                     </button>
                                 </article>
                             ))}
                         </div>
                         <p className="groups-norenew">{t.noAutoRenew}</p>
+                        {!isAuthenticated && (
+                            <p className="groups-guest-note">
+                                {t.guestNote}{' '}
+                                <Link to="/signup">{t.guestSignup}</Link>
+                            </p>
+                        )}
                     </section>
                 )}
 
@@ -193,9 +228,18 @@ const GroupsPage = () => {
                 })}
 
                 {state === 'ready' && (
-                    <button type="button" className="groups-back" onClick={() => navigate('/quizs')}>
-                        {t.backToQuizzes}
-                    </button>
+                    isAuthenticated ? (
+                        <button type="button" className="groups-back" onClick={() => navigate('/quizs')}>
+                            {t.backToQuizzes}
+                        </button>
+                    ) : (
+                        // A guest has no /quizs to go back to, and /subscribe is
+                        // itself behind the login wall — so the individual plans
+                        // they might want instead are the ones on the landing
+                        // page, which is the only version of them a guest can
+                        // actually read.
+                        <Link to="/" className="groups-back">{t.backToIndividual}</Link>
+                    )
                 )}
             </div>
         </div>

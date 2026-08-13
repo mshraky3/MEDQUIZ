@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Icon from '../common/Icon.jsx';
+import ExplanationPanel from '../common/ExplanationPanel.jsx';
 import ReportModal from './ReportModal';
 import { useCopy, useLang } from '../../i18n';
 import quizCopy from '../../i18n/copy/quiz.js';
@@ -10,6 +11,7 @@ const Question = ({
   questionNumber,
   totalQuestions,
   selectedAnswer,
+  revealed = false,
   onSelectOption,
   onNextQuestion,
   onPreviousQuestion,
@@ -64,17 +66,40 @@ const Question = ({
             <div className="question-text">{safeQuestionText}</div>
 
             <div className="options">
-              {optionKeys.map((optKey) => (
-                <button
-                  key={optKey}
-                  className={`option-button ${selectedAnswer === question?.[optKey] ? "selected" : ""}`}
-                  onClick={() => question?.[optKey] && onSelectOption(question[optKey])}
-                  disabled={!question?.[optKey]}
-                >
-                  {question?.[optKey] || t.optionUnavailable}
-                </button>
-              ))}
+              {optionKeys.map((optKey) => {
+                const option = question?.[optKey];
+                const isSelected = selectedAnswer === option;
+                // Study mode only: once answered, mark the correct option and
+                // the student's pick if it was a different one.
+                let state = '';
+                if (revealed && option) {
+                  if (option === question?.correct_option) state = ' is-correct';
+                  else if (isSelected) state = ' is-wrong';
+                }
+                return (
+                  <button
+                    key={optKey}
+                    className={`option-button ${isSelected ? 'selected' : ''}${state}`}
+                    onClick={() => option && onSelectOption(option)}
+                    disabled={!option || revealed}
+                  >
+                    <span className="option-text">{option || t.optionUnavailable}</span>
+                    {state === ' is-correct' && (
+                      <span className="option-mark"><Icon name="check" size={16} /></span>
+                    )}
+                    {state === ' is-wrong' && (
+                      <span className="option-mark"><Icon name="x" size={16} /></span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
+
+            {/* Study mode: the answer is already on screen, so the explanation
+                opens with it rather than hiding behind another click. */}
+            {revealed && (
+              <ExplanationPanel explanation={question?.explanation} defaultOpen />
+            )}
 
             {/* Report button */}
             {userId && userEmail && (

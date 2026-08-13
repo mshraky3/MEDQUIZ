@@ -1,9 +1,8 @@
 import React, { useEffect, useState, useContext } from 'react';
-import axios from 'axios';
+import apiClient from '../../utils/apiClient.js';
 import { useNavigate } from 'react-router-dom';
 import { track } from '@vercel/analytics';
 import './QUIZS.css';
-import Globals from '../../global.js';
 
 import CongratulationsPopup from '../common/CongratulationsPopup.jsx';
 import Icon from '../common/Icon.jsx';
@@ -11,6 +10,7 @@ import { UserContext } from '../../UserContext';
 import { getTypeLabel } from '../../utils/typeLabels';
 import { getSourceLabel } from '../../utils/sourceLabels';
 import { specialtyKeys, bankLabel, userTrack, trackLabel, examLabel } from '../../utils/tracks.js';
+import { readQuizMode, writeQuizMode, STUDY, EXAM } from '../../utils/quizMode.js';
 import { useCopy, useLang } from '../../i18n';
 import quizCopy from '../../i18n/copy/quiz.js';
 
@@ -26,8 +26,14 @@ const quizOptions = [10, 50, 'custom'];
  * original it drops the source-selection modal entirely — the bank is unified —
  * so the flow is simply: size → type → timer (and final quiz: type → time).
  */
-const QuizLauncher = ({ id }) => {
-    const { user, setUser, sessionToken } = useContext(UserContext);
+// contentStatus: the /api/track-content-status response, when the caller
+// already has it. QUIZS.jsx fetches this on every hub load and then rendered
+// this launcher underneath, which fetched the exact same endpoint again a
+// moment later — passing it down skips that second request. Still optional:
+// /quizs?view=custom is a real bookmarkable URL, so a launcher reached
+// directly (no parent fetch to hand off) falls back to fetching for itself.
+const QuizLauncher = ({ id, contentStatus }) => {
+    const { user, sessionToken } = useContext(UserContext);
     const navigate = useNavigate();
     const copy = useCopy(quizCopy);
     const t = copy.launcher;
@@ -45,17 +51,19 @@ const QuizLauncher = ({ id }) => {
     // land on directly (bookmark, back button), so the launcher checks for
     // itself rather than offering a quiz that would come back empty.
     // null = not known yet; treated as "has content" so nothing flashes.
-    const [bankEmpty, setBankEmpty] = useState(false);
+    const [bankEmpty, setBankEmpty] = useState(() => contentStatus ? !contentStatus.hasQuestions : false);
 
     // The collections this track can be narrowed to, straight from the server
     // ([{key,total}], already filtered to ones that actually have questions).
     // The nursing bank has two — "Most Repeated" and "Confirmed" — and the
     // picker below only appears when there is genuinely a choice to make.
-    const [sources, setSources] = useState([]);
+    const [sources, setSources] = useState(() =>
+        Array.isArray(contentStatus?.selectableSources) ? contentStatus.selectableSources : []
+    );
     // How much of each specialty this user has already answered, as a 0-100
     // percentage straight from the server ({type: pct}) — shown as a small
     // badge next to each checkbox so the user knows how much is left.
-    const [progressByType, setProgressByType] = useState({});
+    const [progressByType, setProgressByType] = useState(() => contentStatus?.progressByType || {});
     // null = the whole bank (both collections mixed).
     const [selectedSource, setSelectedSource] = useState(null);
     const activeSource = selectedSource || WHOLE_BANK;
@@ -63,6 +71,14 @@ const QuizLauncher = ({ id }) => {
         () => sources.reduce((sum, s) => sum + (s.total || 0), 0),
         [sources]
     );
+
+    // Study vs exam. Shared with the hub's quick start through utils/quizMode.js
+    // so both entry points start the quiz the same way.
+    const [quizMode, setQuizMode] = useState(readQuizMode);
+    const chooseMode = (mode) => {
+        setQuizMode(mode);
+        writeQuizMode(mode);
+    };
 
     const [showTypeSelector, setShowTypeSelector] = useState(false);
     const [selectedTypes, setSelectedTypes] = useState([]);
@@ -83,43 +99,14 @@ const QuizLauncher = ({ id }) => {
     const [showCongratulations, setShowCongratulations] = useState(false);
     const [congratulationsData, setCongratulationsData] = useState(null);
 
-    // ---- Protected request helpers (mirror the app's auth pattern) ----
-    const protectedGet = async (url, config = {}) => {
-        if (!user || !sessionToken) throw new Error('Not authenticated');
-        const urlWithUser = url + (url.includes('?') ? '&' : '?') + `username=${encodeURIComponent(user.username)}`;
-        try {
-            return await axios.get(urlWithUser, { ...config, headers: { ...(config.headers || {}), Authorization: `Bearer ${sessionToken}` } });
-        } catch (err) {
-            if (err.response && err.response.status === 401) {
-                setUser(null, null);
-                localStorage.removeItem('user'); localStorage.removeItem('sessionToken');
-                window.location.href = '/login?session=expired';
-                return;
-            }
-            throw err;
-        }
-    };
-
-    const protectedPost = async (url, data, config = {}) => {
-        if (!user || !sessionToken) throw new Error('Not authenticated');
-        const urlWithUser = url + (url.includes('?') ? '&' : '?') + `username=${encodeURIComponent(user.username)}`;
-        try {
-            return await axios.post(urlWithUser, data, { ...config, headers: { ...(config.headers || {}), Authorization: `Bearer ${sessionToken}` } });
-        } catch (err) {
-            if (err.response && err.response.status === 401) {
-                setUser(null, null);
-                localStorage.removeItem('user'); localStorage.removeItem('sessionToken');
-                window.location.href = '/login?session=expired';
-                return;
-            }
-            throw err;
-        }
-    };
-
     useEffect(() => {
+        // The parent (QUIZS.jsx) already fetched this and handed it down —
+        // fetching it again here would be the exact same request twice on
+        // every /quizs?view=custom visit reached through the hub.
+        if (contentStatus) return undefined;
         let alive = true;
         if (!user || !sessionToken) return undefined;
-        protectedGet(`${Globals.URL}/api/track-content-status`)
+        apiClient.get('/api/track-content-status')
             .then((res) => {
                 if (!alive || !res) return;
                 setBankEmpty(!res.data.hasQuestions);
@@ -129,7 +116,7 @@ const QuizLauncher = ({ id }) => {
             .catch(() => { /* advisory only — never block the launcher on this */ });
         return () => { alive = false; };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [user?.username, sessionToken]);
+    }, [user?.username, sessionToken, contentStatus]);
 
     // ---- Regular quiz flow: size → type → timer ----
     const handleOptionClick = (num) => {
@@ -148,7 +135,7 @@ const QuizLauncher = ({ id }) => {
         } catch (error) {
             console.debug('Analytics track skipped:', error);
         }
-        navigate('/quiz/10', { state: { id, types: 'mix', source: activeSource, timer: null } });
+        navigate('/quiz/10', { state: { id, types: 'mix', source: activeSource, timer: null, mode: quizMode } });
     };
 
     const handleCheckboxChange = (type) => {
@@ -176,7 +163,7 @@ const QuizLauncher = ({ id }) => {
         const typesStr = selectedTypes.length > 0 ? selectedTypes.join(',') : 'mix';
         const timerMinutes = selectedTimer === 'custom' ? customTimerMinutes : selectedTimer;
         setShowTimerSelector(false);
-        navigate(`/quiz/${numQuestions}`, { state: { id, types: typesStr, source: activeSource, timer: timerMinutes } });
+        navigate(`/quiz/${numQuestions}`, { state: { id, types: typesStr, source: activeSource, timer: timerMinutes, mode: quizMode } });
     };
 
     const handleCustomQuestionsConfirm = () => {
@@ -204,9 +191,9 @@ const QuizLauncher = ({ id }) => {
         setLoadingFinalCount(true);
         setShowFinalQuizTime(true);
         try {
-            const response = await protectedGet(
-                `${Globals.URL}/final-quiz/questions-count?questionType=${encodeURIComponent(type)}&source=${encodeURIComponent(activeSource)}`
-            );
+            const response = await apiClient.get('/final-quiz/questions-count', {
+                params: { questionType: type, source: activeSource },
+            });
             setFinalQuizQuestionsCount(response.data.totalQuestions || 0);
         } catch (error) {
             console.error('Error fetching questions count:', error);
@@ -221,7 +208,9 @@ const QuizLauncher = ({ id }) => {
         if (!finalQuizQuestionsCount || finalQuizQuestionsCount < 1) return;
         setShowFinalQuizTime(false);
         navigate(`/quiz/${finalQuizQuestionsCount}`, {
-            state: { id, types: selectedFinalType, source: activeSource, timer: timeLimit, isFinalQuiz: true }
+            // A final quiz is a mock exam: never revealed mid-quiz, whatever the
+            // launcher's mode preference is set to.
+            state: { id, types: selectedFinalType, source: activeSource, timer: timeLimit, isFinalQuiz: true, mode: EXAM }
         });
     };
 
@@ -240,7 +229,7 @@ const QuizLauncher = ({ id }) => {
     const checkCompletion = async (type, source) => {
         if (!user || !sessionToken) return false;
         try {
-            const response = await protectedGet(`${Globals.URL}/api/check-completion/${id}?type=${encodeURIComponent(type)}&source=${encodeURIComponent(source)}`);
+            const response = await apiClient.get(`/api/check-completion/${id}`, { params: { type, source } });
             const { isCompleted, total, completed } = response.data;
             if (isCompleted && total > 0) {
                 await awardAchievement(type, source);
@@ -268,7 +257,7 @@ const QuizLauncher = ({ id }) => {
             const achievementKey = `${type}_${source}`;
             const achievementName = t.achievementName(getTypeLabel(type, lang), getSourceLabel(source, lang));
             const achievementDescription = t.achievementDesc(getTypeLabel(type, lang), getSourceLabel(source, lang));
-            await protectedPost(`${Globals.URL}/api/award-achievement`, {
+            await apiClient.post('/api/award-achievement', {
                 userId: id,
                 achievementType: 'cardinality_completion',
                 achievementKey,
@@ -284,7 +273,7 @@ const QuizLauncher = ({ id }) => {
         if (!congratulationsData) return;
         if (!user || !sessionToken) return;
         try {
-            await protectedPost(`${Globals.URL}/api/reset-progress`, {
+            await apiClient.post('/api/reset-progress', {
                 userId: id,
                 type: congratulationsData.type,
                 source: congratulationsData.source
@@ -293,6 +282,13 @@ const QuizLauncher = ({ id }) => {
             setCongratulationsData(null);
             window.location.reload();
         } catch (error) {
+            // Subscriber-only (see POST /api/reset-progress). A lapsed account
+            // can still reach this popup, so send it to the paywall instead of
+            // swallowing the failure and looking broken.
+            if (error?.response?.status === 402) {
+                navigate('/subscribe?reason=reset_requires_subscription');
+                return;
+            }
             console.error('Error resetting progress:', error);
         }
     };
@@ -350,6 +346,33 @@ const QuizLauncher = ({ id }) => {
             <div className={`quiz-main${anyModalOpen ? ' is-dimmed' : ''}`}>
                 <h1>{t.title}</h1>
                 <p className="quiz-subtitle">{t.subtitlePrefix}<bdi>{bankLabel(myTrack, lang)}</bdi>.</p>
+
+                {/* Study vs exam mode. Applies to quick start and to custom
+                    quizzes; the final quiz is always exam mode. Reuses the
+                    source picker's chip styling so the two rows read as one
+                    set of controls. */}
+                <div className="bank-source-picker quiz-mode-picker" role="group" aria-label={t.modeGroupLabel}>
+                    <span className="bank-source-legend">
+                        <Icon name="lightbulb" size={15} /> {t.modeLegend}
+                    </span>
+                    <div className="bank-source-options">
+                        {[
+                            { key: STUDY, name: t.modeStudy, hint: t.modeStudyHint },
+                            { key: EXAM, name: t.modeExam, hint: t.modeExamHint },
+                        ].map((mode) => (
+                            <button
+                                type="button"
+                                key={mode.key}
+                                className={`bank-source-chip${quizMode === mode.key ? ' is-active' : ''}`}
+                                aria-pressed={quizMode === mode.key}
+                                onClick={() => chooseMode(mode.key)}
+                            >
+                                <span className="bank-source-chip-name">{mode.name}</span>
+                                <span className="bank-source-chip-count">{mode.hint}</span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
 
                 {/* Collection picker. Only rendered when the track's bank really
                     has more than one collection to choose between, so the

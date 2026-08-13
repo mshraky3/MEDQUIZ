@@ -22,12 +22,18 @@ const CookieConsent = () => {
         safeSetItem('cookie-consent', 'accepted');
         safeSetItem('cookie-consent-date', new Date().toISOString());
         setShowBanner(false);
+        // A same-tab localStorage write fires no 'storage' event (that's
+        // cross-tab only), so anything that gated on consent at its own
+        // mount — GoogleAd — would otherwise never learn the answer changed
+        // until the visitor navigated to a fresh mount.
+        window.dispatchEvent(new Event('sqb:consent-changed'));
     };
 
     const acceptNecessary = () => {
         safeSetItem('cookie-consent', 'necessary-only');
         safeSetItem('cookie-consent-date', new Date().toISOString());
         setShowBanner(false);
+        window.dispatchEvent(new Event('sqb:consent-changed'));
     };
 
     if (!showBanner) return null;

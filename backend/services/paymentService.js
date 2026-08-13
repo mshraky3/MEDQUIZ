@@ -127,6 +127,11 @@ export const PLANS = {
         months: 4,
         seats: 1,
         priceHalalas: Number(process.env.PLAN_4MONTH_PRICE_HALALAS || 12900),
+        // Presentation only — the "was" price the pickers strike through. It is
+        // never compared against a real payment: verification uses
+        // priceHalalas alone, so a wrong value here can only mis-draw a label,
+        // never accept or reject money. Set to 0/unset to hide the offer.
+        compareAtHalalas: Number(process.env.PLAN_4MONTH_COMPARE_HALALAS || 20000),
     },
     annual: {
         id: 'annual',
@@ -344,66 +349,105 @@ function computeNewExpiry(currentExpiry, plan) {
 export async function activateSubscriptionFromPayment(db, accountId, payment, eventType = 'payment_paid', plan = PLANS.annual) {
     const gatewayRef = payment?.id || null;
 
-    const acctRes = await db.query(
-        `SELECT id, subscription_expiry_date FROM accounts WHERE id = $1`,
-        [accountId]
-    );
-    const account = acctRes.rows[0];
-    if (!account) {
-        const err = new Error('Account not found for activation.');
-        err.statusCode = 404;
+    // Everything that MUST be durably consistent — the claim, the
+    // subscription activation, and (for a group plan) the seat links — runs
+    // in one transaction. Previously these were separate autocommit
+    // statements: if the process died between the claim INSERT and the
+    // account UPDATE (a timeout, a crash), the claim had already committed,
+    // so the payment was permanently marked processed while the account was
+    // never actually activated — and because the claim can never be taken
+    // twice, no retry (a page refresh, a redelivered webhook) could ever
+    // repair it. A failure now rolls the whole transaction back, including
+    // the claim, so the exact same retry that used to be permanently locked
+    // out instead just tries the whole activation again.
+    const client = await db.connect();
+    let claim, newExpiry, group, account;
+    try {
+        await client.query('BEGIN');
+
+        // FOR UPDATE: without a row lock, two different payments activating
+        // the same account back-to-back can both read the same
+        // subscription_expiry_date and race — the second UPDATE would win
+        // and silently discard the first payment's extension (a lost update,
+        // not something the claim's uniqueness on gateway_ref protects
+        // against, since these are two DIFFERENT gateway_refs).
+        const acctRes = await client.query(
+            `SELECT id, subscription_expiry_date FROM accounts WHERE id = $1 FOR UPDATE`,
+            [accountId]
+        );
+        account = acctRes.rows[0];
+        if (!account) {
+            const err = new Error('Account not found for activation.');
+            err.statusCode = 404;
+            throw err;
+        }
+
+        // ── Claim the payment atomically ──────────────────────────────────
+        // /verify (browser callback) and the webhook both call this, and they can
+        // arrive at the same instant. A SELECT-then-INSERT check would let both
+        // pass, extending the subscription twice and recording the money twice.
+        // The INSERT itself is the lock: a partial unique index on
+        // (gateway_ref) WHERE status='paid' means exactly one caller can insert,
+        // and only that caller gets a row back and proceeds.
+        claim = await client.query(
+            `INSERT INTO payment_events
+                (account_id, event_type, gateway, gateway_ref, amount_halalas, currency, status, raw_payload)
+             VALUES ($1, $2, 'moyasar', $3, $4, $5, $6, $7)
+             ON CONFLICT (gateway_ref) WHERE status = 'paid' DO NOTHING
+             RETURNING id`,
+            [
+                accountId,
+                eventType,
+                gatewayRef,
+                payment?.amount ?? null,
+                payment?.currency ?? getCurrency(),
+                payment?.status ?? null,
+                JSON.stringify(payment ?? {}),
+            ]
+        );
+
+        if (claim.rows.length === 0) {
+            // Someone else already processed this payment.
+            await client.query('ROLLBACK');
+            return { activated: false, alreadyProcessed: true };
+        }
+
+        newExpiry = computeNewExpiry(account.subscription_expiry_date, plan);
+
+        await client.query(
+            `UPDATE accounts
+                SET subscription_status = 'active',
+                    subscription_expiry_date = $1
+              WHERE id = $2`,
+            [newExpiry, accountId]
+        );
+
+        // A group plan additionally mints the invite links for seats 2..N. The
+        // buyer's own account (seat 1) was just activated above, so the group only
+        // records it — there is no link to claim for yourself.
+        group = null;
+        if (isGroupPlan(plan)) {
+            group = await provisionGroup(client, accountId, plan, gatewayRef, newExpiry);
+        }
+
+        await client.query('COMMIT');
+    } catch (err) {
+        try {
+            await client.query('ROLLBACK');
+        } catch (rollbackErr) {
+            console.error('[payment] rollback failed:', rollbackErr.message);
+        }
         throw err;
+    } finally {
+        client.release();
     }
 
-    // ── Claim the payment atomically ──────────────────────────────────────
-    // /verify (browser callback) and the webhook both call this, and they can
-    // arrive at the same instant. A SELECT-then-INSERT check would let both
-    // pass, extending the subscription twice and recording the money twice.
-    // The INSERT itself is the lock: a partial unique index on
-    // (gateway_ref) WHERE status='paid' means exactly one caller can insert,
-    // and only that caller gets a row back and proceeds.
-    const claim = await db.query(
-        `INSERT INTO payment_events
-            (account_id, event_type, gateway, gateway_ref, amount_halalas, currency, status, raw_payload)
-         VALUES ($1, $2, 'moyasar', $3, $4, $5, $6, $7)
-         ON CONFLICT (gateway_ref) WHERE status = 'paid' DO NOTHING
-         RETURNING id`,
-        [
-            accountId,
-            eventType,
-            gatewayRef,
-            payment?.amount ?? null,
-            payment?.currency ?? getCurrency(),
-            payment?.status ?? null,
-            JSON.stringify(payment ?? {}),
-        ]
-    );
-
-    if (claim.rows.length === 0) {
-        // Someone else already processed this payment.
-        return { activated: false, alreadyProcessed: true };
-    }
-
-    const newExpiry = computeNewExpiry(account.subscription_expiry_date, plan);
-
-    await db.query(
-        `UPDATE accounts
-            SET subscription_status = 'active',
-                subscription_expiry_date = $1
-          WHERE id = $2`,
-        [newExpiry, accountId]
-    );
-
-    // A group plan additionally mints the invite links for seats 2..N. The
-    // buyer's own account (seat 1) was just activated above, so the group only
-    // records it — there is no link to claim for yourself.
-    let group = null;
-    if (isGroupPlan(plan)) {
-        group = await provisionGroup(db, accountId, plan, gatewayRef, newExpiry);
-    }
-
-    // Notifications run after the claim succeeded, so each fires exactly once
-    // per payment. Both are best-effort: neither may undo a completed payment.
+    // Below this point, activation is durably committed — nothing here can
+    // undo it, so neither of these blocks the response or the caller waiting
+    // on it. Previously both were awaited in the critical path: a slow (or
+    // down) mail provider delayed — or on a serverless function's time
+    // budget, could time out — a payment response whose actual database work
+    // had already fully succeeded.
     const settled = settleEvent({
         id: claim.rows[0].id,
         account_id: accountId,
@@ -416,19 +460,19 @@ export async function activateSubscriptionFromPayment(db, accountId, payment, ev
         email: null,
     });
 
-    try {
-        // The customer's own copy: their emailed PDF receipt.
-        const who = await db.query(
-            'SELECT email FROM accounts WHERE id = $1', [accountId]
-        );
-        settled.subscriber = who.rows[0]?.email || null;
-        await sendInvoiceEmail(settled);
-    } catch (err) {
-        console.error('[payment] invoice email failed:', err.message);
-    }
-
-    // Tell the owner money arrived.
-    await notifyPaymentReceived(db, accountId, payment, newExpiry);
+    (async () => {
+        try {
+            // The customer's own copy: their emailed PDF receipt.
+            const who = await db.query('SELECT email FROM accounts WHERE id = $1', [accountId]);
+            settled.subscriber = who.rows[0]?.email || null;
+            await sendInvoiceEmail(settled);
+        } catch (err) {
+            console.error('[payment] invoice email failed:', err.message);
+        }
+    })();
+    notifyPaymentReceived(db, accountId, payment, newExpiry).catch((err) => {
+        console.error('[payment] owner notification failed:', err.message);
+    });
 
     return {
         activated: true,
@@ -517,21 +561,32 @@ export async function verifyAndActivate(db, paymentId, userId) {
     if (Number(payment.amount) < plan.priceHalalas) {
         return { success: false, reason: 'amount_mismatch', amount: payment.amount, expected: plan.priceHalalas };
     }
-    if ((payment.currency || getCurrency()) !== getCurrency()) {
-        return { success: false, reason: 'currency_mismatch', currency: payment.currency };
+    // A missing currency must fail, not fall back to "assume it matches" —
+    // `payment.currency || getCurrency()` made the check pass whenever
+    // Moyasar's response omitted currency, which is the one case a currency
+    // check exists to catch.
+    if (!payment.currency || payment.currency !== getCurrency()) {
+        return { success: false, reason: 'currency_mismatch', currency: payment.currency ?? null };
     }
 
     // Bind the payment to the account via metadata to stop a user from
-    // claiming someone else's payment id.
+    // claiming someone else's payment id. This is now REQUIRED, not just
+    // checked-when-present: every real payment sets it at creation time (see
+    // Subscribe.jsx's Moyasar.init metadata), so a payment without it has
+    // nothing tying it to the caller's account, and the old fallback to the
+    // caller's own session userId let anyone verify-and-claim any paymentId
+    // that happened to be missing metadata for itself.
     const metaAccount = payment.metadata?.account_id != null
         ? String(payment.metadata.account_id)
         : '';
-    if (metaAccount && String(userId) && metaAccount !== String(userId)) {
+    if (!metaAccount) {
+        return { success: false, reason: 'missing_account_metadata' };
+    }
+    if (String(userId) && metaAccount !== String(userId)) {
         return { success: false, reason: 'account_mismatch' };
     }
 
-    const accountId = metaAccount || userId;
-    const result = await activateSubscriptionFromPayment(db, accountId, payment, 'payment_paid', plan);
+    const result = await activateSubscriptionFromPayment(db, metaAccount, payment, 'payment_paid', plan);
     return { success: true, ...result };
 }
 
@@ -554,18 +609,40 @@ export async function handleWebhookEvent(db, payload) {
     if (type === 'payment_refunded' || type === 'payment_voided') {
         const ref = payment?.id;
         if (!ref) return { handled: false, reason: 'no_payment_id' };
-        const upd = await db.query(
-            `UPDATE payment_events
-                SET raw_payload = $1
-              WHERE gateway_ref = $2 AND status = 'paid'
-              RETURNING account_id`,
-            [JSON.stringify(payment ?? {}), ref]
+
+        // Read the previously-recorded refunded amount BEFORE overwriting
+        // raw_payload, so a redelivered webhook (Moyasar retries on anything
+        // but a prompt 2xx, and this endpoint is safe to point an external
+        // scheduler at too) can be told apart from a genuinely new refund.
+        // status stays 'paid' deliberately — it means "this gateway_ref
+        // completed as a paid transaction", which a later refund doesn't
+        // retroactively change (see the payment_events check in
+        // DELETE /users/:userId, which relies on that same meaning to keep a
+        // refunded customer's history from being deleted like it never
+        // happened).
+        const existing = await db.query(
+            `SELECT account_id, raw_payload FROM payment_events WHERE gateway_ref = $1 AND status = 'paid'`,
+            [ref]
         );
-        if (upd.rows.length === 0) {
+        if (existing.rows.length === 0) {
             return { handled: false, reason: 'unknown_payment' };
         }
-        // A full refund ends access; a partial one leaves the subscription be.
+        const previousRefunded = Number(existing.rows[0].raw_payload?.refunded) || 0;
         const refunded = Number(payment?.refunded) || 0;
+
+        await db.query(
+            `UPDATE payment_events SET raw_payload = $1 WHERE gateway_ref = $2 AND status = 'paid'`,
+            [JSON.stringify(payment ?? {}), ref]
+        );
+
+        // Nothing new: same (or smaller — never happens, but not our call to
+        // assume) refunded amount as already on record. Re-running the
+        // side effects below on every replay is wasted work at best; skip it.
+        if (refunded <= previousRefunded) {
+            return { handled: true, type, refundedHalalas: refunded, replay: true };
+        }
+
+        // A full refund ends access; a partial one leaves the subscription be.
         const amount = Number(payment?.amount) || 0;
         if (amount > 0 && refunded >= amount) {
             await db.query(
@@ -573,7 +650,7 @@ export async function handleWebhookEvent(db, payload) {
                     SET subscription_status = 'refunded',
                         subscription_expiry_date = NOW()
                   WHERE id = $1`,
-                [upd.rows[0].account_id]
+                [existing.rows[0].account_id]
             );
             // A refunded GROUP payment must also end the seats it bought —
             // otherwise the money comes back and up to four other accounts keep
@@ -603,7 +680,9 @@ export async function handleWebhookEvent(db, payload) {
     if (Number(payment.amount) < plan.priceHalalas) {
         return { handled: false, reason: 'amount_mismatch' };
     }
-    if ((payment.currency || getCurrency()) !== getCurrency()) {
+    // See the identical check in verifyAndActivate: a missing currency must
+    // fail closed, not be treated as a match.
+    if (!payment.currency || payment.currency !== getCurrency()) {
         return { handled: false, reason: 'currency_mismatch' };
     }
 

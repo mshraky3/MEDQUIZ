@@ -272,8 +272,27 @@
     color: var(--muted, #64748b);
 }
 
+/* Shown only to visitors with no session, under the plan cards. */
+.groups-guest-note {
+    margin: 10px 0 0;
+    text-align: center;
+    font-size: 13px;
+    color: var(--muted, #64748b);
+}
+
+.groups-guest-note a {
+    color: var(--primary-color, #2563eb);
+    font-weight: 700;
+    text-decoration: underline;
+}
+
+/* Also used as an <a> on the guest view, hence the explicit text-decoration
+   and width — a block-level link would otherwise stretch the full row. */
 .groups-back {
     display: block;
+    width: fit-content;
+    text-align: center;
+    text-decoration: none;
     margin: 24px auto 0;
     border: 1px solid var(--border, #d7dee9);
     background: var(--surface, #fff);

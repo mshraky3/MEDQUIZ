@@ -3,7 +3,7 @@ import Icon from '../common/Icon.jsx';
 import { getTypeLabel } from '../../utils/typeLabels';
 import { useCopy, useLang } from '../../i18n';
 import analysisCopy from '../../i18n/copy/analysis.js';
-import './analysis.css';
+import './analysisShared.css';
 
 const TopicAnalysisTable = ({ topicAnalysis, topics }) => {
   const t = useCopy(analysisCopy).topics;

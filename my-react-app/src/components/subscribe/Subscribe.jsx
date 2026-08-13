@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import axios from 'axios';
 import { trackFunnel } from '../../utils/analytics.js';
@@ -66,7 +66,6 @@ const Subscribe = () => {
     const [publishableKey, setPublishableKey] = useState(null);
     const [selectedPlanId, setSelectedPlanId] = useState(null);
     const [isTestMode, setIsTestMode] = useState(false);
-    const formRef = useRef(null);
 
     // /subscribe?kind=group&plan=group_3 is how the groups page hands off to
     // checkout. The default is the personal ladder — a group plan must never
@@ -178,9 +177,20 @@ const Subscribe = () => {
                 // fall back to a state that still tells the user what to do.
                 watchdog = setTimeout(() => {
                     if (cancelled) return;
-                    if (!document.querySelector('.mysr-form form')) {
+                    const form = document.querySelector('.mysr-form form');
+                    if (!form) {
                         setStatus('blocked');
+                        return;
                     }
+                    // The funnel step used to be our own pay button; that button
+                    // is gone (Moyasar's form has its own), so the submit of the
+                    // real form is what marks the attempt now — and it is the
+                    // truer signal of the two.
+                    form.addEventListener('submit', () => {
+                        trackFunnel('subscribe_pay_click', {
+                            amountHalalas: plan.priceHalalas, plan: plan.id,
+                        });
+                    }, { once: true });
                 }, 3000);
             } catch (err) {
                 if (cancelled) return;
@@ -198,15 +208,16 @@ const Subscribe = () => {
 
     const selectedPlan = plans.find((p) => p.id === selectedPlanId) || null;
 
-    // Scroll the card form into view — on mobile the perks push it below the
-    // fold, so the price is visible but the way to pay is not.
-    const goToPaymentForm = () => {
-        trackFunnel('subscribe_pay_click', { amountHalalas: selectedPlan?.priceHalalas ?? null, plan: selectedPlanId });
-        const el = formRef.current;
-        if (!el) return;
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        el.querySelector('input')?.focus({ preventScroll: true });
+    // A plan is "on offer" only when the server sent a compare-at price that is
+    // genuinely higher than what it charges. Never derive this in the UI: the
+    // struck-through number has to be a real former price, not decoration.
+    const offer = (plan) => {
+        if (!plan || !(Number(plan.compareAtHalalas) > Number(plan.priceHalalas))) return null;
+        const was = plan.compareAtHalalas / 100;
+        const now = plan.priceHalalas / 100;
+        return { was, saved: was - now, pct: Math.round((1 - now / was) * 100) };
     };
+    const selectedOffer = offer(selectedPlan);
 
     const selectPlan = (planId) => {
         if (planId === selectedPlanId) return;
@@ -251,16 +262,27 @@ const Subscribe = () => {
                                 const planCopy = t.plans[plan.id];
                                 if (!planCopy) return null;
                                 const perMonth = Math.round((plan.priceHalalas / plan.months) / 100);
+                                const planOffer = offer(plan);
                                 return (
                                     <button
                                         key={plan.id}
                                         type="button"
-                                        className={`subscribe-plan${plan.id === selectedPlanId ? ' selected' : ''}`}
+                                        className={`subscribe-plan${plan.id === selectedPlanId ? ' selected' : ''}${planOffer ? ' on-offer' : ''}`}
                                         onClick={() => selectPlan(plan.id)}
                                     >
-                                        {planCopy.badge && <span className="subscribe-plan-badge">{planCopy.badge}</span>}
+                                        {/* An offer badge replaces the static one: a live
+                                            discount is the stronger thing to say, and two
+                                            badges on one tile would just fight each other. */}
+                                        {planOffer ? (
+                                            <span className="subscribe-plan-badge offer">{t.offerBadge(planOffer.pct)}</span>
+                                        ) : planCopy.badge && (
+                                            <span className="subscribe-plan-badge">{planCopy.badge}</span>
+                                        )}
                                         <span className="subscribe-plan-label">{planCopy.label}</span>
-                                        <span className="subscribe-plan-amount">{plan.priceHalalas / 100}</span>
+                                        <span className="subscribe-plan-amount">
+                                            {planOffer && <s className="subscribe-plan-was">{planOffer.was}</s>}
+                                            {plan.priceHalalas / 100}
+                                        </span>
                                         {plan.seats > 1 ? (
                                             // For a group the useful per-unit number is per ACCOUNT,
                                             // not per month — that is the comparison a buyer is making.
@@ -277,10 +299,62 @@ const Subscribe = () => {
                     )}
 
                     <div className="subscribe-price">
+                        {selectedOffer && <span className="subscribe-price-was">{selectedOffer.was}</span>}
                         <span className="subscribe-price-amount">{riyals != null ? riyals : '—'}</span>
                         <span className="subscribe-price-cur">{t.currency}</span>
                         <span className="subscribe-price-period">{selectedPlan ? t.plans[selectedPlan.id]?.period : ''}</span>
                     </div>
+
+                    {selectedOffer && (
+                        <p className="subscribe-save-note">{t.saveNote(selectedOffer.saved, selectedOffer.pct)}</p>
+                    )}
+
+                    {isTestMode && (
+                        <div className="subscribe-test-banner">
+                            {t.testBannerBefore} <strong dir="ltr">4111 1111 1111 1111</strong> {t.testBannerAfter}
+                        </div>
+                    )}
+
+                    {status === 'loading' && (
+                        <div className="subscribe-loading">
+                            <Spinner size="md" />
+                            <span>{t.loadingForm}</span>
+                        </div>
+                    )}
+
+                    {(status === 'error' || status === 'blocked') && (
+                        <div className="subscribe-fallback">
+                            <div className="alert-box error">
+                                {status === 'blocked' ? t.blocked : error}
+                            </div>
+                            <button
+                                type="button"
+                                className="btn primary large"
+                                onClick={() => window.location.reload()}
+                            >
+                                <Icon name="refresh" size={18} />
+                                {t.reload}
+                            </button>
+                            <Link to="/contact" className="btn subscribe-fallback-secondary">
+                                {t.contactUs}
+                            </Link>
+                        </div>
+                    )}
+
+                    {/* Moyasar renders the card form inside this element. It
+                        carries its own pay button, so this page deliberately has
+                        none of its own — a second one next to it only made
+                        people wonder which of the two actually charges them.
+                        Everything that is not the act of paying now sits below
+                        it, so the form is the first thing under the price. */}
+                    <div
+                        className="mysr-form"
+                        style={{ display: status === 'ready' ? 'block' : 'none' }}
+                    />
+
+                    <p className="subscribe-note">
+                        {t.secureNoteBefore} <strong>{t.secureNoteProvider}</strong>{t.secureNoteAfter}
+                    </p>
 
                     <ul className="subscribe-perks">
                         {(isGroup ? t.groupPerks : t.perks).map((perk) => <li key={perk}>{perk}</li>)}
@@ -306,62 +380,6 @@ const Subscribe = () => {
                             {t.crossToGroup}
                         </Link>
                     )}
-
-                    {isTestMode && (
-                        <div className="subscribe-test-banner">
-                            {t.testBannerBefore} <strong dir="ltr">4111 1111 1111 1111</strong> {t.testBannerAfter}
-                        </div>
-                    )}
-
-                    {status === 'loading' && (
-                        <div className="subscribe-loading">
-                            <Spinner size="md" />
-                            <span>{t.loadingForm}</span>
-                        </div>
-                    )}
-
-                    {/* Primary CTA — the page must never show a price without an
-                        obvious next step, on any screen size. */}
-                    {status === 'ready' && (
-                        <button
-                            type="button"
-                            className="btn primary large subscribe-cta"
-                            onClick={goToPaymentForm}
-                        >
-                            <Icon name="lock" size={18} />
-                            {riyals != null ? t.payCta(t.amountWithCurrency(riyals)) : t.payCtaPlain}
-                        </button>
-                    )}
-
-                    {(status === 'error' || status === 'blocked') && (
-                        <div className="subscribe-fallback">
-                            <div className="alert-box error">
-                                {status === 'blocked' ? t.blocked : error}
-                            </div>
-                            <button
-                                type="button"
-                                className="btn primary large"
-                                onClick={() => window.location.reload()}
-                            >
-                                <Icon name="refresh" size={18} />
-                                {t.reload}
-                            </button>
-                            <Link to="/contact" className="btn subscribe-fallback-secondary">
-                                {t.contactUs}
-                            </Link>
-                        </div>
-                    )}
-
-                    {/* Moyasar renders the card form inside this element */}
-                    <div
-                        ref={formRef}
-                        className="mysr-form"
-                        style={{ display: status === 'ready' ? 'block' : 'none' }}
-                    />
-
-                    <p className="subscribe-note">
-                        {t.secureNoteBefore} <strong>{t.secureNoteProvider}</strong>{t.secureNoteAfter}
-                    </p>
                     <p className="subscribe-policy">
                         {t.policyBefore}{' '}
                         <Link to="/terms" target="_blank" rel="noopener">{t.terms}</Link>{' '}{t.and}{' '}

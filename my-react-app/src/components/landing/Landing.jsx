@@ -1,17 +1,68 @@
-import React, { useContext, useEffect } from 'react';
+import React, { lazy, Suspense, useContext, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { safeTrack, trackFunnel, captureLandingAttribution } from '../../utils/analytics.js';
 import Icon from '../common/Icon.jsx';
 import HeroArt from './HeroArt.jsx';
 import ExamCountdown from './ExamCountdown.jsx';
-import ProductShowcase from './ProductShowcase.jsx';
 import InstallPrompt from '../common/InstallPrompt.jsx';
-import InstallShowcase from '../common/InstallShowcase.jsx';
 import { UserContext } from '../../UserContext';
 import { TRACKS, MEDICAL, NURSING, pick } from '../../utils/tracks.js';
 import { useCopy, useLang, LanguageToggle } from '../../i18n';
 import landingCopy from '../../i18n/copy/landing.js';
 import './Landing.css';
+
+// Both below the hero, both scroll-triggered animations (see their own
+// files), so neither needs to be ready for first paint. Landing.jsx is
+// eager (it's the LCP route, per main.jsx) and previously imported these two
+// statically — which meant ProductShowcase.css and InstallShowcase.css rode
+// along in the ONE eager CSS bundle every route downloads, including a
+// visitor going straight to /login who never sees this page at all.
+const ProductShowcase = lazy(() => import('./ProductShowcase.jsx'));
+const InstallShowcase = lazy(() => import('../common/InstallShowcase.jsx'));
+
+/**
+ * The worked example inside the explanations section — a shortened but
+ * otherwise faithful copy of a real entry from the bank, including the four
+ * section labels every imported explanation uses (see
+ * backend/scripts/buildExplanationSet.js).
+ *
+ * It lives here rather than in the copy files because it is NOT translated:
+ * explanations are study content and render in English under both site
+ * languages, exactly as ExplanationPanel renders them in the app. Showing an
+ * Arabic mock-up here would promise something the product does not do.
+ */
+const EXPLANATION_SAMPLE = {
+  stem: 'Primary dysmenorrhea — why is this the answer?',
+  blocks: [
+    {
+      label: 'Core Concept:',
+      lines: [
+        'Excess endometrial prostaglandin (PGF2α) drives uterine hypercontractility and ischaemia, with no underlying pelvic pathology.',
+      ],
+    },
+    {
+      label: 'Clinical Presentation:',
+      lines: [
+        'Crampy suprapubic pain starting with the flow, settling within 48–72 hours.',
+        'Regular cycles, onset within a few years of menarche.',
+      ],
+    },
+    {
+      label: 'Diagnosis:',
+      lines: [
+        'Clinical, from the history and a normal examination.',
+        'A normal pelvic ultrasound supports the diagnosis rather than making it — it is what separates this from endometriosis and adenomyosis.',
+      ],
+    },
+    {
+      label: 'Management:',
+      lines: [
+        'NSAIDs started at or just before the onset of flow, plus local heat.',
+        'Combined hormonal contraception when ongoing suppression is needed.',
+      ],
+    },
+  ],
+};
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -223,7 +274,9 @@ const Landing = () => {
           </section>
 
           {/* Replaces the old adjective grid: the product, shown working. */}
-          <ProductShowcase copy={t.showcase} specialtyLabels={showcaseSpecialties} />
+          <Suspense fallback={null}>
+            <ProductShowcase copy={t.showcase} specialtyLabels={showcaseSpecialties} />
+          </Suspense>
 
           {/* Seeing the product work is the moment the visitor stops reading
               and starts wanting it — so the tour ends with a way in. */}
@@ -235,6 +288,64 @@ const Landing = () => {
               <p className="section-cta-note">{t.showcase.ctaNote}</p>
             </div>
           )}
+
+          {/* Explanations get a section of their own, and it sits above the
+              comparison table on purpose: it is the single thing this bank has
+              that the free PDF collections passed around in group chats do not,
+              so it is the strongest argument on the page and has to be made
+              before the price is. */}
+          <section className="explain-section" aria-label={t.explain.sectionLabel}>
+            <div className="section-head">
+              <p className="pill subtle">{t.explain.pill}</p>
+              <h2>{t.explain.title}</h2>
+              <p>{t.explain.body}</p>
+            </div>
+
+            <div className="explain-grid">
+              <div className="explain-points">
+                {t.explain.points.map((point) => (
+                  <div key={point.title} className="explain-point">
+                    <span className="feature-icon" aria-hidden="true"><Icon name={point.icon} size={22} /></span>
+                    <div>
+                      <h3>{point.title}</h3>
+                      <p>{point.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* A replica of the real explanation panel, down to the section
+                  labels the imported content actually uses. Like the panel in
+                  the app, the body stays English and LTR in both site
+                  languages — explanations are study material, not UI. */}
+              <figure className="explain-sample">
+                <figcaption className="explain-sample-head">
+                  <Icon name="lightbulb" size={16} />
+                  <span>{t.explain.sampleTitle}</span>
+                </figcaption>
+                <p className="explain-sample-stem" dir="ltr">{EXPLANATION_SAMPLE.stem}</p>
+                <div className="explain-sample-body" dir="ltr">
+                  {EXPLANATION_SAMPLE.blocks.map((block) => (
+                    <div key={block.label} className="explain-sample-block">
+                      <strong>{block.label}</strong>
+                      <ul>
+                        {block.lines.map((line) => <li key={line}>{line}</li>)}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              </figure>
+            </div>
+
+            {!isAuthenticated && (
+              <div className="section-cta">
+                <Link to="/signup" className="btn primary" onClick={() => trackSignupClick('explain')}>
+                  {t.explain.cta}
+                </Link>
+                <p className="section-cta-note">{t.explain.ctaNote}</p>
+              </div>
+            )}
+          </section>
 
           <section className="compare-section" aria-label={t.compare.sectionLabel}>
             <div className="section-head">
@@ -349,6 +460,31 @@ const Landing = () => {
                 <p className="price-card-note">{t.value.note}</p>
               </aside>
             </div>
+
+            {/* Group plans used to be mentioned in one clause of the price
+                card's small print, and reachable only from two pages that both
+                sit behind the login wall — so nobody who had not already been
+                told about them ever found them. This band is their only public
+                shop window; /groups now renders for logged-out visitors too. */}
+            <div className="group-band">
+              <div className="group-band-head">
+                <span className="group-band-icon" aria-hidden="true"><Icon name="users" size={22} /></span>
+                <div>
+                  <h3>{t.value.group.title}</h3>
+                  <p>{t.value.group.body}</p>
+                </div>
+              </div>
+              <div className="group-band-tiers">
+                {t.value.group.tiers.map((tier) => (
+                  <div key={tier.label} className="group-tier">
+                    <span className="group-tier-label">{tier.label}</span>
+                    <span className="group-tier-price">{tier.price}</span>
+                    <span className="group-tier-each">{tier.each}</span>
+                  </div>
+                ))}
+              </div>
+              <Link to="/groups" className="btn group-band-cta">{t.value.group.cta}</Link>
+            </div>
           </section>
 
 
@@ -418,7 +554,9 @@ const Landing = () => {
           </section>
 
           {/* The steps, played on a phone rather than listed. */}
-          <InstallShowcase />
+          <Suspense fallback={null}>
+            <InstallShowcase />
+          </Suspense>
 
 
 

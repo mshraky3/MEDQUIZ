@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Icon from '../common/Icon.jsx';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import './analysis.css';
-import Globals from '../../global.js';
+import apiClient from '../../utils/apiClient.js';
+import './analysisShared.css';
 import Spinner from '../common/Spinner.jsx';
+import ExplanationPanel from '../common/ExplanationPanel.jsx';
 import { getSourceLabel } from '../../utils/sourceLabels';
 import { getTypeLabel } from '../../utils/typeLabels';
 import { useContext } from 'react';
@@ -30,7 +30,7 @@ const WrongQuestions = () => {
     const navigate = useNavigate();
     const t = useCopy(analysisCopy).wrong;
     const { lang, dir } = useLang();
-    const { user, sessionToken, setUser } = useContext(UserContext);
+    const { user } = useContext(UserContext);
     const [wrongQuestions, setWrongQuestions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -48,37 +48,33 @@ const WrongQuestions = () => {
 
     const limit = LIMIT;
 
-    const protectedGet = useCallback(async (url, config = {}) => {
-        if (!user || !sessionToken) throw new Error('Not authenticated');
-        const urlWithUser = url + (url.includes('?') ? '&' : '?') + `username=${encodeURIComponent(user.username)}`;
-        try {
-            return await axios.get(urlWithUser, { ...config, headers: { ...(config.headers || {}), Authorization: `Bearer ${sessionToken}` } });
-        } catch (err) {
-            if (err.response && err.response.status === 401) {
-                setUser(null, null);
-                localStorage.removeItem('user'); localStorage.removeItem('sessionToken');
-                window.location.href = '/login?session=expired';
-                return;
-            }
-            throw err;
-        }
-    }, [user, sessionToken, setUser]);
+    // Aborts the previous fresh (page 0) search when a newer one starts, so a
+    // slow response to an earlier keystroke/filter can't land after a faster
+    // one and overwrite it with stale results. "Load more" appends are never
+    // aborted by a later one — there's only ever one in flight at a time
+    // because the button disables itself while loading.
+    const searchAbortRef = React.useRef(null);
 
     const fetchWrongQuestions = useCallback(async (page = 0, append = false) => {
         if (!user?.id) return;
+
+        if (!append) {
+            searchAbortRef.current?.abort();
+            searchAbortRef.current = new AbortController();
+        }
 
         try {
             setError(null);
             if (page === 0) setLoading(true);
 
-            const params = new URLSearchParams({
-                limit: String(limit),
-                offset: String(page * limit),
-            });
-            if (query) params.set('q', query);
-            if (typeFilter) params.set('type', typeFilter);
+            const params = { limit, offset: page * limit };
+            if (query) params.q = query;
+            if (typeFilter) params.type = typeFilter;
 
-            const response = await protectedGet(`${Globals.URL}/wrong-questions/user/${user.id}?${params}`);
+            const response = await apiClient.get(`/wrong-questions/user/${user.id}`, {
+                params,
+                signal: append ? undefined : searchAbortRef.current.signal,
+            });
 
             const { wrongQuestions: newQuestions, total, byType: facets } = response.data;
 
@@ -94,12 +90,17 @@ const WrongQuestions = () => {
             setCurrentPage(page);
 
         } catch (err) {
+            if (err.code === 'ERR_CANCELED' || err.name === 'CanceledError') return;
             console.error('Error fetching wrong questions:', err);
             setError(t.error);
-        } finally {
             setLoading(false);
+            return;
         }
-    }, [user?.id, limit, protectedGet, query, typeFilter, t.error]);
+        // Not in `finally` — an aborted request must not clear loading for the
+        // newer request that superseded it (finally runs even after the early
+        // `return` above, which is exactly the case it would otherwise hit).
+        setLoading(false);
+    }, [user?.id, limit, query, typeFilter, t.error]);
 
     // Any change of query or filter restarts pagination from page 0 — appending
     // page 2 of the old search onto page 1 of the new one would interleave two
@@ -285,6 +286,8 @@ const WrongQuestions = () => {
                                                         <span className="answer-text correct">{question.correct_option}</span>
                                                     </div>
                                                 </div>
+
+                                                <ExplanationPanel explanation={question.explanation} />
                                             </div>
                                         </div>
                                     ))}

@@ -1575,14 +1575,14 @@ const pediatrics = {
                 <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Croup vs epiglottitis — steeple vs thumbprint</div>
                 <div class="deck-imgrow deck-imgrow--scan">
                     <div class="deck-imgcell">
-                        <img class="deck-img" src="/summaries/croup-steeple-sign.jpg" width="426" height="429" loading="lazy" decoding="async"
+                        <img class="deck-img" src="/summaries/croup-steeple-sign.webp" width="426" height="429" loading="lazy" decoding="async"
                              alt="Anteroposterior neck radiograph of a child. An arrow points to the subglottic trachea, where the air column tapers symmetrically to a narrow point instead of keeping its normal shoulders — the steeple sign." />
                         <p class="deck-imgcap"><b>Croup</b> — STEEPLE sign on the <b>AP</b> neck film
                         <br>6 mo – 3 y · gradual onset · BARKING (seal) cough · drooling rare · parainfluenza
                         <br><span class="deck-hi deck-hi--green">dexamethasone ± nebulised adrenaline</span></p>
                     </div>
                     <div class="deck-imgcell">
-                        <img class="deck-img" src="/summaries/epiglottitis-thumbprint-sign.jpg" width="400" height="628" loading="lazy" decoding="async"
+                        <img class="deck-img" src="/summaries/epiglottitis-thumbprint-sign.webp" width="400" height="628" loading="lazy" decoding="async"
                              alt="Lateral neck radiograph. An arrow points to a markedly swollen, rounded epiglottis bulging into the airway, shaped like the tip of a thumb — the thumbprint sign." />
                         <p class="deck-imgcap"><b>Epiglottitis</b> — THUMBPRINT sign on the <b>lateral</b> neck film
                         <br>2 – 7 y · SUDDEN onset · drooling · tripod · cough usually absent · H. influenzae type B

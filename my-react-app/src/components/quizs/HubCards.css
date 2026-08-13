@@ -4,18 +4,23 @@
    three cards sitting in a row must not have three different button styles.
    Logical properties throughout: the hub renders both RTL and LTR. */
 
+/* All three status cards (exam date, streak, goal) share this row, sitting
+   under the study loop. Three across on a wide screen, wrapping to two and then
+   one — `minmax(240px, 1fr)` is what makes the goal card, which is the widest
+   of the three, still readable in a third of the page. GoalCard.css zeroes
+   .goalx's own margin so the grid gap is the only spacing. */
 .hub-cards-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
   margin-bottom: 22px;
 }
 
 .hubcard {
   background: #fff;
   border: 1px solid #e6ecf6;
-  border-radius: 18px;
-  padding: 18px 20px;
+  border-radius: 16px;
+  padding: 14px 16px;
   box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
   /* Cards in the row are equal height with their content pinned to the top. */
   display: flex;
@@ -27,15 +32,15 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .hubcard-head h3 {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
   margin: 0;
-  font-size: 14.5px;
+  font-size: 13px;
   font-weight: 800;
   color: #0f1e3d;
 }
@@ -49,7 +54,7 @@
 }
 
 .hubcard-count-n {
-  font-size: 40px;
+  font-size: 28px;
   font-weight: 800;
   line-height: 1;
   color: #0f1e3d;
@@ -57,38 +62,38 @@
 }
 
 .hubcard-count-unit {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   color: #64748b;
 }
 
 .hubcard-headline {
   margin: 0;
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 800;
   color: #0f1e3d;
-  line-height: 1.4;
+  line-height: 1.35;
 }
 
 .hubcard-sub {
-  margin: 8px 0 0;
-  font-size: 12.5px;
+  margin: 6px 0 0;
+  font-size: 12px;
   color: #64748b;
 }
 
 .hubcard-dot { color: #94a3b8; }
 
 .hubcard-pace {
-  margin: 10px 0 0;
-  font-size: 12.5px;
+  margin: 7px 0 0;
+  font-size: 12px;
   font-weight: 700;
   color: #2563eb;
 }
 
 .hubcard-note {
-  margin: 10px 0 0;
-  font-size: 12px;
-  line-height: 1.6;
+  margin: 7px 0 0;
+  font-size: 11.5px;
+  line-height: 1.55;
   color: #94a3b8;
 }
 
@@ -110,13 +115,13 @@
 
 .hubcard-date {
   width: 100%;
-  padding: 10px 12px;
+  padding: 8px 10px;
   border: 1px solid #e2e8f0;
   border-radius: 10px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   color: #0f1e3d;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
   /* Dates are always Latin digits in a date input; keep them LTR so the
      picker's internal ordering doesn't reverse inside an RTL page. */
   direction: ltr;
@@ -148,7 +153,7 @@
   display: flex;
   justify-content: space-between;
   gap: 4px;
-  margin: 14px 0 0;
+  margin: 10px 0 0;
   padding: 0;
 }
 
@@ -164,8 +169,8 @@
 .streak-day-dot {
   display: grid;
   place-items: center;
-  width: 26px;
-  height: 26px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   background: #f1f5f9;
   border: 1px solid #e2e8f0;
@@ -196,8 +201,8 @@
 .streak-day.is-done .streak-day-label { color: #64748b; }
 
 .streak-status {
-  margin: 14px 0 0;
-  font-size: 12.5px;
+  margin: 10px 0 0;
+  font-size: 12px;
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -220,9 +225,9 @@
 .hubcard-empty-icon {
   display: inline-grid;
   place-items: center;
-  width: 46px;
-  height: 46px;
-  border-radius: 14px;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
   background: linear-gradient(150deg, rgba(59, 130, 246, 0.18), rgba(99, 102, 241, 0.14));
   border: 1px solid rgba(59, 130, 246, 0.26);
   color: #2563eb;
@@ -235,25 +240,25 @@
   color: #ea580c;
 }
 
-.hubcard-empty-body { flex: 1 1 180px; min-width: 0; }
+.hubcard-empty-body { flex: 1 1 150px; min-width: 0; }
 
 .hubcard-empty-body h3 {
   margin: 0 0 3px;
-  font-size: 14.5px;
+  font-size: 13.5px;
   font-weight: 800;
   color: #0f1e3d;
 }
 
 .hubcard-empty-body p {
   margin: 0;
-  font-size: 12.5px;
-  line-height: 1.6;
+  font-size: 12px;
+  line-height: 1.55;
   color: #64748b;
 }
 
 @media (max-width: 560px) {
-  .hub-cards-row { grid-template-columns: 1fr; gap: 14px; margin-bottom: 18px; }
-  .hubcard { padding: 16px; }
-  .hubcard-count-n { font-size: 34px; }
-  .streak-day-dot { width: 24px; height: 24px; }
+  .hub-cards-row { grid-template-columns: 1fr; gap: 12px; margin-bottom: 18px; }
+  .hubcard { padding: 14px; }
+  .hubcard-count-n { font-size: 26px; }
+  .streak-day-dot { width: 22px; height: 22px; }
 }

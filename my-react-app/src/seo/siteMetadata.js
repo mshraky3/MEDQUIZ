@@ -78,7 +78,7 @@ function articleSchema(path, headline, description, keywords = '') {
             name: 'SQB',
             logo: {
                 '@type': 'ImageObject',
-                url: `${SITE_ORIGIN}/tab_logo.png`
+                url: `${SITE_ORIGIN}/icons/icon-512.png`
             }
         },
         image: DEFAULT_IMAGE,
@@ -111,7 +111,7 @@ const organizationSchema = {
     name: 'اس كيو بي',
     alternateName: 'SQB',
     url: SITE_ORIGIN,
-    logo: `${SITE_ORIGIN}/tab_logo.png`,
+    logo: `${SITE_ORIGIN}/icons/icon-512.png`,
     image: DEFAULT_IMAGE,
     email: 'alshraky3@gmail.com',
     telephone: '+966582619119',
@@ -280,6 +280,32 @@ const routeMap = {
         <ul>
           <li>البريد الإلكتروني: <a href="mailto:alshraky3@gmail.com">alshraky3@gmail.com</a></li>
           <li>واتساب: <a href="https://wa.link/gqafib">0582619119</a></li>
+        </ul>
+      </main>
+    `
+    },
+    // Only the logged-out half of /groups is indexable — GroupsPage flips the
+    // robots tag to noindex once a session exists, because the signed-in view
+    // lists a person's own seats and invite links.
+    '/groups': {
+        title: 'الاشتراك الجماعي | SQB',
+        description: 'اشتراك جماعي في SQB لك ولأصدقائك: 3 حسابات بـ 250 ريالاً أو 5 حسابات بـ 299 ريالاً لمدة أربعة أشهر، بدفعة واحدة وروابط دعوة توزّعها بنفسك.',
+        keywords: 'اشتراك جماعي SMLE, بنك أسئلة للمجموعات, اشتراك SQB للأصدقاء, خصم مجموعات',
+        alternates: ['ar-SA', 'ar', 'x-default'],
+        structuredData: [
+            routePageData('/groups', 'الاشتراك الجماعي | SQB', 'خطط الاشتراك الجماعي في منصة SQB.'),
+            breadcrumbs([
+                { name: 'الرئيسية', path: '/' },
+                { name: 'الاشتراك الجماعي', path: '/groups' }
+            ])
+        ],
+        prerenderHtml: `
+      <main class="seo-shell" dir="rtl">
+        <h1>الاشتراك الجماعي</h1>
+        <p>دفعة واحدة تفعّل حسابك مباشرة وتعطيك روابط دعوة لبقية المقاعد توزّعها على أصدقائك. كل المقاعد تنتهي في نفس التاريخ، وكل رابط يفتح حساباً واحداً فقط.</p>
+        <ul>
+          <li>3 حسابات لمدة 4 أشهر — 250 ريالاً (83 ريالاً للحساب)</li>
+          <li>5 حسابات لمدة 4 أشهر — 299 ريالاً (60 ريالاً للحساب)</li>
         </ul>
       </main>
     `
@@ -587,6 +613,7 @@ const enOverlay = {
     '/privacy': { title: 'Privacy Policy | SQB', description: 'How SQB collects, uses and protects your personal data.' },
     '/terms': { title: 'Terms of Service | SQB', description: 'The terms that govern your use of the SQB platform.' },
     '/refund-policy': { title: 'Refund Policy | SQB', description: 'When and how you can request a refund for an SQB subscription.' },
+    '/groups': { title: 'Group plans | SQB', description: 'Share one SQB subscription with your study group: 3 accounts for SAR 250 or 5 for SAR 299 over four months, one payment, invite links you hand out yourself.' },
     '/guides': { title: 'SMLE study guides | SQB', description: 'Practical guides for preparing for the SMLE: study plans, high-yield topics, and how to review your wrong questions.' },
     '/guides/smle-study-plan': { title: 'The 12-week SMLE study plan | SQB', description: 'A week-by-week SMLE study plan you can actually follow, built around question practice and spaced review.' },
     '/guides/wrong-questions-method': { title: 'How to review your wrong questions | SQB', description: 'A repeatable method for turning every wrong answer into a question you will never miss again.' },

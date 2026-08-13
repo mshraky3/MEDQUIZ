@@ -1,6 +1,12 @@
 .contact-container {
-    max-height: 100vh;
-    height: 100vh;
+    /* Was height:100vh + overflow:hidden while this element ALSO sits inside
+       .page-with-navbar's 72px padding-top — the box was 72px taller than the
+       viewport with no way to scroll to the clipped part, cutting off the
+       bottom of the form on short viewports. min-height + flex:1 fills the
+       parent's already-navbar-aware space instead, and can grow past it
+       (the page then scrolls normally) rather than clipping. */
+    min-height: 100%;
+    flex: 1 0 auto;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -8,7 +14,6 @@
     padding: 16px;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     position: relative;
-    overflow: hidden;
 }
 
 .contact-container::before {
@@ -38,7 +43,15 @@
         inset 0 1px 0 rgba(255, 255, 255, 0.1);
     max-width: 650px;
     width: 100%;
-    max-height: calc(100vh - 32px);
+    /* Reserves navbar space too (the raw 100vh here never did) — errs toward
+       a shorter internal-scroll area rather than one that could clip. */
+    max-height: calc(100vh - 104px);
+    /* Flex items default to min-height:auto, which is their content's
+       intrinsic size — that floor beat max-height above and silently
+       disabled it, so the card just grew past the viewport (page-scroll)
+       instead of scrolling internally like its custom-scrollbar rules below
+       assume it does. */
+    min-height: 0;
     overflow-y: auto;
     position: relative;
     z-index: 1;
@@ -68,7 +81,7 @@
     text-align: center;
     max-width: 500px;
     padding: 24px 20px;
-    max-height: calc(100vh - 32px);
+    max-height: calc(100vh - 104px);
     overflow-y: auto;
 }
 
@@ -170,14 +183,10 @@
     border-radius: 10px;
     flex-shrink: 0;
     box-shadow: 0 2px 8px rgba(35, 109, 237, 0.3);
-    padding: 8px;
-}
-
-.info-icon img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    filter: brightness(0) invert(1);
+    /* The inline-SVG <Icon> strokes with currentColor, replacing the old
+       raster icons8 image (which needed filter: brightness(0) invert(1) to
+       force it white). */
+    color: #ffffff;
 }
 
 .info-content h3 {
@@ -246,7 +255,9 @@
     padding: 10px 14px;
     border: 1px solid rgba(15, 23, 42, 0.10);
     border-radius: 10px;
-    font-size: 0.9rem;
+    /* 16px unconditionally — below that, iOS Safari zooms the page on focus.
+       This used to only apply under the 768px media query further down. */
+    font-size: 16px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     font-family: inherit;
     background: rgba(15, 23, 42, 0.04);
@@ -395,14 +406,16 @@
 @media (max-width: 768px) {
     .contact-container {
         padding: 12px;
-        max-height: 100vh;
-        height: 100vh;
+        /* No height:100vh/max-height:100vh here — the base rule already
+           fills the flex parent's navbar-aware space (see the note there);
+           reintroducing a raw 100vh at this breakpoint was the actual B2 bug
+           on real phones, since max-width:768px matches virtually all of them. */
     }
 
     .contact-card {
         padding: 16px;
         border-radius: 16px;
-        max-height: calc(100vh - 24px);
+        max-height: calc(100vh - 88px);
     }
 
     .contact-header {
@@ -445,8 +458,6 @@
     .form-group select,
     .form-group textarea {
         padding: 12px 14px;
-        font-size: 16px;
-        /* Prevent zoom on iOS */
     }
 
     .submit-button {
@@ -463,14 +474,13 @@
 @media (max-width: 480px) {
     .contact-container {
         padding: 10px;
-        max-height: 100vh;
-        height: 100vh;
+        /* See the 768px breakpoint above — no forced 100vh here either. */
     }
 
     .contact-card {
         padding: 14px;
         border-radius: 14px;
-        max-height: calc(100vh - 20px);
+        max-height: calc(100vh - 80px);
     }
 
     .contact-header {
@@ -496,7 +506,7 @@
 
     .contact-info-item {
         flex-direction: row;
-        text-align: left;
+        text-align: start;
         gap: 12px;
     }
 
@@ -580,14 +590,19 @@
     }
 }
 
+/* A primary CTA now — this is the only entry point to /suggestions left in
+   the app (the footer link and the /quizs hub button are gone), so it reads
+   as a clear button rather than a decorative card. Blue tokens, not the old
+   violet — every other surface on this page is blue. */
 .suggestions-button {
     display: flex;
     align-items: center;
     gap: 14px;
+    min-height: 44px;
     padding: 16px 20px;
     margin-top: 12px;
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(168, 85, 247, 0.1));
-    border: 1px solid rgba(139, 92, 246, 0.3);
+    background: var(--surface-tint, rgba(37, 99, 235, 0.08));
+    border: 1px solid var(--primary-color, #2563eb);
     border-radius: 16px;
     text-decoration: none;
     transition: all 0.3s ease;
@@ -595,27 +610,14 @@
 }
 
 .suggestions-button:hover {
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(168, 85, 247, 0.15));
-    border-color: rgba(139, 92, 246, 0.5);
+    background: rgba(37, 99, 235, 0.14);
+    box-shadow: 0 8px 25px rgba(37, 99, 235, 0.18);
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(139, 92, 246, 0.25);
 }
 
 .suggestions-icon {
-    font-size: 28px;
-    animation: pulse 2s ease-in-out infinite;
-}
-
-@keyframes pulse {
-
-    0%,
-    100% {
-        transform: scale(1);
-    }
-
-    50% {
-        transform: scale(1.1);
-    }
+    display: flex;
+    color: var(--primary-color, #2563eb);
 }
 
 .suggestions-text {
@@ -632,18 +634,17 @@
 }
 
 .suggestions-subtitle {
-    color: #a78bfa;
+    color: var(--primary-color, #2563eb);
     font-size: 0.8rem;
 }
 
+/* No CSS rotation here — `arrow` is already the correct glyph (← in RTL, →
+   in LTR, chosen in JS from `dir`); rotating it again in CSS would flip an
+   already-correct character back to pointing the wrong way. */
 .suggestions-arrow {
-    color: #a78bfa;
+    color: var(--primary-color, #2563eb);
     font-size: 1.2rem;
     transition: transform 0.3s ease;
-}
-
-[dir="rtl"] .suggestions-arrow {
-    transform: rotate(180deg);
 }
 
 .suggestions-button:hover .suggestions-arrow {
@@ -651,5 +652,5 @@
 }
 
 [dir="rtl"] .suggestions-button:hover .suggestions-arrow {
-    transform: translateX(-4px) rotate(180deg);
+    transform: translateX(-4px);
 }

@@ -3,7 +3,7 @@ import Icon from '../common/Icon.jsx';
 import { getSourceLabel } from '../../utils/sourceLabels';
 import { useCopy, useLang } from '../../i18n';
 import analysisCopy from '../../i18n/copy/analysis.js';
-import './analysis.css';
+import './analysisShared.css';
 
 const OverallStats = ({ userAnalysis }) => {
     const t = useCopy(analysisCopy).overall;

@@ -986,14 +986,14 @@ const medicine = {
                 <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Gout vs pseudogout — crystal microscopy</div>
                 <div class="deck-imgrow">
                     <div class="deck-imgcell">
-                        <img class="deck-img" src="/summaries/gout-msu-crystals.jpg" width="1200" height="900" loading="lazy" decoding="async"
+                        <img class="deck-img" src="/summaries/gout-msu-crystals.webp" width="1200" height="900" loading="lazy" decoding="async"
                              alt="Synovial fluid under polarised light with a red compensator. Long, thin needle-shaped crystals lie among neutrophils, some glowing yellow and others blue depending on their orientation." />
                         <p class="deck-imgcap"><b>Gout</b> — monosodium urate
                         <br><b>NEEDLE-shaped</b> · <b>NEGATIVELY</b> birefringent · 1st MTP joint (podagra)
                         <br><span class="deck-hi deck-hi--red">acute: NSAID / colchicine / steroid → later allopurinol</span></p>
                     </div>
                     <div class="deck-imgcell">
-                        <img class="deck-img" src="/summaries/pseudogout-cppd-crystals.jpg" width="900" height="1200" loading="lazy" decoding="async"
+                        <img class="deck-img" src="/summaries/pseudogout-cppd-crystals.webp" width="900" height="1200" loading="lazy" decoding="async"
                              alt="Synovial fluid under polarised light. Short, blunt rhomboid and rectangular crystals appear scattered through the field, glowing orange-yellow and blue." />
                         <p class="deck-imgcap"><b>Pseudogout</b> — calcium pyrophosphate (CPPD)
                         <br><b>RHOMBOID</b> · <b>POSITIVELY</b> birefringent · knee · chondrocalcinosis

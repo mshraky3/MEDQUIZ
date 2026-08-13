@@ -20,6 +20,12 @@ export default {
         seatYouPreview: 'حسابك أنت — يُفعَّل فوراً',
         seatLinkPreview: (n) => `المقعد ${n} — رابط دعوة`,
         buyCta: (amount) => `اشترك بـ ${amount}`,
+        // Shown to visitors with no session: the page is now readable without
+        // logging in, so the button has to be honest about the next step.
+        buyCtaGuest: (amount) => `سجّل دخولك واشترك بـ ${amount}`,
+        guestNote: 'ليس لديك حساب بعد؟',
+        guestSignup: 'أنشئ حسابك مجاناً وابدأ بـ 40 سؤالاً',
+        backToIndividual: 'عرض الخطط الفردية',
         noAutoRenew: 'دفعة واحدة فقط — لا يوجد تجديد تلقائي ولا خصم متكرر.',
 
         // ── After purchase ───────────────────────────────────────────────
@@ -74,6 +80,12 @@ export default {
         seatYouPreview: 'Your own account — activated instantly',
         seatLinkPreview: (n) => `Seat ${n} — invite link`,
         buyCta: (amount) => `Subscribe for ${amount}`,
+        // Shown to visitors with no session: the page is now readable without
+        // logging in, so the button has to be honest about the next step.
+        buyCtaGuest: (amount) => `Log in and subscribe for ${amount}`,
+        guestNote: 'No account yet?',
+        guestSignup: 'Create one free and start with 40 questions',
+        backToIndividual: 'See the individual plans',
         noAutoRenew: 'One payment only — no automatic renewal, no recurring charge.',
 
         yourGroupTitle: 'Your group seats',

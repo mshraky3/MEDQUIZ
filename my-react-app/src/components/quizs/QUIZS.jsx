@@ -1,10 +1,9 @@
 import React, { useEffect, useState, useContext } from 'react';
-import axios from 'axios';
+import apiClient from '../../utils/apiClient.js';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { track } from '@vercel/analytics';
 import './QUIZS.css';
 import './QuizsHub.css';
-import Globals from '../../global.js';
 
 import AchievementBadges from '../common/AchievementBadges.jsx';
 import Icon from '../common/Icon.jsx';
@@ -15,6 +14,7 @@ import QuizLauncher from './QuizLauncher.jsx';
 import { UserContext } from '../../UserContext';
 import { getTypeLabel } from '../../utils/typeLabels';
 import { specialtiesOf, userTrack, examLabel, bankLabel, trackLabel, normalizeTrack } from '../../utils/tracks.js';
+import { readQuizMode } from '../../utils/quizMode.js';
 import { useCopy, useLang, formatNumber } from '../../i18n';
 import quizCopy from '../../i18n/copy/quiz.js';
 
@@ -67,8 +67,7 @@ const QUIZS = () => {
 
     const protectedGet = async (url) => {
         if (!user || !sessionToken) throw new Error('Not authenticated');
-        const urlWithUser = url + (url.includes('?') ? '&' : '?') + `username=${encodeURIComponent(user.username)}`;
-        return axios.get(urlWithUser, { headers: { Authorization: `Bearer ${sessionToken}` } });
+        return apiClient.get(url);
     };
 
     // Tracks whether this instance is still mounted, so a slow response that
@@ -83,14 +82,27 @@ const QUIZS = () => {
         return () => { aliveRef.current = false; };
     }, []);
 
+    // Read via a ref inside load(), not the `user` closure variable directly —
+    // load() itself calls setUser() below when the server's track disagrees
+    // with the stored one. With `user` in load's own dependency array, that
+    // setUser call produced a new `user` reference, which gave load() a new
+    // identity, which re-ran the effect below, which called load() again. It
+    // happened to stop after one extra pass because normalizeTrack(t) === t
+    // for every value the server actually sends today, but that's incidental —
+    // a track value where that's not true would loop forever. Reading through
+    // a ref means updating `user` never changes load()'s own identity.
+    const userRef = React.useRef(user);
+    useEffect(() => { userRef.current = user; }, [user]);
+
     const load = React.useCallback(async () => {
-        if (!id || !user || !sessionToken) { setState('error'); return; }
+        const currentUser = userRef.current;
+        if (!id || !currentUser || !sessionToken) { setState('error'); return; }
         setState('loading');
         const [analysisRes, streakRes, topicRes, contentRes] = await Promise.allSettled([
-            protectedGet(`${Globals.URL}/user-analysis/${id}`),
-            protectedGet(`${Globals.URL}/user-streaks/${id}`),
-            protectedGet(`${Globals.URL}/topic-analysis/user/${id}`),
-            protectedGet(`${Globals.URL}/api/track-content-status`)
+            protectedGet(`/user-analysis/${id}`),
+            protectedGet(`/user-streaks/${id}`),
+            protectedGet(`/topic-analysis/user/${id}`),
+            protectedGet('/api/track-content-status')
         ]);
         if (!aliveRef.current) return;
         if (contentRes.status === 'fulfilled') {
@@ -101,8 +113,9 @@ const QUIZS = () => {
             // while the server serves content from the new one. Reconcile here,
             // on the first authenticated request of the session.
             const serverTrack = contentRes.value.data.track;
-            if (serverTrack && user && normalizeTrack(user.track) !== serverTrack) {
-                setUser({ ...user, track: serverTrack }, sessionToken);
+            const latestUser = userRef.current;
+            if (serverTrack && latestUser && normalizeTrack(latestUser.track) !== serverTrack) {
+                setUser({ ...latestUser, track: serverTrack }, sessionToken);
             }
         }
         if (analysisRes.status === 'fulfilled') {
@@ -116,19 +129,22 @@ const QUIZS = () => {
         if (streakRes.status === 'fulfilled') setStreak(streakRes.value.data || null);
         if (topicRes.status === 'fulfilled' && Array.isArray(topicRes.value.data)) setTopics(topicRes.value.data);
         setState(analysisRes.status === 'fulfilled' ? 'ready' : 'error');
-    }, [id, user, setUser, sessionToken]);
+    }, [id, sessionToken, setUser]);
 
     useEffect(() => { load(); }, [load]);
 
     const startQuiz = (types) => {
         try { track('hub_start_quiz', { types, source: SOURCE }); } catch (e) { /* analytics is best-effort */ }
-        navigate('/quiz/10', { state: { id, types, source: SOURCE, timer: null } });
+        // The hub's quick start skips the launcher, so it reads the saved
+        // study/exam preference directly — without this it would silently
+        // start every quick quiz in exam mode.
+        navigate('/quiz/10', { state: { id, types, source: SOURCE, timer: null, mode: readQuizMode() } });
     };
 
     if (view === 'launcher') {
         return (
             <div className="quiz-selection">
-                <QuizLauncher id={id} />
+                <QuizLauncher id={id} contentStatus={content} />
             </div>
         );
     }
@@ -275,38 +291,6 @@ const QUIZS = () => {
                 </section>
             )}
 
-            {/* Placed above the journey deliberately: a goal is a commitment
-                device, and "28 questions to go this week" is what turns an
-                open dashboard into a started quiz. Hidden while the bank is
-                empty — there is nothing to make progress against.
-
-                The exam date and the streak sit above the goal because they
-                are the two facts that frame it: how long you have, and whether
-                today has been used. */}
-            {!bankEmpty && user?.username && sessionToken && (
-                <>
-                    <div className="hub-cards-row">
-                        <ExamDateCard
-                            username={user.username}
-                            sessionToken={sessionToken}
-                            questionsRemaining={content?.totalQuestions || 0}
-                        />
-                        <StreakCard streak={streak} onStartToday={() => startQuiz('mix')} />
-                    </div>
-                    {/* `sources` comes from the content-status response rather
-                        than a constant, so the collection picker only ever
-                        offers collections this track actually has loaded — and
-                        stays hidden entirely for medical, whose bank is
-                        unified by design. */}
-                    <GoalCard
-                        username={user.username}
-                        sessionToken={sessionToken}
-                        specialties={SPECIALTIES}
-                        sources={content?.selectableSources || []}
-                    />
-                </>
-            )}
-
             <nav className="hubx-journey" aria-labelledby="hubx-journey-h">
                 <div className="hubx-sec-head">
                     <h2 id="hubx-journey-h">{t.journeyTitle}</h2>
@@ -336,6 +320,37 @@ const QUIZS = () => {
                     ))}
                 </ol>
             </nav>
+
+            {/* The three commitment cards — how long you have, whether today
+                has been used, and what you promised yourself this week.
+
+                They sit directly under the study loop rather than above it: the
+                loop is what the page is FOR, and three status cards ahead of it
+                pushed the actual instruction below the fold. They are also one
+                row of three rather than a 2-up row plus a full-width goal card,
+                which is what made this stretch of the page so tall. Hidden
+                while the bank is empty — nothing to make progress against.
+
+                GoalCard's `sources` comes from the content-status response
+                rather than a constant, so the collection picker only ever
+                offers collections this track actually has loaded — and stays
+                hidden entirely for medical, whose bank is unified by design. */}
+            {!bankEmpty && user?.username && sessionToken && (
+                <div className="hub-cards-row">
+                    <ExamDateCard
+                        username={user.username}
+                        sessionToken={sessionToken}
+                        questionsRemaining={content?.totalQuestions || 0}
+                    />
+                    <StreakCard streak={streak} onStartToday={() => startQuiz('mix')} />
+                    <GoalCard
+                        username={user.username}
+                        sessionToken={sessionToken}
+                        specialties={SPECIALTIES}
+                        sources={content?.selectableSources || []}
+                    />
+                </div>
+            )}
 
             {/* One performance panel: headline numbers on top, per-specialty
                 rings below. These used to be two separate boxes that both
@@ -409,11 +424,6 @@ const QUIZS = () => {
             </section>
 
             {id && <AchievementBadges userId={id} />}
-
-            <button className="suggestions-btn" onClick={() => navigate('/suggestions')}>
-                <span className="suggestions-icon"><Icon name="lightbulb" size={18} /></span>
-                <span>{t.suggestions}</span>
-            </button>
         </div>
     );
 };

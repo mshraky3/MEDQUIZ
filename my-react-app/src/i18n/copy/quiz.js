@@ -181,6 +181,14 @@ const quizCopy = {
             questionsUnit: 'سؤال',
             sourcePriorityBadge: (rank) => `الأولوية ${rank}`,
             sourcePriorityLabel: (rank) => `الأولوية ${rank} في ترتيب المذاكرة الموصى به`,
+
+            modeGroupLabel: 'نمط الاختبار',
+            modeLegend: 'نمط الاختبار',
+            modeStudy: 'نمط المذاكرة',
+            modeStudyHint: 'تظهر الإجابة والشرح فور اختيارك',
+            modeExam: 'نمط الاختبار',
+            modeExamHint: 'بدون كشف — تراجع إجاباتك في النهاية',
+
             quickStart: 'ابدأ سريعاً: 10 أسئلة مختلطة',
             customCount: 'عدد مخصص',
             questionsCount: (n) => `${n} سؤال`,
@@ -493,6 +501,14 @@ const quizCopy = {
             questionsUnit: 'questions',
             sourcePriorityBadge: (rank) => `Priority ${rank}`,
             sourcePriorityLabel: (rank) => `Priority ${rank} in the recommended study order`,
+
+            modeGroupLabel: 'Quiz mode',
+            modeLegend: 'Quiz mode',
+            modeStudy: 'Study mode',
+            modeStudyHint: 'Answer and explanation revealed as you go',
+            modeExam: 'Exam mode',
+            modeExamHint: 'No reveal — review your answers at the end',
+
             quickStart: 'Quick start: 10 mixed questions',
             customCount: 'Custom number',
             questionsCount: (n) => `${n} questions`,

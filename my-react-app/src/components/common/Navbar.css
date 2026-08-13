@@ -44,7 +44,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  z-index: 1000;
+  z-index: var(--z-navbar);
   animation: slideDown 0.6s ease-out;
 }
 
@@ -92,6 +92,15 @@
   align-items: center;
   min-width: 0;
   animation: fadeIn 0.8s ease-out 0.3s both;
+}
+
+/* Both edge columns are minmax(0, 1fr), which lets them be laid out NARROWER
+   than their content — so without this, a long email in the user pill simply
+   painted over the centre nav links instead of being clipped. Every edge child
+   must therefore be able to shrink, and the pill's text must truncate. */
+.navbar-right > *,
+.navbar-left > * {
+  min-width: 0;
 }
 
 .navbar .back-button {
@@ -213,6 +222,8 @@
 .user-info {
   display: flex;
   align-items: center;
+  min-width: 0;
+  max-width: 100%;
   background: rgba(59, 130, 246, 0.1);
   border-radius: 999px;
   padding-block: 8px;
@@ -256,6 +267,23 @@
   box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
 }
 
+/* Truncate rather than grow. An email is arbitrarily long and the pill sits in
+   a column that is allowed to be narrower than its content; letting it run on
+   is what made it overlap the nav links.
+
+   `min-width: 0` is the load-bearing line, not the max-width. An email address
+   contains no spaces, so its min-content width is the WHOLE string — and a flex
+   item defaults to `min-width: auto`, meaning the browser refuses to shrink it
+   below that no matter how little room the column has. Zeroing it is what lets
+   the ellipsis ever appear. */
+.user-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 180px;
+}
+
 .user-icon {
   margin-inline-end: 10px;
   transition: transform 0.3s ease;
@@ -277,11 +305,19 @@
 }
 
 /* Dropdown panel: absolutely positioned below the pill so it never pushes
-   or overlaps other navbar content. */
+   or overlaps other navbar content.
+
+   Anchored to the pill's INLINE-START edge, not its end. The pill lives in the
+   bar's start corner (right of the brand), and on a phone it shrinks to a ~38px
+   avatar — anchoring the 200px panel by its end edge hung it ~160px past the
+   edge of the screen, which is exactly what the iPhone screenshots showed. The
+   max-width is the belt to that braces: however narrow the viewport, the panel
+   stays inside it. */
 .user-menu-dropdown {
   position: absolute;
   top: calc(100% + 8px);
-  inset-inline-end: 0;
+  inset-inline-start: 0;
+  max-width: calc(100vw - 24px);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -387,26 +423,22 @@
   }
 }
 
-/* Mobile Responsiveness.
+/* Layout collapse.
    The grid's fixed 3-column layout has no room for the hamburger's dropdown
-   to become a full-width third row, so mobile falls back to the same
-   flex + wrap arrangement this navbar used before the grid change. */
-@media (max-width: 768px) {
+   to become a full-width third row, so narrow viewports fall back to the same
+   flex + wrap arrangement this navbar used before the grid change.
+
+   The threshold is 1024px, not 768px: the signed-in bar carries five nav links
+   PLUS a pill holding a full email address, and somewhere around 800–1000px
+   those two stopped fitting and painted over each other. Collapsing to the
+   hamburger early is the only arrangement that cannot collide, and it is a
+   layout change only — the size reductions still start at 768px below. */
+@media (max-width: 1024px) {
   .navbar {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    min-height: 64px;
-    padding: 0 16px;
     flex-wrap: wrap;
-  }
-
-  .navbar-left {
-    height: 64px;
-  }
-
-  .navbar-brand {
-    font-size: 1rem;
   }
 
   .navbar-center {
@@ -435,6 +467,22 @@
   .navbar-hamburger {
     display: flex;
   }
+}
+
+/* Mobile sizing (unchanged thresholds — only the collapse moved up to 1024). */
+@media (max-width: 768px) {
+  .navbar {
+    min-height: 64px;
+    padding: 0 16px;
+  }
+
+  .navbar-left {
+    height: 64px;
+  }
+
+  .navbar-brand {
+    font-size: 1rem;
+  }
 
   .navbar .back-button {
     width: 36px;
@@ -444,6 +492,10 @@
   .user-info {
     font-size: 12px;
     padding-inline: 16px 10px;
+  }
+
+  .user-name {
+    max-width: 140px;
   }
 
   .user-icon {

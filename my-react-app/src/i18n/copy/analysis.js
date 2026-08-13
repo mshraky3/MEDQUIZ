@@ -21,7 +21,9 @@ const analysisCopy = {
         loadingLastQuiz: 'جاري تحميل ملخص آخر اختبار...',
         loadingLastQuizQuestions: 'جاري تحميل أسئلة آخر اختبار...',
         loadingUser: 'جاري تحميل بيانات المستخدم...',
+        loading: 'جاري تحميل تقرير الأداء...',
         retry: 'إعادة المحاولة',
+        loadError: 'تعذّر تحميل تقرير الأداء.',
 
         errUserAnalysis: 'فشل في تحميل تحليل المستخدم.',
         errStreak: 'فشل في تحميل بيانات السلسلة.',
@@ -43,6 +45,34 @@ const analysisCopy = {
             accuracy: 'الدقة:',
             questions: 'الأسئلة:',
             noData: 'لا توجد بيانات',
+        },
+
+        nextStep: {
+            eyebrow: 'افعل هذا الآن',
+            weakestLabel: 'أضعف نقطة لديك',
+            weakestBody: (topic, pct) => `${topic} — دقتك ${pct}%`,
+            wrongCount: (n) => `${n} سؤال خاطئ بانتظار المراجعة`,
+            examIn: (n) => `الاختبار خلال ${n} يوم`,
+            examToday: 'الاختبار اليوم',
+            examPassed: 'موعد الاختبار مضى',
+            noExam: 'لم تحدد موعد اختبار بعد',
+            cta: (topic) => `تدرّب على ${topic} ←`,
+            ctaGeneric: 'ابدأ اختبار جديد ←',
+            noDataYet: 'أجب على بضعة أسئلة لنعرف من أين نبدأ.',
+            readiness: 'مستوى الجاهزية',
+            streakDays: (n) => `${n} يوم متتالي`,
+            noStreak: 'ابدأ سلسلتك اليوم',
+        },
+
+        drill: {
+            overview: 'نظرة عامة',
+            bySpecialty: 'حسب التخصص',
+            progress: 'التقدم',
+            quizHistory: 'سجل الاختبارات',
+            mockExams: 'الاختبارات النهائية',
+            lastQuizReview: 'مراجعة آخر اختبار',
+            expand: 'عرض',
+            collapse: 'إخفاء',
         },
 
         streak: {
@@ -285,7 +315,9 @@ const analysisCopy = {
         loadingLastQuiz: 'Loading your last quiz summary…',
         loadingLastQuizQuestions: 'Loading the questions from your last quiz…',
         loadingUser: 'Loading your account…',
+        loading: 'Loading your performance report…',
         retry: 'Try again',
+        loadError: 'Could not load your performance report.',
 
         errUserAnalysis: 'Failed to load your analysis.',
         errStreak: 'Failed to load your streak.',
@@ -307,6 +339,34 @@ const analysisCopy = {
             accuracy: 'Accuracy:',
             questions: 'Questions:',
             noData: 'No data yet',
+        },
+
+        nextStep: {
+            eyebrow: 'Do this next',
+            weakestLabel: 'Your weakest spot',
+            weakestBody: (topic, pct) => `${topic} — ${pct}% accuracy`,
+            wrongCount: (n) => `${n} wrong questions waiting`,
+            examIn: (n) => `Exam in ${n} days`,
+            examToday: 'Exam is today',
+            examPassed: 'Exam date has passed',
+            noExam: 'No exam date set yet',
+            cta: (topic) => `Practise ${topic} →`,
+            ctaGeneric: 'Start a new quiz →',
+            noDataYet: 'Answer a few questions and we’ll tell you where to start.',
+            readiness: 'Readiness',
+            streakDays: (n) => `${n}-day streak`,
+            noStreak: 'Start your streak today',
+        },
+
+        drill: {
+            overview: 'Overview',
+            bySpecialty: 'By specialty',
+            progress: 'Progress',
+            quizHistory: 'Quiz history',
+            mockExams: 'Mock exams',
+            lastQuizReview: 'Last quiz review',
+            expand: 'Expand',
+            collapse: 'Collapse',
         },
 
         streak: {

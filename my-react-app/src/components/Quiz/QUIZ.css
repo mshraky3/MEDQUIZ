@@ -233,6 +233,9 @@
 }
 
 .option-button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 16px 20px;
   font-size: 1.05rem;
   border: 2px solid #e6ecf6;
@@ -261,6 +264,37 @@
   background: #eef4ff;
   color: #1d4ed8;
   border-color: #2563eb;
+  font-weight: 700;
+}
+
+/* Study mode reveal. The options are disabled once answered, so they must not
+   read as greyed-out — the colour IS the feedback. Same green/red pair the
+   result review and the summaries question card use. */
+.option-text {
+  flex: 1;
+}
+
+.option-mark {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.option-button:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
+.option-button.is-correct {
+  background: rgba(34, 197, 94, 0.10);
+  border-color: #16a34a;
+  color: #15803d;
+  font-weight: 700;
+}
+
+.option-button.is-wrong {
+  background: rgba(239, 68, 68, 0.10);
+  border-color: #dc2626;
+  color: #b91c1c;
   font-weight: 700;
 }
 
@@ -558,14 +592,6 @@
 .result-review-answer.bad {
   background: rgba(239, 68, 68, 0.10);
   color: #b91c1c;
-}
-
-.quiz-result .result-review-explanation p {
-  margin: 0;
-  font-size: 0.92rem;
-  line-height: 1.7;
-  color: #0f1e3d;
-  text-align: start;
 }
 
 /* Responsive styles for new quiz layout */

@@ -3,6 +3,7 @@ import Icon from '../common/Icon.jsx';
 import axios from 'axios';
 import Globals from '../../global.js';
 import Spinner from '../common/Spinner.jsx';
+import ExplanationPanel from '../common/ExplanationPanel.jsx';
 import { getSourceLabel } from '../../utils/sourceLabels';
 import { getTypeLabel } from '../../utils/typeLabels';
 import { useCopy, useLang, formatDateTime } from '../../i18n';
@@ -334,6 +335,8 @@ const FinalExams = ({ userId, username, sessionToken }) => {
                                                                                 <span className="answer-text correct">{question.correct_option}</span>
                                                                             </div>
                                                                         </div>
+
+                                                                        <ExplanationPanel explanation={question.explanation} />
 
                                                                         <div className="question-meta">
                                                                             <span className="question-number">{t.questionNo(index + 1)}</span>

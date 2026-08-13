@@ -20,7 +20,12 @@ const Bank = () => {
     option4: "",
     question_type: "",
     correct_option: "",
-    source: ""
+    source: "",
+    // null until the explanation has been fetched for the row being edited.
+    // /api/all-questions omits the column (it is ~1 KB a row), so it is loaded
+    // separately on edit — and while it is null the save omits the field
+    // entirely rather than posting an empty string that would wipe it.
+    explanation: null
   });
   const [loading, setLoading] = useState(true);
   const [successMessage, setSuccessMessage] = useState("");
@@ -81,8 +86,20 @@ const Bank = () => {
       option4: question.option4,
       question_type: question.question_type || "",
       correct_option: question.correct_option,
-      source: question.source || ""
+      source: question.source || "",
+      explanation: null
     });
+
+    // GET /questions/:id is SELECT *, so it carries the explanation the list
+    // endpoint leaves out. On failure the field stays null and the save leaves
+    // the stored explanation untouched.
+    axios
+      .get(`${Globals.URL}/questions/${question.id}`)
+      .then((res) => {
+        const loaded = res.data?.question?.explanation ?? "";
+        setFormData((prev) => (prev.explanation === null ? { ...prev, explanation: loaded } : prev));
+      })
+      .catch((error) => console.error("Error fetching question explanation:", error));
   };
 
   const cancelEditing = () => {
@@ -95,15 +112,20 @@ const Bank = () => {
       option4: "",
       question_type: "",
       correct_option: "",
-      source: ""
+      source: "",
+      explanation: null
     });
   };
 
   const saveQuestion = async () => {
     try {
+      const payload = { ...formData };
+      // Never send the key when the current value could not be read — the
+      // backend leaves the column alone when the field is absent.
+      if (payload.explanation === null) delete payload.explanation;
       const response = await axios.put(
         `${Globals.URL}/questions/${editingQuestion}`,
-        formData
+        payload
       );
       setQuestions((prev) =>
         prev.map((q) => (q.id === editingQuestion ? response.data.question : q))
@@ -264,6 +286,21 @@ const Bank = () => {
                           value={formData.source}
                           onChange={handleInputChange}
                           placeholder="e.g., NBME, UWorld, Kaplan..."
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Explanation:</label>
+                        <textarea
+                          name="explanation"
+                          rows={10}
+                          value={formData.explanation ?? ""}
+                          onChange={handleInputChange}
+                          disabled={formData.explanation === null}
+                          placeholder={
+                            formData.explanation === null
+                              ? "Loading the stored explanation…"
+                              : "**Core Concept:** …\n\n**Clinical Presentation:**\n- …"
+                          }
                         />
                       </div>
                       <div className="button-group">

@@ -88,7 +88,7 @@
   background: #ffffff;
   border: 1px solid rgba(22, 163, 74, 0.35);
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   font-weight: 800;
   color: #15803d;
 }
@@ -132,7 +132,7 @@
 
 .ps-screen-title {
   margin-inline-start: 8px;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: #64748b;
   white-space: nowrap;
@@ -183,7 +183,7 @@
   flex: 0 0 auto;
   border-radius: 6px;
   background: #e8eefb;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 800;
   color: #2563eb;
 }
@@ -232,7 +232,7 @@
 .ps-quiz-tag {
   display: inline-block;
   margin-bottom: 6px;
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.03em;
   color: #15803d;
@@ -294,7 +294,7 @@
 }
 
 .ps-ring-label {
-  font-size: 0.66rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: #64748b;
   line-height: 1.35;
@@ -305,7 +305,7 @@
   padding: 2px 7px;
   border-radius: 999px;
   background: rgba(217, 119, 6, 0.12);
-  font-size: 0.6rem;
+  font-size: 0.75rem;
   font-weight: 800;
   color: #b45309;
   white-space: nowrap;
@@ -320,7 +320,7 @@
   border-top: 1px solid #e6ecf6;
 }
 
-.ps-analysis-foot-label { font-size: 0.72rem; font-weight: 700; color: #64748b; white-space: nowrap; }
+.ps-analysis-foot-label { font-size: 0.75rem; font-weight: 700; color: #64748b; white-space: nowrap; }
 .ps-analysis-foot-val { font-size: 0.8rem; font-weight: 800; color: #2563eb; }
 
 .ps-analysis-bar {
@@ -392,7 +392,7 @@
   padding: 3px 9px;
   border-radius: 6px;
   background: rgba(220, 38, 38, 0.88);
-  font-size: 0.66rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: #ffffff;
   opacity: 0;
@@ -498,7 +498,7 @@
 .ps-wrong-bad, .ps-wrong-good {
   padding: 3px 9px;
   border-radius: 999px;
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   font-weight: 700;
 }
 

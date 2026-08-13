@@ -68,13 +68,14 @@
   }
 }
 
-:root {
-  --bg: #ffffff;
+/* Scoped to .login-body (also used by Signup, ForgotPassword, Subscribe and
+   PaymentCallback, which all import this stylesheet), not :root — see the
+   identical note in Landing.css. --accent and --muted now come from the real
+   global tokens in index.css. */
+.login-body {
   --card: rgba(0, 0, 0, 0.04);
   --glass: rgba(0, 0, 0, 0.06);
   --text: #1e293b;
-  --muted: #64748b;
-  --accent: #3b82f6;
   --accent-strong: #2563eb;
   --pill-bg: rgba(59, 130, 246, 0.16);
   --border: rgba(15, 23, 42, 0.10);
@@ -82,7 +83,13 @@
 }
 
 .login-body {
-  min-height: 100vh;
+  /* min-height:100% + flex:1, not 100vh — this renders inside
+     .page-with-navbar, which already reserves 72px for the fixed navbar and
+     is itself min-height:100vh. A child that ALSO demands a full 100vh made
+     the whole page 72px taller than the viewport, pushing this vertically-
+     centered card visibly off-center and adding a needless scroll. */
+  min-height: 100%;
+  flex: 1 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -181,7 +188,10 @@
   border: 1px solid var(--border);
   border-radius: 12px;
   color: var(--text);
-  font-size: 15px;
+  /* 16px unconditionally, not just under some breakpoint — below 16px, iOS
+     Safari zooms the whole page on focus, on every page that uses this class
+     (Login, Signup, ForgotPassword, Subscribe, PaymentCallback). */
+  font-size: 16px;
   transition: all 0.3s ease;
   box-sizing: border-box;
 }

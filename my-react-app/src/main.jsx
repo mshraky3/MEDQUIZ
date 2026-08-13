@@ -1,4 +1,22 @@
 import { StrictMode, Suspense, lazy } from 'react'
+// Self-hosted via @fontsource — each weight file declares @font-face rules
+// split by unicode-range (latin / latin-ext / arabic / ...) with
+// font-display: swap already built in, so a visitor only downloads the
+// glyph ranges their own text actually uses. Before this, --font-family-primary
+// named 'Inter' but nothing on the page ever requested it — every visitor
+// silently rendered in the OS's system-ui fallback instead.
+import '@fontsource/inter/400.css'
+import '@fontsource/inter/500.css'
+import '@fontsource/inter/600.css'
+import '@fontsource/inter/700.css'
+import '@fontsource/inter/800.css'
+import '@fontsource/inter/900.css'
+import '@fontsource/cairo/400.css'
+import '@fontsource/cairo/500.css'
+import '@fontsource/cairo/600.css'
+import '@fontsource/cairo/700.css'
+import '@fontsource/cairo/800.css'
+import '@fontsource/cairo/900.css'
 import './index.css'
 import App from './App.jsx';
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
@@ -13,7 +31,6 @@ import ErrorBoundary from './components/common/ErrorBoundary.jsx';
 import NotFound from './components/common/NotFound.jsx';
 import Layout from './components/common/Layout.jsx';
 import RequireAuth from './components/common/RequireAuth.jsx';
-import AdminGate from './components/common/AdminGate.jsx';
 import CookieConsent from './components/common/CookieConsent.jsx';
 import Spinner from './components/common/Spinner.jsx';
 
@@ -53,6 +70,12 @@ const Subscribe = lazy(() => import('./components/subscribe/Subscribe.jsx'));
 const PaymentCallback = lazy(() => import('./components/subscribe/PaymentCallback.jsx'));
 const GroupsPage = lazy(() => import('./components/groups/GroupsPage.jsx'));
 const AccountPage = lazy(() => import('./components/account/AccountPage.jsx'));
+// Only ever used inside admin(...) below, whose children are all already
+// lazy — but AdminGate itself imports utils/adminApi.js, a static `import
+// axios from 'axios'`. Left eager, that shipped the 34KB axios bundle to
+// every visitor (including anonymous landing-page ones) even though nothing
+// but the admin panel ever uses it.
+const AdminGate = lazy(() => import('./components/common/AdminGate.jsx'));
 
 import Globals from './global.js';
 import { UserProvider } from './UserContext.jsx';
@@ -90,7 +113,7 @@ const withBoundary = (path, element) => ({ path, element, errorElement: <ErrorBo
 const pub = (path, node) => withBoundary(path, <Layout>{lazyEl(node)}</Layout>);
 const authed = (path, node) => withBoundary(path, <Layout><RequireAuth>{lazyEl(node)}</RequireAuth></Layout>);
 // Admin stays English/LTR regardless of the site language — AdminShell pins it.
-const admin = (path, node) => withBoundary(path, <AdminShell><AdminGate>{lazyEl(node)}</AdminGate></AdminShell>);
+const admin = (path, node) => withBoundary(path, <AdminShell>{lazyEl(<AdminGate>{lazyEl(node)}</AdminGate>)}</AdminShell>);
 
 const router = createBrowserRouter([
   // Landing — its own shell (own topbar/footer), so not wrapped in Layout.
@@ -111,6 +134,11 @@ const router = createBrowserRouter([
   pub('/terms', <Terms />),
   pub('/refund-policy', <RefundPolicy />),
   pub('/suggestions', <Suggestions />),
+  // Public on purpose. It is a price page for a guest and a seat manager for
+  // the person who bought one — GroupsPage picks which, and only the guest
+  // half is indexable. Behind RequireAuth, group plans were undiscoverable to
+  // anyone who had not already been told they exist.
+  pub('/groups', <GroupsPage />),
   pub('/guides', <GuidesHub />),
   pub('/guides/smle-study-plan', <SmleStudyPlanGuide />),
   pub('/guides/wrong-questions-method', <WrongQuestionsMethodGuide />),
@@ -125,7 +153,6 @@ const router = createBrowserRouter([
   authed('/summaries', <SummariesPage />),
   authed('/summaries/:slug', <SummariesPage />),
   authed('/subscribe', <Subscribe />),
-  authed('/groups', <GroupsPage />),
   authed('/account', <AccountPage />),
   authed('/payment/callback', <PaymentCallback />),
 

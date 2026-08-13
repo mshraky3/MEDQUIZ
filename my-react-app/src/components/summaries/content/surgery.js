@@ -486,7 +486,7 @@ const surgery = {
                 <text x="510" y="238" text-anchor="middle" font-size="12" fill="#1d4ed8" font-weight="700">Peripheral · haustra (partial)</text><text x="510" y="256" text-anchor="middle" font-size="11" fill="#475569">frames abdomen · caecum &gt;9 cm</text>
                 </svg>
                 <div class="deck-imgcell" style="max-width:340px;margin:12px auto 0">
-                    <img class="deck-img" src="/summaries/bowel-obstruction-axr.jpg" width="964" height="1200" loading="lazy" decoding="async"
+                    <img class="deck-img" src="/summaries/bowel-obstruction-axr.webp" width="964" height="1200" loading="lazy" decoding="async"
                          alt="Upright plain abdominal radiograph showing several dilated, gas-filled bowel loops with multiple horizontal air-fluid levels stacked across the abdomen." />
                     <p class="deck-imgcap">A real obstructed abdomen: dilated gas-filled loops with multiple <b>air-fluid levels</b> on the upright film</p>
                 </div>
@@ -1048,7 +1048,7 @@ const surgery = {
                 <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Epidural vs subdural haematoma on CT</div>
                 <div class="deck-imgrow deck-imgrow--scan">
                     <div class="deck-imgcell">
-                        <img class="deck-img" src="/summaries/epidural-haematoma-ct.jpg" width="784" height="963" loading="lazy" decoding="async"
+                        <img class="deck-img" src="/summaries/epidural-haematoma-ct.webp" width="784" height="963" loading="lazy" decoding="async"
                              alt="Axial head CT. An arrow points to a bright, lens-shaped biconvex collection pressed against the inner skull on the patient's left, bulging inward and pushing the brain away." />
                         <p class="deck-imgcap"><b>EPIDURAL</b> (extradural) — <b>LENS-shaped, biconvex</b>
                         <br>middle meningeal <b>ARTERY</b> · LUCID INTERVAL then deterioration
@@ -1056,7 +1056,7 @@ const surgery = {
                         <br><span class="deck-hi deck-hi--red">arterial — urgent evacuation</span></p>
                     </div>
                     <div class="deck-imgcell">
-                        <img class="deck-img" src="/summaries/subdural-haematoma-ct.jpg" width="344" height="410" loading="lazy" decoding="async"
+                        <img class="deck-img" src="/summaries/subdural-haematoma-ct.webp" width="344" height="410" loading="lazy" decoding="async"
                              alt="Axial head CT. Arrows point to a bright crescent-shaped collection that hugs and follows the curve of the inner skull over a long distance, rather than bulging inward." />
                         <p class="deck-imgcap"><b>SUBDURAL</b> — <b>CRESCENT-shaped</b>, follows the skull
                         <br>bridging <b>VEINS</b> · GRADUAL deterioration

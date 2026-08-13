@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Icon from '../common/Icon.jsx';
+import ExplanationPanel from '../common/ExplanationPanel.jsx';
 import { getSourceLabel } from '../../utils/sourceLabels';
 import { getTypeLabel } from '../../utils/typeLabels';
 import { useCopy, useLang } from '../../i18n';
@@ -125,6 +126,7 @@ const Result = ({
                       </div>
                     )}
                   </div>
+                  <ExplanationPanel explanation={answer.explanation} />
                 </li>
               ))}
             </ul>

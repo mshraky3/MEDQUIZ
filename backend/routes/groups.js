@@ -68,37 +68,46 @@ router.get('/mine', resolveSession, async (req, res) => {
             [req.accountId]
         );
 
-        const withSeats = [];
-        for (const g of groups) {
-            const { rows: seats } = await req.db.query(
+        // One query for every seat across every one of this owner's groups,
+        // not one query per group — an owner with several groups no longer
+        // makes the page wait on N sequential round trips.
+        let seatsByGroup = new Map();
+        if (groups.length > 0) {
+            const { rows: allSeats } = await req.db.query(
                 // NOTE: claimed_by_account_id is deliberately NOT selected —
                 // see the privacy rule at the top of this file.
-                `SELECT seat_index, token, claimed_at,
+                `SELECT group_id, seat_index, token, claimed_at,
                         (claimed_by_account_id IS NOT NULL) AS claimed
                    FROM group_seats
-                  WHERE group_id = $1
-                  ORDER BY seat_index`,
-                [g.id]
+                  WHERE group_id = ANY($1::int[])
+                  ORDER BY group_id, seat_index`,
+                [groups.map((g) => g.id)]
             );
-            withSeats.push({
-                id: g.id,
-                planId: g.plan_id,
-                seats: g.seats,
-                months: g.months,
-                expiresAt: g.expires_at,
-                createdAt: g.created_at,
-                expired: new Date(g.expires_at).getTime() <= Date.now(),
-                seatList: seats.map((s) => ({
-                    seatIndex: s.seat_index,
-                    // Seat 1 is the owner's own account: no link exists for it.
-                    isYou: s.seat_index === 1,
-                    claimed: s.claimed,
-                    claimedAt: s.claimed_at,
-                    // A used link is dead — don't keep showing it around.
-                    link: s.token && !s.claimed ? seatLink(req, s.token) : null,
-                })),
-            });
+            seatsByGroup = allSeats.reduce((map, s) => {
+                if (!map.has(s.group_id)) map.set(s.group_id, []);
+                map.get(s.group_id).push(s);
+                return map;
+            }, new Map());
         }
+
+        const withSeats = groups.map((g) => ({
+            id: g.id,
+            planId: g.plan_id,
+            seats: g.seats,
+            months: g.months,
+            expiresAt: g.expires_at,
+            createdAt: g.created_at,
+            expired: new Date(g.expires_at).getTime() <= Date.now(),
+            seatList: (seatsByGroup.get(g.id) || []).map((s) => ({
+                seatIndex: s.seat_index,
+                // Seat 1 is the owner's own account: no link exists for it.
+                isYou: s.seat_index === 1,
+                claimed: s.claimed,
+                claimedAt: s.claimed_at,
+                // A used link is dead — don't keep showing it around.
+                link: s.token && !s.claimed ? seatLink(req, s.token) : null,
+            })),
+        }));
 
         res.json({
             success: true,

@@ -34,13 +34,13 @@
   }
 }
 
-:root {
-  --bg: #ffffff;
+/* Scoped to .quiz-selection (this page's own root class), not :root — see
+   the identical note in Landing.css. --accent and --muted now come from the
+   real global tokens in index.css. */
+.quiz-selection {
   --card: var(--surface, #ffffff);
   --card-hover: var(--surface-2, #f5f8fd);
   --text: var(--text-medium, #475569);
-  --muted: var(--text-light, #64748b);
-  --accent: var(--primary-light, #3b82f6);
   --accent-strong: var(--primary-color, #2563eb);
   --border: var(--border-color, #d4deee);
   --shadow: var(--shadow-lg, 0 14px 36px rgba(15, 23, 42, 0.16));
@@ -115,6 +115,18 @@
   background: var(--card);
   box-shadow: var(--shadow-sm, 0 1px 2px rgba(15, 23, 42, 0.06));
   animation: fadeInUp 0.6s ease-out 0.12s both;
+}
+
+/* The mode picker borrows the source picker's chip styling; it only needs its
+   two options side by side and a hint line long enough to wrap gracefully. */
+.quiz-mode-picker .bank-source-options {
+  grid-template-columns: 1fr 1fr;
+}
+
+.quiz-mode-picker .bank-source-chip-count {
+  font-size: 11px;
+  line-height: 1.35;
+  text-align: center;
 }
 
 .bank-source-legend {
@@ -283,50 +295,6 @@
   transform: translateY(-4px) scale(1.02);
 }
 
-/* Suggestions Button */
-.suggestions-btn {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 14px 24px;
-  font-size: 14px;
-  font-weight: 700;
-  color: #fff;
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 50%, #6d28d9 100%);
-  border: none;
-  border-radius: 50px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
-  z-index: 100;
-  animation: fadeInUp 0.6s ease-out 0.5s both;
-}
-
-.suggestions-btn:hover {
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 8px 30px rgba(139, 92, 246, 0.5);
-}
-
-.suggestions-btn .suggestions-icon {
-  font-size: 18px;
-  animation: pulse 2s ease-in-out infinite;
-}
-
-@keyframes pulse {
-
-  0%,
-  100% {
-    transform: scale(1);
-  }
-
-  50% {
-    transform: scale(1.15);
-  }
-}
-
 @media (max-width: 800px) {
   .quiz-selection h1 {
     font-size: 28px;
@@ -345,13 +313,6 @@
 
   .options-container {
     gap: 1rem;
-  }
-
-  .suggestions-btn {
-    bottom: 20px;
-    right: 20px;
-    padding: 12px 20px;
-    font-size: 13px;
   }
 }
 
@@ -969,7 +930,8 @@
 
   .custom-timer-number-input {
     width: 80px;
-    font-size: 0.9rem;
+    /* Stays 16px — shrinking it below that on the exact viewports where iOS
+       Safari zooms on focus was the bug. */
   }
 }
 
@@ -994,7 +956,7 @@
 
   .custom-timer-number-input {
     width: 70px;
-    font-size: 0.8rem;
+    /* Stays 16px — see the 768px breakpoint above. */
   }
 }
 
@@ -1257,7 +1219,7 @@
 
   .custom-questions-number-input {
     width: 100px;
-    font-size: 0.9rem;
+    /* Stays 16px — below that, iOS Safari zooms the page on focus. */
     padding: 0.6rem;
   }
 
@@ -1319,7 +1281,7 @@
 
   .custom-questions-number-input {
     width: 80px;
-    font-size: 0.8rem;
+    /* Stays 16px — see the earlier breakpoint above. */
     padding: 0.5rem;
   }
 
@@ -1376,7 +1338,7 @@
 
   .custom-questions-number-input {
     width: 70px;
-    font-size: 0.75rem;
+    /* Stays 16px — see the earlier breakpoints above. */
     padding: 0.4rem;
   }
 

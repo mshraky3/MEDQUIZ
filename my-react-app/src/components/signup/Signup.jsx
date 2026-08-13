@@ -181,11 +181,14 @@ const Signup = () => {
             const loginRes = await axios.post(`${Globals.URL}/login`, {
                 username,
                 password: form.password,
-                deviceId: 'placeholder-device-id',
             });
 
             if (loginRes.data.showTerms) {
-                await axios.post(`${Globals.URL}/accept-terms`, { username }).catch(() => {});
+                await axios.post(
+                    `${Globals.URL}/accept-terms`,
+                    { username },
+                    { headers: { Authorization: `Bearer ${loginRes.data.sessionToken}` } }
+                ).catch(() => {});
             }
 
             setUser(loginRes.data.user || { username }, loginRes.data.sessionToken);
@@ -309,7 +312,7 @@ const Signup = () => {
         e.preventDefault();
         setError('');
 
-        if (!otp || otp.length !== 4) {
+        if (!otp || otp.length !== 6) {
             setError(t.errOtpLength);
             return;
         }
@@ -472,6 +475,7 @@ const Signup = () => {
                                     value={form.email}
                                     onChange={handleInputChange}
                                     placeholder={t.emailPlaceholder}
+                                    autoComplete="email"
                                     required
                                 />
                             </div>
@@ -485,6 +489,7 @@ const Signup = () => {
                                     value={form.password}
                                     onChange={handleInputChange}
                                     placeholder={t.passwordPlaceholder}
+                                    autoComplete="new-password"
                                     required
                                 />
                             </div>
@@ -498,6 +503,7 @@ const Signup = () => {
                                     value={form.confirmPassword}
                                     onChange={handleInputChange}
                                     placeholder={t.confirmPlaceholder}
+                                    autoComplete="new-password"
                                     required
                                 />
                             </div>
@@ -562,10 +568,11 @@ const Signup = () => {
                                     name="otp"
                                     className="form-input"
                                     value={otp}
-                                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                                     placeholder={t.otpPlaceholder}
-                                    maxLength={4}
+                                    maxLength={6}
                                     inputMode="numeric"
+                                    autoComplete="one-time-code"
                                     required
                                     style={{ textAlign: 'center', fontSize: '24px', letterSpacing: '8px' }}
                                 />

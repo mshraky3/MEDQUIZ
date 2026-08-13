@@ -1,0 +1,121 @@
+/* Explanation panel — the "why this answer is correct" disclosure shared by the
+   quiz screen and every review surface. Light theme, matching the site: white
+   cards, #e6ecf6 borders, #2563eb primary (see Quiz/QUIZ.css). The tinted fill
+   and the accent rule on the inline start edge mirror .sq-explain in
+   summaries/Summaries.css so the two reveal panels read as the same component. */
+
+.sqb-explain {
+  margin-top: 14px;
+  border: 1px solid rgba(37, 99, 235, 0.20);
+  border-inline-start: 3px solid #2563eb;
+  border-radius: 12px;
+  background: rgba(37, 99, 235, 0.05);
+  overflow: hidden;
+  animation: sqb-explain-reveal 0.25s ease;
+}
+
+@keyframes sqb-explain-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.sqb-explain-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 11px 14px;
+  border: 0;
+  background: transparent;
+  color: #1d4ed8;
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+  text-align: start;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.sqb-explain-toggle:hover {
+  background: rgba(37, 99, 235, 0.07);
+}
+
+.sqb-explain-toggle:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: -2px;
+}
+
+.sqb-explain-title {
+  flex: 1;
+}
+
+.sqb-explain-chevron {
+  display: inline-flex;
+  transition: transform 0.2s ease;
+}
+
+.sqb-explain.is-open .sqb-explain-chevron {
+  transform: rotate(180deg);
+}
+
+/* The body is exam material: always LTR and left-aligned, whatever direction
+   the surrounding page is in. Same rule as .question-text / .option-button. */
+.sqb-explain-body {
+  padding: 2px 14px 14px;
+  direction: ltr;
+  text-align: left;
+  color: #1e293b;
+  font-size: 0.92rem;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.sqb-explain-line {
+  margin: 0 0 8px;
+}
+
+.sqb-explain-line.is-section {
+  margin-top: 12px;
+}
+
+.sqb-explain-line.is-section:first-child {
+  margin-top: 0;
+}
+
+.sqb-explain-line strong {
+  color: #0f1e3d;
+  font-weight: 700;
+}
+
+.sqb-explain-list {
+  margin: 0 0 10px;
+  padding-inline-start: 20px;
+  list-style: disc;
+}
+
+.sqb-explain-list li {
+  margin-bottom: 4px;
+}
+
+.sqb-explain-list li::marker {
+  color: #2563eb;
+}
+
+@media (max-width: 768px) {
+  .sqb-explain-toggle {
+    padding: 10px 12px;
+    font-size: 0.88rem;
+  }
+
+  .sqb-explain-body {
+    padding: 2px 12px 12px;
+    font-size: 0.88rem;
+  }
+}

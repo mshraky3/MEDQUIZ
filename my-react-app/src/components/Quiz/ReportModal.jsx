@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Icon from '../common/Icon.jsx';
 import axios from 'axios';
 import Globals from '../../global.js';
@@ -11,6 +11,44 @@ const ReportModal = ({ question, userId, userEmail, onClose }) => {
     const { dir } = useLang();
     const [reason, setReason] = useState('');
     const [status, setStatus] = useState('idle'); // idle | loading | success | error
+    const dialogRef = useRef(null);
+
+    // Esc closes, background scroll locks, and Tab is kept inside the dialog
+    // — the same pattern as SummariesPage.jsx's reading panel, plus a
+    // minimal focus trap since this modal (unlike that panel) sits over a
+    // still-interactive quiz screen behind it.
+    useEffect(() => {
+        const dialog = dialogRef.current;
+        const focusable = dialog?.querySelectorAll(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        focusable?.[0]?.focus();
+
+        const onKey = (e) => {
+            if (e.key === 'Escape') {
+                onClose();
+                return;
+            }
+            if (e.key !== 'Tab' || !focusable?.length) return;
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (e.shiftKey && document.activeElement === first) {
+                e.preventDefault();
+                last.focus();
+            } else if (!e.shiftKey && document.activeElement === last) {
+                e.preventDefault();
+                first.focus();
+            }
+        };
+        window.addEventListener('keydown', onKey);
+        const prevOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        return () => {
+            window.removeEventListener('keydown', onKey);
+            document.body.style.overflow = prevOverflow;
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [status]);
 
     const handleSubmit = async () => {
         if (status === 'loading' || status === 'success') return;
@@ -30,9 +68,17 @@ const ReportModal = ({ question, userId, userEmail, onClose }) => {
 
     return (
         <div className="report-modal-overlay" onClick={onClose}>
-            <div className="report-modal" onClick={(e) => e.stopPropagation()} dir={dir}>
+            <div
+                className="report-modal"
+                onClick={(e) => e.stopPropagation()}
+                dir={dir}
+                ref={dialogRef}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="report-modal-title"
+            >
                 <button className="report-modal-close" onClick={onClose} aria-label={t.close}><Icon name="x" size={18} /></button>
-                <h3 className="report-modal-title"><Icon name="flag" size={16} /> {t.title}</h3>
+                <h3 className="report-modal-title" id="report-modal-title"><Icon name="flag" size={16} /> {t.title}</h3>
 
                 {status === 'success' ? (
                     <div className="report-modal-success">

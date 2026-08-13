@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, useContext } from 'react';
 import Icon from '../common/Icon.jsx';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import axios from 'axios';
+import apiClient from '../../utils/apiClient.js';
 import './QUIZ.css';
 import Loading from './Loading';
 import ErrorScreen from './ErrorScreen';
@@ -10,11 +10,31 @@ import './ErrorScreen.css';
 import Result from './Result';
 import Question from './Question';
 import QuizComplete from './QuizComplete';
-import Globals from '../../global.js';
 import { getSourceLabel } from '../../utils/sourceLabels';
 import { UserContext } from '../../UserContext';
 import { useCopy, useLang } from '../../i18n';
 import quizCopy from '../../i18n/copy/quiz.js';
+import { safeGetSessionItem, safeSetSessionItem, safeRemoveSessionItem } from '../../utils/safeStorage.js';
+
+/**
+ * The per-question record the result screen reviews. Built in two places (the
+ * submission effect and the finished-quiz render), so it lives here to keep
+ * them from drifting apart. `explanation` rides along from the question rows
+ * already in memory — the review screen needs no extra request for it.
+ */
+const buildAnswers = (validQuestions, questionAnswers) =>
+  validQuestions.map((question, index) => {
+    const selected = questionAnswers[index];
+    return {
+      id: question.id,
+      question: question.question_text,
+      selected,
+      correct: question.correct_option,
+      isCorrect: selected === question.correct_option,
+      topic: question.question_type,
+      explanation: question.explanation || null,
+    };
+  });
 
 const isValidQuestion = (question) => {
   return (
@@ -47,12 +67,60 @@ const QUIZ = () => {
   const location = useLocation();
   const t = useCopy(quizCopy).quiz;
   const { lang, dir } = useLang();
-  const id = location.state?.id;
-  const [questions, setQuestions] = useState([]);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const { user, sessionToken } = useContext(UserContext);
+  // A bookmarked/back-button /quiz/:n has no location.state, but the user is
+  // still signed in — falling back to the session's own id (matching
+  // QUIZS.jsx:45) is what lets sendQuizData actually submit instead of
+  // silently discarding a finished quiz because `id` was never set.
+  const id = user?.id || location.state?.id;
+  const types = location.state?.types || 'mix';
+  // Default to the unified bank sentinel (a valid session source) so a stateless
+  // direct navigation to /quiz/:n still fetches and submits with a legal source.
+  const source = location.state?.source || 'MidgardGameBoy';
+  const timerMinutes = location.state?.timer || null;
+  const isFinalQuiz = location.state?.isFinalQuiz || false;
+  // 'study' locks each answer as it is picked and reveals the correct option
+  // with its explanation; 'exam' is the original silent behaviour, with
+  // feedback only on the result screen. A direct navigation to /quiz/:n with
+  // no state (bookmark, back button) falls back to exam mode — the safer of
+  // the two, since it can never reveal an answer the student did not ask to see.
+  const studyMode = location.state?.mode === 'study' && !isFinalQuiz;
+
+  // ── Autosave ──────────────────────────────────────────────────────────
+  // Refreshing mid-quiz (or the back/forward button) used to lose every
+  // answer and the timer, AND refetch a different randomized question set
+  // from the server — there was no persistence at all. numQuestions/types/
+  // source/isFinalQuiz are stable across a reload (the URL, and
+  // location.state, which the History API keeps for that entry), so they're
+  // enough to key a sessionStorage slot that survives one. Scoped to the
+  // account id so a shared-device session change can never inherit someone
+  // else's in-progress answers.
+  const storageKey = `sqb_quiz_${id || 'anon'}_${numQuestions}_${types}_${source}_${isFinalQuiz ? 'f' : 'n'}`;
+
+  const savedRef = useRef(undefined);
+  if (savedRef.current === undefined) {
+    savedRef.current = (() => {
+      try {
+        const raw = safeGetSessionItem(storageKey);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (!parsed || !Array.isArray(parsed.questions) || parsed.questions.length === 0) return null;
+        return parsed;
+      } catch {
+        return null;
+      }
+    })();
+  }
+  // Consumed on the fetch effect's first run only — a later refetch (manual
+  // retry, changed params) must hit the network like normal, not keep
+  // replaying the same restored snapshot forever.
+  const skipInitialFetchRef = useRef(!!savedRef.current);
+
+  const [questions, setQuestions] = useState(() => savedRef.current?.questions || []);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(() => savedRef.current?.currentQuestionIndex || 0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [quizFinished, setQuizFinished] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => !savedRef.current);
   const [error, setError] = useState(null);
   const [dataSent, setDataSent] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
@@ -62,16 +130,24 @@ const QUIZ = () => {
   // (type,source) categories finished by the quiz just submitted.
   const [completedTopics, setCompletedTopics] = useState([]);
   const quizStartTimeRef = useRef(Date.now());
-  const types = location.state?.types || 'mix';
-  // Default to the unified bank sentinel (a valid session source) so a stateless
-  // direct navigation to /quiz/:n still fetches and submits with a legal source.
-  const source = location.state?.source || 'MidgardGameBoy';
-  const timerMinutes = location.state?.timer || null;
-  const isFinalQuiz = location.state?.isFinalQuiz || false;
-  const { user, setUser, sessionToken } = useContext(UserContext);
-  const [timeRemaining, setTimeRemaining] = useState(timerMinutes ? timerMinutes * 60 : null);
+
+  // Absolute deadline, not "seconds remaining" — computed once (restored, or
+  // fresh from timerMinutes) so a refresh mid-countdown resumes the real
+  // remaining time instead of re-arming the full timer or freezing it.
+  const deadlineRef = useRef(
+    savedRef.current?.deadline || (timerMinutes ? Date.now() + timerMinutes * 60000 : null)
+  );
+
+  const [timeRemaining, setTimeRemaining] = useState(() => {
+    if (!deadlineRef.current) return null;
+    return Math.max(0, Math.floor((deadlineRef.current - Date.now()) / 1000));
+  });
   const [timerExpired, setTimerExpired] = useState(false);
-  const [questionAnswers, setQuestionAnswers] = useState({});
+  const [questionAnswers, setQuestionAnswers] = useState(() => savedRef.current?.questionAnswers || {});
+  // Indexes whose answer has been revealed in study mode. Held here rather than
+  // in <Question> because that component is keyed by index and remounts on
+  // every navigation, which would reset the reveal when the student goes back.
+  const [revealedIndexes, setRevealedIndexes] = useState(() => new Set(savedRef.current?.revealedIndexes || []));
   const [showUnansweredPopup, setShowUnansweredPopup] = useState(false);
   const [unansweredCount, setUnansweredCount] = useState(0);
   const [countdown, setCountdown] = useState(2);
@@ -80,103 +156,61 @@ const QUIZ = () => {
   // type is subscriber-only. Rendered as an upsell screen, never a redirect.
   const [paywalled, setPaywalled] = useState(null);
 
-  const protectedGet = async (url, config = {}) => {
-    if (!user || !sessionToken) throw new Error('Not authenticated');
-    const urlWithUser = url + (url.includes('?') ? '&' : '?') + `username=${encodeURIComponent(user.username)}`;
-    try {
-      return await axios.get(urlWithUser, { ...config, headers: { ...(config.headers || {}), Authorization: `Bearer ${sessionToken}` } });
-    } catch (err) {
-      if (err.response && err.response.status === 401) {
-        setUser(null, null);
-        localStorage.removeItem('user'); localStorage.removeItem('sessionToken');
-        window.location.href = '/login?session=expired';
-        return;
-      }
-      throw err;
-    }
-  };
-  // Helper for protected POST
-  const protectedPost = async (url, data, config = {}) => {
-    if (!user || !sessionToken) throw new Error('Not authenticated');
-    const body = { ...data, username: user.username };
-    try {
-      return await axios.post(url, body, { ...config, headers: { ...(config.headers || {}), Authorization: `Bearer ${sessionToken}` } });
-    } catch (err) {
-      if (err.response && err.response.status === 401) {
-        setUser(null, null);
-        localStorage.removeItem('user'); localStorage.removeItem('sessionToken');
-        window.location.href = '/login?session=expired';
-        return;
-      }
-      throw err;
-    }
-  };
-
-  // Timer effect
+  // Timer effect — the updater is pure now (just the decrement). StrictMode
+  // double-invokes updaters; the old version called setTimerExpired,
+  // setFinalDuration and setQuizFinished from inside this one, which meant
+  // those three could each fire twice per real tick in dev.
   useEffect(() => {
     if (!timerMinutes || timerExpired || quizFinished) return;
 
     const timer = setInterval(() => {
-      setTimeRemaining(prev => {
-        if (prev <= 1) {
-          setTimerExpired(true);
-          // Store the final duration when timer expires
-          const duration = Math.floor((Date.now() - quizStartTimeRef.current) / 1000);
-          setFinalDuration(duration);
-          setQuizFinished(true);
-          return 0;
-        }
-        return prev - 1;
-      });
+      setTimeRemaining(prev => (prev !== null && prev > 0 ? prev - 1 : 0));
     }, 1000);
 
     return () => clearInterval(timer);
   }, [timerMinutes, timerExpired, quizFinished]);
 
+  // Expiry side effects live here instead — run exactly once, the render
+  // after timeRemaining actually reaches 0.
   useEffect(() => {
+    if (!timerMinutes || timerExpired || quizFinished) return;
+    if (timeRemaining !== 0) return;
+    setTimerExpired(true);
+    setFinalDuration(Math.floor((Date.now() - quizStartTimeRef.current) / 1000));
+    setQuizFinished(true);
+  }, [timeRemaining, timerMinutes, timerExpired, quizFinished]);
+
+  useEffect(() => {
+    if (skipInitialFetchRef.current) {
+      // The restored snapshot already has everything this effect would fetch.
+      skipInitialFetchRef.current = false;
+      return undefined;
+    }
+
+    const controller = new AbortController();
+
     const fetchQuestions = async () => {
       try {
         setLoading(true);
         setError(null);
         setCategoryDone(null);
 
-        // Add userId to params for non-trial users to filter completed questions
-        const params = {
-          limit: numQuestions,
-          types: types,
-          source: source
-        };
+        const params = { limit: numQuestions, types, source };
+        if (id) params.userId = id;
 
-        // Add userId for progress filtering
-        if (id) {
-          params.userId = id;
-        }
-
-        // Use different endpoint based on quiz type
-        let endpoint, response;
-
+        let response;
         if (isFinalQuiz) {
-          // Final quiz is only for authenticated users
           if (!user || !sessionToken) {
             setError(t.errFinalAuth);
             setLoading(false);
             return;
           }
-
-          // Final quiz endpoint - get all questions including previously answered ones
-          endpoint = '/final-quiz/questions';
-          response = await protectedGet(`${Globals.URL}${endpoint}`, {
-            params: {
-              questionType: types,
-              source: source
-            }
+          response = await apiClient.get('/final-quiz/questions', {
+            params: { questionType: types, source },
+            signal: controller.signal,
           });
         } else {
-          // Regular quiz endpoint
-          endpoint = '/api/questions';
-          response = await protectedGet(`${Globals.URL}${endpoint}`, {
-            params: params
-          });
+          response = await apiClient.get('/api/questions', { params, signal: controller.signal });
         }
 
         if (response.data.questions?.length > 0) {
@@ -195,17 +229,15 @@ const QUIZ = () => {
           setError(t.errNoQuestions);
         }
       } catch (err) {
+        if (err.code === 'ERR_CANCELED' || err.name === 'CanceledError') return;
         // 402 = the free question allowance is spent (or this is a
         // subscriber-only quiz type). NOT a lockout and NOT an error: the
         // account is fine, there are simply no free questions left to serve.
-        // Shown in place as an upsell rather than redirected — apiClient no
-        // longer bounces the window on 402, deliberately.
         if (err.response?.status === 402) {
           setPaywalled(err.response.data?.reason || 'free_allowance_exhausted');
         } else {
           console.error('Error fetching questions:', err);
           setError(t.errLoadFailed);
-          // Don't auto-redirect, let user retry
         }
       } finally {
         setLoading(false);
@@ -213,7 +245,8 @@ const QUIZ = () => {
     };
 
     fetchQuestions();
-  }, [numQuestions, navigate, types, source, id, retryCount]);
+    return () => controller.abort();
+  }, [numQuestions, types, source, id, retryCount, isFinalQuiz, user, sessionToken, t]);
 
   const handleRetry = () => {
     setError(null);
@@ -229,7 +262,7 @@ const QUIZ = () => {
     setResettingCategory(true);
     try {
       const typesArr = (!types || types === 'mix') ? [] : types.split(',');
-      await protectedPost(`${Globals.URL}/api/reset-progress`, {
+      await apiClient.post('/api/reset-progress', {
         userId: id,
         source,
         types: typesArr
@@ -238,6 +271,13 @@ const QUIZ = () => {
       setError(null);
       setRetryCount(prev => prev + 1); // refetch — questions are available again
     } catch (err) {
+      // Restarting a finished section is subscriber-only. The account that
+      // finished it may have lapsed since, so this is a reachable path and
+      // deserves the paywall rather than "we could not reset this section".
+      if (err?.response?.status === 402) {
+        navigate('/subscribe?reason=reset_requires_subscription');
+        return;
+      }
       console.error('Error resetting category progress:', err);
       setError(t.errResetFailed);
       setCategoryDone(null);
@@ -247,12 +287,25 @@ const QUIZ = () => {
   };
 
   const handleSelectOption = (option) => {
+    // In study mode the first pick is final: the answer is about to be shown,
+    // so allowing a change afterwards would let the score be edited with the
+    // answer in view.
+    if (studyMode && revealedIndexes.has(currentQuestionIndex)) return;
+
     setSelectedAnswer(option);
     // Save answer for current question
     setQuestionAnswers(prev => ({
       ...prev,
       [currentQuestionIndex]: option
     }));
+
+    if (studyMode) {
+      setRevealedIndexes(prev => {
+        const next = new Set(prev);
+        next.add(currentQuestionIndex);
+        return next;
+      });
+    }
   };
 
   const handleNextQuestion = () => {
@@ -331,6 +384,39 @@ const QUIZ = () => {
     }
   }, [questions, currentQuestionIndex]);
 
+  // Persist progress on every change, and clear it once there is nothing left
+  // to protect (submitted, or the whole attempt is done). This is the write
+  // side of the autosave read at the top of the component.
+  useEffect(() => {
+    if (quizFinished || dataSent) {
+      safeRemoveSessionItem(storageKey);
+      return;
+    }
+    if (questions.length === 0) return;
+    const toSave = {
+      questions,
+      questionAnswers,
+      currentQuestionIndex,
+      revealedIndexes: [...revealedIndexes],
+      deadline: deadlineRef.current,
+    };
+    safeSetSessionItem(storageKey, JSON.stringify(toSave));
+  }, [questions, questionAnswers, currentQuestionIndex, revealedIndexes, quizFinished, dataSent, storageKey]);
+
+  // Native "leave site?" prompt while there is progress a refresh could still
+  // lose track of visually (autosave covers the data, but a closed tab still
+  // ends the session) — only once at least one question has been answered,
+  // so it never fires on a quiz the student hasn't actually started.
+  useEffect(() => {
+    if (quizFinished || dataSent || Object.keys(questionAnswers).length === 0) return;
+    const onBeforeUnload = (e) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [quizFinished, dataSent, questionAnswers]);
+
 
   useEffect(() => {
     const sendQuizData = async () => {
@@ -338,19 +424,11 @@ const QUIZ = () => {
 
       // Build answers array from questionAnswers
       const validQuestions = questions.filter(isValidQuestion);
-      const finalAnswers = validQuestions.map((question, index) => {
-        const selectedAnswer = questionAnswers[index];
-        const isCorrect = selectedAnswer === question.correct_option;
-        return {
-          question: question.question_text,
-          selected: selectedAnswer,
-          correct: question.correct_option,
-          isCorrect,
-          topic: question.question_type
-        };
-      });
-
-      if (finalAnswers.length !== validQuestions.length || validQuestions.length === 0) return;
+      if (validQuestions.length === 0) return;
+      // buildAnswers maps every validQuestion 1:1, so finalAnswers.length can
+      // never differ from validQuestions.length — that comparison used to
+      // sit here too, permanently true and dead.
+      const finalAnswers = buildAnswers(validQuestions, questionAnswers);
 
       setDataSent(true);
       const duration = finalDuration;
@@ -384,8 +462,6 @@ const QUIZ = () => {
           });
 
           sessionData = {
-            username: user.username,
-            sessionToken: sessionToken,
             userId: id,
             questionType: types,
             source: source,
@@ -415,7 +491,7 @@ const QUIZ = () => {
           };
         }
 
-        const sessionRes = await protectedPost(`${Globals.URL}${endpoint}`, sessionData);
+        const sessionRes = await apiClient.post(endpoint, sessionData);
         const quiz_session_id = sessionRes.data.id;
 
         // The server tells us which (type, source) topics this quiz just
@@ -438,7 +514,7 @@ const QUIZ = () => {
               quiz_session_id: quiz_session_id
             };
 
-            return protectedPost(`${Globals.URL}/question-attempts`, attemptData);
+            return apiClient.post('/question-attempts', attemptData);
           });
 
           const { failures } = await settleWithRetry(attemptTasks);
@@ -455,7 +531,7 @@ const QUIZ = () => {
             const topicCorrect = topicAnswers.filter(a => a.isCorrect).length;
             const topicAccuracy = topicQuestions.length > 0 ? (topicCorrect / topicQuestions.length) * 100 : 0;
 
-            return protectedPost(`${Globals.URL}/topic-analysis`, {
+            return apiClient.post('/topic-analysis', {
               user_id: id,
               question_type: topic,
               total_answered: topicQuestions.length,
@@ -477,7 +553,7 @@ const QUIZ = () => {
     };
 
     sendQuizData();
-  }, [quizFinished, questionAnswers, questions, id, dataSent, finalDuration]);
+  }, [quizFinished, questionAnswers, questions, id, dataSent, finalDuration, isFinalQuiz, source, timerMinutes, types]);
 
   if (loading) {
     return <Loading />;
@@ -528,17 +604,7 @@ const QUIZ = () => {
 
   if (quizFinished) {
     const validQuestions = questions.filter(isValidQuestion);
-    const finalAnswers = validQuestions.map((question, index) => {
-      const selectedAnswer = questionAnswers[index];
-      const isCorrect = selectedAnswer === question.correct_option;
-      return {
-        question: question.question_text,
-        selected: selectedAnswer,
-        correct: question.correct_option,
-        isCorrect,
-        topic: question.question_type
-      };
-    });
+    const finalAnswers = buildAnswers(validQuestions, questionAnswers);
 
     const correctCount = finalAnswers.filter(a => a.isCorrect).length;
     const totalQuestions = finalAnswers.length;
@@ -560,9 +626,11 @@ const QUIZ = () => {
           setCurrentQuestionIndex(0);
           setSelectedAnswer(null);
           setQuestionAnswers({});
+          setRevealedIndexes(new Set());
           setQuizFinished(false);
           setDataSent(false);
           setFinalDuration(null);
+          deadlineRef.current = timerMinutes ? Date.now() + timerMinutes * 60000 : null;
           setTimeRemaining(timerMinutes ? timerMinutes * 60 : null);
           setTimerExpired(false);
           quizStartTimeRef.current = Date.now();
@@ -599,6 +667,7 @@ const QUIZ = () => {
         questionNumber={currentQuestionIndex + 1}
         totalQuestions={questions.length}
         selectedAnswer={selectedAnswer}
+        revealed={studyMode && revealedIndexes.has(currentQuestionIndex)}
         onSelectOption={handleSelectOption}
         onNextQuestion={handleNextQuestion}
         onPreviousQuestion={handlePreviousQuestion}

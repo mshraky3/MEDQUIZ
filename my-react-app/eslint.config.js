@@ -34,4 +34,12 @@ export default [
       ],
     },
   },
+  // Build/config files run under Node, not the browser — they need `process`,
+  // `__dirname`, etc., which globals.browser above doesn't provide.
+  {
+    files: ['vite.config.js', 'eslint.config.js'],
+    languageOptions: {
+      globals: globals.node,
+    },
+  },
 ]

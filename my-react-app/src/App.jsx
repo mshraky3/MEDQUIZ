@@ -5,7 +5,7 @@ import RouteSEO from './components/common/RouteSEO.jsx';
 
 function App() {
     return (
-        <div style={{ minHeight: '100vh', background: '#0b1021', margin: 0, padding: 0 }}>
+        <div style={{ minHeight: '100vh', background: 'var(--bg)', margin: 0, padding: 0 }}>
             <RouteSEO />
             <Landing />
             <Footer />

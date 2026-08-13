@@ -46,10 +46,18 @@ const testName = (req) => (testLang(req) === 'en' ? TEST_USERNAME_EN : TEST_USER
 
 // ─── Cron auth middleware ──────────────────────────────────────────────────
 // Vercel sets Authorization: Bearer <CRON_SECRET> on cron invocations.
-// Falls through without auth in development (no CRON_SECRET set).
+// Falls through without auth in development (no CRON_SECRET set) — but ONLY
+// in development. Without the NODE_ENV check, a CRON_SECRET that's missing
+// or unset in production (a forgotten env var on a fresh deploy) silently
+// opened every one of these routes to the public internet — including
+// broadcast-drain and daily-emails, either of which can mass-mail the entire
+// user base on request from anyone who finds the URL.
 const cronAuth = (req, res, next) => {
     const secret = process.env.CRON_SECRET;
-    if (!secret) return next(); // local dev — no secret configured
+    if (!secret) {
+        if (process.env.NODE_ENV !== 'production') return next(); // local dev only
+        return res.status(503).json({ success: false, message: 'Cron auth is not configured on this server (CRON_SECRET missing).' });
+    }
     const authHeader = req.headers.authorization || '';
     if (authHeader === `Bearer ${secret}`) return next();
     return res.status(401).json({ success: false, message: 'Unauthorized' });
@@ -194,7 +202,17 @@ router.get('/api/email-test/all', adminAuth, async (req, res) => {
  * POST /api/cron/welcome-emails
  * Finds accounts created 1+ hour ago with welcome_email_sent = FALSE
  * and a verified email. Sends welcome email and marks as sent.
- * Schedule: every hour  (0 * * * *)
+ *
+ * Actual schedule (vercel.json): once daily at 08:00 UTC — NOT hourly. A
+ * signup shortly after 08:00 waits nearly a full day for its welcome email.
+ * Vercel's Hobby plan caps the project at two native cron entries, both
+ * already spoken for (this route and /api/cron/daily-emails), so a genuinely
+ * hourly cadence needs the same workaround already used for
+ * /api/cron/lifecycle-emails and /api/cron/broadcast-drain: point an
+ * external scheduler (cron-job.org, GitHub Actions, Uptime Robot) at this
+ * URL with `Authorization: Bearer $CRON_SECRET`. Safe to call as often as
+ * you like — welcome_email_sent is the dedupe guard, so overlapping calls
+ * can't double-send.
  */
 router.get('/api/cron/welcome-emails', cronAuth, async (req, res) => {
     const db = req.db;

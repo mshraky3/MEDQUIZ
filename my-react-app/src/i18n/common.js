@@ -47,6 +47,14 @@ const common = {
             previous: 'السابق',
             quickLinks: 'روابط سريعة',
         },
+        // The explanation panel appears on the quiz screen and on every review
+        // surface, so its labels live here rather than in one page's copy. Only
+        // the labels are translated — the explanation itself is study material
+        // and stays in English in both languages.
+        explanation: {
+            title: 'لماذا هذه الإجابة صحيحة',
+            unavailable: 'لا يوجد شرح لهذا السؤال بعد.',
+        },
         loading: 'جاري التحميل',
         loadingEllipsis: 'جاري التحميل…',
         footer: {
@@ -55,6 +63,7 @@ const common = {
             information: 'معلومات',
             legal: 'الشؤون القانونية',
             contactHeading: 'تواصل',
+            groupPlans: 'الاشتراك الجماعي',
             suggestions: 'الاقتراحات',
             terms: 'شروط الخدمة',
             refund: 'سياسة الاسترداد',
@@ -147,6 +156,10 @@ const common = {
             previous: 'Previous',
             quickLinks: 'Quick links',
         },
+        explanation: {
+            title: 'Why this answer is correct',
+            unavailable: 'No explanation for this question yet.',
+        },
         loading: 'Loading',
         loadingEllipsis: 'Loading…',
         footer: {
@@ -155,6 +168,7 @@ const common = {
             information: 'Information',
             legal: 'Legal',
             contactHeading: 'Contact',
+            groupPlans: 'Group plans',
             suggestions: 'Suggestions',
             terms: 'Terms of Service',
             refund: 'Refund Policy',

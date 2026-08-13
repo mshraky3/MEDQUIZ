@@ -163,7 +163,7 @@ export function summarize(settled) {
  * same instant could each write a row for one payment. Collapsing by gateway
  * reference means a duplicate can never inflate revenue.
  */
-export async function fetchPaidEvents(db, { from = null, to = null, includeTest = false } = {}) {
+export async function fetchPaidEvents(db, { from = null, to = null, includeTest = false, gatewayRef = null } = {}) {
     // Test-environment payments are not revenue. `livemode IS NULL` (not yet
     // verified) counts as live so a gateway outage can never silently wipe
     // real income off the books.
@@ -172,6 +172,10 @@ export async function fetchPaidEvents(db, { from = null, to = null, includeTest 
     const params = [];
     if (from) { params.push(from); conds.push(`pe.received_at > $${params.length}`); }
     if (to) { params.push(to); conds.push(`pe.received_at <= $${params.length}`); }
+    // A single invoice lookup (GET /invoice/:gatewayRef.pdf) used to fetch
+    // every paid event ever recorded just to find one row by scanning it in
+    // JS — this narrows the query itself instead.
+    if (gatewayRef) { params.push(gatewayRef); conds.push(`pe.gateway_ref = $${params.length}`); }
 
     const { rows } = await db.query(`
         SELECT DISTINCT ON (pe.gateway_ref)

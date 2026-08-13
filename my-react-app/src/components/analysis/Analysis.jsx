@@ -1,9 +1,8 @@
-import React, { useEffect, useState, useCallback, useContext } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Icon from '../common/Icon.jsx';
-import { useNavigate, useLocation } from 'react-router-dom';
-import axios from 'axios';
-import './analysis.css';
-import Globals from '../../global.js';
+import Spinner from '../common/Spinner.jsx';
+import apiClient from '../../utils/apiClient.js';
 import OverallStats from './OverallStats';
 import TopicAnalysisTable from './TopicAnalysisTable';
 import QuestionAttemptsTable from './QuestionAttemptsTable';
@@ -11,261 +10,191 @@ import LastQuizSummary from './LastQuizSummary';
 import QuizHistory from './QuizHistory';
 import Progress from './Progress';
 import FinalExams from './FinalExams';
-import Spinner from '../common/Spinner.jsx';
 import { UserContext } from '../../UserContext';
 import { getTypeLabel } from '../../utils/typeLabels';
 import { userTrack } from '../../utils/tracks.js';
+import { readQuizMode } from '../../utils/quizMode.js';
 import { useCopy, useLang } from '../../i18n';
 import analysisCopy from '../../i18n/copy/analysis.js';
+import './Analysis.css';
 
-const BestWorstTopic = ({ best, worst }) => {
-  const t = useCopy(analysisCopy).bestWorst;
-  const { lang } = useLang();
+// Every quiz-start call site in the app (QUIZS.jsx, QuizLauncher.jsx) uses
+// this same sentinel for "the unified bank, no specific monthly collection" —
+// matching it here is what makes the "practise this" deep link land on a
+// real, answerable quiz instead of an empty category.
+const QUIZ_SOURCE_SENTINEL = 'MidgardGameBoy';
 
+// Module scope, not declared inside the component body — a component
+// declared inline gets a new identity every render, and React tears down and
+// rebuilds it (flicker, lost state) instead of just re-rendering it in place.
+const SectionLoader = ({ label }) => (
+  <div className="an-loader"><Spinner size="sm" />{label && <span>{label}</span>}</div>
+);
+
+const ErrorRetry = ({ message, onRetry }) => (
+  <div className="an-error-inline">
+    <p>{message}</p>
+    <button type="button" className="an-retry-btn" onClick={onRetry}>
+      <Icon name="refresh" size={14} />
+    </button>
+  </div>
+);
+
+/** One accuracy palette, reused everywhere a percentage needs a color. */
+function accuracyTone(pct) {
+  if (pct == null || Number.isNaN(pct)) return 'neutral';
+  if (pct >= 75) return 'high';
+  if (pct >= 50) return 'mid';
+  return 'low';
+}
+
+const CollapsibleSection = ({ title, icon, badge, defaultOpen, children }) => {
+  const t = useCopy(analysisCopy).drill;
+  const [open, setOpen] = useState(!!defaultOpen);
   return (
-  <section className="streak-section">
-    <h3 className="section-header">{t.title}</h3>
-    <div className="questions-grid">
-      <div className="question-card">
-        <div className="question-header">
-          <div className="question-meta">
-            <span className="type-badge" style={{
-              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-              color: 'white'
-            }}>
-              <Icon name="trophy" size={15} /> {t.best}
-            </span>
-            <span className="accuracy-badge" style={{
-              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-              color: 'white'
-            }}>
-              <Icon name="bar-chart" size={15} /> {best ? `${Number(best.accuracy).toFixed(1)}%` : '—'}
-            </span>
-          </div>
-        </div>
-
-        <div className="question-content">
-          <div className="topic-performance-text">
-            <h4>{t.strongest}</h4>
-            <p>{t.strongestHint}</p>
-          </div>
-
-          <div className="answers-section">
-            <div className="answer-row">
-              <span className="answer-label correct">{t.topic}</span>
-              <span className="answer-text correct">{best ? getTypeLabel(best.question_type, lang) : t.noData}</span>
-            </div>
-
-            <div className="answer-row">
-              <span className="answer-label accuracy">{t.accuracy}</span>
-              <span className="answer-text accuracy">{best ? `${Number(best.accuracy).toFixed(1)}%` : '—'}</span>
-            </div>
-
-            <div className="answer-row">
-              <span className="answer-label primary">{t.questions}</span>
-              <span className="answer-text primary">{best?.total_answered || 0}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="question-card">
-        <div className="question-header">
-          <div className="question-meta">
-            <span className="type-badge" style={{
-              background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-              color: 'white'
-            }}>
-              <Icon name="trending-down" size={15} /> {t.needsWork}
-            </span>
-            <span className="accuracy-badge" style={{
-              background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-              color: 'white'
-            }}>
-              <Icon name="bar-chart" size={15} /> {worst ? `${Number(worst.accuracy).toFixed(1)}%` : '—'}
-            </span>
-          </div>
-        </div>
-
-        <div className="question-content">
-          <div className="topic-performance-text">
-            <h4>{t.focus}</h4>
-            <p>{t.focusHint}</p>
-          </div>
-
-          <div className="answers-section">
-            <div className="answer-row">
-              <span className="answer-label wrong">{t.topic}</span>
-              <span className="answer-text wrong">{worst ? getTypeLabel(worst.question_type, lang) : t.noData}</span>
-            </div>
-
-            <div className="answer-row">
-              <span className="answer-label accuracy">{t.accuracy}</span>
-              <span className="answer-text accuracy">{worst ? `${Number(worst.accuracy).toFixed(1)}%` : '—'}</span>
-            </div>
-
-            <div className="answer-row">
-              <span className="answer-label primary">{t.questions}</span>
-              <span className="answer-text primary">{worst?.total_answered || 0}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
+    <section className={`an-drill${open ? ' is-open' : ''}`}>
+      <button
+        type="button"
+        className="an-drill-head"
+        aria-expanded={open}
+        aria-label={open ? t.collapse : t.expand}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <span className="an-drill-icon" aria-hidden="true"><Icon name={icon} size={17} /></span>
+        <span className="an-drill-title">{title}</span>
+        {badge != null && badge !== '' && <span className="an-drill-badge">{badge}</span>}
+        <span className="an-drill-chev" aria-hidden="true"><Icon name="chevron-down" size={17} /></span>
+      </button>
+      {open && <div className="an-drill-body">{children}</div>}
+    </section>
   );
 };
 
-// Floating Streak Badge component
-const FloatingStreakBadge = ({ streakData, loading: streakLoading }) => {
-  const t = useCopy(analysisCopy).streak;
-  const [expanded, setExpanded] = useState(false);
-  const currentStreak = streakData?.current_streak ?? 0;
-  const longestStreak = streakData?.longest_streak ?? 0;
-
-  if (streakLoading) return null;
-
-  return (
-    <div className={`floating-streak-badge ${expanded ? 'expanded' : ''}`} onClick={() => setExpanded(!expanded)}>
-      <div className="streak-badge-icon">
-        <span className="streak-fire">{currentStreak > 0 ? <Icon name="flame" size={18} /> : <Icon name="moon" size={18} />}</span>
-        <span className="streak-count">{currentStreak}</span>
-      </div>
-      {expanded && (
-        <div className="streak-badge-details">
-          <div className="streak-badge-row">
-            <span><Icon name="flame" size={15} /> {t.current}</span>
-            <strong>{currentStreak} {t.days}</strong>
-          </div>
-          <div className="streak-badge-row">
-            <span><Icon name="trophy" size={15} /> {t.longest}</span>
-            <strong>{longestStreak} {t.days}</strong>
-          </div>
-          <div className="streak-badge-hint">
-            {currentStreak > 0 ? <>{t.keepGoing} <Icon name="flame" size={14} /></> : t.startToday}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
+/** Same logic the page always had for finding a student's best/worst subject. */
+function calculateBestWorstTopics(topicAnalysis) {
+  if (!Array.isArray(topicAnalysis) || topicAnalysis.length === 0) return { best: null, worst: null };
+  const valid = topicAnalysis.filter((t) => t.total_answered > 0 && t.total_correct !== undefined);
+  if (valid.length === 0) return { best: null, worst: null };
+  const withAccuracy = valid
+    .map((t) => ({ ...t, accuracy: (t.total_correct / t.total_answered) * 100 }))
+    .sort((a, b) => b.accuracy - a.accuracy);
+  return { best: withAccuracy[0], worst: withAccuracy[withAccuracy.length - 1] };
+}
 
 const Analysis = () => {
-  const { user, setUser, sessionToken } = useContext(UserContext);
+  const { user, sessionToken } = useContext(UserContext);
   const t = useCopy(analysisCopy);
-  const { dir } = useLang();
+  const { lang, dir } = useLang();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const id = user?.id;
+  // Result.jsx sends a finished final/mock quiz here wanting the mock-exams
+  // drill-down open, not the collapsed default — the one surviving use of
+  // the old per-tab navigation state.
+  const openMockExams = location.state?.activeTab === 'final-exams';
+
+  // Same signal SummariesPage/AccountPage use — never a lockout, just what
+  // gates the (paid, irreversible) "start over" button below.
+  const isSubscriber = user?.accessAllowed !== false;
+
+  const [userAnalysis, setUserAnalysis] = useState(null);
+  const [streakData, setStreakData] = useState(null);
+  const [topicAnalysis, setTopicAnalysis] = useState([]);
+  const [lastQuizAttempts, setLastQuizAttempts] = useState([]);
+  const [wrongCount, setWrongCount] = useState(null);
+  const [examInfo, setExamInfo] = useState(null);
+
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+
   const [showResetModal, setShowResetModal] = useState(false);
   const [resetConfirm, setResetConfirm] = useState('');
   const [resetting, setResetting] = useState(false);
   const [resetError, setResetError] = useState('');
-  const location = useLocation();
-  const id = user?.id || location.state?.id;
-  const navigate = useNavigate();
 
-  const [data, setData] = useState({
-    userAnalysis: null,
-    streakData: null,
-    topicAnalysis: [],
-    questionAttempts: [],
-    questions: [],
-    lastQuizAttempts: []
-  });
-
-  const [loading, setLoading] = useState({
-    userAnalysis: true,
-    streakData: true,
-    topicAnalysis: true,
-    questionAttempts: true,
-    questions: true,
-    lastQuizAttempts: true
-  });
-
-  const [errors, setErrors] = useState({
-    userAnalysis: null,
-    streakData: null,
-    topicAnalysis: null,
-    questionAttempts: null,
-    questions: null,
-    lastQuizAttempts: null
-  });
-
-  const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState(location.state?.activeTab || 'overview');
-
-  // Function to calculate best and worst topics from topicAnalysis data
-  const calculateBestWorstTopics = useCallback((topicAnalysis) => {
-    if (!topicAnalysis || !Array.isArray(topicAnalysis) || topicAnalysis.length === 0) {
-      return { best: null, worst: null };
-    }
-
-    // Filter out topics with no questions answered
-    const validTopics = topicAnalysis.filter(topic =>
-      topic.total_answered > 0 && topic.total_correct !== undefined
-    );
-
-    if (validTopics.length === 0) {
-      return { best: null, worst: null };
-    }
-
-    // Calculate accuracy for each topic
-    const topicsWithAccuracy = validTopics.map(topic => ({
-      ...topic,
-      accuracy: (topic.total_correct / topic.total_answered) * 100
-    }));
-
-    // Sort by accuracy (highest first)
-    const sortedTopics = topicsWithAccuracy.sort((a, b) => b.accuracy - a.accuracy);
-
-    return {
-      best: sortedTopics[0],
-      worst: sortedTopics[sortedTopics.length - 1]
-    };
-  }, []);
-
-  // Helper to handle protected GET requests
-  const protectedGet = async (url, config = {}) => {
-    if (!user || !sessionToken) throw new Error('Not authenticated');
-    const urlWithUser = url + (url.includes('?') ? '&' : '?') + `username=${encodeURIComponent(user.username)}`;
+  const fetchAll = useCallback(async (signal) => {
     try {
-      return await axios.get(urlWithUser, { ...config, headers: { ...(config.headers || {}), Authorization: `Bearer ${sessionToken}` } });
-    } catch (err) {
-      if (err.response && err.response.status === 401) {
-        setUser(null, null);
-        localStorage.removeItem('user'); localStorage.removeItem('sessionToken');
-        window.location.href = '/login?session=expired';
-        return;
-      }
-      throw err;
-    }
-  };
+      const [uaRes, streakRes, topicsRes, wrongRes, examRes] = await Promise.all([
+        apiClient.get(`/user-analysis/${id}`, { signal }),
+        apiClient.get(`/user-streaks/${id}`, { signal }),
+        apiClient.get(`/topic-analysis/user/${id}`, { signal }),
+        // limit=1: the count (`total`) is what this needs, not the rows —
+        // the full wrong-question list is fetched by /wrong-questions itself.
+        apiClient.get(`/wrong-questions/user/${id}`, { params: { limit: 1 }, signal }),
+        apiClient.get('/api/exam-date', { signal }),
+      ]);
 
-  // Helper to handle protected POST requests
-  const protectedPost = async (url, body = {}, config = {}) => {
-    if (!user || !sessionToken) throw new Error('Not authenticated');
-    const urlWithUser = url + (url.includes('?') ? '&' : '?') + `username=${encodeURIComponent(user.username)}`;
-    try {
-      return await axios.post(urlWithUser, body, { ...config, headers: { ...(config.headers || {}), Authorization: `Bearer ${sessionToken}` } });
-    } catch (err) {
-      if (err.response && err.response.status === 401) {
-        setUser(null, null);
-        localStorage.removeItem('user'); localStorage.removeItem('sessionToken');
-        window.location.href = '/login?session=expired';
-        return;
-      }
-      throw err;
-    }
-  };
+      setUserAnalysis(uaRes.data);
+      setStreakData(streakRes.data);
+      setTopicAnalysis(topicsRes.data || []);
+      setWrongCount(wrongRes.data?.total ?? 0);
+      setExamInfo(examRes.data?.exam || null);
 
-  /**
-   * Wipe every performance record and start over. Irreversible, so it is gated
-   * behind a modal that requires typing a confirmation word — a plain "are you sure"
-   * is too easy to click through for something with no undo.
-   */
+      const latestQuizId = uaRes.data?.latest_quiz?.id;
+      if (latestQuizId) {
+        const attemptsRes = await apiClient.get(`/question-attempts/session/${latestQuizId}`, { signal });
+        setLastQuizAttempts(attemptsRes.data || []);
+      } else {
+        setLastQuizAttempts([]);
+      }
+      setLoadError(null);
+    } catch (err) {
+      if (err.code === 'ERR_CANCELED' || err.name === 'CanceledError') return;
+      setLoadError(t.loadError);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [id, t.loadError]);
+
+  useEffect(() => {
+    if (!id) {
+      navigate('/login');
+      return undefined;
+    }
+    const controller = new AbortController();
+    fetchAll(controller.signal);
+    return () => controller.abort();
+    // fetchAll is intentionally the only other dependency — it already
+    // captures `id`, and re-running this effect on every fetchAll identity
+    // change (which happens whenever t.loadError's object reference changes)
+    // would refetch on language toggle for no reason.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, navigate]);
+
+  const handleRefresh = useCallback(() => {
+    if (refreshing) return;
+    setRefreshing(true);
+    fetchAll();
+  }, [refreshing, fetchAll]);
+
+  const { best, worst } = useMemo(() => calculateBestWorstTopics(topicAnalysis), [topicAnalysis]);
+
+  const overallAccuracy = useMemo(() => {
+    const answered = userAnalysis?.total_questions_answered;
+    const correct = userAnalysis?.total_correct_options;
+    if (!answered) return null;
+    return (Number(correct || 0) / Number(answered)) * 100;
+  }, [userAnalysis]);
+
+  const currentStreak = streakData?.current_streak ?? 0;
+
+  const practiceWeakest = useCallback(() => {
+    if (!worst) {
+      navigate('/quizs');
+      return;
+    }
+    navigate('/quiz/10', {
+      state: { id, types: worst.question_type, source: QUIZ_SOURCE_SENTINEL, timer: null, mode: readQuizMode() },
+    });
+  }, [worst, id, navigate]);
+
   const handleResetAnalytics = async () => {
     setResetting(true);
     setResetError('');
     try {
-      await protectedPost(`${Globals.URL}/user-analysis/${id}/reset`);
+      await apiClient.post(`/user-analysis/${id}/reset`);
       setShowResetModal(false);
       setResetConfirm('');
       window.location.reload(); // simplest way to guarantee every panel re-reads
@@ -275,389 +204,174 @@ const Analysis = () => {
     }
   };
 
-  // Optimized fetch functions with better error handling
-  const fetchUserAnalysis = useCallback(async () => {
-    setLoading(prev => ({ ...prev, userAnalysis: true }));
-    setErrors(prev => ({ ...prev, userAnalysis: null }));
-    try {
-      const timestamp = Date.now();
-      const res = await protectedGet(`${Globals.URL}/user-analysis/${id}?_=${timestamp}`);
-      setData(prev => ({ ...prev, userAnalysis: res.data }));
-    } catch (err) {
-      setErrors(prev => ({ ...prev, userAnalysis: t.errUserAnalysis }));
-    } finally {
-      setLoading(prev => ({ ...prev, userAnalysis: false }));
-    }
-  }, [id, protectedGet]);
+  if (loading) {
+    return (
+      <div className="an-wrapper" dir={dir}>
+        <Spinner fullScreen label={t.loading} />
+      </div>
+    );
+  }
 
-  const fetchStreakData = useCallback(async () => {
-    setLoading(prev => ({ ...prev, streakData: true }));
-    setErrors(prev => ({ ...prev, streakData: null }));
-    try {
-      const timestamp = Date.now();
-      const res = await protectedGet(`${Globals.URL}/user-streaks/${id}?_=${timestamp}`);
-      setData(prev => ({ ...prev, streakData: res.data }));
-    } catch (err) {
-      setErrors(prev => ({ ...prev, streakData: t.errStreak }));
-    } finally {
-      setLoading(prev => ({ ...prev, streakData: false }));
-    }
-  }, [id, protectedGet]);
+  if (loadError && !userAnalysis) {
+    return (
+      <div className="an-wrapper" dir={dir}>
+        <div className="an-error-full">
+          <p>{loadError}</p>
+          <button type="button" className="primary-button" onClick={handleRefresh}>{t.retry}</button>
+        </div>
+      </div>
+    );
+  }
 
-  const fetchTopicAnalysis = useCallback(async () => {
-    setLoading(prev => ({ ...prev, topicAnalysis: true }));
-    setErrors(prev => ({ ...prev, topicAnalysis: null }));
-    try {
-      const timestamp = Date.now();
-      const res = await protectedGet(`${Globals.URL}/topic-analysis/user/${id}?_=${timestamp}`);
-      setData(prev => ({ ...prev, topicAnalysis: res.data || [] }));
-    } catch (err) {
-      setErrors(prev => ({ ...prev, topicAnalysis: t.errTopics }));
-    } finally {
-      setLoading(prev => ({ ...prev, topicAnalysis: false }));
-    }
-  }, [id, protectedGet]);
-
-  const fetchQuestionAttempts = useCallback(async () => {
-    setLoading(prev => ({ ...prev, questionAttempts: true }));
-    setErrors(prev => ({ ...prev, questionAttempts: null }));
-    try {
-      const timestamp = Date.now();
-      const res = await protectedGet(`${Globals.URL}/question-attempts/user/${id}?_=${timestamp}`, {
-        timeout: 10000 // 10 second timeout
-      });
-      setData(prev => ({ ...prev, questionAttempts: res.data || [] }));
-    } catch (err) {
-      console.error('Error fetching question attempts:', err);
-      setErrors(prev => ({
-        ...prev,
-        questionAttempts: err.code === 'ECONNABORTED'
-          ? t.errTimeout
-          : t.errAttempts
-      }));
-    } finally {
-      setLoading(prev => ({ ...prev, questionAttempts: false }));
-    }
-  }, [id, protectedGet]);
-
-  const fetchQuestions = useCallback(async () => {
-    setLoading(prev => ({ ...prev, questions: true }));
-    setErrors(prev => ({ ...prev, questions: null }));
-    try {
-      const timestamp = Date.now();
-      // Session-authenticated: /api/all-questions now requires a valid
-      // (subscriber) session server-side.
-      const res = await protectedGet(`${Globals.URL}/api/all-questions?_=${timestamp}`);
-      setData(prev => ({ ...prev, questions: res.data.questions || [] }));
-    } catch (err) {
-      setErrors(prev => ({ ...prev, questions: t.errQuestions }));
-    } finally {
-      setLoading(prev => ({ ...prev, questions: false }));
-    }
-  }, [protectedGet]);
-
-  const fetchLastQuizAttempts = useCallback(async (latestQuizId) => {
-    if (!latestQuizId) {
-      setData(prev => ({ ...prev, lastQuizAttempts: [] }));
-      setLoading(prev => ({ ...prev, lastQuizAttempts: false }));
-      setErrors(prev => ({ ...prev, lastQuizAttempts: null }));
-      return;
-    }
-    setLoading(prev => ({ ...prev, lastQuizAttempts: true }));
-    setErrors(prev => ({ ...prev, lastQuizAttempts: null }));
-    try {
-      const res = await protectedGet(`${Globals.URL}/question-attempts/session/${latestQuizId}`);
-      setData(prev => ({ ...prev, lastQuizAttempts: res.data || [] }));
-    } catch (err) {
-      setErrors(prev => ({ ...prev, lastQuizAttempts: t.errLastQuiz }));
-    } finally {
-      setLoading(prev => ({ ...prev, lastQuizAttempts: false }));
-    }
-  }, [protectedGet]);
-
-  // Optimized parallel loading for better performance
-  const fetchAll = useCallback(async () => {
-    if (refreshing) return; // Prevent multiple simultaneous calls
-
-    setRefreshing(true);
-
-    try {
-      // Load critical data in parallel (userAnalysis and streakData don't depend on each other)
-      // Fetch userAnalysis directly to get data immediately, while fetchStreakData runs in parallel
-      const [userAnalysisResponse] = await Promise.all([
-        protectedGet(`${Globals.URL}/user-analysis/${id}?_=${Date.now()}`).then(res => {
-          // Update state immediately
-          setData(prev => ({ ...prev, userAnalysis: res.data }));
-          setLoading(prev => ({ ...prev, userAnalysis: false }));
-          return res;
-        }).catch(err => {
-          setErrors(prev => ({ ...prev, userAnalysis: t.errUserAnalysis }));
-          setLoading(prev => ({ ...prev, userAnalysis: false }));
-          throw err;
-        }),
-        fetchStreakData()
-      ]);
-
-      const userAnalysisData = userAnalysisResponse.data;
-
-      // Load secondary data in parallel (these don't depend on userAnalysis)
-      await Promise.all([
-        fetchTopicAnalysis(),
-        fetchQuestionAttempts(),
-        fetchQuestions()
-      ]);
-
-      // Load last quiz attempts after userAnalysis is available
-      if (userAnalysisData && userAnalysisData.latest_quiz && userAnalysisData.latest_quiz.id) {
-        await fetchLastQuizAttempts(userAnalysisData.latest_quiz.id);
-      } else {
-        setData(prev => ({ ...prev, lastQuizAttempts: [] }));
-        setLoading(prev => ({ ...prev, lastQuizAttempts: false }));
-        setErrors(prev => ({ ...prev, lastQuizAttempts: null }));
-      }
-    } catch (error) {
-      console.error('Error loading analysis data:', error);
-    } finally {
-      setRefreshing(false);
-    }
-  }, [fetchStreakData, fetchTopicAnalysis, fetchQuestionAttempts, fetchQuestions, fetchLastQuizAttempts, id, refreshing, protectedGet]);
-
-  // Initial fetch only - no more annoying auto-refresh
-  useEffect(() => {
-    if (!id) {
-      navigate('/');
-      return;
-    }
-
-    // Only refresh data when component first mounts
-    // Small delay to ensure backend has processed quiz data
-    setTimeout(() => {
-      fetchAll();
-    }, 500);
-
-  }, [id, navigate]); // Remove fetchAll and refreshing from dependencies to prevent re-runs
-
-  // Manual refresh
-  const handleRefresh = useCallback(() => {
-    if (!refreshing) {
-      fetchAll();
-    }
-  }, [fetchAll, refreshing]);
-
-  // Section loading indicators
-  const SectionLoader = ({ message }) => (
-    <div className="section-loader">
-      <Spinner size="sm" />
-      <p style={{ color: '#888', fontSize: '1rem', marginTop: 8 }}>{message}</p>
-    </div>
-  );
-
-  // Error component with retry button
-  const ErrorWithRetry = ({ error, onRetry, retryFunction }) => (
-    <div className="error-screen">
-      <p>{error}</p>
-      <button
-        onClick={() => {
-          onRetry();
-          retryFunction();
-        }}
-        className="retry-button"
-        style={{
-          marginTop: '10px',
-          padding: '8px 16px',
-          backgroundColor: '#007bff',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: 'pointer'
-        }}
-      >
-        {t.retry}
-      </button>
-    </div>
-  );
-
-  // Calculate best and worst topics from the same data source
-  const { best, worst } = calculateBestWorstTopics(data.topicAnalysis);
-
-  // Tab configuration
-  const tabs = [
-    { id: 'final-exams', label: t.tabs.finalExams, icon: 'graduation-cap' },
-    { id: 'progress', label: t.tabs.progress, icon: 'target' },
-    { id: 'history', label: t.tabs.history, icon: 'chart-line' },
-    { id: 'recent', label: t.tabs.recent, icon: 'clock' },
-    { id: 'topics', label: t.tabs.topics, icon: 'book-open' },
-    { id: 'overview', label: t.tabs.overview, icon: 'chart-bar' }
-  ];
-
-  // Render tab content
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'overview':
-        return (
-          <>
-            {loading.userAnalysis ? (
-              <SectionLoader message={t.loadingOverall} />
-            ) : errors.userAnalysis ? (
-              <ErrorWithRetry
-                error={errors.userAnalysis}
-                onRetry={() => setErrors(prev => ({ ...prev, userAnalysis: null }))}
-                retryFunction={fetchUserAnalysis}
-              />
-            ) : (
-              <>
-                <OverallStats userAnalysis={data.userAnalysis} />
-                <BestWorstTopic best={best} worst={worst} />
-              </>
-            )}
-          </>
-        );
-
-      case 'topics':
-        return (
-          <>
-            {loading.topicAnalysis ? (
-              <SectionLoader message={t.loadingTopics} />
-            ) : errors.topicAnalysis ? (
-              <ErrorWithRetry
-                error={errors.topicAnalysis}
-                onRetry={() => setErrors(prev => ({ ...prev, topicAnalysis: null }))}
-                retryFunction={fetchTopicAnalysis}
-              />
-            ) : (
-              <TopicAnalysisTable topicAnalysis={data.topicAnalysis} />
-            )}
-          </>
-        );
-
-      case 'recent':
-        return (
-          <>
-            {loading.userAnalysis ? (
-              <SectionLoader message={t.loadingLastQuiz} />
-            ) : errors.userAnalysis ? null : (
-              <LastQuizSummary latest_quiz={data.userAnalysis?.latest_quiz} />
-            )}
-
-            {loading.lastQuizAttempts || loading.questions ? (
-              <SectionLoader message={t.loadingLastQuizQuestions} />
-            ) : errors.lastQuizAttempts || errors.questions ? (
-              <ErrorWithRetry
-                error={errors.lastQuizAttempts || errors.questions}
-                onRetry={() => {
-                  setErrors(prev => ({
-                    ...prev,
-                    lastQuizAttempts: null,
-                    questions: null
-                  }));
-                }}
-                retryFunction={() => {
-                  fetchQuestions();
-                  if (data.userAnalysis?.latest_quiz?.id) {
-                    fetchLastQuizAttempts(data.userAnalysis.latest_quiz.id);
-                  }
-                }}
-              />
-            ) : (
-              <QuestionAttemptsTable
-                questionAttempts={data.lastQuizAttempts}
-                questions={data.questions}
-                latestQuiz={data.userAnalysis?.latest_quiz}
-              />
-            )}
-          </>
-        );
-
-      case 'history':
-        return (
-          <QuizHistory
-            userId={id}
-            username={user?.username}
-            sessionToken={sessionToken}
-          />
-        );
-
-      case 'progress':
-        return (
-          <Progress
-            userId={id}
-            username={user?.username}
-            sessionToken={sessionToken}
-            track={userTrack(user)}
-          />
-        );
-
-      case 'final-exams':
-        if (!user?.username || !sessionToken) {
-          return (
-            <div className="analysis-container">
-              <Spinner fullScreen label={t.loadingUser} />
-            </div>
-          );
-        }
-        return (
-          <FinalExams
-            userId={id}
-            username={user.username}
-            sessionToken={sessionToken}
-          />
-        );
-
-      default:
-        return null;
-    }
-  };
+  const worstLabel = worst ? getTypeLabel(worst.question_type, lang) : null;
+  const examDays = examInfo && !examInfo.passed ? examInfo.daysRemaining : null;
 
   return (
-    <div className="analysis-wrapper fade-in" dir={dir}>
-        <h2 className="screen-title">{t.title}</h2>
+    <div className="an-wrapper fade-in" dir={dir}>
+      <h1 className="an-page-title">{t.title}</h1>
 
-        {/* Tab Navigation */}
-        <div className="tab-navigation-container">
-          <FloatingStreakBadge streakData={data.streakData} loading={loading.streakData} />
-          <div className="tab-navigation">
-            {tabs.map(tab => (
-              <button
-                key={tab.id}
-                className={`tab-button ${activeTab === tab.id ? 'active' : ''}`}
-                onClick={() => setActiveTab(tab.id)}
-              >
-                <span className={`tab-icon icon-${tab.icon}`}></span>
-                <span className="tab-label">{tab.label}</span>
-              </button>
-            ))}
+      {/* .an-hero only changes layout at the desktop breakpoint (side by side
+          instead of stacked) — see Analysis.css. Below it, both children
+          render exactly as before. */}
+      <div className="an-hero">
+        {/* "Do this next" — the only thing meant to be read above the fold. */}
+        <section className="an-next-card">
+          <span className="an-next-eyebrow">{t.nextStep.eyebrow}</span>
+
+          {worst ? (
+            <>
+              <div className="an-next-row">
+                <span className="an-next-label">{t.nextStep.weakestLabel}</span>
+                <span className={`an-next-pct tone-${accuracyTone(worst.accuracy)}`}>
+                  {Number(worst.accuracy).toFixed(0)}%
+                </span>
+              </div>
+              <p className="an-next-topic">{worstLabel}</p>
+            </>
+          ) : (
+            <p className="an-next-topic">{t.nextStep.noDataYet}</p>
+          )}
+
+          <ul className="an-next-facts">
+            {wrongCount != null && wrongCount > 0 && (
+              <li><Icon name="alert-triangle" size={14} /> {t.nextStep.wrongCount(wrongCount)}</li>
+            )}
+            <li>
+              <Icon name="calendar" size={14} />{' '}
+              {examInfo == null
+                ? t.nextStep.noExam
+                : examInfo.passed
+                  ? t.nextStep.examPassed
+                  : examDays === 0
+                    ? t.nextStep.examToday
+                    : t.nextStep.examIn(examDays)}
+            </li>
+          </ul>
+
+          <button type="button" className="an-next-cta" onClick={practiceWeakest}>
+            {worst ? t.nextStep.cta(worstLabel) : t.nextStep.ctaGeneric}
+          </button>
+        </section>
+
+        {/* Readiness + streak — replaces the old floating streak badge and the
+            overview tab's headline numbers with one glanceable row. */}
+        <div className="an-stat-row">
+          <div className="an-stat-pill">
+            <span className="an-stat-label">{t.nextStep.readiness}</span>
+            <span className={`an-stat-value tone-${accuracyTone(overallAccuracy)}`}>
+              {overallAccuracy == null ? '—' : `${overallAccuracy.toFixed(0)}%`}
+            </span>
+          </div>
+          <div className="an-stat-pill">
+            <span className="an-stat-label"><Icon name="flame" size={13} /></span>
+            <span className="an-stat-value">
+              {currentStreak > 0 ? t.nextStep.streakDays(currentStreak) : t.nextStep.noStreak}
+            </span>
           </div>
         </div>
+      </div>
 
-        {/* Tab Content */}
-        <div className="tab-content">
-          {renderTabContent()}
-        </div>
+      {/* Drill-downs replace the six-tab strip — no more horizontal
+          scroller hiding tabs off-screen on a 360px phone, and no more
+          landing on the LAST tab (old default: 'overview', 6th of 6). */}
+      <div className="an-drills">
+        <CollapsibleSection title={t.drill.overview} icon="bar-chart" defaultOpen>
+          <OverallStats userAnalysis={userAnalysis} />
+          {(best || worst) && (
+            <div className="questions-grid an-bestworst-grid">
+              {best && (
+                <div className="question-card">
+                  <div className="question-header">
+                    <span className="type-badge tone-high"><Icon name="trophy" size={14} /> {t.bestWorst.best}</span>
+                  </div>
+                  <div className="question-content">
+                    <p className="topic-performance-text">{getTypeLabel(best.question_type, lang)}</p>
+                    <span className={`an-stat-value tone-${accuracyTone(best.accuracy)}`}>{best.accuracy.toFixed(0)}%</span>
+                  </div>
+                </div>
+              )}
+              {worst && (
+                <div className="question-card">
+                  <div className="question-header">
+                    <span className="type-badge tone-low"><Icon name="trending-down" size={14} /> {t.bestWorst.needsWork}</span>
+                  </div>
+                  <div className="question-content">
+                    <p className="topic-performance-text">{getTypeLabel(worst.question_type, lang)}</p>
+                    <span className={`an-stat-value tone-${accuracyTone(worst.accuracy)}`}>{worst.accuracy.toFixed(0)}%</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </CollapsibleSection>
 
-        {/* Action Buttons */}
-        <div className="button-bar">
-          <button
-            onClick={() => navigate("/wrong-questions")}
-            className="secondary-button"
-          >
-            <Icon name="book-open" size={15} /> {t.actions.reviewWrong}
-          </button>
-          <button
-            onClick={handleRefresh}
-            className="secondary-button"
-            disabled={refreshing}
-          >
-            {refreshing ? <><Icon name="refresh" size={14} /> {t.actions.refreshing}</> : <><Icon name="refresh" size={14} /> {t.actions.refresh}</>}
-          </button>
-          <button
-            onClick={() => navigate("/quizs", { state: { id } })}
-            className="primary-button"
-          >
-            {t.actions.newQuiz}
-          </button>
-        </div>
+        <CollapsibleSection title={t.drill.bySpecialty} icon="book-open" badge={topicAnalysis.length || null}>
+          <TopicAnalysisTable topicAnalysis={topicAnalysis} />
+        </CollapsibleSection>
 
-        {/* Danger zone — irreversible, so it sits apart from the normal actions */}
+        <CollapsibleSection title={t.drill.progress} icon="target">
+          <Progress userId={id} username={user?.username} sessionToken={sessionToken} track={userTrack(user)} />
+        </CollapsibleSection>
+
+        <CollapsibleSection title={t.drill.quizHistory} icon="trending-up">
+          <QuizHistory userId={id} username={user?.username} sessionToken={sessionToken} />
+        </CollapsibleSection>
+
+        <CollapsibleSection title={t.drill.mockExams} icon="graduation-cap" defaultOpen={openMockExams}>
+          {user?.username && sessionToken ? (
+            <FinalExams userId={id} username={user.username} sessionToken={sessionToken} />
+          ) : (
+            <SectionLoader label={t.loadingUser} />
+          )}
+        </CollapsibleSection>
+
+        <CollapsibleSection title={t.drill.lastQuizReview} icon="clock">
+          <LastQuizSummary latest_quiz={userAnalysis?.latest_quiz} onRefresh={handleRefresh} />
+          <QuestionAttemptsTable questionAttempts={lastQuizAttempts} />
+        </CollapsibleSection>
+      </div>
+
+      {loadError && (
+        <ErrorRetry message={loadError} onRetry={handleRefresh} />
+      )}
+
+      <div className="button-bar">
+        <button type="button" onClick={() => navigate('/wrong-questions')} className="secondary-button">
+          <Icon name="book-open" size={15} /> {t.actions.reviewWrong}
+        </button>
+        <button type="button" onClick={handleRefresh} className="secondary-button" disabled={refreshing}>
+          <Icon name="refresh" size={14} /> {refreshing ? t.actions.refreshing : t.actions.refresh}
+        </button>
+        <button type="button" onClick={() => navigate('/quizs', { state: { id } })} className="primary-button">
+          {t.actions.newQuiz}
+        </button>
+      </div>
+
+      {/* Danger zone — irreversible, so it sits apart from the normal actions.
+          Subscribers only, matching the server (POST /user-analysis/:id/reset
+          is behind subscriberOnly): starting over is a paid convenience, and a
+          free account's single run at 40 questions has nothing worth clearing. */}
+      {isSubscriber && (
         <div className="danger-zone">
           <div className="danger-zone-text">
             <strong>{t.reset.zoneTitle}</strong>
@@ -667,47 +381,48 @@ const Analysis = () => {
             <Icon name="trash" size={15} /> {t.reset.zoneButton}
           </button>
         </div>
+      )}
 
-        {showResetModal && (
-          <div className="reset-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="reset-modal-title">
-            <div className="reset-modal">
-              <h2 id="reset-modal-title"><Icon name="alert-triangle" size={19} /> {t.reset.modalTitle}</h2>
-              <p className="reset-modal-lead">{t.reset.lead}</p>
-              <ul className="reset-modal-list">
-                {t.reset.items.map((item) => <li key={item}>{item}</li>)}
-              </ul>
-              <p className="reset-modal-keep"><Icon name="check-circle" size={14} /> {t.reset.keep}</p>
+      {showResetModal && (
+        <div className="reset-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="reset-modal-title">
+          <div className="reset-modal">
+            <h2 id="reset-modal-title"><Icon name="alert-triangle" size={19} /> {t.reset.modalTitle}</h2>
+            <p className="reset-modal-lead">{t.reset.lead}</p>
+            <ul className="reset-modal-list">
+              {t.reset.items.map((item) => <li key={item}>{item}</li>)}
+            </ul>
+            <p className="reset-modal-keep"><Icon name="check-circle" size={14} /> {t.reset.keep}</p>
 
-              <label className="reset-modal-label" htmlFor="reset-confirm">
-                {t.reset.confirmLabelBefore} <b>{t.reset.confirmWord}</b> {t.reset.confirmLabelAfter}
-              </label>
-              <input
-                id="reset-confirm"
-                className="reset-modal-input"
-                value={resetConfirm}
-                onChange={(e) => setResetConfirm(e.target.value)}
-                autoComplete="off"
-                disabled={resetting}
-              />
+            <label className="reset-modal-label" htmlFor="reset-confirm">
+              {t.reset.confirmLabelBefore} <b>{t.reset.confirmWord}</b> {t.reset.confirmLabelAfter}
+            </label>
+            <input
+              id="reset-confirm"
+              className="reset-modal-input"
+              value={resetConfirm}
+              onChange={(e) => setResetConfirm(e.target.value)}
+              autoComplete="off"
+              disabled={resetting}
+            />
 
-              {resetError && <p className="reset-modal-error">{resetError}</p>}
+            {resetError && <p className="reset-modal-error">{resetError}</p>}
 
-              <div className="reset-modal-actions">
-                <button type="button" className="secondary-button" onClick={() => setShowResetModal(false)} disabled={resetting}>
-                  {t.reset.cancel}
-                </button>
-                <button
-                  type="button"
-                  className="danger-button"
-                  onClick={handleResetAnalytics}
-                  disabled={resetConfirm.trim() !== t.reset.confirmWord || resetting}
-                >
-                  {resetting ? t.reset.deleting : t.reset.deleteAll}
-                </button>
-              </div>
+            <div className="reset-modal-actions">
+              <button type="button" className="secondary-button" onClick={() => setShowResetModal(false)} disabled={resetting}>
+                {t.reset.cancel}
+              </button>
+              <button
+                type="button"
+                className="danger-button"
+                onClick={handleResetAnalytics}
+                disabled={resetConfirm.trim() !== t.reset.confirmWord || resetting}
+              >
+                {resetting ? t.reset.deleting : t.reset.deleteAll}
+              </button>
             </div>
           </div>
-        )}
+        </div>
+      )}
     </div>
   );
 };

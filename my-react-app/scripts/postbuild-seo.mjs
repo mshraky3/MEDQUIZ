@@ -89,6 +89,7 @@ const SITEMAP_HINTS = {
   '/guides': { priority: '0.85', changefreq: 'weekly' },
   '/about': { priority: '0.7', changefreq: 'monthly' },
   '/faq': { priority: '0.7', changefreq: 'monthly' },
+  '/groups': { priority: '0.7', changefreq: 'monthly' },
   '/privacy': { priority: '0.4', changefreq: 'yearly' },
   '/terms': { priority: '0.4', changefreq: 'yearly' },
   '/refund-policy': { priority: '0.4', changefreq: 'yearly' }
