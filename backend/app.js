@@ -392,8 +392,8 @@ function ensureSchema() {
     })();
     return _schemaReady;
 }
-// Kick off at module load; non-blocking so it never delays the first request.
-ensureSchema();
+// Kicked off from the single bootstrapAll() sequence below, not individually
+// here — see that comment for why.
 
 // Lazily detect whether the payment/subscription columns from migration 001
 // exist yet. This lets the new payment-prep code deploy SAFELY before the
@@ -593,8 +593,7 @@ function ensurePaymentSchema() {
     })();
     return _paymentSchemaReady;
 }
-// Kick off at module load (after ensureSchema so accounts table exists).
-ensurePaymentSchema();
+// Kicked off from bootstrapAll() below.
 
 // Email notification functions (shared transport — see services/mailer.js)
 //
@@ -946,8 +945,7 @@ const ensureLoginHistoryTable = async () => {
     }
 };
 
-// Call on startup
-ensureLoginHistoryTable();
+// Kicked off from bootstrapAll() below.
 
 // ============================================
 // OTP TABLE INITIALIZATION
@@ -978,7 +976,7 @@ const ensureOtpTable = async () => {
         reportBootstrapFailure('ensureOtpTable', err);
     }
 };
-ensureOtpTable();
+// Kicked off from bootstrapAll() below.
 
 // ============================================
 // EMAIL CAMPAIGN COLUMNS INITIALIZATION
@@ -1005,7 +1003,7 @@ const ensureEmailCampaignColumns = async () => {
         reportBootstrapFailure('ensureEmailCampaignColumns', err);
     }
 };
-ensureEmailCampaignColumns();
+// Kicked off from bootstrapAll() below.
 
 // Temporary signup links (admin-generated free-account invites). Created at
 // startup like every other table so the feature never depends on the manual
@@ -1048,7 +1046,7 @@ const ensureTempLinksTables = async () => {
         reportBootstrapFailure('ensureTempLinksTables', err);
     }
 };
-ensureTempLinksTables();
+// Kicked off from bootstrapAll() below.
 
 const ensureQuestionReportsTable = async () => {
     try {
@@ -1072,7 +1070,7 @@ const ensureQuestionReportsTable = async () => {
         reportBootstrapFailure('ensureQuestionReportsTable', err);
     }
 };
-ensureQuestionReportsTable();
+// Kicked off from bootstrapAll() below.
 
 // ============================================
 // TOPIC SUMMARIES INITIALIZATION
@@ -1170,7 +1168,34 @@ const ensureSummariesTables = async () => {
         reportBootstrapFailure('ensureSummariesTables', err);
     }
 };
-ensureSummariesTables();
+// All 8 schema-bootstrap checks, run ONE AT A TIME rather than each firing
+// its own connection at module load. They used to run concurrently (8
+// simultaneous ensureXxx() calls, unawaited) — harmless when the database is
+// already warm, but on a cold start where the database itself is waking
+// from being idle, 8 simultaneous new-connection attempts hitting it at once
+// is exactly the shape of a burst of "Connection terminated due to
+// connection timeout" errors across unrelated bootstrap functions, which is
+// what started showing up after the pool's max was raised (previously max:5
+// silently throttled this to 5-at-a-time; max:10 let all 8 through
+// simultaneously). Sequencing them removes that burst regardless of pool
+// size, and also actually delivers the ordering ensurePaymentSchema's own
+// comment always claimed ("after ensureSchema so accounts table exists") —
+// true only by source-order before, never enforced.
+//
+// Still fire-and-forget from the request path's perspective (nothing awaits
+// bootstrapAll() itself) — a slightly slower total bootstrap is a fair trade
+// for not stalling the database on every cold start.
+async function bootstrapAll() {
+    await ensureSchema();
+    await ensurePaymentSchema();
+    await ensureLoginHistoryTable();
+    await ensureOtpTable();
+    await ensureEmailCampaignColumns();
+    await ensureTempLinksTables();
+    await ensureQuestionReportsTable();
+    await ensureSummariesTables();
+}
+bootstrapAll();
 
 // Helper function to parse user agent
 const parseUserAgent = (userAgent) => {
