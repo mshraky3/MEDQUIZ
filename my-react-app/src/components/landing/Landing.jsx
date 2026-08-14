@@ -168,7 +168,7 @@ const Landing = () => {
                     screens, where the fixed mobile bar already carries it. */}
                 <Link
                   to="/signup"
-                  className="btn btn-primary topbar-btn topbar-cta"
+                  className="btn primary topbar-btn topbar-cta"
                   onClick={() => trackSignupClick('topbar')}
                 >
                   {t.topbar.signup}
@@ -190,7 +190,7 @@ const Landing = () => {
               </h1>
               <p>{t.heroReturning.body}</p>
               <div className="cta-row">
-                <button className="btn btn-primary" onClick={handleContinue}>
+                <button className="btn primary" onClick={handleContinue}>
                   {t.heroReturning.primary}
                 </button>
                 <button className="btn ghost" onClick={handleLogout}>
@@ -205,7 +205,7 @@ const Landing = () => {
               <p>{t.hero.body}</p>
               <ExamCountdown copy={t.hero.examCountdown} />
               <div className="cta-row">
-                <Link to="/signup" className="btn btn-primary" onClick={() => trackSignupClick('hero')}>
+                <Link to="/signup" className="btn primary" onClick={() => trackSignupClick('hero')}>
                   {t.hero.primary}
                 </Link>
                 <button className="btn ghost" onClick={handleLogin}>
@@ -265,7 +265,7 @@ const Landing = () => {
                 signup button was two screens further down. */}
             {!isAuthenticated && (
               <div className="section-cta">
-                <Link to="/signup" className="btn btn-primary" onClick={() => trackSignupClick('tracks')}>
+                <Link to="/signup" className="btn primary" onClick={() => trackSignupClick('tracks')}>
                   {t.tracks.cta}
                 </Link>
                 <p className="section-cta-note">{t.tracks.ctaNote}</p>
@@ -282,7 +282,7 @@ const Landing = () => {
               and starts wanting it — so the tour ends with a way in. */}
           {!isAuthenticated && (
             <div className="section-cta">
-              <Link to="/signup" className="btn btn-primary" onClick={() => trackSignupClick('showcase')}>
+              <Link to="/signup" className="btn primary" onClick={() => trackSignupClick('showcase')}>
                 {t.showcase.cta}
               </Link>
               <p className="section-cta-note">{t.showcase.ctaNote}</p>
@@ -339,7 +339,7 @@ const Landing = () => {
 
             {!isAuthenticated && (
               <div className="section-cta">
-                <Link to="/signup" className="btn btn-primary" onClick={() => trackSignupClick('explain')}>
+                <Link to="/signup" className="btn primary" onClick={() => trackSignupClick('explain')}>
                   {t.explain.cta}
                 </Link>
                 <p className="section-cta-note">{t.explain.ctaNote}</p>
@@ -383,7 +383,7 @@ const Landing = () => {
                 decision moment, and a decision moment needs a button. */}
             {!isAuthenticated && (
               <div className="section-cta">
-                <Link to="/signup" className="btn btn-primary" onClick={() => trackSignupClick('compare')}>
+                <Link to="/signup" className="btn primary" onClick={() => trackSignupClick('compare')}>
                   {t.compare.cta}
                 </Link>
                 <p className="section-cta-note">{t.compare.ctaNote}</p>
@@ -414,7 +414,7 @@ const Landing = () => {
                 the alternative to doing nothing. */}
             {!isAuthenticated && (
               <div className="section-cta">
-                <Link to="/signup" className="btn btn-primary" onClick={() => trackSignupClick('cost')}>
+                <Link to="/signup" className="btn primary" onClick={() => trackSignupClick('cost')}>
                   {t.costOfWaiting.cta}
                 </Link>
                 <p className="section-cta-note">{t.costOfWaiting.ctaNote}</p>
@@ -454,7 +454,7 @@ const Landing = () => {
                     <li key={item}>{item}</li>
                   ))}
                 </ul>
-                <Link to="/signup" className="btn btn-primary price-card-cta" onClick={() => trackSignupClick('price_card')}>
+                <Link to="/signup" className="btn primary price-card-cta" onClick={() => trackSignupClick('price_card')}>
                   {t.value.cta}
                 </Link>
                 <p className="price-card-note">{t.value.note}</p>
@@ -511,7 +511,7 @@ const Landing = () => {
                   reachable from the card that describes it. */}
               {!isAuthenticated && (
                 <div className="section-cta">
-                  <Link to="/signup" className="btn btn-primary" onClick={() => trackSignupClick('flow')}>
+                  <Link to="/signup" className="btn primary" onClick={() => trackSignupClick('flow')}>
                     {t.flow.cta}
                   </Link>
                   <p className="section-cta-note">{t.flow.ctaNote}</p>
@@ -545,7 +545,7 @@ const Landing = () => {
                 subscription — say so where it is being read. */}
             {!isAuthenticated && (
               <div className="section-cta">
-                <Link to="/signup" className="btn btn-primary" onClick={() => trackSignupClick('news')}>
+                <Link to="/signup" className="btn primary" onClick={() => trackSignupClick('news')}>
                   {t.news.cta}
                 </Link>
                 <p className="section-cta-note">{t.news.ctaNote}</p>
@@ -580,7 +580,7 @@ const Landing = () => {
               <div className="cta-actions">
                 {isAuthenticated ? (
                   <>
-                    <button className="btn btn-primary" onClick={handleContinue}>
+                    <button className="btn primary" onClick={handleContinue}>
                       {t.ctaBand.returning.primary}
                     </button>
                     <button className="btn outline" onClick={handleLogout}>
@@ -589,7 +589,7 @@ const Landing = () => {
                   </>
                 ) : (
                   <>
-                    <Link to="/signup" className="btn btn-primary" onClick={() => trackSignupClick('cta_band')}>
+                    <Link to="/signup" className="btn primary" onClick={() => trackSignupClick('cta_band')}>
                       {t.ctaBand.visitor.primary}
                     </Link>
                     <button className="btn outline" onClick={handleLogin}>
@@ -606,7 +606,7 @@ const Landing = () => {
         <div className="mobile-cta">
           {isAuthenticated ? (
             <>
-              <button className="btn btn-primary" onClick={handleContinue}>
+              <button className="btn primary" onClick={handleContinue}>
                 {t.mobileCta.continue}
               </button>
               <button className="btn outline" onClick={handleLogout}>
@@ -615,7 +615,7 @@ const Landing = () => {
             </>
           ) : (
             <>
-              <Link to="/signup" className="btn btn-primary" onClick={() => trackSignupClick('mobile_bar')}>
+              <Link to="/signup" className="btn primary" onClick={() => trackSignupClick('mobile_bar')}>
                 {t.mobileCta.tryFree}
               </Link>
               <button className="btn outline" onClick={handleLogin}>
