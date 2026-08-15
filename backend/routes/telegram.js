@@ -120,9 +120,12 @@ async function handlePollAnswer(db, pollAnswer) {
 }
 
 router.post('/api/telegram/webhook', verifyTelegramSecret, async (req, res) => {
-    // Always 200 — Telegram retries aggressively on non-2xx, and a bug on our
-    // side shouldn't turn into a retry storm against api.telegram.org.
-    res.sendStatus(200);
+    // Must AWAIT the handling before responding — this is a Vercel serverless
+    // function, not a long-lived process. Sending the response first (so the
+    // handling runs "in the background") works locally but silently gets cut
+    // off on Vercel the instant the response flushes, since the invocation is
+    // free to freeze/terminate right then. Telegram tolerates several seconds
+    // before it considers the webhook slow, so there's no need to race this.
     const update = req.body || {};
     try {
         if (update.message) await handleMessage(req.db, update.message);
@@ -130,6 +133,9 @@ router.post('/api/telegram/webhook', verifyTelegramSecret, async (req, res) => {
     } catch (err) {
         console.error('telegram webhook error:', err);
     }
+    // Always 200 regardless of outcome — Telegram retries aggressively on
+    // non-2xx, and a bug on our side shouldn't turn into a retry storm.
+    res.sendStatus(200);
 });
 
 // ════════════════════════════════════════════════════════════
