@@ -1185,7 +1185,48 @@ const ensureSummariesTables = async () => {
 // Still fire-and-forget from the request path's perspective (nothing awaits
 // bootstrapAll() itself) — a slightly slower total bootstrap is a fair trade
 // for not stalling the database on every cold start.
+//
+// That said, sequencing within ONE process wasn't the whole story: the 8
+// functions above combine for 100+ idempotent ALTER/CREATE statements, and
+// that full sequence used to re-run on EVERY cold start. Fine with one
+// process — but Vercel spins up several Lambda instances concurrently under
+// real traffic, and each independently-running sequence piled up on the
+// same table locks (ALTER TABLE accounts, CREATE INDEX on questions, ...).
+// A statement stuck behind another instance's lock for longer than
+// query_timeout (15s) surfaces as "Query read timeout" — which is exactly
+// what showed up in prod repeatedly once traffic produced multiple
+// simultaneous cold starts, on `ensureSchema` in particular (the largest of
+// the 8, at ~40 statements).
+//
+// schema_bootstrap_version fixes that at the source: only the first cold
+// start after a deploy (or the very first boot) pays for the full sequence.
+// Every other concurrent or later cold start sees the version row already
+// there and returns after one cheap SELECT — no DDL, no lock contention.
+// Bump SCHEMA_BOOTSTRAP_VERSION whenever a statement is added to any of the
+// 8 ensureXxx() functions above, so the new statement actually runs on the
+// next deploy instead of being silently skipped forever.
+const SCHEMA_BOOTSTRAP_VERSION = 1;
 async function bootstrapAll() {
+    try {
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS schema_bootstrap_version (
+                version    INTEGER PRIMARY KEY,
+                applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            )
+        `);
+        const { rows: [current] } = await db.query(
+            `SELECT version FROM schema_bootstrap_version ORDER BY version DESC LIMIT 1`
+        );
+        if (current && current.version >= SCHEMA_BOOTSTRAP_VERSION) {
+            logger.info(`Schema already at bootstrap version ${current.version}, skipping DDL sequence`);
+            return;
+        }
+    } catch (err) {
+        // Version check itself failed (e.g. a timed-out connection) — fall
+        // through to the full sequence rather than silently skipping
+        // bootstrap forever.
+        reportBootstrapFailure('bootstrapAll:versionCheck', err);
+    }
     await ensureSchema();
     await ensurePaymentSchema();
     await ensureLoginHistoryTable();
@@ -1194,6 +1235,14 @@ async function bootstrapAll() {
     await ensureTempLinksTables();
     await ensureQuestionReportsTable();
     await ensureSummariesTables();
+    try {
+        await db.query(
+            `INSERT INTO schema_bootstrap_version (version) VALUES ($1) ON CONFLICT DO NOTHING`,
+            [SCHEMA_BOOTSTRAP_VERSION]
+        );
+    } catch (err) {
+        reportBootstrapFailure('bootstrapAll:versionWrite', err);
+    }
 }
 bootstrapAll();
 
