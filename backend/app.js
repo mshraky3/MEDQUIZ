@@ -92,7 +92,14 @@ const db = new Pool({
     // Vercel concurrency numbers if this still isn't enough.
     max: 10,
     idleTimeoutMillis: 10000, // Close idle clients after 10 seconds
-    connectionTimeoutMillis: 10000, // Wait up to 10 seconds for a connection (Vercel cold starts need more time)
+    // Was 10000. That's enough for a warm DB but not for the case this
+    // actually needs to survive: the FIRST query of a fresh Lambda cold
+    // start's pool, hitting Koyeb/Neon while its compute is still resuming
+    // from suspend — which is exactly the "Connection terminated due to
+    // connection timeout" seen repeatedly in prod on bootstrapAll's very
+    // first query. 20s gives that resume room to finish instead of the
+    // client giving up mid-handshake.
+    connectionTimeoutMillis: 20000,
     allowExitOnIdle: true, // Allow process to exit when pool is idle (important for serverless)
     maxUses: 7500, // Close (and replace) a connection after it has been used 7500 times
     // Without this, one runaway query (a missing index, an accidental
