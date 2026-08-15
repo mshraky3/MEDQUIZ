@@ -24,6 +24,7 @@ import notificationsRouter from './routes/notifications.js';
 import examDateRouter from './routes/examDate.js';
 import groupRoutes from './routes/groups.js';
 import trialRouter from './routes/trial.js';
+import telegramRouter from './routes/telegram.js';
 import { checkMilestones } from './services/notificationService.js';
 import {
     revenueSnapshot, subscriptionSnapshot, conversionSnapshot,
@@ -1168,7 +1169,84 @@ const ensureSummariesTables = async () => {
         reportBootstrapFailure('ensureSummariesTables', err);
     }
 };
-// All 8 schema-bootstrap checks, run ONE AT A TIME rather than each firing
+
+// Telegram bot/channel (see routes/telegram.js). telegram_users tracks bot
+// DM subscribers independently of website accounts — no login is required to
+// use the bot, so there is no account_id to hang this off. telegram_sent_questions
+// is the dedupe log that stops the daily channel post and /quiz repeating a
+// question too soon. telegram_quiz_attempts records answers to *private*
+// quiz-polls (channel polls are always anonymous, so those can't be tracked
+// per-user) — it's what /weakspots and the weekly DM job compute from.
+const ensureTelegramSchema = async () => {
+    try {
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS telegram_users (
+                id SERIAL PRIMARY KEY,
+                chat_id BIGINT UNIQUE NOT NULL,
+                username VARCHAR(64),
+                first_name VARCHAR(128),
+                track VARCHAR(20) NOT NULL DEFAULT '${DEFAULT_TRACK}',
+                started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                last_active_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                weak_topics_sent_at TIMESTAMPTZ DEFAULT NULL,
+                is_blocked BOOLEAN NOT NULL DEFAULT FALSE
+            )
+        `);
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS telegram_sent_questions (
+                id SERIAL PRIMARY KEY,
+                question_id INTEGER NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+                context VARCHAR(20) NOT NULL,
+                chat_id BIGINT,
+                sent_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            )
+        `);
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS telegram_quiz_attempts (
+                id SERIAL PRIMARY KEY,
+                chat_id BIGINT NOT NULL,
+                question_id INTEGER NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+                poll_id VARCHAR(64) UNIQUE NOT NULL,
+                is_correct BOOLEAN,
+                sent_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                answered_at TIMESTAMPTZ DEFAULT NULL
+            )
+        `);
+        await db.query(`CREATE INDEX IF NOT EXISTS idx_telegram_sent_questions_context ON telegram_sent_questions(context, sent_at DESC)`);
+        await db.query(`CREATE INDEX IF NOT EXISTS idx_telegram_sent_questions_question ON telegram_sent_questions(question_id, context)`);
+        await db.query(`CREATE INDEX IF NOT EXISTS idx_telegram_quiz_attempts_chat ON telegram_quiz_attempts(chat_id)`);
+        // Generic outbound-message log used ONLY for scheduled auto-delete.
+        // Telegram lets a bot delete its own channel posts at any age (it's an
+        // admin there), but only its own PRIVATE-chat messages sent within the
+        // last 48 hours — a hard platform limit with no workaround. So this is
+        // populated for channel posts only; DM messages are never logged here.
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS telegram_sent_messages (
+                id SERIAL PRIMARY KEY,
+                chat_id VARCHAR(64) NOT NULL,
+                message_id BIGINT NOT NULL,
+                delete_after TIMESTAMPTZ NOT NULL,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            )
+        `);
+        await db.query(`CREATE INDEX IF NOT EXISTS idx_telegram_sent_messages_delete_after ON telegram_sent_messages(delete_after)`);
+        // Rotation log for the weekly channel topic-summary post — picks the
+        // least-recently-posted summary each week, same pattern as
+        // telegram_sent_questions for the daily question.
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS telegram_sent_summaries (
+                id SERIAL PRIMARY KEY,
+                summary_id INTEGER NOT NULL REFERENCES summaries(id) ON DELETE CASCADE,
+                sent_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            )
+        `);
+        logger.info('telegram tables ensured');
+    } catch (err) {
+        reportBootstrapFailure('ensureTelegramSchema', err);
+    }
+};
+
+// All 9 schema-bootstrap checks, run ONE AT A TIME rather than each firing
 // its own connection at module load. They used to run concurrently (8
 // simultaneous ensureXxx() calls, unawaited) — harmless when the database is
 // already warm, but on a cold start where the database itself is waking
@@ -1186,7 +1264,7 @@ const ensureSummariesTables = async () => {
 // bootstrapAll() itself) — a slightly slower total bootstrap is a fair trade
 // for not stalling the database on every cold start.
 //
-// That said, sequencing within ONE process wasn't the whole story: the 8
+// That said, sequencing within ONE process wasn't the whole story: the 9
 // functions above combine for 100+ idempotent ALTER/CREATE statements, and
 // that full sequence used to re-run on EVERY cold start. Fine with one
 // process — but Vercel spins up several Lambda instances concurrently under
@@ -1203,9 +1281,9 @@ const ensureSummariesTables = async () => {
 // Every other concurrent or later cold start sees the version row already
 // there and returns after one cheap SELECT — no DDL, no lock contention.
 // Bump SCHEMA_BOOTSTRAP_VERSION whenever a statement is added to any of the
-// 8 ensureXxx() functions above, so the new statement actually runs on the
+// 9 ensureXxx() functions above, so the new statement actually runs on the
 // next deploy instead of being silently skipped forever.
-const SCHEMA_BOOTSTRAP_VERSION = 1;
+const SCHEMA_BOOTSTRAP_VERSION = 3;
 async function bootstrapAll() {
     try {
         await db.query(`
@@ -1235,6 +1313,7 @@ async function bootstrapAll() {
     await ensureTempLinksTables();
     await ensureQuestionReportsTable();
     await ensureSummariesTables();
+    await ensureTelegramSchema();
     try {
         await db.query(
             `INSERT INTO schema_bootstrap_version (version) VALUES ($1) ON CONFLICT DO NOTHING`,
@@ -6532,6 +6611,10 @@ app.use('/api/groups', (req, res, next) => { req.db = db; next(); }, groupRoutes
 // Retired trial heartbeat — answers 410 so tabs left open across the deploy
 // stop retrying. See routes/trial.js.
 app.use('/api/trial', requireSession, (req, res, next) => { req.db = db; next(); }, trialRouter);
+// Telegram bot/channel: webhook, cron endpoints, admin test/setup routes —
+// each declares its own full path (see routes/telegram.js), same mount style
+// as emailCampaignsRouter below.
+app.use('/', (req, res, next) => { req.db = db; next(); }, telegramRouter);
 
 /**
  * GET /api/progress/weekly — this week vs last week, for the hub's progress
