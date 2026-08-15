@@ -92,13 +92,12 @@ const db = new Pool({
     // Vercel concurrency numbers if this still isn't enough.
     max: 10,
     idleTimeoutMillis: 10000, // Close idle clients after 10 seconds
-    // Was 10000. That's enough for a warm DB but not for the case this
-    // actually needs to survive: the FIRST query of a fresh Lambda cold
-    // start's pool, hitting Koyeb/Neon while its compute is still resuming
-    // from suspend — which is exactly the "Connection terminated due to
-    // connection timeout" seen repeatedly in prod on bootstrapAll's very
-    // first query. 20s gives that resume room to finish instead of the
-    // client giving up mid-handshake.
+    // Was 10000, raised to survive a Koyeb/Neon compute resuming from suspend
+    // on a cold start's first connection. Worth keeping for that reason, but
+    // note it was NOT what fixed the repeated "Connection terminated due to
+    // connection timeout" alerts — those came from bootstrap work left in
+    // flight when the Lambda froze, where no timeout value can help because
+    // the freeze is unbounded. See bootstrapOnce() for the actual fix.
     connectionTimeoutMillis: 20000,
     allowExitOnIdle: true, // Allow process to exit when pool is idle (important for serverless)
     maxUses: 7500, // Close (and replace) a connection after it has been used 7500 times
@@ -114,9 +113,9 @@ const db = new Pool({
     query_timeout: 15000,
 });
 
-// Every ensure*() bootstrap below runs fire-and-forget at module load and
-// swallows its own errors (so one failed CREATE TABLE can't stop the process
-// from serving the requests that don't need it) — but a swallowed error was
+// Every ensure*() bootstrap below swallows its own errors (so one failed
+// CREATE TABLE can't stop the process from serving the requests that don't
+// need it) — but a swallowed error was
 // ALSO a silent one: a failed bootstrap (a bad migration statement, a
 // permissions issue) left the server serving requests against a schema that
 // was never actually ensured, with the only trace a log line that may never
@@ -124,8 +123,51 @@ const db = new Pool({
 // path the global error handler uses — so a bootstrap failure is noticed
 // instead of surfacing later as a confusing "column does not exist" on
 // whatever request happens to hit it first.
+//
+// "The connection went away" arrives in half a dozen shapes, and during
+// bootstrap every one of them is expected background noise rather than a bug:
+// bootstrap is idempotent and re-runs on the next request/cold start, so a
+// socket that died mid-handshake costs nothing except the alert it used to
+// send. Mailing them was actively harmful — a burst of cold starts turned into
+// 70+ CRITICAL emails against the ONE 100/day Resend allowance shared by every
+// project, which is quota that real errors then can't use. Logged, never
+// mailed. A genuine bootstrap bug (bad SQL, missing privileges) still mails.
+const TRANSIENT_CONNECTION_CODES = new Set([
+    'ECONNRESET',   // socket killed under us (instance freeze, pooler recycle)
+    'ETIMEDOUT',    // handshake never completed
+    'EPIPE',        // wrote to a socket the other end had already closed
+    'EAI_AGAIN',    // transient DNS failure
+    '08001', '08003', '08006', // Postgres connection-exception class
+    '57P01', '57P03',          // admin shutdown / cannot connect now (Neon resuming)
+]);
+function isTransientConnectionError(err) {
+    if (!err) return false;
+    if (err.code && TRANSIENT_CONNECTION_CODES.has(err.code)) return true;
+    // pg-pool's own timeout paths build plain Errors with no .code at all.
+    return /Connection terminated|timeout exceeded when trying to connect|Client has encountered a connection error|terminating connection|Connection ended unexpectedly/i
+        .test(String(err.message || ''));
+}
+
+// One alert per distinct bootstrap failure per process. The 11 steps below
+// (version check + 9 ensureXxx + version write) all hit the same database in
+// the same second, so a single outage used to mail 11 near-identical CRITICALs
+// per cold start — and errorNotificationService's rate limiter can't catch it,
+// because its counters live in module memory and every cold start is a fresh
+// process with an empty tracker. Keyed on the message, not the step, so two
+// genuinely different bugs still get an alert each.
+const _alertedBootstrapFailures = new Set();
+
 function reportBootstrapFailure(name, err) {
+    if (isTransientConnectionError(err)) {
+        logger.warn(`${name} skipped: database connection did not survive, retrying on the next request`, {
+            error: err.message,
+        });
+        return;
+    }
     logger.error(`${name} failed`, err);
+    const key = String(err?.message || err);
+    if (_alertedBootstrapFailures.has(key)) return;
+    _alertedBootstrapFailures.add(key);
     notifyBackendError(err, null, { middleware: name }).catch(() => { /* already logged above */ });
 }
 
@@ -713,6 +755,36 @@ app.use(cors({
 
 app.use(express.json());
 
+// Runs the one-time schema bootstrap from inside a request instead of at
+// module load — see bootstrapOnce() for why detached module-load work is what
+// generated the repeated cold-start connection-timeout alerts.
+//
+// Gates EVERY route on purpose, the / health check included: a route that
+// answers without waiting is precisely the one that leaves a half-open
+// connection behind to be frozen, which is the bug. The wait is bounded so a
+// slow or unreachable database can't hold requests open past Vercel's function
+// limit — bootstrap re-arms and the next request retries, exactly as it did
+// when this was fire-and-forget.
+const BOOTSTRAP_WAIT_MS = 8000;
+app.use((req, res, next) => {
+    let handedOff = false;
+    const proceed = () => {
+        if (handedOff) return;
+        handedOff = true;
+        next();
+    };
+    const giveUp = setTimeout(() => {
+        logger.warn(`Schema bootstrap still running after ${BOOTSTRAP_WAIT_MS}ms, serving request anyway`);
+        proceed();
+    }, BOOTSTRAP_WAIT_MS);
+    bootstrapOnce()
+        .catch(() => { /* already logged/reported by reportBootstrapFailure */ })
+        .finally(() => {
+            clearTimeout(giveUp);
+            proceed();
+        });
+});
+
 // ── Access-control helpers ─────────────────────────────────────────────
 // Two levels, both transparent pass-throughs while PAYMENT_ENFORCEMENT_ENABLED
 // is off. Both must run after requireSession — they trust the session
@@ -1267,9 +1339,10 @@ const ensureTelegramSchema = async () => {
 // comment always claimed ("after ensureSchema so accounts table exists") —
 // true only by source-order before, never enforced.
 //
-// Still fire-and-forget from the request path's perspective (nothing awaits
-// bootstrapAll() itself) — a slightly slower total bootstrap is a fair trade
-// for not stalling the database on every cold start.
+// No longer fire-and-forget: the first request of each process awaits this
+// (see bootstrapOnce below), bounded, so nothing is ever left in flight when
+// the instance freezes. A slightly slower total bootstrap is a fair trade for
+// not stalling the database on every cold start.
 //
 // That said, sequencing within ONE process wasn't the whole story: the 9
 // functions above combine for 100+ idempotent ALTER/CREATE statements, and
@@ -1307,10 +1380,16 @@ async function bootstrapAll() {
             return;
         }
     } catch (err) {
-        // Version check itself failed (e.g. a timed-out connection) — fall
-        // through to the full sequence rather than silently skipping
-        // bootstrap forever.
         reportBootstrapFailure('bootstrapAll:versionCheck', err);
+        // A connection that never came up says nothing about the schema, and
+        // answering it by firing 100+ DDL statements at a database we just
+        // failed to reach is how the "Query read timeout" lock pile-up started
+        // in the first place. Rethrow so bootstrapOnce() re-arms and the next
+        // request retries the cheap check instead.
+        if (isTransientConnectionError(err)) throw err;
+        // Anything else (bad SQL, missing privileges) leaves the version
+        // genuinely unknown — fall through to the full sequence rather than
+        // silently skipping bootstrap forever.
     }
     await ensureSchema();
     await ensurePaymentSchema();
@@ -1328,9 +1407,48 @@ async function bootstrapAll() {
         );
     } catch (err) {
         reportBootstrapFailure('bootstrapAll:versionWrite', err);
+        // Without the version row the sequence above didn't really land (the
+        // ensureXxx() functions each swallow their own errors, so a connection
+        // that died partway through leaves them "done" but incomplete).
+        // Rethrowing re-arms bootstrapOnce() so this process retries rather
+        // than serving the rest of its life against a half-applied schema.
+        if (isTransientConnectionError(err)) throw err;
     }
 }
-bootstrapAll();
+// bootstrapAll() used to be fired here, unawaited, at module load — and THAT
+// is what produced the endless "Connection terminated due to connection
+// timeout" alerts pointing at bootstrapAll's very first query.
+//
+// Vercel freezes the whole instance the instant a response is sent. Module
+// load happens while the first request is being served, so on any fast route
+// (the / health check answers with no DB at all) the response goes out long
+// before the pool has finished opening its first connection. The freeze kills
+// that half-open socket, but pg-pool's connectionTimeoutMillis timer keeps
+// counting across it — so the moment the instance is thawed for the next
+// request, the timer fires, destroys the stream, and pg-pool rewrites the
+// failure as "Connection terminated due to connection timeout". One alert per
+// cold start, from a connection nothing was waiting on.
+//
+// That also explains why the two previous attempts couldn't work: raising
+// connectionTimeoutMillis 10s -> 20s only matters if the gap is the database
+// waking up, but the gap here is however long the instance stays frozen, which
+// is unbounded; and version-gating the DDL didn't help because the version
+// check IS the first query, i.e. the one that gets frozen.
+//
+// The fix is to never let bootstrap run outside a request. Inside one, the
+// instance is guaranteed alive for the whole attempt. Steady-state cost is a
+// single indexed SELECT on the first request of each cold start; only the
+// first request after a SCHEMA_BOOTSTRAP_VERSION bump pays for the DDL.
+let _bootstrapPromise = null;
+function bootstrapOnce() {
+    if (!_bootstrapPromise) {
+        _bootstrapPromise = bootstrapAll().catch((err) => {
+            _bootstrapPromise = null; // re-arm, so the next request retries
+            throw err;
+        });
+    }
+    return _bootstrapPromise;
+}
 
 // Helper function to parse user agent
 const parseUserAgent = (userAgent) => {
