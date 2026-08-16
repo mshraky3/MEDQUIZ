@@ -153,6 +153,8 @@ const quizCopy = {
             kpiQuizzes: 'اختبار',
             kpiQuestions: 'سؤال',
             kpiStreak: 'يوم متتالٍ',
+            telegramCtaTitle: 'انضم لقناتنا',
+            telegramCtaSubtitle: 'أسئلة يومية ونصائح',
 
             loadError: 'تعذّر تحميل بياناتك.',
             retry: 'إعادة المحاولة',
@@ -473,6 +475,8 @@ const quizCopy = {
             kpiQuizzes: 'Quizzes',
             kpiQuestions: 'Questions',
             kpiStreak: 'Day streak',
+            telegramCtaTitle: 'Join our channel',
+            telegramCtaSubtitle: 'Daily questions & tips',
 
             loadError: 'We could not load your data.',
             retry: 'Try again',

@@ -12,6 +12,7 @@
 .hub-cards-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  align-items: start;
   gap: 14px;
   margin-bottom: 22px;
 }

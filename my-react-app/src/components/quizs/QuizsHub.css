@@ -150,6 +150,36 @@
 
 .hubx .hubx-kpi-label { font-size: var(--text-xs, 0.75rem); font-weight: 600; color: var(--text-light, #64748b); }
 
+/* The 4th KPI cell — a Telegram join CTA rather than a stat, since the hub
+   only ever has three numbers to show (the streak moved to its own card).
+   Left as a blank grid cell otherwise on every screen ≥560px wide. */
+.hubx .hubx-kpi--telegram {
+    background: linear-gradient(135deg, #2aabee, #229ed9);
+    color: #fff;
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.hubx .hubx-kpi--telegram:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(34, 158, 217, 0.35);
+}
+
+.hubx .hubx-kpi--telegram:focus-visible {
+    outline: 3px solid #fff;
+    outline-offset: 2px;
+}
+
+.hubx .hubx-kpi--telegram .hubx-kpi-icon { color: #fff; }
+.hubx .hubx-kpi--telegram .hubx-kpi-label { color: rgba(255, 255, 255, 0.85); }
+
+.hubx .hubx-kpi-value--sm {
+    min-height: 0;
+    font-size: 0.95rem;
+    font-weight: 800;
+}
+
 .hubx .hubx-kpi.is-loading .hubx-kpi-value::after {
     content: '';
     display: block;

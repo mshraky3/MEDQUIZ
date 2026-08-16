@@ -369,6 +369,17 @@ const QUIZS = () => {
                             <span className="hubx-kpi-label">{tile.label}</span>
                         </div>
                     ))}
+                    <a
+                        className="hubx-kpi hubx-kpi--telegram"
+                        href="https://t.me/sqb_exam"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => { try { track('hub_telegram_cta'); } catch (e) { /* analytics is best-effort */ } }}
+                    >
+                        <span className="hubx-kpi-icon"><Icon name="telegram" size={17} /></span>
+                        <span className="hubx-kpi-value hubx-kpi-value--sm">{t.telegramCtaTitle}</span>
+                        <span className="hubx-kpi-label">{t.telegramCtaSubtitle}</span>
+                    </a>
                 </div>
 
                 {state === 'error' ? (
