@@ -18,6 +18,7 @@ import {
 } from '../services/telegramContentService.js';
 import {
     runDailyChannelPostJob, runWeeklyWeakTopicsJob, runWeeklyChannelSummaryJob, runMessageCleanupJob,
+    postChannelAnnouncement,
 } from '../services/telegramJobs.js';
 
 const router = express.Router();
@@ -236,6 +237,18 @@ router.get('/api/telegram-test/channel-summary', adminAuth, async (req, res) => 
 router.get('/api/telegram-test/cleanup', adminAuth, async (req, res) => {
     try {
         res.json({ success: true, ...(await runMessageCleanupJob(req.db)) });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Ad-hoc announcement/ad, posted to the channel right now — the manual
+// counterpart to the scheduled jobs above. Used from the admin broadcast page
+// so a site announcement or promo can go to the channel in the same motion.
+router.post('/api/telegram-test/announce', adminAuth, async (req, res) => {
+    try {
+        const { text, buttonText, buttonUrl, deleteAfterDays } = req.body || {};
+        res.json({ success: true, ...(await postChannelAnnouncement(req.db, { text, buttonText, buttonUrl, deleteAfterDays })) });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }

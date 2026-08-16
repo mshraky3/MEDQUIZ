@@ -72,6 +72,16 @@ const Footer = () => {
             >
               <Icon name="phone" size={17} />
             </a>
+            <a
+              className="footer-icon-btn"
+              href="https://t.me/sqb_exam"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={t.footer.telegram}
+              title={t.footer.telegram}
+            >
+              <Icon name="telegram" size={17} />
+            </a>
             <Link className="footer-icon-btn" to="/contact" aria-label={t.footer.contactPage}>
               <Icon name="message-circle" size={17} />
             </Link>

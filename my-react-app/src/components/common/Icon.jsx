@@ -66,6 +66,7 @@ const PATHS = {
     cookie: <><circle cx="12" cy="12" r="9" /><circle cx="9" cy="9" r="1" fill="currentColor" stroke="none" /><circle cx="14.5" cy="14.5" r="1" fill="currentColor" stroke="none" /><circle cx="15" cy="9" r="1" fill="currentColor" stroke="none" /></>,
     lock: <><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></>,
     send: <><path d="m22 2-7 20-4-9-9-4z" /><path d="M22 2 11 13" /></>,
+    telegram: <><circle cx="12" cy="12" r="9" /><path d="m7.2 12.4 3 2.3c.3.3.8.1.9-.3l1.8-8c.1-.5-.4-.9-.9-.6L6.9 10.4c-.5.3-.4 1 .1 1.2l1.7.7 1 3.2" /></>,
     info: <><circle cx="12" cy="12" r="9" /><path d="M12 16v-4" /><path d="M12 8h.01" /></>,
     award: <><circle cx="12" cy="8" r="6" /><path d="M8.2 13.4 7 22l5-3 5 3-1.2-8.6" /></>,
     palette: <><circle cx="13.5" cy="6.5" r="1.5" fill="currentColor" stroke="none" /><circle cx="17.5" cy="10.5" r="1.5" fill="currentColor" stroke="none" /><circle cx="8.5" cy="7.5" r="1.5" fill="currentColor" stroke="none" /><circle cx="6.5" cy="12.5" r="1.5" fill="currentColor" stroke="none" /><path d="M12 2a10 10 0 1 0 0 20 2 2 0 0 0 2-2c0-.6-.4-1-1-1.5-.4-.5-.6-1-.5-1.5a2 2 0 0 1 2-2h2a4 4 0 0 0 4-4 8 8 0 0 0-8-8z" /></>,

@@ -132,6 +132,10 @@
 .bc-btn--primary { margin-top: 16px; width: 100%; background: var(--primary-color, #2563eb); border-color: var(--primary-color, #2563eb); color: #fff; }
 .bc-btn--primary:hover:not(:disabled) { background: var(--primary-dark, #1d4ed8); }
 
+/* Telegram's own brand blue — visually distinct from the email "primary" blue so the two send actions never look interchangeable. */
+.bc-btn--telegram { background: #229ed9; border-color: #229ed9; }
+.bc-btn--telegram:hover:not(:disabled) { background: #1b87bd; }
+
 /* The only button that mails real people — deliberately the loudest thing here. */
 .bc-btn--send { background: #16a34a; border-color: #16a34a; color: #fff; }
 .bc-btn--send:hover:not(:disabled) { background: #15803d; }

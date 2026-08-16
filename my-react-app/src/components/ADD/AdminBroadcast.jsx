@@ -76,6 +76,16 @@ const AdminBroadcast = () => {
     const [confirmed, setConfirmed] = useState(false);
     const [busy, setBusy] = useState('');             // which action is in flight
 
+    // Telegram channel — a separate, immediate post (not queued like the
+    // email drip). Kept next to the email composer as a standing reminder:
+    // most announcements/ads worth emailing are worth posting to the channel too.
+    const [tgText, setTgText] = useState('');
+    const [tgButtonText, setTgButtonText] = useState('');
+    const [tgButtonUrl, setTgButtonUrl] = useState('');
+    const [tgBusy, setTgBusy] = useState(false);
+    const [tgNotice, setTgNotice] = useState('');
+    const [tgError, setTgError] = useState('');
+
     // Drip loop
     const [running, setRunning] = useState(false);
     const stopRef = useRef(false);
@@ -126,6 +136,20 @@ const AdminBroadcast = () => {
             setNotice(data.message);
         } catch (e) { setError(e?.response?.data?.message || 'Could not send the test email.'); }
         finally { setBusy(''); }
+    };
+
+    const postToTelegram = async () => {
+        setTgError(''); setTgNotice(''); setTgBusy(true);
+        try {
+            const { data } = await axios.post(`${Globals.URL}/api/telegram-test/announce`, {
+                text: tgText,
+                buttonText: tgButtonText.trim() || undefined,
+                buttonUrl: tgButtonUrl.trim() || undefined,
+            });
+            setTgNotice(`Posted to the channel (message ${data.messageId}).`);
+            setTgText(''); setTgButtonText(''); setTgButtonUrl('');
+        } catch (e) { setTgError(e?.response?.data?.error || e?.response?.data?.message || 'Could not post to Telegram.'); }
+        finally { setTgBusy(false); }
     };
 
     /** Look up individual people to mail. Debounced by the caller. */
@@ -375,6 +399,39 @@ const AdminBroadcast = () => {
                     </div>
                 </section>
             </div>
+
+            {/* ── Telegram channel ──
+                Posts immediately (not a queued drip like the email above) —
+                it's one message to one channel, not hundreds of inboxes.
+                Kept next to the email composer on purpose: whatever gets
+                announced or advertised by email is usually worth the channel too. */}
+            <section className="bc-card">
+                <h2><Icon name="send" size={17} /> Telegram channel</h2>
+                <p className="bc-muted">Post an announcement or ad straight to the channel. HTML formatting (b/i/a) is allowed; Telegram ignores the rest.</p>
+
+                {tgError && <div className="bc-alert bc-alert--err"><Icon name="alert-triangle" size={16} /> {tgError}</div>}
+                {tgNotice && <div className="bc-alert bc-alert--ok"><Icon name="check-circle" size={16} /> {tgNotice}</div>}
+
+                <label className="bc-label" htmlFor="tg-text">Message</label>
+                <textarea id="tg-text" className="bc-input bc-textarea" value={tgText} rows={5}
+                    onChange={(e) => setTgText(e.target.value)}
+                    placeholder={'📢 New this week on SQB…\n\nOpen the app to check it out.'} />
+
+                <div className="bc-testrow">
+                    <input className="bc-input" value={tgButtonText} maxLength={40}
+                        onChange={(e) => setTgButtonText(e.target.value)}
+                        placeholder="Button text (optional, defaults to “Try more on SQB”)" />
+                    <input className="bc-input" value={tgButtonUrl} maxLength={500} dir="ltr"
+                        onChange={(e) => setTgButtonUrl(e.target.value)}
+                        placeholder="Button link (optional, defaults to the site)" />
+                </div>
+
+                <button type="button" className="bc-btn bc-btn--primary bc-btn--telegram"
+                    disabled={!tgText.trim() || tgBusy}
+                    onClick={postToTelegram}>
+                    <Icon name="send" size={16} /> {tgBusy ? 'Posting…' : 'Post to channel now'}
+                </button>
+            </section>
 
             {/* ── Active campaign ── */}
             {active && (

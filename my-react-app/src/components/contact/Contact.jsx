@@ -105,6 +105,12 @@ ${t.mailFooter}
             title: t.email,
             value: 'alshraky3@gmail.com',
             link: 'mailto:alshraky3@gmail.com'
+        },
+        {
+            icon: 'telegram',
+            title: t.telegram,
+            value: '@sqb_exam',
+            link: 'https://t.me/sqb_exam'
         }
     ];
 

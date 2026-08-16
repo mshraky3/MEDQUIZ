@@ -87,6 +87,24 @@ export async function runWeeklyChannelSummaryJob(db) {
     return { sent: true, summaryId: summary.id, slug: summary.slug };
 }
 
+/**
+ * Free-text announcement/ad, posted straight to the channel on admin demand —
+ * not on any schedule, unlike the jobs above. This is the "also share it on
+ * Telegram" button for whatever the admin is announcing on the site/by email.
+ * No TTL by default: an announcement is meant to stay up, unlike the daily
+ * question or weekly summary card, which are deliberately ephemeral.
+ */
+export async function postChannelAnnouncement(db, { text, buttonText, buttonUrl, deleteAfterDays } = {}) {
+    const body = String(text || '').trim();
+    if (!body) throw new Error('text is required');
+    const replyMarkup = buttonUrl ? { inline_keyboard: [[{ text: buttonText || 'Open SQB', url: buttonUrl }]] } : siteButton();
+    const message = await sendMessage(CHANNEL(), body, { reply_markup: replyMarkup });
+    if (deleteAfterDays) {
+        await recordSentMessage(db, { chatId: CHANNEL(), messageId: message.message_id, deleteAfterDays });
+    }
+    return { sent: true, messageId: message.message_id };
+}
+
 /** Deletes channel messages past their scheduled delete_after. DM messages are never logged here (see telegramContentService). */
 export async function runMessageCleanupJob(db) {
     const due = await findMessagesDueForDeletion(db);
