@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import { Pool } from 'pg';
 import crypto from 'crypto';
+import { OAuth2Client } from 'google-auth-library';
 import { rateLimit } from './middleware/rateLimit.js';
 import { sendMail } from './services/mailer.js';
 import errorReportRoutes from './routes/error-report.js';
@@ -985,6 +986,12 @@ app.post('/admin/users/:userId/track', adminAuth, async (req, res) => {
 // Helper: 30 minutes in ms
 const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
 
+// Google Sign-In: verifies the ID token the frontend gets from Google
+// Identity Services. No client secret involved — verifyIdToken only needs
+// the client ID as the expected audience.
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const googleOAuthClient = new OAuth2Client(GOOGLE_CLIENT_ID);
+
 // ============================================
 // LOGIN HISTORY & ACCOUNT SHARING DETECTION
 // ============================================
@@ -1325,6 +1332,21 @@ const ensureTelegramSchema = async () => {
     }
 };
 
+// Column backing Google sign-in. It's a login method with no password:
+// `password` can no longer be required once a Google-only account can exist.
+// A partial unique index (not a plain UNIQUE column) so the common case of
+// "no Google account linked" doesn't collide every NULL against every other.
+const ensureOAuthColumns = async () => {
+    try {
+        await db.query(`ALTER TABLE accounts ADD COLUMN IF NOT EXISTS google_id VARCHAR(255)`);
+        await db.query(`ALTER TABLE accounts ALTER COLUMN password DROP NOT NULL`);
+        await db.query(`CREATE UNIQUE INDEX IF NOT EXISTS idx_accounts_google_id ON accounts(google_id) WHERE google_id IS NOT NULL`);
+        logger.info('OAuth column (google_id) ensured');
+    } catch (err) {
+        reportBootstrapFailure('ensureOAuthColumns', err);
+    }
+};
+
 // All 9 schema-bootstrap checks, run ONE AT A TIME rather than each firing
 // its own connection at module load. They used to run concurrently (8
 // simultaneous ensureXxx() calls, unawaited) — harmless when the database is
@@ -1363,7 +1385,7 @@ const ensureTelegramSchema = async () => {
 // Bump SCHEMA_BOOTSTRAP_VERSION whenever a statement is added to any of the
 // 9 ensureXxx() functions above, so the new statement actually runs on the
 // next deploy instead of being silently skipped forever.
-const SCHEMA_BOOTSTRAP_VERSION = 3;
+const SCHEMA_BOOTSTRAP_VERSION = 4;
 async function bootstrapAll() {
     try {
         await db.query(`
@@ -1400,6 +1422,7 @@ async function bootstrapAll() {
     await ensureQuestionReportsTable();
     await ensureSummariesTables();
     await ensureTelegramSchema();
+    await ensureOAuthColumns();
     try {
         await db.query(
             `INSERT INTO schema_bootstrap_version (version) VALUES ($1) ON CONFLICT DO NOTHING`,
@@ -1778,6 +1801,181 @@ app.post('/login', rateLimit(db, 'login', { windowMs: 5 * 60_000, max: 15 }), as
         res.status(500).json({ message: 'Internal server error' });
     } finally {
         if (client) client.release();
+    }
+});
+
+// Mints a session for an account whose identity a provider (Google) has
+// already vouched for — no password check needed. Mirrors the tail of /login
+// (session token, login_history, suspicious-login check, subscription
+// shaping) so a Google account gets exactly the same session shape a
+// password login gets and every downstream consumer (requireSession,
+// UserContext) needs no changes.
+async function issueSessionForAccount(userRow, req) {
+    const ipAddress = req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+        req.headers['x-real-ip'] ||
+        req.connection?.remoteAddress ||
+        req.socket?.remoteAddress ||
+        'Unknown';
+    const userAgent = req.headers['user-agent'] || 'Unknown';
+    const { device, browser, os } = parseUserAgent(userAgent);
+
+    const now = new Date();
+    const sessionToken = crypto.randomBytes(24).toString('hex');
+
+    await db.query(
+        "UPDATE accounts SET logged = $1, logged_date = $2, session_token = $3 WHERE id = $4",
+        [true, now, sessionToken, userRow.id]
+    );
+    invalidateSessionCache(userRow.username);
+    invalidateSessionCache(userRow.email);
+
+    const suspiciousCheck = await detectSuspiciousLogin(userRow.id, ipAddress, userAgent);
+    const geoCountry = req.headers['x-vercel-ip-country'] || null;
+    let geoCity = null;
+    try {
+        geoCity = req.headers['x-vercel-ip-city'] ? decodeURIComponent(req.headers['x-vercel-ip-city']) : null;
+    } catch (_) { /* malformed header — leave city NULL rather than fail the login */ }
+    try {
+        await db.query(`
+            INSERT INTO login_history (user_id, username, ip_address, user_agent, device_type, browser, os, session_token, is_suspicious, suspicious_reason, country, city)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        `, [userRow.id, userRow.email, ipAddress, userAgent, device, browser, os, sessionToken, suspiciousCheck.isSuspicious, suspiciousCheck.reasons, geoCountry, geoCity]);
+    } catch (historyErr) {
+        logger.error('Failed to record login history', historyErr);
+    }
+
+    let subscription = {
+        enforced: false,
+        status: 'free',
+        active: true,
+        expiryDate: null,
+        daysRemaining: null,
+        freeQuestionsRemaining: null,
+        allowance: FREE_QUESTION_ALLOWANCE,
+        reason: 'enforcement_disabled',
+    };
+    let freeQuestionsRemaining = null;
+    try {
+        const columnsReady = await hasPaymentColumns();
+        if (columnsReady && isPaymentEnforcementEnabled()) {
+            const { allowed, reason } = checkSubscriptionAccess(userRow);
+            let daysRemaining = null;
+            if (allowed && userRow.subscription_expiry_date) {
+                const ms = new Date(userRow.subscription_expiry_date).getTime() - Date.now();
+                daysRemaining = Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
+            }
+            if (!allowed) {
+                freeQuestionsRemaining = checkQuizAccess(userRow).remaining;
+            }
+            subscription = {
+                enforced: true,
+                status: userRow.subscription_status,
+                active: allowed,
+                expiryDate: userRow.subscription_expiry_date || null,
+                daysRemaining,
+                freeQuestionsRemaining,
+                allowance: FREE_QUESTION_ALLOWANCE,
+                reason,
+            };
+        }
+    } catch (subErr) {
+        logger.error('Failed computing subscription state at OAuth login', subErr);
+    }
+
+    const updatedUser = {
+        ...userRow,
+        logged: true,
+        logged_date: now,
+        sessionToken,
+        terms_accepted: userRow.terms_accepted,
+        accessAllowed: subscription.active,
+        subscription_status: subscription.enforced ? userRow.subscription_status : 'free',
+        subscription_expiry_date: subscription.enforced ? userRow.subscription_expiry_date : null,
+        free_questions_remaining: subscription.enforced ? freeQuestionsRemaining : null,
+        free_question_allowance: FREE_QUESTION_ALLOWANCE,
+    };
+
+    return {
+        message: 'Login successful',
+        expired: false,
+        subscription,
+        user: updatedUser,
+        sessionToken,
+        showTerms: !userRow.terms_accepted,
+    };
+}
+
+// Google Sign-In. The frontend posts the ID token it gets from Google
+// Identity Services; this verifies it server-side (signature + audience),
+// then logs in an existing account or creates a new one — same "first
+// sign-in is the sign-up" model the /login route's own account lookup
+// assumes elsewhere.
+app.post('/api/auth/google', rateLimit(db, 'oauth_google', { windowMs: 5 * 60_000, max: 30 }), async (req, res) => {
+    const { credential } = req.body;
+    if (!credential) {
+        return res.status(400).json({ message: 'Missing Google credential' });
+    }
+    if (!GOOGLE_CLIENT_ID) {
+        logger.error('GOOGLE_CLIENT_ID is not set — /api/auth/google cannot verify tokens');
+        return res.status(500).json({ message: 'Google sign-in is not configured' });
+    }
+
+    let payload;
+    try {
+        const ticket = await googleOAuthClient.verifyIdToken({ idToken: credential, audience: GOOGLE_CLIENT_ID });
+        payload = ticket.getPayload();
+    } catch (err) {
+        logger.warn('Google ID token verification failed', err);
+        return res.status(401).json({ message: 'Invalid Google credential' });
+    }
+
+    if (!payload?.email || !payload.email_verified) {
+        return res.status(401).json({ message: 'Google account has no verified email' });
+    }
+    const email = payload.email.toLowerCase().trim();
+    const googleId = payload.sub;
+
+    const client = await db.connect();
+    try {
+        await client.query('BEGIN');
+        let { rows: [userRow] } = await client.query('SELECT * FROM accounts WHERE email = $1 FOR UPDATE', [email]);
+
+        if (!userRow) {
+            const inserted = await client.query(
+                `INSERT INTO accounts (username, email, isactive, logged, terms_accepted, email_verified, track, google_id)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+                [email, email, true, false, false, true, DEFAULT_TRACK, googleId]
+            );
+            userRow = inserted.rows[0];
+            try {
+                await sendWelcomeEmail(email, email, DEFAULT_TRACK);
+                await client.query('UPDATE accounts SET welcome_email_sent = TRUE, welcome_email_sent_at = NOW() WHERE id = $1', [userRow.id]);
+            } catch (welcomeErr) {
+                logger.error('Failed to send welcome email at Google signup', welcomeErr);
+            }
+            logger.info(`New account created via Google sign-in: ${email}`);
+        } else if (!userRow.google_id) {
+            const updated = await client.query(
+                'UPDATE accounts SET google_id = $1, email_verified = TRUE WHERE id = $2 RETURNING *',
+                [googleId, userRow.id]
+            );
+            userRow = updated.rows[0];
+        }
+
+        if (!userRow.isactive) {
+            await client.query('ROLLBACK');
+            return res.status(403).json({ message: 'Account is inactive. Please contact support.' });
+        }
+
+        await client.query('COMMIT');
+        const result = await issueSessionForAccount(userRow, req);
+        return res.status(200).json(result);
+    } catch (err) {
+        try { await client.query('ROLLBACK'); } catch (rollbackErr) { logger.error('Rollback failed during Google sign-in', rollbackErr); }
+        logger.error('Error during Google sign-in', err);
+        return res.status(500).json({ message: 'Internal server error' });
+    } finally {
+        client.release();
     }
 });
 

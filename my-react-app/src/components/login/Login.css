@@ -343,6 +343,45 @@
   margin-top: 8px;
 }
 
+.oauth-block {
+  margin-top: 8px;
+}
+
+.oauth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.oauth-divider::before,
+.oauth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.oauth-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.oauth-buttons-google {
+  width: 100%;
+}
+
+/* @react-oauth/google renders its button inside this wrapper div and sizes
+   it to the wrapper's width — width:100% on the wrapper is how it's told to
+   match the password form's own full-width inputs/submit button. */
+.oauth-buttons-google > div {
+  width: 100% !important;
+}
+
 .login-footer-text {
   text-align: center;
   font-size: 14px;

@@ -24,6 +24,9 @@ const authCopy = {
             noAccount: 'لا تملك حساباً؟',
             signupLink: 'إنشاء حساب مجاني',
 
+            dividerOr: 'أو',
+            oauthError: 'تعذر تسجيل الدخول. يرجى المحاولة مرة أخرى.',
+
             requiredFieldsError: 'يرجى إدخال البريد الإلكتروني وكلمة المرور.',
             accountInUseError: 'هذا الحساب مستخدم حالياً على جهاز أو متصفح آخر. يرجى الانتظار 30 دقيقة أو تسجيل الخروج من الجهاز الآخر.',
             credentialsError: 'البريد الإلكتروني أو كلمة المرور غير صحيحة. حاول مرة أخرى.',
@@ -219,6 +222,9 @@ const authCopy = {
             submitting: 'Logging in…',
             noAccount: 'Do not have an account?',
             signupLink: 'Create a free account',
+
+            dividerOr: 'or',
+            oauthError: 'Could not sign in. Please try again.',
 
             requiredFieldsError: 'Please enter your email address and password.',
             accountInUseError: 'This account is currently in use on another device or browser. Wait 30 minutes, or log out on the other device.',

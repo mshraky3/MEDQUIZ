@@ -8,6 +8,7 @@ import { UserContext } from '../../UserContext';
 import { safeGetItem } from '../../utils/safeStorage.js';
 import { useCopy, useLang } from '../../i18n';
 import authCopy from '../../i18n/copy/auth.js';
+import OAuthButtons from './OAuthButtons.jsx';
 
 const Login = () => {
   const { setUser, user, sessionToken } = useContext(UserContext);
@@ -165,6 +166,31 @@ const Login = () => {
       });
   };
 
+  // Google/Telegram sign-in shares the exact response shape /login returns
+  // (showTerms, user, sessionToken) — including the "sign up on first click"
+  // account-creation the backend does for a Google/Telegram identity it has
+  // never seen. form.username is set here too: handleAcceptTerms below reads
+  // it to call /accept-terms, and the password form was never filled in on
+  // this path.
+  const handleOAuthSuccess = (data) => {
+    setError('');
+    setForm(prev => ({ ...prev, username: data.user?.username || data.user?.email || prev.username }));
+
+    if (data.showTerms) {
+      setShowTermsPopup(true);
+      setUser(data.user, data.sessionToken);
+      return;
+    }
+
+    setUser(data.user, data.sessionToken);
+    const redirectTo = location.state?.from || '/quizs';
+    navigate(redirectTo, { state: data });
+  };
+
+  const handleOAuthError = () => {
+    setError(copy.oauthError);
+  };
+
   const handleAcceptTerms = async () => {
     if (!termsChecked) return;
     setShowTermsPopup(false);
@@ -265,6 +291,12 @@ const Login = () => {
               <button type="submit" className="btn primary large" disabled={loading}>
                 {loading ? copy.submitting : copy.submit}
               </button>
+
+              <OAuthButtons
+                dividerLabel={copy.dividerOr}
+                onSuccess={handleOAuthSuccess}
+                onError={handleOAuthError}
+              />
 
               <div className="login-footer-text">
                 <span>{copy.noAccount}</span>
