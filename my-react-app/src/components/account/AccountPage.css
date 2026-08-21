@@ -2,7 +2,13 @@
    rest of the student-facing app. */
 
 .account-page {
-    min-height: 100vh;
+    /* min-height:100% + flex:1, not 100vh — this renders inside
+       .page-with-navbar, which is itself min-height:100vh and already
+       reserves space for the fixed navbar. A child that ALSO demands a full
+       100vh makes the whole page taller than the viewport, adding a needless
+       scrollbar (see the identical note in login/Login.css). */
+    min-height: 100%;
+    flex: 1 0 auto;
     background: var(--bg-light, #f6f8fc);
     padding: clamp(1.25rem, 4vw, 3rem) 1rem 4rem;
 }

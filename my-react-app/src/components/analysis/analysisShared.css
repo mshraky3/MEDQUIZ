@@ -504,44 +504,13 @@
     justify-content: center;
 }
 
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(15, 23, 42, 0.45);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: var(--z-modal-backdrop);
-    padding: var(--space-4);
-}
-
-.modal-content {
-    background: var(--bg-white);
-    padding: var(--space-8);
-    border-radius: var(--radius-lg);
-    max-width: 600px;
-    width: 100%;
-    max-height: 90vh;
-    overflow-y: auto;
-    box-shadow: var(--shadow-lg);
-    position: relative;
-    animation: modalSlideIn 0.3s ease-out;
-}
-
-@keyframes modalSlideIn {
-    from {
-        opacity: 0;
-        transform: translateY(-20px) scale(0.95);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
+/* No JSX under components/analysis renders .modal-overlay/.modal-content —
+   these were dead weight that happened to redefine index.css's real global
+   modal classes (used by ADD.jsx) with different values. Since CSS chunks
+   stay injected for the SPA session once loaded, an admin who'd also
+   visited an analysis page in the same session got this file's version by
+   cascade-order accident instead of the intended one. Removed rather than
+   scoped, since nothing here actually needs its own modal styling. */
 
 .loading-state {
     text-align: center;
@@ -651,30 +620,6 @@
     }
 }
 
-/* Source Badge Styles */
-.source-badge {
-    display: inline-block;
-    background: var(--primary-color);
-    color: white;
-    padding: var(--space-1) var(--space-3);
-    border-radius: var(--radius-full);
-    font-size: var(--text-sm);
-    font-weight: 500;
-    text-transform: capitalize;
-}
-
-/* Type Badge Styles */
-.type-badge {
-    display: inline-block;
-    background: var(--accent-color);
-    color: white;
-    padding: var(--space-1) var(--space-3);
-    border-radius: var(--radius-full);
-    font-size: var(--text-sm);
-    font-weight: 500;
-    text-transform: capitalize;
-}
-
 /* Wrong Questions Page Styles */
 .screen-header {
     text-align: center;
@@ -756,6 +701,12 @@
     align-items: center;
 }
 
+/* Used across most of the analysis feature (OverallStats, WrongQuestions,
+   LastQuizSummary, QuizHistory, etc.) — used to be redeclared a second time
+   near the top of this file with a plain solid-color style; that block
+   never actually rendered (this one, being later, always won for every
+   property they both set) except for text-transform, which only this block
+   lacked and so silently survived from the dead block underneath it. */
 .type-badge,
 .source-badge,
 .date-badge {
@@ -765,6 +716,7 @@
     border-radius: 20px;
     font-size: 12px;
     font-weight: 600;
+    text-transform: capitalize;
     white-space: nowrap;
 }
 

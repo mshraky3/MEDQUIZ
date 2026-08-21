@@ -9,6 +9,10 @@ import SEO from '../common/SEO.jsx';
 import { useCopy, useLang } from '../../i18n';
 import { formatDate } from '../../i18n/format.js';
 import accountCopy from '../../i18n/copy/account.js';
+// The subscribe/renew CTA below matches the button style used on the page it
+// navigates to (/subscribe, styled via Login.css) — was previously the
+// plainer global default, a jarring style change across a single click.
+import '../login/Login.css';
 import './AccountPage.css';
 
 /**
@@ -181,7 +185,7 @@ const AccountPage = () => {
 
                         <div className="account-actions">
                             {!isLegacy && (
-                                <button type="button" className="btn btn-primary" onClick={() => navigate('/subscribe')}>
+                                <button type="button" className="btn primary" onClick={() => navigate('/subscribe')}>
                                     {isPaid ? t.renewCta : t.subscribeCta}
                                 </button>
                             )}

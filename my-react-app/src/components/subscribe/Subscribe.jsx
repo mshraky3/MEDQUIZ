@@ -329,7 +329,7 @@ const Subscribe = () => {
                             </div>
                             <button
                                 type="button"
-                                className="btn btn-primary large"
+                                className="btn primary large"
                                 onClick={() => window.location.reload()}
                             >
                                 <Icon name="refresh" size={18} />

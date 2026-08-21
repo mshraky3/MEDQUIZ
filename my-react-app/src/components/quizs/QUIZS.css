@@ -1464,8 +1464,14 @@
   box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
 }
 
-/* Timer Options for Final Quiz */
-.timer-options {
+/* Timer Options for Final Quiz — scoped to the final-quiz variant of this
+   modal via :has(), same pattern as "Final Quiz Button/Action Buttons" just
+   above/below. Previously these redeclared the bare .timer-options/
+   .timer-option-btn/etc. selectors unscoped, at identical specificity to the
+   regular timer modal's own rules — whichever block loaded later in the file
+   always won, so the regular "start a custom quiz" timer picker could render
+   in this red final-quiz theme regardless of which modal was actually open. */
+.custom-timer-selector-modal:has(.final-quiz-description) .timer-options {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 0.8rem;
@@ -1474,7 +1480,7 @@
   width: 100%;
 }
 
-.timer-option-btn {
+.custom-timer-selector-modal:has(.final-quiz-description) .timer-option-btn {
   background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
   color: white;
   border: 2px solid #ff6b6b;
@@ -1488,7 +1494,7 @@
   box-shadow: 0 3px 8px rgba(255, 107, 107, 0.3);
 }
 
-.timer-option-btn:hover {
+.custom-timer-selector-modal:has(.final-quiz-description) .timer-option-btn:hover {
   background: linear-gradient(135deg, #ee5a24 0%, #d63031 100%);
   border-color: #ee5a24;
   transform: translateY(-3px) scale(1.02);
@@ -1496,7 +1502,7 @@
 }
 
 /* Custom Timer Input for Final Quiz */
-.custom-timer-input {
+.custom-timer-selector-modal:has(.final-quiz-description) .custom-timer-input {
   margin: 1rem 0;
   background: rgba(255, 107, 107, 0.05);
   padding: 1rem;
@@ -1504,7 +1510,7 @@
   border: 1px solid rgba(255, 107, 107, 0.2);
 }
 
-.custom-timer-input label {
+.custom-timer-selector-modal:has(.final-quiz-description) .custom-timer-input label {
   display: block;
   margin-bottom: 0.6rem;
   font-weight: 700;
@@ -1520,7 +1526,7 @@
   justify-content: center;
 }
 
-.custom-timer-number-input {
+.custom-timer-selector-modal:has(.final-quiz-description) .custom-timer-number-input {
   width: 120px;
   padding: 0.8rem;
   border: 2px solid #ff6b6b;
@@ -1534,7 +1540,7 @@
   color: #d63031;
 }
 
-.custom-timer-number-input:focus {
+.custom-timer-selector-modal:has(.final-quiz-description) .custom-timer-number-input:focus {
   outline: none;
   border-color: #ee5a24;
   box-shadow: 0 0 0 4px rgba(255, 107, 107, 0.2);
@@ -1552,7 +1558,7 @@
   margin: 0;
 }
 
-.time-unit {
+.custom-timer-selector-modal:has(.final-quiz-description) .time-unit {
   font-size: 1.1rem;
   color: #d63031;
   font-weight: 700;

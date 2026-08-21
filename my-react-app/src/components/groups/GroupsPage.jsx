@@ -9,6 +9,10 @@ import SEO from '../common/SEO.jsx';
 import { useCopy, useLang } from '../../i18n';
 import { formatDate } from '../../i18n/format.js';
 import groupsCopy from '../../i18n/copy/groups.js';
+// The buy-a-seat CTA matches the button style used on /subscribe (which this
+// page also funnels a buyer to for the individual plans) — was previously
+// the plainer global default, a jarring style change across a single click.
+import '../login/Login.css';
 import './GroupsPage.css';
 
 /**
@@ -100,11 +104,18 @@ const GroupsPage = () => {
                 robots={isAuthenticated ? 'noindex, nofollow' : 'index, follow'}
             />
             <div className="groups-wrap">
-                <header className="groups-header">
-                    <span className="groups-pill">{t.pill}</span>
-                    <h1>{t.introTitle}</h1>
-                    <p>{t.introBody}</p>
-                </header>
+                {/* The "buy a group subscription" pitch belongs to the guest/buy
+                    view — once state is known and the visitor already owns a
+                    group, they're here to manage seats/links, not to be sold
+                    to again on every visit. Shown during loading/error too,
+                    since ownership isn't known yet at that point. */}
+                {!(state === 'ready' && groups.length > 0) && (
+                    <header className="groups-header">
+                        <span className="groups-pill">{t.pill}</span>
+                        <h1>{t.introTitle}</h1>
+                        <p>{t.introBody}</p>
+                    </header>
+                )}
 
                 {state === 'loading' && (
                     <div className="groups-loading">
@@ -147,7 +158,7 @@ const GroupsPage = () => {
                                         ))}
                                     </ul>
 
-                                    <button type="button" className="btn btn-primary groups-buy-cta" onClick={() => buy(plan.id)}>
+                                    <button type="button" className="btn primary groups-buy-cta" onClick={() => buy(plan.id)}>
                                         {isAuthenticated
                                             ? t.buyCta(t.priceWithCurrency(plan.priceHalalas / 100))
                                             : t.buyCtaGuest(t.priceWithCurrency(plan.priceHalalas / 100))}

@@ -19,7 +19,12 @@
   max-width: 1000px;
   margin: 0 auto;
   padding: 32px 24px;
-  min-height: 100vh;
+  /* min-height:100% + flex:1, not 100vh — renders inside .page-with-navbar,
+     which is itself min-height:100vh (see the identical note in
+     login/Login.css). Only reached transiently today (Loading/ErrorScreen),
+     but still adds a needless scrollbar on every quiz load while it is. */
+  min-height: 100%;
+  flex: 1 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;

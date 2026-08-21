@@ -1,6 +1,10 @@
 /* Legal Pages Styling */
 .legal-page {
-    min-height: 100vh;
+    /* min-height:100% + flex:1, not 100vh — renders inside .page-with-navbar,
+       which is itself min-height:100vh (see the identical note in
+       login/Login.css). */
+    min-height: 100%;
+    flex: 1 0 auto;
     background: #ffffff;
     padding: 2rem 1rem 4rem;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;

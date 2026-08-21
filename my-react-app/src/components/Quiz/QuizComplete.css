@@ -1,5 +1,9 @@
 .quiz-complete-wrap {
-    min-height: 100vh;
+    /* min-height:100% + flex:1, not 100vh — renders inside .page-with-navbar,
+       which is itself min-height:100vh (see the identical note in
+       login/Login.css). */
+    min-height: 100%;
+    flex: 1 0 auto;
     display: flex;
     align-items: center;
     justify-content: center;
