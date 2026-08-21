@@ -6,18 +6,21 @@
    this file only carries what is new to this page. */
 
 .an-wrapper {
+  width: 100%;
   max-width: 900px;
   margin: 0 auto;
   padding: 24px 16px 48px;
+  box-sizing: border-box;
 }
 
 @media (min-width: 1024px) {
   .an-wrapper {
-    /* Was capped at 900px on every viewport — on a laptop or wider that left
-       a narrow, centered mobile-width column floating in a sea of empty
-       background either side. Still a bounded reading width (not edge to
-       edge), just one that actually uses a desktop-sized viewport. */
-    max-width: 1180px;
+    /* A fixed 1180px cap left wide gutters on either side on any screen
+       bigger than a small laptop — a 90%-of-viewport width (capped so an
+       ultrawide monitor doesn't stretch text into an unreadable line)
+       actually uses the space a desktop viewport has. */
+    width: 90%;
+    max-width: 1600px;
     padding: 32px 24px 56px;
   }
 }

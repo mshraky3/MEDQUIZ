@@ -171,7 +171,16 @@
     outline-offset: 2px;
 }
 
-.hubx .hubx-kpi--telegram .hubx-kpi-icon { color: #fff; }
+.hubx .hubx-kpi--telegram .hubx-kpi-icon--badge {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.24);
+    color: #fff;
+}
+
 .hubx .hubx-kpi--telegram .hubx-kpi-label { color: rgba(255, 255, 255, 0.85); }
 
 .hubx .hubx-kpi-value--sm {

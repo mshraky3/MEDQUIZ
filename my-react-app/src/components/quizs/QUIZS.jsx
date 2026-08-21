@@ -376,7 +376,9 @@ const QUIZS = () => {
                         rel="noopener noreferrer"
                         onClick={() => { try { track('hub_telegram_cta'); } catch (e) { /* analytics is best-effort */ } }}
                     >
-                        <span className="hubx-kpi-icon"><Icon name="telegram" size={17} /></span>
+                        <span className="hubx-kpi-icon hubx-kpi-icon--badge" aria-hidden="true">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z" /></svg>
+                        </span>
                         <span className="hubx-kpi-value hubx-kpi-value--sm">{t.telegramCtaTitle}</span>
                         <span className="hubx-kpi-label">{t.telegramCtaSubtitle}</span>
                     </a>
