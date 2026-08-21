@@ -9,6 +9,7 @@ import { safeGetItem } from '../../utils/safeStorage.js';
 import { useCopy, useLang } from '../../i18n';
 import authCopy from '../../i18n/copy/auth.js';
 import OAuthButtons from './OAuthButtons.jsx';
+import TrackModal from '../common/TrackModal.jsx';
 
 const Login = () => {
   const { setUser, user, sessionToken } = useContext(UserContext);
@@ -22,6 +23,14 @@ const Login = () => {
   const [sessionExpired, setSessionExpired] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  // A brand-new Google identity signing in here (not on /signup) has no
+  // track yet — the backend refuses to auto-provision one on a default (see
+  // /api/auth/google's needsTrackSelection response) and hands back the
+  // still-valid credential instead, which is re-POSTed with the chosen
+  // track once this modal resolves it.
+  const [showGoogleTrackModal, setShowGoogleTrackModal] = useState(false);
+  const [googleTrack, setGoogleTrack] = useState(null);
+  const [pendingGoogleCredential, setPendingGoogleCredential] = useState(null);
 
 
   const navigate = useNavigate();
@@ -166,14 +175,24 @@ const Login = () => {
       });
   };
 
-  // Google/Telegram sign-in shares the exact response shape /login returns
-  // (showTerms, user, sessionToken) — including the "sign up on first click"
-  // account-creation the backend does for a Google/Telegram identity it has
-  // never seen. form.username is set here too: handleAcceptTerms below reads
-  // it to call /accept-terms, and the password form was never filled in on
-  // this path.
+  // Google sign-in shares the exact response shape /login returns (showTerms,
+  // user, sessionToken) — including the "sign up on first click" account
+  // creation the backend does for a Google identity it has never seen.
+  // form.username is set here too: handleAcceptTerms below reads it to call
+  // /accept-terms, and the password form was never filled in on this path.
   const handleOAuthSuccess = (data) => {
     setError('');
+
+    if (data.needsTrackSelection) {
+      // Brand-new Google identity with no existing account — the backend
+      // refused to auto-provision one on a default track. Block on the same
+      // track-choice modal every other signup path uses; on confirm we
+      // re-POST this same still-valid credential together with the track.
+      setPendingGoogleCredential(data.credential);
+      setShowGoogleTrackModal(true);
+      return;
+    }
+
     setForm(prev => ({ ...prev, username: data.user?.username || data.user?.email || prev.username }));
 
     if (data.showTerms) {
@@ -189,6 +208,25 @@ const Login = () => {
 
   const handleOAuthError = () => {
     setError(copy.oauthError);
+  };
+
+  const handleGoogleTrackConfirm = async () => {
+    if (!googleTrack || !pendingGoogleCredential) return;
+    setShowGoogleTrackModal(false);
+    setLoading(true);
+    try {
+      const { data } = await axios.post(`${Globals.URL}/api/auth/google`, {
+        credential: pendingGoogleCredential,
+        track: googleTrack,
+      });
+      setPendingGoogleCredential(null);
+      setLoading(false);
+      handleOAuthSuccess(data);
+    } catch (err) {
+      setLoading(false);
+      setPendingGoogleCredential(null);
+      setError(copy.oauthError);
+    }
   };
 
   const handleAcceptTerms = async () => {
@@ -219,7 +257,6 @@ const Login = () => {
         <div className="login-wrapper">
           <div className="login-card">
             <div className="login-header">
-              <span className="pill">{copy.pill}</span>
               <h1 className="login-title">{copy.title}</h1>
               <p className="login-subtitle">{copy.subtitle}</p>
             </div>
@@ -310,7 +347,7 @@ const Login = () => {
 
         {/* Terms of Use Popup */}
         {showTermsPopup && (
-          <div className="popup-overlay" style={{ zIndex: 1000 }}>
+          <div className="popup-overlay">
             <div className="popup-content large-popup">
               <div className="terms-section">
                 <h4>{terms.title}</h4>
@@ -378,6 +415,14 @@ const Login = () => {
               </div>
             </div>
           </div>
+        )}
+
+        {showGoogleTrackModal && (
+          <TrackModal
+            studyTrack={googleTrack}
+            onSelect={setGoogleTrack}
+            onConfirm={handleGoogleTrackConfirm}
+          />
         )}
       </div>
     </>

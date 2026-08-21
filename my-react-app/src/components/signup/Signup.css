@@ -10,15 +10,41 @@
 
 /* Signup now uses login/landing styles for full glassmorphism redesign */
 
+/* Signup has more rows than Login (track readback, OAuth block, exam date) —
+   a touch tighter rhythm than Login.css's own 14px keeps the extra content
+   from compounding into more scroll than it needs to. */
+.signup-short .login-form {
+    gap: 12px;
+}
+
+.signup-password-row {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+@media (min-width: 768px) {
+    /* Password + confirm side by side on desktop — one fewer full-width row
+       of vertical length where scroll is least excusable. */
+    .signup-password-row {
+        flex-direction: row;
+    }
+
+    .signup-password-row .form-group {
+        flex: 1;
+        min-width: 0;
+    }
+}
+
 /* Callout above the signup form. Class name kept (`trial-callout`) because it
    is referenced from several places; the content is now the free-question
    allowance, or the paid-seat notice on a group invite. */
 .trial-callout {
     display: flex;
     align-items: flex-start;
-    gap: 12px;
-    margin: 4px 0 20px;
-    padding: 14px 16px;
+    gap: 10px;
+    margin: 2px 0 10px;
+    padding: 9px 13px;
     border-radius: 14px;
     border: 1px solid rgba(37, 99, 235, 0.28);
     background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(99, 102, 241, 0.10));
@@ -104,8 +130,8 @@
     display: flex;
     align-items: center;
     gap: 11px;
-    margin: 2px 0 18px;
-    padding: 12px 14px;
+    margin: 2px 0 14px;
+    padding: 10px 14px;
     border-radius: 14px;
     border: 1.5px solid rgba(37, 99, 235, 0.28);
     background: linear-gradient(135deg, rgba(59, 130, 246, 0.10), rgba(99, 102, 241, 0.08));
@@ -168,219 +194,8 @@
     outline-offset: 2px;
 }
 
-/* ── Study-track modal ─────────────────────────────────────────────────── */
-.track-modal {
-    position: fixed;
-    inset: 0;
-    z-index: 1050;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    overflow-y: auto;
-    background: rgba(15, 23, 42, 0.55);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    animation: trackModalIn .22s ease-out;
-}
-
-@keyframes trackModalIn {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-}
-
-.track-modal-card {
-    width: 100%;
-    max-width: 540px;
-    margin: auto;
-    padding: 28px;
-    border-radius: 24px;
-    background: var(--surface, #ffffff);
-    border: 1px solid var(--border-color, #d4deee);
-    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
-    animation: scaleIn .3s ease-out;
-    text-align: start;
-}
-
-.track-modal-eyebrow {
-    display: inline-block;
-    padding: 5px 12px;
-    border-radius: 999px;
-    background: rgba(37, 99, 235, 0.12);
-    color: #1d4ed8;
-    font-size: 11.5px;
-    font-weight: 800;
-    letter-spacing: 0.4px;
-    margin-bottom: 12px;
-}
-
-.track-modal-head h2 {
-    margin: 0 0 8px;
-    font-size: 21px;
-    font-weight: 800;
-    line-height: 1.45;
-    color: var(--text-dark, #0f1e3d);
-}
-
-.track-modal-head p {
-    margin: 0 0 20px;
-    font-size: 13.5px;
-    line-height: 1.7;
-    color: var(--muted, #64748b);
-}
-
-.track-modal-options {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-    margin-bottom: 18px;
-}
-
-.track-modal-option {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 5px;
-    padding: 18px 16px;
-    border-radius: 16px;
-    border: 2px solid var(--border-color, #d4deee);
-    background: var(--surface-2, #f5f8fd);
-    font-family: inherit;
-    text-align: start;
-    cursor: pointer;
-    transition: border-color .15s ease, background .15s ease,
-                transform .15s ease, box-shadow .15s ease;
-}
-
-.track-modal-option:hover {
-    border-color: rgba(37, 99, 235, 0.5);
-    transform: translateY(-2px);
-    box-shadow: 0 10px 24px rgba(37, 99, 235, 0.14);
-}
-
-.track-modal-option:focus-visible {
-    outline: 2px solid #3b82f6;
-    outline-offset: 2px;
-}
-
-.track-modal-option.is-selected {
-    border-color: #2563eb;
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(99, 102, 241, 0.09));
-}
-
-.track-modal-option-icon {
-    width: 46px;
-    height: 46px;
-    border-radius: 13px;
-    display: grid;
-    place-items: center;
-    margin-bottom: 4px;
-    background: rgba(148, 163, 184, 0.18);
-    color: var(--muted, #64748b);
-    transition: background .15s ease, color .15s ease;
-}
-
-.track-modal-option.is-selected .track-modal-option-icon {
-    background: linear-gradient(135deg, #2563eb, #4f46e5);
-    color: #ffffff;
-}
-
-.track-modal-option-title {
-    font-size: 17px;
-    font-weight: 800;
-    color: var(--text-dark, #0f1e3d);
-}
-
-.track-modal-option-exam {
-    font-size: 12px;
-    font-weight: 700;
-    color: #1d4ed8;
-}
-
-.track-modal-option-desc {
-    font-size: 12px;
-    line-height: 1.6;
-    color: var(--muted, #64748b);
-}
-
-/* Selected tick — pinned to the inline-end corner so it mirrors in RTL. */
-.track-modal-option-mark {
-    position: absolute;
-    top: 12px;
-    inset-inline-end: 12px;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    display: grid;
-    place-items: center;
-    background: #2563eb;
-    color: #ffffff;
-    opacity: 0;
-    transform: scale(.6);
-    transition: opacity .15s ease, transform .15s ease;
-}
-
-.track-modal-option.is-selected .track-modal-option-mark {
-    opacity: 1;
-    transform: scale(1);
-}
-
-.track-modal-confirm {
-    width: 100%;
-}
-
-.track-modal-note {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    margin: 14px 0 0;
-    font-size: 12px;
-    line-height: 1.6;
-    color: var(--muted, #64748b);
-    text-align: center;
-}
-
-@media (max-width: 480px) {
-    .track-modal { padding: 12px; }
-
-    .track-modal-card {
-        padding: 22px 18px;
-        border-radius: 20px;
-    }
-
-    .track-modal-head h2 { font-size: 18.5px; }
-
-    .track-modal-options { grid-template-columns: 1fr; gap: 10px; }
-
-    .track-modal-option {
-        flex-direction: row;
-        align-items: center;
-        gap: 12px;
-        padding: 14px;
-        display: grid;
-        grid-template-columns: auto 1fr;
-        grid-template-areas:
-            "icon title"
-            "icon exam"
-            "icon desc";
-        column-gap: 13px;
-        row-gap: 2px;
-    }
-
-    .track-modal-option-icon {
-        grid-area: icon;
-        align-self: center;
-        margin-bottom: 0;
-        width: 42px;
-        height: 42px;
-    }
-
-    .track-modal-option-title { grid-area: title; font-size: 16px; }
-    .track-modal-option-exam  { grid-area: exam; }
-    .track-modal-option-desc  { grid-area: desc; }
-}
+/* Study-track modal itself now lives in common/TrackModal.css, shared with
+   Login (a brand-new Google identity signing in via /login must choose too). */
 
 /* Invite links carry their own track, so the invitee is shown what they were
    invited to rather than being asked to choose. */
@@ -388,7 +203,7 @@
     display: flex;
     align-items: center;
     gap: 9px;
-    margin: 2px 0 18px;
+    margin: 2px 0 14px;
     padding: 11px 14px;
     border-radius: 12px;
     border: 1px solid rgba(148, 163, 184, 0.32);

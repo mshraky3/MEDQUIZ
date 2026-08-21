@@ -106,11 +106,14 @@ const lazyEl = (node) => (
 // one of three access tiers. Naming the tiers makes the table below readable at
 // a glance — and makes it impossible to add a private page without saying so.
 //
-//   pub(...)    public page inside the standard Layout (navbar + footer)
-//   authed(...) signed-in users only
-//   admin(...)  admin only
+//   pub(...)         public page inside the standard Layout (navbar + footer)
+//   pubNoFooter(...) same, minus the footer — login/signup, where a page of
+//                    site links just adds scroll to a form mid-transaction
+//   authed(...)      signed-in users only
+//   admin(...)       admin only
 const withBoundary = (path, element) => ({ path, element, errorElement: <ErrorBoundary /> });
 const pub = (path, node) => withBoundary(path, <Layout>{lazyEl(node)}</Layout>);
+const pubNoFooter = (path, node) => withBoundary(path, <Layout hideFooter>{lazyEl(node)}</Layout>);
 const authed = (path, node) => withBoundary(path, <Layout><RequireAuth>{lazyEl(node)}</RequireAuth></Layout>);
 // Admin stays English/LTR regardless of the site language — AdminShell pins it.
 const admin = (path, node) => withBoundary(path, <AdminShell>{lazyEl(<AdminGate>{lazyEl(node)}</AdminGate>)}</AdminShell>);
@@ -120,12 +123,12 @@ const router = createBrowserRouter([
   withBoundary('/', <App />),
 
   // Public
-  pub('/login', <Login />),
-  pub('/signup', <Signup />),
-  pub('/signup/:token', <Signup />),
+  pubNoFooter('/login', <Login />),
+  pubNoFooter('/signup', <Signup />),
+  pubNoFooter('/signup/:token', <Signup />),
   // Paid group seat. A separate path from /signup/:token so the page can tell
   // an admin invite (free account) from a bought seat (paid, with an end date).
-  pub('/join/:token', <Signup />),
+  pubNoFooter('/join/:token', <Signup />),
   pub('/forgot-password', <ForgotPassword />),
   pub('/contact', <Contact />),
   pub('/about', <About />),

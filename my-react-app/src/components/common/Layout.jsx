@@ -16,7 +16,7 @@ import './Navbar.css';
 // was last actually synced (surviving across those remounts) does.
 let lastSyncedLang = null;
 
-const Layout = ({ children }) => {
+const Layout = ({ children, hideFooter = false }) => {
   const location = useLocation();
   const { user, sessionToken } = useContext(UserContext);
   const { lang } = useLang();
@@ -58,8 +58,11 @@ const Layout = ({ children }) => {
           /suggestions, and Navbar.css:401 still described a footer that
           wasn't actually here. .page-with-navbar is already a flex column
           with the right min-height, and Footer's own margin-top:auto is
-          exactly the sticky-footer pattern that needs. */}
-      <Footer />
+          exactly the sticky-footer pattern that needs.
+          hideFooter opts a page out — Login/Signup use it: a footer full of
+          site links adds a page-height of scroll to a form the visitor is
+          mid-transaction on. */}
+      {!hideFooter && <Footer />}
     </div>
   );
 };

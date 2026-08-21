@@ -69,10 +69,10 @@ const authCopy = {
             pillFree: '🎁 40 سؤالاً مجاناً',
             pillSeat: '👥 مقعد في مجموعة',
             titleInvite: 'أنشئ حسابك',
-            titleFree: 'ابدأ مجاناً',
+            titleFree: 'أنشئ حسابك',
             titleSeat: 'فعّل مقعدك',
             subtitleInvite: 'أنشئ حسابك المجاني ثم ابدأ اختباراً سريعاً من 10 أسئلة',
-            subtitleFree: 'أنشئ حسابك وأكّد بريدك لتبدأ فوراً بـ 40 سؤالاً مجانياً',
+            subtitleFree: 'أدخل بياناتك أدناه للمتابعة',
             subtitleSeat: 'أحدهم اشترى لك مقعداً — أنشئ حسابك ليصبح اشتراكك مفعّلاً فوراً',
             subtitleOtpInvite: (email) => `أدخل رمز التحقق المرسل إلى ${email}`,
             subtitleOtpFree: (email) => `أدخل الرمز المرسل إلى ${email} لتفعيل حسابك`,
@@ -113,6 +113,9 @@ const authCopy = {
             troubleQuestion: 'تواجه مشكلة؟',
             contactSupport: 'تواصل مع الدعم',
 
+            dividerOr: 'أو أنشئ حسابك يدوياً',
+            oauthError: 'تعذر إنشاء الحساب عبر جوجل. حاول مرة أخرى.',
+
             otpLabel: 'رمز التحقق',
             otpPlaceholder: 'أدخل الرمز المكون من 6 أرقام',
             otpSpamHintBefore: '⚠️ إذا لم تجد الرمز في بريدك، تحقّق من مجلد',
@@ -123,6 +126,7 @@ const authCopy = {
             changeEmail: 'تغيير البريد الإلكتروني',
             noCode: 'لم يصلك الرمز؟',
             resend: 'أعد الإرسال',
+            resendCooldown: (s) => `إعادة الإرسال بعد ${s} ثانية`,
 
             successTitle: 'تم إنشاء الحساب بنجاح!',
             successFree: 'لديك الآن 40 سؤالاً مجانياً، وأول درس من كل تخصص مفتوح لك دائماً 🎉',
@@ -155,15 +159,18 @@ const authCopy = {
             errOtpLength: 'يرجى إدخال الرمز المكون من 6 أرقام',
             errSendOtp: 'فشل إرسال رمز التحقق. حاول مرة أخرى.',
             errCreate: 'فشل في إنشاء الحساب',
+        },
 
-            trackModal: {
-                eyebrow: 'الخطوة الأولى',
-                title: 'هل أنت طالب/خريج تمريض أم طب بشري؟',
-                body: 'اختيارك يحدّد بنك الأسئلة والملخصات وتحليل الأداء الذي ستستخدمه. اختر بدقّة — لا يمكن تغييره لاحقاً إلا عبر الدعم.',
-                confirm: (label) => `متابعة كـ«${label}»`,
-                confirmEmpty: 'اختر مسارك للمتابعة',
-                note: 'اخترت المسار الخطأ؟ راسل الدعم قبل الاشتراك ونحوّل حسابك مجاناً.',
-            },
+        // Shared by Signup (every entry path but an invite link, which already
+        // carries its own track) and Login (a brand-new Google identity signing
+        // in via /login must still choose, same as any other new account).
+        trackModal: {
+            eyebrow: 'الخطوة الأولى',
+            title: 'هل أنت طالب/خريج تمريض أم طب بشري؟',
+            body: 'اختيارك يحدّد بنك الأسئلة والملخصات وتحليل الأداء الذي ستستخدمه. اختر بدقّة — لا يمكن تغييره لاحقاً إلا عبر الدعم.',
+            confirm: (label) => `متابعة كـ«${label}»`,
+            confirmEmpty: 'اختر مسارك للمتابعة',
+            note: 'اخترت المسار الخطأ؟ راسل الدعم قبل الاشتراك ونحوّل حسابك مجاناً.',
         },
 
         forgot: {
@@ -268,10 +275,10 @@ const authCopy = {
             pillFree: '🎁 40 free questions',
             pillSeat: '👥 A seat in a group',
             titleInvite: 'Create your account',
-            titleFree: 'Start free',
+            titleFree: 'Create your account',
             titleSeat: 'Activate your seat',
             subtitleInvite: 'Create your free account, then start a quick 10-question quiz',
-            subtitleFree: 'Create your account and confirm your email to start with 40 free questions',
+            subtitleFree: 'Enter your details below to continue',
             subtitleSeat: 'Someone bought you a seat — create your account and your subscription is active straight away',
             subtitleOtpInvite: (email) => `Enter the verification code sent to ${email}`,
             subtitleOtpFree: (email) => `Enter the code sent to ${email} to activate your account`,
@@ -312,6 +319,9 @@ const authCopy = {
             troubleQuestion: 'Having trouble?',
             contactSupport: 'Contact support',
 
+            dividerOr: 'or create your account manually',
+            oauthError: 'Could not sign up with Google. Please try again.',
+
             otpLabel: 'Verification code',
             otpPlaceholder: 'Enter the 6-digit code',
             otpSpamHintBefore: '⚠️ If the code is not in your inbox, check your',
@@ -322,6 +332,7 @@ const authCopy = {
             changeEmail: 'Change email address',
             noCode: 'Code did not arrive?',
             resend: 'Send it again',
+            resendCooldown: (s) => `Resend available in ${s}s`,
 
             successTitle: 'Your account is ready!',
             successFree: 'You have 40 free questions, and the first lesson of every specialty is yours to read any time 🎉',
@@ -354,15 +365,18 @@ const authCopy = {
             errOtpLength: 'Please enter the 6-digit code',
             errSendOtp: 'We could not send the verification code. Please try again.',
             errCreate: 'We could not create your account',
+        },
 
-            trackModal: {
-                eyebrow: 'First step',
-                title: 'Are you a nursing student/graduate, or a medical one?',
-                body: 'Your choice decides which question bank, summaries and performance analytics your account uses. Choose carefully — it can only be changed later through support.',
-                confirm: (label) => `Continue as “${label}”`,
-                confirmEmpty: 'Choose your track to continue',
-                note: 'Picked the wrong track? Message support before you subscribe and we will move your account free of charge.',
-            },
+        // Shared by Signup (every entry path but an invite link, which already
+        // carries its own track) and Login (a brand-new Google identity signing
+        // in via /login must still choose, same as any other new account).
+        trackModal: {
+            eyebrow: 'First step',
+            title: 'Are you a nursing student/graduate, or a medical one?',
+            body: 'Your choice decides which question bank, summaries and performance analytics your account uses. Choose carefully — it can only be changed later through support.',
+            confirm: (label) => `Continue as “${label}”`,
+            confirmEmpty: 'Choose your track to continue',
+            note: 'Picked the wrong track? Message support before you subscribe and we will move your account free of charge.',
         },
 
         forgot: {

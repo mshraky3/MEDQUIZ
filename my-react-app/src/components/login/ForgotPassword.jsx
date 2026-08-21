@@ -4,6 +4,11 @@ import axios from 'axios';
 import Globals from '../../global.js';
 import { useCopy, useLang } from '../../i18n';
 import authCopy from '../../i18n/copy/auth.js';
+// This page renders entirely with Login's classes (login-card, btn primary
+// large, form-input, ...) but is its own lazy route chunk — without this
+// import, a cold visit (a password-reset link opened fresh, e.g. from an
+// email) never loads Login.css and the page renders unstyled.
+import '../login/Login.css';
 
 const ForgotPassword = () => {
     const navigate = useNavigate();
@@ -88,7 +93,6 @@ const ForgotPassword = () => {
             <div className="login-wrapper">
                 <div className="login-card">
                     <div className="login-header">
-                        <span className="pill">{t.pill}</span>
                         <h1 className="login-title">{t.title}</h1>
                         <p className="login-subtitle">
                             {step === 'email' && t.subtitleEmail}
@@ -113,7 +117,7 @@ const ForgotPassword = () => {
                                 />
                             </div>
                             {error && <div className="alert-box error">{error}</div>}
-                            <button type="submit" className="btn btn-primary large" disabled={loading}>
+                            <button type="submit" className="btn primary large" disabled={loading}>
                                 {loading ? t.sending : t.sendOtp}
                             </button>
                             <div className="login-footer-text">
@@ -147,7 +151,7 @@ const ForgotPassword = () => {
                                 {t.spamHintBefore} <strong>{t.spamFolder}</strong> {t.spamOr} <strong>{t.trashFolder}</strong>.
                             </p>
                             {error && <div className="alert-box error">{error}</div>}
-                            <button type="submit" className="btn btn-primary large">{t.next}</button>
+                            <button type="submit" className="btn primary large">{t.next}</button>
                             <div className="login-footer-text">
                                 <button
                                     type="button"
@@ -189,7 +193,7 @@ const ForgotPassword = () => {
                                 />
                             </div>
                             {error && <div className="alert-box error">{error}</div>}
-                            <button type="submit" className="btn btn-primary large" disabled={loading}>
+                            <button type="submit" className="btn primary large" disabled={loading}>
                                 {loading ? t.submitting : t.submit}
                             </button>
                         </form>

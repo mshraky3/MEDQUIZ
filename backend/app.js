@@ -1915,6 +1915,15 @@ app.post('/api/auth/google', rateLimit(db, 'oauth_google', { windowMs: 5 * 60_00
     if (!credential) {
         return res.status(400).json({ message: 'Missing Google credential' });
     }
+    // Only used the first time this Google identity signs in — the signup
+    // page's track modal has already resolved it by then, and /login sends
+    // one along only after its own track modal resolves it too (see the
+    // needsTrackSelection branch below). isValidTrack, not normalizeTrack:
+    // normalizeTrack can't tell "no track sent" apart from "a real one was
+    // chosen" — it silently defaults both to 'medical', which is exactly the
+    // silent-default bug this branch exists to avoid. An existing account
+    // below keeps whatever track it already has, regardless of what's sent.
+    const requestedTrack = req.body.track;
     if (!GOOGLE_CLIENT_ID) {
         logger.error('GOOGLE_CLIENT_ID is not set — /api/auth/google cannot verify tokens');
         return res.status(500).json({ message: 'Google sign-in is not configured' });
@@ -1940,15 +1949,27 @@ app.post('/api/auth/google', rateLimit(db, 'oauth_google', { windowMs: 5 * 60_00
         await client.query('BEGIN');
         let { rows: [userRow] } = await client.query('SELECT * FROM accounts WHERE email = $1 FOR UPDATE', [email]);
 
+        if (!userRow && !isValidTrack(requestedTrack)) {
+            // Brand-new identity, no track chosen yet — do NOT auto-provision
+            // on a default. Every other signup path blocks on a track-choice
+            // modal before creating the account; this identity gets the same
+            // treatment instead of silently landing on 'medical'. The caller
+            // (Login.jsx, when this happens on /login) shows that modal and
+            // re-POSTs this same still-valid credential together with the
+            // chosen track to finish account creation.
+            await client.query('ROLLBACK');
+            return res.status(200).json({ needsTrackSelection: true });
+        }
+
         if (!userRow) {
             const inserted = await client.query(
                 `INSERT INTO accounts (username, email, isactive, logged, terms_accepted, email_verified, track, google_id)
                  VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
-                [email, email, true, false, false, true, DEFAULT_TRACK, googleId]
+                [email, email, true, false, false, true, requestedTrack, googleId]
             );
             userRow = inserted.rows[0];
             try {
-                await sendWelcomeEmail(email, email, DEFAULT_TRACK);
+                await sendWelcomeEmail(email, email, requestedTrack);
                 await client.query('UPDATE accounts SET welcome_email_sent = TRUE, welcome_email_sent_at = NOW() WHERE id = $1', [userRow.id]);
             } catch (welcomeErr) {
                 logger.error('Failed to send welcome email at Google signup', welcomeErr);

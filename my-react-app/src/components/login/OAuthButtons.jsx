@@ -9,13 +9,21 @@ import Globals from '../../global.js';
 // incomplete provider setup never ships a dead button.
 const GOOGLE_CLIENT_ID = import.meta.env?.VITE_GOOGLE_CLIENT_ID;
 
-const OAuthButtons = ({ dividerLabel, onSuccess, onError }) => {
+const OAuthButtons = ({ dividerLabel, onSuccess, onError, track }) => {
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
       const { data } = await axios.post(`${Globals.URL}/api/auth/google`, {
         credential: credentialResponse.credential,
+        // Only meaningful the first time this Google identity signs in —
+        // the backend ignores it for an existing account, whose track is
+        // already fixed. Undefined on the login page, which passes no track.
+        ...(track ? { track } : {}),
       });
-      onSuccess(data);
+      // The credential is still valid for ~1hr — passed through so a caller
+      // that gets back `needsTrackSelection` (a brand-new identity with no
+      // track yet) can re-POST it with a track once the visitor picks one,
+      // without asking them to click the Google button a second time.
+      onSuccess({ ...data, credential: credentialResponse.credential });
     } catch (err) {
       onError?.(err);
     }
@@ -33,6 +41,8 @@ const OAuthButtons = ({ dividerLabel, onSuccess, onError }) => {
               onSuccess={handleGoogleSuccess}
               onError={() => onError?.(new Error('google_login_failed'))}
               text="continue_with"
+              shape="pill"
+              size="large"
             />
           </GoogleOAuthProvider>
         </div>

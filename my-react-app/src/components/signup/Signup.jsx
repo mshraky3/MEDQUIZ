@@ -6,10 +6,12 @@ import { safeTrack, trackFunnel } from '../../utils/analytics.js';
 import Globals from '../../global.js';
 import Spinner from '../common/Spinner.jsx';
 import { UserContext } from '../../UserContext';
-import { TRACKS, TRACK_KEYS, normalizeTrack, pick } from '../../utils/tracks.js';
+import { TRACKS, normalizeTrack, pick } from '../../utils/tracks.js';
 import { useCopy, useLang } from '../../i18n';
 import { formatDate } from '../../i18n/format.js';
 import authCopy from '../../i18n/copy/auth.js';
+import OAuthButtons from '../login/OAuthButtons.jsx';
+import TrackModal from '../common/TrackModal.jsx';
 import '../login/Login.css';
 import './Signup.css';
 
@@ -19,15 +21,14 @@ const Signup = () => {
         email: '',
         password: '',
         confirmPassword: '',
-        // Optional. Feeds the exam-date reminder ladder (lifecycleJobs.js) and
-        // the hub countdown — asked here because almost nobody sets it later
-        // from settings (see MONETIZATION_ANALYSIS_2026-08.md §3.3). Never
-        // required: plenty of students sign up before they have a sitting date.
-        examDate: ''
     });
     const [termsAgreed, setTermsAgreed] = useState(false);
     const [otp, setOtp] = useState('');
     const [step, setStep] = useState('credentials'); // 'credentials' | 'otp'
+    // Seconds until "resend" is clickable again — resets to 30 on every send,
+    // ticks down via the effect below. Nothing server-side rate-limits this
+    // click, so without it a visitor can spam send-otp as fast as they can tap.
+    const [resendCooldown, setResendCooldown] = useState(0);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
@@ -53,10 +54,19 @@ const Signup = () => {
     // before the form is usable rather than inherited from a preselected radio.
     const [studyTrack, setStudyTrack] = useState(null);
     const [showTrackModal, setShowTrackModal] = useState(false);
+    // Google sign-in skips the inline terms checkbox entirely, so a
+    // brand-new Google account still needs the same explicit accept step a
+    // brand-new password account gets on its first login (see Login.jsx's
+    // identical popup) — held here as its own state because it belongs to
+    // the freshly created session, not the credentials form.
+    const [showTermsPopup, setShowTermsPopup] = useState(false);
+    const [termsChecked, setTermsChecked] = useState(false);
+    const [oauthSession, setOauthSession] = useState(null);
     const navigate = useNavigate();
     const { token } = useParams();
     const location = useLocation();
     const t = useCopy(authCopy).signup;
+    const terms = useCopy(authCopy).terms;
     const { lang, dir } = useLang();
 
     const isGroupSeat = location.pathname.startsWith('/join/');
@@ -81,6 +91,12 @@ const Signup = () => {
         trackFunnel('signup_view', { entryType });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    useEffect(() => {
+        if (resendCooldown <= 0) return;
+        const id = setTimeout(() => setResendCooldown((s) => s - 1), 1000);
+        return () => clearTimeout(id);
+    }, [resendCooldown]);
 
     const validateGroupSeat = async () => {
         try {
@@ -244,7 +260,6 @@ const Signup = () => {
                         password: form.password,
                         otp_code: otpCode,
                         track: studyTrack,
-                        examDate: form.examDate || undefined,
                     };
 
             const response = await axios.post(`${Globals.URL}${endpoint}`, payload);
@@ -289,6 +304,7 @@ const Signup = () => {
         try {
             await sendOtp();
             setStep('otp');
+            setResendCooldown(30);
         } catch (err) {
             setError(err.response?.data?.message || t.errSendOtp);
         } finally {
@@ -301,6 +317,7 @@ const Signup = () => {
         setLoading(true);
         try {
             await sendOtp();
+            setResendCooldown(30);
         } catch (err) {
             setError(err.response?.data?.message || t.errSendOtp);
         } finally {
@@ -318,6 +335,48 @@ const Signup = () => {
         }
 
         await createAccount(otp);
+    };
+
+    // Google sign-in shares the exact response shape /login and the
+    // email/password signup return (showTerms, user, sessionToken) — the
+    // backend creates the account on first sight of this Google identity,
+    // on the study track already chosen in the blocking modal above (see
+    // OAuthButtons' `track` prop). No OTP step: Google has already verified
+    // the email address.
+    const handleOAuthSuccess = (data) => {
+        setError('');
+        if (data.showTerms) {
+            setOauthSession({ username: data.user?.username || data.user?.email, sessionToken: data.sessionToken });
+            setUser(data.user, data.sessionToken);
+            setShowTermsPopup(true);
+            return;
+        }
+        setUser(data.user, data.sessionToken);
+        safeTrack('signup_success', { entryType: 'google-oauth', studyTrack });
+        navigate('/quizs', { replace: true, state: data });
+    };
+
+    const handleOAuthError = () => {
+        setError(t.oauthError);
+    };
+
+    const handleAcceptOAuthTerms = async () => {
+        if (!termsChecked || !oauthSession) return;
+        setShowTermsPopup(false);
+        setLoading(true);
+        try {
+            await axios.post(
+                `${Globals.URL}/accept-terms`,
+                { username: oauthSession.username },
+                { headers: { Authorization: `Bearer ${oauthSession.sessionToken}` } }
+            );
+            safeTrack('signup_success', { entryType: 'google-oauth', studyTrack });
+            navigate('/quizs', { replace: true });
+        } catch (err) {
+            setError(t.errCreate);
+        } finally {
+            setLoading(false);
+        }
     };
 
     if (success) {
@@ -373,7 +432,7 @@ const Signup = () => {
                         <div className="login-form">
                             <button
                                 type="button"
-                                className="btn btn-primary large"
+                                className="btn primary large"
                                 onClick={() => {
                                     // Both /signup and /signup/:token render this same
                                     // component, so the router may reuse the instance —
@@ -401,9 +460,16 @@ const Signup = () => {
             <div className="login-wrapper signup-wide">
                 <div className="login-card signup-short">
                     <div className="login-header">
-                        <div className="pill">
-                            {isGroupSeat ? t.pillSeat : isTempLink ? t.pillInvite : t.pillFree}
-                        </div>
+                        {/* The free-account pill was a promotional badge repeating what
+                            the title/subtitle already say — three "free questions"
+                            mentions stacked in a row read as an ad, not a signup form.
+                            Seat/invite keep theirs: those convey actual account state
+                            (a paid seat, an admin invite), not a sales pitch. */}
+                        {(isGroupSeat || isTempLink) && (
+                            <div className="pill">
+                                {isGroupSeat ? t.pillSeat : t.pillInvite}
+                            </div>
+                        )}
                         <div className="login-title">
                             {isGroupSeat ? t.titleSeat : isTempLink ? t.titleInvite : t.titleFree}
                         </div>
@@ -424,16 +490,6 @@ const Signup = () => {
                             <div className="trial-callout-body">
                                 <strong>{t.seatCalloutTitle}</strong>
                                 <span>{t.seatCalloutBody(formatDate(seatExpiresAt, lang))}</span>
-                            </div>
-                        </div>
-                    )}
-
-                    {!token && (
-                        <div className="trial-callout">
-                            <span className="trial-callout-icon" aria-hidden="true"><Icon name="help-circle" size={20} /></span>
-                            <div className="trial-callout-body">
-                                <strong>{t.freeCalloutTitle}</strong>
-                                <span>{t.freeCalloutBody}</span>
                             </div>
                         </div>
                     )}
@@ -465,6 +521,14 @@ const Signup = () => {
                                     </button>
                                 </div>
                             )}
+                            {!token && (
+                                <OAuthButtons
+                                    dividerLabel={t.dividerOr}
+                                    onSuccess={handleOAuthSuccess}
+                                    onError={handleOAuthError}
+                                    track={studyTrack}
+                                />
+                            )}
                             <div className="form-group">
                                 <label className="form-label" htmlFor="email">{t.emailLabel}</label>
                                 <input
@@ -479,51 +543,36 @@ const Signup = () => {
                                     required
                                 />
                             </div>
-                            <div className="form-group">
-                                <label className="form-label" htmlFor="password">{t.passwordLabel}</label>
-                                <input
-                                    type="password"
-                                    id="password"
-                                    name="password"
-                                    className="form-input"
-                                    value={form.password}
-                                    onChange={handleInputChange}
-                                    placeholder={t.passwordPlaceholder}
-                                    autoComplete="new-password"
-                                    required
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label className="form-label" htmlFor="confirmPassword">{t.confirmLabel}</label>
-                                <input
-                                    type="password"
-                                    id="confirmPassword"
-                                    name="confirmPassword"
-                                    className="form-input"
-                                    value={form.confirmPassword}
-                                    onChange={handleInputChange}
-                                    placeholder={t.confirmPlaceholder}
-                                    autoComplete="new-password"
-                                    required
-                                />
-                            </div>
-                            {!token && (
+                            <div className="signup-password-row">
                                 <div className="form-group">
-                                    <label className="form-label" htmlFor="examDate">
-                                        {t.examDateLabel} <span className="form-label-optional">{t.examDateOptional}</span>
-                                    </label>
+                                    <label className="form-label" htmlFor="password">{t.passwordLabel}</label>
                                     <input
-                                        type="date"
-                                        id="examDate"
-                                        name="examDate"
+                                        type="password"
+                                        id="password"
+                                        name="password"
                                         className="form-input"
-                                        value={form.examDate}
+                                        value={form.password}
                                         onChange={handleInputChange}
-                                        min={new Date().toISOString().slice(0, 10)}
+                                        placeholder={t.passwordPlaceholder}
+                                        autoComplete="new-password"
+                                        required
                                     />
-                                    <p className="form-hint">{t.examDateHint}</p>
                                 </div>
-                            )}
+                                <div className="form-group">
+                                    <label className="form-label" htmlFor="confirmPassword">{t.confirmLabel}</label>
+                                    <input
+                                        type="password"
+                                        id="confirmPassword"
+                                        name="confirmPassword"
+                                        className="form-input"
+                                        value={form.confirmPassword}
+                                        onChange={handleInputChange}
+                                        placeholder={t.confirmPlaceholder}
+                                        autoComplete="new-password"
+                                        required
+                                    />
+                                </div>
+                            </div>
                             <label className="terms-agree-row">
                                 <input
                                     type="checkbox"
@@ -540,7 +589,7 @@ const Signup = () => {
                             {error && <div className="alert-box error">{error}</div>}
                             <button
                                 type="submit"
-                                className="btn btn-primary large"
+                                className="btn primary large"
                                 disabled={loading}
                             >
                                 {loading ? (
@@ -581,7 +630,7 @@ const Signup = () => {
                                 </p>
                             </div>
                             {error && <div className="alert-box error">{error}</div>}
-                            <button type="submit" className="btn btn-primary large" disabled={loading}>
+                            <button type="submit" className="btn primary large" disabled={loading}>
                                 {loading ? (
                                     <div className="loading-spinner"><Spinner size="sm" />{t.creatingAccount}</div>
                                 ) : t.otpSubmit}
@@ -602,15 +651,63 @@ const Signup = () => {
                                     className="link-primary"
                                     style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
                                     onClick={handleResendOtp}
-                                    disabled={loading}
+                                    disabled={loading || resendCooldown > 0}
                                 >
-                                    {t.resend}
+                                    {resendCooldown > 0 ? t.resendCooldown(resendCooldown) : t.resend}
                                 </button>
                             </div>
                         </form>
                     )}
                 </div>
             </div>
+
+            {/* Terms popup for a Google-created account — see handleOAuthSuccess.
+                Identical content/markup to Login.jsx's popup of the same name,
+                just scoped to the oauthSession this page tracks itself. */}
+            {showTermsPopup && (
+                <div className="popup-overlay">
+                    <div className="popup-content large-popup">
+                        <div className="terms-section">
+                            <h4>{terms.title}</h4>
+                            {terms.sections.map((sec) => (
+                                <p key={sec.heading}>
+                                    <strong>{sec.heading}:</strong><br />
+                                    {sec.body}
+                                </p>
+                            ))}
+                            <div>
+                                <strong>{terms.prohibitedHeading}:</strong><br />
+                                <ul>
+                                    {terms.prohibited.map((item) => <li key={item}>{item}</li>)}
+                                </ul>
+                            </div>
+                            {terms.sectionsAfter.map((sec) => (
+                                <p key={sec.heading}>
+                                    <strong>{sec.heading}:</strong><br />
+                                    {sec.body}
+                                </p>
+                            ))}
+                            <p>{terms.closing}</p>
+                        </div>
+                        <label className="checkbox-label">
+                            <input
+                                type="checkbox"
+                                checked={termsChecked}
+                                onChange={(e) => setTermsChecked(e.target.checked)}
+                            />
+                            {terms.accept}
+                        </label>
+                        <button
+                            className="popup-btn try-free"
+                            onClick={handleAcceptOAuthTerms}
+                            disabled={!termsChecked}
+                            style={{ marginTop: '15px' }}
+                        >
+                            {terms.continue}
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* ── Study-track modal ────────────────────────────────────────────
                 Opens before anything else on a regular signup and cannot be
@@ -620,56 +717,11 @@ const Signup = () => {
                 radio with a default was quietly sending nursing students into
                 the medical bank. */}
             {showTrackModal && !isTempLink && (
-                <div className="track-modal" dir={dir} role="dialog" aria-modal="true" aria-labelledby="track-modal-title">
-                    <div className="track-modal-card">
-                        <div className="track-modal-head">
-                            <span className="track-modal-eyebrow">{t.trackModal.eyebrow}</span>
-                            <h2 id="track-modal-title">{t.trackModal.title}</h2>
-                            <p>{t.trackModal.body}</p>
-                        </div>
-
-                        <div className="track-modal-options">
-                            {TRACK_KEYS.map((key) => {
-                                const trackDef = TRACKS[key];
-                                const selected = studyTrack === key;
-                                return (
-                                    <button
-                                        type="button"
-                                        key={key}
-                                        className={`track-modal-option${selected ? ' is-selected' : ''}`}
-                                        aria-pressed={selected}
-                                        onClick={() => { setStudyTrack(key); trackFunnel('signup_track_selected', { track: key }); }}
-                                    >
-                                        <span className="track-modal-option-icon" aria-hidden="true">
-                                            <Icon name={trackDef.icon} size={26} />
-                                        </span>
-                                        <span className="track-modal-option-title">{pick(trackDef.label, lang)}</span>
-                                        <span className="track-modal-option-exam">{pick(trackDef.exam, lang)}</span>
-                                        <span className="track-modal-option-desc">{pick(trackDef.blurb, lang)}</span>
-                                        <span className="track-modal-option-mark" aria-hidden="true">
-                                            <Icon name="check" size={15} />
-                                        </span>
-                                    </button>
-                                );
-                            })}
-                        </div>
-
-                        <button
-                            type="button"
-                            className="btn btn-primary large track-modal-confirm"
-                            disabled={!studyTrack}
-                            onClick={() => { setError(''); setShowTrackModal(false); }}
-                        >
-                            {studyTrack
-                                ? t.trackModal.confirm(pick(TRACKS[studyTrack].label, lang))
-                                : t.trackModal.confirmEmpty}
-                        </button>
-
-                        <p className="track-modal-note">
-                            <Icon name="info" size={14} /> {t.trackModal.note}
-                        </p>
-                    </div>
-                </div>
+                <TrackModal
+                    studyTrack={studyTrack}
+                    onSelect={(key) => { setStudyTrack(key); trackFunnel('signup_track_selected', { track: key }); }}
+                    onConfirm={() => { setError(''); setShowTrackModal(false); }}
+                />
             )}
         </div>
     );
