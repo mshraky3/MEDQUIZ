@@ -62,11 +62,18 @@ const subscriptionInfo = (user) => {
 };
 
 /**
- * Did we create this account, or did the student? Two independent markers:
- * temp-link invites set `is_admin_created` (which also exempts them from the
- * paywall), the admin form sets only `account_type` (no exemption).
+ * Did we create this account, or did the student? `account_type` is the only
+ * marker that answers that. Both creation paths — the admin form and temp-link
+ * invites — set it to 'admin_created'.
+ *
+ * Deliberately NOT `is_admin_created`: that flag means "granted by an admin",
+ * which is a fact about the SUBSCRIPTION, not about who opened the account. A
+ * student who signed up themselves and was later comped from the panel carries
+ * the flag, and reading it here would relabel their origin as Admin-created —
+ * losing the one column that says where they actually came from. The grant is
+ * already shown, in the subscription column, by subscriptionInfo() above.
  */
-const adminMade = (user) => Boolean(user.is_admin_created) || user.account_type === 'admin_created';
+const adminMade = (user) => user.account_type === 'admin_created';
 
 // English labels for payment plan ids — admin is pinned English/LTR, mirrors
 // the ar/en copy in src/i18n/copy/account.js (kept separate since that file
@@ -86,7 +93,9 @@ const planLabel = (planId) => (planId ? (PLAN_LABELS[planId] || planId) : null);
 // rewrite.
 const DEFAULT_GRANT_MONTHS = 12;
 const MAX_GRANT_MONTHS = 120;
-const GRANT_PRESETS = [1, 3, 6, 12];
+// 4 is here because four_month is a plan we actually sell — the commonest
+// term to comp is the one people would otherwise have bought.
+const GRANT_PRESETS = [1, 3, 4, 6, 12];
 
 /** "1 year" reads better than "12 months" for the commonest case. */
 const monthsLabel = (m) => {
@@ -95,15 +104,32 @@ const monthsLabel = (m) => {
     return `${m} month${m === 1 ? '' : 's'}`;
 };
 
+// `tone` picks the badge colour so the summary tiles and the row badges use one
+// palette — a "Paid" tile in a different green from the "Paid" badge under it
+// reads as two different things.
 const PLAN_FILTERS = [
-    { value: 'all', label: 'All plans' },
-    { value: 'paid', label: 'Paid' },
-    { value: 'free', label: 'Free — questions left' },
-    { value: 'spent', label: 'Free — used up' },
-    { value: 'expired', label: 'Expired / refunded' },
-    { value: 'exempt', label: 'Admin grant (active)' },
-    { value: 'legacy', label: 'Legacy' },
+    { value: 'all', label: 'All plans', tone: 'free' },
+    { value: 'paid', label: 'Paid', tone: 'paid' },
+    { value: 'exempt', label: 'Admin grant (active)', tone: 'legacy' },
+    { value: 'free', label: 'Free — questions left', tone: 'free' },
+    { value: 'spent', label: 'Free — used up', tone: 'expired' },
+    { value: 'expired', label: 'Expired / refunded', tone: 'expired' },
+    { value: 'legacy', label: 'Legacy', tone: 'legacy' },
 ];
+
+/**
+ * One predicate, used by BOTH the dropdown filter and the summary tiles above
+ * the table. Defined once on purpose: a tile that says "4 Paid" and a filter
+ * that then lists 9 rows is worse than having neither.
+ */
+const matchesPlanFilter = (user, filterValue) => {
+    if (filterValue === 'all') return true;
+    const { key } = subscriptionInfo(user);
+    // 'expired' is the one filter covering two states — a lapsed subscription
+    // and a reversed one are the same thing to an admin scanning the list.
+    if (filterValue === 'expired') return key === 'expired' || key === 'refunded';
+    return key === filterValue;
+};
 
 const ADD = (props) => {
     // State for add account form
@@ -135,6 +161,13 @@ const ADD = (props) => {
     const [showLoginHistory, setShowLoginHistory] = useState(false);
     const [loginHistory, setLoginHistory] = useState([]);
     const [deletingUser, setDeletingUser] = useState(null);
+    // Granting access to an EXISTING account (the "upgrade" flow). Null target
+    // means the modal is closed — one piece of state, not a separate boolean
+    // that can disagree with it.
+    const [grantTarget, setGrantTarget] = useState(null);
+    const [grantMonths, setGrantMonths] = useState(4);
+    const [grantReason, setGrantReason] = useState("");
+    const [grantSaving, setGrantSaving] = useState(false);
 
     // Fetch users with activity data
     const fetchUsers = async () => {
@@ -250,6 +283,54 @@ const ADD = (props) => {
         }
     };
 
+    /**
+     * Open the upgrade modal for one account. Defaults the term to 4 months —
+     * the plan most people would otherwise have bought — and clears whatever
+     * reason was typed for the previous user, which must never carry over into
+     * a different account's audit record.
+     */
+    const openGrant = (user) => {
+        setGrantTarget(user);
+        setGrantMonths(4);
+        setGrantReason("");
+        setError("");
+        setMessage("");
+    };
+
+    /**
+     * Give an existing account paid access without a payment.
+     *
+     * The server is the authority on the resulting date — it recomputes the
+     * expiry under a row lock — so the success message quotes what came BACK,
+     * never the date this component previewed. The two differ whenever a real
+     * payment lands in the same moment, and the admin needs to see the one that
+     * actually got written.
+     */
+    const handleGrantAccess = async () => {
+        if (!grantTarget) return;
+        setGrantSaving(true);
+        setError("");
+        try {
+            const { data } = await axios.post(
+                `${props.host}/admin/users/${grantTarget.id}/grant-subscription`,
+                { months: grantMonths, reason: grantReason.trim() || undefined }
+            );
+            const g = data.grant;
+            const until = new Date(g.newExpiry).toLocaleDateString();
+            setMessage(
+                g.wasActive
+                    ? `Added ${monthsLabel(g.months)} to ${g.email} — now paid until ${until}.`
+                    : `${g.email} now has access until ${until} (${monthsLabel(g.months)}).`
+            );
+            setGrantTarget(null);
+            fetchUsers();
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to grant access.');
+        } finally {
+            setGrantSaving(false);
+        }
+    };
+
     // Handle delete user
     const handleDeleteUser = async (userId, username) => {
         if (!window.confirm(`Are you sure you want to delete user "${username}"? This will permanently delete all their data including quiz history, analysis, and streaks. This action cannot be undone.`)) {
@@ -300,11 +381,7 @@ const ADD = (props) => {
         // Narrow to one commercial cohort — "who is actually paying" is the
         // question this table gets asked most.
         if (planFilter !== 'all') {
-            filtered = filtered.filter((user) => {
-                const { key } = subscriptionInfo(user);
-                if (planFilter === 'expired') return key === 'expired' || key === 'refunded';
-                return key === planFilter;
-            });
+            filtered = filtered.filter((user) => matchesPlanFilter(user, planFilter));
         }
 
         // Apply sort
@@ -346,6 +423,22 @@ const ADD = (props) => {
         return users.filter(user => user.suspicious?.hasSuspiciousActivity);
     }, [users]);
 
+    /**
+     * How many accounts are in each access state — the answer to "how many
+     * people are ACTUALLY paying", which the row badges alone cannot give you
+     * without counting 200 rows by eye.
+     *
+     * Paid and Admin grant are separate tiles because they are separate facts:
+     * a granted account carries subscription_status='active' exactly like a
+     * paid one, so anything that treats "active" as "paying" over-reports
+     * revenue. (The dashboard's own subscriber count had this bug.)
+     */
+    const accessMix = useMemo(() => (
+        PLAN_FILTERS
+            .filter((f) => f.value !== 'all')
+            .map((f) => ({ ...f, count: users.filter((u) => matchesPlanFilter(u, f.value)).length }))
+    ), [users]);
+
     return (
         <AdminLayout containerClassName="admin-dashboard">
                 {/* Tab Navigation */}
@@ -377,6 +470,31 @@ const ADD = (props) => {
                 {/* Users Tab */}
                 {activeTab === 'users' && (
                     <div className="tab-content">
+                        {/* Where access actually comes from. Paid and Admin grant
+                            look identical in the accounts table — both are
+                            subscription_status='active' with an expiry — so they
+                            are split here, and each tile doubles as the filter
+                            for its own cohort. */}
+                        <div className="access-mix">
+                            {accessMix.map((tile) => (
+                                <button
+                                    key={tile.value}
+                                    type="button"
+                                    className={`access-tile access-tile--${tile.tone}${planFilter === tile.value ? ' is-active' : ''}`}
+                                    onClick={() => setPlanFilter(planFilter === tile.value ? 'all' : tile.value)}
+                                    title={`Show only: ${tile.label}`}
+                                >
+                                    <span className="access-tile-count">{tile.count}</span>
+                                    <span className="access-tile-label">{tile.label}</span>
+                                </button>
+                            ))}
+                        </div>
+                        <p className="access-mix-note">
+                            <Icon name="info" size={13} />{' '}
+                            <strong>Paid</strong> is money received. <strong>Admin grant</strong> is access
+                            given from this panel or a temp link — it never counts as revenue.
+                        </p>
+
                         {/* Search and Sort Controls */}
                         <div className="users-controls">
                             <div className="search-box">
@@ -541,6 +659,13 @@ const ADD = (props) => {
                                                         <Icon name="check" size={16} />
                                                     </button>
                                                 )}
+                                                <button
+                                                    className="action-btn grant-btn"
+                                                    onClick={() => openGrant(user)}
+                                                    title="Grant / extend paid access"
+                                                >
+                                                    <Icon name="shield-check" size={16} />
+                                                </button>
                                                 <button
                                                     className="action-btn track-btn"
                                                     onClick={() => handleChangeTrack(user)}
@@ -753,6 +878,135 @@ const ADD = (props) => {
                         </div>
                     </div>
                 )}
+
+                {/* Grant / extend access ("upgrade") */}
+                {grantTarget && (() => {
+                    const current = subscriptionInfo(grantTarget);
+                    const currentExpiry = grantTarget.subscription_expiry_date
+                        ? new Date(grantTarget.subscription_expiry_date)
+                        : null;
+                    // Mirrors computeNewExpiry() on the server: a term stacks on
+                    // top of a LIVE subscription and starts from today for a
+                    // lapsed or free one. Shown before confirming because
+                    // "4 months" means two different dates in those two cases,
+                    // and picking the wrong one is invisible afterwards.
+                    const stillLive = currentExpiry && currentExpiry.getTime() > Date.now();
+                    const preview = new Date(stillLive ? currentExpiry : new Date());
+                    preview.setMonth(preview.getMonth() + grantMonths);
+                    return (
+                        <div className="modal-overlay" onClick={() => !grantSaving && setGrantTarget(null)}>
+                            <div className="modal-content grant-modal" onClick={(e) => e.stopPropagation()}>
+                                <div className="modal-header">
+                                    <h3><Icon name="shield-check" size={18} /> Grant access</h3>
+                                    <button className="modal-close" onClick={() => setGrantTarget(null)} disabled={grantSaving}>
+                                        <Icon name="x" size={16} />
+                                    </button>
+                                </div>
+                                <div className="modal-body">
+                                    <div className="grant-account">
+                                        <div className="grant-account-name">{grantTarget.email || grantTarget.username}</div>
+                                        <div className="grant-account-meta">
+                                            <span>ID {grantTarget.id}</span>
+                                            <span className={`plan-badge plan-badge--${current.cls}`}>{current.label}</span>
+                                            <span className="plan-detail">{current.detail}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label htmlFor="grantMonths">How long</label>
+                                        <div className="grant-months-row">
+                                            {GRANT_PRESETS.map((m) => (
+                                                <button
+                                                    key={m}
+                                                    type="button"
+                                                    className={`grant-preset${grantMonths === m ? ' is-selected' : ''}`}
+                                                    onClick={() => setGrantMonths(m)}
+                                                >
+                                                    {m === 12 ? '1 year' : `${m} mo`}
+                                                </button>
+                                            ))}
+                                            <span className="grant-months-field">
+                                                <input
+                                                    id="grantMonths"
+                                                    type="number"
+                                                    min="1"
+                                                    max={MAX_GRANT_MONTHS}
+                                                    value={grantMonths}
+                                                    onChange={(e) => setGrantMonths(
+                                                        Math.max(1, Math.min(MAX_GRANT_MONTHS, parseInt(e.target.value, 10) || 1))
+                                                    )}
+                                                    className="form-input grant-months-input"
+                                                    aria-label="Months of access to grant"
+                                                />
+                                                <span className="grant-months-unit">months</span>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div className="grant-preview">
+                                        <div className="grant-preview-row">
+                                            <span>Access ends</span>
+                                            <strong>
+                                                {currentExpiry ? currentExpiry.toLocaleDateString() : 'no access'}
+                                                {' \u2192 '}
+                                                <span className="grant-preview-new">{preview.toLocaleDateString()}</span>
+                                            </strong>
+                                        </div>
+                                        <p className="grant-preview-note">
+                                            {stillLive
+                                                ? `Stacks: ${monthsLabel(grantMonths)} is ADDED to the time they already have.`
+                                                : 'Starts today - they have no live access right now.'}
+                                        </p>
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label htmlFor="grantReason">Reason <span className="grant-optional">(optional)</span></label>
+                                        <input
+                                            id="grantReason"
+                                            type="text"
+                                            className="form-input"
+                                            placeholder="e.g. support case, giveaway, bank transfer received"
+                                            value={grantReason}
+                                            onChange={(e) => setGrantReason(e.target.value)}
+                                            maxLength={200}
+                                        />
+                                        <small className="form-hint">
+                                            Stored on the audit record. Worth writing when the money arrived
+                                            some other way - it is the only note explaining why this account
+                                            has access with no payment behind it.
+                                        </small>
+                                    </div>
+
+                                    <p className="grant-warning">
+                                        <Icon name="info" size={13} />{' '}
+                                        This is <strong>not</strong> a payment. It is recorded as an admin grant,
+                                        stays out of every revenue figure, and this account will show as{' '}
+                                        <strong>Admin grant</strong> - not Paid.
+                                    </p>
+
+                                    <div className="grant-actions">
+                                        <button
+                                            className="btn-secondary"
+                                            onClick={() => setGrantTarget(null)}
+                                            disabled={grantSaving}
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            className="btn-primary"
+                                            onClick={handleGrantAccess}
+                                            disabled={grantSaving}
+                                        >
+                                            {grantSaving
+                                                ? <><Icon name="hourglass" size={14} /> Granting...</>
+                                                : <><Icon name="shield-check" size={14} /> Grant {monthsLabel(grantMonths)}</>}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })()}
 
                 {/* Login History Modal */}
                 {showLoginHistory && selectedUser && (

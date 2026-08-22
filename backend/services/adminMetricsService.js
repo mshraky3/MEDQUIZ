@@ -27,7 +27,13 @@ export function riyadhMonthKey(date) {
 // Exported as strings so every query that needs "is this account a paying
 // subscriber" splices in the exact same condition. A predicate defined twice
 // is how the dashboard and analytics page disagreed before.
-export const SQL_ACTIVE_SUBSCRIBER = `subscription_status = 'active' AND subscription_expiry_date > NOW()`;
+// is_admin_created excluded deliberately: admin grants, temp-link invites and
+// admin-created accounts all carry subscription_status='active' plus a real
+// expiry, so without this they were counted as PAYING subscribers on the
+// dashboard while also being counted again under admin_created below. They are
+// access, not revenue — SQL_HAS_ACCESS picks them up on its own arm.
+export const SQL_ACTIVE_SUBSCRIBER = `subscription_status = 'active' AND subscription_expiry_date > NOW()
+    AND is_admin_created = FALSE`;
 // is_admin_created is a TIMED grant, not a permanent one (see
 // checkSubscriptionAccess in paymentService.js), so it only counts as access
 // while its expiry is in the future. The NULL-expiry arm mirrors the safety

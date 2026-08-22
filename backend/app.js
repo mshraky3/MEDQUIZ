@@ -13,7 +13,8 @@ import questionReportsRouter from './routes/question-reports.js';
 import emailCampaignsRouter from './routes/email-campaigns.js';
 import adminBroadcastRouter, { unsubToken } from './routes/admin-broadcast.js';
 import paymentRoutes from './routes/payment.js';
-import { checkSubscriptionAccess, checkQuizAccess, isPaymentEnforcementEnabled, FREE_QUESTION_ALLOWANCE, getPlan } from './services/paymentService.js';
+import { checkSubscriptionAccess, checkQuizAccess, isPaymentEnforcementEnabled, FREE_QUESTION_ALLOWANCE, getPlan,
+         grantSubscriptionMonths, MIN_GRANT_MONTHS, MAX_GRANT_MONTHS } from './services/paymentService.js';
 import { adminAuth, isAdminRequest } from './middleware/adminAuth.js';
 import { subscriptionGuard, quizAccessGuard } from './middleware/subscriptionGuard.js';
 import summariesRouter from './routes/summaries.js';
@@ -1061,6 +1062,83 @@ app.post('/admin/users/:userId/track', adminAuth, async (req, res) => {
     } catch (err) {
         logger.error('Error changing user track', err);
         res.status(500).json({ message: 'Failed to change track' });
+    }
+});
+
+/**
+ * Give an existing account paid access for N months, with no payment taken.
+ *
+ * The panel door to grantSubscriptionMonths() — the CLI door is
+ * scripts/grantSubscription.mjs, and both go through the same function so a
+ * grant made either way is recorded identically.
+ *
+ * The term STACKS: granting to someone mid-subscription adds months to what
+ * they have rather than resetting them to N. The response returns both the
+ * previous and the new expiry so the UI can show what actually changed instead
+ * of asserting a date the server may have computed differently.
+ */
+app.post('/admin/users/:userId/grant-subscription', adminAuth, async (req, res) => {
+    const { userId } = req.params;
+    const { months, reason } = req.body || {};
+
+    if (months === undefined || months === null || months === '' || Number.isNaN(Number(months))) {
+        return res.status(400).json({ message: 'months is required and must be a number' });
+    }
+    // normalizeGrantMonths clamps rather than rejects, so an out-of-range value
+    // would silently become a different term than the admin picked. Say so.
+    const requested = Math.round(Number(months));
+    if (requested < MIN_GRANT_MONTHS || requested > MAX_GRANT_MONTHS) {
+        return res.status(400).json({
+            message: `months must be between ${MIN_GRANT_MONTHS} and ${MAX_GRANT_MONTHS}`,
+        });
+    }
+
+    try {
+        const result = await grantSubscriptionMonths(db, userId, requested, {
+            reason: (typeof reason === 'string' && reason.trim()) || 'granted from admin panel',
+            grantedBy: 'admin_panel',
+        });
+
+        // The cached session carries the old subscription state — drop it so the
+        // paywall re-reads the account on the student's very next request
+        // instead of making them wait out the cache to see what they were given.
+        invalidateSessionCache(result.username);
+        invalidateSessionCache(result.email);
+
+        logger.info(
+            `Admin granted ${result.months} month(s) to account ${userId} `
+            + `(${result.previousStatus} → active, expires ${new Date(result.newExpiry).toISOString().slice(0, 10)})`
+        );
+
+        // Owner notification, mirroring /add_account. Deliberately not awaited
+        // into the failure path: the grant is already committed, and a mail
+        // provider outage must not report a successful grant as failed.
+        try {
+            const when = new Date(result.newExpiry).toLocaleDateString();
+            const subject = `Access granted - ${result.email} (${result.months} month(s))`;
+            const text = `Admin granted paid access without a payment.
+
+Account: ${result.email} (ID ${result.accountId})
+Granted: ${result.months} month(s)
+Was:     ${result.previousStatus}${result.previousExpiry ? ` until ${new Date(result.previousExpiry).toLocaleDateString()}` : ' (no expiry)'}
+Now:     active until ${when}
+Reason:  ${reason || 'granted from admin panel'}
+
+This is NOT revenue - it is recorded as an admin_grant, not a payment.`;
+            await sendEmail(OWNER_EMAIL, subject, text, `<pre>${text}</pre>`, {
+                event: 'medqize.owner.admin_grant',
+            });
+        } catch (emailError) {
+            console.error('Failed to send grant notification:', emailError);
+        }
+
+        res.json({ success: true, grant: result });
+    } catch (err) {
+        if (err.statusCode === 404) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        logger.error('Error granting subscription', err);
+        res.status(500).json({ message: 'Failed to grant access' });
     }
 });
 

@@ -352,6 +352,140 @@ function computeNewExpiry(currentExpiry, plan) {
 }
 
 /**
+ * Clamp an admin-supplied term to something sane. Mirrors the clamp the
+ * account-creation and temp-link paths already apply (see DEFAULT_INVITE_MONTHS
+ * in app.js): 1..120 months, and a non-numeric value falls back to the DEFAULT,
+ * never to null — a null term is what made admin grants permanent in the first
+ * place.
+ */
+export const MIN_GRANT_MONTHS = 1;
+export const MAX_GRANT_MONTHS = 120;
+export const DEFAULT_GRANT_MONTHS = 4;
+
+export function normalizeGrantMonths(months) {
+    const n = Math.round(Number(months));
+    if (!Number.isFinite(n)) return DEFAULT_GRANT_MONTHS;
+    return Math.min(MAX_GRANT_MONTHS, Math.max(MIN_GRANT_MONTHS, n));
+}
+
+/**
+ * Give an EXISTING account paid access for `months`, with no payment.
+ *
+ * This is the manual counterpart to activateSubscriptionFromPayment: same two
+ * columns, same stacking rule (computeNewExpiry, so a grant on top of a live
+ * subscription extends it rather than truncating it), same FOR UPDATE lock so
+ * a grant and a real payment landing together cannot lose one another's term.
+ *
+ * It DOES set is_admin_created, because that flag means "granted by an admin",
+ * not "created by an admin" — the account's origin is recorded separately in
+ * account_type, which this leaves alone. Without the flag a comped account is
+ * indistinguishable from a paying one everywhere it is displayed: the admin
+ * users table would badge it "Paid", and SQL_ACTIVE_SUBSCRIBER would count it
+ * as a paying subscriber on the dashboard. Both would be reporting money that
+ * never arrived.
+ *
+ * What it deliberately does NOT do:
+ *
+ *   - It does not touch account_type. A student who signed up themselves and
+ *     was later comped is still a self-signup, and the Origin column in the
+ *     admin users table must keep saying so.
+ *   - It does not write status='paid' on the audit row. `status = 'paid'` is
+ *     the single predicate every money query uses — fetchPaidEvents(), the
+ *     accounting PDF, paidButInactiveCount() — so a comped month recorded that
+ *     way would show up as revenue that never arrived, and reconcileWithGateway
+ *     would then go ask Moyasar about a payment id that does not exist.
+ *     'granted' is invisible to all of them and still leaves the trail.
+ *
+ * @param {import('pg').Pool} db
+ * @param {string|number} accountId
+ * @param {number} months - clamped by normalizeGrantMonths
+ * @param {{ reason?: string, grantedBy?: string }} [meta]
+ * @returns {Promise<{accountId: number, email: string, username: string, months: number,
+ *                    previousExpiry: Date|null, newExpiry: Date, wasActive: boolean}>}
+ */
+export async function grantSubscriptionMonths(db, accountId, months, meta = {}) {
+    const term = normalizeGrantMonths(months);
+    const { reason = null, grantedBy = 'admin' } = meta;
+
+    const client = await db.connect();
+    try {
+        await client.query('BEGIN');
+
+        const { rows } = await client.query(
+            `SELECT id, username, email, subscription_status, subscription_expiry_date
+               FROM accounts WHERE id = $1 FOR UPDATE`,
+            [accountId]
+        );
+        const account = rows[0];
+        if (!account) {
+            const err = new Error('Account not found.');
+            err.statusCode = 404;
+            throw err;
+        }
+
+        const previousExpiry = account.subscription_expiry_date || null;
+        // Informational only: was this account inside a live PAID term at the
+        // moment of the grant? Deliberately not checkSubscriptionAccess() —
+        // that also answers yes for grandfathered and admin-created accounts,
+        // which says nothing about whether this grant extends or restarts.
+        const wasActive = account.subscription_status === 'active'
+            && !!previousExpiry
+            && new Date(previousExpiry).getTime() > Date.now();
+        const newExpiry = computeNewExpiry(previousExpiry, { months: term });
+
+        await client.query(
+            `UPDATE accounts
+                SET subscription_status = 'active',
+                    subscription_expiry_date = $1,
+                    is_admin_created = TRUE
+              WHERE id = $2`,
+            [newExpiry, accountId]
+        );
+
+        await client.query(
+            `INSERT INTO payment_events
+                (account_id, event_type, gateway, gateway_ref, amount_halalas, currency, status, raw_payload)
+             VALUES ($1, 'admin_grant', 'admin', $2, 0, $3, 'granted', $4)`,
+            [
+                accountId,
+                `admin_grant_${accountId}_${Date.now()}`,
+                getCurrency(),
+                JSON.stringify({
+                    months: term,
+                    reason,
+                    granted_by: grantedBy,
+                    previous_status: account.subscription_status,
+                    previous_expiry: previousExpiry,
+                    new_expiry: newExpiry,
+                }),
+            ]
+        );
+
+        await client.query('COMMIT');
+
+        return {
+            accountId: account.id,
+            username: account.username,
+            email: account.email,
+            months: term,
+            previousStatus: account.subscription_status,
+            previousExpiry,
+            newExpiry,
+            wasActive,
+        };
+    } catch (err) {
+        try {
+            await client.query('ROLLBACK');
+        } catch (rollbackErr) {
+            console.error('[grant] rollback failed:', rollbackErr.message);
+        }
+        throw err;
+    } finally {
+        client.release();
+    }
+}
+
+/**
  * Activate (or extend) a subscription from a confirmed-paid Moyasar payment,
  * and append an audit row to payment_events. Idempotent: a payment id already
  * recorded as paid will NOT extend the subscription a second time (so the

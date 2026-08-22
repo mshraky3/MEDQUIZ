@@ -1227,3 +1227,190 @@
   font-weight: 600;
   color: #475569;
 }
+
+/* ── Access mix: where access actually comes from ───────────────────────
+   Paid and Admin grant are indistinguishable in the accounts table (both are
+   subscription_status='active' with an expiry), so the split is drawn here.
+   Each tile is also the filter for its own cohort, which is why they are
+   buttons — the count and the way to see the rows behind it are one control. */
+.access-mix {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.access-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 128px;
+  flex: 1 1 128px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  background: rgba(15, 23, 42, 0.03);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.access-tile:hover {
+  transform: translateY(-2px);
+  border-color: rgba(35, 109, 237, 0.28);
+}
+
+.access-tile-count {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: #1e293b;
+}
+
+.access-tile-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+/* Tinted to match the row badge for the same cohort — a green "Paid" tile over
+   green "Paid" badges, so the eye connects the number to the rows. */
+.access-tile--paid .access-tile-count { color: #15803d; }
+.access-tile--legacy .access-tile-count { color: #6d28d9; }
+.access-tile--expired .access-tile-count { color: #b91c1c; }
+.access-tile--free .access-tile-count { color: #475569; }
+
+.access-tile.is-active {
+  border-color: #236ded;
+  background: rgba(35, 109, 237, 0.08);
+  box-shadow: 0 0 0 1px rgba(35, 109, 237, 0.25) inset;
+}
+
+.access-mix-note {
+  margin: 0 0 18px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.access-mix-note strong {
+  color: #334155;
+}
+
+/* ── Grant access ("upgrade") ───────────────────────────────────────────
+   Comping an existing account. Reuses .grant-months-row / .grant-preset from
+   the create-account form above so the two ways of setting a term look and
+   behave identically. */
+.action-btn.grant-btn {
+  color: #15803d;
+}
+
+.action-btn.grant-btn:hover:not(:disabled) {
+  background: rgba(22, 163, 74, 0.14);
+  border-color: rgba(22, 163, 74, 0.3);
+}
+
+.grant-modal {
+  max-width: 520px;
+}
+
+.grant-account {
+  padding: 12px 14px;
+  margin-bottom: 18px;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.grant-account-name {
+  font-weight: 700;
+  color: #1e293b;
+  word-break: break-all;
+}
+
+.grant-account-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+/* .plan-detail carries a top margin for the table cell it was written for. */
+.grant-account-meta .plan-detail {
+  margin-top: 0;
+}
+
+.grant-preview {
+  padding: 12px 14px;
+  margin-bottom: 18px;
+  border-radius: 10px;
+  background: rgba(35, 109, 237, 0.06);
+  border: 1px solid rgba(35, 109, 237, 0.18);
+}
+
+.grant-preview-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  color: #475569;
+}
+
+.grant-preview-row strong {
+  color: #1e293b;
+}
+
+.grant-preview-new {
+  color: #15803d;
+}
+
+.grant-preview-note {
+  margin: 6px 0 0;
+  font-size: 11px;
+  color: #64748b;
+}
+
+.grant-optional {
+  font-weight: 400;
+  color: #94a3b8;
+}
+
+.grant-warning {
+  margin: 0 0 18px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(124, 58, 237, 0.07);
+  border: 1px solid rgba(124, 58, 237, 0.18);
+  font-size: 12px;
+  line-height: 1.5;
+  color: #4c1d95;
+}
+
+.grant-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+@media (max-width: 560px) {
+  .access-tile {
+    min-width: 104px;
+    flex-basis: 104px;
+    padding: 10px 12px;
+  }
+
+  .grant-actions {
+    flex-direction: column-reverse;
+  }
+
+  .grant-actions button {
+    width: 100%;
+    justify-content: center;
+  }
+}
