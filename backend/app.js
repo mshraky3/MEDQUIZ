@@ -114,6 +114,26 @@ const db = new Pool({
     query_timeout: 15000,
 });
 
+// node-postgres REQUIRES an error listener on the pool. Without one, an idle
+// (checked-in, not in use) client that the server kills — e.g. Koyeb/Neon
+// administratively terminating a connection ("terminating connection due to
+// administrator command") — re-emits as an 'error' event on the pool itself.
+// With zero listeners, Node treats that as fatal and it becomes an
+// uncaughtException below with no request in scope at all (hence "Page: N/A"
+// in past error reports) — which then calls process.exit(1) and crashes the
+// whole warm instance, taking every other in-flight request down with it,
+// for what pg-pool would otherwise handle by itself: discard the dead client
+// and open a fresh one on the next .connect()/.query().
+db.on('error', (err) => {
+    logger.error('Idle Postgres client error (pool discards it and recovers automatically)', err);
+    // Visibility only, not fatal — same notifier used elsewhere in this file,
+    // but deliberately without the process.exit(1) the uncaughtException
+    // handler below does, since this event is exactly what that handler used
+    // to have to catch (and crash the whole instance for) before this
+    // listener existed.
+    notifyBackendError(err, null, { middleware: 'pgPoolIdleClientError' }).catch(() => { /* already logged above */ });
+});
+
 // Every ensure*() bootstrap below swallows its own errors (so one failed
 // CREATE TABLE can't stop the process from serving the requests that don't
 // need it) — but a swallowed error was

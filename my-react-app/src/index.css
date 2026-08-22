@@ -16,6 +16,15 @@
      definition here removes that. */
   --accent: var(--accent-light);
   --muted: var(--text-light);
+  /* --accent-strong had no :root value at all, only page-scoped ones on
+     .landing-body / .login-body / .quiz-selection. Login.css's shared
+     `.btn.primary { background: linear-gradient(135deg, var(--accent), var(--accent-strong)) }`
+     is imported by pages that use none of those roots (GroupsPage's
+     .groups-page, AccountPage's .account-page), where the unresolvable
+     reference made the whole `background` invalid at computed-value time —
+     i.e. transparent, under white text. That is a CTA nobody can see, which
+     is exactly what /groups and /account were shipping. */
+  --accent-strong: var(--primary-color);
 
   /* Neutral Colors - Light Theme */
   --text-dark: #0f1e3d;

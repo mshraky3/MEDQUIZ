@@ -287,7 +287,11 @@
 }
 
 .btn.primary {
-  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  /* Fallbacks are load-bearing, not decoration: this rule is shared with
+     pages that do not use .login-body as their root (GroupsPage, AccountPage),
+     where an unresolvable var() would make the whole background transparent
+     under white text. */
+  background: linear-gradient(135deg, var(--accent, #3b82f6), var(--accent-strong, #2563eb));
   color: #ffffff;
   border: none;
   box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
@@ -400,7 +404,7 @@
 }
 
 .link-primary:hover {
-  color: var(--accent-strong);
+  color: var(--accent-strong, #2563eb);
   text-decoration: underline;
 }
 
@@ -448,17 +452,24 @@
   }
 }
 
+/* An OPAQUE card, deliberately not var(--card). --card is a 4%-black tint
+   (see .login-body above) designed to sit on the light page background; on top
+   of .popup-overlay's rgba(10,15,30,.72) it rendered as a dark grey panel with
+   this popup's light-theme text still on it — h4/strong/.checkbox-label at
+   ~1.5:1 contrast, i.e. invisible headings and an unreadable "I agree" label.
+   backdrop-filter went with it: it only ever existed to make a translucent
+   card legible, and blurring the page through the popup is what made the
+   heading behind it bleed into the terms text. */
 .popup-content {
-  background: var(--card);
-  border: 1px solid var(--border);
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--border, rgba(15, 23, 42, 0.10));
   border-radius: 24px;
   padding: 32px;
   max-width: 460px;
   width: 100%;
   max-height: min(640px, 85vh);
   overflow-y: auto;
-  box-shadow: var(--shadow);
-  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow, 0 25px 80px rgba(0, 0, 0, 0.35));
   animation: scaleIn 0.4s ease-out;
 }
 
@@ -471,22 +482,25 @@
   flex-direction: column;
 }
 
+/* Every colour below reads a real :root token with a literal fallback, rather
+   than --text/--muted, whose values exist only inside .login-body. A popup can
+   be rendered from anywhere; its text must not depend on which page opened it. */
 .popup-content h3 {
-  color: #0f1e3d;
+  color: var(--text-dark, #0f1e3d);
   font-size: 22px;
   font-weight: 700;
   margin: 0 0 14px;
 }
 
 .popup-content h4 {
-  color: #0f1e3d;
+  color: var(--text-dark, #0f1e3d);
   font-size: 18px;
   font-weight: 700;
   margin: 0 0 10px;
 }
 
 .popup-content p {
-  color: var(--muted);
+  color: var(--text-medium, #475569);
   line-height: 1.6;
   margin: 0 0 12px;
 }
@@ -496,14 +510,14 @@
 }
 
 .popup-content ul {
-  color: var(--muted);
+  color: var(--text-medium, #475569);
   line-height: 1.6;
   padding-inline-start: 20px;
   margin: 8px 0;
 }
 
 .popup-content strong {
-  color: var(--text);
+  color: var(--text-dark, #0f1e3d);
 }
 
 /* Terms text is the one part of a large-popup that can genuinely overflow —
@@ -540,7 +554,7 @@
   align-items: center;
   gap: 10px;
   padding: 12px 0 4px;
-  color: var(--text);
+  color: var(--text-dark, #0f1e3d);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -586,7 +600,7 @@
 
 .popup-btn.try-free {
   width: 100%;
-  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  background: linear-gradient(135deg, var(--accent, #3b82f6), var(--accent-strong, #2563eb));
   color: #ffffff;
   border-color: transparent;
   box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
@@ -604,8 +618,8 @@
 
 .popup-btn.no-thanks {
   background: transparent;
-  border-color: var(--border);
-  color: var(--muted);
+  border-color: var(--border, rgba(15, 23, 42, 0.10));
+  color: var(--text-medium, #475569);
 }
 
 .popup-btn.no-thanks:hover {

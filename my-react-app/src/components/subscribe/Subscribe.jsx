@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import axios from 'axios';
 import { trackFunnel } from '../../utils/analytics.js';
@@ -66,6 +66,10 @@ const Subscribe = () => {
     const [publishableKey, setPublishableKey] = useState(null);
     const [selectedPlanId, setSelectedPlanId] = useState(null);
     const [isTestMode, setIsTestMode] = useState(false);
+    // React owns this host and keeps it empty; each Moyasar instance is mounted
+    // into a throwaway child of it. See the note on the plan effect below.
+    const hostRef = useRef(null);
+    const mountSeq = useRef(0);
 
     // /subscribe?kind=group&plan=group_3 is how the groups page hands off to
     // checkout. The default is the personal ladder — a group plan must never
@@ -121,7 +125,35 @@ const Subscribe = () => {
         return () => { cancelled = true; };
     }, [user, sessionToken, navigate]);
 
+    // Keep the picker honest when ?plan= changes on an already-mounted page.
+    // The effect above only runs once per session, so arriving here a second
+    // time from /groups (250 → back → 299) left the FIRST plan selected while
+    // the URL named the second one — you'd read "group_5" in the address bar
+    // and be charged for group_3.
+    useEffect(() => {
+        if (!requestedPlanId || !plans.length) return;
+        if (!plans.some((p) => p.id === requestedPlanId)) return;
+        setSelectedPlanId(requestedPlanId);
+    }, [requestedPlanId, plans]);
+
     // (Re)builds the embedded Moyasar form whenever the selected plan changes.
+    //
+    // Moyasar.init() is one-shot PER ELEMENT: calling it a second time on an
+    // element it has already mounted into does nothing at all — no error, no
+    // form — even after the element's innerHTML is cleared. That is what broke
+    // every plan except the one selected on first render: switching tier left
+    // an empty container, the watchdog below found no <form>, and checkout
+    // dead-ended on "the payment form could not be displayed". So each init
+    // gets a brand-new node with a selector that has never been used on this
+    // page load.
+    //
+    // Deliberately NOT Moyasar.setAmount(), which is the obvious-looking fix:
+    // it changes the charged amount but leaves `metadata.plan` at whatever the
+    // first init set. The server grants months from metadata.plan and rejects
+    // the payment when amount < that plan's price (paymentService.js), so
+    // setAmount would take a 50 SAR payment for a plan tagged four_month and
+    // then refuse to activate it. Amount, description and metadata have to
+    // move together, and only a full re-init does that.
     useEffect(() => {
         if (!selectedPlanId || !publishableKey || !user?.id) return;
         const plan = plans.find((p) => p.id === selectedPlanId);
@@ -129,6 +161,10 @@ const Subscribe = () => {
 
         let cancelled = false;
         let watchdog = null;
+        // Read the ref once, here, rather than in the cleanup below: by the time
+        // cleanup runs the component may already be unmounting and the ref
+        // nulled, and this is the node whose children we need to tear down.
+        const host = hostRef.current;
         setStatus('loading');
 
         (async () => {
@@ -136,10 +172,18 @@ const Subscribe = () => {
                 await loadMoyasarAssets();
                 if (cancelled) return;
 
-                // Clear first so a StrictMode/HMR remount — or switching plans —
-                // can't stack two forms.
-                const el = document.querySelector('.mysr-form');
-                if (el) el.innerHTML = '';
+                // Throw rather than return: bailing out silently would leave
+                // the page spinning on 'loading' with no way forward.
+                if (!host) throw new Error('payment form host is missing');
+                // Drop the previous instance, then mount into a fresh child.
+                // React only ever sees the empty host, so it never fights
+                // Moyasar over this subtree (and a StrictMode double-invoke or
+                // an HMR reload can't stack two forms).
+                host.replaceChildren();
+                const mountClass = `mysr-mount-${++mountSeq.current}`;
+                const target = document.createElement('div');
+                target.className = `mysr-form ${mountClass}`;
+                host.appendChild(target);
 
                 const planLabel = t.plans[plan.id]?.label || plan.id;
                 // A group buyer goes back to /groups, where their new invite
@@ -147,7 +191,7 @@ const Subscribe = () => {
                 // them wondering what they just bought.
                 const next = plan.kind === 'group' ? '?next=/groups' : '';
                 window.Moyasar.init({
-                    element: '.mysr-form',
+                    element: `.${mountClass}`,
                     amount: plan.priceHalalas,
                     currency,
                     description: t.paymentDescription(user.id, planLabel),
@@ -175,11 +219,21 @@ const Subscribe = () => {
                 // Moyasar.init() resolves even when it then declines to build
                 // the form. Confirm a real <form> actually landed, otherwise
                 // fall back to a state that still tells the user what to do.
-                watchdog = setTimeout(() => {
+                //
+                // Polled rather than checked once at 3s: the form typically
+                // lands in ~2s, so a single 3s check was one slow network away
+                // from telling a paying customer we couldn't show them a form.
+                // Polling also stops waiting the moment the form appears.
+                const deadline = Date.now() + 8000;
+                const checkForForm = () => {
                     if (cancelled) return;
-                    const form = document.querySelector('.mysr-form form');
+                    const form = target.querySelector('form');
                     if (!form) {
-                        setStatus('blocked');
+                        if (Date.now() >= deadline) {
+                            setStatus('blocked');
+                            return;
+                        }
+                        watchdog = setTimeout(checkForForm, 500);
                         return;
                     }
                     // The funnel step used to be our own pay button; that button
@@ -191,7 +245,8 @@ const Subscribe = () => {
                             amountHalalas: plan.priceHalalas, plan: plan.id,
                         });
                     }, { once: true });
-                }, 3000);
+                };
+                watchdog = setTimeout(checkForForm, 500);
             } catch (err) {
                 if (cancelled) return;
                 console.error('Subscribe form init failed:', err);
@@ -203,6 +258,9 @@ const Subscribe = () => {
         return () => {
             cancelled = true;
             if (watchdog) clearTimeout(watchdog);
+            // Tear the old instance down here too, so an unmount can't leave a
+            // dead form (bound to the previous plan's amount) behind.
+            if (host) host.replaceChildren();
         };
     }, [selectedPlanId, publishableKey, currency, plans, user?.id]);
 
@@ -341,14 +399,18 @@ const Subscribe = () => {
                         </div>
                     )}
 
-                    {/* Moyasar renders the card form inside this element. It
-                        carries its own pay button, so this page deliberately has
-                        none of its own — a second one next to it only made
-                        people wonder which of the two actually charges them.
-                        Everything that is not the act of paying now sits below
-                        it, so the form is the first thing under the price. */}
+                    {/* Moyasar renders the card form into a throwaway child of
+                        this host (see the plan effect). React keeps the host
+                        itself empty and never touches what Moyasar puts inside.
+                        The form carries its own pay button, so this page
+                        deliberately has none of its own — a second one next to
+                        it only made people wonder which of the two actually
+                        charges them. Everything that is not the act of paying
+                        sits below it, so the form is the first thing under the
+                        price. */}
                     <div
-                        className="mysr-form"
+                        className="mysr-host"
+                        ref={hostRef}
                         style={{ display: status === 'ready' ? 'block' : 'none' }}
                     />
 

@@ -140,8 +140,15 @@ router.post('/api/telegram/webhook', verifyTelegramSecret, async (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════
-//  CRON — called by the external scheduler (cron-job.org) with
-//  Authorization: Bearer $CRON_SECRET, same as email-campaigns.js
+//  CRON — called by .github/workflows/cron.yml with
+//  Authorization: Bearer $CRON_SECRET, same as email-campaigns.js.
+//
+//  NOT by Vercel: the Hobby plan allows two native cron entries and both are
+//  already spent (see backend/vercel.json). These endpoints sat uncalled for
+//  that reason, which is why the channel posted on the day it was created and
+//  then went silent. /api/cron/telegram-daily additionally rides along on
+//  /api/cron/daily-emails as a belt-and-braces fallback; the daily cap below
+//  makes the two callers safe to overlap.
 // ════════════════════════════════════════════════════════════
 
 router.get('/api/cron/telegram-daily', cronAuth, async (req, res) => {

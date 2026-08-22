@@ -25,6 +25,7 @@ import {
     EXAM_REMINDER_STAGES,
 } from '../services/lifecycleJobs.js';
 import { maybeSendSubscriptionReport, sendSubscriptionReport } from '../services/subscriptionReportService.js';
+import { runDailyChannelPostJob, runMessageCleanupJob } from '../services/telegramJobs.js';
 import { drainSendingCampaigns } from './admin-broadcast.js';
 import { adminAuth } from '../middleware/adminAuth.js';
 import { normalizeTrack } from '../config/tracks.js';
@@ -398,6 +399,32 @@ router.get('/api/cron/daily-emails', cronAuth, async (req, res) => {
     } catch (err) {
         console.error('cron/daily-emails broadcast drain error:', err);
         results.errors.push({ job: 'broadcast_drain', error: err.message });
+    }
+
+    // -- 6. Telegram channel ----------------------------------
+    // Same Hobby-plan reasoning as the subscription report above: there is no
+    // third Vercel cron slot to give the channel, and without a caller the
+    // daily-question job simply never ran -- the channel went silent the day
+    // after it was created. Riding along here guarantees at least one question
+    // a day with nothing to configure.
+    //
+    // The GitHub Actions workflow (.github/workflows/cron.yml) calls
+    // /api/cron/telegram-daily three times a day for the full cadence, and the
+    // two callers cannot collide: channelPostsToday caps the channel at
+    // DAILY_CHANNEL_CAP posts per day and pickChannelQuestion dedupes against a
+    // 90-day window, so an extra call is a no-op, never a duplicate.
+    for (const [name, job] of [
+        ['telegramChannelPost', runDailyChannelPostJob],
+        ['telegramCleanup', runMessageCleanupJob],
+    ]) {
+        try {
+            results[name] = await job(db);
+        } catch (err) {
+            // Never fail the email cron over Telegram: a missing bot token or
+            // a Telegram outage must not cost the day's emails.
+            console.error(`cron/daily-emails ${name} error:`, err);
+            results.errors.push({ job: name, error: err.message });
+        }
     }
 
     res.json({ success: true, ...results });

@@ -1,0 +1,114 @@
+# Scheduled cron caller for the SQB backend.
+#
+# Why this exists: the project is on Vercel's Hobby plan, which allows exactly
+# two native cron entries — both already spent in backend/vercel.json on
+# /api/cron/welcome-emails and /api/cron/daily-emails. Every other scheduled
+# endpoint the backend exposes was written expecting "an external scheduler"
+# that was never actually set up, so those jobs simply never ran. The Telegram
+# channel is the visible symptom: it posted on the day it was created and then
+# went silent, because nothing ever called /api/cron/telegram-daily.
+#
+# GitHub Actions is free, has no schedule limit, and the repo already lives
+# here, so it is the scheduler.
+#
+# SETUP (one time): add a repository secret named CRON_SECRET
+#   Settings -> Secrets and variables -> Actions -> New repository secret
+# whose value matches the CRON_SECRET environment variable on Vercel. Without
+# it every run below fails with 503/401 — deliberately loud rather than silent.
+#
+# NOTE: GitHub disables scheduled workflows in a repository with no activity
+# for 60 days. If the channel goes quiet again, check the Actions tab first.
+
+name: Scheduled jobs
+
+on:
+  schedule:
+    # Times are UTC. Saudi Arabia is UTC+3, so these land at roughly
+    # 10:00, 16:00 and 21:00 local — morning, afternoon and evening study time.
+    - cron: '0 7,13,18 * * *'   # telegram-daily (capped at 3 posts/day server-side)
+    - cron: '30 2 * * *'        # daily cleanup + lifecycle emails
+    - cron: '0 8 * * 6'         # weekly: channel summary + weak-topics DMs
+    - cron: '15 * * * *'        # hourly: broadcast drain + welcome emails
+  workflow_dispatch:
+    inputs:
+      job:
+        description: 'Which group to run now'
+        required: true
+        default: telegram-daily
+        type: choice
+        options: [telegram-daily, daily, weekly, hourly]
+
+env:
+  API_BASE: https://medquiz.vercel.app
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check the secret is configured
+        run: |
+          if [ -z "${{ secrets.CRON_SECRET }}" ]; then
+            echo "::error::CRON_SECRET repository secret is not set — every call below would fail."
+            echo "Add it under Settings > Secrets and variables > Actions, matching the value on Vercel."
+            exit 1
+          fi
+
+      - name: Call the due endpoints
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SCHEDULE: ${{ github.event.schedule }}
+          MANUAL: ${{ inputs.job }}
+        run: |
+          set -uo pipefail
+
+          # --fail so a 4xx/5xx turns the run red instead of passing silently;
+          # --max-time because a hung serverless cold start must not pin a runner.
+          call() {
+            echo "--> $1"
+            curl --fail --silent --show-error --max-time 120 \
+              -H "Authorization: Bearer ${CRON_SECRET}" \
+              "${API_BASE}$1"
+            echo
+          }
+
+          # Map either the firing schedule or the manual choice onto a group.
+          case "${MANUAL:-}" in
+            telegram-daily) group=telegram-daily ;;
+            daily)          group=daily ;;
+            weekly)         group=weekly ;;
+            hourly)         group=hourly ;;
+            *)
+              case "${SCHEDULE:-}" in
+                '0 7,13,18 * * *') group=telegram-daily ;;
+                '30 2 * * *')      group=daily ;;
+                '0 8 * * 6')       group=weekly ;;
+                '15 * * * *')      group=hourly ;;
+                *) echo "::error::Unrecognised schedule '${SCHEDULE:-}'"; exit 1 ;;
+              esac
+              ;;
+          esac
+          echo "Running group: ${group}"
+
+          failed=0
+          case "$group" in
+            telegram-daily)
+              # Safe to over-call: the server caps the channel at 3 posts a day.
+              call /api/cron/telegram-daily || failed=1
+              ;;
+            daily)
+              call /api/cron/telegram-cleanup  || failed=1
+              call /api/cron/lifecycle-emails  || failed=1
+              ;;
+            weekly)
+              call /api/cron/telegram-channel-summary || failed=1
+              call /api/cron/telegram-weekly          || failed=1
+              ;;
+            hourly)
+              # vercel.json runs these once a day; the endpoints are idempotent
+              # (dedupe columns guard every send), so an hourly nudge only makes
+              # them timelier.
+              call /api/cron/broadcast-drain || failed=1
+              call /api/cron/welcome-emails  || failed=1
+              ;;
+          esac
+          exit $failed

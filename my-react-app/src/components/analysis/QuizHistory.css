@@ -408,7 +408,10 @@
 .question-text {
   font-size: var(--text-base);
   line-height: 1.6;
-  color: var(--text-color);
+  /* --text-color is declared nowhere in the app; the reference was invalid,
+     so this fell back to whatever colour it inherited. --text-dark is the
+     real :root token for body copy. */
+  color: var(--text-dark, #0f1e3d);
   margin-bottom: var(--space-4);
   font-weight: 500;
   width: 100%;

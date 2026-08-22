@@ -237,14 +237,14 @@
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    background: var(--priority-color);
+    background: var(--priority-color, #2563eb);
     opacity: 0.5;
     transition: all 0.3s ease;
 }
 
 .priority-option.active .priority-dot {
     opacity: 1;
-    box-shadow: 0 0 10px var(--priority-color);
+    box-shadow: 0 0 10px var(--priority-color, #2563eb);
 }
 
 .priority-text {
@@ -254,11 +254,11 @@
 }
 
 .priority-option:hover {
-    border-color: var(--priority-color);
+    border-color: var(--priority-color, #2563eb);
 }
 
 .priority-option.active {
-    border-color: var(--priority-color);
+    border-color: var(--priority-color, #2563eb);
     background: rgba(15, 23, 42, 0.04);
 }
 
