@@ -32,8 +32,24 @@ export function riyadhMonthKey(date) {
 // expiry, so without this they were counted as PAYING subscribers on the
 // dashboard while also being counted again under admin_created below. They are
 // access, not revenue — SQL_HAS_ACCESS picks them up on its own arm.
-export const SQL_ACTIVE_SUBSCRIBER = `subscription_status = 'active' AND subscription_expiry_date > NOW()
-    AND is_admin_created = FALSE`;
+//
+// The `prefix` form exists for queries that join accounts under an alias. It is
+// the reason /admin/stats can splice the predicate instead of restating it as
+// `a.subscription_status = 'active' AND ...` — which is exactly how the
+// per-track subscriber count drifted from the headline one.
+export const activeSubscriberSql = (prefix = '') =>
+    `${prefix}subscription_status = 'active' AND ${prefix}subscription_expiry_date > NOW()
+    AND ${prefix}is_admin_created = FALSE`;
+export const SQL_ACTIVE_SUBSCRIBER = activeSubscriberSql();
+
+// Access granted by an admin (panel grant, temp-link invite, admin-created
+// account) that has not lapsed. The OTHER half of SQL_ACTIVE_SUBSCRIBER:
+// together they cover everyone sitting on a live term, and any surface showing
+// one without the other reports comped accounts as customers.
+export const adminGrantedSql = (prefix = '') =>
+    `${prefix}is_admin_created = TRUE
+    AND (${prefix}subscription_expiry_date IS NULL OR ${prefix}subscription_expiry_date > NOW())`;
+export const SQL_ADMIN_GRANTED = adminGrantedSql();
 // is_admin_created is a TIMED grant, not a permanent one (see
 // checkSubscriptionAccess in paymentService.js), so it only counts as access
 // while its expiry is in the future. The NULL-expiry arm mirrors the safety
@@ -42,7 +58,7 @@ export const SQL_ACTIVE_SUBSCRIBER = `subscription_status = 'active' AND subscri
 // report a student as lapsed while the app still lets them in.
 export const SQL_HAS_ACCESS = `((${SQL_ACTIVE_SUBSCRIBER})
     OR grandfathered_at IS NOT NULL
-    OR (is_admin_created = TRUE AND (subscription_expiry_date IS NULL OR subscription_expiry_date > NOW())))`;
+    OR (${SQL_ADMIN_GRANTED}))`;
 // The free tier replaced the timed trial on 2026-08-08. "Still trying" means a
 // non-paying account with allowance left; "used up" is the conversion moment
 // the old SQL_ACTIVE_TRIAL / trial_expired pair used to mark.

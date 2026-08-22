@@ -32,6 +32,7 @@ import {
     revenueSnapshot, subscriptionSnapshot, conversionSnapshot,
     paidButInactiveCount, userSnapshot, activeUserSnapshot, dailySignups,
     dailyActiveUsers, openReportsCount, SQL_FREE_EXHAUSTED,
+    SQL_ACTIVE_SUBSCRIBER, SQL_ADMIN_GRANTED, activeSubscriberSql,
 } from './services/adminMetricsService.js';
 import summaryContent from './content/summaryHtml/index.js';
 import { notifyBackendError } from './services/errorNotificationService.js';
@@ -2453,8 +2454,10 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
                        COUNT(DISTINCT a.id)                                                    AS users,
                        COUNT(DISTINCT a.id) FILTER (WHERE a.logged_date > NOW() - INTERVAL '7 days')  AS active_users,
                        COUNT(DISTINCT a.id) FILTER (WHERE a.created_at  > NOW() - INTERVAL '7 days')  AS new_users_week,
-                       COUNT(DISTINCT a.id) FILTER (WHERE a.subscription_status = 'active'
-                                                      AND a.subscription_expiry_date > NOW())  AS active_subscribers,
+                       -- Paying subscribers only. Spliced rather than restated:
+                       -- written out by hand it counted admin grants as
+                       -- customers, disagreeing with the dashboard headline.
+                       COUNT(DISTINCT a.id) FILTER (WHERE ${activeSubscriberSql('a.')})  AS active_subscribers,
                        COUNT(q.id)                                                             AS quizzes,
                        ROUND(AVG(q.quiz_accuracy)::numeric, 1)                                 AS avg_accuracy
                 FROM accounts a
@@ -2650,9 +2653,15 @@ app.get('/admin/analytics', adminAuth, async (req, res) => {
             mixRes, activeRes, loginsRes, signupsRes, growthRes,
             specialtyRes, sessionRes, summaryRes
         ] = await Promise.allSettled([
+            // `paid` used to be `subscription_status = 'active'` alone: no
+            // expiry check, and no exclusion of admin grants. The donut called
+            // a lapsed subscriber a customer and drew every comped account as
+            // revenue. Both halves splice the shared predicates now, and the
+            // grants get their own slice instead of hiding inside Paid.
             q(`SELECT
                     COUNT(*) FILTER (WHERE grandfathered_at IS NOT NULL OR subscription_status = 'grandfathered')::int AS legacy,
-                    COUNT(*) FILTER (WHERE grandfathered_at IS NULL AND subscription_status = 'active')::int AS paid,
+                    COUNT(*) FILTER (WHERE grandfathered_at IS NULL AND ${SQL_ACTIVE_SUBSCRIBER})::int AS paid,
+                    COUNT(*) FILTER (WHERE grandfathered_at IS NULL AND ${SQL_ADMIN_GRANTED})::int AS admin_grant,
                     COUNT(*) FILTER (WHERE ${SQL_FREE_EXHAUSTED})::int AS exhausted,
                     COUNT(*)::int AS total
                 FROM accounts`),
@@ -2721,14 +2730,21 @@ app.get('/admin/analytics', adminAuth, async (req, res) => {
                 FROM summary_progress`),
         ]);
 
-        const mix = firstOf(mixRes, { legacy: 0, paid: 0, exhausted: 0, total: 0 });
+        const mix = firstOf(mixRes, { legacy: 0, paid: 0, admin_grant: 0, exhausted: 0, total: 0 });
         // "Free" here means free tier WITH allowance left; accounts that used it
         // all up are broken out separately because they are the ones worth a
         // subscribe nudge — the free tier's equivalent of "trial expired".
-        const free = Math.max(0, (mix.total || 0) - (mix.legacy || 0) - (mix.paid || 0) - (mix.exhausted || 0));
+        // A LAPSED subscriber now lands here too, which is right: they have no
+        // access at all, and they are precisely who that nudge is for.
+        const free = Math.max(0, (mix.total || 0) - (mix.legacy || 0) - (mix.paid || 0)
+            - (mix.admin_grant || 0) - (mix.exhausted || 0));
         // English labels — admin stays English/LTR regardless of site language (AdminShell).
+        // Paid and Admin grant sit next to each other on purpose: they are the
+        // two ways to be on a live term, and the point of the split is that
+        // only one of them is money.
         const accountMix = [
             { key: 'paid', label: 'Paid', value: mix.paid || 0 },
+            { key: 'admin_grant', label: 'Admin grant', value: mix.admin_grant || 0 },
             { key: 'free', label: 'Free (questions left)', value: free },
             { key: 'exhausted', label: 'Free (used up)', value: mix.exhausted || 0 },
             { key: 'legacy', label: 'Legacy', value: mix.legacy || 0 }
@@ -2750,6 +2766,7 @@ app.get('/admin/analytics', adminAuth, async (req, res) => {
             totals: {
                 totalAccounts: mix.total || 0,
                 paid: mix.paid || 0,
+                adminGrant: mix.admin_grant || 0,
                 exhausted: mix.exhausted || 0,
                 legacy: mix.legacy || 0,
                 free,

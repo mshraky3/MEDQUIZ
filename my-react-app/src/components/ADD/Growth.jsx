@@ -14,6 +14,22 @@ import ChartCard from './ui/ChartCard.jsx';
 import useAdminData from './ui/useAdminData.js';
 import { pct, dur, num, daysAgoISO, todayISO } from './ui/format.js';
 import { PALETTE, AXIS_TICK, GRID, TOOLTIP } from './ui/chartTheme.js';
+
+/**
+ * Account-mix slice colours, keyed by cohort rather than taken from PALETTE by
+ * array position. Two reasons: adding a slice would otherwise recolour every
+ * cohort after it (Paid changing colour between deploys is how a chart starts
+ * lying to someone who reads it every morning), and these are the exact hues
+ * the users table already uses for the same badges — green money, purple grant
+ * — so the two pages read as one system.
+ */
+const MIX_COLORS = {
+    paid: '#16a34a',
+    admin_grant: '#7c3aed',
+    free: '#2563eb',
+    exhausted: '#d97706',
+    legacy: '#0891b2',
+};
 import { TRACKS, TRACK_KEYS } from '../../utils/tracks.js';
 import './Admin.css';
 import './Growth.css';
@@ -125,7 +141,7 @@ const Growth = () => {
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie data={data.accountMix} dataKey="value" nameKey="label" innerRadius={55} outerRadius={92} paddingAngle={2}>
-                                    {data.accountMix.map((e, i) => <Cell key={e.key} fill={PALETTE[i % PALETTE.length]} />)}
+                                    {data.accountMix.map((e, i) => <Cell key={e.key} fill={MIX_COLORS[e.key] || PALETTE[i % PALETTE.length]} />)}
                                 </Pie>
                                 <Tooltip contentStyle={TOOLTIP} />
                                 <Legend />
