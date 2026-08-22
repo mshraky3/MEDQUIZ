@@ -1209,6 +1209,14 @@
   color: #ffffff;
 }
 
+.grant-months-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
 .grant-months-input {
   width: 90px;
   flex: 0 0 auto;

@@ -721,19 +721,25 @@ const ADD = (props) => {
                                                 {m === 12 ? '1 year' : `${m} mo`}
                                             </button>
                                         ))}
-                                        <input
-                                            id="newUserMonths"
-                                            type="number"
-                                            min="1"
-                                            max={MAX_GRANT_MONTHS}
-                                            value={newUserMonths}
-                                            onChange={(e) => setNewUserMonths(
-                                                Math.max(1, Math.min(MAX_GRANT_MONTHS, parseInt(e.target.value, 10) || 1))
-                                            )}
-                                            className="form-input grant-months-input"
-                                            aria-label="Access duration in months"
-                                        />
-                                        <span className="grant-months-unit">months</span>
+                                        {/* Input and unit are one flex item, not two:
+                                            as siblings the row could wrap between
+                                            them, stranding "months" on its own line
+                                            under the number it labels. */}
+                                        <span className="grant-months-field">
+                                            <input
+                                                id="newUserMonths"
+                                                type="number"
+                                                min="1"
+                                                max={MAX_GRANT_MONTHS}
+                                                value={newUserMonths}
+                                                onChange={(e) => setNewUserMonths(
+                                                    Math.max(1, Math.min(MAX_GRANT_MONTHS, parseInt(e.target.value, 10) || 1))
+                                                )}
+                                                className="form-input grant-months-input"
+                                                aria-label="Access duration in months"
+                                            />
+                                            <span className="grant-months-unit">months</span>
+                                        </span>
                                     </div>
                                     <small className="form-hint">
                                         Counted from today. No account is granted access forever —
