@@ -42,6 +42,31 @@ import {
 } from './config/tracks.js';
 import { PICKABLE_SOURCES, SOURCE_PRIORITY, resolveSources } from './config/sources.js';
 
+/**
+ * How long an admin-granted account keeps access when no explicit term is
+ * given, in months.
+ *
+ * There is deliberately no "forever" option any more. Admin-created accounts
+ * and temp-link invites used to set is_admin_created = true and nothing else,
+ * which checkSubscriptionAccess() treated as an unconditional, permanent
+ * paywall exemption — an account handed out once and never reviewed again.
+ * Every such account now carries a real subscription_expiry_date, and the
+ * exemption is honoured only until that date.
+ */
+const DEFAULT_INVITE_MONTHS = 12;
+const MAX_INVITE_MONTHS = 120;
+
+/**
+ * Coerce a caller-supplied month count into the allowed range.
+ * Anything missing or unparseable falls back to DEFAULT_INVITE_MONTHS rather
+ * than to "no expiry" — the whole point is that there is no forever.
+ */
+const normalizeInviteMonths = (value) => {
+    const n = Math.trunc(Number(value));
+    if (!Number.isFinite(n) || n < 1) return DEFAULT_INVITE_MONTHS;
+    return Math.min(MAX_INVITE_MONTHS, n);
+};
+
 dotenv.config();
 // Logging configuration
 const LOG_LEVEL = process.env.LOG_LEVEL || 'INFO'; 
@@ -655,6 +680,30 @@ function ensurePaymentSchema() {
                 await db.query(`INSERT INTO schema_migrations (name) VALUES ('003_free_tier_40q') ON CONFLICT DO NOTHING`);
                 logger.info(`Free tier: seeded ${seeded.rowCount} counter(s), moved ${freed.rowCount} trial account(s) to 'free' (one-time)`);
             }
+
+            // No admin-granted account is free forever any more. Every
+            // is_admin_created account predating DEFAULT_INVITE_MONTHS was
+            // created with a NULL expiry, which checkSubscriptionAccess() read
+            // as a permanent exemption; give each of them a real term instead.
+            // Runs EXACTLY ONCE.
+            //
+            // Scoped to is_admin_created deliberately. Grandfathered accounts
+            // are NOT touched: "free for good" is a promise already made to
+            // them (same reasoning as migration 003 above), and ending the free
+            // era for that group is what scripts/endFreeEraCampaign.js is for —
+            // it sends the announcement first, which a silent migration cannot.
+            const applied4 = await db.query(`SELECT 1 FROM schema_migrations WHERE name = '004_expire_admin_created'`);
+            if (applied4.rows.length === 0) {
+                const timed = await db.query(`
+                    UPDATE accounts
+                       SET subscription_expiry_date = NOW() + make_interval(months => $1::int),
+                           subscription_status = 'active'
+                     WHERE is_admin_created = TRUE
+                       AND subscription_expiry_date IS NULL
+                `, [DEFAULT_INVITE_MONTHS]);
+                await db.query(`INSERT INTO schema_migrations (name) VALUES ('004_expire_admin_created') ON CONFLICT DO NOTHING`);
+                logger.info(`Gave ${timed.rowCount} admin-created account(s) a ${DEFAULT_INVITE_MONTHS}-month term instead of permanent access (one-time)`);
+            }
             _paymentColumnsExist = true; // prime the lazy cache used elsewhere
             logger.info('Payment/subscription schema ensured');
         } catch (err) {
@@ -842,6 +891,10 @@ app.get('/', (req, res) => {
 app.post('/add_account', adminAuth, async (req, res) => {
     const { username, password } = req.body;
     const track = normalizeTrack(req.body.track);
+    // Admin-created accounts are time-limited like every other kind. There is
+    // no "forever" option: an omitted or unparseable value falls back to
+    // DEFAULT_INVITE_MONTHS, never to a null expiry.
+    const durationMonths = normalizeInviteMonths(req.body.durationMonths);
 
     if (!username || !password) {
         return res.status(400).json({ message: 'Missing username or password' });
@@ -883,16 +936,21 @@ app.post('/add_account', adminAuth, async (req, res) => {
         // email_verified marks the address as settled so the same person cannot
         // later self-signup and create a duplicate account.
         //
-        // is_admin_created = true is a PERMANENT paywall exemption: it is the
-        // first thing checkSubscriptionAccess() tests, so these accounts never
-        // see the paywall and never expire — free forever, by design. Same
-        // treatment as temp-link invites. account_type records the origin for
-        // the admin users table.
+        // is_admin_created = true is a paywall exemption, but a TIMED one: it
+        // is the first thing checkSubscriptionAccess() tests, and that check
+        // now honours the exemption only until subscription_expiry_date. These
+        // accounts used to never expire — free forever, by design — which meant
+        // every invite ever handed out stayed live indefinitely. Same treatment
+        // as temp-link invites. account_type records the origin for the admin
+        // users table.
         const columnsReady = await hasPaymentColumns();
         const result = columnsReady
             ? await db.query(
-                "INSERT INTO accounts (username, email, password, isactive, logged, terms_accepted, email_verified, track, account_type, is_admin_created) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id",
-                [lowercaseUsername, lowercaseUsername, lowercasePassword, true, false, false, true, track, 'admin_created', true]
+                `INSERT INTO accounts (username, email, password, isactive, logged, terms_accepted, email_verified, track, account_type, is_admin_created,
+                                       subscription_status, subscription_expiry_date)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'active', NOW() + make_interval(months => $11::int))
+                 RETURNING id, subscription_expiry_date`,
+                [lowercaseUsername, lowercaseUsername, lowercasePassword, true, false, false, true, track, 'admin_created', true, durationMonths]
             )
             : await db.query(
                 "INSERT INTO accounts (username, email, password, isactive, logged, terms_accepted, email_verified, track) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id",
@@ -900,6 +958,7 @@ app.post('/add_account', adminAuth, async (req, res) => {
             );
 
         const newUserId = result.rows[0].id;
+        const accessExpiresAt = result.rows[0].subscription_expiry_date || null;
 
         // Send email notification for admin-created account
         try {
@@ -910,6 +969,7 @@ New account created by admin:
 Username: ${username}
 User ID: ${newUserId}
 Track: ${trackLabelAr(track)} (${track})
+Access: ${durationMonths} month(s)${accessExpiresAt ? ` — expires ${new Date(accessExpiresAt).toLocaleDateString()}` : ''}
 Created: ${new Date().toLocaleString()}
 Created by: Admin Panel
 
@@ -921,6 +981,7 @@ This account has been activated and is ready for use.
                 <p><strong>Username:</strong> ${username}</p>
                 <p><strong>User ID:</strong> ${newUserId}</p>
                 <p><strong>Track:</strong> ${trackLabelAr(track)} (${track})</p>
+                <p><strong>Access:</strong> ${durationMonths} month(s)${accessExpiresAt ? ` — expires ${new Date(accessExpiresAt).toLocaleDateString()}` : ''}</p>
                 <p><strong>Created:</strong> ${new Date().toLocaleString()}</p>
                 <p><strong>Created by:</strong> Admin Panel</p>
                 <p><strong>Status:</strong> Active and ready for use</p>
@@ -1144,6 +1205,12 @@ const ensureTempLinksTables = async () => {
         // nursing cohort a link that puts every account on the nursing bank
         // without the invitee having to choose (or being able to choose wrong).
         await db.query(`ALTER TABLE temporary_signup_links ADD COLUMN IF NOT EXISTS track VARCHAR(20) NOT NULL DEFAULT '${DEFAULT_TRACK}'`);
+        // How long the accounts minted by this link keep access. Invites used
+        // to grant permanent, never-expiring access; they now carry a term, so
+        // an admin can hand a cohort three months without that turning into a
+        // free-forever account nobody ever revisits. DEFAULT_INVITE_MONTHS is
+        // the fallback for links created before this column existed.
+        await db.query(`ALTER TABLE temporary_signup_links ADD COLUMN IF NOT EXISTS duration_months INTEGER NOT NULL DEFAULT ${DEFAULT_INVITE_MONTHS}`);
         await db.query(`CREATE INDEX IF NOT EXISTS idx_temp_links_token ON temporary_signup_links(token)`);
         await db.query(`CREATE INDEX IF NOT EXISTS idx_temp_links_active ON temporary_signup_links(is_active)`);
         await db.query(`CREATE INDEX IF NOT EXISTS idx_temp_link_accounts_link_id ON temp_link_accounts(link_id)`);
@@ -1405,7 +1472,9 @@ const ensureOAuthColumns = async () => {
 // Bump SCHEMA_BOOTSTRAP_VERSION whenever a statement is added to any of the
 // 9 ensureXxx() functions above, so the new statement actually runs on the
 // next deploy instead of being silently skipped forever.
-const SCHEMA_BOOTSTRAP_VERSION = 4;
+// 5: temporary_signup_links.duration_months, plus migration
+//    004_expire_admin_created — admin-granted accounts stop being free forever.
+const SCHEMA_BOOTSTRAP_VERSION = 5;
 async function bootstrapAll() {
     try {
         await db.query(`
@@ -5675,12 +5744,16 @@ app.post('/api/admin/generate-temp-link', adminAuth, async (req, res) => {
         // resist brute-forcing.
         const token = crypto.randomBytes(16).toString('base64url');
         const linkTrack = normalizeTrack(req.body.track);
+        // The term every account minted by this link gets, counted from that
+        // account's own signup — not from the link's creation — so a link left
+        // active for a month still gives its last user the full period.
+        const durationMonths = normalizeInviteMonths(req.body.durationMonths);
 
         // Insert the new link
         const result = await db.query(
-            `INSERT INTO temporary_signup_links (token, max_uses, created_by, track)
-             VALUES ($1, $2, $3, $4) RETURNING *`,
-            [token, maxUses, createdBy || 'admin', linkTrack]
+            `INSERT INTO temporary_signup_links (token, max_uses, created_by, track, duration_months)
+             VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+            [token, maxUses, createdBy || 'admin', linkTrack, durationMonths]
         );
 
         const link = result.rows[0];
@@ -5698,6 +5771,7 @@ app.post('/api/admin/generate-temp-link', adminAuth, async (req, res) => {
                 currentUses: link.current_uses,
                 isActive: link.is_active,
                 track: link.track,
+                durationMonths: link.duration_months,
                 createdAt: link.created_at
             }
         });
@@ -5741,6 +5815,7 @@ app.get('/api/admin/temp-links', adminAuth, async (req, res) => {
             currentUses: link.current_uses,
             isActive: link.is_active,
             track: link.track,
+            durationMonths: link.duration_months,
             createdBy: link.created_by,
             createdAt: link.created_at,
             lastUsedAt: link.last_used_at,
@@ -5795,7 +5870,8 @@ app.get('/api/validate-temp-link/:token', async (req, res) => {
                 maxUses: link.max_uses,
                 currentUses: link.current_uses,
                 remainingUses: link.max_uses - link.current_uses,
-                track: normalizeTrack(link.track)
+                track: normalizeTrack(link.track),
+                durationMonths: link.duration_months
             }
         });
     } catch (err) {
@@ -6223,18 +6299,27 @@ app.post('/api/signup/temp-link', async (req, res) => {
             }
 
             // Create the account (username = email for backward compat).
-            // Accounts created via admin temp links are flagged for future
-            // payment exemption (is_admin_created / account_type='admin_created').
+            // Accounts created via admin temp links are flagged for payment
+            // exemption (is_admin_created / account_type='admin_created') — but
+            // that exemption is now TIMED, not permanent: the account also gets
+            // a real subscription_expiry_date, counted in months from right now
+            // (not from the link's creation, so the last person to use a
+            // long-lived link still gets the full term), and
+            // checkSubscriptionAccess() stops honouring the exemption once that
+            // date passes.
             // Falls back to the legacy insert if migration 001 isn't applied yet.
             // The link decides the track — an invite is issued for one cohort,
             // so nothing the invitee sends can move them to the other bank.
             const linkTrack = normalizeTrack(link.track);
+            const inviteMonths = normalizeInviteMonths(link.duration_months);
             const columnsReady = await hasPaymentColumns();
             const accountResult = columnsReady
                 ? await client.query(
-                    `INSERT INTO accounts (username, email, password, isactive, logged, terms_accepted, email_verified, is_admin_created, account_type, track)
-                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id`,
-                    [lowerEmail, lowerEmail, lowerPassword, true, false, false, true, true, 'admin_created', linkTrack]
+                    `INSERT INTO accounts (username, email, password, isactive, logged, terms_accepted, email_verified, is_admin_created, account_type, track,
+                                           subscription_status, subscription_expiry_date)
+                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'active', NOW() + make_interval(months => $11::int))
+                     RETURNING id, subscription_expiry_date`,
+                    [lowerEmail, lowerEmail, lowerPassword, true, false, false, true, true, 'admin_created', linkTrack, inviteMonths]
                 )
                 : await client.query(
                     `INSERT INTO accounts (username, email, password, isactive, logged, terms_accepted, email_verified, track)
@@ -6243,6 +6328,7 @@ app.post('/api/signup/temp-link', async (req, res) => {
                 );
 
             const newUserId = accountResult.rows[0].id;
+            const accessExpiresAt = accountResult.rows[0].subscription_expiry_date || null;
 
             // Record the account creation in temp_link_accounts
             await client.query(
@@ -6269,7 +6355,7 @@ app.post('/api/signup/temp-link', async (req, res) => {
             // Send email notification to admin
             try {
                 const emailSubject = `🔗 Account Created via Temp Link - ${lowerEmail}`;
-                const emailText = `New account created via temp link:\nEmail: ${lowerEmail}\nUser ID: ${newUserId}\nTrack: ${trackLabelAr(linkTrack)}\nLink Token: ${token}\nCreated: ${new Date().toLocaleString()}\nLink Usage: ${link.current_uses + 1}/${link.max_uses}`;
+                const emailText = `New account created via temp link:\nEmail: ${lowerEmail}\nUser ID: ${newUserId}\nTrack: ${trackLabelAr(linkTrack)}\nAccess: ${inviteMonths} month(s)${accessExpiresAt ? ` (until ${new Date(accessExpiresAt).toLocaleDateString()})` : ''}\nLink Token: ${token}\nCreated: ${new Date().toLocaleString()}\nLink Usage: ${link.current_uses + 1}/${link.max_uses}`;
                 await sendEmail(OWNER_EMAIL, emailSubject, emailText, { event: 'medqize.owner.temp_link_account' });
             } catch (emailError) {
                 console.error('Failed to send temp link account creation email:', emailError);
@@ -6279,7 +6365,9 @@ app.post('/api/signup/temp-link', async (req, res) => {
                 success: true,
                 message: 'Account created successfully',
                 userId: newUserId,
-                track: linkTrack
+                track: linkTrack,
+                accessMonths: inviteMonths,
+                accessExpiresAt
             });
 
         } catch (error) {

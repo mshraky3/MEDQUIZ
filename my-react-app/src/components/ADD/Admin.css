@@ -261,6 +261,22 @@
   transform: translateY(0);
 }
 
+/* The selected duration preset. Without this the picker has no readable
+   current state — hover is not selection, and an admin choosing "3 mo" needs
+   to see that it stuck before generating a link they then hand to a cohort. */
+.quick-btn.is-selected {
+  border-color: #236ded;
+  background: #236ded;
+  color: #ffffff;
+}
+
+/* Unit label after the months number input. */
+.counter-unit {
+  font-size: 14px;
+  font-weight: 600;
+  color: #475569;
+}
+
 .generated-link-card {
   background: linear-gradient(135deg, #236ded, #1054ca);
   color: #ffffff;

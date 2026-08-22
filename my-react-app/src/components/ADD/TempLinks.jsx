@@ -6,6 +6,21 @@ import "./Admin.css";
 import AdminLayout from "./AdminLayout.jsx";
 import { TRACKS, TRACK_KEYS, MEDICAL, normalizeTrack } from '../../utils/tracks.js';
 
+// Mirrors DEFAULT_INVITE_MONTHS / MAX_INVITE_MONTHS in backend/app.js. The
+// server clamps whatever arrives, so these only shape the picker.
+const DEFAULT_LINK_MONTHS = 12;
+const MAX_LINK_MONTHS = 120;
+const MONTH_PRESETS = [1, 3, 6, 12];
+
+/** "1 year" reads better than "12 months" for the commonest case. */
+const monthsLabel = (m) => {
+    const n = Number(m);
+    if (!Number.isFinite(n) || n < 1) return '—';
+    if (n === 12) return '1 year';
+    if (n % 12 === 0) return `${n / 12} years`;
+    return `${n} month${n === 1 ? '' : 's'}`;
+};
+
 const TempLinks = (props) => {
     const [links, setLinks] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -18,6 +33,10 @@ const TempLinks = (props) => {
         // an invited cohort can't end up on the wrong bank.
         track: MEDICAL,
         maxUses: 1,
+        // How long each account made with this link keeps access, counted from
+        // that account's own signup. Invites used to grant permanent access;
+        // there is no "forever" option any more.
+        durationMonths: DEFAULT_LINK_MONTHS,
         createdBy: "admin"
     });
     const [generatedLink, setGeneratedLink] = useState(null);
@@ -49,13 +68,14 @@ const TempLinks = (props) => {
             const response = await axios.post(`${props.host}/api/admin/generate-temp-link`, {
                 track: generateForm.track,
                 maxUses: parseInt(generateForm.maxUses),
+                durationMonths: parseInt(generateForm.durationMonths),
                 createdBy: generateForm.createdBy
             });
 
             if (response.data.success) {
                 setGeneratedLink(response.data.link);
                 setMessage(`Temporary link generated successfully!`);
-                setGenerateForm({ track: MEDICAL, maxUses: 1, createdBy: "admin" });
+                setGenerateForm({ track: MEDICAL, maxUses: 1, durationMonths: DEFAULT_LINK_MONTHS, createdBy: "admin" });
                 setShowGenerateForm(false);
                 fetchLinks(); // Refresh the list
             } else {
@@ -209,6 +229,43 @@ const TempLinks = (props) => {
                             </div>
 
                             <div className="form-group">
+                                <label htmlFor="linkMonths">Access Duration:</label>
+                                <div className="quick-select-buttons">
+                                    {MONTH_PRESETS.map((m) => (
+                                        <button
+                                            key={m}
+                                            type="button"
+                                            className={`quick-btn${Number(generateForm.durationMonths) === m ? ' is-selected' : ''}`}
+                                            onClick={() => setGenerateForm(prev => ({ ...prev, durationMonths: m }))}
+                                        >
+                                            {m === 12 ? '1 year' : `${m} mo`}
+                                        </button>
+                                    ))}
+                                </div>
+                                <div className="counter-container">
+                                    <input
+                                        type="number"
+                                        id="linkMonths"
+                                        min="1"
+                                        max={MAX_LINK_MONTHS}
+                                        value={generateForm.durationMonths}
+                                        onChange={(e) => setGenerateForm(prev => ({
+                                            ...prev,
+                                            durationMonths: Math.max(1, Math.min(MAX_LINK_MONTHS, parseInt(e.target.value, 10) || 1))
+                                        }))}
+                                        className="input counter-input"
+                                        required
+                                    />
+                                    <span className="counter-unit">months</span>
+                                </div>
+                                <small>
+                                    Each account made with this link gets {monthsLabel(generateForm.durationMonths)} of
+                                    access, counted from its own signup — not from today, so the last person to use a
+                                    long-lived link still gets the full period. No invite grants access forever.
+                                </small>
+                            </div>
+
+                            <div className="form-group">
                                 <label htmlFor="linkTrack">Study Track:</label>
                                 <select
                                     id="linkTrack"
@@ -275,6 +332,7 @@ const TempLinks = (props) => {
                                 <div className="link-details">
                                     <p><strong>Token:</strong> {generatedLink.token}</p>
                                     <p><strong>Max Uses:</strong> {generatedLink.maxUses}</p>
+                                    <p><strong>Access:</strong> {monthsLabel(generatedLink.durationMonths)} per account</p>
                                     <p><strong>Track:</strong> {TRACKS[normalizeTrack(generatedLink.track)].label.en}</p>
                                     <p><strong>Status:</strong> <span className="status active"><Icon name="check-circle" size={16} /> Active</span></p>
                                 </div>
@@ -347,6 +405,9 @@ const TempLinks = (props) => {
                                             </div>
                                             <div>
                                                 <strong>Usage:</strong> {link.currentUses}/{link.maxUses}
+                                            </div>
+                                            <div className="stat-item">
+                                                <strong>Access:</strong> {monthsLabel(link.durationMonths)}
                                             </div>
                                             <div className="stat-item">
                                                 <strong>Created:</strong> {formatDate(link.createdAt)}

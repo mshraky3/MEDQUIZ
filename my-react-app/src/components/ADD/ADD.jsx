@@ -25,9 +25,16 @@ const subscriptionInfo = (user) => {
 
     // Checked first, mirroring checkSubscriptionAccess: this flag short-circuits
     // the paywall, so subscription_status is meaningless on these rows. Calling
-    // them "Free" would read as "not paying yet" rather than "never will".
+    // them "Free" would read as "not paying yet" rather than "granted".
+    // The grant is TIMED now, so it lapses like any other and an expired one
+    // must stop reading as if it still has access.
     if (user.is_admin_created) {
-        return { key: 'exempt', label: 'Free forever', cls: 'legacy', detail: 'Admin-created — never charged' };
+        if (!expiry) {
+            return { key: 'exempt', label: 'Admin — no expiry', cls: 'legacy', detail: 'Legacy grant, never charged' };
+        }
+        return expired
+            ? { key: 'expired', label: 'Admin — expired', cls: 'expired', detail: `Ended ${expiry.toLocaleDateString()}` }
+            : { key: 'exempt', label: 'Admin grant', cls: 'legacy', detail: `Until ${expiry.toLocaleDateString()}` };
     }
     if (user.grandfathered_at || status === 'grandfathered') {
         return { key: 'legacy', label: 'Legacy', cls: 'legacy', detail: 'Free lifetime access' };
@@ -73,13 +80,28 @@ const PLAN_LABELS = {
 };
 const planLabel = (planId) => (planId ? (PLAN_LABELS[planId] || planId) : null);
 
+// Mirrors DEFAULT_INVITE_MONTHS / MAX_INVITE_MONTHS in backend/app.js. The
+// server is the authority — it clamps whatever arrives — these just drive the
+// picker and keep the UI from offering a value the server would silently
+// rewrite.
+const DEFAULT_GRANT_MONTHS = 12;
+const MAX_GRANT_MONTHS = 120;
+const GRANT_PRESETS = [1, 3, 6, 12];
+
+/** "1 year" reads better than "12 months" for the commonest case. */
+const monthsLabel = (m) => {
+    if (m === 12) return '1 year';
+    if (m % 12 === 0) return `${m / 12} years`;
+    return `${m} month${m === 1 ? '' : 's'}`;
+};
+
 const PLAN_FILTERS = [
     { value: 'all', label: 'All plans' },
     { value: 'paid', label: 'Paid' },
     { value: 'free', label: 'Free — questions left' },
     { value: 'spent', label: 'Free — used up' },
     { value: 'expired', label: 'Expired / refunded' },
-    { value: 'exempt', label: 'Free forever (admin)' },
+    { value: 'exempt', label: 'Admin grant (active)' },
     { value: 'legacy', label: 'Legacy' },
 ];
 
@@ -90,6 +112,10 @@ const ADD = (props) => {
     // Study track for the account being created, and for a user being moved
     // between tracks — a change only an admin can make.
     const [newUserTrack, setNewUserTrack] = useState(MEDICAL);
+    // How long the new account keeps access. There is no "forever" option:
+    // the server clamps this to 1..120 months and falls back to 12, so an
+    // account created here always carries a real expiry date.
+    const [newUserMonths, setNewUserMonths] = useState(DEFAULT_GRANT_MONTHS);
     const [changingTrack, setChangingTrack] = useState(null);
     const [error, setError] = useState("");
     const [message, setMessage] = useState("");
@@ -179,11 +205,13 @@ const ADD = (props) => {
                 username,
                 password,
                 track: newUserTrack,
+                durationMonths: newUserMonths,
             });
 
             setMessage(`${response.data.message}`);
             setUsername("");
             setPassword("");
+            setNewUserMonths(DEFAULT_GRANT_MONTHS);
             fetchUsers(); // Refresh user list
         } catch (err) {
             const errorMessage = err.response?.data?.message || "Failed to add account. Please try again.";
@@ -630,9 +658,10 @@ const ADD = (props) => {
                             <h2><Icon name="plus" size={16} /> Add New User Account</h2>
                             <p className="add-user-notice">
                                 <Icon name="shield-check" size={15} />
-                                Accounts created here skip the paywall permanently — full access,
-                                free forever, no expiry. Same as temp-link invites. Paying students
-                                should sign up themselves.
+                                Accounts created here skip the paywall for the period you set below —
+                                full access until it ends, then they drop to the free tier like anyone
+                                else. Same as temp-link invites. Paying students should sign up
+                                themselves.
                             </p>
                             <form onSubmit={handleSubmit} className="add-user-form">
                                 <div className="form-group">
@@ -677,6 +706,38 @@ const ADD = (props) => {
                                     </select>
                                     <small className="form-hint">
                                         Decides which question bank and summaries this account sees.
+                                    </small>
+                                </div>
+                                <div className="form-group">
+                                    <label htmlFor="newUserMonths">Access Duration</label>
+                                    <div className="grant-months-row">
+                                        {GRANT_PRESETS.map((m) => (
+                                            <button
+                                                key={m}
+                                                type="button"
+                                                className={`grant-preset${newUserMonths === m ? ' is-selected' : ''}`}
+                                                onClick={() => setNewUserMonths(m)}
+                                            >
+                                                {m === 12 ? '1 year' : `${m} mo`}
+                                            </button>
+                                        ))}
+                                        <input
+                                            id="newUserMonths"
+                                            type="number"
+                                            min="1"
+                                            max={MAX_GRANT_MONTHS}
+                                            value={newUserMonths}
+                                            onChange={(e) => setNewUserMonths(
+                                                Math.max(1, Math.min(MAX_GRANT_MONTHS, parseInt(e.target.value, 10) || 1))
+                                            )}
+                                            className="form-input grant-months-input"
+                                            aria-label="Access duration in months"
+                                        />
+                                        <span className="grant-months-unit">months</span>
+                                    </div>
+                                    <small className="form-hint">
+                                        Counted from today. No account is granted access forever —
+                                        this one expires {monthsLabel(newUserMonths)} from now.
                                     </small>
                                 </div>
                                 <button type="submit" className="btn-primary" disabled={loading}>

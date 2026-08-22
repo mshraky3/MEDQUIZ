@@ -73,11 +73,28 @@ const AccountPage = () => {
         return () => { cancelled = true; };
     }, [user?.id, user?.username, sessionToken, navigate]);
 
+    // An admin-granted ("managed") account is time-limited now, so the grant
+    // can lapse. Once it has, this account is an ordinary free-tier one and
+    // must be shown as such — otherwise it reads "Managed account, permanent
+    // access" on a page that is also refusing to start a quiz, and offers no
+    // way to subscribe.
+    const adminGrantExpiry = sub?.is_admin_created ? sub.subscription_expiry_date : null;
+    const adminGrantLive = Boolean(sub?.is_admin_created)
+        && (!adminGrantExpiry || new Date(adminGrantExpiry).getTime() > Date.now());
+
     const statusLabel = () => {
         if (!sub) return '';
-        if (sub.is_admin_created) return t.statusAdmin;
+        if (adminGrantLive) return t.statusAdmin;
         if (sub.grandfathered_at) return t.statusLegacy;
-        if (sub.subscription_status === 'active') {
+        // subscription_status stays 'active' after the expiry date passes —
+        // nothing rewrites the column when time runs out — so the date has to
+        // be checked here too, or a lapsed account reads "Active" on the very
+        // page it opens to find out why it lost access. The admin users table
+        // already draws this distinction (see planState in ADD.jsx).
+        const stillValid = sub.subscription_expiry_date
+            ? new Date(sub.subscription_expiry_date).getTime() > Date.now()
+            : false;
+        if (sub.subscription_status === 'active' && stillValid) {
             return sub.account_type === 'group_seat' ? t.statusGroupSeat : t.statusActive;
         }
         return t.statusFree;
@@ -87,7 +104,10 @@ const AccountPage = () => {
     // exactly the test for "is this a paying/exempt account".
     const isFree = sub != null && typeof sub.freeQuestionsRemaining === 'number';
     const isPaid = sub != null && !isFree && sub.subscription_status === 'active';
-    const isLegacy = sub != null && (sub.grandfathered_at || sub.is_admin_created);
+    // "Legacy" means access with no end date at all. A managed account with a
+    // real expiry is NOT that: it needs the end date, the renew button and the
+    // no-auto-renew line, exactly like a paid one.
+    const isLegacy = sub != null && (sub.grandfathered_at || (sub.is_admin_created && !sub.subscription_expiry_date));
 
     return (
         <div className="account-page" dir={dir}>
@@ -158,6 +178,8 @@ const AccountPage = () => {
                                 are about to be charged again. */}
                             {isLegacy
                                 ? <p className="account-note">{t.legacyNote}</p>
+                                : adminGrantLive
+                                ? <p className="account-note">{t.adminGrantNote}</p>
                                 : <p className="account-note account-norenew">
                                     <Icon name="shield-check" size={15} />
                                     {t.noAutoRenew}

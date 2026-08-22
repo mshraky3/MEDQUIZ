@@ -43,6 +43,7 @@ export default {
 
         noAutoRenew: 'اشتراكك لا يتجدّد تلقائياً. لن نخصم أي مبلغ دون أن تشتري بنفسك.',
         legacyNote: 'حسابك يتمتع بوصول دائم دون اشتراك.',
+        adminGrantNote: 'تم منح حسابك وصولاً كاملاً حتى التاريخ الموضّح أعلاه، دون اشتراك مدفوع. بعد ذلك يعود الحساب إلى الباقة المجانية.',
 
         subscribeCta: 'عرض خطط الاشتراك',
         renewCta: 'تمديد اشتراكي',
@@ -89,6 +90,7 @@ export default {
 
         noAutoRenew: 'Your subscription does not renew automatically. Nothing will ever be charged unless you buy it yourself.',
         legacyNote: 'Your account has permanent access without a subscription.',
+        adminGrantNote: 'Your account was granted full access until the date above, with no payment. After that it returns to the free tier.',
 
         subscribeCta: 'See subscription plans',
         renewCta: 'Extend my subscription',

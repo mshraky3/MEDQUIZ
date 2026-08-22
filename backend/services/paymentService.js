@@ -207,10 +207,22 @@ export const FREE_QUESTION_ALLOWANCE = Number(process.env.FREE_QUESTION_ALLOWANC
  * Everything else — logging in, reading their own analytics, the free lessons —
  * is available to every account forever and asks neither question.
  *
- *   - allow if is_admin_created (admin-exempt)
+ *   - allow if is_admin_created AND its expiry has not passed (admin-exempt)
  *   - allow if grandfathered_at is set (pre-rollout users)
  *   - allow if subscription_status='active' AND expiry in the future
  *   - otherwise deny with 'free_tier'
+ *
+ * is_admin_created used to be an UNCONDITIONAL, permanent exemption: an
+ * account created from the admin panel or a temp-link invite never expired and
+ * never saw the paywall again. Both of those paths now stamp a real
+ * subscription_expiry_date at creation (see DEFAULT_INVITE_MONTHS in app.js),
+ * and migration 004 backfilled the ones that predate that, so the flag means
+ * "granted by an admin", not "granted forever".
+ *
+ * The null-expiry branch below is a safety valve, not a loophole: it exists so
+ * a row written by an older deploy — or inserted by hand — cannot silently
+ * lock a real student out of an account they were told was theirs. Nothing in
+ * the codebase creates such a row any more.
  *
  * @param {object} account - row from the accounts table
  * @returns {{ allowed: boolean, reason: string }}
@@ -222,15 +234,20 @@ export function checkSubscriptionAccess(account) {
     if (!account) {
         return { allowed: false, reason: 'account_not_found' };
     }
+    const notExpired = account.subscription_expiry_date
+        ? new Date(account.subscription_expiry_date).getTime() > Date.now()
+        : false;
     if (account.is_admin_created) {
-        return { allowed: true, reason: 'admin_exempt' };
+        if (!account.subscription_expiry_date) {
+            return { allowed: true, reason: 'admin_exempt' };
+        }
+        return notExpired
+            ? { allowed: true, reason: 'admin_granted' }
+            : { allowed: false, reason: 'admin_grant_expired' };
     }
     if (account.grandfathered_at) {
         return { allowed: true, reason: 'grandfathered' };
     }
-    const notExpired = account.subscription_expiry_date
-        ? new Date(account.subscription_expiry_date).getTime() > Date.now()
-        : false;
     if (account.subscription_status === 'active' && notExpired) {
         return { allowed: true, reason: 'active_subscription' };
     }

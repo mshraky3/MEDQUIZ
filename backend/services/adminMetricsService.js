@@ -28,7 +28,15 @@ export function riyadhMonthKey(date) {
 // subscriber" splices in the exact same condition. A predicate defined twice
 // is how the dashboard and analytics page disagreed before.
 export const SQL_ACTIVE_SUBSCRIBER = `subscription_status = 'active' AND subscription_expiry_date > NOW()`;
-export const SQL_HAS_ACCESS = `((${SQL_ACTIVE_SUBSCRIBER}) OR grandfathered_at IS NOT NULL OR is_admin_created = TRUE)`;
+// is_admin_created is a TIMED grant, not a permanent one (see
+// checkSubscriptionAccess in paymentService.js), so it only counts as access
+// while its expiry is in the future. The NULL-expiry arm mirrors the safety
+// valve in that function: nothing creates such a row any more, but one that
+// exists still has access and must be counted as such, or the dashboard would
+// report a student as lapsed while the app still lets them in.
+export const SQL_HAS_ACCESS = `((${SQL_ACTIVE_SUBSCRIBER})
+    OR grandfathered_at IS NOT NULL
+    OR (is_admin_created = TRUE AND (subscription_expiry_date IS NULL OR subscription_expiry_date > NOW())))`;
 // The free tier replaced the timed trial on 2026-08-08. "Still trying" means a
 // non-paying account with allowance left; "used up" is the conversion moment
 // the old SQL_ACTIVE_TRIAL / trial_expired pair used to mark.
