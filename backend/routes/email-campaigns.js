@@ -25,6 +25,7 @@ import {
     EXAM_REMINDER_STAGES,
 } from '../services/lifecycleJobs.js';
 import { maybeSendSubscriptionReport, sendSubscriptionReport } from '../services/subscriptionReportService.js';
+import { maybeSendDailySignupsReport, sendDailySignupsReport } from '../services/dailySignupsReportService.js';
 import { runDailyChannelPostJob, runMessageCleanupJob } from '../services/telegramJobs.js';
 import { drainSendingCampaigns } from './admin-broadcast.js';
 import { adminAuth } from '../middleware/adminAuth.js';
@@ -446,6 +447,45 @@ router.get('/api/email-test/subscription-report', adminAuth, async (req, res) =>
         res.json({ success: true, ...result });
     } catch (err) {
         console.error('email-test/subscription-report error:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+/**
+ * GET /api/email-test/daily-signups-report
+ * Force-sends today's signups report immediately (admin only), without
+ * touching daily_signups_report_log — so the scheduled 23:00 AST send still
+ * happens on its own, unaffected by this preview.
+ */
+router.get('/api/email-test/daily-signups-report', adminAuth, async (req, res) => {
+    try {
+        const result = await sendDailySignupsReport(req.db, { record: false });
+        res.json({ success: true, ...result });
+    } catch (err) {
+        console.error('email-test/daily-signups-report error:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+/**
+ * GET /api/cron/daily-signups-report
+ *
+ * One email a day, summarising how many users signed up and how they joined
+ * (Google / email / admin-created / temp-link / group seat), plus how today
+ * compares to the 7-day average.
+ *
+ * Deliberately NOT one of Vercel's two Hobby-plan cron slots — both are
+ * already spent (see backend/vercel.json). Called once a day from
+ * .github/workflows/cron.yml at 20:00 UTC (23:00 AST), which is what makes
+ * this a genuine end-of-day report rather than a next-morning one riding
+ * along on the existing 09:00 UTC daily-emails cron.
+ */
+router.get('/api/cron/daily-signups-report', cronAuth, async (req, res) => {
+    try {
+        const result = await maybeSendDailySignupsReport(req.db);
+        res.json({ success: true, ...result });
+    } catch (err) {
+        console.error('cron/daily-signups-report error:', err);
         res.status(500).json({ success: false, error: err.message });
     }
 });

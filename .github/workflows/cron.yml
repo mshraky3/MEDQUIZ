@@ -29,6 +29,7 @@ on:
     - cron: '30 2 * * *'        # daily cleanup + lifecycle emails
     - cron: '0 8 * * 6'         # weekly: channel summary + weak-topics DMs
     - cron: '15 * * * *'        # hourly: broadcast drain + welcome emails
+    - cron: '0 20 * * *'        # end-of-day: daily signups report (20:00 UTC = 23:00 AST)
   workflow_dispatch:
     inputs:
       job:
@@ -36,7 +37,7 @@ on:
         required: true
         default: telegram-daily
         type: choice
-        options: [telegram-daily, daily, weekly, hourly]
+        options: [telegram-daily, daily, weekly, hourly, eod]
 
 env:
   API_BASE: https://medquiz.vercel.app
@@ -77,12 +78,14 @@ jobs:
             daily)          group=daily ;;
             weekly)         group=weekly ;;
             hourly)         group=hourly ;;
+            eod)            group=eod ;;
             *)
               case "${SCHEDULE:-}" in
                 '0 7,13,18 * * *') group=telegram-daily ;;
                 '30 2 * * *')      group=daily ;;
                 '0 8 * * 6')       group=weekly ;;
                 '15 * * * *')      group=hourly ;;
+                '0 20 * * *')      group=eod ;;
                 *) echo "::error::Unrecognised schedule '${SCHEDULE:-}'"; exit 1 ;;
               esac
               ;;
@@ -109,6 +112,11 @@ jobs:
               # them timelier.
               call /api/cron/broadcast-drain || failed=1
               call /api/cron/welcome-emails  || failed=1
+              ;;
+            eod)
+              # Idempotent per calendar date (daily_signups_report_log), so a
+              # retried or re-run workflow can never double-send.
+              call /api/cron/daily-signups-report || failed=1
               ;;
           esac
           exit $failed
