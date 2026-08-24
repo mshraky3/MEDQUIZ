@@ -8,11 +8,11 @@
     min-height: 100%;
     flex: 1 0 auto;
     background: var(--bg-light, #f6f8fc);
-    padding: clamp(1.25rem, 4vw, 3rem) 1rem 4rem;
+    padding: var(--page-pad-block) var(--page-pad-inline) var(--space-12);
 }
 
 .groups-wrap {
-    max-width: 860px;
+    max-width: var(--container-page, 860px);
     margin: 0 auto;
 }
 

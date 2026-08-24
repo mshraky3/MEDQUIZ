@@ -57,7 +57,13 @@
 }
 
 .landing-body {
-  min-height: 100vh;
+  /* min-height:100% + flex:1, not 100vh — App.jsx's wrapper is already
+     min-height:100vh and is now a flex column, so a child that ALSO demands a
+     full 100vh filled it exactly and pushed the Footer entirely below the fold.
+     The landing page is long enough that it scrolls anyway; the point is that
+     the scroll comes from content, not from an arithmetic mistake. */
+  min-height: 100%;
+  flex: 1 0 auto;
   margin: 0;
   position: relative;
   display: flex;

@@ -11,10 +11,21 @@ const BATCH_ENDPOINT = '/api/error-report/batch';
 
 // Configuration
 const CONFIG = {
-    cooldownMinutes: 1, // Client-side cooldown for same error
+    // Was 1 minute, and held only in a module-level Map — so it reset on every
+    // page load. A route that throws on mount therefore mailed a fresh CRITICAL
+    // on each reload, and a user retrying a broken page half a dozen times sent
+    // half a dozen alerts for one fault. The window is now long enough to cover
+    // a retry loop, and persisted per-tab (see loadCooldowns) so reloading no
+    // longer resets it.
+    cooldownMinutes: 15,
     maxQueueSize: 50,   // Maximum offline queue size
     enableConsoleLog: true
 };
+
+// Where the persisted cooldown map lives. sessionStorage, not localStorage:
+// per-tab and cleared when the tab closes, which keeps a stale suppression from
+// hiding a fault in a browsing session days later.
+const COOLDOWN_STORAGE_KEY = 'errorCooldowns';
 
 // Error severity levels
 const SEVERITY = {
@@ -24,21 +35,91 @@ const SEVERITY = {
     LOW: 'LOW'
 };
 
-// Browser notices that surface as window 'error' events but are not faults.
-// "ResizeObserver loop ..." is fired when a ResizeObserver callback changes
-// layout and the browser defers the remaining notifications to the next frame —
-// nothing breaks, the user sees nothing, and there is no stack to act on
-// (lineno/colno are always 0). Reporting them stamps a fake 500 and pages the
-// admin, so drop them before they reach the queue.
+// Browser notices that surface as window 'error'/'unhandledrejection' events
+// but are not faults in this app. Every one of these stamps a fake 500 and
+// pages the admin, and the alert inbox only has ONE shared 100/day Resend
+// allowance — noise here is quota a real outage can't use.
+//
+//   ResizeObserver loop ...   fired when a ResizeObserver callback changes
+//                             layout and the browser defers the rest to the
+//                             next frame. Nothing breaks, the user sees
+//                             nothing, and lineno/colno are always 0.
+//
+//   Object Not Found Matching Id:N, MethodName:update, ParamCount:4
+//                             NOT ours. This is a browser EXTENSION talking to
+//                             its own disconnected message port (the Edge/Chrome
+//                             autofill and password-manager extensions are the
+//                             usual sources). It rejects with a raw string
+//                             rather than an Error, arrives on pages with form
+//                             fields — which is why every instance recorded so
+//                             far landed on /signup — and there is nothing in
+//                             this codebase to fix. See isExtensionNoise below
+//                             for the structural version of this check.
+//
+//   Script error.             the cross-origin placeholder the browser
+//                             substitutes when a script from another origin
+//                             throws. No message, no file, no line, no stack:
+//                             literally zero actionable information.
 const IGNORED_ERROR_PATTERNS = [
     'resizeobserver loop completed with undelivered notifications',
     'resizeobserver loop limit exceeded',
+    'object not found matching id',
+    'script error.',
 ];
 
 function isIgnorableBrowserError(message) {
     if (!message) return false;
     const msg = String(message).toLowerCase();
     return IGNORED_ERROR_PATTERNS.some((p) => msg.includes(p));
+}
+
+/**
+ * Structural companion to the message list above, for unhandled rejections.
+ *
+ * Application code rejects with an Error — that is what `throw` inside an
+ * async function produces, what axios rejects with, and what every rejection
+ * this app creates on purpose looks like. A rejection carrying a bare string,
+ * or a plain object with no message, essentially always came from an injected
+ * extension content script sharing the page's event loop.
+ *
+ * Matching on shape rather than wording is what makes this hold up: extensions
+ * update and reword their messages, and each new wording would otherwise be a
+ * fresh burst of CRITICALs before anyone added it to the list above.
+ */
+function isExtensionNoise(reason) {
+    if (reason instanceof Error) return false;
+    if (typeof reason === 'string') return true;
+    // A rejection with no usable message is unactionable regardless of source.
+    return !reason || typeof reason.message !== 'string' || reason.message === '';
+}
+
+/**
+ * Requests the CLIENT gave up on, which say nothing about server health.
+ *
+ * A user who taps a link mid-request, or whose phone drops off wifi, aborts
+ * every in-flight XHR. Axios surfaces those as ERR_CANCELED / AbortError and as
+ * the generic "Network Error", all of which classifyErrorSeverity() below rates
+ * CRITICAL or HIGH — so ordinary navigation was paging the admin.
+ *
+ * Cancellation is dropped unconditionally: it is deliberate, by definition.
+ * "Network Error" is dropped only with corroboration that the client, not the
+ * server, is the one that went away — navigator.onLine is false, or the page is
+ * already unloading. A genuine backend outage leaves the browser online and the
+ * page loaded, so it still alerts.
+ */
+function isClientAbortedRequest(error) {
+    const code = error?.code;
+    const name = error?.name;
+    if (code === 'ERR_CANCELED' || name === 'CanceledError' || name === 'AbortError') return true;
+
+    const msg = String(error?.message || '').toLowerCase();
+    if (msg === 'canceled' || msg === 'cancelled') return true;
+
+    if (msg.includes('network error')) {
+        if (isBrowser && navigator.onLine === false) return true;
+        if (isPageUnloading) return true;
+    }
+    return false;
 }
 
 // Track sent errors for client-side rate limiting
@@ -52,6 +133,12 @@ let _isReportingError = false;
 
 // Check if we're in browser environment
 const isBrowser = typeof window !== 'undefined';
+
+// Set once the browser has committed to leaving the page. Every request still
+// in flight is about to be aborted through no fault of the server, so
+// isClientAbortedRequest() uses this to tell "the user navigated away" apart
+// from "the backend is unreachable". Registered in initErrorTracking().
+let isPageUnloading = false;
 
 /**
  * Get API base URL.
@@ -120,7 +207,40 @@ function getErrorKey(errorData) {
 }
 
 /**
- * Check if we can report this error (client-side rate limiting)
+ * Rehydrate the cooldown map for this tab. Called once at init so a reload
+ * cannot re-send an alert the previous page load already sent.
+ */
+function loadCooldowns() {
+    if (!isBrowser) return;
+    try {
+        const raw = sessionStorage.getItem(COOLDOWN_STORAGE_KEY);
+        if (!raw) return;
+        const cutoff = Date.now() - CONFIG.cooldownMinutes * 60 * 1000;
+        for (const [key, at] of Object.entries(JSON.parse(raw))) {
+            if (at > cutoff) errorCooldowns.set(key, at);
+        }
+    } catch (e) {
+        // Unparseable or unavailable (private mode) — the in-memory map still
+        // works for this page load, which is the old behaviour.
+    }
+}
+
+function persistCooldowns() {
+    if (!isBrowser) return;
+    try {
+        sessionStorage.setItem(COOLDOWN_STORAGE_KEY, JSON.stringify(Object.fromEntries(errorCooldowns)));
+    } catch (e) {
+        // Storage full or unavailable — suppression degrades to in-memory only.
+    }
+}
+
+/**
+ * Check if we can report this error (client-side rate limiting).
+ *
+ * Every reporting path goes through here now. It used to guard only
+ * reportApiError, which left the three paths that fire on their own
+ * (unhandled rejections, global errors, render errors) completely unthrottled —
+ * and those are exactly the ones a broken render loop repeats fastest.
  */
 function canReportError(errorKey) {
     const now = Date.now();
@@ -134,6 +254,26 @@ function canReportError(errorKey) {
     }
 
     return true;
+}
+
+/** Mark an error key as just-reported, in memory and for the rest of the tab. */
+function markReported(errorKey) {
+    errorCooldowns.set(errorKey, Date.now());
+    persistCooldowns();
+}
+
+/**
+ * Cooldown key for the paths that carry no endpoint.
+ *
+ * getErrorKey() keys on errorType + endpoint + statusCode, which is right for
+ * API errors but collapses to a single constant for render errors, rejections
+ * and global errors — they all have a null endpoint and a hardcoded 500, so
+ * every distinct React bug would share one key and the first one reported would
+ * mute the rest. Keying on the message keeps unrelated bugs independent; it is
+ * truncated so a message with an embedded id or timestamp still groups.
+ */
+function getContentErrorKey(errorType, message, page) {
+    return `${errorType}_${page || ''}_${String(message || '').slice(0, 120)}`;
 }
 
 /**
@@ -338,6 +478,15 @@ async function flushOfflineQueue() {
  * @param {Object} response - Response object if available
  */
 export function reportApiError(error, config = {}, response = null) {
+    // A request the client itself abandoned (navigation, offline, explicit
+    // abort) is not a server fault — see isClientAbortedRequest.
+    if (isClientAbortedRequest(error)) {
+        if (CONFIG.enableConsoleLog) {
+            console.log('[ErrorTracking] Skipping client-aborted request:', error?.message);
+        }
+        return Promise.resolve({ success: false, message: 'Skipped: client aborted' });
+    }
+
     const userInfo = getUserInfo();
     const statusCode = response?.status || error?.response?.status || 0;
     const errorType = determineErrorType(error, response);
@@ -377,7 +526,7 @@ export function reportApiError(error, config = {}, response = null) {
     }
 
     // Update cooldown
-    errorCooldowns.set(errorKey, Date.now());
+    markReported(errorKey);
 
     return sendErrorReport(errorData);
 }
@@ -396,6 +545,15 @@ export function reportRenderError(error, errorInfo = {}) {
         }
         return Promise.resolve({ success: false, message: 'Skipped: stale chunk' });
     }
+
+    // A render error repeats on every remount, and React remounts an error
+    // boundary's subtree on each retry — so one broken route could mail an
+    // alert per retry. Throttle on the message, not the route alone.
+    const cooldownKey = getContentErrorKey('REACT_RENDER_ERROR', error?.message, getCurrentPage());
+    if (!canReportError(cooldownKey)) {
+        return Promise.resolve({ success: false, message: 'Rate limited' });
+    }
+    markReported(cooldownKey);
 
     const userInfo = getUserInfo();
 
@@ -429,6 +587,25 @@ export function reportUnhandledRejection(event) {
     try {
         const error = event.reason;
         if (isStaleChunkError(error?.message)) return;
+        // Injected extension scripts share this page's event loop, and their
+        // rejections land on our window. They are not this app's to fix, and
+        // they arrived in enough volume to crowd out real alerts.
+        if (isExtensionNoise(error) || isIgnorableBrowserError(error?.message)) {
+            if (CONFIG.enableConsoleLog) {
+                console.log('[ErrorTracking] Skipping non-application rejection:', error);
+            }
+            return;
+        }
+        if (isClientAbortedRequest(error)) {
+            if (CONFIG.enableConsoleLog) {
+                console.log('[ErrorTracking] Skipping client-aborted request rejection');
+            }
+            return;
+        }
+        const cooldownKey = getContentErrorKey('UNHANDLED_PROMISE_REJECTION', error?.message, getCurrentPage());
+        if (!canReportError(cooldownKey)) return;
+        markReported(cooldownKey);
+
         const userInfo = getUserInfo();
 
         const errorData = {
@@ -469,6 +646,23 @@ export function reportGlobalError(event) {
             }
             return;
         }
+        // The window 'error' event fires for failed RESOURCE loads too (an
+        // <img>, <script> or <link> that 404s), not just thrown exceptions.
+        // Those events carry no .message at all, so they were being mailed as
+        // "JavaScript error" with every useful field blank. A missing asset is
+        // a real problem, but it is not one this alert can describe — and it is
+        // caught properly by the stale-chunk path when it matters.
+        if (!event.message && event.target && event.target !== window) {
+            if (CONFIG.enableConsoleLog) {
+                console.log('[ErrorTracking] Skipping resource load error:', event.target?.src || event.target?.href);
+            }
+            return;
+        }
+
+        const cooldownKey = getContentErrorKey('GLOBAL_JS_ERROR', event.message, getCurrentPage());
+        if (!canReportError(cooldownKey)) return;
+        markReported(cooldownKey);
+
         const userInfo = getUserInfo();
 
         const errorData = {
@@ -532,6 +726,17 @@ export function initErrorTracking() {
 
     // Handle online/offline for queue flushing
     window.addEventListener('online', flushOfflineQueue);
+
+    // Mark the page as leaving so requests aborted by the navigation are not
+    // mistaken for the backend being unreachable (see isClientAbortedRequest).
+    // 'pagehide' fires where 'beforeunload' does not on mobile Safari, which is
+    // precisely where mid-request navigation is most common.
+    window.addEventListener('pagehide', () => { isPageUnloading = true; });
+    window.addEventListener('beforeunload', () => { isPageUnloading = true; });
+
+    // Restore this tab's suppression window so a reload cannot re-send an alert
+    // the previous page load already sent.
+    loadCooldowns();
 
     // Load offline queue from localStorage
     try {

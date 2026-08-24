@@ -2,14 +2,13 @@ import React, { useState, useContext, useEffect } from 'react';
 import Icon from '../common/Icon.jsx';
 import axios from 'axios';
 import './Login.css';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import Globals from '../../global.js';
 import { UserContext } from '../../UserContext';
 import { safeGetItem } from '../../utils/safeStorage.js';
 import { useCopy, useLang } from '../../i18n';
 import authCopy from '../../i18n/copy/auth.js';
 import OAuthButtons from './OAuthButtons.jsx';
-import TrackModal from '../common/TrackModal.jsx';
 
 const Login = () => {
   const { setUser, user, sessionToken } = useContext(UserContext);
@@ -23,14 +22,11 @@ const Login = () => {
   const [sessionExpired, setSessionExpired] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  // A brand-new Google identity signing in here (not on /signup) has no
-  // track yet — the backend refuses to auto-provision one on a default (see
-  // /api/auth/google's needsTrackSelection response) and hands back the
-  // still-valid credential instead, which is re-POSTed with the chosen
-  // track once this modal resolves it.
-  const [showGoogleTrackModal, setShowGoogleTrackModal] = useState(false);
-  const [googleTrack, setGoogleTrack] = useState(null);
-  const [pendingGoogleCredential, setPendingGoogleCredential] = useState(null);
+  // Set when Google authenticated someone who has no account here. Rendered as
+  // its own message with a link to /signup rather than folded into `error`,
+  // because it is not a failure — it is a correct outcome that needs a next
+  // step, and the next step is a different page.
+  const [noGoogleAccount, setNoGoogleAccount] = useState(false);
 
 
   const navigate = useNavigate();
@@ -176,22 +172,17 @@ const Login = () => {
   };
 
   // Google sign-in shares the exact response shape /login returns (showTerms,
-  // user, sessionToken) — including the "sign up on first click" account
-  // creation the backend does for a Google identity it has never seen.
+  // user, sessionToken). Account CREATION no longer happens on this path:
+  // OAuthButtons posts mode="login", so a Google identity with no account here
+  // gets a 404 { noAccount } instead of a new row, a track picker and a terms
+  // checkbox — the whole signup sequence, on the sign-in screen. Anyone who
+  // already has an account (whether they opened it with Google or with the
+  // email OTP and is linking Google now) lands straight in the app.
   // form.username is set here too: handleAcceptTerms below reads it to call
   // /accept-terms, and the password form was never filled in on this path.
   const handleOAuthSuccess = (data) => {
     setError('');
-
-    if (data.needsTrackSelection) {
-      // Brand-new Google identity with no existing account — the backend
-      // refused to auto-provision one on a default track. Block on the same
-      // track-choice modal every other signup path uses; on confirm we
-      // re-POST this same still-valid credential together with the track.
-      setPendingGoogleCredential(data.credential);
-      setShowGoogleTrackModal(true);
-      return;
-    }
+    setNoGoogleAccount(false);
 
     setForm(prev => ({ ...prev, username: data.user?.username || data.user?.email || prev.username }));
 
@@ -206,27 +197,17 @@ const Login = () => {
     navigate(redirectTo, { state: data });
   };
 
-  const handleOAuthError = () => {
-    setError(copy.oauthError);
-  };
-
-  const handleGoogleTrackConfirm = async () => {
-    if (!googleTrack || !pendingGoogleCredential) return;
-    setShowGoogleTrackModal(false);
-    setLoading(true);
-    try {
-      const { data } = await axios.post(`${Globals.URL}/api/auth/google`, {
-        credential: pendingGoogleCredential,
-        track: googleTrack,
-      });
-      setPendingGoogleCredential(null);
-      setLoading(false);
-      handleOAuthSuccess(data);
-    } catch (err) {
-      setLoading(false);
-      setPendingGoogleCredential(null);
-      setError(copy.oauthError);
+  const handleOAuthError = (err) => {
+    // 404 + noAccount is the backend saying "Google verified them, but there
+    // is no account under that email" — the one error here that is not an
+    // error, and the only one with a specific next step.
+    if (err?.response?.status === 404 && err.response.data?.noAccount) {
+      setError('');
+      setNoGoogleAccount(true);
+      return;
     }
+    setNoGoogleAccount(false);
+    setError(copy.oauthError);
   };
 
   const handleAcceptTerms = async () => {
@@ -325,11 +306,19 @@ const Login = () => {
                 </div>
               )}
 
+              {noGoogleAccount && (
+                <div className="alert-box warning">
+                  {copy.googleNoAccount}{' '}
+                  <Link to="/signup" className="link-primary">{copy.googleNoAccountCta}</Link>
+                </div>
+              )}
+
               <button type="submit" className="btn primary large" disabled={loading}>
                 {loading ? copy.submitting : copy.submit}
               </button>
 
               <OAuthButtons
+                mode="login"
                 dividerLabel={copy.dividerOr}
                 onSuccess={handleOAuthSuccess}
                 onError={handleOAuthError}
@@ -417,13 +406,6 @@ const Login = () => {
           </div>
         )}
 
-        {showGoogleTrackModal && (
-          <TrackModal
-            studyTrack={googleTrack}
-            onSelect={setGoogleTrack}
-            onConfirm={handleGoogleTrackConfirm}
-          />
-        )}
       </div>
     </>
   );

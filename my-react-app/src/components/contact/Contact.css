@@ -10,9 +10,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #ffffff;
-    padding: 16px;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: var(--bg-white, #ffffff);
+    padding: var(--page-pad-block) var(--page-pad-inline);
+    font-family: var(--font-family-primary);
     position: relative;
 }
 
@@ -31,58 +31,34 @@
     pointer-events: none;
 }
 
+/* One scroll context, not two.
+   This card used to be max-height: calc(100vh - 104px) + overflow-y: auto,
+   which on a desktop gave the CARD its own scrollbar inside a page that also
+   scrolled — two nested scrollers on one screen, where a flick of the wheel
+   did different things depending on which pixel the pointer was over. The page
+   is the scroller now; the card is just a card, and it sizes to its content
+   the way the login card does.
+   The shadow is the shared token: the old one was `0 8px 32px rgba(0,0,0,0.3)`
+   plus two white inset highlights — a dark-theme glass treatment, still being
+   painted on a white page long after the theme went light. */
 .contact-card {
-    background: rgba(15, 23, 42, 0.04);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-radius: 24px;
-    padding: 24px;
-    box-shadow:
-        0 8px 32px rgba(0, 0, 0, 0.3),
-        0 0 0 1px rgba(255, 255, 255, 0.05),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    max-width: 650px;
+    background: var(--surface, #ffffff);
+    border-radius: var(--radius-xl, 24px);
+    padding: clamp(1.25rem, 4vw, 1.75rem);
+    box-shadow: var(--shadow-md);
+    max-width: var(--container-form, 620px);
     width: 100%;
-    /* Reserves navbar space too (the raw 100vh here never did) — errs toward
-       a shorter internal-scroll area rather than one that could clip. */
-    max-height: calc(100vh - 104px);
-    /* Flex items default to min-height:auto, which is their content's
-       intrinsic size — that floor beat max-height above and silently
-       disabled it, so the card just grew past the viewport (page-scroll)
-       instead of scrolling internally like its custom-scrollbar rules below
-       assume it does. */
-    min-height: 0;
-    overflow-y: auto;
     position: relative;
     z-index: 1;
-    border: 1px solid rgba(15, 23, 42, 0.10);
+    border: 1px solid var(--border-color, rgba(15, 23, 42, 0.10));
 }
 
-/* Custom scrollbar for contact card */
-.contact-card::-webkit-scrollbar {
-    width: 6px;
-}
-
-.contact-card::-webkit-scrollbar-track {
-    background: rgba(15, 23, 42, 0.04);
-    border-radius: 10px;
-}
-
-.contact-card::-webkit-scrollbar-thumb {
-    background: rgba(35, 109, 237, 0.3);
-    border-radius: 10px;
-}
-
-.contact-card::-webkit-scrollbar-thumb:hover {
-    background: rgba(35, 109, 237, 0.5);
-}
-
+/* The success state is a tick and two lines — deliberately narrower than the
+   form it replaces, so it doesn't read as an empty version of the same card. */
 .contact-card.success {
     text-align: center;
-    max-width: 500px;
+    max-width: var(--container-card, 480px);
     padding: 24px 20px;
-    max-height: calc(100vh - 104px);
-    overflow-y: auto;
 }
 
 .success-icon {
@@ -147,9 +123,13 @@
     font-weight: 700;
 }
 
+/* minmax(160px), not 200px: the three contact methods are short (a label and
+   a value), but at 200px they only fit two per row inside this card, so the
+   third wrapped onto a line of its own and the block cost 156px instead of 78
+   for no extra information. */
 .contact-info-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 8px;
 }
 
@@ -236,10 +216,15 @@
     gap: 12px;
 }
 
+/* margin-bottom restated rather than inherited from index.css's own
+   .form-group — see the identical note in login/Login.css. The real gap
+   between two fields here is this margin plus .contact-form's 12px of flex
+   gap; 10px keeps the form compact on a page that already has a lot in it. */
 .form-group {
     display: flex;
     flex-direction: column;
     gap: 5px;
+    margin-bottom: 10px;
 }
 
 .form-group label {
@@ -415,7 +400,6 @@
     .contact-card {
         padding: 16px;
         border-radius: 16px;
-        max-height: calc(100vh - 88px);
     }
 
     .contact-header {
@@ -480,7 +464,6 @@
     .contact-card {
         padding: 14px;
         border-radius: 14px;
-        max-height: calc(100vh - 80px);
     }
 
     .contact-header {

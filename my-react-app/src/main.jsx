@@ -46,6 +46,7 @@ const Analysis = lazy(() => import('./components/analysis/Analysis.jsx'));
 const WrongQuestions = lazy(() => import('./components/analysis/WrongQuestions.jsx'));
 const Admin = lazy(() => import('./components/ADD/Admin.jsx'));
 const Growth = lazy(() => import('./components/ADD/Growth.jsx'));
+const Behavior = lazy(() => import('./components/ADD/Behavior.jsx'));
 const AdminBroadcast = lazy(() => import('./components/ADD/AdminBroadcast.jsx'));
 const Bank = lazy(() => import('./components/ADD/Bank.jsx'));
 const Accounting = lazy(() => import('./components/ADD/Accounting.jsx'));
@@ -58,6 +59,7 @@ const About = lazy(() => import('./components/legal/About.jsx'));
 const FAQ = lazy(() => import('./components/legal/FAQ.jsx'));
 const Suggestions = lazy(() => import('./components/suggestions/Suggestions.jsx'));
 const GuidesHub = lazy(() => import('./components/guides/GuidesHub.jsx'));
+const HowToUseQuestionBankGuide = lazy(() => import('./components/guides/HowToUseQuestionBankGuide.jsx'));
 const SmleStudyPlanGuide = lazy(() => import('./components/guides/SmleStudyPlanGuide.jsx'));
 const WrongQuestionsMethodGuide = lazy(() => import('./components/guides/WrongQuestionsMethodGuide.jsx'));
 const SmleVsPrometricGuide = lazy(() => import('./components/guides/SmleVsPrometricGuide.jsx'));
@@ -110,11 +112,14 @@ const lazyEl = (node) => (
 //   pubNoFooter(...) same, minus the footer — login/signup, where a page of
 //                    site links just adds scroll to a form mid-transaction
 //   authed(...)      signed-in users only
+//   authedNoFooter() same, minus the footer — checkout and its result page,
+//                    for exactly the reason login/signup skip it
 //   admin(...)       admin only
 const withBoundary = (path, element) => ({ path, element, errorElement: <ErrorBoundary /> });
 const pub = (path, node) => withBoundary(path, <Layout>{lazyEl(node)}</Layout>);
 const pubNoFooter = (path, node) => withBoundary(path, <Layout hideFooter>{lazyEl(node)}</Layout>);
 const authed = (path, node) => withBoundary(path, <Layout><RequireAuth>{lazyEl(node)}</RequireAuth></Layout>);
+const authedNoFooter = (path, node) => withBoundary(path, <Layout hideFooter><RequireAuth>{lazyEl(node)}</RequireAuth></Layout>);
 // Admin stays English/LTR regardless of the site language — AdminShell pins it.
 const admin = (path, node) => withBoundary(path, <AdminShell>{lazyEl(<AdminGate>{lazyEl(node)}</AdminGate>)}</AdminShell>);
 
@@ -143,6 +148,7 @@ const router = createBrowserRouter([
   // anyone who had not already been told they exist.
   pub('/groups', <GroupsPage />),
   pub('/guides', <GuidesHub />),
+  pub('/guides/how-to-use-a-question-bank', <HowToUseQuestionBankGuide />),
   pub('/guides/smle-study-plan', <SmleStudyPlanGuide />),
   pub('/guides/wrong-questions-method', <WrongQuestionsMethodGuide />),
   pub('/guides/smle-vs-prometric-differences', <SmleVsPrometricGuide />),
@@ -155,14 +161,19 @@ const router = createBrowserRouter([
   authed('/wrong-questions', <WrongQuestions />),
   authed('/summaries', <SummariesPage />),
   authed('/summaries/:slug', <SummariesPage />),
-  authed('/subscribe', <Subscribe />),
+  // Checkout and its result page get the same treatment as login/signup above:
+  // a footer full of site links is a page-height of scroll appended to a form
+  // someone is mid-payment on. These two were the only transaction pages that
+  // still carried it.
+  authedNoFooter('/subscribe', <Subscribe />),
   authed('/account', <AccountPage />),
-  authed('/payment/callback', <PaymentCallback />),
+  authedNoFooter('/payment/callback', <PaymentCallback />),
 
   // Admin — one hub (/admin) with sub-sections. Old URLs redirect so any
   // bookmark or saved link still works.
   admin('/admin', <Admin />),
   admin('/admin/growth', <Growth />),
+  admin('/admin/behavior', <Behavior />),
   admin('/admin/accounting', <Accounting />),
   admin('/admin/users', <ADD host={getHostUrl} />),
   admin('/admin/questions', <ADDQ host={getHostUrl} />),

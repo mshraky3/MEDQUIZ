@@ -286,3 +286,295 @@ export async function openReportsCount(db) {
     ).catch(() => ({ rows: [{ n: 0 }] }));
     return parseInt(rows[0]?.n) || 0;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Learning behaviour.
+//
+// Everything below reads tables the admin panel has never surfaced —
+// principally user_question_attempts, which holds one row per answer with its
+// timing and is by some distance the richest thing in the database. Every
+// query here is only ever called from GET /admin/behavior, which is on-demand:
+// none of it belongs on /admin/stats, whose two-minute poll would run these
+// aggregations continuously for no one.
+//
+// Day/hour bucketing adds INTERVAL '3 hours' throughout, matching dailySignups
+// and dailyActiveUsers above — timestamps are stored TZ-less in UTC and Riyadh
+// is a fixed UTC+3 with no DST, so this is the Saudi calendar day regardless of
+// what the server session timezone happens to be. Getting this wrong would put
+// a 9pm study session on the wrong day and shift the whole hour-of-day chart.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * The questions students get wrong most often, among those answered enough
+ * times for the rate to mean anything.
+ *
+ * This is a content-quality instrument as much as a difficulty one: a question
+ * almost everyone misses is usually either genuinely hard or quietly miskeyed,
+ * and the second kind currently only surfaces if a student bothers to report
+ * it. avgSeconds separates the two — a question people answer fast and get
+ * wrong reads as misleading, one they answer slowly and get wrong reads as hard.
+ *
+ * minAttempts keeps a question answered twice, wrongly, out of the top of a
+ * list sorted by percentage.
+ */
+export async function hardestQuestions(db, { limit = 20, minAttempts = 15 } = {}) {
+    const { rows } = await db.query(`
+        SELECT q.id,
+               LEFT(q.question_text, 160)                              AS question_text,
+               q.question_type,
+               q.source,
+               q.track,
+               COUNT(*)::int                                          AS attempts,
+               COUNT(DISTINCT a.user_id)::int                         AS users,
+               ROUND(100.0 * COUNT(*) FILTER (WHERE a.is_correct) / COUNT(*), 1)::float AS pct_correct,
+               ROUND(AVG(a.time_taken)::numeric, 1)::float            AS avg_seconds
+        FROM user_question_attempts a
+        JOIN questions q ON q.id = a.question_id
+        GROUP BY q.id, q.question_text, q.question_type, q.source, q.track
+        HAVING COUNT(*) >= $2
+        ORDER BY pct_correct ASC, attempts DESC
+        LIMIT $1
+    `, [limit, minAttempts]).catch(() => ({ rows: [] }));
+    return rows;
+}
+
+/**
+ * For one question, how the answers split across the options — i.e. which
+ * distractor is doing the damage.
+ *
+ * selected_option stores the option TEXT, not an index (see the ILIKE
+ * comparison in the admin question search), so the grouping is by value. A
+ * single dominant wrong answer usually means the distractor is defensible and
+ * the explanation needs to address it by name; an even spread means guessing.
+ */
+export async function questionAnswerSpread(db, questionId) {
+    const { rows } = await db.query(`
+        SELECT a.selected_option,
+               COUNT(*)::int AS n,
+               BOOL_OR(a.is_correct) AS is_correct
+        FROM user_question_attempts a
+        WHERE a.question_id = $1 AND a.selected_option IS NOT NULL
+        GROUP BY a.selected_option
+        ORDER BY n DESC
+    `, [questionId]).catch(() => ({ rows: [] }));
+    return rows;
+}
+
+/**
+ * How long answers take, as buckets.
+ *
+ * The tail is the interesting half. A pile-up under 5 seconds is people
+ * clicking through without reading — which inflates every accuracy number
+ * elsewhere on the dashboard — and a fat tail past two minutes points at
+ * questions whose stem is too long to work through in exam conditions.
+ */
+export async function answerTimeDistribution(db) {
+    const { rows } = await db.query(`
+        SELECT bucket, COUNT(*)::int AS n FROM (
+            SELECT CASE
+                     WHEN time_taken < 5   THEN '0-5s'
+                     WHEN time_taken < 15  THEN '5-15s'
+                     WHEN time_taken < 30  THEN '15-30s'
+                     WHEN time_taken < 60  THEN '30-60s'
+                     WHEN time_taken < 120 THEN '1-2m'
+                     ELSE '2m+'
+                   END AS bucket
+            FROM user_question_attempts
+            WHERE time_taken IS NOT NULL AND time_taken >= 0
+        ) b
+        GROUP BY bucket
+    `).catch(() => ({ rows: [] }));
+    // Fixed order — GROUP BY returns buckets alphabetically, which would put
+    // '0-5s' next to '1-2m' and draw the histogram out of sequence.
+    const ORDER = ['0-5s', '5-15s', '15-30s', '30-60s', '1-2m', '2m+'];
+    const byBucket = Object.fromEntries(rows.map((r) => [r.bucket, r.n]));
+    return ORDER.map((bucket) => ({ bucket, n: byBucket[bucket] || 0 }));
+}
+
+/**
+ * How much of the question bank is actually being reached, per track and
+ * specialty.
+ *
+ * Answers the content-planning question directly: a specialty at 90% consumed
+ * needs new questions before subscribers run dry, and one at 5% is either
+ * undiscoverable in the UI or nobody's priority. Counts DISTINCT questions ever
+ * answered by anyone, not attempts.
+ */
+export async function bankCoverage(db) {
+    const { rows } = await db.query(`
+        SELECT q.track,
+               q.question_type,
+               COUNT(*)::int                                             AS questions,
+               COUNT(*) FILTER (WHERE seen.question_id IS NOT NULL)::int AS reached
+        FROM questions q
+        LEFT JOIN (
+            SELECT DISTINCT question_id FROM user_question_progress
+        ) seen ON seen.question_id = q.id
+        GROUP BY q.track, q.question_type
+        ORDER BY q.track, questions DESC
+    `).catch(() => ({ rows: [] }));
+    return rows.map((r) => ({
+        ...r,
+        pctReached: r.questions > 0 ? Math.round((r.reached / r.questions) * 1000) / 10 : 0,
+    }));
+}
+
+/**
+ * When people study: quiz starts by day-of-week and hour, in Riyadh time.
+ *
+ * The practical use is scheduling — the daily Telegram post, lifecycle email
+ * sends and maintenance windows are all currently set by guesswork. Returns a
+ * flat list rather than a matrix so the client can shape it; dow is 0=Sunday,
+ * matching Postgres EXTRACT(DOW) and the Saudi working week.
+ */
+export async function studyHeatmap(db, { days = 60 } = {}) {
+    const { rows } = await db.query(`
+        SELECT EXTRACT(DOW  FROM start_time + INTERVAL '3 hours')::int AS dow,
+               EXTRACT(HOUR FROM start_time + INTERVAL '3 hours')::int AS hour,
+               COUNT(*)::int AS n
+        FROM user_quiz_sessions
+        WHERE start_time >= NOW() - ($1 || ' days')::interval
+        GROUP BY 1, 2
+    `, [days]).catch(() => ({ rows: [] }));
+    return rows;
+}
+
+/**
+ * Weekly signup cohorts and how many of each came back in the weeks after.
+ *
+ * This is real retention, unlike the wowActiveRatio on the overview page —
+ * that one compares two adjacent weeks of activity and can exceed 100%, which
+ * is why it had to be renamed away from "retention". Here each cohort is fixed
+ * at signup and followed forward, so week 0 is always close to 100% and the
+ * decay after it is the number worth watching.
+ *
+ * Activity means a login, reusing the same framing as the new-vs-returning
+ * chart on the growth page.
+ */
+export async function retentionCohorts(db, { weeks = 8 } = {}) {
+    const { rows } = await db.query(`
+        WITH cohort AS (
+            SELECT id AS user_id,
+                   DATE_TRUNC('week', created_at + INTERVAL '3 hours')::date AS cohort_week
+            FROM accounts
+            WHERE created_at >= NOW() - (($1 + 1) || ' weeks')::interval
+        ),
+        activity AS (
+            SELECT DISTINCT c.user_id, c.cohort_week,
+                   (DATE_TRUNC('week', l.login_time + INTERVAL '3 hours')::date
+                    - c.cohort_week) / 7 AS week_index
+            FROM cohort c
+            JOIN login_history l ON l.user_id = c.user_id
+            WHERE l.login_time >= c.cohort_week
+        ),
+        sizes AS (
+            SELECT cohort_week, COUNT(*)::int AS cohort_size FROM cohort GROUP BY cohort_week
+        )
+        SELECT to_char(s.cohort_week, 'YYYY-MM-DD') AS cohort_week,
+               s.cohort_size,
+               a.week_index::int AS week_index,
+               COUNT(a.user_id)::int AS active
+        FROM sizes s
+        LEFT JOIN activity a
+               ON a.cohort_week = s.cohort_week
+              AND a.week_index BETWEEN 0 AND $1
+        GROUP BY s.cohort_week, s.cohort_size, a.week_index
+        ORDER BY s.cohort_week, week_index
+    `, [weeks]).catch(() => ({ rows: [] }));
+    return rows;
+}
+
+/**
+ * Which summaries get read, and how far.
+ *
+ * max_page_reached against the deck's page_count is a drop-off curve per deck:
+ * a summary everyone opens and nobody finishes is either too long or front-
+ * loaded with the wrong material. Nothing in the admin panel has ever shown
+ * this — summaries are measured only by a raw view count.
+ */
+export async function summaryDropoff(db, { limit = 15 } = {}) {
+    const { rows } = await db.query(`
+        SELECT s.id,
+               COALESCE(s.title_en, s.title) AS title,
+               s.question_type,
+               s.page_count,
+               COUNT(p.user_id)::int                             AS readers,
+               COUNT(*) FILTER (WHERE p.completed)::int          AS finished,
+               ROUND(AVG(p.max_page_reached)::numeric, 1)::float AS avg_max_page
+        FROM summaries s
+        JOIN summary_progress p ON p.summary_id = s.id
+        GROUP BY s.id, s.title, s.title_en, s.question_type, s.page_count
+        ORDER BY readers DESC
+        LIMIT $1
+    `, [limit]).catch(() => ({ rows: [] }));
+    return rows.map((r) => ({
+        ...r,
+        pctFinished: r.readers > 0 ? Math.round((r.finished / r.readers) * 1000) / 10 : 0,
+        pctDepth: r.page_count > 0 ? Math.round((r.avg_max_page / r.page_count) * 1000) / 10 : 0,
+    }));
+}
+
+/**
+ * How accounts get opened — Google, the email OTP, an invite link, a group
+ * seat, or an admin — as a total and as a weekly series.
+ *
+ * Reads accounts.signup_method, which every INSERT INTO accounts writes and a
+ * one-time backfill filled in for older rows. Deliberately NOT derived from
+ * google_id: that column is also set when an email-OTP account links Google at
+ * a later sign-in, so using it would move part of the email cohort into the
+ * Google one and overstate how well Google sign-in recruits.
+ */
+export async function signupMethodMix(db, { weeks = 12 } = {}) {
+    const [totalsRes, trendRes] = await Promise.allSettled([
+        db.query(`
+            SELECT COALESCE(signup_method, 'unknown') AS method, COUNT(*)::int AS n
+            FROM accounts GROUP BY 1 ORDER BY n DESC
+        `),
+        db.query(`
+            SELECT to_char(DATE_TRUNC('week', created_at + INTERVAL '3 hours'), 'YYYY-MM-DD') AS week,
+                   COALESCE(signup_method, 'unknown') AS method,
+                   COUNT(*)::int AS n
+            FROM accounts
+            WHERE created_at >= NOW() - ($1 || ' weeks')::interval
+            GROUP BY 1, 2
+            ORDER BY 1
+        `, [weeks]),
+    ]);
+    return {
+        totals: totalsRes.status === 'fulfilled' ? totalsRes.value.rows : [],
+        trend: trendRes.status === 'fulfilled' ? trendRes.value.rows : [],
+    };
+}
+
+/**
+ * Headline behaviour numbers for the KPI strip: how hard the bank is being
+ * worked, how long an answer takes, and whether the goal/achievement features
+ * anyone built are being used at all.
+ */
+export async function behaviourTotals(db) {
+    const [attempts, sessions, goals, achievements] = await Promise.allSettled([
+        db.query(`
+            SELECT COUNT(*)::int AS attempts,
+                   COUNT(DISTINCT user_id)::int AS answering_users,
+                   ROUND(AVG(time_taken)::numeric, 1)::float AS avg_seconds,
+                   ROUND(100.0 * COUNT(*) FILTER (WHERE is_correct) / NULLIF(COUNT(*), 0), 1)::float AS pct_correct
+            FROM user_question_attempts
+        `),
+        db.query(`
+            SELECT ROUND(AVG(total_questions)::numeric, 1)::float AS avg_questions,
+                   ROUND(AVG(duration)::numeric, 0)::float        AS avg_duration,
+                   COUNT(*) FILTER (WHERE device_type = 'mobile')::int AS mobile_sessions,
+                   COUNT(*)::int AS sessions
+            FROM user_quiz_sessions
+        `),
+        db.query(`SELECT COUNT(*)::int AS goals_set, COUNT(*) FILTER (WHERE achieved_at IS NOT NULL)::int AS achieved FROM user_goals`),
+        db.query(`SELECT COUNT(DISTINCT user_id)::int AS users, COUNT(*)::int AS earned FROM user_achievements`),
+    ]);
+    const first = (r) => (r.status === 'fulfilled' ? r.value.rows[0] || {} : {});
+    return {
+        attempts: first(attempts),
+        sessions: first(sessions),
+        goals: first(goals),
+        achievements: first(achievements),
+    };
+}

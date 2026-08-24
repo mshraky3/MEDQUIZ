@@ -23,6 +23,27 @@ const STALE_CHUNK_PATTERNS = [
     // resolved to something without a usable default export (stale asset
     // hash after a deploy, or a 404 page served in place of the JS module).
     '_result.default',
+    // The same failure again, as V8 phrases it once react-dom is MINIFIED.
+    // '_result' is a local inside React's lazy resolver, so the production
+    // build reports only the property being read — which is why the pattern
+    // above missed it and a stale /admin chunk surfaced as a CRITICAL alert
+    // plus a dead error page instead of the one-line reload it needed.
+    //
+    // Every route in this app is React.lazy (see main.jsx), and reading
+    // '.default' off undefined is what module interop does, not application
+    // code — so this is a safe thing to treat as a stale chunk. And it is
+    // self-limiting either way: reloadOnceForStaleChunk() reloads at most
+    // once per minute per tab, so a genuine bug that happened to match falls
+    // through to the normal error UI on the second occurrence rather than
+    // looping.
+    "cannot read properties of undefined (reading 'default')",
+    // Safari and Firefox wording for the identical read. Both are anchored on
+    // the 'default' property specifically — Safari's bare "undefined is not an
+    // object (evaluating ...)" prefix matches every undefined property access
+    // in the app and must NOT be used on its own, or a genuine bug anywhere
+    // would be silently answered with a page reload.
+    ".default')",
+    'can\'t access property "default"',
 ];
 
 export function isStaleChunkError(message) {

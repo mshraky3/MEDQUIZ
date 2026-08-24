@@ -26,6 +26,10 @@ const authCopy = {
 
             dividerOr: 'أو',
             oauthError: 'تعذر تسجيل الدخول. يرجى المحاولة مرة أخرى.',
+            // صفحة الدخول تسجّل الدخول فقط، ولا تنشئ حساباً. إذا لم يكن لحساب
+            // جوجل هذا حساب لدينا، نقول ذلك ونشير إلى صفحة إنشاء الحساب.
+            googleNoAccount: 'لا يوجد حساب مرتبط بحساب جوجل هذا.',
+            googleNoAccountCta: 'أنشئ حساباً جديداً',
 
             requiredFieldsError: 'يرجى إدخال البريد الإلكتروني وكلمة المرور.',
             accountInUseError: 'هذا الحساب مستخدم حالياً على جهاز أو متصفح آخر. يرجى الانتظار 30 دقيقة أو تسجيل الخروج من الجهاز الآخر.',
@@ -232,6 +236,11 @@ const authCopy = {
 
             dividerOr: 'or',
             oauthError: 'Could not sign in. Please try again.',
+            // The login page signs people in; it does not open accounts. When
+            // Google verifies someone we have no account for, say so and point
+            // at the page that does open one.
+            googleNoAccount: 'No account is linked to that Google account.',
+            googleNoAccountCta: 'Create an account',
 
             requiredFieldsError: 'Please enter your email address and password.',
             accountInUseError: 'This account is currently in use on another device or browser. Wait 30 minutes, or log out on the other device.',

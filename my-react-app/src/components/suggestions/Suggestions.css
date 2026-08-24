@@ -10,9 +10,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #ffffff;
-    padding: 20px;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: var(--bg-white, #ffffff);
+    padding: var(--page-pad-block) var(--page-pad-inline);
+    font-family: var(--font-family-primary);
     position: relative;
 }
 
@@ -31,34 +31,35 @@
     pointer-events: none;
 }
 
+/* One scroll context, not two — see the identical note in Contact.css. The
+   max-height + overflow-y pair gave this card its own scrollbar inside a page
+   that also scrolled, so the wheel did different things depending on which
+   pixel the pointer was over. */
 .suggestions-card {
-    background: rgba(15, 23, 42, 0.04);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-radius: 24px;
-    padding: 32px;
-    box-shadow:
-        0 8px 32px rgba(15, 23, 42, 0.14),
-        0 0 0 1px rgba(15, 23, 42, 0.04);
-    max-width: 600px;
+    background: var(--surface, #ffffff);
+    border-radius: var(--radius-xl, 24px);
+    padding: clamp(1.5rem, 4vw, 2rem);
+    box-shadow: var(--shadow-md);
+    max-width: var(--container-form, 620px);
     width: 100%;
-    max-height: calc(100vh - 104px);
-    min-height: 0;
-    overflow-y: auto;
     position: relative;
     z-index: 1;
-    border: 1px solid rgba(15, 23, 42, 0.10);
+    border: 1px solid var(--border-color, rgba(15, 23, 42, 0.10));
 }
 
 /* Header */
 .suggestions-header {
     text-align: center;
-    margin-bottom: 24px;
+    margin-bottom: var(--space-4);
 }
 
+/* Was 48px, which with its line box and margin cost 89px of vertical space —
+   a decorative glyph taking more room than the heading it sits above, at the
+   top of a page that is four form sections long. */
 .header-icon {
-    font-size: 48px;
-    margin-bottom: 12px;
+    font-size: 34px;
+    line-height: 1;
+    margin-bottom: var(--space-2);
     animation: float 3s ease-in-out infinite;
 }
 
@@ -103,7 +104,7 @@
     background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(59, 130, 246, 0.05));
     border: 1px solid rgba(37, 99, 235, 0.2);
     border-radius: 12px;
-    margin-bottom: 24px;
+    margin-bottom: var(--space-4);
     color: #1d4ed8;
     font-size: 0.85rem;
 }
@@ -323,7 +324,9 @@
 /* Success Card */
 .success-card {
     text-align: center;
-    padding: 48px 32px;
+    /* Was 48px 32px, the largest padding in any non-admin page stylesheet, on a
+       card that holds a tick and two lines of text. */
+    padding: var(--space-8) var(--space-6);
 }
 
 .success-animation {

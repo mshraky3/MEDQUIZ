@@ -132,6 +132,30 @@
   --space-20: 5rem;
   /* 80px */
 
+  /* Page containers.
+     Ten pages hardcoded ten different max-widths (460/480/600/620/650/800/
+     860/960/1100/1400) and their own block padding, which is why nothing
+     stayed consistent between them — there was no shared answer to "how wide
+     is a page". Three widths cover every layout in the app:
+       --container-card  a single-column centred card (auth, checkout)
+       --container-form  a card whose fields sit side by side (contact,
+                         suggestions, account) — wider than --container-card
+                         precisely because a 1fr 1fr row inside a 480px card
+                         leaves each field too narrow to type a name into
+       --container-page  one column of prose or a short grid (legal, guides)
+       --container-wide  a dashboard or multi-column grid (FAQ, quiz hub)
+     --page-pad-block is the space between the fixed navbar and the first
+     content. It does NOT need to include the navbar's own height:
+     .page-with-navbar already reserves that with padding-top. Pages that added
+     their own 90-100px on top are the ones that opened with a screenful of
+     nothing. */
+  --container-card: 480px;
+  --container-form: 620px;
+  --container-page: 860px;
+  --container-wide: 1100px;
+  --page-pad-block: clamp(1.25rem, 3vw, 2.5rem);
+  --page-pad-inline: clamp(1rem, 3vw, 1.5rem);
+
   /* Transitions */
   --transition-fast: 0.15s ease;
   --transition-normal: 0.25s ease;
@@ -152,9 +176,38 @@ html[lang="ar"] {
   --font-family-secondary: var(--font-family-ar);
 }
 
+/* Direction sign, for the handful of places where a logical property does not
+   exist: `transform` has no RTL-aware form, so a hover that nudges an element
+   "backwards" has to know which way that is. Multiply the offset by this
+   instead of hardcoding a negative — e.g. translate(calc(-4px * var(--dir-sign))).
+   Set on [dir] rather than [lang] because a page can be flipped by direction
+   alone (the admin shell pins LTR while the site language stays Arabic). */
+:root {
+  --dir-sign: 1;
+}
+
+[dir="rtl"] {
+  --dir-sign: -1;
+}
+
 /* Reset and Base Styles */
 * {
   box-sizing: border-box;
+}
+
+/* Form controls do NOT inherit the page font by default — every browser gives
+   inputs, buttons, selects and textareas its own UI font instead. Nothing in
+   this codebase set one, so the login card was rendering its heading in Cairo
+   or Inter, its inputs and its submit button in the browser's default
+   (Arial-ish), and Google's button in Google's own face: three typefaces on one
+   card. Only the family is inherited, not the shorthand — `font: inherit` would
+   also reset every control's size and weight to the body's, silently resizing
+   buttons across the app that rely on the UA default. */
+input,
+button,
+select,
+textarea {
+  font-family: inherit;
 }
 
 /* Inline SVG icons (src/components/common/Icon.jsx) — align with adjacent text. */

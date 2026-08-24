@@ -97,7 +97,11 @@
     radial-gradient(circle at 85% 10%, rgba(99, 102, 241, 0.09), transparent 25%),
     linear-gradient(145deg, #eef2fb 0%, #ffffff 60%, #ffffff 100%);
   color: var(--text);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  /* Was a hardcoded 'Inter' stack. --font-family-primary switches to Cairo on
+     html[lang="ar"] (index.css), so hardcoding Inter here meant the Arabic
+     auth cards fell through to system-ui and never rendered in the
+     self-hosted face the rest of the site uses. */
+  font-family: var(--font-family-primary);
   padding: 24px 20px;
 }
 
@@ -167,10 +171,17 @@
   animation: fadeInUp 0.6s ease-out 0.4s both;
 }
 
+/* margin-bottom is restated, not inherited. index.css also defines
+   .form-group (with margin-bottom: var(--space-4)) and this rule does not
+   reset it, so the real gap between two login fields has always been 16px of
+   that margin PLUS .login-form's own 14px of flex gap — 30px that neither
+   file states and that only holds while index.css keeps losing the load order.
+   The spacing is right; it just needed to be deliberate. */
 .form-group {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  margin-bottom: var(--space-4);
 }
 
 .form-label {
@@ -256,10 +267,15 @@
   color: #1e293b;
 }
 
+/* The text colour here was #fca5a5 — a light pink meant for a dark theme,
+   left on a 10%-red tint over a white card at roughly 2:1 contrast. This is
+   the box /subscribe shows when checkout fails and /groups shows when its
+   plans fail to load, so the one message a stuck buyer needs was the one they
+   could not read. */
 .alert-box.error {
   background: rgba(239, 68, 68, 0.1);
   border-color: rgba(239, 68, 68, 0.3);
-  color: #fca5a5;
+  color: var(--error-color, #dc2626);
 }
 
 .alert-box.warning {
@@ -335,10 +351,35 @@
   padding: 16px 24px;
   font-size: 16px;
   margin-top: 8px;
+  /* 52px is what 16px padding + this font's line box already works out to —
+     stated explicitly because the Google button next to it is sized to this
+     exact number and cannot read it. Without this, switching face or size
+     (Cairo vs Inter already differ) would move one button and not the other. */
+  min-height: 52px;
 }
 
+/* Capped at Google's own maximum button width so the column is a deliberate
+   400px that the button fills, rather than a full-width column the button
+   silently stops short of. Centred, because the signup card is wider than
+   400px and the block would otherwise hang off one edge. */
 .oauth-block {
   margin-top: 4px;
+  /* Google's renderButton clamps `width` at 400px and ignores anything larger,
+     so this column can never be wider than the button inside it. The card's
+     own content column is narrower than that anyway — the cap only matters if
+     someone widens the card later. OAuthButtons measures this box and passes
+     the number, so the Google button matches the submit button at whatever
+     width the card happens to be, rather than at one hardcoded size. */
+  max-width: 400px;
+  /* width:100% is load-bearing next to margin-inline:auto, not redundant with
+     it. This is a flex item of .login-form; auto inline margins on a flex item
+     consume the free space themselves, which cancels the default stretch and
+     leaves the item at its content width. Without the explicit 100% the whole
+     chain below collapsed to the Google button's min-content (~184px) and the
+     button came out less than half the width of the submit button — the exact
+     symptom this rule exists to fix. */
+  width: 100%;
+  margin-inline: auto;
 }
 
 .oauth-divider {
@@ -365,24 +406,45 @@
   align-items: stretch;
 }
 
-/* @react-oauth/google renders its own button at a fixed native height
-   (~40px for size="large") that we can't set directly — shorter than
-   .btn.large (~54px). min-height + centering here gives it the same outer
-   bounding box as the submit button above it, so the two full-width
-   buttons read as deliberately, consistently sized rather than mismatched. */
+/* Sizing Google's button to look like it belongs to this card.
+   Three things have to line up, and only one of them is CSS:
+
+   1. WIDTH is Google's to decide. `renderButton` takes a numeric `width` and
+      ignores percentages, so OAuthButtons.jsx measures this box and passes the
+      number (capped at Google's own 400px limit). The wrapper being 100% wide
+      does nothing on its own — that was the flaw in the rule this replaces,
+      which left a ~220px button parked at the start edge of a 408px row.
+   2. HEIGHT is fixed at 40px for size="large", inline on the library's wrapper
+      and again on Google's own element. Both are overridden below to 56px so
+      the box matches .btn.large.
+   3. RADIUS has no API at all; shape="rectangular" gets it to ~4px and the
+      override below takes it the rest of the way to the card's 12px.
+
+   The [role="button"] hook is deliberate: Google's class names are obfuscated
+   and change, the ARIA role does not. If Google ever moves this behind an
+   iframe the overrides simply stop applying and the button falls back to a
+   correctly-widthed 40px rectangle — visibly smaller, but never broken. */
 .oauth-buttons-google {
   width: 100%;
-  min-height: 52px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* @react-oauth/google renders its button inside this wrapper div and sizes
-   it to the wrapper's width — width:100% on the wrapper is how it's told to
-   match the password form's own full-width inputs/submit button. */
 .oauth-buttons-google > div {
   width: 100% !important;
+  height: 52px !important;
+}
+
+/* max-width, NOT width. Google sets `width: <the number we passed>px` inline
+   on this element and sizes its label to it; a `width: 100%` here overrode
+   that with a percentage of a parent Google knows nothing about. The only job
+   left is a ceiling, so a narrow phone can never be overflowed by a stale
+   measurement. Height and radius are ours because Google exposes neither. */
+.oauth-buttons-google [role="button"] {
+  max-width: 100% !important;
+  height: 52px !important;
+  border-radius: 12px !important;
 }
 
 .login-footer-text {

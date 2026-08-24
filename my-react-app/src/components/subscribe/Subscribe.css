@@ -1,7 +1,15 @@
 /* Subscribe / paywall page — builds on the shared .login-* card shell. */
 
 .subscribe-card {
-    max-width: 460px;
+    max-width: var(--container-card, 480px);
+}
+
+/* .login-card lifts 4px on hover. Fine on a sign-in card; wrong on the one
+   that takes someone's card number, where the page shifting under the cursor
+   mid-form reads as instability. Same treatment for the payment result. */
+.subscribe-card:hover {
+    transform: none;
+    box-shadow: var(--shadow);
 }
 
 .subscribe-price {
@@ -9,11 +17,11 @@
     align-items: baseline;
     justify-content: center;
     gap: 6px;
-    margin: 6px 0 18px;
+    margin: 4px 0 14px;
 }
 
 .subscribe-price-amount {
-    font-size: 42px;
+    font-size: 36px;
     font-weight: 800;
     line-height: 1;
     color: var(--text-dark, #0f1e3d);
@@ -30,6 +38,9 @@
     color: var(--muted, #64748b);
 }
 
+/* Slightly smaller than the 42px it was: the selected plan tile directly above
+   already shows this number, so the headline price is a confirmation, not the
+   first reveal, and 42px of it was pushing the card form down the page. */
 /* The struck-through former price. `unicode-bidi: plaintext` keeps the number
    reading left-to-right inside the Arabic layout, and the strike is coloured
    red so it reads as "no longer this" at a glance rather than as a second
@@ -144,10 +155,10 @@
 
 .subscribe-perks {
     list-style: none;
-    margin: 0 0 14px;
+    margin: 0;
     padding: 0;
     display: grid;
-    gap: 8px;
+    gap: 7px;
 }
 
 .subscribe-perks li {
@@ -175,15 +186,25 @@
     color: var(--primary-color, #2563eb);
 }
 
-/* The no-auto-renewal promise. Quiet, but never omitted — it is the reason
-   there is no "cancel subscription" flow anywhere in the product. */
+/* The no-auto-renewal promise, now carrying the "processed by Moyasar" line
+   with it — two reassurances that were two separate blocks and say the same
+   kind of thing. Never omitted: the no-renewal promise is the reason there is
+   no "cancel subscription" flow anywhere in the product. */
 .subscribe-norenew {
-    margin: 0 0 14px;
+    margin: 0;
     text-align: center;
     font-size: 12.5px;
     font-weight: 600;
-    line-height: 1.7;
+    line-height: 1.65;
     color: var(--success-color, #16a34a);
+}
+
+.subscribe-norenew .app-icon {
+    margin-inline-end: 5px;
+}
+
+.subscribe-norenew strong {
+    color: inherit;
 }
 
 /* Individual ⇄ group cross-link. The two ladders live on separate pages, so
@@ -193,8 +214,8 @@
     align-items: center;
     justify-content: center;
     gap: 7px;
-    margin: 0 0 16px;
-    padding: 10px 14px;
+    margin: 0;
+    padding: 9px 14px;
     border: 1px dashed var(--border, #d7dee9);
     border-radius: 10px;
     font-size: 13px;
@@ -231,6 +252,49 @@
     text-align: center;
 }
 
+/* One block for everything that is not the transaction. Tight, centred, and
+   quiet — it should read as the fine print under a form, not as four more
+   sections of the page. */
+.subscribe-assurance {
+    margin-top: 14px;
+    display: grid;
+    gap: 8px;
+}
+
+/* Perks behind a disclosure. Closed, this is a single 34px row instead of the
+   ~150px three-item list that sat between the pay button and the bottom of the
+   card; open, it is the same list it always was. */
+.subscribe-perks-toggle > summary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 8px 12px;
+    border: 1px dashed var(--border, #d7dee9);
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--primary-color, #2563eb);
+    cursor: pointer;
+    list-style: none;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+/* Safari/Chrome draw their own disclosure triangle via this pseudo-element,
+   which sits outside the flex centring and pulls the label off-centre. */
+.subscribe-perks-toggle > summary::-webkit-details-marker {
+    display: none;
+}
+
+.subscribe-perks-toggle > summary:hover {
+    background: rgba(37, 99, 235, 0.06);
+    border-color: var(--primary-color, #2563eb);
+}
+
+.subscribe-perks-toggle[open] > summary {
+    margin-bottom: 10px;
+}
+
 .subscribe-note {
     margin-top: 16px;
     text-align: center;
@@ -239,7 +303,7 @@
 }
 
 .subscribe-policy {
-    margin-top: 8px;
+    margin: 0;
     text-align: center;
     font-size: 12px;
     line-height: 1.8;
@@ -313,6 +377,32 @@
    the price digits and plan padding were sized for the 460px card, not the
    ~280px of usable width left on a 320–360px phone once the shell's own
    padding is subtracted. */
+/* This file used to jump straight from "no breakpoint at all" to 380px, so a
+   phone at 390-640px — the majority of them — got the desktop sizing inside a
+   card whose own padding had already shrunk. */
+@media (max-width: 640px) {
+    .subscribe-price-amount {
+        font-size: 32px;
+    }
+
+    .subscribe-price-was {
+        font-size: 19px;
+    }
+
+    .subscribe-plan {
+        padding: 12px 5px 11px;
+    }
+
+    .subscribe-plan-amount {
+        font-size: 18px;
+    }
+
+    .subscribe-crosslink {
+        font-size: 12.5px;
+        line-height: 1.5;
+    }
+}
+
 @media (max-width: 380px) {
     .subscribe-price-amount {
         font-size: 34px;

@@ -75,6 +75,32 @@ const subscriptionInfo = (user) => {
  */
 const adminMade = (user) => user.account_type === 'admin_created';
 
+/**
+ * How this account was opened. `accounts.signup_method` is written by every
+ * INSERT INTO accounts in the backend and backfilled for older rows, so it
+ * answers the question directly rather than being inferred.
+ *
+ * Note it is NOT derivable from google_id: that column is also set when someone
+ * who signed up with the email OTP later signs in with Google for the first
+ * time, which links the identity to the existing account. Reading google_id as
+ * "signed up with Google" would move a slice of the email cohort into the
+ * Google one and quietly overstate how well Google sign-in recruits.
+ *
+ * `tone` maps onto the .origin-badge modifiers in add.css. adminMade() is the
+ * fallback for any row the backfill hasn't reached — it only knows admin vs
+ * self, which is exactly what this column showed before.
+ */
+const SIGNUP_METHODS = {
+    google: { label: 'Google', icon: 'user', tone: 'google' },
+    email_otp: { label: 'Email + OTP', icon: 'send', tone: 'self' },
+    admin: { label: 'Admin-created', icon: 'shield-check', tone: 'admin' },
+    temp_link: { label: 'Invite link', icon: 'link', tone: 'invite' },
+    group_seat: { label: 'Group seat', icon: 'users', tone: 'group' },
+};
+const originOf = (user) => SIGNUP_METHODS[user.signup_method] || (adminMade(user)
+    ? SIGNUP_METHODS.admin
+    : { label: 'Self signup', icon: 'user', tone: 'self' });
+
 // English labels for payment plan ids — admin is pinned English/LTR, mirrors
 // the ar/en copy in src/i18n/copy/account.js (kept separate since that file
 // is student-facing and this is a read-only admin display).
@@ -598,17 +624,22 @@ const ADD = (props) => {
                                                     : <span className="plan-detail">Never purchased</span>}
                                             </td>
                                             <td className="origin-cell">
-                                                <span className={`origin-badge ${adminMade(user) ? 'admin' : 'self'}`}>
-                                                    <Icon name={adminMade(user) ? 'shield-check' : 'user'} size={13} />
-                                                    {adminMade(user) ? 'Admin-created' : 'Self signup'}
-                                                </span>
+                                                {(() => {
+                                                    const origin = originOf(user);
+                                                    return (
+                                                        <span className={`origin-badge ${origin.tone}`}>
+                                                            <Icon name={origin.icon} size={13} />
+                                                            {origin.label}
+                                                        </span>
+                                                    );
+                                                })()}
                                                 <div className="plan-detail">
                                                     <Icon name="calendar" size={13} />{' '}
                                                     {user.created_at ? new Date(user.created_at).toLocaleString() : 'Unknown'}
                                                 </div>
                                             </td>
                                             <td>
-                                                <span className={`status-badge ${user.isactive ? 'active' : 'inactive'}`}>
+                                                <span className={`user-status-badge ${user.isactive ? 'active' : 'inactive'}`}>
                                                     {user.isactive ? <><Icon name="check-circle" size={14} /> Active</> : <><Icon name="x-circle" size={14} /> Inactive</>}
                                                 </span>
                                                 {user.logged && (

@@ -18,6 +18,7 @@ const GROUPS = [
         links: [
             { path: '/admin', label: 'Overview', icon: 'home' },
             { path: '/admin/growth', label: 'Growth', icon: 'trending-up' },
+            { path: '/admin/behavior', label: 'Behaviour', icon: 'brain' },
             { path: '/admin/accounting', label: 'Accounting', icon: 'bar-chart' },
         ],
     },

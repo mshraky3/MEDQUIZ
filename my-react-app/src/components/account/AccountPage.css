@@ -10,11 +10,11 @@
     min-height: 100%;
     flex: 1 0 auto;
     background: var(--bg-light, #f6f8fc);
-    padding: clamp(1.25rem, 4vw, 3rem) 1rem 4rem;
+    padding: var(--page-pad-block) var(--page-pad-inline) var(--space-12);
 }
 
 .account-wrap {
-    max-width: 620px;
+    max-width: var(--container-form, 620px);
     margin: 0 auto;
 }
 
@@ -180,4 +180,30 @@
     gap: 12px;
     padding: 40px 0;
     color: var(--muted, #64748b);
+}
+
+/* This file had no media queries at all — the desktop layout was the only
+   layout, on a page that is mostly label/value rows. Two things actually
+   break below ~480px: `justify-content: space-between` on a fact row squeezes
+   a long value (an email, a plan name) until it wraps, at which point
+   `text-align: end` strands it ragged against the far edge; and the card's
+   20-22px padding is a meaningful share of a 320px screen. */
+@media (max-width: 480px) {
+    .account-card {
+        padding: 18px 16px;
+    }
+
+    /* Stack label over value instead of fighting for one line. */
+    .account-facts > div {
+        display: grid;
+        gap: 2px;
+    }
+
+    .account-facts dd {
+        text-align: start;
+    }
+
+    .account-facts {
+        gap: 12px;
+    }
 }

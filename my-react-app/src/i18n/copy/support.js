@@ -117,6 +117,10 @@ const supportCopy = {
             contactUs: 'تواصل معنا لإتمام الدفع',
             secureNoteBefore: 'الدفع آمن ومعالَج عبر',
             secureNoteProvider: 'ميسر',
+            // Label on the perks disclosure. The plan picker and the card form
+            // are what someone opens this page for; the perks are the
+            // supporting detail, one tap away instead of a third of the page.
+            perksToggle: 'ما الذي يشمله الاشتراك؟',
             secureNoteAfter: '. لا نقوم بتخزين بيانات بطاقتك على خوادمنا.',
             policyBefore: 'الاشتراك لا يُجدَّد تلقائياً — التجديد يدوي. بالمتابعة فإنك توافق على',
             terms: 'شروط الاستخدام',
@@ -257,6 +261,10 @@ const supportCopy = {
             secureNoteBefore: 'Payment is secure and processed by',
             secureNoteProvider: 'Moyasar',
             secureNoteAfter: '. We never store your card details on our servers.',
+            // Label on the perks disclosure. The plan picker and the card form
+            // are what someone opens this page for; the perks are the
+            // supporting detail, one tap away instead of a third of the page.
+            perksToggle: "What's included?",
             policyBefore: 'The subscription does not auto-renew — renewal is manual. By continuing you agree to the',
             terms: 'Terms of Use',
             and: 'and the',

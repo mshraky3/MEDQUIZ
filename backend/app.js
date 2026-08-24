@@ -33,9 +33,11 @@ import {
     paidButInactiveCount, userSnapshot, activeUserSnapshot, dailySignups,
     dailyActiveUsers, openReportsCount, SQL_FREE_EXHAUSTED,
     SQL_ACTIVE_SUBSCRIBER, SQL_ADMIN_GRANTED, activeSubscriberSql,
+    hardestQuestions, questionAnswerSpread, answerTimeDistribution, bankCoverage,
+    studyHeatmap, retentionCohorts, summaryDropoff, signupMethodMix, behaviourTotals,
 } from './services/adminMetricsService.js';
 import summaryContent from './content/summaryHtml/index.js';
-import { notifyBackendError } from './services/errorNotificationService.js';
+import { notifyBackendError, configureAlertThrottle } from './services/errorNotificationService.js';
 import { sendWelcomeEmail, sendGroupSeatClaimedEmail } from './services/userEmailService.js';
 import { OWNER_EMAIL } from './config/recipients.js';
 import {
@@ -68,6 +70,28 @@ const normalizeInviteMonths = (value) => {
     if (!Number.isFinite(n) || n < 1) return DEFAULT_INVITE_MONTHS;
     return Math.min(MAX_INVITE_MONTHS, n);
 };
+
+/**
+ * Domains the IETF permanently reserved so they can never resolve to a real
+ * mailbox: RFC 2606 (.test/.example/.invalid/.localhost and example.com/net/org)
+ * and RFC 6761, plus *.local, which mDNS claims and no public mail server can
+ * hold.
+ *
+ * An automated endpoint test run on 2026-08-22 was pointed at the PRODUCTION
+ * backend instead of staging and created live accounts here —
+ * probe.add.*@example.invalid, zz-grant-e2e-*@example.invalid,
+ * cssqacheck@test.local — several of them carrying real 6/12/120-month paid
+ * access grants, each one mailing an owner notification and each one counted
+ * by the admin dashboard as a genuine granted account. See
+ * scripts/deleteSyntheticTestAccounts.js, which removes the ones already there.
+ *
+ * Refusing them in production is what stops it recurring. It stays ALLOWED
+ * outside production, because these addresses are exactly what the test suite
+ * should use when it is correctly pointed at a non-production database.
+ */
+const RESERVED_TEST_DOMAIN = /@(?:[^@\s]+\.)?(?:invalid|test|example|localhost|local)$|@example\.(?:com|net|org)$/i;
+
+const isReservedTestAddress = (address) => RESERVED_TEST_DOMAIN.test(String(address || '').trim());
 
 dotenv.config();
 // Logging configuration
@@ -151,7 +175,35 @@ const db = new Pool({
 // whole warm instance, taking every other in-flight request down with it,
 // for what pg-pool would otherwise handle by itself: discard the dead client
 // and open a fresh one on the next .connect()/.query().
+// Give the error notifier a shared place to record what it has already mailed.
+// Without this its throttle is per-process, which on serverless means no
+// throttle at all — see the emailTracker comment in errorNotificationService.
+configureAlertThrottle(db);
+
 db.on('error', (err) => {
+    // A killed idle client is EXPECTED on this stack, not a fault: Neon (via
+    // Koyeb) suspends idle computes and its pooler recycles connections, both
+    // of which arrive here as 57P01 "terminating connection due to
+    // administrator command". pg-pool's whole contract is that it discards the
+    // dead client and opens a fresh one on the next .connect()/.query(), so by
+    // the time this listener runs the pool has ALREADY recovered and no
+    // request was harmed.
+    //
+    // Mailing them was actively harmful for exactly the reason spelled out at
+    // reportBootstrapFailure() below: the in-memory rate limiter in
+    // errorNotificationService cannot catch these, because its counters live in
+    // module memory and every serverless cold start is a fresh process with an
+    // empty tracker. One Neon recycle therefore became a burst of near
+    // identical CRITICALs against the ONE 100/day Resend allowance shared by
+    // every project — quota that a real outage then can't use. Logged so the
+    // rate is still visible in Vercel logs, never mailed.
+    if (isTransientConnectionError(err)) {
+        logger.warn('Idle Postgres client dropped by the server (pool discards it and recovers automatically)', {
+            error: err.message,
+            code: err.code,
+        });
+        return;
+    }
     logger.error('Idle Postgres client error (pool discards it and recovers automatically)', err);
     // Visibility only, not fatal — same notifier used elsewhere in this file,
     // but deliberately without the process.exit(1) the uncaughtException
@@ -423,6 +475,16 @@ function ensureSchema() {
             await db.query(`CREATE INDEX IF NOT EXISTS idx_uqa_user ON user_question_attempts(user_id)`);
             await db.query(`CREATE INDEX IF NOT EXISTS idx_uqa_session ON user_question_attempts(quiz_session_id)`);
             await db.query(`CREATE INDEX IF NOT EXISTS idx_uqa_user_wrong ON user_question_attempts(user_id) WHERE is_correct = false`);
+            // Live production already carries idx_user_question_attempts_question_id
+            // (added out-of-band, not by any script in this repo), which is exactly
+            // what the behaviour page's per-question rollup
+            // (adminMetricsService.hardestQuestions) needs to avoid seq-scanning
+            // the largest table in the database on every load. Named to match it
+            // exactly — IF NOT EXISTS then skips it here and creates the real
+            // thing on any environment that doesn't already have it, rather than
+            // shipping a second physical index on the same column under a
+            // different name.
+            await db.query(`CREATE INDEX IF NOT EXISTS idx_user_question_attempts_question_id ON user_question_attempts(question_id)`);
             await db.query(`CREATE INDEX IF NOT EXISTS idx_questions_type_source ON questions(question_type, source)`);
 
             // ── Study tracks (medical | nursing) ───────────────────────────
@@ -914,6 +976,20 @@ app.post('/add_account', adminAuth, async (req, res) => {
         });
     }
 
+    // A reserved test domain in PRODUCTION means a QA suite is pointed at the
+    // wrong backend — see isReservedTestAddress. Refuse before the insert, so
+    // the run fails loudly against the live system instead of quietly seeding
+    // it with accounts and paid-access grants nobody will notice for weeks.
+    if (isProduction && isReservedTestAddress(lowercaseUsername)) {
+        logger.warn('Refused to create an account on a reserved test domain in production', {
+            username: lowercaseUsername,
+        });
+        return res.status(400).json({
+            message: 'Reserved test domains (.invalid/.test/.example/.local) cannot be used in production. '
+                + 'Point the test run at a non-production database.',
+        });
+    }
+
     try {
         // Both columns are still checked even though they now always hold the
         // same value: UNIQUE(username) is the constraint an insert would
@@ -949,13 +1025,13 @@ app.post('/add_account', adminAuth, async (req, res) => {
         const result = columnsReady
             ? await db.query(
                 `INSERT INTO accounts (username, email, password, isactive, logged, terms_accepted, email_verified, track, account_type, is_admin_created,
-                                       subscription_status, subscription_expiry_date)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'active', NOW() + make_interval(months => $11::int))
+                                       subscription_status, subscription_expiry_date, signup_method)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'active', NOW() + make_interval(months => $11::int), 'admin')
                  RETURNING id, subscription_expiry_date`,
                 [lowercaseUsername, lowercaseUsername, lowercasePassword, true, false, false, true, track, 'admin_created', true, durationMonths]
             )
             : await db.query(
-                "INSERT INTO accounts (username, email, password, isactive, logged, terms_accepted, email_verified, track) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id",
+                "INSERT INTO accounts (username, email, password, isactive, logged, terms_accepted, email_verified, track, signup_method) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'admin') RETURNING id",
                 [lowercaseUsername, lowercaseUsername, lowercasePassword, true, false, false, true, track]
             );
 
@@ -1325,6 +1401,44 @@ const ensureQuestionReportsTable = async () => {
 };
 // Kicked off from bootstrapAll() below.
 
+// The suggestions table had NO bootstrap at all: the only thing that created it
+// was the manual POST /api/admin/init-suggestions-table endpoint below, which
+// nobody ever called against production. So the table did not exist there, and
+// two things had been broken for as long as the feature has shipped —
+//   GET /api/admin/suggestions  500s on every admin dashboard load (and its
+//                               poll), which is a steady source of CRITICAL
+//                               alert mail, and
+//   POST /api/suggestions       500s on submit, so every suggestion a student
+//                               took the trouble to write was thrown away.
+// Same treatment the progress tables already got when ensureSchema() replaced
+// the old manual POST /init-progress-tables: create it at boot, idempotently,
+// instead of depending on someone remembering to call an endpoint.
+const ensureSuggestionsTable = async () => {
+    try {
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS suggestions (
+                id SERIAL PRIMARY KEY,
+                category VARCHAR(50) NOT NULL,
+                title VARCHAR(200) NOT NULL,
+                description TEXT NOT NULL,
+                priority VARCHAR(20) DEFAULT 'medium',
+                status VARCHAR(30) DEFAULT 'pending',
+                admin_notes TEXT,
+                created_at TIMESTAMP DEFAULT NOW(),
+                updated_at TIMESTAMP DEFAULT NOW()
+            )
+        `);
+        // The admin list is always "newest first" and the filters are all
+        // equality on low-cardinality columns, so one index on created_at is
+        // what that query actually needs.
+        await db.query(`CREATE INDEX IF NOT EXISTS idx_suggestions_created_at ON suggestions (created_at DESC)`);
+        logger.info('suggestions table ensured');
+    } catch (err) {
+        reportBootstrapFailure('ensureSuggestionsTable', err);
+    }
+};
+// Kicked off from bootstrapAll() below.
+
 // ============================================
 // TOPIC SUMMARIES INITIALIZATION
 // ============================================
@@ -1507,7 +1621,32 @@ const ensureOAuthColumns = async () => {
         await db.query(`ALTER TABLE accounts ADD COLUMN IF NOT EXISTS google_id VARCHAR(255)`);
         await db.query(`ALTER TABLE accounts ALTER COLUMN password DROP NOT NULL`);
         await db.query(`CREATE UNIQUE INDEX IF NOT EXISTS idx_accounts_google_id ON accounts(google_id) WHERE google_id IS NOT NULL`);
-        logger.info('OAuth column (google_id) ensured');
+
+        // How this account came into existence. Every INSERT INTO accounts now
+        // states it outright, because google_id cannot answer the question:
+        // it is also set when someone who signed up by email later signs in
+        // with Google (see POST /api/auth/google), so reading it as "signed up
+        // with Google" would relabel a chunk of the email cohort.
+        await db.query(`ALTER TABLE accounts ADD COLUMN IF NOT EXISTS signup_method VARCHAR(20)`);
+        // One-time backfill for rows created before the column existed. Safe
+        // because it only ever touches NULLs — a value written by an INSERT
+        // is never overwritten, and re-running the bootstrap is a no-op.
+        // The google test is `password IS NULL` rather than `google_id IS NOT
+        // NULL` for exactly the reason above: the Google INSERT is the only one
+        // in the codebase that omits a password (which is why the NOT NULL
+        // constraint was dropped just above), so a passwordless account with a
+        // google_id is the one thing that can only have been created by Google.
+        await db.query(`
+            UPDATE accounts SET signup_method = CASE
+                WHEN google_id IS NOT NULL AND password IS NULL THEN 'google'
+                WHEN is_admin_created = TRUE THEN 'admin'
+                WHEN EXISTS (SELECT 1 FROM temp_link_accounts t WHERE t.user_id = accounts.id) THEN 'temp_link'
+                WHEN EXISTS (SELECT 1 FROM group_seats g WHERE g.claimed_by_account_id = accounts.id) THEN 'group_seat'
+                ELSE 'email_otp'
+            END
+            WHERE signup_method IS NULL
+        `);
+        logger.info('OAuth columns (google_id, signup_method) ensured');
     } catch (err) {
         reportBootstrapFailure('ensureOAuthColumns', err);
     }
@@ -1553,7 +1692,19 @@ const ensureOAuthColumns = async () => {
 // next deploy instead of being silently skipped forever.
 // 5: temporary_signup_links.duration_months, plus migration
 //    004_expire_admin_created — admin-granted accounts stop being free forever.
-const SCHEMA_BOOTSTRAP_VERSION = 5;
+// 6: accounts.signup_method + its one-time backfill, so the admin user list can
+//    say whether someone arrived via Google, the email OTP, an invite link, a
+//    group seat, or an admin. Plus idx_user_question_attempts_question_id, which
+//    the behaviour page's per-question rollup needs to avoid seq-scanning
+//    user_question_attempts (production already has it; this just makes it
+//    reproducible on any environment that doesn't).
+// 7: ensureSuggestionsTable. The suggestions table was never bootstrapped at
+//    all — it only ever existed if someone manually called
+//    POST /api/admin/init-suggestions-table, which nobody did against
+//    production. Confirmed absent there on 2026-08-24, which is why the admin
+//    dashboard 500s on every load and every student suggestion submitted so far
+//    was discarded.
+const SCHEMA_BOOTSTRAP_VERSION = 7;
 async function bootstrapAll() {
     try {
         await db.query(`
@@ -1588,6 +1739,7 @@ async function bootstrapAll() {
     await ensureEmailCampaignColumns();
     await ensureTempLinksTables();
     await ensureQuestionReportsTable();
+    await ensureSuggestionsTable();
     await ensureSummariesTables();
     await ensureTelegramSchema();
     await ensureOAuthColumns();
@@ -2092,6 +2244,12 @@ app.post('/api/auth/google', rateLimit(db, 'oauth_google', { windowMs: 5 * 60_00
     // silent-default bug this branch exists to avoid. An existing account
     // below keeps whatever track it already has, regardless of what's sent.
     const requestedTrack = req.body.track;
+    // 'login' | 'signup'. Defaults to 'signup' so any caller that doesn't send
+    // it keeps the old behaviour. The login page sends 'login', which is what
+    // stops /login from quietly creating an account for a Google identity it
+    // has never seen — and then walking the visitor through a track picker and
+    // a terms checkbox, i.e. the entire signup flow, on the sign-in screen.
+    const mode = req.body.mode === 'login' ? 'login' : 'signup';
     if (!GOOGLE_CLIENT_ID) {
         logger.error('GOOGLE_CLIENT_ID is not set — /api/auth/google cannot verify tokens');
         return res.status(500).json({ message: 'Google sign-in is not configured' });
@@ -2117,6 +2275,17 @@ app.post('/api/auth/google', rateLimit(db, 'oauth_google', { windowMs: 5 * 60_00
         await client.query('BEGIN');
         let { rows: [userRow] } = await client.query('SELECT * FROM accounts WHERE email = $1 FOR UPDATE', [email]);
 
+        if (!userRow && mode === 'login') {
+            // Signing in, and there is nothing to sign in to. Create nothing,
+            // send no welcome email — the page tells them so and points at
+            // /signup. Note this is reached only when the email is genuinely
+            // absent: an account that already exists signs in below whether it
+            // was created with Google or with a password, so someone who signed
+            // up by email and now clicks Google gets linked, not rejected.
+            await client.query('ROLLBACK');
+            return res.status(404).json({ noAccount: true, email });
+        }
+
         if (!userRow && !isValidTrack(requestedTrack)) {
             // Brand-new identity, no track chosen yet — do NOT auto-provision
             // on a default. Every other signup path blocks on a track-choice
@@ -2131,8 +2300,8 @@ app.post('/api/auth/google', rateLimit(db, 'oauth_google', { windowMs: 5 * 60_00
 
         if (!userRow) {
             const inserted = await client.query(
-                `INSERT INTO accounts (username, email, isactive, logged, terms_accepted, email_verified, track, google_id)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+                `INSERT INTO accounts (username, email, isactive, logged, terms_accepted, email_verified, track, google_id, signup_method)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'google') RETURNING *`,
                 [email, email, true, false, false, true, requestedTrack, googleId]
             );
             userRow = inserted.rows[0];
@@ -2366,12 +2535,17 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
                 ORDER BY total_questions DESC
                 LIMIT 8
             `),
-            // Hourly activity pattern (quizzes started by hour)
+            // Hourly activity pattern (quizzes started by hour).
+            // + INTERVAL '3 hours' because start_time is stored TZ-less in UTC
+            // and every student reading this dashboard is on Riyadh time (fixed
+            // UTC+3, no DST). Without it a chart labelled "hour of day" put the
+            // 9pm study peak at 6pm, and disagreed with every other day-bucketed
+            // series in this file, which have always applied the offset.
             db.query(`
-                SELECT EXTRACT(HOUR FROM start_time) as hour, COUNT(*) as count
+                SELECT EXTRACT(HOUR FROM start_time + INTERVAL '3 hours') as hour, COUNT(*) as count
                 FROM user_quiz_sessions
                 WHERE start_time > NOW() - INTERVAL '30 days'
-                GROUP BY EXTRACT(HOUR FROM start_time)
+                GROUP BY 1
                 ORDER BY hour
             `),
             // Week-over-week active ratio: NOT retention (it can exceed 100% —
@@ -2402,12 +2576,12 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
                 ORDER BY count DESC
                 LIMIT 5
             `),
-            // Logins by hour of day
+            // Logins by hour of day — Riyadh, see the note on hourly activity above.
             db.query(`
-                SELECT EXTRACT(HOUR FROM login_time) as hour, COUNT(*) as count
+                SELECT EXTRACT(HOUR FROM login_time + INTERVAL '3 hours') as hour, COUNT(*) as count
                 FROM login_history
                 WHERE login_time > NOW() - INTERVAL '30 days'
-                GROUP BY EXTRACT(HOUR FROM login_time)
+                GROUP BY 1
                 ORDER BY hour
             `),
             // Quiz completion rate (quizzes with results vs started)
@@ -2615,6 +2789,97 @@ app.get('/admin/stats', adminAuth, async (req, res) => {
     }
 });
 
+// ==================== ADMIN: LEARNING BEHAVIOUR ====================
+// What students actually do, as opposed to how many of them there are and
+// what they paid. Everything here comes from services/adminMetricsService.js
+// so the numbers cannot drift from the overview and growth pages.
+//
+// On-demand, like /admin/analytics and unlike the two-minute-polled
+// /admin/stats: these aggregate user_question_attempts (one row per answer, the
+// largest table in the database), and running them on a poll would keep the
+// database busy for nobody's benefit.
+//
+// allSettled, not all: each section is independent, so a table missing in some
+// environment degrades that one card instead of 500-ing the whole page.
+app.get('/admin/behavior', adminAuth, async (req, res) => {
+    const clampInt = (v, def, min, max) => {
+        const n = parseInt(v, 10);
+        return Number.isFinite(n) ? Math.min(Math.max(n, min), max) : def;
+    };
+    const days = clampInt(req.query.days, 60, 7, 365);
+    const weeks = clampInt(req.query.weeks, 8, 4, 26);
+    // Read straight off the request rather than a hardcoded 15: a bank with a
+    // few thousand attempts needs a lower bar than one with a million before
+    // "hardest question" means anything, and only a person looking at the page
+    // knows which they are looking at.
+    const minAttempts = clampInt(req.query.minAttempts, 15, 1, 500);
+
+    try {
+        const settled = await Promise.allSettled([
+            behaviourTotals(db),
+            hardestQuestions(db, { limit: 20, minAttempts }),
+            answerTimeDistribution(db),
+            bankCoverage(db),
+            studyHeatmap(db, { days }),
+            retentionCohorts(db, { weeks }),
+            summaryDropoff(db, { limit: 15 }),
+            signupMethodMix(db, { weeks: 12 }),
+        ]);
+        const val = (i, def) => (settled[i].status === 'fulfilled' ? settled[i].value : def);
+        const failed = settled
+            .map((r, i) => (r.status === 'rejected' ? i : null))
+            .filter((i) => i !== null);
+        if (failed.length) {
+            logger.warn('Some /admin/behavior sections failed', { sections: failed });
+        }
+
+        res.json({
+            range: { days, weeks, minAttempts },
+            totals: val(0, {}),
+            hardestQuestions: val(1, []),
+            answerTimes: val(2, []),
+            bankCoverage: val(3, []),
+            studyHeatmap: val(4, []),
+            retention: val(5, []),
+            summaryDropoff: val(6, []),
+            signupMethods: val(7, { totals: [], trend: [] }),
+        });
+    } catch (err) {
+        logger.error('Error fetching admin behaviour metrics', err);
+        res.status(500).json({ message: 'Server error fetching behaviour metrics' });
+    }
+});
+
+// The option-by-option breakdown for one question, opened from the "hardest
+// questions" table. Separate from the page load on purpose: it is only ever
+// wanted for the handful of questions someone actually clicks into, and
+// fetching the spread for all twenty up front would be twenty scans nobody
+// reads.
+app.get('/admin/behavior/question/:id/spread', adminAuth, async (req, res) => {
+    const questionId = parseInt(req.params.id, 10);
+    if (!Number.isFinite(questionId)) {
+        return res.status(400).json({ message: 'Invalid question id' });
+    }
+    try {
+        const [question, spread] = await Promise.all([
+            db.query(
+                `SELECT id, question_text, option1, option2, option3, option4,
+                        correct_option, explanation, question_type, source, track
+                   FROM questions WHERE id = $1`,
+                [questionId]
+            ),
+            questionAnswerSpread(db, questionId),
+        ]);
+        if (!question.rows[0]) {
+            return res.status(404).json({ message: 'Question not found' });
+        }
+        res.json({ question: question.rows[0], spread });
+    } catch (err) {
+        logger.error('Error fetching question answer spread', err);
+        res.status(500).json({ message: 'Server error fetching answer spread' });
+    }
+});
+
 // ==================== EXPANDED ADMIN ANALYTICS ====================
 // On-demand (not on the 2-min /admin/stats auto-refresh) so its heavier
 // time-series queries don't load the DB continuously. Accepts ?from=&to=
@@ -2804,7 +3069,7 @@ app.get('/admin/users', adminAuth, async (req, res) => {
                 a.id, a.username, a.password, a.isactive, a.logged, a.logged_date,
                 a.terms_accepted, a.email, a.created_at, a.track,
                 a.subscription_status, a.subscription_expiry_date, a.free_questions_used,
-                a.account_type, a.is_admin_created, a.grandfathered_at,
+                a.account_type, a.is_admin_created, a.grandfathered_at, a.signup_method,
                 latest_plan.plan_id,
                 COUNT(DISTINCT q.id) as total_quizzes,
                 ROUND(AVG(q.quiz_accuracy)::numeric, 1) as avg_accuracy,
@@ -2826,7 +3091,7 @@ app.get('/admin/users', adminAuth, async (req, res) => {
             GROUP BY a.id, a.username, a.password, a.isactive, a.logged, a.logged_date,
                      a.terms_accepted, a.email, a.created_at, a.track,
                      a.subscription_status, a.subscription_expiry_date, a.free_questions_used,
-                     a.account_type, a.is_admin_created, a.grandfathered_at,
+                     a.account_type, a.is_admin_created, a.grandfathered_at, a.signup_method,
                      latest_plan.plan_id
             ORDER BY a.id DESC
         `, trackParams);
@@ -4028,124 +4293,147 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
         // GET /api/questions), not here — submitting no longer touches
         // free_questions_used at all, so there is nothing to spend or report.
 
-        // Record question progress for each answered question (parallelized)
+        // ── Everything below is BOOKKEEPING, and must never fail the request ──
+        // The session row above is the student's result and it is committed.
+        // Progress rows, attempt rows, completion checks and milestones are all
+        // derived extras — useful, but none of them is the thing the student
+        // just earned.
+        //
+        // They used to run unguarded inside the outer try, so one transient
+        // failure in any of them (a Neon connection recycled mid-request being
+        // the common one — see the pool's 'error' listener at the top of this
+        // file) threw past the 201 and answered 500 "Failed to record quiz
+        // session" for a session that HAD been recorded. The student was told
+        // their finished quiz was lost, and retrying would have written a
+        // duplicate row. Once the INSERT succeeds this handler must not fail:
+        // degrade the extras, always return the session.
         let touchedCardinalities = [];
-        if (question_ids && question_ids.length > 0) {
-            const questionDetails = await db.query(`
-                SELECT id, question_type, source
-                FROM questions
-                WHERE id = ANY($1)
-            `, [question_ids]);
-
-            // Parallelize question progress inserts for better performance
-            const progressPromises = questionDetails.rows.map(question =>
-                db.query(`
-                    INSERT INTO user_question_progress (user_id, question_id, question_type, source)
-                    VALUES ($1, $2, $3, $4)
-                    ON CONFLICT (user_id, question_id) DO NOTHING
-                `, [user_id, question.id, question.question_type, question.source || 'general'])
-            );
-
-            await Promise.all(progressPromises);
-
-            // Distinct (type, source) cardinalities this quiz touched — used
-            // below to tell the client which topics are now fully answered.
-            const seen = new Map();
-            for (const q of questionDetails.rows) {
-                const type = q.question_type;
-                const src = q.source || 'general';
-                // Map key avoids any string delimiter: type/source contain spaces.
-                seen.set(JSON.stringify([type, src]), { type, source: src });
-            }
-            touchedCardinalities = [...seen.values()];
-        }
-
-        // Record detailed question attempts if provided (parallelized)
-        if (question_attempts && question_attempts.length > 0) {
-            logger.debug("Recording question attempts", {
-                attemptCount: question_attempts.length,
-                sessionId: result.rows[0].id
-            });
-
-            // Parallelize question attempt inserts for better performance
-            const attemptPromises = question_attempts.map(attempt =>
-                db.query(`
-                    INSERT INTO user_question_attempts 
-                    (user_id, question_id, selected_option, is_correct, time_taken, quiz_session_id)
-                    VALUES ($1, $2, $3, $4, $5, $6)
-                `, [
-                    user_id,
-                    attempt.question_id,
-                    attempt.selected_option,
-                    attempt.is_correct,
-                    attempt.time_taken,
-                    result.rows[0].id
-                ]).catch(attemptError => {
-                    logger.warn("Failed to record question attempt", {
-                        error: attemptError.message,
-                        attempt: attempt
-                    });
-                    // Return null for failed attempts so Promise.allSettled continues
-                    return null;
-                })
-            );
-
-            // Use allSettled to continue even if some attempts fail
-            const results = await Promise.allSettled(attemptPromises);
-            // Log any failures for debugging
-            results.forEach((result, index) => {
-                if (result.status === 'rejected') {
-                    logger.warn("Question attempt insert failed", {
-                        attemptIndex: index,
-                        error: result.reason?.message
-                    });
-                }
-            });
-        }
-
-        // Which (type, source) topics did this quiz just finish off? A question
-        // never repeats until its whole category is done, so hitting the total
-        // means the user has now covered that topic end to end.
         let completedCategories = [];
-        if (touchedCardinalities.length > 0) {
-            const checks = await Promise.all(touchedCardinalities.map(async ({ type, source }) => {
-                try {
-                    const [totalRes, doneRes] = await Promise.all([
-                        db.query(
-                            // Track-scoped like every other bank-size denominator.
-                            // Specialty names happen to be disjoint across tracks
-                            // today, but "topic complete" must not depend on that.
-                            `SELECT COUNT(*)::int AS c FROM questions
-                              WHERE track = $1 AND question_type = $2 AND source = $3`,
-                            [resolveContentTrack(req), type, source]
-                        ),
-                        db.query(
-                            `SELECT COUNT(*)::int AS c FROM user_question_progress
-                             WHERE user_id = $1 AND question_type = $2 AND source = $3`,
-                            [user_id, type, source]
-                        )
-                    ]);
-                    const total = totalRes.rows[0].c;
-                    return { type, source, complete: total > 0 && doneRes.rows[0].c >= total };
-                } catch (e) {
-                    logger.warn('Completion check failed', { type, source, error: e.message });
-                    return { type, source, complete: false };
-                }
-            }));
-            completedCategories = checks
-                .filter(c => c.complete)
-                .map(({ type, source }) => ({ type, source }));
-        }
-
-        // Goal completion and streak milestones. Awaited (not fire-and-forget)
-        // so the response can tell the client something was earned and the hub
-        // can celebrate it immediately — but wrapped, because a notification
-        // must never turn a successfully recorded quiz into a 500.
         let milestones = [];
         try {
-            milestones = await checkMilestones(db, user_id);
-        } catch (e) {
-            logger.warn('Milestone check failed', { error: e.message });
+            // Record question progress for each answered question (parallelized)
+            if (question_ids && question_ids.length > 0) {
+                const questionDetails = await db.query(`
+                    SELECT id, question_type, source
+                    FROM questions
+                    WHERE id = ANY($1)
+                `, [question_ids]);
+
+                // Parallelize question progress inserts for better performance
+                const progressPromises = questionDetails.rows.map(question =>
+                    db.query(`
+                        INSERT INTO user_question_progress (user_id, question_id, question_type, source)
+                        VALUES ($1, $2, $3, $4)
+                        ON CONFLICT (user_id, question_id) DO NOTHING
+                    `, [user_id, question.id, question.question_type, question.source || 'general'])
+                );
+
+                await Promise.all(progressPromises);
+
+                // Distinct (type, source) cardinalities this quiz touched — used
+                // below to tell the client which topics are now fully answered.
+                const seen = new Map();
+                for (const q of questionDetails.rows) {
+                    const type = q.question_type;
+                    const src = q.source || 'general';
+                    // Map key avoids any string delimiter: type/source contain spaces.
+                    seen.set(JSON.stringify([type, src]), { type, source: src });
+                }
+                touchedCardinalities = [...seen.values()];
+            }
+
+            // Record detailed question attempts if provided (parallelized)
+            if (question_attempts && question_attempts.length > 0) {
+                logger.debug("Recording question attempts", {
+                    attemptCount: question_attempts.length,
+                    sessionId: result.rows[0].id
+                });
+
+                // Parallelize question attempt inserts for better performance
+                const attemptPromises = question_attempts.map(attempt =>
+                    db.query(`
+                        INSERT INTO user_question_attempts
+                        (user_id, question_id, selected_option, is_correct, time_taken, quiz_session_id)
+                        VALUES ($1, $2, $3, $4, $5, $6)
+                    `, [
+                        user_id,
+                        attempt.question_id,
+                        attempt.selected_option,
+                        attempt.is_correct,
+                        attempt.time_taken,
+                        result.rows[0].id
+                    ]).catch(attemptError => {
+                        logger.warn("Failed to record question attempt", {
+                            error: attemptError.message,
+                            attempt: attempt
+                        });
+                        // Return null for failed attempts so Promise.allSettled continues
+                        return null;
+                    })
+                );
+
+                // Use allSettled to continue even if some attempts fail
+                const attemptResults = await Promise.allSettled(attemptPromises);
+                // Log any failures for debugging
+                attemptResults.forEach((attemptResult, index) => {
+                    if (attemptResult.status === 'rejected') {
+                        logger.warn("Question attempt insert failed", {
+                            attemptIndex: index,
+                            error: attemptResult.reason?.message
+                        });
+                    }
+                });
+            }
+
+            // Which (type, source) topics did this quiz just finish off? A question
+            // never repeats until its whole category is done, so hitting the total
+            // means the user has now covered that topic end to end.
+            if (touchedCardinalities.length > 0) {
+                const checks = await Promise.all(touchedCardinalities.map(async ({ type, source }) => {
+                    try {
+                        const [totalRes, doneRes] = await Promise.all([
+                            db.query(
+                                // Track-scoped like every other bank-size denominator.
+                                // Specialty names happen to be disjoint across tracks
+                                // today, but "topic complete" must not depend on that.
+                                `SELECT COUNT(*)::int AS c FROM questions
+                                  WHERE track = $1 AND question_type = $2 AND source = $3`,
+                                [resolveContentTrack(req), type, source]
+                            ),
+                            db.query(
+                                `SELECT COUNT(*)::int AS c FROM user_question_progress
+                                 WHERE user_id = $1 AND question_type = $2 AND source = $3`,
+                                [user_id, type, source]
+                            )
+                        ]);
+                        const total = totalRes.rows[0].c;
+                        return { type, source, complete: total > 0 && doneRes.rows[0].c >= total };
+                    } catch (e) {
+                        logger.warn('Completion check failed', { type, source, error: e.message });
+                        return { type, source, complete: false };
+                    }
+                }));
+                completedCategories = checks
+                    .filter(c => c.complete)
+                    .map(({ type, source }) => ({ type, source }));
+            }
+
+            // Goal completion and streak milestones. Awaited (not fire-and-forget)
+            // so the response can tell the client something was earned and the hub
+            // can celebrate it immediately — but wrapped, because a notification
+            // must never turn a successfully recorded quiz into a 500.
+            try {
+                milestones = await checkMilestones(db, user_id);
+            } catch (e) {
+                logger.warn('Milestone check failed', { error: e.message });
+            }
+        } catch (bookkeepingError) {
+            // Logged at error level (this IS a real fault worth investigating —
+            // progress rows the student earned may be missing), but deliberately
+            // NOT turned into a failed response: the session is saved, and
+            // telling the student otherwise is the worse outcome. Progress rows
+            // are ON CONFLICT DO NOTHING, so the next quiz re-converges them.
+            logger.error('Quiz session recorded, but post-session bookkeeping failed', bookkeepingError);
         }
 
         res.status(201).json({
@@ -6261,8 +6549,8 @@ app.post('/api/signup/free', async (req, res) => {
 
             // Create the account (username = email for backward compat)
             const accountResult = await client.query(
-                `INSERT INTO accounts (username, email, password, isactive, logged, terms_accepted, email_verified, track, exam_date)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
+                `INSERT INTO accounts (username, email, password, isactive, logged, terms_accepted, email_verified, track, exam_date, signup_method)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'email_otp') RETURNING id`,
                 [lowerEmail, lowerEmail, lowerPassword, true, false, false, true, track, examDate]
             );
 
@@ -6411,14 +6699,14 @@ app.post('/api/signup/temp-link', async (req, res) => {
             const accountResult = columnsReady
                 ? await client.query(
                     `INSERT INTO accounts (username, email, password, isactive, logged, terms_accepted, email_verified, is_admin_created, account_type, track,
-                                           subscription_status, subscription_expiry_date)
-                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'active', NOW() + make_interval(months => $11::int))
+                                           subscription_status, subscription_expiry_date, signup_method)
+                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'active', NOW() + make_interval(months => $11::int), 'temp_link')
                      RETURNING id, subscription_expiry_date`,
                     [lowerEmail, lowerEmail, lowerPassword, true, false, false, true, true, 'admin_created', linkTrack, inviteMonths]
                 )
                 : await client.query(
-                    `INSERT INTO accounts (username, email, password, isactive, logged, terms_accepted, email_verified, track)
-                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
+                    `INSERT INTO accounts (username, email, password, isactive, logged, terms_accepted, email_verified, track, signup_method)
+                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'temp_link') RETURNING id`,
                     [lowerEmail, lowerEmail, lowerPassword, true, false, false, true, linkTrack]
                 );
 
@@ -6568,10 +6856,10 @@ app.post('/api/signup/group-seat', async (req, res) => {
                 `INSERT INTO accounts
                     (username, email, password, isactive, logged, terms_accepted, email_verified,
                      is_admin_created, account_type, track,
-                     subscription_status, subscription_expiry_date)
+                     subscription_status, subscription_expiry_date, signup_method)
                  VALUES ($1, $2, $3, TRUE, FALSE, FALSE, TRUE,
                          FALSE, 'group_seat', $4,
-                         'active', $5)
+                         'active', $5, 'group_seat')
                  RETURNING id`,
                 [lowerEmail, lowerEmail, lowerPassword, seatTrack, seat.expires_at]
             );
@@ -7339,6 +7627,19 @@ app.use(async (err, req, res, next) => {
 // going safely after an uncaughtException (the process may be in an
 // inconsistent state), so it still exits — but now notified, not silent.
 process.on('unhandledRejection', (reason) => {
+    // Same reasoning as the pool's 'error' listener above: the fire-and-forget
+    // work this handler exists to catch (cron ticks, lifecycle jobs) talks to
+    // the same Neon-backed database, so a suspend/recycle surfaces here as a
+    // rejection nobody awaited. It is transient by definition — the next tick
+    // reconnects — and mailing it burns shared Resend quota a real fault will
+    // need. Logged, never mailed; a genuine bug still alerts.
+    if (isTransientConnectionError(reason)) {
+        logger.warn('Unhandled rejection from a dropped database connection (transient, next run reconnects)', {
+            error: reason?.message,
+            code: reason?.code,
+        });
+        return;
+    }
     logger.error('Unhandled promise rejection:', reason);
     notifyBackendError(reason instanceof Error ? reason : new Error(String(reason)), null, {
         middleware: 'unhandledRejection',

@@ -27,6 +27,11 @@ const guidesCopy = {
             ],
             cards: [
                 {
+                    path: '/guides/how-to-use-a-question-bank',
+                    title: 'كيف تستخدم بنك الأسئلة لرفع أدائك في SMLE والبرومترك',
+                    excerpt: 'امتلاك بنك أسئلة كبير لا يرفع درجتك وحده. دليل عملي لاستخدامه بالترتيب الصحيح: من التشخيص المبدئي إلى المحاكاة الكاملة.',
+                },
+                {
                     path: '/guides/smle-study-plan',
                     title: 'خطة SMLE من 12 أسبوعاً: من الصفر إلى الجاهزية',
                     excerpt: 'خطة أسبوعية واضحة لتغطية التخصصات الأساسية، مع توزيع يومي للمذاكرة، ومراجعة الأخطاء، وحل أسئلة عالية العائد.',
@@ -88,6 +93,40 @@ const guidesCopy = {
                 {
                     heading: '6) مؤشرات الجاهزية قبل يوم الاختبار',
                     blocks: [{ p: 'راقب ثلاثة مؤشرات: دقة مستقرة في mixed sets، وانخفاض الأخطاء المتكررة في المحاور نفسها، وثبات إدارة الوقت عبر أكثر من محاكاة كاملة. إذا كانت هذه المؤشرات تتحسّن أسبوعياً فأنت على المسار الصحيح، حتى لو بقيت بعض الثغرات في مواضيع محدّدة.' }],
+                },
+            ],
+        },
+
+        howToUseBank: {
+            kicker: 'Question Bank Strategy',
+            title: 'كيف تستخدم بنك الأسئلة لرفع أدائك في SMLE والبرومترك',
+            intro: 'امتلاك بنك أسئلة كبير لا يرفع درجتك تلقائياً؛ الفرق الحقيقي في كيفية استخدامه: بأي ترتيب تحل، وكيف تراجع، وكيف تحوّل كل جلسة إلى تحسّن مقاس فعلياً وليس مجرد عدد أسئلة أُنجز. هذا الدليل يجمع الخطوات العملية الأساسية، مع روابط لكل موضوع بالتفصيل.',
+            sections: [
+                {
+                    heading: '1) ابدأ بجلسة تشخيصية قبل أي خطة',
+                    blocks: [{ p: 'قبل أن تلتزم بخطة مذاكرة، حل بلوكاً مختلطاً من 40 إلى 60 سؤالاً يغطي عدة تخصصات دفعة واحدة. الهدف ليس الدرجة بل معرفة نقاط ضعفك الحقيقية قبل أن تبني عليها خطتك. بعدها ابنِ جدولك حول هذه النتيجة بدل توزيع وقت متساوٍ على كل موضوع، كما في [[/guides/smle-study-plan|خطة SMLE من 12 أسبوعاً]].' }],
+                },
+                {
+                    heading: '2) حل تحت ظروف الاختبار الحقيقية',
+                    blocks: [{ p: 'الأسئلة التي تُحل بلا وقت محدد ولا تركيز متواصل تدرّبك على عادات لن تنفعك يوم الاختبار. استخدم timed sets بعدد أسئلة وزمن مطابقين لبنية الاختبار الفعلي، بلا توقف منتصف البلوك. هذا وحده يكشف مشاكل إدارة الوقت التي لا تظهر في الحل العشوائي.' }],
+                },
+                {
+                    heading: '3) عامل كل سؤال — صح أو خطأ — كبيانات',
+                    blocks: [{ p: 'الإجابة الصحيحة بتخمين، أو بعد تردد بين خيارين، تحمل نفس قيمة الخطأ من ناحية التعلم. سجّلها وراجعها بنفس الجدية. للحصول على نظام كامل لتصنيف الأخطاء وتحويلها لقواعد قرار ثابتة، راجع [[/guides/wrong-questions-method|دليل مراجعة الأسئلة الخاطئة]].' }],
+                },
+                { ad: true },
+                {
+                    heading: '4) وزّع الأسئلة حسب العائد لا بالتساوي',
+                    blocks: [{ p: 'لا تحل نفس عدد الأسئلة في كل موضوع. المواضيع عالية التكرار تستحق حصة أكبر من وقتك في بنك الأسئلة، والمواضيع النادرة تستحق مراجعة خفيفة فقط. تفاصيل هذا التوزيع وكيفية اكتشاف أولوياتك موجودة في [[/guides/smle-high-yield-topics|دليل المواضيع عالية العائد]].' }],
+                },
+                {
+                    heading: '5) عدّل أسلوب الحل حسب الاختبار المستهدف',
+                    blocks: [{ p: 'الطريقة المثلى لحل الأسئلة تختلف قليلاً بين SMLE والبرومترك من ناحية عمق قراءة الـstem وسرعة القرار. استخدام نفس الأسلوب للاختبارين يهدر وقتك في التدريب على مهارة أقل أهمية للاختبار الذي تستعد له فعلياً. الفروقات العملية موضحة في [[/guides/smle-vs-prometric-differences|دليل الفرق بين SMLE وPrometric]].' }],
+                },
+                { ad: true },
+                {
+                    heading: '6) قِس تقدّمك بثلاثة أرقام أسبوعياً',
+                    blocks: [{ p: 'لا تقس تقدّمك بعدد الأسئلة المحلولة فقط. تابع أسبوعياً: نسبة الدقة في الجلسات المختلطة، متوسط الزمن لكل سؤال، وعدد الأخطاء المتكررة في نفس المحور. إذا كانت الثلاثة تتحسّن أسبوعاً بعد أسبوع، فأنت تستخدم بنك الأسئلة بالطريقة الصحيحة — بغض النظر عن عدد الأسئلة الكلي الذي حللته.' }],
                 },
             ],
         },
@@ -221,6 +260,11 @@ const guidesCopy = {
             ],
             cards: [
                 {
+                    path: '/guides/how-to-use-a-question-bank',
+                    title: 'How to use a question bank to improve your SMLE & Prometric performance',
+                    excerpt: 'Owning a large question bank does not raise your score by itself. A practical guide to using one in the right order — from an initial diagnostic to a full simulation.',
+                },
+                {
                     path: '/guides/smle-study-plan',
                     title: 'The 12-week SMLE plan: from zero to exam-ready',
                     excerpt: 'A clear week-by-week plan covering the core specialties, with a daily split between studying, reviewing mistakes and working through high-yield questions.',
@@ -282,6 +326,40 @@ const guidesCopy = {
                 {
                     heading: '6) Signs you are ready before exam day',
                     blocks: [{ p: 'Watch three indicators: stable accuracy in mixed sets, a fall in repeated errors within the same areas, and consistent time management across more than one full simulation. If those are improving week to week you are on track, even if some gaps remain in specific topics.' }],
+                },
+            ],
+        },
+
+        howToUseBank: {
+            kicker: 'Question Bank Strategy',
+            title: 'How to Use a Question Bank to Improve Your SMLE & Prometric Performance',
+            intro: 'Owning a large question bank does not raise your score by itself — how you use it does: what order you solve in, how you review, and whether each session turns into a measured improvement rather than just a question count. This guide lays out the core steps, with links to each topic in depth.',
+            sections: [
+                {
+                    heading: '1) Start with a diagnostic block, not a plan',
+                    blocks: [{ p: 'Before committing to a study schedule, work through one mixed block of 40 to 60 questions spanning several specialties at once. The goal is not the score — it is finding your real weak areas before you build a plan on top of them. Then structure your schedule around that result instead of splitting your time evenly across topics, as in the [[/guides/smle-study-plan|12-week SMLE plan]].' }],
+                },
+                {
+                    heading: '2) Practise under real exam conditions',
+                    blocks: [{ p: 'Questions solved with no time limit and no sustained focus train habits that will not serve you on exam day. Use timed sets matching the real exam’s question count and time, without pausing mid-block. That alone surfaces time-management problems that never show up in casual, untimed practice.' }],
+                },
+                {
+                    heading: '3) Treat every question — right or wrong — as data',
+                    blocks: [{ p: 'A correct answer reached by guessing, or after hesitating between two options, carries the same learning value as a wrong one. Log it and review it with the same seriousness. For a full system for classifying mistakes and turning them into fixed decision rules, see the [[/guides/wrong-questions-method|wrong-questions review guide]].' }],
+                },
+                { ad: true },
+                {
+                    heading: '4) Weight your questions by yield, not evenly',
+                    blocks: [{ p: 'Do not solve the same number of questions in every topic. High-frequency topics deserve a larger share of your question-bank time, and rare ones deserve only a light pass. The details of that split, and how to find your own priorities, are in the [[/guides/smle-high-yield-topics|high-yield topics guide]].' }],
+                },
+                {
+                    heading: '5) Adjust your approach to the exam you are sitting',
+                    blocks: [{ p: 'The optimal way to work through questions differs slightly between the SMLE and Prometric, in how deeply you read the stem and how fast you need to decide. Using the same approach for both wastes time training a skill that matters less for the exam you are actually preparing for. The practical differences are set out in the [[/guides/smle-vs-prometric-differences|SMLE vs Prometric guide]].' }],
+                },
+                { ad: true },
+                {
+                    heading: '6) Track three numbers every week',
+                    blocks: [{ p: 'Do not measure progress by question count alone. Track weekly: your accuracy in mixed sessions, your average time per question, and how many mistakes repeat within the same topic. If all three are improving week over week, you are using the question bank the right way — regardless of the total number of questions solved.' }],
                 },
             ],
         },

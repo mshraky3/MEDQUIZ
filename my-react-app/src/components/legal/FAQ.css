@@ -6,12 +6,16 @@
     min-height: 100%;
     flex: 1 0 auto;
     background: linear-gradient(135deg, #eef2fb 0%, #ffffff 50%, #ffffff 100%);
-    padding: 100px 20px 40px;
-    color: #1e293b;
+    /* Was `100px 20px 40px`. .page-with-navbar already reserves the navbar's
+       72px with its own padding-top, so this page opened with 172px of empty
+       space above its heading — a sixth of a laptop screen, spent on nothing,
+       before the first word. The token is the gap AFTER the navbar. */
+    padding: var(--page-pad-block) var(--page-pad-inline) var(--space-10);
+    color: var(--text-dark, #1e293b);
 }
 
 .faq-container {
-    max-width: 1100px;
+    max-width: var(--container-wide, 1100px);
     margin: 0 auto;
 }
 
@@ -19,27 +23,30 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    color: #236ded;
+    color: var(--primary-color, #236ded);
     text-decoration: none;
     font-weight: 600;
     font-size: 0.95rem;
-    margin-bottom: 2rem;
+    margin-bottom: var(--space-6);
     transition: transform 0.2s ease;
 }
 
+/* Logical, not physical: translateX(-4px) moved a "back" arrow LEFT in Arabic
+   too, i.e. away from the direction the arrow points and away from where back
+   is in an RTL layout. The site defaults to Arabic. */
 .faq-back:hover {
-    transform: translateX(-4px);
+    transform: translate(calc(-4px * var(--dir-sign, 1)));
 }
 
 .faq-header {
     text-align: center;
-    margin-bottom: 3rem;
+    margin-bottom: var(--space-8);
 }
 
 .faq-header h1 {
     font-size: 2.2rem;
     font-weight: 800;
-    background: linear-gradient(135deg, #236ded, #818cf8);
+    background: linear-gradient(135deg, var(--primary-color, #236ded), #818cf8);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -197,7 +204,7 @@
 /* Responsive */
 @media (max-width: 768px) {
     .faq-page {
-        padding: 90px 16px 30px;
+        padding: var(--page-pad-block) var(--page-pad-inline) var(--space-8);
     }
 
     .faq-header h1 {

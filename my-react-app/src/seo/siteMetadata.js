@@ -384,6 +384,35 @@ const routeMap = {
                 <h1>أدلة التحضير لاختبار SMLE</h1>
                 <p>صفحة تضم مقالات تعليمية عميقة حول خطط المذاكرة، مراجعة الأخطاء، وإدارة الوقت في اختبار SMLE والبرومترك.</p>
                 <nav aria-label="أدلة التحضير">
+                    <a href="/guides/how-to-use-a-question-bank">كيف تستخدم بنك الأسئلة</a>
+                    <a href="/guides/smle-study-plan">خطة SMLE من 12 أسبوع</a>
+                    <a href="/guides/wrong-questions-method">طريقة مراجعة الأسئلة الخاطئة</a>
+                    <a href="/guides/smle-vs-prometric-differences">الفرق بين SMLE وPrometric</a>
+                    <a href="/guides/smle-high-yield-topics">أهم مواضيع SMLE عالية العائد</a>
+                </nav>
+            </main>
+        `
+    },
+    '/guides/how-to-use-a-question-bank': {
+        title: 'كيف تستخدم بنك الأسئلة لرفع أدائك في SMLE والبرومترك | SQB',
+        description: 'دليل عملي لاستخدام بنك الأسئلة بالترتيب الصحيح: جلسة تشخيصية، حل تحت ظروف الاختبار، مراجعة الأخطاء، وتوزيع الأسئلة حسب العائد لرفع أدائك في SMLE والبرومترك.',
+        keywords: 'كيف تستخدم بنك الأسئلة, how to use a question bank, question bank strategy SMLE, question bank prometric exam, تحسين الأداء ببنك الأسئلة, smle qbank tips',
+        alternates: ['ar-SA', 'ar', 'x-default'],
+        structuredData: [
+            routePageData('/guides/how-to-use-a-question-bank', 'كيف تستخدم بنك الأسئلة لرفع أدائك في SMLE والبرومترك | SQB', 'دليل عملي لاستخدام بنك الأسئلة بالترتيب الصحيح لرفع الأداء في SMLE والبرومترك.'),
+            articleSchema('/guides/how-to-use-a-question-bank', 'كيف تستخدم بنك الأسئلة لرفع أدائك في SMLE والبرومترك | SQB', 'دليل عملي لاستخدام بنك الأسئلة بالترتيب الصحيح لرفع الأداء في SMLE والبرومترك.', 'كيف تستخدم بنك الأسئلة, how to use a question bank, question bank strategy SMLE'),
+            courseSchema('/guides/how-to-use-a-question-bank', 'كيف تستخدم بنك الأسئلة لرفع أدائك في SMLE والبرومترك', 'دليل عملي لاستخدام بنك الأسئلة بالترتيب الصحيح لرفع الأداء في SMLE والبرومترك.', 'كيف تستخدم بنك الأسئلة, how to use a question bank, question bank strategy SMLE'),
+            breadcrumbs([
+                { name: 'الرئيسية', path: '/' },
+                { name: 'الأدلة', path: '/guides' },
+                { name: 'كيف تستخدم بنك الأسئلة', path: '/guides/how-to-use-a-question-bank' }
+            ])
+        ],
+        prerenderHtml: `
+            <main class="seo-shell" dir="rtl">
+                <h1>كيف تستخدم بنك الأسئلة لرفع أدائك في SMLE والبرومترك</h1>
+                <p>امتلاك بنك أسئلة كبير لا يرفع درجتك تلقائياً. دليل عملي يشرح الترتيب الصحيح: جلسة تشخيصية أولاً، حل تحت ظروف الاختبار الحقيقية، مراجعة كل سؤال كبيانات، وتوزيع الأسئلة حسب العائد.</p>
+                <nav aria-label="أدلة ذات صلة">
                     <a href="/guides/smle-study-plan">خطة SMLE من 12 أسبوع</a>
                     <a href="/guides/wrong-questions-method">طريقة مراجعة الأسئلة الخاطئة</a>
                     <a href="/guides/smle-vs-prometric-differences">الفرق بين SMLE وPrometric</a>
@@ -615,6 +644,7 @@ const enOverlay = {
     '/refund-policy': { title: 'Refund Policy | SQB', description: 'When and how you can request a refund for an SQB subscription.' },
     '/groups': { title: 'Group plans | SQB', description: 'Share one SQB subscription with your study group: 3 accounts for SAR 250 or 5 for SAR 299 over four months, one payment, invite links you hand out yourself.' },
     '/guides': { title: 'SMLE study guides | SQB', description: 'Practical guides for preparing for the SMLE: study plans, high-yield topics, and how to review your wrong questions.' },
+    '/guides/how-to-use-a-question-bank': { title: 'How to Use a Question Bank to Improve Your SMLE & Prometric Performance | SQB', description: 'A practical guide to using a question bank the right way: a diagnostic session, timed practice, reviewing every answer as data, and weighting questions by topic yield.' },
     '/guides/smle-study-plan': { title: 'The 12-week SMLE study plan | SQB', description: 'A week-by-week SMLE study plan you can actually follow, built around question practice and spaced review.' },
     '/guides/wrong-questions-method': { title: 'How to review your wrong questions | SQB', description: 'A repeatable method for turning every wrong answer into a question you will never miss again.' },
     '/guides/smle-vs-prometric-differences': { title: 'SMLE vs Prometric: the differences | SQB', description: 'What actually differs between the SMLE and Prometric exams, and what it means for how you prepare.' },

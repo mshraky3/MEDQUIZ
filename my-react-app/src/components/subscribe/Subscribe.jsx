@@ -414,39 +414,56 @@ const Subscribe = () => {
                         style={{ display: status === 'ready' ? 'block' : 'none' }}
                     />
 
-                    <p className="subscribe-note">
-                        {t.secureNoteBefore} <strong>{t.secureNoteProvider}</strong>{t.secureNoteAfter}
-                    </p>
+                    {/* Everything below the card form is reassurance, not the
+                        transaction. It used to be five separate stacked blocks
+                        — secure note, a three-item perk list, the no-renewal
+                        promise, the cross-link and the policy line — roughly
+                        400px of small print that pushed the pay button off the
+                        first screen on a laptop. Same words, one compact strip:
+                        the perks fold into a disclosure, and the rest sits on
+                        three tight lines. Nothing is dropped; the no-renewal
+                        promise in particular is a commitment in the Terms, so
+                        the page that takes the money still states it. */}
+                    <div className="subscribe-assurance">
+                        <details className="subscribe-perks-toggle">
+                            <summary>
+                                <Icon name="check-circle" size={15} />
+                                {t.perksToggle}
+                            </summary>
+                            <ul className="subscribe-perks">
+                                {(isGroup ? t.groupPerks : t.perks).map((perk) => <li key={perk}>{perk}</li>)}
+                            </ul>
+                        </details>
 
-                    <ul className="subscribe-perks">
-                        {(isGroup ? t.groupPerks : t.perks).map((perk) => <li key={perk}>{perk}</li>)}
-                    </ul>
+                        <p className="subscribe-norenew">
+                            <Icon name="lock" size={14} />
+                            {t.secureNoteBefore} <strong>{t.secureNoteProvider}</strong>{t.secureNoteAfter}{' '}
+                            {t.noAutoRenew}
+                        </p>
 
-                    {/* Stated on every checkout, in both languages: nothing here
-                        renews itself. It is a promise in the Terms, so the page
-                        that takes the money has to make it too. */}
-                    <p className="subscribe-norenew">{t.noAutoRenew}</p>
+                        {/* Cross-link to the group plans. They are deliberately
+                            not in this page's picker (nothing here explains the
+                            invite links), so without this line a student buying
+                            for a study group would never find out the option
+                            exists. */}
+                        {isGroup ? (
+                            <Link to="/subscribe" className="subscribe-crosslink">
+                                <Icon name="user" size={15} />
+                                {t.crossToIndividual}
+                            </Link>
+                        ) : (
+                            <Link to="/groups" className="subscribe-crosslink">
+                                <Icon name="users" size={15} />
+                                {t.crossToGroup}
+                            </Link>
+                        )}
 
-                    {/* Cross-link to the group plans. They are deliberately not
-                        in this page's picker (nothing here explains the invite
-                        links), so without this line a student buying for a study
-                        group would never find out the option exists. */}
-                    {isGroup ? (
-                        <Link to="/subscribe" className="subscribe-crosslink">
-                            <Icon name="user" size={15} />
-                            {t.crossToIndividual}
-                        </Link>
-                    ) : (
-                        <Link to="/groups" className="subscribe-crosslink">
-                            <Icon name="users" size={15} />
-                            {t.crossToGroup}
-                        </Link>
-                    )}
-                    <p className="subscribe-policy">
-                        {t.policyBefore}{' '}
-                        <Link to="/terms" target="_blank" rel="noopener">{t.terms}</Link>{' '}{t.and}{' '}
-                        <Link to="/refund-policy" target="_blank" rel="noopener">{t.refund}</Link>.
-                    </p>
+                        <p className="subscribe-policy">
+                            {t.policyBefore}{' '}
+                            <Link to="/terms" target="_blank" rel="noopener">{t.terms}</Link>{' '}{t.and}{' '}
+                            <Link to="/refund-policy" target="_blank" rel="noopener">{t.refund}</Link>.
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>

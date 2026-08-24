@@ -13,13 +13,105 @@ const RATE_LIMIT = {
   cooldownMinutes: 5
 };
 
-// Track sent emails for rate limiting
+// Track sent emails for rate limiting.
+//
+// IN-PROCESS ONLY, and that is the whole problem this module used to have: on
+// Vercel every cold start is a fresh process with an empty tracker, and a burst
+// of traffic is spread across several concurrent instances that never see each
+// other's counters. A limit of "20 per hour" was therefore really "20 per hour
+// per instance per cold start", which in practice meant no limit at all — one
+// database wobble produced 20+ near-identical CRITICALs against the ONE 100/day
+// Resend allowance shared by every project.
+//
+// Kept as the fast in-memory first pass, but the authoritative check is now
+// hasRecentlyAlerted() below, which is backed by a shared Postgres table and so
+// survives cold starts and spans instances.
 const emailTracker = {
   hourlyCount: 0,
   hourlyResetTime: Date.now() + 3600000,
   errorCooldowns: new Map(), // errorKey -> lastSentTime
   errorFrequency: new Map()  // errorKey -> count in last hour
 };
+
+// ── shared, cold-start-proof alert throttle ─────────────────────────────────
+// The pool is injected by app.js at boot (configureAlertThrottle) rather than
+// imported, because this module is also pulled in by scripts and jobs that have
+// no pool of their own — and an alert must never fail just because the throttle
+// store is absent. When _db is null every check below fails open, i.e. exactly
+// the old in-memory-only behaviour.
+let _db = null;
+
+/** Give the notifier a database to record alert sends in. Optional. */
+export function configureAlertThrottle(db) {
+  _db = db;
+}
+
+const ALERT_BUCKET = 'alert_email';
+// One email per distinct error per hour. Repeats inside the window are counted
+// (so the "×11" badge stays truthful) but do not send.
+const ALERT_WINDOW_MS = 60 * 60 * 1000;
+// Circuit breaker across ALL error keys. A broken deploy produces many distinct
+// errors at once; without a global ceiling, "one per key per hour" still lets a
+// hundred keys fill a hundred inboxes' worth of quota in a minute.
+const ALERT_GLOBAL_MAX_PER_HOUR = 12;
+
+/**
+ * Atomically record an alert attempt and report whether it should be sent.
+ *
+ * Reuses the rate_limit_hits table that middleware/rateLimit.js already creates
+ * and sweeps — same fixed-window UPSERT, so there is no second schema to keep
+ * alive and the existing hourly cleanup covers these rows too.
+ *
+ * Returns { send, repeatCount }. Fails OPEN: if the throttle store is missing
+ * or the query fails, the alert goes out. Losing an alert is worse than sending
+ * a duplicate, and this path is most likely to be exercised precisely when the
+ * database is the thing that is broken.
+ */
+async function claimAlertSlot(errorKey) {
+  if (!_db) return { send: true, repeatCount: 1 };
+  try {
+    const windowStart = new Date(Math.floor(Date.now() / ALERT_WINDOW_MS) * ALERT_WINDOW_MS);
+    const identifier = String(errorKey).slice(0, 120);
+
+    const perError = await _db.query(
+      `INSERT INTO rate_limit_hits (bucket, identifier, window_start, count)
+       VALUES ($1, $2, $3, 1)
+       ON CONFLICT (bucket, identifier, window_start)
+       DO UPDATE SET count = rate_limit_hits.count + 1
+       RETURNING count`,
+      [ALERT_BUCKET, identifier, windowStart]
+    );
+    const repeatCount = perError.rows[0]?.count ?? 1;
+    if (repeatCount > 1) {
+      console.log(`[ErrorNotification] Suppressed repeat #${repeatCount} this hour for: ${identifier}`);
+      return { send: false, repeatCount };
+    }
+
+    // First time this hour for this key — does the global budget allow it?
+    const global = await _db.query(
+      `INSERT INTO rate_limit_hits (bucket, identifier, window_start, count)
+       VALUES ($1, '__global__', $2, 1)
+       ON CONFLICT (bucket, identifier, window_start)
+       DO UPDATE SET count = rate_limit_hits.count + 1
+       RETURNING count`,
+      [ALERT_BUCKET, windowStart]
+    );
+    const globalCount = global.rows[0]?.count ?? 1;
+    if (globalCount > ALERT_GLOBAL_MAX_PER_HOUR) {
+      console.error(
+        `[ErrorNotification] GLOBAL alert ceiling hit (${globalCount}/${ALERT_GLOBAL_MAX_PER_HOUR} this hour). ` +
+        `Suppressing "${identifier}" and everything after it until the window rolls. ` +
+        `Check Vercel logs — something is failing broadly.`
+      );
+      return { send: false, repeatCount };
+    }
+
+    return { send: true, repeatCount };
+  } catch (err) {
+    console.error('[ErrorNotification] Alert throttle unavailable, sending anyway:', err.message);
+    return { send: true, repeatCount: 1 };
+  }
+}
 
 // Severity levels
 const SEVERITY = {
@@ -560,10 +652,20 @@ export async function sendErrorNotification(errorData) {
       return { success: false, message: `Skipped: ${severity.level} severity` };
     }
 
-    // Check rate limiting
+    // Check rate limiting — in-memory first (free, catches same-instance
+    // bursts without a round trip), then the shared store, which is the one
+    // that actually holds across cold starts and concurrent instances.
     const errorKey = getErrorKey(errorData);
     if (!canSendEmail(errorKey)) {
       return { success: false, message: 'Rate limited' };
+    }
+
+    const { send, repeatCount } = await claimAlertSlot(errorKey);
+    if (!send) {
+      // Still counted in the shared store, so the next window's alert can say
+      // how many times this happened while it was suppressed.
+      updateTrackers(errorKey);
+      return { success: false, message: `Rate limited (repeat ${repeatCount} this hour)` };
     }
 
     // Get error frequency
@@ -663,6 +765,7 @@ export function getRateLimitStatus() {
 export default {
   sendErrorNotification,
   notifyBackendError,
+  configureAlertThrottle,
   getRateLimitStatus,
   SEVERITY
 };

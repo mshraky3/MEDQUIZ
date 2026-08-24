@@ -1,11 +1,15 @@
-/* Guides pages — aligned to the global dark glassmorphism design system
-   (see index.css :root tokens). Previously used an off-theme light palette. */
+/* Guides pages — one column of long-form prose, on the shared light palette.
+   (The header here used to describe a "dark glassmorphism design system"; the
+   app has been light for a long time, and the backdrop-filter below was the
+   last thing still acting like it wasn't.) */
 
 .guides-page,
 .guide-article {
-    max-width: 960px;
+    max-width: var(--container-page, 860px);
     margin: 0 auto;
-    padding: var(--space-8) var(--space-4) var(--space-16);
+    /* Was --space-8/--space-16 (32px top, 64px bottom) on top of the navbar's
+       own 72px. The tokens are the shared page rhythm. */
+    padding: var(--page-pad-block) var(--page-pad-inline) var(--space-12);
     color: var(--text-dark);
     line-height: 1.8;
 }
@@ -25,13 +29,14 @@
 .guides-hero,
 .guide-header {
     background: var(--bg-white);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
-    padding: var(--space-8);
+    /* --space-8 was 32px of padding around a kicker and a heading. */
+    padding: var(--space-6);
     margin-bottom: var(--space-6);
-    box-shadow: var(--shadow-lg);
+    /* --shadow-lg is the modal elevation; a page header is not floating above
+       the page, it is part of it. */
+    box-shadow: var(--shadow-sm);
 }
 
 .guides-hero h1,
