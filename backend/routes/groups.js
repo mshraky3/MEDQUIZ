@@ -18,6 +18,7 @@
  */
 import express from 'express';
 import { PLANS, getCurrency } from '../services/paymentService.js';
+import { logger } from '../utils/observability.js';
 
 const router = express.Router();
 
@@ -41,7 +42,7 @@ async function resolveSession(req, res, next) {
         req.accountId = r.rows[0].id;
         next();
     } catch (err) {
-        console.error('[groups] session check failed:', err);
+        logger.error('[groups] session check failed:', err);
         res.status(500).json({ success: false, message: 'Internal server error' });
     }
 }
@@ -119,7 +120,7 @@ router.get('/mine', resolveSession, async (req, res) => {
             groups: withSeats,
         });
     } catch (err) {
-        console.error('[groups] /mine failed:', err);
+        logger.error('[groups] /mine failed:', err);
         res.status(500).json({ success: false, message: 'Failed to load your groups.' });
     }
 });
@@ -154,7 +155,7 @@ router.get('/seat/:token', async (req, res) => {
         }
         return res.json({ valid: true, expiresAt: seat.expires_at });
     } catch (err) {
-        console.error('[groups] seat check failed:', err);
+        logger.error('[groups] seat check failed:', err);
         res.status(500).json({ valid: false, reason: 'error' });
     }
 });

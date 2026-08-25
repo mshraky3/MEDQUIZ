@@ -34,6 +34,7 @@ import {
     FREE_QUESTION_ALLOWANCE,
 } from '../services/paymentService.js';
 import { recordFunnelEvent } from '../routes/funnel.js';
+import { logger } from '../utils/observability.js';
 
 const ACCOUNT_FIELDS = `id, subscription_status, subscription_expiry_date,
                         is_admin_created, grandfathered_at, free_questions_used`;
@@ -93,7 +94,7 @@ export function quizAccessGuard(db) {
             }
             return next();
         } catch (error) {
-            console.error('[quizAccessGuard] error:', error);
+            logger.error('[quizAccessGuard] error:', error);
             return res.status(500).json({ message: 'Access check failed' });
         }
     };
@@ -123,7 +124,7 @@ export function subscriptionGuard(db) {
             }
             return next();
         } catch (error) {
-            console.error('[subscriptionGuard] error:', error);
+            logger.error('[subscriptionGuard] error:', error);
             return res.status(500).json({ message: 'Subscription check failed' });
         }
     };

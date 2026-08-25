@@ -9,6 +9,7 @@
  */
 
 import express from 'express';
+import { logger } from '../utils/observability.js';
 import {
     isPaymentEnforcementEnabled,
     listPlans,
@@ -46,7 +47,7 @@ async function resolveSession(req, res, next) {
         req.accountId = r.rows[0].id;
         next();
     } catch (err) {
-        console.error('[payment] session check failed:', err);
+        logger.error('[payment] session check failed:', err);
         res.status(500).json({ success: false, message: 'Internal server error' });
     }
 }
@@ -128,7 +129,7 @@ router.post('/verify', requirePaymentEnabled, resolveSession, async (req, res) =
         }
         return res.json(result);
     } catch (error) {
-        console.error('[payment/verify] error:', error);
+        logger.error('[payment/verify] error:', error);
         return res.status(error.statusCode || 500).json({
             success: false,
             message: error.message || 'Payment verification failed.',
@@ -149,7 +150,7 @@ router.post('/webhook', requirePaymentEnabled, async (req, res) => {
         const result = await handleWebhookEvent(req.db, req.body);
         return res.status(200).json({ success: true, ...result });
     } catch (error) {
-        console.error('[payment/webhook] error:', error);
+        logger.error('[payment/webhook] error:', error);
         // 500 lets Moyasar retry transient failures.
         return res.status(500).json({ success: false, message: 'Webhook processing failed.' });
     }
@@ -192,7 +193,7 @@ router.get('/status/:userId', requirePaymentEnabled, requireOwnSession, async (r
             grandfathered: !!a.grandfathered_at,
         });
     } catch (error) {
-        console.error('[payment/status] error:', error);
+        logger.error('[payment/status] error:', error);
         return res.status(500).json({ success: false, message: 'Failed to fetch subscription status.' });
     }
 });

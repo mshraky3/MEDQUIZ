@@ -8,6 +8,7 @@ import express from 'express';
 import crypto from 'crypto';
 import { adminAuth } from '../middleware/adminAuth.js';
 import { sendQuizPoll, sendMessage, siteButton, setWebhook, getWebhookInfo } from '../services/telegramClient.js';
+import { logger } from '../utils/observability.js';
 import {
     welcomeMessage, helpMessage, websiteMessage, noWeakspotsYetMessage,
     weakspotsMessage, noQuestionsAvailableMessage,
@@ -132,7 +133,7 @@ router.post('/api/telegram/webhook', verifyTelegramSecret, async (req, res) => {
         if (update.message) await handleMessage(req.db, update.message);
         else if (update.poll_answer) await handlePollAnswer(req.db, update.poll_answer);
     } catch (err) {
-        console.error('telegram webhook error:', err);
+        logger.error('telegram webhook error:', err);
     }
     // Always 200 regardless of outcome — Telegram retries aggressively on
     // non-2xx, and a bug on our side shouldn't turn into a retry storm.
@@ -156,7 +157,7 @@ router.get('/api/cron/telegram-daily', cronAuth, async (req, res) => {
         const result = await runDailyChannelPostJob(req.db);
         res.json({ success: true, ...result });
     } catch (err) {
-        console.error('cron/telegram-daily error:', err);
+        logger.error('cron/telegram-daily error:', err);
         res.status(500).json({ success: false, error: err.message });
     }
 });
@@ -166,7 +167,7 @@ router.get('/api/cron/telegram-weekly', cronAuth, async (req, res) => {
         const result = await runWeeklyWeakTopicsJob(req.db);
         res.json({ success: true, ...result });
     } catch (err) {
-        console.error('cron/telegram-weekly error:', err);
+        logger.error('cron/telegram-weekly error:', err);
         res.status(500).json({ success: false, error: err.message });
     }
 });
@@ -178,7 +179,7 @@ router.get('/api/cron/telegram-channel-summary', cronAuth, async (req, res) => {
         const result = await runWeeklyChannelSummaryJob(req.db);
         res.json({ success: true, ...result });
     } catch (err) {
-        console.error('cron/telegram-channel-summary error:', err);
+        logger.error('cron/telegram-channel-summary error:', err);
         res.status(500).json({ success: false, error: err.message });
     }
 });
@@ -190,7 +191,7 @@ router.get('/api/cron/telegram-cleanup', cronAuth, async (req, res) => {
         const result = await runMessageCleanupJob(req.db);
         res.json({ success: true, ...result });
     } catch (err) {
-        console.error('cron/telegram-cleanup error:', err);
+        logger.error('cron/telegram-cleanup error:', err);
         res.status(500).json({ success: false, error: err.message });
     }
 });

@@ -15,6 +15,7 @@
  * never from anything the client sends.
  */
 import express from 'express';
+import { logger } from '../utils/observability.js';
 
 const router = express.Router();
 
@@ -63,7 +64,7 @@ router.get('/', async (req, res) => {
         );
         res.json({ success: true, exam: serialize(rows[0]?.exam_date) });
     } catch (err) {
-        console.error('[exam-date] fetch failed:', err);
+        logger.error('[exam-date] fetch failed:', err);
         res.status(500).json({ success: false, message: 'Failed to load exam date' });
     }
 });
@@ -97,7 +98,7 @@ router.put('/', async (req, res) => {
         );
         res.json({ success: true, exam: serialize(rows[0]?.exam_date) });
     } catch (err) {
-        console.error('[exam-date] save failed:', err);
+        logger.error('[exam-date] save failed:', err);
         res.status(500).json({ success: false, message: 'Failed to save exam date' });
     }
 });
@@ -111,7 +112,7 @@ router.delete('/', async (req, res) => {
         );
         res.json({ success: true, exam: null });
     } catch (err) {
-        console.error('[exam-date] clear failed:', err);
+        logger.error('[exam-date] clear failed:', err);
         res.status(500).json({ success: false, message: 'Failed to clear exam date' });
     }
 });

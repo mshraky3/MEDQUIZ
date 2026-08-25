@@ -21,6 +21,7 @@
 import express from 'express';
 import { adminAuth } from '../middleware/adminAuth.js';
 import { normalizeTrack, TRACK_KEYS, trackLabelEn } from '../config/tracks.js';
+import { logger } from '../utils/observability.js';
 
 const router = express.Router();
 
@@ -98,7 +99,7 @@ router.post('/', async (req, res) => {
         `, [rows[0].id, section, seconds]);
         res.status(204).end();
     } catch (err) {
-        console.error('[engagement] ingest failed:', err.message);
+        logger.error('[engagement] ingest failed:', err.message);
         res.status(204).end(); // never bother the student with telemetry errors
     }
 });
@@ -191,7 +192,7 @@ router.get('/admin', adminAuth, async (req, res) => {
             hasData: grandTotal > 0,
         });
     } catch (err) {
-        console.error('[engagement] admin query failed:', err);
+        logger.error('[engagement] admin query failed:', err);
         res.status(500).json({ success: false, message: 'Failed to load engagement data' });
     }
 });

@@ -6,6 +6,7 @@
  * events. See that file for why there is no broadcast path here.
  */
 import express from 'express';
+import { logger } from '../utils/observability.js';
 
 const router = express.Router();
 
@@ -44,7 +45,7 @@ router.get('/', async (req, res) => {
         // A missing table (first deploy, before schema bootstrap lands) must not
         // break the navbar the feed hangs off.
         if (err.code === '42P01') return res.json({ success: true, unreadCount: 0, notifications: [] });
-        console.error('[notifications] fetch failed:', err);
+        logger.error('[notifications] fetch failed:', err);
         res.status(500).json({ success: false, message: 'Failed to load notifications' });
     }
 });
@@ -70,7 +71,7 @@ router.post('/read', async (req, res) => {
         }
         res.json({ success: true });
     } catch (err) {
-        console.error('[notifications] mark-read failed:', err);
+        logger.error('[notifications] mark-read failed:', err);
         res.status(500).json({ success: false, message: 'Failed to update notifications' });
     }
 });

@@ -3,6 +3,7 @@ import { adminAuth } from '../middleware/adminAuth.js';
 import { sendMail } from '../services/mailer.js';
 import { trackLabelAr, normalizeTrack, specialtyLabel } from '../config/tracks.js';
 import { OWNER_EMAIL } from '../config/recipients.js';
+import { logger } from '../utils/observability.js';
 
 const router = express.Router();
 
@@ -93,13 +94,13 @@ router.post('/', async (req, res) => {
                 { event: 'medqize.owner.question_report_filed' }
             );
         } catch (emailErr) {
-            console.error('[QuestionReports] Admin notification email failed:', emailErr);
+            logger.error('[QuestionReports] Admin notification email failed:', emailErr);
             // Don't fail the request if email fails
         }
 
         return res.status(201).json({ success: true, message: 'Report submitted' });
     } catch (err) {
-        console.error('[QuestionReports] Failed to insert report:', err);
+        logger.error('[QuestionReports] Failed to insert report:', err);
         return res.status(500).json({ success: false, message: 'Failed to submit report' });
     }
 });
@@ -135,7 +136,7 @@ router.get('/', adminAuth, async (req, res) => {
         `);
         return res.json({ success: true, reports: result.rows });
     } catch (err) {
-        console.error('[QuestionReports] Failed to fetch reports:', err);
+        logger.error('[QuestionReports] Failed to fetch reports:', err);
         return res.status(500).json({ success: false, message: 'Failed to fetch reports' });
     }
 });
@@ -257,7 +258,7 @@ router.put('/:id/resolve', adminAuth, async (req, res) => {
 
         return res.json({ success: true, message: `Report resolved as ${action}` });
     } catch (err) {
-        console.error('[QuestionReports] Failed to resolve report:', err);
+        logger.error('[QuestionReports] Failed to resolve report:', err);
         return res.status(500).json({ success: false, message: 'Failed to resolve report' });
     }
 });

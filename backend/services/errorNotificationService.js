@@ -5,6 +5,7 @@
 
 import { sendMail } from './mailer.js';
 import { developerEmails } from '../config/recipients.js';
+import { ensureRateLimitTable } from '../middleware/rateLimit.js';
 
 
 // Rate limiting configuration
@@ -41,9 +42,20 @@ const emailTracker = {
 // the old in-memory-only behaviour.
 let _db = null;
 
-/** Give the notifier a database to record alert sends in. Optional. */
+/**
+ * Give the notifier a database to record alert sends in. Optional.
+ *
+ * Also ensures the table it counts in exists. That creation used to belong
+ * solely to middleware/rateLimit.js and happened lazily, on the first request
+ * to a rate-limited route — so on a fresh database the throttle's very first
+ * query could fail, and a failed throttle query means an unthrottled alert.
+ * The throttle owns its own dependency now.
+ */
 export function configureAlertThrottle(db) {
   _db = db;
+  ensureRateLimitTable(db).catch((err) => {
+    console.error('[ErrorNotification] Could not ensure the throttle table; alerts run in degraded mode:', err.message);
+  });
 }
 
 const ALERT_BUCKET = 'alert_email';
@@ -55,6 +67,39 @@ const ALERT_WINDOW_MS = 60 * 60 * 1000;
 // hundred keys fill a hundred inboxes' worth of quota in a minute.
 const ALERT_GLOBAL_MAX_PER_HOUR = 12;
 
+// ── Degraded mode ───────────────────────────────────────────────────────────
+// The shared throttle above lives in Postgres, so when Postgres is the thing
+// that is broken the throttle query fails too — and it fails OPEN. That was a
+// defensible default when only 3 places in the backend could alert. It is not
+// any more: alertOn5xx now reports every 5xx in the app, and a database outage
+// makes EVERY request a 5xx at the same moment as it makes the throttle
+// unavailable. Failing fully open there is precisely the flood scenario.
+//
+// So while the shared store is unreachable, fall back to a deliberately tight
+// per-process budget. An outage still gets through — the first few alerts are
+// the ones that matter and they say the same thing — but it cannot empty the
+// day's mail allowance before anyone reads the first one.
+const DEGRADED_MAX_PER_HOUR = 3;
+const degraded = { count: 0, resetAt: 0 };
+
+function allowWhileDegraded() {
+    const now = Date.now();
+    if (now > degraded.resetAt) {
+        degraded.count = 0;
+        degraded.resetAt = now + ALERT_WINDOW_MS;
+    }
+    degraded.count += 1;
+    if (degraded.count > DEGRADED_MAX_PER_HOUR) {
+        console.error(
+            `[ErrorNotification] Throttle store unreachable AND the degraded budget is spent ` +
+            `(${degraded.count}/${DEGRADED_MAX_PER_HOUR} this hour). Suppressing. Check the logs — ` +
+            `the database is very likely down, which is both why errors are firing and why this cannot be throttled properly.`
+        );
+        return false;
+    }
+    return true;
+}
+
 /**
  * Atomically record an alert attempt and report whether it should be sent.
  *
@@ -62,13 +107,15 @@ const ALERT_GLOBAL_MAX_PER_HOUR = 12;
  * and sweeps — same fixed-window UPSERT, so there is no second schema to keep
  * alive and the existing hourly cleanup covers these rows too.
  *
- * Returns { send, repeatCount }. Fails OPEN: if the throttle store is missing
- * or the query fails, the alert goes out. Losing an alert is worse than sending
- * a duplicate, and this path is most likely to be exercised precisely when the
- * database is the thing that is broken.
+ * Returns { send, repeatCount }. When the store is missing or the query fails
+ * it does not fail fully open any more — it falls back to allowWhileDegraded()
+ * above, which still lets the first few through (losing an alert entirely is
+ * worse than a duplicate) but caps them, because this path is exercised
+ * precisely when the database is the thing that is broken and therefore when
+ * every other request is failing too.
  */
 async function claimAlertSlot(errorKey) {
-  if (!_db) return { send: true, repeatCount: 1 };
+  if (!_db) return { send: allowWhileDegraded(), repeatCount: 1 };
   try {
     const windowStart = new Date(Math.floor(Date.now() / ALERT_WINDOW_MS) * ALERT_WINDOW_MS);
     const identifier = String(errorKey).slice(0, 120);
@@ -108,8 +155,15 @@ async function claimAlertSlot(errorKey) {
 
     return { send: true, repeatCount };
   } catch (err) {
-    console.error('[ErrorNotification] Alert throttle unavailable, sending anyway:', err.message);
-    return { send: true, repeatCount: 1 };
+    // Was an unconditional `send: true`. See DEGRADED_MAX_PER_HOUR above: the
+    // store being unreachable is correlated with everything else failing, so
+    // "fail open" here means "mail every 5xx of an outage".
+    const send = allowWhileDegraded();
+    console.error(
+      `[ErrorNotification] Alert throttle unavailable (${err.message}); ` +
+      `degraded budget ${degraded.count}/${DEGRADED_MAX_PER_HOUR} this hour, ${send ? 'sending' : 'SUPPRESSING'}.`
+    );
+    return { send, repeatCount: 1 };
   }
 }
 

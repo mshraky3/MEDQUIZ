@@ -38,6 +38,12 @@ import {
 } from './services/adminMetricsService.js';
 import summaryContent from './content/summaryHtml/index.js';
 import { notifyBackendError, configureAlertThrottle } from './services/errorNotificationService.js';
+// Shared logging + the "no silent 500" interceptor. logger and
+// isTransientConnectionError used to be defined locally in this file; they now
+// live in one module so the route files can use the same ones.
+import {
+    logger, isTransientConnectionError, isProduction, requestContext, alertOn5xx,
+} from './utils/observability.js';
 import { sendWelcomeEmail, sendGroupSeatClaimedEmail } from './services/userEmailService.js';
 import { OWNER_EMAIL } from './config/recipients.js';
 import {
@@ -94,29 +100,10 @@ const RESERVED_TEST_DOMAIN = /@(?:[^@\s]+\.)?(?:invalid|test|example|localhost|l
 const isReservedTestAddress = (address) => RESERVED_TEST_DOMAIN.test(String(address || '').trim());
 
 dotenv.config();
-// Logging configuration
-const LOG_LEVEL = process.env.LOG_LEVEL || 'INFO'; 
-const isProduction = process.env.NODE_ENV === 'production';
-const logger = {
-    debug: (message, data = null) => {
-        if (LOG_LEVEL === 'DEBUG' && !isProduction) {
-            console.log(`🔍 [DEBUG] ${message}`, data ? JSON.stringify(data, null, 2) : '');
-        }
-    },
-    info: (message, data = null) => {
-        if (['DEBUG', 'INFO'].includes(LOG_LEVEL)) {
-            console.log(`ℹ️  [INFO] ${message}`, data ? JSON.stringify(data, null, 2) : '');
-        }
-    },
-    warn: (message, data = null) => {
-        if (['DEBUG', 'INFO', 'WARN'].includes(LOG_LEVEL)) {
-            console.warn(`⚠️  [WARN] ${message}`, data ? JSON.stringify(data, null, 2) : '');
-        }
-    },
-    error: (message, error = null) => {
-        console.error(`❌ [ERROR] ${message}`, error ? error.stack || error : '');
-    }
-};
+// logger, LOG_LEVEL and isProduction now come from utils/observability.js —
+// one definition shared with every route file, and the only one that prints a
+// Postgres error's code/constraint/column instead of just its stack.
+
 const db = new Pool({
     user: process.env.DBUSER,
     host: process.env.DBHOST,
@@ -232,21 +219,10 @@ db.on('error', (err) => {
 // 70+ CRITICAL emails against the ONE 100/day Resend allowance shared by every
 // project, which is quota that real errors then can't use. Logged, never
 // mailed. A genuine bootstrap bug (bad SQL, missing privileges) still mails.
-const TRANSIENT_CONNECTION_CODES = new Set([
-    'ECONNRESET',   // socket killed under us (instance freeze, pooler recycle)
-    'ETIMEDOUT',    // handshake never completed
-    'EPIPE',        // wrote to a socket the other end had already closed
-    'EAI_AGAIN',    // transient DNS failure
-    '08001', '08003', '08006', // Postgres connection-exception class
-    '57P01', '57P03',          // admin shutdown / cannot connect now (Neon resuming)
-]);
-function isTransientConnectionError(err) {
-    if (!err) return false;
-    if (err.code && TRANSIENT_CONNECTION_CODES.has(err.code)) return true;
-    // pg-pool's own timeout paths build plain Errors with no .code at all.
-    return /Connection terminated|timeout exceeded when trying to connect|Client has encountered a connection error|terminating connection|Connection ended unexpectedly/i
-        .test(String(err.message || ''));
-}
+// TRANSIENT_CONNECTION_CODES / isTransientConnectionError now come from
+// utils/observability.js — the 5xx interceptor needs the same classification,
+// and two copies of "which faults are noise" would drift.
+
 
 // One alert per distinct bootstrap failure per process. The 11 steps below
 // (version check + 9 ensureXxx + version write) all hit the same database in
@@ -888,6 +864,29 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+// ── No silent 500s ──────────────────────────────────────────────────────────
+// Mounted here, before every route, so it wraps the response for all of them.
+//
+// 141 places in this backend answer a request with a 500; until this middleware
+// existed, 3 of them told anyone. The rest caught their own error and responded
+// directly, which means they never reached the global error handler at the
+// bottom of this file where notifyBackendError lives — so there was no
+// server-side record of them at all. The only way any surfaced was the browser
+// posting the failure to /api/error-report, which by construction can only see
+// the opaque client-facing message and never the cause.
+//
+// requestContext must come first: it opens the async-local store that
+// logger.error writes the real Error into, so the alert can carry the Postgres
+// code/constraint/column rather than just "Failed to save goal".
+//
+// This deliberately does NOT re-create the alert flood. Transient connection
+// faults — the majority of the last one — are filtered inside alertOn5xx, and
+// errorNotificationService's throttle is database-backed: one mail per distinct
+// error key per hour, hard ceiling of 12/hour across all keys, surviving cold
+// starts and spanning instances.
+app.use(requestContext);
+app.use(alertOn5xx(notifyBackendError));
 
 // Runs the one-time schema bootstrap from inside a request instead of at
 // module load — see bootstrapOnce() for why detached module-load work is what
@@ -4203,7 +4202,13 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
         device_type = 'desktop',
         fastest_question_time = 0,
         slowest_question_time = 0,
-        session_metadata = {}
+        session_metadata = {},
+        // Set by the client only when it is re-sending a submission whose first
+        // attempt did not come back cleanly (see QUIZ.jsx). On a retry we look
+        // for the row before writing, so a first attempt that committed but
+        // never reached the browser cannot become a second quiz row. Absent on
+        // the normal path, which therefore pays nothing for this.
+        retry_attempt = 0
     } = req.body;
 
     // The account this session is written to is always the authenticated
@@ -4221,12 +4226,17 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
         return res.status(400).json({ message: "Missing required fields" });
     }
 
+    // Declared outside the try so the catch can report the value that was
+    // actually written. It is derived below from the questions themselves, so
+    // it is frequently NOT the source the client sent — and it is the column
+    // carrying a CHECK constraint (check_valid_quiz_source) and a VARCHAR(50)
+    // limit, which makes it the single most useful field to have in a failure
+    // log for this endpoint.
+    let actualSource = source || 'general';
+
     try {
         // Schema columns are ensured once at startup by ensureSchema() — no
         // per-request DDL here anymore.
-
-        // Determine the actual source based on the questions that were answered
-        let actualSource = source || 'general';
 
         // If we have question IDs, determine the source from the actual questions
         if (question_ids && question_ids.length > 0) {
@@ -4261,9 +4271,9 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
         // Calculate end time based on start time and duration
         const endTime = new Date(Date.now() + ((Number(duration) || 0) * 1000));
 
-        const result = await db.query(
-            `INSERT INTO user_quiz_sessions 
-            (user_id, total_questions, correct_answers, quiz_accuracy, duration, avg_time_per_question, topics_covered, source, quiz_type, difficulty_level, device_type, fastest_question_time, slowest_question_time, session_metadata, end_time) 
+        const insertSession = () => db.query(
+            `INSERT INTO user_quiz_sessions
+            (user_id, total_questions, correct_answers, quiz_accuracy, duration, avg_time_per_question, topics_covered, source, quiz_type, difficulty_level, device_type, fastest_question_time, slowest_question_time, session_metadata, end_time)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING id, session_id`,
             [
                 user_id,
@@ -4283,6 +4293,70 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
                 endTime
             ]
         );
+
+        // This is the one statement in the handler that must succeed — it IS
+        // the student's finished quiz. Everything after it is bookkeeping and
+        // is already allowed to degrade (see the block below).
+        //
+        // Neon suspends and recycles pooled connections; the pool's own 'error'
+        // listener at the top of this file exists precisely because that is the
+        // routine transient fault here, and it was ~58 of the ~105 alerts the
+        // last pass triaged. The bookkeeping was guarded against it in that
+        // pass — this INSERT was not, and a recycled connection here still
+        // costs a student a completed quiz.
+        //
+        // The retry is not blind. A connection can also die AFTER the INSERT
+        // commits and before the acknowledgement arrives, in which case
+        // retrying would write the same quiz twice — so on a transient error we
+        // look for the row first and only insert again if it genuinely is not
+        // there. The lookback matches on the full result shape (totals, score
+        // and duration) within two minutes: two distinct quizzes agreeing on
+        // all of those in that window is not a real scenario, while a duplicate
+        // of the row we just tried to write matches every one of them.
+        // Has this exact submission already been written? Used both when the
+        // client says it is retrying and when a connection dies mid-INSERT.
+        const findAlreadyRecorded = () => db.query(
+            `SELECT id, session_id FROM user_quiz_sessions
+              WHERE user_id = $1 AND total_questions = $2 AND correct_answers = $3
+                AND duration IS NOT DISTINCT FROM $4
+                AND start_time > NOW() - INTERVAL '2 minutes'
+              ORDER BY id DESC LIMIT 1`,
+            [user_id, total_questions, correct_answers, duration]
+        );
+
+        let result;
+        if (Number(retry_attempt) > 0) {
+            const existing = await findAlreadyRecorded();
+            if (existing.rows.length > 0) {
+                logger.info('Client retried a submission that had already been recorded', {
+                    user_id, id: existing.rows[0].id, retry_attempt,
+                });
+                result = existing;
+            }
+        }
+
+        if (!result) {
+            try {
+                result = await insertSession();
+            } catch (insertErr) {
+                if (!isTransientConnectionError(insertErr)) throw insertErr;
+                logger.warn('Quiz session INSERT hit a transient connection error; checking whether it landed', {
+                    user_id,
+                    error: insertErr.message,
+                    code: insertErr.code,
+                });
+                const existing = await findAlreadyRecorded();
+                if (existing.rows.length > 0) {
+                    logger.info('Quiz session had already been recorded before the connection dropped', {
+                        id: existing.rows[0].id,
+                    });
+                    result = existing;
+                } else {
+                    result = await insertSession();
+                    logger.info('Quiz session INSERT succeeded on retry', { user_id });
+                }
+            }
+        }
 
         logger.info("Quiz session created", {
             id: result.rows[0].id,
@@ -4444,7 +4518,36 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
             message: 'Quiz session created successfully'
         });
     } catch (err) {
+        // Two things this catch has to do that it previously did not.
+        //
+        // 1. Log enough to diagnose it. The payload is echoed because the
+        //    failure is almost always a value the schema rejected, and which
+        //    value it was is invisible from the message alone. logger.error now
+        //    also prints the pg code/constraint/column/detail (see logger).
+        // 2. Actually alert. Because this handler catches its own error and
+        //    answers 500 itself, it never reaches the global error middleware —
+        //    so notifyBackendError was never called and there was no
+        //    server-side record at all. The only reason this surfaced was the
+        //    browser reporting the opaque 500 back through /error-report, which
+        //    by definition cannot see any of the detail above.
+        //
+        // logger.error also hands this error to the request context, so
+        // alertOn5xx mails it with the Postgres code/constraint/column attached
+        // — no notifyBackendError call belongs here, and one would double-mail.
+        // Transient connection drops are filtered there, not here.
         logger.error("Failed to record quiz session", err);
+        logger.error("...for payload", {
+            user_id,
+            total_questions,
+            correct_answers,
+            quiz_accuracy,
+            duration,
+            avg_time_per_question,
+            source_sent: source,
+            source_written: actualSource,
+            topics_covered,
+            question_id_count: question_ids?.length ?? 0,
+        });
         res.status(500).json({ message: 'Failed to record quiz session' });
     }
 });
@@ -7047,7 +7150,13 @@ app.post('/final-quiz/submit', requireSession, subscriberOnly, async (req, res) 
         timeLimit,
         sessionMetadata,
         questionIds = [], // Array of question IDs used in the quiz
-        questionAttempts = [] // Array of question attempts with user answers
+        questionAttempts = [], // Array of question attempts with user answers
+        // See the identical field on POST /quiz-sessions. QUIZ.jsx submits both
+        // endpoints through the same retrying helper, so this one needs the
+        // same guard: without it a first attempt that committed but never
+        // reached the browser would come back as a SECOND mock-exam result in
+        // the student's history.
+        retry_attempt = 0
     } = req.body;
 
     try {
@@ -7075,17 +7184,37 @@ app.post('/final-quiz/submit', requireSession, subscriberOnly, async (req, res) 
             timeTaken,
             timeLimit
         });
-        const result = await db.query(`
+        // Only on a declared retry, so the normal path costs nothing: has this
+        // exact submission already been recorded in the last two minutes?
+        let result = null;
+        if (Number(retry_attempt) > 0) {
+            const already = await db.query(
+                `SELECT id, session_id FROM final_review_sessions
+                  WHERE user_id = $1 AND total_questions = $2 AND correct_answers = $3
+                    AND time_taken IS NOT DISTINCT FROM $4
+                    AND start_time > NOW() - INTERVAL '2 minutes'
+                  ORDER BY id DESC LIMIT 1`,
+                [userId, totalQuestions, correctAnswers, timeTaken]
+            );
+            if (already.rows.length > 0) {
+                logger.info('Client retried a final-quiz submission that had already been recorded', {
+                    userId, id: already.rows[0].id, retry_attempt,
+                });
+                result = already;
+            }
+        }
+
+        if (!result) result = await db.query(`
             INSERT INTO final_review_sessions (
-                user_id, 
-                question_type, 
-                source, 
-                total_questions, 
-                correct_answers, 
-                score, 
-                time_taken, 
-                time_limit, 
-                end_time, 
+                user_id,
+                question_type,
+                source,
+                total_questions,
+                correct_answers,
+                score,
+                time_taken,
+                time_limit,
+                end_time,
                 session_metadata,
                 question_ids
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP, $9, $10)
@@ -7594,17 +7723,20 @@ app.use(async (err, req, res, next) => {
         return next(err);
     }
 
-    // Send error notification for 500+ errors
-    try {
-        await notifyBackendError(err, req, {
-            middleware: 'globalErrorHandler',
-            route: req.originalUrl,
-            method: req.method
-        });
-    } catch (notifyError) {
-        logger.error('Failed to send error notification:', notifyError);
-    }
-
+    // No notifyBackendError call here any more, and that is not a regression:
+    // alertOn5xx (mounted at the top of the chain) fires on the response, so
+    // this error is still alerted — and alerted correctly.
+    //
+    // The comment this replaces said "Send error notification for 500+ errors";
+    // the code did no such check. It mailed for EVERY error that reached this
+    // handler, deliberate 4xx included — PaymentDisabledError, "Payment not
+    // found.", any throw that sets an explicit 4xx status. Those are normal
+    // refusals, not faults, and each one spent a slot from the shared 12/hour
+    // alert budget that a real outage would need. alertOn5xx only fires on
+    // status >= 500, skips transient connection faults, and marks the request
+    // so nothing double-mails. logger.error above has already put this exact
+    // error into the request context for it to report.
+    //
     // Only relay err.message when the throw site explicitly set a status —
     // that's the signal it's a deliberate, client-safe error (e.g.
     // PaymentDisabledError, "Payment not found."). An error that reaches here

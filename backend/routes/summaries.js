@@ -14,6 +14,7 @@ import express from 'express';
 import { getObject, isR2Configured } from '../services/r2Service.js';
 import { isPaymentEnforcementEnabled, checkSubscriptionAccess } from '../services/paymentService.js';
 import { normalizeTrack } from '../config/tracks.js';
+import { logger } from '../utils/observability.js';
 
 const router = express.Router();
 
@@ -44,7 +45,7 @@ async function requireSession(req, res, next) {
         req.userTrack = normalizeTrack(r.rows[0].track);
         next();
     } catch (err) {
-        console.error('[Summaries] session check failed:', err);
+        logger.error('[Summaries] session check failed:', err);
         res.status(500).json({ message: 'Internal server error' });
     }
 }
@@ -74,7 +75,7 @@ router.use(async (req, res, next) => {
         req.isSubscriber = checkSubscriptionAccess(r.rows[0]).allowed;
         next();
     } catch (err) {
-        console.error('[Summaries] subscription check failed:', err);
+        logger.error('[Summaries] subscription check failed:', err);
         res.status(500).json({ message: 'Subscription check failed' });
     }
 });
@@ -118,7 +119,7 @@ router.get('/figure/:name', async (req, res) => {
         const body = obj.Body;
         if (body && typeof body.pipe === 'function') {
             body.on('error', (streamErr) => {
-                console.error('[Summaries] figure stream error:', streamErr);
+                logger.error('[Summaries] figure stream error:', streamErr);
                 if (!res.headersSent) res.status(500).end(); else res.end();
             });
             body.pipe(res);
@@ -130,7 +131,7 @@ router.get('/figure/:name', async (req, res) => {
         if (err?.name === 'NoSuchKey' || err?.$metadata?.httpStatusCode === 404) {
             return res.status(404).json({ message: 'Figure not found' });
         }
-        console.error('[Summaries] figure fetch failed:', err);
+        logger.error('[Summaries] figure fetch failed:', err);
         res.status(500).json({ message: 'Failed to load figure' });
     }
 });
@@ -172,7 +173,7 @@ router.get('/', async (req, res) => {
             })),
         });
     } catch (err) {
-        console.error('[Summaries] list failed:', err);
+        logger.error('[Summaries] list failed:', err);
         res.status(500).json({ message: 'Failed to load summaries' });
     }
 });
@@ -223,7 +224,7 @@ router.get('/:slug', async (req, res) => {
             },
         });
     } catch (err) {
-        console.error('[Summaries] detail failed:', err);
+        logger.error('[Summaries] detail failed:', err);
         res.status(500).json({ message: 'Failed to load summary' });
     }
 });
@@ -246,7 +247,7 @@ router.get('/:slug/questions', requireSubscriber, async (req, res) => {
         );
         res.json({ question_type: qtype, total: qres.rows.length, questions: qres.rows });
     } catch (err) {
-        console.error('[Summaries] questions failed:', err);
+        logger.error('[Summaries] questions failed:', err);
         res.status(500).json({ message: 'Failed to load questions' });
     }
 });
@@ -284,7 +285,7 @@ router.get('/:slug/page/:n', requireSubscriber, async (req, res) => {
         const body = obj.Body;
         if (body && typeof body.pipe === 'function') {
             body.on('error', (streamErr) => {
-                console.error('[Summaries] page stream error:', streamErr);
+                logger.error('[Summaries] page stream error:', streamErr);
                 if (!res.headersSent) res.status(500).end();
                 else res.end();
             });
@@ -298,7 +299,7 @@ router.get('/:slug/page/:n', requireSubscriber, async (req, res) => {
         if (err?.name === 'NoSuchKey' || err?.$metadata?.httpStatusCode === 404) {
             return res.status(404).json({ message: 'Page not found' });
         }
-        console.error('[Summaries] page fetch failed:', err);
+        logger.error('[Summaries] page fetch failed:', err);
         res.status(500).json({ message: 'Failed to load page' });
     }
 });
@@ -334,7 +335,7 @@ router.post('/:slug/progress', async (req, res) => {
         );
         res.json({ progress: result.rows[0] });
     } catch (err) {
-        console.error('[Summaries] progress upsert failed:', err);
+        logger.error('[Summaries] progress upsert failed:', err);
         res.status(500).json({ message: 'Failed to save progress' });
     }
 });

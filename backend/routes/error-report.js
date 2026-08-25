@@ -5,6 +5,7 @@
 
 import express from 'express';
 import { sendErrorNotification, getRateLimitStatus } from '../services/errorNotificationService.js';
+import { logger } from '../utils/observability.js';
 
 const router = express.Router();
 
@@ -51,7 +52,7 @@ router.post('/', async (req, res) => {
         }
 
     } catch (error) {
-        console.error('[ErrorReport] Failed to process error report:', error);
+        logger.error('[ErrorReport] Failed to process error report:', error);
         return res.status(500).json({
             success: false,
             message: 'Failed to process error report'
@@ -101,7 +102,7 @@ router.post('/batch', async (req, res) => {
         });
 
     } catch (error) {
-        console.error('[ErrorReport] Failed to process batch error reports:', error);
+        logger.error('[ErrorReport] Failed to process batch error reports:', error);
         return res.status(500).json({
             success: false,
             message: 'Failed to process batch error reports'

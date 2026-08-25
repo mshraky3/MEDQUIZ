@@ -18,6 +18,7 @@
 import express from 'express';
 import { adminAuth } from '../middleware/adminAuth.js';
 import { funnelSnapshot } from '../services/adminMetricsService.js';
+import { logger } from '../utils/observability.js';
 
 const router = express.Router();
 
@@ -53,7 +54,7 @@ export async function recordFunnelEvent(db, { accountId = null, anonId = null, e
             [accountId, anonId ? String(anonId).slice(0, 64) : null, event, safeProps]
         );
     } catch (err) {
-        console.error('[funnel] insert failed:', err.message);
+        logger.error('[funnel] insert failed:', err.message);
     }
 }
 
@@ -129,7 +130,7 @@ router.get('/admin', adminAuth, async (req, res) => {
         const snapshot = await funnelSnapshot(req.db, { days });
         res.json({ success: true, ...snapshot });
     } catch (err) {
-        console.error('[funnel] admin query failed:', err);
+        logger.error('[funnel] admin query failed:', err);
         res.status(500).json({ success: false, message: 'Failed to load funnel data' });
     }
 });

@@ -17,6 +17,7 @@ import express from 'express';
 import { goalProgress, scopedBaseline } from '../services/lifecycleJobs.js';
 import { specialtyKeys, normalizeTrack } from '../config/tracks.js';
 import { PICKABLE_SOURCES } from '../config/sources.js';
+import { logger } from '../utils/observability.js';
 
 const router = express.Router();
 
@@ -91,7 +92,7 @@ router.get('/', async (req, res) => {
         );
         res.json({ success: true, goal: await serializeGoal(req.db, req.accountId, rows[0]) });
     } catch (err) {
-        console.error('[goals] fetch failed:', err);
+        logger.error('[goals] fetch failed:', err);
         res.status(500).json({ success: false, message: 'Failed to load goal' });
     }
 });
@@ -173,7 +174,7 @@ router.put('/', async (req, res) => {
         res.json({ success: true, goal: await serializeGoal(req.db, req.accountId, inserted[0]) });
     } catch (err) {
         await client.query('ROLLBACK').catch(() => {});
-        console.error('[goals] save failed:', err);
+        logger.error('[goals] save failed:', err);
         res.status(500).json({ success: false, message: 'Failed to save goal' });
     } finally {
         client.release();
@@ -189,7 +190,7 @@ router.delete('/', async (req, res) => {
         );
         res.json({ success: true, goal: null });
     } catch (err) {
-        console.error('[goals] clear failed:', err);
+        logger.error('[goals] clear failed:', err);
         res.status(500).json({ success: false, message: 'Failed to clear goal' });
     }
 });

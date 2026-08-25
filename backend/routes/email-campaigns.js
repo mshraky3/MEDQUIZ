@@ -31,6 +31,7 @@ import { drainSendingCampaigns } from './admin-broadcast.js';
 import { adminAuth } from '../middleware/adminAuth.js';
 import { normalizeTrack } from '../config/tracks.js';
 import { OWNER_EMAIL } from '../config/recipients.js';
+import { logger } from '../utils/observability.js';
 
 const router = express.Router();
 
@@ -146,7 +147,7 @@ router.get('/api/email-test/:name', adminAuth, async (req, res, next) => {
             message: `${req.params.name} email sent to ${TEST_EMAIL} (lang=${testLang(req)}, track=${testTrack(req)})`,
         });
     } catch (err) {
-        console.error(`email-test/${req.params.name} error:`, err);
+        logger.error(`email-test/${req.params.name} error:`, err);
         res.status(500).json({ success: false, error: err.message });
     }
 });
@@ -249,7 +250,7 @@ router.get('/api/cron/welcome-emails', cronAuth, async (req, res) => {
 
         res.json({ success: true, sent, errors });
     } catch (err) {
-        console.error('cron/welcome-emails error:', err);
+        logger.error('cron/welcome-emails error:', err);
         res.status(500).json({ success: false, error: err.message });
     }
 });
@@ -375,7 +376,7 @@ router.get('/api/cron/daily-emails', cronAuth, async (req, res) => {
             results[name] = r.sent;
             if (r.errors.length) results.errors.push(...r.errors);
         } catch (err) {
-            console.error(`cron/daily-emails ${name} error:`, err);
+            logger.error(`cron/daily-emails ${name} error:`, err);
             results.errors.push({ job: name, error: err.message });
         }
     }
@@ -387,7 +388,7 @@ router.get('/api/cron/daily-emails', cronAuth, async (req, res) => {
     try {
         results.subscriptionReport = await maybeSendSubscriptionReport(db);
     } catch (err) {
-        console.error('cron/daily-emails subscription report error:', err);
+        logger.error('cron/daily-emails subscription report error:', err);
         results.errors.push({ job: 'subscription_report', error: err.message });
     }
 
@@ -398,7 +399,7 @@ router.get('/api/cron/daily-emails', cronAuth, async (req, res) => {
     try {
         results.broadcasts = await drainSendingCampaigns(db);
     } catch (err) {
-        console.error('cron/daily-emails broadcast drain error:', err);
+        logger.error('cron/daily-emails broadcast drain error:', err);
         results.errors.push({ job: 'broadcast_drain', error: err.message });
     }
 
@@ -423,7 +424,7 @@ router.get('/api/cron/daily-emails', cronAuth, async (req, res) => {
         } catch (err) {
             // Never fail the email cron over Telegram: a missing bot token or
             // a Telegram outage must not cost the day's emails.
-            console.error(`cron/daily-emails ${name} error:`, err);
+            logger.error(`cron/daily-emails ${name} error:`, err);
             results.errors.push({ job: name, error: err.message });
         }
     }
@@ -446,7 +447,7 @@ router.get('/api/email-test/subscription-report', adminAuth, async (req, res) =>
         });
         res.json({ success: true, ...result });
     } catch (err) {
-        console.error('email-test/subscription-report error:', err);
+        logger.error('email-test/subscription-report error:', err);
         res.status(500).json({ success: false, error: err.message });
     }
 });
@@ -462,7 +463,7 @@ router.get('/api/email-test/daily-signups-report', adminAuth, async (req, res) =
         const result = await sendDailySignupsReport(req.db, { record: false });
         res.json({ success: true, ...result });
     } catch (err) {
-        console.error('email-test/daily-signups-report error:', err);
+        logger.error('email-test/daily-signups-report error:', err);
         res.status(500).json({ success: false, error: err.message });
     }
 });
@@ -485,7 +486,7 @@ router.get('/api/cron/daily-signups-report', cronAuth, async (req, res) => {
         const result = await maybeSendDailySignupsReport(req.db);
         res.json({ success: true, ...result });
     } catch (err) {
-        console.error('cron/daily-signups-report error:', err);
+        logger.error('cron/daily-signups-report error:', err);
         res.status(500).json({ success: false, error: err.message });
     }
 });
@@ -543,7 +544,7 @@ router.get('/api/cron/broadcast-drain', cronAuth, async (req, res) => {
         const results = await drainSendingCampaigns(req.db);
         res.json({ success: true, campaigns: results });
     } catch (err) {
-        console.error('cron/broadcast-drain error:', err);
+        logger.error('cron/broadcast-drain error:', err);
         res.status(500).json({ success: false, error: err.message });
     }
 });

@@ -14,6 +14,7 @@ import {
 import { riyadhMonthKey } from '../services/adminMetricsService.js';
 import { TRACK_KEYS, trackLabelEn } from '../config/tracks.js';
 import { buildInvoicePdf, invoiceNumberFor } from '../services/invoiceService.js';
+import { logger } from '../utils/observability.js';
 
 const router = express.Router();
 router.use(adminAuth);
@@ -117,7 +118,7 @@ router.get('/summary', async (req, res) => {
             },
         });
     } catch (err) {
-        console.error('[accounting/summary] failed:', err);
+        logger.error('[accounting/summary] failed:', err);
         res.status(500).json({ success: false, message: 'Failed to build accounting summary' });
     }
 });
@@ -138,7 +139,7 @@ router.post('/reconcile', async (req, res) => {
         });
         res.json({ success: true, ...result });
     } catch (err) {
-        console.error('[accounting/reconcile] failed:', err);
+        logger.error('[accounting/reconcile] failed:', err);
         res.status(500).json({ success: false, message: err.message });
     }
 });
@@ -190,7 +191,7 @@ router.get('/export.csv', async (req, res) => {
         // BOM so Excel opens the Arabic subscriber names correctly.
         res.send('﻿' + lines.join('\n'));
     } catch (err) {
-        console.error('[accounting/export] failed:', err);
+        logger.error('[accounting/export] failed:', err);
         res.status(500).json({ success: false, message: 'Failed to export' });
     }
 });
@@ -214,7 +215,7 @@ router.get('/invoice/:gatewayRef.pdf', async (req, res) => {
             `inline; filename="${invoiceNumberFor(payment)}.pdf"`);
         res.end(pdf);
     } catch (err) {
-        console.error('[accounting/invoice] failed:', err);
+        logger.error('[accounting/invoice] failed:', err);
         res.status(500).json({ success: false, message: 'Failed to build invoice' });
     }
 });

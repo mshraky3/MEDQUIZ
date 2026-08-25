@@ -1,3 +1,4 @@
+import { logger } from '../utils/observability.js';
 /**
  * Postgres-backed rate limiting.
  * ------------------------------------------------------------------
@@ -16,7 +17,14 @@
  * guard, which is not defending anything latency- or precision-sensitive.
  */
 let _rateLimitSchemaReady = null;
-function ensureRateLimitTable(db) {
+/**
+ * Exported because errorNotificationService's alert throttle stores its own
+ * counters in this same table. That throttle FAILS OPEN when the table is
+ * missing, so leaving its creation to whichever rate-limited route happened to
+ * be hit first meant the very first error after a fresh deploy could bypass
+ * throttling entirely. The throttle now ensures it explicitly at boot.
+ */
+export function ensureRateLimitTable(db) {
     if (_rateLimitSchemaReady) return _rateLimitSchemaReady;
     _rateLimitSchemaReady = (async () => {
         await db.query(`
@@ -95,7 +103,7 @@ export function rateLimit(db, bucket, { windowMs = 60_000, max = 10, keyFn = cli
             // the reason a real user can't log in or send a message. Some of
             // the routes this guards have their own secondary defense
             // underneath too (send-otp's own per-email throttle, for one).
-            console.error(`[rateLimit:${bucket}] check failed, allowing request:`, err.message);
+            logger.error(`[rateLimit:${bucket}] check failed, allowing request:`, err.message);
             next();
         }
     };
