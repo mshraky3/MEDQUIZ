@@ -60,10 +60,10 @@
     font-size: 34px;
     line-height: 1;
     margin-bottom: var(--space-2);
-    animation: float 3s ease-in-out infinite;
+    animation: sug-float 3s ease-in-out infinite;
 }
 
-@keyframes float {
+@keyframes sug-float {
 
     0%,
     100% {
@@ -90,7 +90,7 @@
 }
 
 .suggestions-header p {
-    color: #64748b;
+    color: var(--text-light);
     font-size: 0.95rem;
     line-height: 1.5;
 }
@@ -144,10 +144,12 @@
     background: rgba(15, 23, 42, 0.04);
     border: 1px solid rgba(15, 23, 42, 0.10);
     border-radius: 12px;
-    color: #64748b;
+    color: var(--text-light);
     font-size: 0.8rem;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition-property: var(--transition-props);
+    transition-duration: 0.3s;
+    transition-timing-function: ease;
     text-align: center;
 }
 
@@ -175,7 +177,9 @@
     color: #1e293b;
     /* 16px — below that, iOS Safari zooms the page on focus. */
     font-size: 16px;
-    transition: all 0.3s ease;
+    transition-property: var(--transition-props);
+    transition-duration: 0.3s;
+    transition-timing-function: ease;
     font-family: inherit;
 }
 
@@ -199,7 +203,7 @@
 
 /* Character Counter */
 .char-counter {
-    text-align: right;
+    text-align: end;
     font-size: 0.75rem;
     color: #475569;
 }
@@ -224,7 +228,9 @@
     border: 1px solid rgba(15, 23, 42, 0.10);
     border-radius: 50px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition-property: var(--transition-props);
+    transition-duration: 0.3s;
+    transition-timing-function: ease;
     flex: 1;
     min-width: 120px;
     justify-content: center;
@@ -240,7 +246,9 @@
     border-radius: 50%;
     background: var(--priority-color, #2563eb);
     opacity: 0.5;
-    transition: all 0.3s ease;
+    transition-property: var(--transition-props);
+    transition-duration: 0.3s;
+    transition-timing-function: ease;
 }
 
 .priority-option.active .priority-dot {
@@ -249,7 +257,7 @@
 }
 
 .priority-text {
-    color: #64748b;
+    color: var(--text-light);
     font-size: 0.85rem;
     transition: color 0.3s ease;
 }
@@ -281,7 +289,9 @@
     font-size: 1rem;
     font-weight: 700;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition-property: var(--transition-props);
+    transition-duration: 0.3s;
+    transition-timing-function: ease;
     box-shadow: 0 4px 20px rgba(37, 99, 235, 0.4);
     margin-top: 8px;
 }
@@ -375,7 +385,7 @@
 }
 
 .success-card p {
-    color: #64748b;
+    color: var(--text-light);
     font-size: 0.95rem;
     line-height: 1.6;
     margin-bottom: 24px;
@@ -389,7 +399,9 @@
     color: #1d4ed8;
     font-size: 0.95rem;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition-property: var(--transition-props);
+    transition-duration: 0.3s;
+    transition-timing-function: ease;
 }
 
 .submit-another-btn:hover {

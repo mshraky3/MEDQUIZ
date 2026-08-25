@@ -1,4 +1,4 @@
-@keyframes fadeInUp {
+@keyframes qs-fade-in-up {
   from {
     opacity: 0;
     transform: translateY(30px);
@@ -10,7 +10,7 @@
   }
 }
 
-@keyframes scaleIn {
+@keyframes qs-scale-in {
   from {
     opacity: 0;
     transform: scale(0.95);
@@ -22,7 +22,7 @@
   }
 }
 
-@keyframes glow {
+@keyframes qs-glow {
 
   0%,
   100% {
@@ -86,7 +86,7 @@
   margin-bottom: 1rem;
   color: #0f1e3d;
   letter-spacing: -0.5px;
-  animation: fadeInUp 0.6s ease-out;
+  animation: qs-fade-in-up 0.6s ease-out;
 }
 
 .quiz-selection p {
@@ -94,7 +94,7 @@
   color: var(--muted);
   margin-bottom: 2.5rem;
   max-width: 700px;
-  animation: fadeInUp 0.6s ease-out 0.1s both;
+  animation: qs-fade-in-up 0.6s ease-out 0.1s both;
 }
 
 .quiz-subtitle {
@@ -114,7 +114,7 @@
   border: 1px solid var(--border);
   background: var(--card);
   box-shadow: var(--shadow-sm, 0 1px 2px rgba(15, 23, 42, 0.06));
-  animation: fadeInUp 0.6s ease-out 0.12s both;
+  animation: qs-fade-in-up 0.6s ease-out 0.12s both;
 }
 
 /* The mode picker borrows the source picker's chip styling; it only needs its
@@ -218,7 +218,7 @@
   cursor: pointer;
   transition: transform 0.22s cubic-bezier(0.34, 1.4, 0.64, 1), box-shadow 0.22s ease;
   box-shadow: 0 6px 18px rgba(59, 130, 246, 0.35);
-  animation: fadeInUp 0.6s ease-out 0.15s both;
+  animation: qs-fade-in-up 0.6s ease-out 0.15s both;
 }
 
 .quick-start-btn:hover {
@@ -249,16 +249,16 @@
   border-radius: 16px;
   cursor: pointer;
   transition: transform 0.24s cubic-bezier(0.34, 1.4, 0.64, 1), box-shadow 0.24s ease, border-color 0.24s ease, background 0.24s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.09);
   backdrop-filter: blur(10px);
   position: relative;
   overflow: hidden;
-  animation: fadeInUp 0.5s ease-out both;
+  animation: qs-fade-in-up 0.5s ease-out both;
 }
 
 .quiz-option-btn:active {
   transform: translateY(1px) scale(0.97);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.11);
 }
 
 .quiz-option-btn::before {
@@ -291,7 +291,7 @@
 }
 
 .quiz-option-btn.final-quiz-btn:hover {
-  animation: glow 2s ease-in-out infinite;
+  animation: qs-glow 2s ease-in-out infinite;
   transform: translateY(-4px) scale(1.02);
 }
 
@@ -357,18 +357,6 @@
   }
 }
 
-@keyframes pulse {
-
-  0%,
-  100% {
-    transform: scale(1);
-  }
-
-  50% {
-    transform: scale(1.1);
-  }
-}
-
 .streak-count {
   font-weight: 700;
   color: var(--accent);
@@ -388,8 +376,8 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
-  animation: fadeIn 0.3s ease-out;
+  z-index: var(--z-modal-backdrop);
+  animation: qs-fade-in 0.3s ease-out;
 }
 
 .custom-modal-content {
@@ -398,11 +386,11 @@
   padding: 2rem;
   border-radius: 24px;
   width: 90%;
-  max-width: 480px;
+  max-width: var(--container-card);
   box-shadow: var(--shadow);
   backdrop-filter: blur(10px);
   font-family: 'Inter', system-ui, sans-serif;
-  animation: scaleIn 0.4s ease-out;
+  animation: qs-scale-in 0.4s ease-out;
   color: var(--text);
 }
 
@@ -517,17 +505,11 @@
   margin: 20px 0;
 }
 
-.section-title {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 12px;
-  margin-top: 0;
-  padding: 0 4px;
-  text-align: right;
-}
+/* A `.section-title` rule used to sit here. Nothing in quizs/ ever rendered
+   that class — the only consumer of the bare name is Progress.jsx on
+   /analysis, which styles it from Progress.css. All this rule did was
+   override that page's headings (uppercase 13px, right-aligned) for any user
+   who reached /analysis after visiting /quizs. Removed. */
 
 .custom-source-btn {
   padding: 16px 20px;
@@ -644,7 +626,7 @@
   color: var(--text);
 }
 
-@keyframes fadeIn {
+@keyframes qs-fade-in {
   from {
     opacity: 0;
     transform: translateY(-10px);
@@ -653,20 +635,6 @@
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-@keyframes moveGradient {
-  0% {
-    background-position: 0% 50%;
-  }
-
-  50% {
-    background-position: 100% 50%;
-  }
-
-  100% {
-    background-position: 0% 50%;
   }
 }
 
@@ -812,20 +780,6 @@
   }
 }
 
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-  }
-
-  50% {
-    transform: scale(1.05);
-  }
-
-  100% {
-    transform: scale(1);
-  }
-}
-
 /* Timer Selector Modal Styles */
 .custom-timer-selector-modal {
   position: fixed;
@@ -837,7 +791,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: var(--z-modal-backdrop);
   padding: 1rem;
 }
 
@@ -856,7 +810,9 @@
   color: #475569;
   cursor: pointer;
   font-weight: bold;
-  transition: all 0.3s ease;
+  transition-property: var(--transition-props);
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
   text-align: center;
 }
 
@@ -972,9 +928,9 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: var(--z-modal-backdrop);
   padding: 1rem;
-  animation: fadeIn 0.3s ease-out;
+  animation: qs-fade-in 0.3s ease-out;
 }
 
 .custom-questions-modal .custom-modal-content {
@@ -989,7 +945,7 @@
   box-shadow: var(--shadow-lg, 0 14px 36px rgba(15, 23, 42, 0.16));
   backdrop-filter: blur(20px);
   text-align: center;
-  animation: scaleIn 0.4s ease-out;
+  animation: qs-scale-in 0.4s ease-out;
 }
 
 .custom-questions-modal h2 {
@@ -1000,7 +956,7 @@
 }
 
 .questions-info {
-  color: #64748b;
+  color: var(--text-light);
   margin-bottom: 1.5rem;
   font-size: 1rem;
 }
@@ -1035,7 +991,9 @@
   font-weight: 600;
   color: #1e293b;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition-property: var(--transition-props);
+  transition-duration: 0.2s;
+  transition-timing-function: ease;
   min-width: 50px;
   min-height: 44px;
 }
@@ -1108,7 +1066,9 @@
   font-size: 1.2rem;
   font-weight: bold;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition-property: var(--transition-props);
+  transition-duration: 0.2s;
+  transition-timing-function: ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1176,7 +1136,7 @@
   justify-content: space-between;
   margin-top: 0.5rem;
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--text-light);
 }
 
 /* Custom Questions Modal Responsive Styles */
@@ -1363,7 +1323,9 @@
   font-size: 18px;
   font-weight: bold;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition-property: var(--transition-props);
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
   box-shadow: 0 4px 8px rgba(255, 107, 107, 0.2);
 }
 
@@ -1382,7 +1344,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 1000;
+  z-index: var(--z-modal-backdrop);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1399,7 +1361,7 @@
   box-shadow: 0 10px 40px rgba(255, 107, 107, 0.3);
   padding: 1.5rem;
   position: relative;
-  z-index: 1002;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   margin: 2rem;
@@ -1425,7 +1387,7 @@
   background: rgba(255, 107, 107, 0.1);
   padding: 0.8rem;
   border-radius: 8px;
-  border-left: 4px solid #ff6b6b;
+  border-inline-start: 4px solid #ff6b6b;
 }
 
 .final-quiz-note {
@@ -1451,7 +1413,9 @@
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition-property: var(--transition-props);
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
   box-shadow: 0 3px 8px rgba(255, 107, 107, 0.3);
   min-width: 120px;
 }
@@ -1489,7 +1453,9 @@
   font-size: 0.9rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition-property: var(--transition-props);
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
   width: 100%;
   box-shadow: 0 3px 8px rgba(255, 107, 107, 0.3);
 }
@@ -1534,7 +1500,9 @@
   font-size: 1rem;
   font-weight: 600;
   text-align: center;
-  transition: all 0.3s ease;
+  transition-property: var(--transition-props);
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
   min-height: 44px;
   background: white;
   color: #d63031;
@@ -1574,7 +1542,7 @@
   flex-wrap: wrap;
   flex-shrink: 0;
   position: relative;
-  z-index: 1003;
+  z-index: 2;
   width: 100%;
 }
 
@@ -1589,7 +1557,9 @@
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition-property: var(--transition-props);
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
   box-shadow: 0 3px 8px rgba(108, 117, 125, 0.3);
   min-width: 120px;
   flex: 1;
@@ -1611,7 +1581,9 @@
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition-property: var(--transition-props);
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
   box-shadow: 0 3px 8px rgba(40, 167, 69, 0.3);
   min-width: 120px;
   flex: 1;
@@ -1632,7 +1604,9 @@
   font-size: 1.1rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition-property: var(--transition-props);
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
   box-shadow: 0 3px 8px rgba(108, 117, 125, 0.3);
   min-width: 160px;
 }

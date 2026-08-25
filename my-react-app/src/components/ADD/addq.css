@@ -1,4 +1,13 @@
-.add-question-container {
+/* Scoped to .admin-page-wrapper — the element AdminLayout puts around every
+   admin route. Admin stylesheets are loaded on admin pages but, like every
+   chunk in this app, they are never unloaded again, so their unscoped rules
+   went on applying to whatever the admin browsed next. That is how the admin
+   section's .modal-overlay, .stat-value, .form-group, .btn-primary and friends
+   ended up redefining index.css's and the analysis pages' versions for anyone
+   who visited /admin first. Everything here now applies only inside the admin
+   shell. Keep new rules inside this scheme — see docs/CSS_MAP.md. */
+
+.admin-page-wrapper .add-question-container {
   max-width: 700px;
   margin: 40px auto;
   padding: 30px;
@@ -7,36 +16,36 @@
   -webkit-backdrop-filter: blur(20px);
   border-radius: 16px;
   box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.3),
+    0 8px 32px rgba(15, 23, 42, 0.14),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(15, 23, 42, 0.10);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
-.add-question-container h2 {
+.admin-page-wrapper .add-question-container h2 {
   text-align: center;
   color: #1e293b;
   margin-bottom: 20px;
   font-size: 24px;
 }
 
-.question-form {
+.admin-page-wrapper .question-form {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-.question-form label {
+.admin-page-wrapper .question-form label {
   display: flex;
   flex-direction: column;
   font-weight: 600;
-  color: #64748b;
+  color: var(--text-light);
   font-size: 14px;
 }
 
-.question-form input,
-.question-form textarea,
-.question-form select {
+.admin-page-wrapper .question-form input,
+.admin-page-wrapper .question-form textarea,
+.admin-page-wrapper .question-form select {
   margin-top: 6px;
   padding: 12px;
   font-size: 16px;
@@ -44,31 +53,33 @@
   border-radius: 8px;
   width: 100%;
   box-sizing: border-box;
-  transition: all 0.3s ease;
+  transition-property: var(--transition-props);
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
   background: rgba(15, 23, 42, 0.04);
   color: #1e293b;
 }
 
-.question-form input::placeholder,
-.question-form textarea::placeholder {
+.admin-page-wrapper .question-form input::placeholder,
+.admin-page-wrapper .question-form textarea::placeholder {
   color: #475569;
 }
 
-.question-form input:focus,
-.question-form textarea:focus,
-.question-form select:focus {
+.admin-page-wrapper .question-form input:focus,
+.admin-page-wrapper .question-form textarea:focus,
+.admin-page-wrapper .question-form select:focus {
   border-color: #236ded;
   outline: none;
   box-shadow: 0 0 0 3px rgba(35, 109, 237, 0.1);
   background: rgba(15, 23, 42, 0.04);
 }
 
-.question-form textarea {
+.admin-page-wrapper .question-form textarea {
   resize: vertical;
   min-height: 80px;
 }
 
-.question-form select {
+.admin-page-wrapper .question-form select {
   background-color: rgba(15, 23, 42, 0.04);
   appearance: none;
   background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%2394a3b8' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
@@ -78,12 +89,12 @@
   padding-right: 36px;
 }
 
-.question-form select option {
+.admin-page-wrapper .question-form select option {
   background: #ffffff;
   color: #1e293b;
 }
 
-.submit-button {
+.admin-page-wrapper .submit-button {
   margin-top: 20px;
   padding: 12px;
   font-size: 16px;
@@ -93,26 +104,28 @@
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition-property: var(--transition-props);
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
   box-shadow: 0 4px 15px rgba(35, 109, 237, 0.3);
 }
 
-.submit-button:hover {
+.admin-page-wrapper .submit-button:hover {
   background: linear-gradient(135deg, #6d9ef3 0%, #236ded 100%);
   box-shadow: 0 6px 20px rgba(35, 109, 237, 0.4);
   transform: translateY(-2px);
 }
 
 /* Success and Error Messages */
-.error {
-  color: #f87171;
+.admin-page-wrapper .error {
+  color: var(--error-color);
   text-align: center;
   font-size: 14px;
   margin-top: -10px;
 }
 
-.success {
-  color: #4ade80;
+.admin-page-wrapper .success {
+  color: var(--secondary-dark);
   text-align: center;
   font-size: 14px;
   margin-top: -10px;
@@ -120,22 +133,21 @@
 
 /* Responsive Design */
 @media (max-width: 600px) {
-  .add-question-container {
+  .admin-page-wrapper .add-question-container {
     margin: 20px;
     padding: 20px;
   }
 
-  .question-form label {
+  .admin-page-wrapper .question-form label {
     font-size: 13px;
   }
 
-  .question-form input,
-  .question-form textarea,
-  .question-form select {
+  .admin-page-wrapper .question-form input,
+.admin-page-wrapper .question-form textarea,
+.admin-page-wrapper .question-form select {
     font-size: 14px;
   }
 
-  .submit-button {
+  .admin-page-wrapper .submit-button {
     font-size: 14px;
-  }
-}
+  }}

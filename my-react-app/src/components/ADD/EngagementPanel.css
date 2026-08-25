@@ -1,14 +1,23 @@
+/* Scoped to .admin-page-wrapper — the element AdminLayout puts around every
+   admin route. Admin stylesheets are loaded on admin pages but, like every
+   chunk in this app, they are never unloaded again, so their unscoped rules
+   went on applying to whatever the admin browsed next. That is how the admin
+   section's .modal-overlay, .stat-value, .form-group, .btn-primary and friends
+   ended up redefining index.css's and the analysis pages' versions for anyone
+   who visited /admin first. Everything here now applies only inside the admin
+   shell. Keep new rules inside this scheme — see docs/CSS_MAP.md. */
+
 /* "What do students actually use?" — share-of-time panel on the dashboard. */
-.eng-panel {
+.admin-page-wrapper .eng-panel {
     margin: 0 0 24px;
     padding: 20px 22px;
     border-radius: 14px;
-    border: 1px solid var(--admin-border, #e2e8f0);
-    background: var(--admin-surface, #fff);
+    border: 1px solid var(--admin-border);
+    background: var(--admin-surface);
     /* Admin is English-only and always LTR — see src/i18n/AdminShell.jsx. */
 }
 
-.eng-head {
+.admin-page-wrapper .eng-head {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
@@ -17,37 +26,37 @@
     margin-bottom: 16px;
 }
 
-.eng-head h2 {
+.admin-page-wrapper .eng-head h2 {
     margin: 0 0 3px;
     font-size: 1rem;
     font-weight: 800;
-    color: var(--admin-text, #0f172a);
+    color: var(--admin-text);
 }
 
-.eng-head span {
+.admin-page-wrapper .eng-head span {
     font-size: 0.78rem;
-    color: var(--admin-muted, #64748b);
+    color: var(--admin-muted);
 }
 
-.eng-ranges { display: flex; gap: 5px; }
+.admin-page-wrapper .eng-ranges { display: flex; gap: 5px; }
 
-.eng-range {
+.admin-page-wrapper .eng-range {
     padding: 5px 12px;
-    border: 1px solid var(--admin-border, #e2e8f0);
+    border: 1px solid var(--admin-border);
     border-radius: 999px;
     background: transparent;
-    color: var(--admin-muted, #64748b);
+    color: var(--admin-muted);
     font: inherit;
     font-size: 0.76rem;
     font-weight: 700;
     cursor: pointer;
 }
 
-.eng-range.is-on { background: #2563eb; border-color: #2563eb; color: #fff; }
+.admin-page-wrapper .eng-range.is-on { background: #2563eb; border-color: #2563eb; color: #fff; }
 
-.eng-muted { font-size: 0.84rem; color: var(--admin-muted, #64748b); }
+.admin-page-wrapper .eng-muted { font-size: 0.84rem; color: var(--admin-muted); }
 
-.eng-retry {
+.admin-page-wrapper .eng-retry {
     margin-inline-start: 8px;
     border: none;
     background: none;
@@ -57,33 +66,33 @@
     cursor: pointer;
 }
 
-.eng-empty {
+.admin-page-wrapper .eng-empty {
     display: flex;
     align-items: flex-start;
     gap: 12px;
     padding: 16px 18px;
     border-radius: 11px;
-    border: 1px dashed var(--admin-border, #cbd5e1);
-    background: var(--admin-bg, #f8fafc);
-    color: var(--admin-muted, #64748b);
+    border: 1px dashed var(--admin-border);
+    background: var(--admin-bg);
+    color: var(--admin-muted);
 }
 
-.eng-empty strong { display: block; margin-bottom: 3px; color: var(--admin-text, #0f172a); font-size: 0.9rem; }
-.eng-empty span { font-size: 0.8rem; line-height: 1.7; }
+.admin-page-wrapper .eng-empty strong { display: block; margin-bottom: 3px; color: var(--admin-text); font-size: 0.9rem; }
+.admin-page-wrapper .eng-empty span { font-size: 0.8rem; line-height: 1.7; }
 
-.eng-verdict {
+.admin-page-wrapper .eng-verdict {
     margin: 0 0 16px;
     padding: 11px 14px;
     border-radius: 10px;
     background: rgba(37, 99, 235, 0.07);
     font-size: 0.88rem;
     line-height: 1.7;
-    color: var(--admin-text, #0f172a);
+    color: var(--admin-text);
 }
 
-.eng-bars { display: flex; flex-direction: column; gap: 12px; }
+.admin-page-wrapper .eng-bars { display: flex; flex-direction: column; gap: 12px; }
 
-.eng-row {
+.admin-page-wrapper .eng-row {
     display: grid;
     grid-template-columns: 130px 1fr 48px;
     grid-template-areas: "name bar pct" ". meta meta";
@@ -91,17 +100,17 @@
     gap: 4px 10px;
 }
 
-.eng-row-name {
+.admin-page-wrapper .eng-row-name {
     grid-area: name;
     display: inline-flex;
     align-items: center;
     gap: 6px;
     font-size: 0.85rem;
     font-weight: 700;
-    color: var(--admin-text, #0f172a);
+    color: var(--admin-text);
 }
 
-.eng-bar-track {
+.admin-page-wrapper .eng-bar-track {
     grid-area: bar;
     height: 12px;
     border-radius: 999px;
@@ -109,31 +118,30 @@
     overflow: hidden;
 }
 
-.eng-bar-fill { height: 100%; border-radius: 999px; transition: width .3s ease; }
+.admin-page-wrapper .eng-bar-fill { height: 100%; border-radius: 999px; transition: width .3s ease; }
 
-.eng-row-pct {
+.admin-page-wrapper .eng-row-pct {
     grid-area: pct;
     text-align: start;
     font-size: 0.82rem;
     font-weight: 800;
     font-variant-numeric: tabular-nums;
-    color: var(--admin-text, #0f172a);
+    color: var(--admin-text);
 }
 
-.eng-row-meta {
+.admin-page-wrapper .eng-row-meta {
     grid-area: meta;
     font-size: 0.72rem;
-    color: var(--admin-muted, #64748b);
+    color: var(--admin-muted);
 }
 
 @media (max-width: 560px) {
-    .eng-row { grid-template-columns: 1fr 44px; grid-template-areas: "name pct" "bar bar" "meta meta"; }
-}
+    .admin-page-wrapper .eng-row { grid-template-columns: 1fr 44px; grid-template-areas: "name pct" "bar bar" "meta meta"; }}
 
-.eng-track-split { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--admin-border, #e2e8f0); }
-.eng-track-split h3 { margin: 0 0 10px; font-size: 0.85rem; font-weight: 800; color: var(--admin-muted, #64748b); }
+.admin-page-wrapper .eng-track-split { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--admin-border); }
+.admin-page-wrapper .eng-track-split h3 { margin: 0 0 10px; font-size: 0.85rem; font-weight: 800; color: var(--admin-muted); }
 
-.eng-track-row {
+.admin-page-wrapper .eng-track-row {
     display: grid;
     grid-template-columns: 90px 1fr 62px;
     align-items: center;
@@ -142,9 +150,9 @@
     font-size: 0.8rem;
 }
 
-.eng-track-name { font-weight: 700; color: var(--admin-text, #0f172a); }
+.admin-page-wrapper .eng-track-name { font-weight: 700; color: var(--admin-text); }
 
-.eng-track-bar {
+.admin-page-wrapper .eng-track-bar {
     display: flex;
     height: 10px;
     border-radius: 999px;
@@ -152,10 +160,10 @@
     background: rgba(148, 163, 184, 0.2);
 }
 
-.eng-track-total { text-align: start; color: var(--admin-muted, #64748b); font-variant-numeric: tabular-nums; }
+.admin-page-wrapper .eng-track-total { text-align: start; color: var(--admin-muted); font-variant-numeric: tabular-nums; }
 
-.eng-top { margin-top: 16px; font-size: 0.82rem; }
-.eng-top summary { cursor: pointer; color: var(--admin-muted, #64748b); font-weight: 700; }
-.eng-top ul { list-style: none; margin: 10px 0 0; padding: 0; }
-.eng-top li { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid var(--admin-border, #f1f5f9); }
-.eng-top-dur { font-variant-numeric: tabular-nums; color: var(--admin-muted, #64748b); }
+.admin-page-wrapper .eng-top { margin-top: 16px; font-size: 0.82rem; }
+.admin-page-wrapper .eng-top summary { cursor: pointer; color: var(--admin-muted); font-weight: 700; }
+.admin-page-wrapper .eng-top ul { list-style: none; margin: 10px 0 0; padding: 0; }
+.admin-page-wrapper .eng-top li { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid var(--admin-border); }
+.admin-page-wrapper .eng-top-dur { font-variant-numeric: tabular-nums; color: var(--admin-muted); }

@@ -17,7 +17,7 @@
 }
 
 .footer-inner {
-  max-width: 1100px;
+  max-width: var(--container-wide);
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -41,12 +41,12 @@
   gap: 7px;
   font-size: 0.98rem;
   font-weight: 700;
-  color: #236ded;
+  color: var(--primary-dark);
 }
 
 .footer-tagline {
   margin: 0.2rem 0 0;
-  color: #64748b;
+  color: var(--text-light);
   font-size: 0.78rem;
   line-height: 1.5;
 }
@@ -74,7 +74,7 @@
 }
 
 .footer-icon-btn:hover {
-  color: #236ded;
+  color: var(--primary-dark);
   border-color: rgba(35, 109, 237, 0.35);
   background: rgba(35, 109, 237, 0.06);
 }
@@ -91,7 +91,7 @@
 }
 
 .footer-nav a {
-  color: #64748b;
+  color: var(--text-light);
   font-size: 0.8rem;
   text-decoration: none;
   /* Comfortable hit area without turning the row into a stack of buttons. */
@@ -99,13 +99,13 @@
   transition: color 0.2s ease;
 }
 
-.footer-nav a:hover { color: #236ded; }
+.footer-nav a:hover { color: var(--primary-dark); }
 
 /* ── Legal ───────────────────────────────────────────────────── */
 .footer-bottom { text-align: center; }
 
 .footer-bottom p {
-  color: #64748b;
+  color: var(--text-light);
   font-size: 0.74rem;
   line-height: 1.6;
   margin: 0.15rem 0;
@@ -116,7 +116,7 @@
   font-weight: 600;
 }
 
-.footer-disclaimer { color: #94a3b8; }
+.footer-disclaimer { color: var(--text-light); }
 
 @media (max-width: 640px) {
   .footer { padding: 1.15rem 1rem 1rem; }

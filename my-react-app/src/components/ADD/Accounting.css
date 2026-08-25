@@ -1,19 +1,28 @@
+/* Scoped to .admin-page-wrapper — the element AdminLayout puts around every
+   admin route. Admin stylesheets are loaded on admin pages but, like every
+   chunk in this app, they are never unloaded again, so their unscoped rules
+   went on applying to whatever the admin browsed next. That is how the admin
+   section's .modal-overlay, .stat-value, .form-group, .btn-primary and friends
+   ended up redefining index.css's and the analysis pages' versions for anyone
+   who visited /admin first. Everything here now applies only inside the admin
+   shell. Keep new rules inside this scheme — see docs/CSS_MAP.md. */
+
 /* Accounting page — money view, deliberately plainer than the growth
    dashboard. Numbers are tabular-figure aligned so columns compare by eye. */
 
-.acc-loading,
-.acc-error {
+.admin-page-wrapper .acc-loading,
+.admin-page-wrapper .acc-error {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 14px;
     padding: 70px 20px;
-    color: var(--admin-muted, #64748b);
+    color: var(--admin-muted);
 }
 
-.acc-error { color: #b91c1c; }
+.admin-page-wrapper .acc-error { color: #b91c1c; }
 
-.acc-head {
+.admin-page-wrapper .acc-head {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
@@ -22,27 +31,27 @@
     margin-bottom: 18px;
 }
 
-.acc-head h1 {
+.admin-page-wrapper .acc-head h1 {
     display: flex;
     align-items: center;
     gap: 9px;
     margin: 0 0 6px;
     font-size: 1.4rem;
     font-weight: 800;
-    color: var(--admin-text, #0f172a);
+    color: var(--admin-text);
 }
 
-.acc-head p {
+.admin-page-wrapper .acc-head p {
     margin: 0;
     max-width: 60ch;
     font-size: 0.85rem;
     line-height: 1.7;
-    color: var(--admin-muted, #64748b);
+    color: var(--admin-muted);
 }
 
-.acc-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.admin-page-wrapper .acc-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
-.acc-btn {
+.admin-page-wrapper .acc-btn {
     display: inline-flex;
     align-items: center;
     gap: 7px;
@@ -58,30 +67,30 @@
     transition: background .15s ease;
 }
 
-.acc-btn:hover:not(:disabled) { background: #1d4ed8; }
-.acc-btn:disabled { opacity: .5; cursor: not-allowed; }
+.admin-page-wrapper .acc-btn:hover:not(:disabled) { background: #1d4ed8; }
+.admin-page-wrapper .acc-btn:disabled { opacity: .5; cursor: not-allowed; }
 
-.acc-btn.ghost {
+.admin-page-wrapper .acc-btn.ghost {
     background: transparent;
     color: #2563eb;
 }
 
-.acc-btn.ghost:hover { background: rgba(37, 99, 235, 0.09); }
-.acc-btn.sm { padding: 6px 12px; font-size: 0.78rem; }
+.admin-page-wrapper .acc-btn.ghost:hover { background: rgba(37, 99, 235, 0.09); }
+.admin-page-wrapper .acc-btn.sm { padding: 6px 12px; font-size: 0.78rem; }
 
-.acc-filters {
+.admin-page-wrapper .acc-filters {
     display: flex;
     align-items: flex-end;
     gap: 14px;
     flex-wrap: wrap;
     margin-bottom: 18px;
     padding: 14px 16px;
-    border: 1px solid var(--admin-border, #e2e8f0);
+    border: 1px solid var(--admin-border);
     border-radius: 12px;
-    background: var(--admin-surface, #fff);
+    background: var(--admin-surface);
 }
 
-.acc-filters label {
+.admin-page-wrapper .acc-filters label {
     display: flex;
     flex-direction: column;
     gap: 5px;
@@ -89,25 +98,25 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.4px;
-    color: var(--admin-muted, #64748b);
+    color: var(--admin-muted);
 }
 
-.acc-filters input {
+.admin-page-wrapper .acc-filters input {
     padding: 8px 10px;
-    border: 1px solid var(--admin-border, #e2e8f0);
+    border: 1px solid var(--admin-border);
     border-radius: 8px;
     font: inherit;
     font-size: 0.85rem;
-    color: var(--admin-text, #0f172a);
+    color: var(--admin-text);
 }
 
-.acc-filter-note {
+.admin-page-wrapper .acc-filter-note {
     margin-inline-start: auto;
     font-size: 0.8rem;
-    color: var(--admin-muted, #64748b);
+    color: var(--admin-muted);
 }
 
-.acc-inline-error {
+.admin-page-wrapper .acc-inline-error {
     margin-bottom: 16px;
     padding: 10px 14px;
     border-radius: 9px;
@@ -118,61 +127,61 @@
 }
 
 /* ── KPI row ── */
-.acc-kpis {
+.admin-page-wrapper .acc-kpis {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
     gap: 14px;
     margin-bottom: 16px;
 }
 
-.acc-kpi {
+.admin-page-wrapper .acc-kpi {
     display: flex;
     flex-direction: column;
     gap: 4px;
     padding: 18px 20px;
-    border: 1px solid var(--admin-border, #e2e8f0);
+    border: 1px solid var(--admin-border);
     border-radius: 13px;
-    background: var(--admin-surface, #fff);
+    background: var(--admin-surface);
 }
 
-.acc-kpi.is-net {
+.admin-page-wrapper .acc-kpi.is-net {
     border-color: rgba(5, 150, 105, 0.4);
     background: linear-gradient(160deg, #f0fdf4, #ffffff);
 }
 
-.acc-kpi-label {
+.admin-page-wrapper .acc-kpi-label {
     font-size: 0.72rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: var(--admin-muted, #64748b);
+    color: var(--admin-muted);
 }
 
-.acc-kpi-value {
+.admin-page-wrapper .acc-kpi-value {
     font-size: 1.6rem;
     font-weight: 800;
     line-height: 1.2;
-    color: var(--admin-text, #0f172a);
+    color: var(--admin-text);
     font-variant-numeric: tabular-nums;
 }
 
-.acc-kpi-value small {
+.admin-page-wrapper .acc-kpi-value small {
     margin-inline-start: 5px;
     font-size: 0.72rem;
     font-weight: 700;
-    color: var(--admin-muted, #64748b);
+    color: var(--admin-muted);
 }
 
-.acc-kpi.is-cost .acc-kpi-value { color: #b91c1c; }
-.acc-kpi.is-net .acc-kpi-value { color: #047857; }
+.admin-page-wrapper .acc-kpi.is-cost .acc-kpi-value { color: #b91c1c; }
+.admin-page-wrapper .acc-kpi.is-net .acc-kpi-value { color: #047857; }
 
-.acc-kpi-sub {
+.admin-page-wrapper .acc-kpi-sub {
     font-size: 0.74rem;
-    color: var(--admin-muted, #64748b);
+    color: var(--admin-muted);
 }
 
 /* ── Explanatory notes ── */
-.acc-note {
+.admin-page-wrapper .acc-note {
     display: flex;
     align-items: flex-start;
     gap: 10px;
@@ -186,20 +195,20 @@
     color: #1e40af;
 }
 
-.acc-note.subtle {
-    border-color: var(--admin-border, #e2e8f0);
-    background: var(--admin-bg, #f8fafc);
-    color: var(--admin-muted, #64748b);
+.admin-page-wrapper .acc-note.subtle {
+    border-color: var(--admin-border);
+    background: var(--admin-bg);
+    color: var(--admin-muted);
 }
 
-.acc-note code {
+.admin-page-wrapper .acc-note code {
     padding: 1px 5px;
     border-radius: 4px;
     background: rgba(15, 23, 42, 0.07);
     font-size: 0.94em;
 }
 
-.acc-est-marker {
+.admin-page-wrapper .acc-est-marker {
     display: inline-block;
     margin-inline-start: 5px;
     padding: 1px 6px;
@@ -212,82 +221,82 @@
 }
 
 /* ── Panels & tables ── */
-.acc-panel {
+.admin-page-wrapper .acc-panel {
     margin-bottom: 20px;
     padding: 18px 20px;
-    border: 1px solid var(--admin-border, #e2e8f0);
+    border: 1px solid var(--admin-border);
     border-radius: 13px;
-    background: var(--admin-surface, #fff);
+    background: var(--admin-surface);
 }
 
-.acc-panel h2 {
+.admin-page-wrapper .acc-panel h2 {
     margin: 0 0 4px;
     font-size: 1rem;
     font-weight: 800;
-    color: var(--admin-text, #0f172a);
+    color: var(--admin-text);
 }
 
-.acc-panel-sub {
+.admin-page-wrapper .acc-panel-sub {
     margin: 0 0 14px;
     font-size: 0.8rem;
-    color: var(--admin-muted, #64748b);
+    color: var(--admin-muted);
 }
 
 /* Tables scroll inside their own box so the page never scrolls sideways. */
-.acc-table-wrap { overflow-x: auto; }
+.admin-page-wrapper .acc-table-wrap { overflow-x: auto; }
 
-.acc-table {
+.admin-page-wrapper .acc-table {
     width: 100%;
     min-width: 560px;
     border-collapse: collapse;
     font-size: 0.85rem;
 }
 
-.acc-table th,
-.acc-table td {
+.admin-page-wrapper .acc-table th,
+.admin-page-wrapper .acc-table td {
     padding: 9px 12px;
     text-align: left;
-    border-bottom: 1px solid var(--admin-border, #e2e8f0);
+    border-bottom: 1px solid var(--admin-border);
     white-space: nowrap;
 }
 
-.acc-table th {
+.admin-page-wrapper .acc-table th {
     font-size: 0.7rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: var(--admin-muted, #64748b);
+    color: var(--admin-muted);
     border-bottom-width: 2px;
 }
 
-.acc-table td.num,
-.acc-table th.num {
+.admin-page-wrapper .acc-table td.num,
+.admin-page-wrapper .acc-table th.num {
     text-align: right;
     font-variant-numeric: tabular-nums;
 }
 
-.acc-table tbody tr:last-child td { border-bottom: none; }
-.acc-table tbody tr:hover { background: var(--admin-bg, #f8fafc); }
+.admin-page-wrapper .acc-table tbody tr:last-child td { border-bottom: none; }
+.admin-page-wrapper .acc-table tbody tr:hover { background: var(--admin-bg); }
 
-.acc-table .cost { color: #b91c1c; }
-.acc-table .net { color: #047857; font-weight: 700; }
-.acc-table .acc-dim { color: var(--admin-muted, #94a3b8); font-weight: 400; }
+.admin-page-wrapper .acc-table .cost { color: #b91c1c; }
+.admin-page-wrapper .acc-table .net { color: #047857; font-weight: 700; }
+.admin-page-wrapper .acc-table .acc-dim { color: var(--admin-muted); font-weight: 400; }
 
-.acc-table tr.is-refunded { background: #fff7ed; }
+.admin-page-wrapper .acc-table tr.is-refunded { background: #fff7ed; }
 
-.acc-sub-cell {
+.admin-page-wrapper .acc-sub-cell {
     max-width: 230px;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.acc-empty {
+.admin-page-wrapper .acc-empty {
     padding: 22px 12px !important;
     text-align: center !important;
-    color: var(--admin-muted, #94a3b8);
+    color: var(--admin-muted);
 }
 
-.acc-invoice-link {
+.admin-page-wrapper .acc-invoice-link {
     padding: 0;
     border: none;
     background: none;
@@ -300,9 +309,9 @@
     cursor: pointer;
 }
 
-.acc-invoice-link:hover { color: #1d4ed8; }
+.admin-page-wrapper .acc-invoice-link:hover { color: #1d4ed8; }
 
-.acc-tag {
+.admin-page-wrapper .acc-tag {
     display: inline-block;
     margin-inline-start: 6px;
     padding: 1px 7px;
@@ -310,57 +319,57 @@
     background: rgba(15, 23, 42, 0.08);
     font-size: 0.66rem;
     font-weight: 700;
-    color: var(--admin-muted, #475569);
+    color: var(--admin-muted);
 }
 
 /* ── Scheme cards ── */
-.acc-scheme-grid {
+.admin-page-wrapper .acc-scheme-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
     gap: 12px;
 }
 
-.acc-scheme {
+.admin-page-wrapper .acc-scheme {
     display: flex;
     flex-direction: column;
     gap: 4px;
     padding: 14px 16px;
-    border: 1px solid var(--admin-border, #e2e8f0);
+    border: 1px solid var(--admin-border);
     border-radius: 11px;
-    background: var(--admin-bg, #f8fafc);
+    background: var(--admin-bg);
 }
 
-.acc-scheme-name {
+.admin-page-wrapper .acc-scheme-name {
     font-size: 0.92rem;
     font-weight: 800;
     text-transform: capitalize;
-    color: var(--admin-text, #0f172a);
+    color: var(--admin-text);
 }
 
-.acc-scheme-count {
+.admin-page-wrapper .acc-scheme-count {
     font-size: 0.74rem;
-    color: var(--admin-muted, #64748b);
+    color: var(--admin-muted);
 }
 
-.acc-scheme-rows {
+.admin-page-wrapper .acc-scheme-rows {
     display: flex;
     flex-direction: column;
     gap: 2px;
     margin-top: 8px;
     font-size: 0.8rem;
-    color: var(--admin-muted, #64748b);
+    color: var(--admin-muted);
     font-variant-numeric: tabular-nums;
 }
 
-.acc-scheme-rows b { color: var(--admin-text, #0f172a); }
-.acc-scheme-rows b.cost { color: #b91c1c; }
-.acc-scheme-rows b.net { color: #047857; }
+.admin-page-wrapper .acc-scheme-rows b { color: var(--admin-text); }
+.admin-page-wrapper .acc-scheme-rows b.cost { color: #b91c1c; }
+.admin-page-wrapper .acc-scheme-rows b.net { color: #047857; }
 
-.acc-scheme-rate {
+.admin-page-wrapper .acc-scheme-rate {
     margin-top: 8px;
     padding-top: 8px;
-    border-top: 1px dashed var(--admin-border, #e2e8f0);
+    border-top: 1px dashed var(--admin-border);
     font-size: 0.74rem;
     font-weight: 700;
-    color: var(--admin-muted, #64748b);
+    color: var(--admin-muted);
 }

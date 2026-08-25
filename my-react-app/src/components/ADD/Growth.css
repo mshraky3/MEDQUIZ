@@ -1,15 +1,24 @@
-.growth-view {
+/* Scoped to .admin-page-wrapper — the element AdminLayout puts around every
+   admin route. Admin stylesheets are loaded on admin pages but, like every
+   chunk in this app, they are never unloaded again, so their unscoped rules
+   went on applying to whatever the admin browsed next. That is how the admin
+   section's .modal-overlay, .stat-value, .form-group, .btn-primary and friends
+   ended up redefining index.css's and the analysis pages' versions for anyone
+   who visited /admin first. Everything here now applies only inside the admin
+   shell. Keep new rules inside this scheme — see docs/CSS_MAP.md. */
+
+.admin-page-wrapper .growth-view {
     padding: 1.5rem !important;
 }
 
-.growth-controls {
+.admin-page-wrapper .growth-controls {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 8px;
 }
 
-.growth-presets {
+.admin-page-wrapper .growth-presets {
     display: inline-flex;
     gap: 4px;
     padding: 3px;
@@ -17,7 +26,7 @@
     border-radius: 10px;
 }
 
-.growth-presets button {
+.admin-page-wrapper .growth-presets button {
     padding: 6px 12px;
     min-height: 34px;
     font-family: inherit;
@@ -30,18 +39,18 @@
     cursor: pointer;
 }
 
-.growth-presets button:hover { background: #fff; color: #2563eb; }
+.admin-page-wrapper .growth-presets button:hover { background: #fff; color: #2563eb; }
 
-.growth-date {
+.admin-page-wrapper .growth-date {
     display: inline-flex;
     align-items: center;
     gap: 6px;
     font-size: 0.8rem;
     font-weight: 600;
-    color: #64748b;
+    color: var(--text-light);
 }
 
-.growth-date input {
+.admin-page-wrapper .growth-date input {
     padding: 7px 10px;
     min-height: 36px;
     font-family: inherit;
@@ -52,7 +61,7 @@
     border-radius: 8px;
 }
 
-.growth-apply {
+.admin-page-wrapper .growth-apply {
     padding: 8px 18px;
     min-height: 36px;
     font-family: inherit;
@@ -65,17 +74,17 @@
     cursor: pointer;
 }
 
-.growth-apply:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3); }
+.admin-page-wrapper .growth-apply:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3); }
 
-.growth-state {
+.admin-page-wrapper .growth-state {
     padding: 16px;
     text-align: center;
-    color: #64748b;
+    color: var(--text-light);
     font-weight: 600;
 }
 
-.growth-state--error { color: #b91c1c; }
-.growth-state button {
+.admin-page-wrapper .growth-state--error { color: #b91c1c; }
+.admin-page-wrapper .growth-state button {
     margin-inline-start: 8px;
     padding: 6px 14px;
     font-family: inherit;
@@ -87,40 +96,39 @@
     cursor: pointer;
 }
 
-.growth-table-wrap {
+.admin-page-wrapper .growth-table-wrap {
     overflow-x: auto;
 }
 
-.growth-table {
+.admin-page-wrapper .growth-table {
     width: 100%;
     border-collapse: collapse;
     font-size: 0.85rem;
 }
 
-.growth-table th,
-.growth-table td {
+.admin-page-wrapper .growth-table th,
+.admin-page-wrapper .growth-table td {
     padding: 10px 12px;
     text-align: left;
     border-bottom: 1px solid #eef2fb;
 }
 
-.growth-table th {
-    color: #64748b;
+.admin-page-wrapper .growth-table th {
+    color: var(--text-light);
     font-weight: 700;
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.04em;
 }
 
-.growth-table td { color: #0f1e3d; }
-.growth-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.admin-page-wrapper .growth-table td { color: #0f1e3d; }
+.admin-page-wrapper .growth-table .num { text-align: right; font-variant-numeric: tabular-nums; }
 
-.growth-empty {
+.admin-page-wrapper .growth-empty {
     text-align: center;
-    color: #94a3b8;
+    color: var(--text-light);
     padding: 24px;
 }
 
 @media (max-width: 768px) {
-    .growth-view { padding: 1rem !important; }
-}
+    .admin-page-wrapper .growth-view { padding: 1rem !important; }}

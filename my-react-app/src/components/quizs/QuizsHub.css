@@ -538,7 +538,7 @@
 .hubx .hubx-step-btn:hover .hubx-step-cta { filter: brightness(1.08); }
 
 /* Per-step accent — the same three colours used elsewhere for these areas. */
-.hubx .hubx-step--sum  .hubx-step-icon { background: #dcfce7; color: #15803d; }
+.hubx .hubx-step--sum  .hubx-step-icon { background: #dcfce7; color: var(--secondary-dark); }
 .hubx .hubx-step--sum  .hubx-step-cta  { background: #16a34a; }
 .hubx .hubx-step--sum  .hubx-step-btn:hover { border-color: #22c55e; }
 .hubx .hubx-step--quiz .hubx-step-icon { background: #dbeafe; color: #1d4ed8; }

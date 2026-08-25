@@ -295,7 +295,7 @@ const Subscribe = () => {
             <div className="login-wrapper">
                 <div className="login-card subscribe-card">
                     <div className="login-header">
-                        <span className="pill">{isGroup ? t.groupPill : t.pill}</span>
+                        <span className="login-pill">{isGroup ? t.groupPill : t.pill}</span>
                         {isGroup ? (
                             <>
                                 <h1 className="login-title">{t.groupTitle}</h1>

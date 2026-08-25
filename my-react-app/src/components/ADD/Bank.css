@@ -1,5 +1,14 @@
+/* Scoped to .admin-page-wrapper — the element AdminLayout puts around every
+   admin route. Admin stylesheets are loaded on admin pages but, like every
+   chunk in this app, they are never unloaded again, so their unscoped rules
+   went on applying to whatever the admin browsed next. That is how the admin
+   section's .modal-overlay, .stat-value, .form-group, .btn-primary and friends
+   ended up redefining index.css's and the analysis pages' versions for anyone
+   who visited /admin first. Everything here now applies only inside the admin
+   shell. Keep new rules inside this scheme — see docs/CSS_MAP.md. */
+
 /* Main container */
-.app-container {
+.admin-page-wrapper .app-container {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background-color: #ffffff;
   padding: 20px;
@@ -9,21 +18,21 @@
 }
 
 /* Title */
-.title {
+.admin-page-wrapper .title {
   font-size: 2rem;
-  color: #236ded;
+  color: var(--primary-dark);
   text-align: center;
   margin-bottom: 20px;
 }
 
 /* Search bar */
-.search-bar {
+.admin-page-wrapper .search-bar {
   display: flex;
   justify-content: center;
   margin-bottom: 20px;
 }
 
-.search-input {
+.admin-page-wrapper .search-input {
   width: 100%;
   padding: 10px;
   font-size: 1rem;
@@ -33,15 +42,15 @@
   color: #1e293b;
 }
 
-.search-input::placeholder {
+.admin-page-wrapper .search-input::placeholder {
   color: #475569;
 }
 
-.question-list {
+.admin-page-wrapper .question-list {
   overflow: visible;
 }
 
-.question-card {
+.admin-page-wrapper .app-container .question-card {
   border: 1px solid rgba(15, 23, 42, 0.10);
   border-radius: 12px;
   padding: 15px;
@@ -52,24 +61,24 @@
 }
 
 /* Form fields */
-.edit-form {
+.admin-page-wrapper .edit-form {
   padding: 10px;
 }
 
-.form-group {
+.admin-page-wrapper .form-group {
   margin-bottom: 15px;
 }
 
-.form-group label {
+.admin-page-wrapper .form-group label {
   display: block;
   font-weight: bold;
   margin-bottom: 5px;
   color: #1e293b;
 }
 
-textarea,
-input,
-select {
+.admin-page-wrapper textarea,
+.admin-page-wrapper input,
+.admin-page-wrapper select {
   width: 100%;
   padding: 8px;
   font-size: 1rem;
@@ -80,14 +89,14 @@ select {
   color: #1e293b;
 }
 
-textarea::placeholder,
-input::placeholder {
+.admin-page-wrapper textarea::placeholder,
+.admin-page-wrapper input::placeholder {
   color: #475569;
 }
 
 /* Buttons */
-.quiz-button,
-.analysis-button {
+.admin-page-wrapper .quiz-button,
+.admin-page-wrapper .analysis-button {
   padding: 10px 20px;
   font-size: 1rem;
   font-weight: bold;
@@ -95,59 +104,61 @@ input::placeholder {
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition-property: var(--transition-props);
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
 }
 
-.quiz-button {
+.admin-page-wrapper .quiz-button {
   background: linear-gradient(135deg, #236ded 0%, #1054ca 100%);
   box-shadow: 0 4px 15px rgba(35, 109, 237, 0.3);
 }
 
-.quiz-button:hover {
+.admin-page-wrapper .quiz-button:hover {
   background: linear-gradient(135deg, #6d9ef3 0%, #236ded 100%);
   box-shadow: 0 6px 20px rgba(35, 109, 237, 0.4);
   transform: translateY(-2px);
 }
 
-.analysis-button {
+.admin-page-wrapper .analysis-button {
   background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
   box-shadow: 0 4px 15px rgba(74, 222, 128, 0.3);
 }
 
-.analysis-button:hover {
+.admin-page-wrapper .analysis-button:hover {
   background: linear-gradient(135deg, #86efac 0%, #4ade80 100%);
   box-shadow: 0 6px 20px rgba(74, 222, 128, 0.4);
   transform: translateY(-2px);
 }
 
-.question-text {
+.admin-page-wrapper .app-container .question-text {
   font-size: 1.2rem;
   margin-bottom: 10px;
   color: #1e293b;
 }
 
-.options p {
+.admin-page-wrapper .options p {
   margin: 5px 0;
-  color: #64748b;
+  color: var(--text-light);
 }
 
-.correct-answer,
-.question-type {
+.admin-page-wrapper .correct-answer,
+.admin-page-wrapper .question-type {
   margin-top: 10px;
-  color: #64748b;
+  color: var(--text-light);
 }
 
 /* Loading screen */
-.loading-screen {
+.admin-page-wrapper .loading-screen {
   text-align: center;
   margin-top: 100px;
-  color: #236ded;
+  color: var(--primary-dark);
 }
 
 /* Success message */
-.success-message {
+.admin-page-wrapper .success-message {
   background-color: rgba(34, 197, 94, 0.2);
-  color: #4ade80;
+  color: var(--secondary-dark);
   padding: 12px;
   border-radius: 8px;
   text-align: center;
@@ -177,13 +188,13 @@ input::placeholder {
   }
 }
 
-.card-wrapper {
+.admin-page-wrapper .card-wrapper {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-.navigation-buttons {
+.admin-page-wrapper .navigation-buttons {
   margin-top: 20px;
   display: flex;
   justify-content: space-between;
@@ -194,7 +205,7 @@ input::placeholder {
 /* ── Bank (track) switcher ────────────────────────────────────────────────
    Medical and nursing are separate question banks. Only one is loaded at a
    time so an edit can never land on the wrong bank. */
-.bank-track-switch {
+.admin-page-wrapper .bank-track-switch {
     display: flex;
     justify-content: center;
     gap: 8px;
@@ -208,7 +219,7 @@ input::placeholder {
     flex-wrap: wrap;
 }
 
-.bank-track-btn {
+.admin-page-wrapper .bank-track-btn {
     display: inline-flex;
     align-items: baseline;
     gap: 7px;
@@ -225,21 +236,21 @@ input::placeholder {
     transition: background .15s ease, opacity .15s ease;
 }
 
-.bank-track-btn small {
+.admin-page-wrapper .bank-track-btn small {
     font-size: 0.76rem;
     font-weight: 500;
     opacity: 0.75;
 }
 
-.bank-track-btn:hover { opacity: 0.9; }
+.admin-page-wrapper .bank-track-btn:hover { opacity: 0.9; }
 
-.bank-track-btn.is-active {
+.admin-page-wrapper .bank-track-btn.is-active {
     background: #2563eb;
     color: #fff;
     opacity: 1;
 }
 
-.bank-track-btn:focus-visible {
+.admin-page-wrapper .bank-track-btn:focus-visible {
     outline: 2px solid #3b82f6;
     outline-offset: 2px;
 }

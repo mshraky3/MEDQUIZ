@@ -71,7 +71,7 @@
 .guide-card:hover {
     transform: translateY(-4px);
     border-color: rgba(35, 109, 237, 0.35);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3), 0 0 20px rgba(35, 109, 237, 0.1);
+    box-shadow: 0 12px 40px rgba(15, 23, 42, 0.14), 0 0 20px rgba(35, 109, 237, 0.1);
 }
 
 .guide-card h2 {

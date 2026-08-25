@@ -10,8 +10,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 10000;
-    animation: fadeIn 0.3s ease;
+    z-index: var(--z-modal);
+    animation: congrats-fade-in 0.3s ease;
 }
 
 .congratulations-popup {
@@ -38,7 +38,7 @@
     width: 200%;
     height: 200%;
     background: linear-gradient(45deg, transparent, rgba(35, 109, 237, 0.1), transparent);
-    animation: shimmer 3s infinite;
+    animation: congrats-shimmer 3s infinite;
 }
 
 .congratulations-header {
@@ -85,7 +85,7 @@
 .badge-icon {
     font-size: 3rem;
     margin-bottom: 10px;
-    animation: pulse 2s infinite;
+    animation: congrats-pulse 2s infinite;
 }
 
 .achievement-badge h3 {
@@ -96,7 +96,7 @@
 }
 
 .achievement-badge p {
-    color: #64748b;
+    color: var(--text-light);
     font-size: 1rem;
     margin: 0;
     line-height: 1.4;
@@ -123,7 +123,7 @@
 .type-badge,
 .source-badge {
     background: rgba(35, 109, 237, 0.15);
-    color: #236ded;
+    color: var(--primary-dark);
     padding: 8px 16px;
     border-radius: 20px;
     font-weight: 600;
@@ -148,7 +148,9 @@
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition-property: var(--transition-props);
+    transition-duration: 0.3s;
+    transition-timing-function: ease;
     min-width: 150px;
 }
 
@@ -179,7 +181,7 @@
 }
 
 /* Animations */
-@keyframes fadeIn {
+@keyframes congrats-fade-in {
     from {
         opacity: 0;
     }
@@ -220,7 +222,7 @@
     }
 }
 
-@keyframes pulse {
+@keyframes congrats-pulse {
     0% {
         transform: scale(1);
     }
@@ -234,7 +236,7 @@
     }
 }
 
-@keyframes shimmer {
+@keyframes congrats-shimmer {
     0% {
         transform: translateX(-100%) translateY(-100%) rotate(45deg);
     }

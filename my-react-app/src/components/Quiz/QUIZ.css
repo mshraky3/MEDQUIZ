@@ -3,7 +3,7 @@
    shadows. One short entrance fade on the question card only; no other
    decorative motion — this used to be a dark-glass design (blur, neon glows,
    three infinite animations) painted onto a plain white page. */
-@keyframes fadeIn {
+@keyframes quiz-fade-in {
   from {
     opacity: 0;
     transform: translateY(8px);
@@ -47,7 +47,7 @@
 
 /* The question stem and its options are exam material and always read LTR,
    whatever direction the surrounding chrome is in. */
-.question-text,
+.quiz-container-card .question-text,
 .option-button {
   direction: ltr;
   text-align: left;
@@ -68,16 +68,16 @@
 }
 
 /* Question Card */
-.question-card {
+.quiz-container-card .question-card {
   background: #ffffff;
   border-radius: 18px;
   border: 1px solid #e6ecf6;
   box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
   overflow: hidden;
-  animation: fadeIn 0.2s ease-out;
+  animation: quiz-fade-in 0.2s ease-out;
 }
 
-.question-header {
+.quiz-container-card .question-header {
   background: #f5f8fd;
   border-bottom: 1px solid #e6ecf6;
   padding: 16px 24px;
@@ -90,7 +90,7 @@
   align-items: center;
 }
 
-.question-header h3 {
+.quiz-container-card .question-header h3 {
   margin: 0;
   font-size: 1.1rem;
   font-weight: 700;
@@ -100,10 +100,10 @@
 .progress-compact {
   font-size: 0.9rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--text-light);
 }
 
-.question-content {
+.quiz-container-card .question-content {
   padding: 32px 24px;
 }
 
@@ -142,7 +142,7 @@
 
 .prev-button:disabled {
   background: #f5f8fd;
-  color: #94a3b8;
+  color: var(--text-light);
   border-color: #e6ecf6;
   cursor: not-allowed;
 }
@@ -159,7 +159,7 @@
 
 .next-button:disabled {
   background: #f5f8fd;
-  color: #94a3b8;
+  color: var(--text-light);
   cursor: not-allowed;
 }
 
@@ -175,7 +175,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: var(--z-modal-backdrop);
   padding: 24px;
 }
 
@@ -218,7 +218,7 @@
 }
 
 
-.question-text {
+.quiz-container-card .question-text {
   font-size: 1.4rem;
   margin-bottom: 32px;
   color: #0f1e3d;
@@ -292,7 +292,7 @@
 .option-button.is-correct {
   background: rgba(34, 197, 94, 0.10);
   border-color: #16a34a;
-  color: #15803d;
+  color: var(--secondary-dark);
   font-weight: 700;
 }
 
@@ -330,7 +330,7 @@
   margin-bottom: 24px;
   padding: 14px 18px;
   border-radius: 14px;
-  color: #16a34a;
+  color: var(--secondary-dark);
   background: rgba(34, 197, 94, 0.10);
   border: 1px solid rgba(34, 197, 94, 0.28);
   font-size: 1rem;
@@ -346,7 +346,7 @@
 .restart-button,
 .home-button {
   margin-top: 16px;
-  margin-left: 12px;
+  margin-inline-start: 12px;
   padding: 14px 32px;
   font-size: 1.05rem;
   border: none;
@@ -497,7 +497,7 @@
 
 .result-review-empty {
   text-align: center;
-  color: #16a34a;
+  color: var(--secondary-dark);
   font-weight: 600;
   padding: 16px 0;
 }
@@ -556,7 +556,7 @@
 }
 
 .result-review-state.ok {
-  color: #16a34a;
+  color: var(--secondary-dark);
 }
 
 .result-review-state.bad {
@@ -591,7 +591,7 @@
 
 .result-review-answer.ok {
   background: rgba(34, 197, 94, 0.10);
-  color: #15803d;
+  color: var(--secondary-dark);
 }
 
 .result-review-answer.bad {
@@ -615,11 +615,11 @@
     padding: 12px 20px;
   }
 
-  .question-header {
+  .quiz-container-card .question-header {
     padding: 14px 20px;
   }
 
-  .question-header h3 {
+  .quiz-container-card .question-header h3 {
     font-size: 1rem;
   }
 
@@ -627,11 +627,11 @@
     font-size: 0.8rem;
   }
 
-  .question-content {
+  .quiz-container-card .question-content {
     padding: 24px 20px;
   }
 
-  .question-text {
+  .quiz-container-card .question-text {
     font-size: 1.25rem;
   }
 
@@ -672,8 +672,7 @@
 
   .countdown {
     font-size: 1.2em;
-  }
-}
+  }}
 
 @media (max-width: 480px) {
   .quiz-container {
@@ -690,11 +689,11 @@
     padding: 10px 16px;
   }
 
-  .question-header {
+  .quiz-container-card .question-header {
     padding: 12px 16px;
   }
 
-  .question-header h3 {
+  .quiz-container-card .question-header h3 {
     font-size: 0.9rem;
   }
 
@@ -702,11 +701,11 @@
     font-size: 0.75rem;
   }
 
-  .question-content {
+  .quiz-container-card .question-content {
     padding: 20px 16px;
   }
 
-  .question-text {
+  .quiz-container-card .question-text {
     font-size: 1.1rem;
   }
 
@@ -760,7 +759,7 @@
   }
 
   .restart-button,
-  .home-button {
+.home-button {
     padding: 12px 24px;
     font-size: 0.95rem;
   }
@@ -768,9 +767,7 @@
   .result-buttons {
     flex-direction: column;
     align-items: center;
-  }
-
-}
+  }}
 
 @media (max-width: 360px) {
   .quiz-container {
@@ -782,7 +779,7 @@
     padding: 8px 14px;
   }
 
-  .question-text {
+  .quiz-container-card .question-text {
     font-size: 1rem;
   }
 
@@ -795,9 +792,7 @@
     padding: 10px 20px;
     font-size: 0.85rem;
     min-width: 90px;
-  }
-
-}
+  }}
 
 @media (max-width: 600px) {
   .quiz-result {
@@ -813,11 +808,10 @@
   }
 
   .restart-button,
-  .home-button {
+.home-button {
     padding: 12px 28px;
     font-size: 0.95rem;
-  }
-}
+  }}
 
 @media screen and (orientation: landscape) and (max-height: 500px) {
   .quiz-container {
@@ -825,7 +819,7 @@
     min-height: auto;
   }
 
-  .question-text {
+  .quiz-container-card .question-text {
     font-size: 1rem;
     margin-bottom: 16px;
   }
@@ -837,8 +831,7 @@
 
   .navigation-section {
     margin-top: 16px;
-  }
-}
+  }}
 
 /* ── Out of free questions ─────────────────────────────────────────────────
    Deliberately styled as a calm card, not an error state. Nothing failed and

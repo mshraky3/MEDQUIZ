@@ -104,15 +104,15 @@ const ForgotPassword = () => {
                     {/* Step 1: Email */}
                     {step === 'email' && (
                         <form onSubmit={handleSendOtp} className="login-form">
-                            <div className="form-group">
-                                <label className="form-label" htmlFor="forgot-email">{t.emailLabel}</label>
+                            <div className="login-field">
+                                <label className="login-label" htmlFor="forgot-email">{t.emailLabel}</label>
                                 <input
                                     id="forgot-email"
                                     type="email"
                                     placeholder={t.emailPlaceholder}
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="form-input"
+                                    className="login-input"
                                     autoComplete="email"
                                 />
                             </div>
@@ -129,8 +129,8 @@ const ForgotPassword = () => {
                     {/* Step 2: OTP */}
                     {step === 'otp' && (
                         <form onSubmit={handleVerifyOtp} className="login-form">
-                            <div className="form-group">
-                                <label className="form-label" htmlFor="forgot-otp">{t.otpLabel}</label>
+                            <div className="login-field">
+                                <label className="login-label" htmlFor="forgot-otp">{t.otpLabel}</label>
                                 <input
                                     id="forgot-otp"
                                     type="text"
@@ -139,7 +139,7 @@ const ForgotPassword = () => {
                                     placeholder={t.otpPlaceholder}
                                     value={otp}
                                     onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                                    className="form-input"
+                                    className="login-input"
                                     autoComplete="one-time-code"
                                     style={{ textAlign: 'center', fontSize: 28, letterSpacing: 12 }}
                                 />
@@ -168,27 +168,27 @@ const ForgotPassword = () => {
                     {/* Step 3: New Password */}
                     {step === 'password' && (
                         <form onSubmit={handleResetPassword} className="login-form">
-                            <div className="form-group">
-                                <label className="form-label" htmlFor="forgot-new-password">{t.newPasswordLabel}</label>
+                            <div className="login-field">
+                                <label className="login-label" htmlFor="forgot-new-password">{t.newPasswordLabel}</label>
                                 <input
                                     id="forgot-new-password"
                                     type="password"
                                     placeholder={t.newPasswordPlaceholder}
                                     value={newPassword}
                                     onChange={(e) => setNewPassword(e.target.value)}
-                                    className="form-input"
+                                    className="login-input"
                                     autoComplete="new-password"
                                 />
                             </div>
-                            <div className="form-group">
-                                <label className="form-label" htmlFor="forgot-confirm-password">{t.confirmLabel}</label>
+                            <div className="login-field">
+                                <label className="login-label" htmlFor="forgot-confirm-password">{t.confirmLabel}</label>
                                 <input
                                     id="forgot-confirm-password"
                                     type="password"
                                     placeholder={t.confirmPlaceholder}
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
-                                    className="form-input"
+                                    className="login-input"
                                     autoComplete="new-password"
                                 />
                             </div>

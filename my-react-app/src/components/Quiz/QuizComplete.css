@@ -61,7 +61,7 @@
 }
 
 .quiz-complete-msg strong {
-    color: #16a34a;
+    color: var(--secondary-dark);
     font-weight: 800;
 }
 
@@ -79,14 +79,14 @@
 .quiz-complete-stat-num {
     font-size: 30px;
     font-weight: 800;
-    color: #16a34a;
+    color: var(--secondary-dark);
     line-height: 1.1;
 }
 
 .quiz-complete-stat-label {
     font-size: 13px;
     font-weight: 600;
-    color: #64748b;
+    color: var(--text-light);
 }
 
 .quiz-complete-actions {

@@ -122,7 +122,12 @@ const QUIZ = () => {
   const [quizFinished, setQuizFinished] = useState(false);
   const [loading, setLoading] = useState(() => !savedRef.current);
   const [error, setError] = useState(null);
+  // dataSent means "the server acknowledged this session", nothing weaker.
+  // sendingRef is the separate in-flight latch that stops a re-render from
+  // firing a second submission while the first is still running — the two used
+  // to be the same flag, which is why a failed submit could never be retried.
   const [dataSent, setDataSent] = useState(false);
+  const sendingRef = useRef(false);
   const [retryCount, setRetryCount] = useState(0);
   // Category completion: the selected type+source has no unseen questions left.
   const [categoryDone, setCategoryDone] = useState(null);
@@ -430,7 +435,18 @@ const QUIZ = () => {
       // sit here too, permanently true and dead.
       const finalAnswers = buildAnswers(validQuestions, questionAnswers);
 
-      setDataSent(true);
+      // Re-entry guard, and NOT setDataSent(true).
+      //
+      // This used to set dataSent before the request, so the flag doubled as
+      // the "don't submit twice" latch. That made a failed submission
+      // permanent: the POST throws, the catch logs to console, dataSent is
+      // already true, and the effect's own guard on line 1 means the finished
+      // quiz can never be sent again. The student sees a normal results screen
+      // for a quiz the server never recorded. A ref keeps the double-submit
+      // protection without claiming the data arrived; dataSent is now set only
+      // after the server has actually acknowledged the session.
+      if (sendingRef.current) return;
+      sendingRef.current = true;
       const duration = finalDuration;
       const totalQuestions = finalAnswers.length;
       const correctCount = finalAnswers.filter(a => a.isCorrect).length;
@@ -491,7 +507,33 @@ const QUIZ = () => {
           };
         }
 
-        const sessionRes = await apiClient.post(endpoint, sessionData);
+        // The session POST is the one request here that carries the student's
+        // result; the attempt and topic-analysis calls below are derived detail
+        // and already have their own retry (settleWithRetry). This one had
+        // none — a single 500 or dropped connection lost the whole quiz. Retry
+        // three times with a short backoff, telling the server when it is a
+        // retry so it can recognise a submission that already landed instead of
+        // writing it twice.
+        const postSession = async () => {
+          let lastErr;
+          for (let attempt = 0; attempt < 3; attempt += 1) {
+            try {
+              return await apiClient.post(endpoint, attempt === 0 ? sessionData : { ...sessionData, retry_attempt: attempt });
+            } catch (err) {
+              lastErr = err;
+              const status = err?.response?.status;
+              // 4xx is a refusal, not a flaky call — retrying sends the same
+              // rejected body again. 401 in particular is already handled
+              // globally by apiClient's session-expiry interceptor.
+              if (status && status >= 400 && status < 500) throw err;
+              if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, (attempt + 1) * 800));
+            }
+          }
+          throw lastErr;
+        };
+
+        const sessionRes = await postSession();
+        setDataSent(true);
         const quiz_session_id = sessionRes.data.id;
 
         // The server tells us which (type, source) topics this quiz just
@@ -548,6 +590,12 @@ const QUIZ = () => {
         }
 
       } catch (error) {
+        // Left as NOT sent, so this is retryable rather than lost for good:
+        // dataSent stays false and the guard is released, so a remount of this
+        // screen (or the answers-changed effect firing again) submits once
+        // more. apiClient has already reported the failure to the error
+        // tracker, which is how these surface to the owner.
+        sendingRef.current = false;
         console.error("Error sending quiz data:", error);
       }
     };

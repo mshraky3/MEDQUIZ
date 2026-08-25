@@ -1,4 +1,4 @@
-@keyframes slideDown {
+@keyframes nav-slide-down {
   from {
     opacity: 0;
     transform: translateY(-20px);
@@ -10,7 +10,7 @@
   }
 }
 
-@keyframes fadeIn {
+@keyframes nav-fade-in {
   from {
     opacity: 0;
   }
@@ -40,12 +40,12 @@
   backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(15, 23, 42, 0.10);
   box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08);
-  min-height: 72px;
+  min-height: var(--navbar-h);
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
   z-index: var(--z-navbar);
-  animation: slideDown 0.6s ease-out;
+  animation: nav-slide-down 0.6s ease-out;
 }
 
 .navbar::before {
@@ -64,9 +64,9 @@
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
-  height: 72px;
+  height: var(--navbar-h);
   min-width: 0;
-  animation: fadeIn 0.8s ease-out 0.2s both;
+  animation: nav-fade-in 0.8s ease-out 0.2s both;
 }
 
 .navbar-lang-toggle {
@@ -91,7 +91,7 @@
   display: flex;
   align-items: center;
   min-width: 0;
-  animation: fadeIn 0.8s ease-out 0.3s both;
+  animation: nav-fade-in 0.8s ease-out 0.3s both;
 }
 
 /* Both edge columns are minmax(0, 1fr), which lets them be laid out NARROWER
@@ -111,12 +111,27 @@
   background: rgba(15, 23, 42, 0.04);
   color: #1e293b;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition-property: var(--transition-props);
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
   flex-shrink: 0;
+  position: relative;
+}
+
+/* The circle shrinks to 34px on a 360px-wide phone; this keeps the tappable
+   area at the 44x44 minimum without changing what is drawn. */
+.navbar .back-button::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: max(100%, 44px);
+  height: max(100%, 44px);
 }
 
 .navbar .back-button:hover {
@@ -132,10 +147,15 @@
 }
 
 .navbar-brand {
-  color: #3b82f6;
+  color: var(--primary-color);
   font-weight: 800;
   font-size: 1.2rem;
   text-decoration: none;
+  /* 32x30 as bare text — below the 44px touch minimum, on the control that
+     goes home from every page. Padding grows the hit area, not the type. */
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   /* Logical, not margin-left: the gap belongs between the brand and whatever
      follows it, which swaps sides with the site language. */
   margin-inline-end: 12px;
@@ -163,13 +183,15 @@
 }
 
 .nav-link {
-  color: #64748b;
+  color: var(--text-light);
   text-decoration: none;
   font-size: 0.9rem;
   font-weight: 500;
   padding: 6px 14px;
   border-radius: 8px;
-  transition: all 0.2s ease;
+  transition-property: var(--transition-props);
+  transition-duration: 0.2s;
+  transition-timing-function: ease;
 }
 
 .nav-link:hover {
@@ -198,7 +220,9 @@
   height: 2px;
   background: #1e293b;
   border-radius: 2px;
-  transition: all 0.3s ease;
+  transition-property: var(--transition-props);
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
 }
 
 .line-open:nth-child(1) {
@@ -233,7 +257,9 @@
   font-size: 12.5px;
   letter-spacing: 0.2px;
   border: 1px solid rgba(59, 130, 246, 0.3);
-  transition: all 0.3s ease;
+  transition-property: var(--transition-props);
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
   position: relative;
   overflow: hidden;
 }
@@ -327,8 +353,8 @@
   border: 1px solid rgba(15, 23, 42, 0.10);
   border-radius: 12px;
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.16);
-  z-index: 1100;
-  animation: fadeIn 0.15s ease-out;
+  z-index: 1;
+  animation: nav-fade-in 0.15s ease-out;
 }
 
 .user-menu-email {
@@ -395,32 +421,19 @@
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.28);
 }
 
-/* Page content padding when navbar is present */
+/* Page content padding when navbar is present.
+   +1px for the bar's own border-bottom: `min-height` sits inside the border
+   box, but `.navbar-left`'s explicit height pushes the content box out to the
+   full value, so the bar always renders one pixel taller than --navbar-h.
+   Without the +1 the top pixel of every page sat under the (translucent) bar,
+   at every breakpoint. */
 .page-with-navbar {
-  padding-top: 72px;
+  padding-top: calc(var(--navbar-h) + 1px);
   /* Sticky-footer column: content grows, Footer (margin-top:auto) sits at the
      bottom so it is always reachable, even when a page's content is short. */
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-}
-
-@media (max-width: 768px) {
-  .page-with-navbar {
-    padding-top: 56px;
-  }
-}
-
-@media (max-width: 480px) {
-  .page-with-navbar {
-    padding-top: 52px;
-  }
-}
-
-@media (max-width: 360px) {
-  .page-with-navbar {
-    padding-top: 48px;
-  }
 }
 
 /* Layout collapse.
@@ -472,12 +485,7 @@
 /* Mobile sizing (unchanged thresholds — only the collapse moved up to 1024). */
 @media (max-width: 768px) {
   .navbar {
-    min-height: 64px;
     padding: 0 16px;
-  }
-
-  .navbar-left {
-    height: 64px;
   }
 
   .navbar-brand {
@@ -503,20 +511,11 @@
     width: 18px;
     height: 18px;
   }
-
-  .page-with-navbar {
-    padding-top: 64px;
-  }
 }
 
 @media (max-width: 480px) {
   .navbar {
-    min-height: 56px;
     padding: 0 12px;
-  }
-
-  .navbar-left {
-    height: 56px;
   }
 
   .navbar .back-button {
@@ -539,20 +538,11 @@
     width: 16px;
     height: 16px;
   }
-
-  .page-with-navbar {
-    padding-top: 56px;
-  }
 }
 
 @media (max-width: 360px) {
   .navbar {
-    min-height: 52px;
     padding: 0 10px;
-  }
-
-  .navbar-left {
-    height: 52px;
   }
 
   .navbar .back-button {
@@ -571,25 +561,6 @@
     margin-inline-end: 4px;
     width: 14px;
     height: 14px;
-  }
-
-  .page-with-navbar {
-    padding-top: 52px;
-  }
-}
-
-/* Landscape orientation adjustments */
-@media (max-width: 768px) and (orientation: landscape) {
-  .navbar {
-    min-height: 56px;
-  }
-
-  .navbar-left {
-    height: 56px;
-  }
-
-  .page-with-navbar {
-    padding-top: 56px;
   }
 }
 

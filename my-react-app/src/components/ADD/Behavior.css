@@ -1,3 +1,12 @@
+/* Scoped to .admin-page-wrapper — the element AdminLayout puts around every
+   admin route. Admin stylesheets are loaded on admin pages but, like every
+   chunk in this app, they are never unloaded again, so their unscoped rules
+   went on applying to whatever the admin browsed next. That is how the admin
+   section's .modal-overlay, .stat-value, .form-group, .btn-primary and friends
+   ended up redefining index.css's and the analysis pages' versions for anyone
+   who visited /admin first. Everything here now applies only inside the admin
+   shell. Keep new rules inside this scheme — see docs/CSS_MAP.md. */
+
 /* ==================== Admin → Behaviour ====================
    Only the pieces recharts cannot draw: the day×hour heatmap, the retention
    cohort grid, the hardest-questions table and its answer-spread modal.
@@ -8,7 +17,7 @@
    class names and ADD.jsx loads both, so which one wins is decided by chunk
    load order rather than by intent — and this file is not adding to it. */
 
-.behavior-view .bhv-headline {
+.admin-page-wrapper .behavior-view .bhv-headline {
     margin-bottom: 0;
 }
 
@@ -17,49 +26,49 @@
    ticks. Cells carry no colour of their own — the page sets opacity inline
    from the value, over the one accent below, so 168 cells read as a single
    surface with bright spots rather than as a mosaic. */
-.bhv-heatmap {
+.admin-page-wrapper .bhv-heatmap {
     display: flex;
     flex-direction: column;
     gap: 10px;
 }
 
-.bhv-heatmap-grid {
+.admin-page-wrapper .bhv-heatmap-grid {
     display: grid;
     grid-template-columns: 34px repeat(24, 1fr);
     gap: 2px;
     align-items: center;
 }
 
-.bhv-heatmap-day {
+.admin-page-wrapper .bhv-heatmap-day {
     font-size: 0.68rem;
     font-weight: 700;
-    color: #64748b;
+    color: var(--text-light);
 }
 
-.bhv-heatmap-cell {
+.admin-page-wrapper .bhv-heatmap-cell {
     aspect-ratio: 1;
     min-height: 14px;
     border-radius: 3px;
     background: #2563eb;
 }
 
-.bhv-heatmap-hour {
+.admin-page-wrapper .bhv-heatmap-hour {
     font-size: 0.6rem;
-    color: #94a3b8;
+    color: var(--text-light);
     text-align: center;
     white-space: nowrap;
 }
 
-.bhv-heatmap-legend {
+.admin-page-wrapper .bhv-heatmap-legend {
     display: flex;
     align-items: center;
     justify-content: flex-end;
     gap: 5px;
     font-size: 0.68rem;
-    color: #94a3b8;
+    color: var(--text-light);
 }
 
-.bhv-heatmap-legend i {
+.admin-page-wrapper .bhv-heatmap-legend i {
     width: 14px;
     height: 14px;
     border-radius: 3px;
@@ -70,97 +79,97 @@
    Both tables here are wider than a phone and one is wider than most laptops.
    They scroll inside their own box rather than widening the page — a table
    that makes the whole document scroll sideways takes the navigation with it. */
-.bhv-table-scroll {
+.admin-page-wrapper .bhv-table-scroll {
     overflow-x: auto;
     margin-inline: -4px;
     padding-inline: 4px;
 }
 
-.bhv-table,
-.bhv-cohort {
+.admin-page-wrapper .bhv-table,
+.admin-page-wrapper .bhv-cohort {
     width: 100%;
     border-collapse: collapse;
     font-size: 0.8rem;
 }
 
-.bhv-table th,
-.bhv-cohort th {
+.admin-page-wrapper .bhv-table th,
+.admin-page-wrapper .bhv-cohort th {
     text-align: start;
     padding: 8px 10px;
     font-size: 0.7rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.4px;
-    color: #64748b;
+    color: var(--text-light);
     border-bottom: 1px solid #e6ecf7;
     white-space: nowrap;
 }
 
-.bhv-table td {
+.admin-page-wrapper .bhv-table td {
     padding: 10px;
     border-bottom: 1px solid #f1f5f9;
     vertical-align: top;
 }
 
-.bhv-row-click {
+.admin-page-wrapper .bhv-row-click {
     cursor: pointer;
     transition: background 0.12s ease;
 }
 
-.bhv-row-click:hover {
+.admin-page-wrapper .bhv-row-click:hover {
     background: rgba(37, 99, 235, 0.05);
 }
 
-.bhv-qtext {
+.admin-page-wrapper .bhv-qtext {
     max-width: 420px;
     line-height: 1.5;
     color: #0f1e3d;
 }
 
-.bhv-qid {
+.admin-page-wrapper .bhv-qid {
     font-weight: 700;
-    color: #94a3b8;
+    color: var(--text-light);
 }
 
-.bhv-dim {
-    color: #94a3b8;
+.admin-page-wrapper .bhv-dim {
+    color: var(--text-light);
     font-weight: 500;
 }
 
 /* Accuracy bands share the meaning of the global --accuracy-* ramp: a question
    under 35% correct is the one to look at first. */
-.bhv-pct {
+.admin-page-wrapper .bhv-pct {
     display: inline-block;
     padding: 2px 8px;
     border-radius: 999px;
     font-weight: 700;
 }
 
-.bhv-pct.is-low {
+.admin-page-wrapper .bhv-pct.is-low {
     background: var(--accuracy-low-bg, rgba(220, 38, 38, 0.12));
     color: var(--accuracy-low, #dc2626);
 }
 
-.bhv-pct.is-mid {
+.admin-page-wrapper .bhv-pct.is-mid {
     background: var(--accuracy-mid-bg, rgba(217, 119, 6, 0.12));
     color: var(--accuracy-mid, #d97706);
 }
 
-.bhv-pct.is-ok {
+.admin-page-wrapper .bhv-pct.is-ok {
     background: var(--accuracy-high-bg, rgba(22, 163, 74, 0.12));
     color: var(--accuracy-high, #16a34a);
 }
 
-.bhv-threshold {
+.admin-page-wrapper .bhv-threshold {
     display: inline-flex;
     align-items: center;
     gap: 8px;
     font-size: 0.75rem;
     font-weight: 600;
-    color: #64748b;
+    color: var(--text-light);
 }
 
-.bhv-threshold input {
+.admin-page-wrapper .bhv-threshold input {
     width: 68px;
     padding: 5px 8px;
     border: 1px solid #d4deee;
@@ -171,22 +180,22 @@
 /* ── Retention cohort grid ──────────────────────────────────────────────
    The fill is passed per cell as a --fill custom property (0-1) so the
    intensity is the retention percentage itself, not a bucket. */
-.bhv-cohort td {
+.admin-page-wrapper .bhv-cohort td {
     padding: 7px 9px;
     border-bottom: 1px solid #f1f5f9;
     white-space: nowrap;
 }
 
-.bhv-cohort-week {
+.admin-page-wrapper .bhv-cohort-week {
     font-weight: 700;
     color: #0f1e3d;
 }
 
-.bhv-cohort-size {
-    color: #64748b;
+.admin-page-wrapper .bhv-cohort-size {
+    color: var(--text-light);
 }
 
-.bhv-cohort-cell {
+.admin-page-wrapper .bhv-cohort-cell {
     text-align: center;
     font-weight: 700;
     font-size: 0.72rem;
@@ -195,12 +204,12 @@
     border-radius: 4px;
 }
 
-.bhv-cohort-empty {
+.admin-page-wrapper .bhv-cohort-empty {
     background: transparent;
 }
 
 /* ── Simple ranked lists (streaks, most active) ─────────────────────────── */
-.bhv-list {
+.admin-page-wrapper .bhv-list {
     list-style: none;
     margin: 0;
     padding: 0;
@@ -208,7 +217,7 @@
     gap: 2px;
 }
 
-.bhv-list li {
+.admin-page-wrapper .bhv-list li {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -218,11 +227,11 @@
     font-size: 0.82rem;
 }
 
-.bhv-list li:nth-child(odd) {
+.admin-page-wrapper .bhv-list li:nth-child(odd) {
     background: rgba(15, 23, 42, 0.025);
 }
 
-.bhv-list-name {
+.admin-page-wrapper .bhv-list-name {
     font-weight: 600;
     color: #0f1e3d;
     overflow: hidden;
@@ -230,8 +239,8 @@
     white-space: nowrap;
 }
 
-.bhv-list-value {
-    color: #64748b;
+.admin-page-wrapper .bhv-list-value {
+    color: var(--text-light);
     font-weight: 600;
     white-space: nowrap;
 }
@@ -240,7 +249,7 @@
    Its own overlay rather than the global .modal-overlay: that one lives in
    index.css and is shared by student-facing pages, and the admin shell is
    pinned LTR while the site can be RTL. */
-.bhv-modal-overlay {
+.admin-page-wrapper .bhv-modal-overlay {
     position: fixed;
     inset: 0;
     z-index: var(--z-modal-backdrop, 1040);
@@ -253,7 +262,7 @@
     -webkit-backdrop-filter: blur(4px);
 }
 
-.bhv-modal {
+.admin-page-wrapper .bhv-modal {
     width: 100%;
     max-width: 560px;
     max-height: 85vh;
@@ -265,7 +274,7 @@
     box-shadow: 0 24px 60px rgba(15, 23, 42, 0.24);
 }
 
-.bhv-modal-head {
+.admin-page-wrapper .bhv-modal-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -273,27 +282,27 @@
     margin-bottom: 12px;
 }
 
-.bhv-modal-head h3 {
+.admin-page-wrapper .bhv-modal-head h3 {
     margin: 0;
     font-size: 1rem;
     color: #0f1e3d;
 }
 
-.bhv-modal-close {
+.admin-page-wrapper .bhv-modal-close {
     display: inline-flex;
     padding: 6px;
     border: none;
     border-radius: 8px;
     background: transparent;
-    color: #64748b;
+    color: var(--text-light);
     cursor: pointer;
 }
 
-.bhv-modal-close:hover {
+.admin-page-wrapper .bhv-modal-close:hover {
     background: rgba(15, 23, 42, 0.06);
 }
 
-.bhv-modal-q {
+.admin-page-wrapper .bhv-modal-q {
     margin: 0 0 16px;
     font-size: 0.88rem;
     line-height: 1.6;
@@ -303,7 +312,7 @@
 /* Each option is a bar whose width is its share of the answers, with the label
    over it. The correct one is outlined so the shape of the mistake — one
    dominant wrong answer versus an even spread — is readable at a glance. */
-.bhv-spread {
+.admin-page-wrapper .bhv-spread {
     list-style: none;
     margin: 0;
     padding: 0;
@@ -311,7 +320,7 @@
     gap: 6px;
 }
 
-.bhv-spread li {
+.admin-page-wrapper .bhv-spread li {
     position: relative;
     display: flex;
     align-items: center;
@@ -325,28 +334,28 @@
     overflow: hidden;
 }
 
-.bhv-spread li.is-correct {
+.admin-page-wrapper .bhv-spread li.is-correct {
     border-color: rgba(22, 163, 74, 0.45);
 }
 
-.bhv-spread-bar {
+.admin-page-wrapper .bhv-spread-bar {
     position: absolute;
     inset-block: 0;
     inset-inline-start: 0;
     background: rgba(220, 38, 38, 0.14);
 }
 
-.bhv-spread li.is-correct .bhv-spread-bar {
+.admin-page-wrapper .bhv-spread li.is-correct .bhv-spread-bar {
     background: rgba(22, 163, 74, 0.16);
 }
 
-.bhv-spread-label,
-.bhv-spread-n {
+.admin-page-wrapper .bhv-spread-label,
+.admin-page-wrapper .bhv-spread-n {
     position: relative;
     z-index: 1;
 }
 
-.bhv-spread-label {
+.admin-page-wrapper .bhv-spread-label {
     display: flex;
     align-items: center;
     gap: 6px;
@@ -354,40 +363,39 @@
     font-weight: 600;
 }
 
-.bhv-spread-n {
-    color: #64748b;
+.admin-page-wrapper .bhv-spread-n {
+    color: var(--text-light);
     font-weight: 700;
     white-space: nowrap;
 }
 
-.bhv-modal-expl {
+.admin-page-wrapper .bhv-modal-expl {
     margin-top: 14px;
     font-size: 0.8rem;
     color: #475569;
 }
 
-.bhv-modal-expl summary {
+.admin-page-wrapper .bhv-modal-expl summary {
     cursor: pointer;
     font-weight: 600;
     color: #2563eb;
 }
 
-.bhv-modal-expl p {
+.admin-page-wrapper .bhv-modal-expl p {
     margin: 8px 0 0;
     line-height: 1.65;
 }
 
 @media (max-width: 900px) {
-    .bhv-heatmap-grid {
+    .admin-page-wrapper .bhv-heatmap-grid {
         grid-template-columns: 28px repeat(24, 1fr);
         gap: 1px;
     }
 
-    .bhv-heatmap-cell {
+    .admin-page-wrapper .bhv-heatmap-cell {
         min-height: 10px;
     }
 
-    .bhv-qtext {
+    .admin-page-wrapper .bhv-qtext {
         max-width: 240px;
-    }
-}
+    }}

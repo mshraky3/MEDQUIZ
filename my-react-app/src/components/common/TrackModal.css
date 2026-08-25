@@ -1,11 +1,16 @@
 /* ── Study-track modal ─────────────────────────────────────────────────────
    Shared by Signup and Login (Google sign-in creating a brand-new account).
-   Uses the `scaleIn` keyframe from Login.css, which every consumer of this
-   modal already imports. */
+   Owns both of its keyframes. It used to borrow `scaleIn` from Login.css on
+   the grounds that "every consumer already imports it" — which made this
+   file's animation silently depend on another file's global keyframe name.
+   @keyframes is a flat global namespace with no specificity, so the moment
+   any other stylesheet defined `scaleIn` the card animated to someone else's
+   curve; and renaming it in Login.css (as the audit required) broke this
+   outright. */
 .track-modal {
     position: fixed;
     inset: 0;
-    z-index: 1050;
+    z-index: var(--z-modal);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -22,6 +27,11 @@
     to   { opacity: 1; }
 }
 
+@keyframes trackModalCardIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to   { opacity: 1; transform: scale(1); }
+}
+
 .track-modal-card {
     width: 100%;
     max-width: 540px;
@@ -31,7 +41,7 @@
     background: var(--surface, #ffffff);
     border: 1px solid var(--border-color, #d4deee);
     box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
-    animation: scaleIn .3s ease-out;
+    animation: trackModalCardIn .3s ease-out;
     text-align: start;
 }
 

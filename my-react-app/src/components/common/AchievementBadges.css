@@ -21,9 +21,11 @@
     font-size: 0.8rem;
     font-weight: 600;
     box-shadow:
-        0 2px 8px rgba(0, 0, 0, 0.2),
+        0 2px 8px rgba(15, 23, 42, 0.09),
         inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    transition: all 0.3s ease;
+    transition-property: var(--transition-props);
+    transition-duration: 0.3s;
+    transition-timing-function: ease;
     cursor: pointer;
     white-space: nowrap;
     color: #1e293b;
@@ -34,7 +36,7 @@
     background: rgba(15, 23, 42, 0.04);
     border-color: rgba(35, 109, 237, 0.3);
     box-shadow:
-        0 4px 12px rgba(0, 0, 0, 0.25),
+        0 4px 12px rgba(15, 23, 42, 0.11),
         0 0 15px rgba(35, 109, 237, 0.15);
 }
 
@@ -44,7 +46,7 @@
 
 .achievement-text {
     font-weight: bold;
-    color: #236ded;
+    color: var(--primary-dark);
     font-size: 0.8rem;
     text-transform: capitalize;
 }
@@ -52,19 +54,6 @@
 /* Keep all badges looking like streak badge for consistency */
 
 /* Animations */
-@keyframes pulse {
-    0% {
-        transform: scale(1);
-    }
-
-    50% {
-        transform: scale(1.05);
-    }
-
-    100% {
-        transform: scale(1);
-    }
-}
 
 /* Responsive Design */
 @media (max-width: 768px) {

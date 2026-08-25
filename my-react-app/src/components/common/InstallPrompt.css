@@ -5,7 +5,7 @@
   position: fixed;
   inset-inline: 12px;
   bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-  z-index: 1200;
+  z-index: var(--z-banner);
   display: flex;
   align-items: center;
   gap: 12px;

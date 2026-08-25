@@ -51,7 +51,7 @@
   cursor: pointer;
 }
 .goalx-link:hover { text-decoration: underline; }
-.goalx-link--muted { color: #94a3b8; }
+.goalx-link--muted { color: var(--text-light); }
 
 /* ── Active goal ─────────────────────────────────────────────── */
 .goalx-body {
@@ -109,15 +109,15 @@
   line-height: 1.2;
 }
 
-.goalx-of { color: #cbd5e1; font-weight: 600; }
+.goalx-of { color: var(--text-light); font-weight: 600; }
 
 .goalx-type {
   margin: 2px 0 0;
   font-size: 12px;
-  color: #64748b;
+  color: var(--text-light);
 }
 
-.goalx-period { color: #94a3b8; }
+.goalx-period { color: var(--text-light); }
 
 .goalx-remaining {
   margin: 6px 0 0;
@@ -136,7 +136,7 @@
   display: block;
   font-size: 11.5px;
   font-weight: 500;
-  color: #64748b;
+  color: var(--text-light);
   margin-top: 2px;
 }
 
@@ -153,7 +153,7 @@
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #94a3b8;
+  color: var(--text-light);
   margin-bottom: 7px;
 }
 
@@ -186,12 +186,12 @@
 
 .goalx-trend--up { color: #047857; }
 .goalx-trend--down { color: #b45309; }
-.goalx-trend--flat { color: #94a3b8; font-weight: 500; }
+.goalx-trend--flat { color: var(--text-light); font-weight: 500; }
 
 .goalx-progress-empty {
   margin: 0;
   font-size: 13px;
-  color: #94a3b8;
+  color: var(--text-light);
 }
 
 /* ── Empty state ─────────────────────────────────────────────── */
@@ -227,7 +227,7 @@
   margin: 0;
   font-size: 12px;
   line-height: 1.55;
-  color: #64748b;
+  color: var(--text-light);
 }
 
 /* ── Editor ──────────────────────────────────────────────────── */
@@ -239,7 +239,7 @@
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #94a3b8;
+  color: var(--text-light);
   margin-bottom: 8px;
 }
 
@@ -311,7 +311,7 @@
   margin: 8px 0 0;
   font-size: 11.5px;
   line-height: 1.6;
-  color: #94a3b8;
+  color: var(--text-light);
 }
 
 .goalx-error {

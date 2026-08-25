@@ -30,7 +30,7 @@
         flex-direction: row;
     }
 
-    .signup-password-row .form-group {
+    .signup-password-row .login-field {
         flex: 1;
         min-width: 0;
     }
@@ -100,17 +100,24 @@
     align-items: flex-start;
     gap: 10px;
     margin: 2px 0 6px;
+    padding: 6px 0;
+    min-height: 44px;
     font-size: 13px;
     line-height: 1.7;
-    color: var(--muted, #64748b);
+    color: var(--muted);
     text-align: start;
     cursor: pointer;
 }
 
+/* 22px, not 17. The whole row is a <label>, so the text already toggles the
+   box — but the box is what people aim at, and 17px (16 as rendered) was the
+   smallest target in the product, on the one control that blocks account
+   creation. The row also gets vertical padding so the combined target clears
+   44px however the label wraps. */
 .terms-agree-row input[type="checkbox"] {
-    width: 17px;
-    height: 17px;
-    margin-top: 3px;
+    width: 22px;
+    height: 22px;
+    margin-top: 1px;
     flex-shrink: 0;
     accent-color: #2563eb;
     cursor: pointer;

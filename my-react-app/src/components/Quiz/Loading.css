@@ -22,7 +22,7 @@
 }
 
 .loading-content p {
-  color: #64748b;
+  color: var(--text-light);
   font-size: 1rem;
   margin-bottom: 1.5rem;
 }

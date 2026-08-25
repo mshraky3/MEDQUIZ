@@ -1,8 +1,17 @@
+/* Scoped to .admin-page-wrapper — the element AdminLayout puts around every
+   admin route. Admin stylesheets are loaded on admin pages but, like every
+   chunk in this app, they are never unloaded again, so their unscoped rules
+   went on applying to whatever the admin browsed next. That is how the admin
+   section's .modal-overlay, .stat-value, .form-group, .btn-primary and friends
+   ended up redefining index.css's and the analysis pages' versions for anyone
+   who visited /admin first. Everything here now applies only inside the admin
+   shell. Keep new rules inside this scheme — see docs/CSS_MAP.md. */
+
 /* ==================== Shared admin UI kit ====================
    Used by Kpi, Panel and ChartCard across every /admin/* page — the light,
    card-based language already established by AdminAnalytics.css. */
 
-.admin-kpi {
+.admin-page-wrapper .admin-kpi {
     display: flex;
     align-items: center;
     gap: 12px;
@@ -13,18 +22,18 @@
     min-width: 0;
 }
 
-.admin-kpi.is-clickable {
+.admin-page-wrapper .admin-kpi.is-clickable {
     cursor: pointer;
     transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
 
-.admin-kpi.is-clickable:hover {
+.admin-page-wrapper .admin-kpi.is-clickable:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
     border-color: rgba(37, 99, 235, 0.3);
 }
 
-.admin-kpi-ic {
+.admin-page-wrapper .admin-kpi-ic {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -36,20 +45,20 @@
     background: linear-gradient(135deg, #3b82f6, #2563eb);
 }
 
-.admin-kpi--positive .admin-kpi-ic { background: linear-gradient(135deg, #4ade80, #16a34a); }
-.admin-kpi--negative .admin-kpi-ic { background: linear-gradient(135deg, #f87171, #dc2626); }
-.admin-kpi--warning .admin-kpi-ic { background: linear-gradient(135deg, #fbbf24, #d97706); }
+.admin-page-wrapper .admin-kpi--positive .admin-kpi-ic { background: linear-gradient(135deg, #4ade80, #16a34a); }
+.admin-page-wrapper .admin-kpi--negative .admin-kpi-ic { background: linear-gradient(135deg, #f87171, #dc2626); }
+.admin-page-wrapper .admin-kpi--warning .admin-kpi-ic { background: linear-gradient(135deg, #fbbf24, #d97706); }
 
-.admin-kpi-body { display: flex; flex-direction: column; min-width: 0; gap: 1px; }
-.admin-kpi-value { font-size: 1.4rem; font-weight: 800; color: #0f1e3d; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.admin-kpi-label { font-size: 0.74rem; color: #64748b; font-weight: 600; }
-.admin-kpi-sub { font-size: 0.68rem; color: #94a3b8; }
+.admin-page-wrapper .admin-kpi-body { display: flex; flex-direction: column; min-width: 0; gap: 1px; }
+.admin-page-wrapper .admin-kpi-value { font-size: 1.4rem; font-weight: 800; color: #0f1e3d; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.admin-page-wrapper .admin-kpi-label { font-size: 0.74rem; color: var(--text-light); font-weight: 600; }
+.admin-page-wrapper .admin-kpi-sub { font-size: 0.68rem; color: var(--text-light); }
 
-.admin-kpi--negative .admin-kpi-value { color: #b91c1c; }
-.admin-kpi--warning .admin-kpi-value { color: #b45309; }
+.admin-page-wrapper .admin-kpi--negative .admin-kpi-value { color: #b91c1c; }
+.admin-page-wrapper .admin-kpi--warning .admin-kpi-value { color: #b45309; }
 
 /* Panel */
-.admin-panel {
+.admin-page-wrapper .admin-panel {
     padding: 20px 22px;
     background: #fff;
     border: 1px solid #e6ecf7;
@@ -58,7 +67,7 @@
     margin-bottom: 20px;
 }
 
-.admin-panel-head {
+.admin-page-wrapper .admin-panel-head {
     display: flex;
     flex-wrap: wrap;
     align-items: flex-start;
@@ -67,7 +76,7 @@
     margin-bottom: 16px;
 }
 
-.admin-panel-head h2 {
+.admin-page-wrapper .admin-panel-head h2 {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -76,14 +85,14 @@
     color: #0f1e3d;
 }
 
-.admin-panel-sub {
+.admin-page-wrapper .admin-panel-sub {
     display: block;
     margin-top: 2px;
     font-size: 0.8rem;
-    color: #64748b;
+    color: var(--text-light);
 }
 
-.admin-panel-actions {
+.admin-page-wrapper .admin-panel-actions {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -91,22 +100,22 @@
 }
 
 /* Chart card */
-.admin-chart-card { min-width: 0; }
+.admin-page-wrapper .admin-chart-card { min-width: 0; }
 
-.admin-chart-state {
+.admin-page-wrapper .admin-chart-state {
     height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #94a3b8;
+    color: var(--text-light);
     font-size: 0.85rem;
     text-align: center;
 }
 
-.admin-chart-state--error { color: #b91c1c; }
+.admin-page-wrapper .admin-chart-state--error { color: #b91c1c; }
 
 /* Strip layout — a row of Kpi tiles */
-.admin-strip {
+.admin-page-wrapper .admin-strip {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
     gap: 12px;
@@ -114,12 +123,11 @@
 }
 
 /* Grid of chart cards / panels, 2-up on desktop */
-.admin-grid-2 {
+.admin-page-wrapper .admin-grid-2 {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 16px;
 }
 
 @media (max-width: 900px) {
-    .admin-grid-2 { grid-template-columns: 1fr; }
-}
+    .admin-page-wrapper .admin-grid-2 { grid-template-columns: 1fr; }}

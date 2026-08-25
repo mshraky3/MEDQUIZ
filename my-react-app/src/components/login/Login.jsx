@@ -255,8 +255,8 @@ const Login = () => {
             )}
 
             <form onSubmit={handleSubmit} className="login-form">
-              <div className="form-group">
-                <label className="form-label" htmlFor="login-username">{copy.emailLabel}</label>
+              <div className="login-field">
+                <label className="login-label" htmlFor="login-username">{copy.emailLabel}</label>
                 <input
                   id="login-username"
                   type="text"
@@ -264,13 +264,13 @@ const Login = () => {
                   placeholder={copy.emailPlaceholder}
                   value={form.username}
                   onChange={handleChange}
-                  className="form-input"
+                  className="login-input"
                   autoComplete="email"
                 />
               </div>
 
-              <div className="form-group">
-                <label className="form-label" htmlFor="login-password">{copy.passwordLabel}</label>
+              <div className="login-field">
+                <label className="login-label" htmlFor="login-password">{copy.passwordLabel}</label>
                 <div className="password-input-wrapper">
                   <input
                     id="login-password"
@@ -279,7 +279,7 @@ const Login = () => {
                     placeholder={copy.passwordPlaceholder}
                     value={form.password}
                     onChange={handleChange}
-                    className="form-input"
+                    className="login-input"
                     autoComplete="current-password"
                   />
                   <button

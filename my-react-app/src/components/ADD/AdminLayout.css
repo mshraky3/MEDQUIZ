@@ -1,6 +1,26 @@
 /* Admin layout — replaces AdminNavbar.css */
 
+/* The admin theme. These five names are read 71 times across Admin.css,
+   add.css, addq.css, Accounting.css, Behavior.css, Growth.css,
+   AdminBroadcast.css, Bank.css and ui/ui.css — and until now they were
+   defined NOWHERE, so every one of those uses rendered from its own inline
+   fallback. The fallbacks had drifted: --admin-muted appeared as #64748b
+   (x26), #94a3b8 (x2) and #475569 (x1); --admin-border as #e2e8f0 (x15),
+   #f1f5f9 and #cbd5e1. Admin muted text was rendering in three different
+   greys and borders in three more, with no single place to change any of it.
+   Defined here, on the wrapper every admin route mounts inside, and mapped
+   onto the global palette so the admin section stays in step with the app.
+
+   Scoped to .admin-page-wrapper rather than :root on purpose: these are the
+   admin section's theme, not the site's, and the site's own pages must not
+   start resolving them by accident. */
 .admin-page-wrapper {
+    --admin-bg: var(--surface-2);
+    --admin-surface: var(--surface);
+    --admin-text: var(--text-dark);
+    --admin-border: var(--border-color);
+    --admin-muted: var(--text-light);
+
     min-height: 100vh;
     background: #ffffff;
 }
@@ -8,7 +28,7 @@
 .admin-navbar {
     position: sticky;
     top: 0;
-    z-index: 1000;
+    z-index: var(--z-navbar);
     background: rgba(255, 255, 255, 0.97);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
@@ -75,7 +95,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: #94a3b8;
+    color: var(--text-light);
     flex-shrink: 0;
 }
 
@@ -93,12 +113,14 @@
     padding: 8px 14px;
     font-size: 13.5px;
     font-weight: 500;
-    color: #64748b;
+    color: var(--text-light);
     background: transparent;
     border: 1px solid transparent;
     border-radius: 8px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition-property: var(--transition-props);
+    transition-duration: 0.2s;
+    transition-timing-function: ease;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     white-space: nowrap;
     flex-shrink: 0;
@@ -110,7 +132,7 @@
 }
 
 .admin-nav-link.active {
-    color: #236ded;
+    color: var(--primary-dark);
     background: rgba(35, 109, 237, 0.1);
     border-color: rgba(35, 109, 237, 0.25);
 }
@@ -127,7 +149,9 @@
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition-property: var(--transition-props);
+    transition-duration: 0.3s;
+    transition-timing-function: ease;
     flex-shrink: 0;
     white-space: nowrap;
 }
@@ -162,7 +186,9 @@
     border-top: 1px solid rgba(15, 23, 42, 0.10);
     max-height: 0;
     overflow: hidden;
-    transition: all 0.3s ease;
+    transition-property: var(--transition-props);
+    transition-duration: 0.3s;
+    transition-timing-function: ease;
 }
 
 .admin-mobile-menu.open {
@@ -178,7 +204,7 @@
     padding: 13px 16px;
     font-size: 14.5px;
     font-weight: 500;
-    color: #64748b;
+    color: var(--text-light);
     background: rgba(15, 23, 42, 0.04);
     border: 1px solid rgba(15, 23, 42, 0.10);
     border-radius: 10px;
@@ -187,7 +213,7 @@
 }
 
 .admin-mobile-link.active {
-    color: #236ded;
+    color: var(--primary-dark);
     background: rgba(35, 109, 237, 0.1);
     border-color: rgba(35, 109, 237, 0.3);
 }
@@ -196,7 +222,7 @@
     margin-top: 8px;
     background: linear-gradient(135deg, rgba(35, 109, 237, 0.15) 0%, rgba(16, 84, 202, 0.15) 100%);
     border-color: rgba(35, 109, 237, 0.3);
-    color: #236ded;
+    color: var(--primary-dark);
 }
 
 .mobile-link-icon {

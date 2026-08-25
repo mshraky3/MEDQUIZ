@@ -1,3 +1,19 @@
+> ## ⚠️ HISTORICAL — DO NOT USE AS A REFERENCE
+>
+> This document describes a **retired palette**: primary `#01b3d9`, secondary
+> `#c7e941`, accent `#2a9d8f`. None of those colours exist in the app any more.
+> The live design system is "Scholar blue" — primary `#2563eb` — and its single
+> source of truth is `src/index.css`.
+>
+> Kept only as a record of an earlier unification pass. For the current system see:
+> - **`docs/DESIGN_MAP.md`** — page-by-page map of every route, its stylesheets and layout contract
+> - **`docs/DESIGN_AUDIT_2026-08-25.md`** — the defect register and what was fixed
+> - **`docs/CSS_MAP.md`** — cross-stylesheet collision history
+>
+> *(Marked historical 2026-08-25.)*
+
+---
+
 # Design Unification Summary
 
 ## Overview

@@ -466,7 +466,7 @@ const Signup = () => {
                             Seat/invite keep theirs: those convey actual account state
                             (a paid seat, an admin invite), not a sales pitch. */}
                         {(isGroupSeat || isTempLink) && (
-                            <div className="pill">
+                            <div className="login-pill">
                                 {isGroupSeat ? t.pillSeat : t.pillInvite}
                             </div>
                         )}
@@ -529,13 +529,13 @@ const Signup = () => {
                                     track={studyTrack}
                                 />
                             )}
-                            <div className="form-group">
-                                <label className="form-label" htmlFor="email">{t.emailLabel}</label>
+                            <div className="login-field">
+                                <label className="login-label" htmlFor="email">{t.emailLabel}</label>
                                 <input
                                     type="email"
                                     id="email"
                                     name="email"
-                                    className="form-input"
+                                    className="login-input"
                                     value={form.email}
                                     onChange={handleInputChange}
                                     placeholder={t.emailPlaceholder}
@@ -544,13 +544,13 @@ const Signup = () => {
                                 />
                             </div>
                             <div className="signup-password-row">
-                                <div className="form-group">
-                                    <label className="form-label" htmlFor="password">{t.passwordLabel}</label>
+                                <div className="login-field">
+                                    <label className="login-label" htmlFor="password">{t.passwordLabel}</label>
                                     <input
                                         type="password"
                                         id="password"
                                         name="password"
-                                        className="form-input"
+                                        className="login-input"
                                         value={form.password}
                                         onChange={handleInputChange}
                                         placeholder={t.passwordPlaceholder}
@@ -558,13 +558,13 @@ const Signup = () => {
                                         required
                                     />
                                 </div>
-                                <div className="form-group">
-                                    <label className="form-label" htmlFor="confirmPassword">{t.confirmLabel}</label>
+                                <div className="login-field">
+                                    <label className="login-label" htmlFor="confirmPassword">{t.confirmLabel}</label>
                                     <input
                                         type="password"
                                         id="confirmPassword"
                                         name="confirmPassword"
-                                        className="form-input"
+                                        className="login-input"
                                         value={form.confirmPassword}
                                         onChange={handleInputChange}
                                         placeholder={t.confirmPlaceholder}
@@ -609,13 +609,13 @@ const Signup = () => {
                         </form>
                     ) : (
                         <form onSubmit={handleSubmit} className="login-form">
-                            <div className="form-group">
-                                <label className="form-label" htmlFor="otp">{t.otpLabel}</label>
+                            <div className="login-field">
+                                <label className="login-label" htmlFor="otp">{t.otpLabel}</label>
                                 <input
                                     type="text"
                                     id="otp"
                                     name="otp"
-                                    className="form-input"
+                                    className="login-input"
                                     value={otp}
                                     onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                                     placeholder={t.otpPlaceholder}

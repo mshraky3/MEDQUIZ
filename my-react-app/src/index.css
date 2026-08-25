@@ -5,7 +5,7 @@
   --primary-dark: #1d4ed8;
   --primary-light: #3b82f6;
   --secondary-color: #16a34a;
-  --secondary-dark: #15803d;
+  --secondary-dark: #166534;
   --accent-color: #2563eb;
   --accent-light: #3b82f6;
   /* Short aliases: several stylesheets (Summaries.css, Signup.jsx, and more)
@@ -14,7 +14,13 @@
      happened to load last in the session — so the same page could render a
      different accent color depending on navigation history. One real
      definition here removes that. */
-  --accent: var(--accent-light);
+  /* Points at --primary-color, not --accent-light. --accent is read as a TEXT
+     colour in 21 places (landing links, .link-primary on login/signup, quiz
+     hub headings, the whole summaries hub); at #3b82f6 every one of those
+     measured 3.68:1, under the 4.5 AA floor. #2563eb measures 5.17:1 and is
+     the same brand blue. --accent-light is still available by name for the
+     fills, hover tints and focus borders that actually want the lighter step. */
+  --accent: var(--primary-color);
   --muted: var(--text-light);
   /* --accent-strong had no :root value at all, only page-scoped ones on
      .landing-body / .login-body / .quiz-selection. Login.css's shared
@@ -29,7 +35,14 @@
   /* Neutral Colors - Light Theme */
   --text-dark: #0f1e3d;
   --text-medium: #475569;
-  --text-light: #64748b;
+  /* Was #64748b (slate-500). That clears 4.5:1 on pure white, but this app's
+     pages are not white — --bg is #eef2fb, and cards sit on --surface-2 —
+     where it measured 4.24-4.47:1 against real rendered backgrounds. Since
+     this is the default colour for every secondary label, hint, placeholder
+     and caption in the product, that was a systemic AA near-miss on every
+     page. #5b6779 measures 5.08:1 on --bg and 5.74:1 on white, and is still
+     clearly lighter than --text-medium so the hierarchy is intact. */
+  --text-light: #5b6779;
   --bg-light: #eef2fb;
   --bg-white: #ffffff;
   --border-color: #d4deee;
@@ -40,6 +53,22 @@
   --surface: #ffffff;
   --surface-2: #f5f8fd;
   --surface-tint: #e1eafb;
+
+  /* Global defaults for the four short names that .landing-body, .login-body
+     and .quiz-selection each redefine locally. They previously existed ONLY on
+     those three roots, which meant any rule reading them from outside one
+     resolved to nothing — and an unresolvable var() does not fall back, it
+     makes the whole declaration `unset` at computed-value time. A missing
+     --border inside `border: 1px solid var(--border)` is not a default border,
+     it is NO border; a missing --card is a transparent card. Defining them
+     here turns every page-scoped copy into a deliberate refinement instead of
+     a load-bearing requirement, so a shared rule can never blank out because
+     of where it happened to render. */
+  --card: var(--surface);
+  --text: var(--text-dark);
+  --border: var(--border-color);
+  --shadow: var(--shadow-lg);
+  --glass: var(--surface-2);
 
   /* Status Colors (tuned for light backgrounds) */
   --success-color: #16a34a;
@@ -67,6 +96,18 @@
   --font-family-primary: var(--font-family-latin);
   --font-family-secondary: var(--font-family-latin);
   --font-family-inter: 'Inter', sans-serif;
+
+  /* Height of the fixed app bar, at this breakpoint.
+     Three separate rules have to agree on this number — `.navbar`'s
+     min-height, `.navbar-left`'s height, and `.page-with-navbar`'s
+     padding-top — and when they were maintained by hand they drifted:
+     Navbar.css carried TWO competing sets of padding-top rules (56/52/48 and
+     64/56/52), and only the second set won, purely because it appeared later
+     in the file. Reordering the file would have shifted every page 8px under
+     the navbar. Deriving all three from one token makes that class of drift
+     impossible. The bar also carries a 1px border-bottom, which is why the
+     page offset is `calc(var(--navbar-h) + 1px)` and not the bare value. */
+  --navbar-h: 72px;
 
   /* Elevation: the layer a fixed navbar sits at. Kept distinct from
      --z-modal-backdrop/--z-modal (below) specifically so the two can never
@@ -161,7 +202,41 @@
   --transition-normal: 0.25s ease;
   --transition-slow: 0.3s ease;
 
-  /* Z-index */
+  /* The properties a hover/focus/active state actually changes. Use with the
+     transition-* longhands instead of `transition: all`:
+
+       transition-property: var(--transition-props);
+       transition-duration: 0.2s;
+       transition-timing-function: ease;
+
+     `all` was used in ~93 rules. It animates EVERY animatable property,
+     including layout ones — so a rule that also changes padding, width or
+     font-size on hover animated those too, and any property changed by a
+     media query or by JS transitioned as well. Naming the set keeps every
+     intended effect (colour, elevation, movement, fade, blur) and drops the
+     unintended layout tweening. */
+  --transition-props: background-color, background-image, border-color, color,
+    box-shadow, transform, opacity, filter, backdrop-filter;
+
+  /* Z-index.
+     One ladder for the whole app. Every `position: fixed` overlay must take
+     its value from here — a raw number is how six different full-screen
+     modals ended up at 1000, i.e. UNDER the 1030 navbar, with the navbar
+     still clickable through the backdrop.
+
+       dropdown  1000  menu attached to a trigger (navbar user menu)
+       sticky    1020  in-page sticky headers
+       navbar    1030  the one fixed app bar            (= --z-fixed)
+       backdrop  1040  a modal's dimmer — above the navbar, by definition
+       modal     1050  the modal's own card
+       popover   1060  a popover raised from inside a modal
+       tooltip   1070  never blocks anything
+       banner    1080  app-level banners mounted OUTSIDE the router
+                       (cookie consent, install prompt) — these gate the whole
+                       app, so they intentionally outrank an open modal.
+
+     Anything that needs to sit between two rungs should get a named rung
+     here rather than a hardcoded offset. */
   --z-dropdown: 1000;
   --z-sticky: 1020;
   --z-fixed: 1030;
@@ -169,6 +244,7 @@
   --z-modal: 1050;
   --z-popover: 1060;
   --z-tooltip: 1070;
+  --z-banner: 1080;
 }
 
 html[lang="ar"] {
@@ -297,7 +373,9 @@ p {
   border: none;
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all var(--transition-normal);
+  transition-property: var(--transition-props);
+  transition-duration: 0.25s;
+  transition-timing-function: ease;
   text-decoration: none;
   /* No white-space: nowrap — a long Arabic label must be able to wrap onto a
      second line instead of overflowing or forcing the button wider than its
@@ -358,7 +436,15 @@ select:focus-visible {
   transition: transform var(--transition-normal), box-shadow var(--transition-normal);
 }
 
-.card:hover {
+/* Opt-in, not automatic. A hover-lift is an affordance — it tells the reader
+   "this whole surface does something when you click it". On the base .card it
+   promised that of every card, including the many that are just containers,
+   and it fired while the cursor was merely crossing them. Cards that really
+   are one big control say so: `class="card card--interactive"`, or use an
+   <a>/<button> as the card element. */
+a.card:hover,
+button.card:hover,
+.card--interactive:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-lg);
 }
@@ -459,9 +545,31 @@ select:focus-visible {
   margin-top: var(--space-2);
 }
 
+/* ── Breakpoints ───────────────────────────────────────────────────────────
+   The standard scale is 480 / 768 / 1024. Those three carry 70 of the app's
+   media queries between them and are what the navbar, the type scale and
+   --navbar-h all switch on; use them unless a component has a real reason not
+   to.
+
+   The remaining widths in the codebase (380, 400, 520, 560, 600, 680, 720,
+   800, 860, 880, 900, 1050, 1200, 1400) are component-specific reflow points
+   — the width at which that one card, table or grid actually runs out of room.
+   Several are legitimate: a 680px table and a 1400px dashboard do not reflow
+   at the same place as a phone. They are listed here so the next person can
+   tell a deliberate content breakpoint from a stray one, and so nobody adds a
+   fifteenth by accident.
+
+   Note that a `min-width: 640px` / `max-width: 639px` pair (Summaries.css) is
+   NOT drift — that is the correct way to write two mutually exclusive ranges
+   with no overlap at the boundary.
+
+   CSS custom properties cannot be used inside a media feature, so these
+   cannot be tokenised; the convention has to be kept by hand. */
+
 /* Responsive Design */
 @media (max-width: 768px) {
   :root {
+    --navbar-h: 64px;
     --text-4xl: 2rem;
     /* 32px */
     --text-3xl: 1.75rem;
@@ -486,6 +594,7 @@ select:focus-visible {
 
 @media (max-width: 480px) {
   :root {
+    --navbar-h: 56px;
     --text-4xl: 1.875rem;
     /* 30px */
     --text-3xl: 1.625rem;
@@ -503,5 +612,45 @@ select:focus-visible {
 
   .modal-overlay {
     padding: var(--space-2);
+  }
+}
+
+@media (max-width: 360px) {
+  :root {
+    --navbar-h: 52px;
+  }
+}
+
+/* A phone held sideways has plenty of width but very little height — the bar
+   shrinks so it doesn't eat the fold. Declared last so it wins over the
+   width-only blocks above at the same widths. */
+@media (max-width: 768px) and (orientation: landscape) {
+  :root {
+    --navbar-h: 56px;
+  }
+}
+
+/* ── Reduced motion ────────────────────────────────────────────────────────
+   Nine stylesheets carried their own `prefers-reduced-motion` block; nineteen
+   others animated with none — including Login.css (7 keyframes), QUIZS.css
+   (7) and CongratulationsPopup.css (5), plus every entrance animation on the
+   navbar, the quiz and the analysis screens. Rather than add a nineteenth
+   local block, this one covers everything, current and future.
+
+   Not `animation: none`: killing an animation outright leaves any element
+   whose start state is `opacity: 0` (every fade-in-up in the app) invisible
+   forever. Collapsing the duration instead lets each animation run to its
+   final frame in a single tick, which is the visible end state, with no
+   motion. The per-file blocks that already exist are more specific about
+   individual properties and still apply on top of this. */
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

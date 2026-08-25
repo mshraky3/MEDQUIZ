@@ -7,9 +7,9 @@ import Globals from '../../global.js';
 const API = Globals.URL;
 
 const STATUS_LABELS = {
-    pending: { label: 'Pending', color: '#f59e0b' },
-    reviewed_correct: { label: 'Confirmed Correct', color: '#22c55e' },
-    reviewed_corrected: { label: 'Corrected', color: '#22d3ee' },
+    pending: { label: 'Pending', color: '#b45309' },
+    reviewed_correct: { label: 'Confirmed Correct', color: '#166534' },
+    reviewed_corrected: { label: 'Corrected', color: '#0e7490' },
 };
 
 const QuestionReports = () => {
@@ -69,19 +69,19 @@ const QuestionReports = () => {
 
     return (
         <AdminLayout bare>
-            <div style={{ minHeight: 'calc(100vh - 60px)', background: '#0b1021', color: '#e2e8f0' }}>
+            <div style={{ minHeight: 'calc(100vh - 60px)', background: 'transparent', color: '#0f172a' }}>
             <div style={{ maxWidth: 900, margin: '0 auto', padding: '32px 16px' }}>
                 <h1 style={{ fontSize: 24, marginBottom: 8 }}><Icon name="flag" size={16} /> Question Reports</h1>
-                <p style={{ color: '#94a3b8', marginBottom: 32 }}>
+                <p style={{ color: '#5b6779', marginBottom: 32 }}>
                     Review questions reported by users. Resolve each report and an email will be sent to the reporter.
                 </p>
 
-                {loading && <p style={{ color: '#94a3b8' }}>Loading...</p>}
+                {loading && <p style={{ color: '#5b6779' }}>Loading...</p>}
                 {error && (
-                    <div style={{ background: '#1a0000', border: '1px solid #7f1d1d', borderRadius: 8, padding: 16, marginBottom: 24 }}>
-                        <p style={{ color: '#f87171', margin: '0 0 8px 0' }}>{error}</p>
-                        <p style={{ color: '#64748b', fontSize: 12, margin: '0 0 12px 0' }}>API: {API || 'VITE_API not set'}</p>
-                        <button onClick={fetchReports} style={{ background: '#7f1d1d', color: '#fca5a5', border: 'none', borderRadius: 6, padding: '6px 14px', cursor: 'pointer' }}>
+                    <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: 16, marginBottom: 24 }}>
+                        <p style={{ color: '#b91c1c', margin: '0 0 8px 0' }}>{error}</p>
+                        <p style={{ color: '#5b6779', fontSize: 12, margin: '0 0 12px 0' }}>API: {API || 'VITE_API not set'}</p>
+                        <button onClick={fetchReports} style={{ background: '#fecaca', color: '#7f1d1d', border: 'none', borderRadius: 6, padding: '6px 14px', cursor: 'pointer' }}>
                             Retry
                         </button>
                     </div>
@@ -91,21 +91,21 @@ const QuestionReports = () => {
                     <>
                         {/* Pending Reports */}
                         <section style={{ marginBottom: 48 }}>
-                            <h2 style={{ fontSize: 18, color: '#f59e0b', marginBottom: 16 }}>
+                            <h2 style={{ fontSize: 18, color: '#b45309', marginBottom: 16 }}>
                                 Pending ({pending.length})
                             </h2>
                             {pending.length === 0 && (
-                                <p style={{ color: '#64748b' }}>No pending reports.</p>
+                                <p style={{ color: '#5b6779' }}>No pending reports.</p>
                             )}
                             {pending.map((report) => {
                                 const edit = editState[report.id] || {};
                                 return (
                                     <div key={report.id} style={cardStyle}>
                                         <div style={cardHeader}>
-                                            <span style={{ color: '#94a3b8', fontSize: 13 }}>
+                                            <span style={{ color: '#5b6779', fontSize: 13 }}>
                                                 Report #{report.id} · {new Date(report.created_at).toLocaleDateString()} · {report.question_type}
                                             </span>
-                                            <span style={{ background: '#f59e0b22', color: '#f59e0b', fontSize: 12, padding: '2px 10px', borderRadius: 20 }}>
+                                            <span style={{ background: '#f59e0b22', color: '#b45309', fontSize: 12, padding: '2px 10px', borderRadius: 20 }}>
                                                 Pending
                                             </span>
                                         </div>
@@ -116,9 +116,9 @@ const QuestionReports = () => {
                                             {['option1', 'option2', 'option3', 'option4'].map((opt) => report[opt] && (
                                                 <span key={opt} style={{
                                                     ...optionTag,
-                                                    background: report[opt] === report.correct_option ? '#166534' : '#1e293b',
-                                                    color: report[opt] === report.correct_option ? '#86efac' : '#cbd5e1',
-                                                    border: report[opt] === report.correct_option ? '1px solid #22c55e' : '1px solid #2d3f60',
+                                                    background: report[opt] === report.correct_option ? '#166534' : '#f5f8fd',
+                                                    color: report[opt] === report.correct_option ? '#ffffff' : '#0f172a',
+                                                    border: report[opt] === report.correct_option ? '1px solid #166534' : '1px solid #d4deee',
                                                 }}>
                                                     {report[opt] === report.correct_option ? <Icon name="check" size={13} /> : null} {report[opt]}
                                                 </span>
@@ -127,16 +127,16 @@ const QuestionReports = () => {
 
                                         {report.reason && (
                                             <div style={reasonBox}>
-                                                <span style={{ color: '#94a3b8', fontSize: 12 }}>User's reason: </span>
+                                                <span style={{ color: '#5b6779', fontSize: 12 }}>User's reason: </span>
                                                 <span style={{ fontSize: 14 }}>{report.reason}</span>
                                             </div>
                                         )}
 
-                                        <p style={{ fontSize: 13, color: '#94a3b8', margin: '8px 0 4px 0' }}>
-                                            Reported by: <strong style={{ color: '#e2e8f0' }}>{report.user_email}</strong>
+                                        <p style={{ fontSize: 13, color: '#5b6779', margin: '8px 0 4px 0' }}>
+                                            Reported by: <strong style={{ color: '#0f172a' }}>{report.user_email}</strong>
                                         </p>
 
-                                        <div style={{ marginTop: 16, borderTop: '1px solid #2d3f60', paddingTop: 16 }}>
+                                        <div style={{ marginTop: 16, borderTop: '1px solid #d4deee', paddingTop: 16 }}>
                                             <label style={labelStyle}>Admin note (optional)</label>
                                             <input
                                                 style={inputStyle}
@@ -148,7 +148,7 @@ const QuestionReports = () => {
                                             <div style={{ display: 'flex', gap: 12, marginTop: 12, flexWrap: 'wrap' }}>
                                                 {/* Option 1: Question is correct */}
                                                 <button
-                                                    style={{ ...actionBtn, background: '#166534', color: '#86efac' }}
+                                                    style={{ ...actionBtn, background: '#166534', color: '#ffffff' }}
                                                     disabled={resolving === report.id}
                                                     onClick={() => handleResolve(report.id, 'correct')}
                                                 >
@@ -164,7 +164,7 @@ const QuestionReports = () => {
                                                         onChange={(e) => updateEdit(report.id, 'newAnswer', e.target.value)}
                                                     />
                                                     <button
-                                                        style={{ ...actionBtn, background: '#0e7490', color: '#e0f2fe', width: '100%' }}
+                                                        style={{ ...actionBtn, background: '#0e7490', color: '#ffffff', width: '100%' }}
                                                         disabled={resolving === report.id}
                                                         onClick={() => handleResolve(report.id, 'corrected')}
                                                     >
@@ -180,18 +180,18 @@ const QuestionReports = () => {
 
                         {/* Resolved Reports */}
                         <section>
-                            <h2 style={{ fontSize: 18, color: '#64748b', marginBottom: 16 }}>
+                            <h2 style={{ fontSize: 18, color: '#5b6779', marginBottom: 16 }}>
                                 Resolved ({resolved.length})
                             </h2>
                             {resolved.length === 0 && (
-                                <p style={{ color: '#64748b' }}>No resolved reports yet.</p>
+                                <p style={{ color: '#5b6779' }}>No resolved reports yet.</p>
                             )}
                             {resolved.map((report) => {
-                                const statusInfo = STATUS_LABELS[report.status] || { label: report.status, color: '#94a3b8' };
+                                const statusInfo = STATUS_LABELS[report.status] || { label: report.status, color: '#5b6779' };
                                 return (
                                     <div key={report.id} style={{ ...cardStyle, opacity: 0.75 }}>
                                         <div style={cardHeader}>
-                                            <span style={{ color: '#94a3b8', fontSize: 13 }}>
+                                            <span style={{ color: '#5b6779', fontSize: 13 }}>
                                                 Report #{report.id} · {new Date(report.created_at).toLocaleDateString()} · {report.user_email}
                                             </span>
                                             <span style={{ background: statusInfo.color + '22', color: statusInfo.color, fontSize: 12, padding: '2px 10px', borderRadius: 20 }}>
@@ -200,14 +200,14 @@ const QuestionReports = () => {
                                         </div>
                                         <p style={{ fontWeight: 600, margin: '10px 0 6px 0', fontSize: 14 }}>{report.question_text}</p>
                                         {report.status === 'reviewed_corrected' && (
-                                            <p style={{ fontSize: 13, color: '#94a3b8', margin: '4px 0' }}>
-                                                Changed: <span style={{ color: '#f87171', textDecoration: 'line-through' }}>{report.old_correct_option}</span>
+                                            <p style={{ fontSize: 13, color: '#5b6779', margin: '4px 0' }}>
+                                                Changed: <span style={{ color: '#b91c1c', textDecoration: 'line-through' }}>{report.old_correct_option}</span>
                                                 {' → '}
-                                                <span style={{ color: '#86efac' }}>{report.new_correct_option}</span>
+                                                <span style={{ color: '#166534', fontWeight: 700 }}>{report.new_correct_option}</span>
                                             </p>
                                         )}
                                         {report.admin_note && (
-                                            <p style={{ fontSize: 13, color: '#94a3b8', margin: '4px 0' }}>Note: {report.admin_note}</p>
+                                            <p style={{ fontSize: 13, color: '#5b6779', margin: '4px 0' }}>Note: {report.admin_note}</p>
                                         )}
                                     </div>
                                 );
@@ -223,8 +223,8 @@ const QuestionReports = () => {
 
 // ── Styles ──────────────────────────────────────────────────
 const cardStyle = {
-    background: '#1a2237',
-    border: '1px solid #2d3f60',
+    background: '#ffffff',
+    border: '1px solid #d4deee',
     borderRadius: 10,
     padding: 20,
     marginBottom: 16,
@@ -252,8 +252,8 @@ const optionTag = {
 };
 
 const reasonBox = {
-    background: '#0f172a',
-    border: '1px solid #2d3f60',
+    background: '#f5f8fd',
+    border: '1px solid #d4deee',
     borderRadius: 6,
     padding: '8px 12px',
     margin: '10px 0 4px 0',
@@ -263,16 +263,16 @@ const reasonBox = {
 const labelStyle = {
     display: 'block',
     fontSize: 13,
-    color: '#94a3b8',
+    color: '#5b6779',
     marginBottom: 6,
 };
 
 const inputStyle = {
     width: '100%',
-    background: '#0f172a',
-    border: '1px solid #2d3f60',
+    background: '#f5f8fd',
+    border: '1px solid #d4deee',
     borderRadius: 6,
-    color: '#e2e8f0',
+    color: '#0f172a',
     padding: '8px 12px',
     fontSize: 14,
     boxSizing: 'border-box',

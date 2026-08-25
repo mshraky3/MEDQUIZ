@@ -1,4 +1,4 @@
-@keyframes fadeInUp {
+@keyframes login-fade-in-up {
   from {
     opacity: 0;
     transform: translateY(30px);
@@ -10,7 +10,7 @@
   }
 }
 
-@keyframes scaleIn {
+@keyframes login-scale-in {
   from {
     opacity: 0;
     transform: scale(0.95);
@@ -22,7 +22,7 @@
   }
 }
 
-@keyframes float {
+@keyframes login-float {
 
   0%,
   100% {
@@ -34,7 +34,7 @@
   }
 }
 
-@keyframes glow {
+@keyframes login-glow {
 
   0%,
   100% {
@@ -46,40 +46,25 @@
   }
 }
 
-@keyframes shimmer {
-  0% {
-    background-position: -1000px 0;
-  }
-
-  100% {
-    background-position: 1000px 0;
-  }
-}
-
-@keyframes pulse {
-
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.8;
-  }
-}
-
 /* Scoped to .login-body (also used by Signup, ForgotPassword, Subscribe and
    PaymentCallback, which all import this stylesheet), not :root — see the
    identical note in Landing.css. --accent and --muted now come from the real
    global tokens in index.css. */
 .login-body {
-  --card: rgba(0, 0, 0, 0.04);
-  --glass: rgba(0, 0, 0, 0.06);
+  /* --card and --shadow were dark-theme leftovers: a 4%-black wash and a
+     35%-black 80px drop shadow. On this page's light gradient that rendered
+     the card DARKER than the surface behind it — inverted elevation, legible
+     only because of a very heavy grey halo. Every auth and checkout page
+     (login, signup, forgot-password, subscribe, payment callback) inherited
+     it. Now the same white surface and the same elevation ramp as every other
+     card in the app. */
+  --card: var(--surface);
+  --glass: var(--surface-2);
   --text: #1e293b;
   --accent-strong: #2563eb;
   --pill-bg: rgba(59, 130, 246, 0.16);
   --border: rgba(15, 23, 42, 0.10);
-  --shadow: 0 25px 80px rgba(0, 0, 0, 0.35);
+  --shadow: var(--shadow-lg);
 }
 
 .login-body {
@@ -107,10 +92,14 @@
 
 .login-wrapper {
   width: 100%;
-  max-width: 480px;
+  max-width: var(--container-card);
   margin: 0 auto;
 }
 
+/* No :hover lift here. A hover-lift says "this whole thing is one clickable
+   surface"; this is a form you type into, and the entire card used to jump 4px
+   the moment the cursor crossed it — including while you were reaching for a
+   field. Hover affordances belong on the controls inside it. */
 .login-card {
   background: var(--card);
   border: 1px solid var(--border);
@@ -118,22 +107,20 @@
   padding: 36px;
   box-shadow: var(--shadow);
   backdrop-filter: blur(10px);
-  animation: scaleIn 0.6s ease-out;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  animation: login-scale-in 0.35s ease-out;
 }
 
-.login-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.45);
-}
-
+/* The header and the form below used to be staggered 0.2s and 0.4s behind the
+   card with `both` fill — so the fields were invisible for 400ms and not
+   settled for a full second, on the one screen a returning user wants to get
+   through fastest. They now arrive with the card. */
 .login-header {
   text-align: center;
   margin-bottom: 22px;
-  animation: fadeInUp 0.6s ease-out 0.2s both;
+  animation: login-fade-in-up 0.35s ease-out;
 }
 
-.pill {
+.login-pill {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -146,7 +133,7 @@
   letter-spacing: 0.5px;
   text-transform: uppercase;
   margin-bottom: 10px;
-  animation: float 3s ease-in-out infinite;
+  animation: login-float 3s ease-in-out infinite;
 }
 
 .login-title {
@@ -168,23 +155,23 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
-  animation: fadeInUp 0.6s ease-out 0.4s both;
+  animation: login-fade-in-up 0.35s ease-out;
 }
 
 /* margin-bottom is restated, not inherited. index.css also defines
-   .form-group (with margin-bottom: var(--space-4)) and this rule does not
+   .login-field (with margin-bottom: var(--space-4)) and this rule does not
    reset it, so the real gap between two login fields has always been 16px of
    that margin PLUS .login-form's own 14px of flex gap — 30px that neither
    file states and that only holds while index.css keeps losing the load order.
    The spacing is right; it just needed to be deliberate. */
-.form-group {
+.login-field {
   display: flex;
   flex-direction: column;
   gap: 6px;
   margin-bottom: var(--space-4);
 }
 
-.form-label {
+.login-label {
   font-size: 13px;
   font-weight: 600;
   color: var(--text);
@@ -192,7 +179,7 @@
   letter-spacing: 0.5px;
 }
 
-.form-input {
+.login-input {
   width: 100%;
   padding: 14px 16px;
   background: rgba(15, 23, 42, 0.04);
@@ -203,11 +190,13 @@
      Safari zooms the whole page on focus, on every page that uses this class
      (Login, Signup, ForgotPassword, Subscribe, PaymentCallback). */
   font-size: 16px;
-  transition: all 0.3s ease;
+  transition-property: var(--transition-props);
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
   box-sizing: border-box;
 }
 
-.form-input:focus {
+.login-input:focus {
   outline: none;
   border-color: var(--accent);
   background: rgba(15, 23, 42, 0.04);
@@ -215,7 +204,7 @@
   transform: translateY(-2px);
 }
 
-.form-input::placeholder {
+.login-input::placeholder {
   color: var(--muted);
   opacity: 0.6;
 }
@@ -226,7 +215,7 @@
   align-items: center;
 }
 
-.password-input-wrapper .form-input {
+.password-input-wrapper .login-input {
   padding-inline-end: 50px;
 }
 
@@ -239,9 +228,14 @@
   border: none;
   color: var(--muted);
   cursor: pointer;
+  /* 44x44 hit area — it was 32x32. */
+  min-width: 44px;
+  min-height: 44px;
   padding: 8px;
   font-size: 18px;
-  transition: all 0.3s ease;
+  transition-property: var(--transition-props);
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -258,7 +252,7 @@
   font-size: 14px;
   line-height: 1.5;
   border: 1px solid;
-  animation: fadeInUp 0.4s ease-out;
+  animation: login-fade-in-up 0.4s ease-out;
 }
 
 .alert-box.success {
@@ -295,7 +289,9 @@
   font-weight: 700;
   letter-spacing: 0.3px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition-property: var(--transition-props);
+  transition-duration: 0.2s;
+  transition-timing-function: ease;
   border: 1px solid transparent;
   text-decoration: none;
   white-space: nowrap;
@@ -322,7 +318,7 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.4), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28), transparent);
   transition: left 0.6s ease;
 }
 
@@ -333,7 +329,7 @@
 .btn.primary:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(59, 130, 246, 0.5);
-  animation: glow 2s ease-in-out infinite;
+  animation: login-glow 2s ease-in-out infinite;
 }
 
 .btn.primary:active {
@@ -499,12 +495,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: var(--z-modal-backdrop);
   padding: 20px;
-  animation: fadeIn 0.3s ease-out;
+  animation: login-fade-in 0.3s ease-out;
 }
 
-@keyframes fadeIn {
+@keyframes login-fade-in {
   from {
     opacity: 0;
   }
@@ -531,8 +527,8 @@
   width: 100%;
   max-height: min(640px, 85vh);
   overflow-y: auto;
-  box-shadow: var(--shadow, 0 25px 80px rgba(0, 0, 0, 0.35));
-  animation: scaleIn 0.4s ease-out;
+  box-shadow: var(--shadow, var(--shadow-lg));
+  animation: login-scale-in 0.4s ease-out;
 }
 
 .popup-content.large-popup {
@@ -647,7 +643,9 @@
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition-property: var(--transition-props);
+  transition-duration: 0.2s;
+  transition-timing-function: ease;
   border: 1px solid transparent;
   text-align: center;
   display: flex;
