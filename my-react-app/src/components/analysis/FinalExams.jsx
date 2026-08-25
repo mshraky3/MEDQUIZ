@@ -8,6 +8,7 @@ import { getSourceLabel } from '../../utils/sourceLabels';
 import { getTypeLabel } from '../../utils/typeLabels';
 import { useCopy, useLang, formatDateTime } from '../../i18n';
 import analysisCopy from '../../i18n/copy/analysis.js';
+import { formatDuration } from '../../utils/formatDuration';
 import './FinalExams.css';
 
 const FinalExams = ({ userId, username, sessionToken }) => {
@@ -119,21 +120,6 @@ const FinalExams = ({ userId, username, sessionToken }) => {
         hour: '2-digit',
         minute: '2-digit'
     });
-
-    // Format duration
-    const formatDuration = (seconds) => {
-        const hours = Math.floor(seconds / 3600);
-        const minutes = Math.floor((seconds % 3600) / 60);
-        const secs = seconds % 60;
-
-        if (hours > 0) {
-            return `${hours}h ${minutes}m ${secs}s`;
-        } else if (minutes > 0) {
-            return `${minutes}m ${secs}s`;
-        } else {
-            return `${secs}s`;
-        }
-    };
 
     // Get score color
     const getScoreColor = (score) => {

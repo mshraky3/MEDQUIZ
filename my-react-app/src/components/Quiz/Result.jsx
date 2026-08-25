@@ -6,6 +6,7 @@ import { getSourceLabel } from '../../utils/sourceLabels';
 import { getTypeLabel } from '../../utils/typeLabels';
 import { useCopy, useLang } from '../../i18n';
 import quizCopy from '../../i18n/copy/quiz.js';
+import { formatDuration } from '../../utils/formatDuration';
 
 const Result = ({
   correctAnswers,
@@ -53,9 +54,9 @@ const Result = ({
         </div>
       )}
       <h2>{t.title}</h2>
-      <p>{t.scoreBefore} <strong>{correctAnswers}</strong> {t.scoreMiddle} <strong>{totalQuestions}</strong> {t.scoreAfter}</p>
+      <p>{t.score(correctAnswers, totalQuestions)}</p>
       <p>{t.accuracy} <strong>{accuracy}%</strong></p>
-      <p>{t.duration} <strong>{t.durationValue(Math.floor(duration / 60), duration % 60)}</strong></p>
+      <p>{t.duration} <strong>{formatDuration(duration)}</strong></p>
 
       <div className="result-buttons">
         <button onClick={onRetry} className="restart-button">

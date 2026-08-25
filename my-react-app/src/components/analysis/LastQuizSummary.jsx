@@ -3,6 +3,7 @@ import Icon from '../common/Icon.jsx';
 import { getSourceLabel } from '../../utils/sourceLabels';
 import { useCopy, useLang } from '../../i18n';
 import analysisCopy from '../../i18n/copy/analysis.js';
+import { formatDuration } from '../../utils/formatDuration';
 import './analysisShared.css';
 
 const LastQuizSummary = ({ latest_quiz, onRefresh }) => {
@@ -60,7 +61,7 @@ const LastQuizSummary = ({ latest_quiz, onRefresh }) => {
                                     <span className="answer-label time">{t.duration}</span>
                                     <span className="answer-text time">
                                         {latest_quiz.duration && latest_quiz.duration > 0
-                                            ? t.durationValue(Math.floor(latest_quiz.duration / 60), latest_quiz.duration % 60)
+                                            ? formatDuration(latest_quiz.duration)
                                             : t.notRecorded}
                                     </span>
                                 </div>

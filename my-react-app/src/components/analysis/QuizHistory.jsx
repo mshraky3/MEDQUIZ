@@ -7,6 +7,7 @@ import { getSourceLabel } from '../../utils/sourceLabels';
 import { getTypeLabel } from '../../utils/typeLabels';
 import { useCopy, useLang, formatDateTime } from '../../i18n';
 import analysisCopy from '../../i18n/copy/analysis.js';
+import { formatDuration } from '../../utils/formatDuration';
 import './QuizHistory.css';
 
 const QuizHistory = ({ userId, username, sessionToken }) => {
@@ -115,12 +116,6 @@ const QuizHistory = ({ userId, username, sessionToken }) => {
     hour: '2-digit',
     minute: '2-digit'
   });
-
-  const formatDuration = (seconds) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-  };
 
   const getAccuracyColor = (accuracy) => {
     const numAccuracy = parseFloat(accuracy || 0);
