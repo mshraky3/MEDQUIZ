@@ -1804,7 +1804,14 @@ const ensureOAuthColumns = async () => {
 //    production. Confirmed absent there on 2026-08-24, which is why the admin
 //    dashboard 500s on every load and every student suggestion submitted so far
 //    was discarded.
-const SCHEMA_BOOTSTRAP_VERSION = 7;
+// 8: widenTimeColumns() — every column storing seconds was numeric(6,2), a
+//    ceiling of 9999.99 (2h46m). A quiz left open longer than that was refused
+//    with `numeric field overflow` and the student's finished quiz was
+//    discarded; two confirmed losses on 2026-08-24/25. Widens all seven to
+//    numeric(12,2). This bump is the whole point of the fix: without it
+//    bootstrapAll() returns at the version check above and the migration never
+//    runs, which is exactly what happened on the first deploy of it.
+const SCHEMA_BOOTSTRAP_VERSION = 8;
 async function bootstrapAll() {
     try {
         await db.query(`
