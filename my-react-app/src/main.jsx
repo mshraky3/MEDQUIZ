@@ -85,6 +85,12 @@ import { LanguageProvider, AdminShell, useCommon } from './i18n';
 
 import { initErrorTracking } from './utils/errorTracking.js';
 import { reloadOnceForStaleChunk } from './utils/staleChunkReload.js';
+import { installTranslationGuard } from './utils/translationGuard.js';
+// Must run BEFORE the first render: it patches the two DOM methods React uses
+// to commit updates, so that a browser translating the page mid-session cannot
+// crash the tree. See translationGuard.js — this was taking out the landing
+// page for anonymous mobile visitors.
+installTranslationGuard();
 initErrorTracking();
 
 // After a deploy, users holding the previous entry script fail to lazy-load

@@ -4,6 +4,7 @@
  */
 
 import { isStaleChunkError } from './staleChunkReload.js';
+import { isNavigatingAway, markNavigatingAway } from './navigationState.js';
 import Globals from '../global.js';
 
 const ERROR_REPORT_ENDPOINT = '/api/error-report';
@@ -74,6 +75,20 @@ function isIgnorableBrowserError(message) {
 }
 
 /**
+ * A window 'error' event whose message says nothing at all.
+ *
+ * Two of these were mailed as CRITICAL with the message "Uncaught " — the
+ * literal prefix and then nothing, because whatever was thrown had no message
+ * to print. There is no report to write from that: no file, no line, no cause.
+ * It is the same dead end as "Script error." and is dropped for the same
+ * reason. A throw that carries any description at all still gets through.
+ */
+function isContentlessError(message) {
+    const msg = String(message || '').replace(/^uncaught\s*/i, '').trim();
+    return msg.length < 3;
+}
+
+/**
  * Structural companion to the message list above, for unhandled rejections.
  *
  * Application code rejects with an Error — that is what `throw` inside an
@@ -96,16 +111,14 @@ function isExtensionNoise(reason) {
 /**
  * Requests the CLIENT gave up on, which say nothing about server health.
  *
- * A user who taps a link mid-request, or whose phone drops off wifi, aborts
- * every in-flight XHR. Axios surfaces those as ERR_CANCELED / AbortError and as
- * the generic "Network Error", all of which classifyErrorSeverity() below rates
+ * A user who taps a link mid-request aborts every in-flight XHR. Axios surfaces
+ * those as ERR_CANCELED / AbortError, which classifyErrorSeverity() below rates
  * CRITICAL or HIGH — so ordinary navigation was paging the admin.
  *
  * Cancellation is dropped unconditionally: it is deliberate, by definition.
- * "Network Error" is dropped only with corroboration that the client, not the
- * server, is the one that went away — navigator.onLine is false, or the page is
- * already unloading. A genuine backend outage leaves the browser online and the
- * page loaded, so it still alerts.
+ * The murkier case — a request that died with no response at all — is handled
+ * by isTransportFailure/backendIsReachable below, which asks the server rather
+ * than guessing.
  */
 function isClientAbortedRequest(error) {
     const code = error?.code;
@@ -113,14 +126,95 @@ function isClientAbortedRequest(error) {
     if (code === 'ERR_CANCELED' || name === 'CanceledError' || name === 'AbortError') return true;
 
     const msg = String(error?.message || '').toLowerCase();
-    if (msg === 'canceled' || msg === 'cancelled') return true;
-
-    if (msg.includes('network error')) {
-        if (isBrowser && navigator.onLine === false) return true;
-        if (isPageUnloading) return true;
-    }
-    return false;
+    return msg === 'canceled' || msg === 'cancelled';
 }
+
+/**
+ * A request that never got a response: no status, no body, nothing.
+ *
+ * Axios reports every one of these identically ("Network Error", ERR_NETWORK),
+ * and the browser gives JavaScript no way to tell the causes apart. The list is
+ * long and almost entirely NOT this app's fault:
+ *
+ *   - the page hard-navigated and the browser killed every in-flight XHR
+ *     (this was the single biggest source — see markNavigatingAway below)
+ *   - the tab was backgrounded or the phone locked, and iOS froze the page
+ *   - wifi dropped, or the handset switched wifi → cellular mid-request
+ *   - a content blocker matched the URL (`/api/track-content-status` contains
+ *     "track", which several mobile blocklists match on) and refused it
+ *   - the API really is down
+ *
+ * Only the last one is worth an email, and it is the rarest. So this function
+ * only CLASSIFIES; the decision to alert is made by backendIsReachable().
+ */
+function isTransportFailure(error) {
+    if (error?.response) return false;   // a response arrived; not a transport fault
+    const code = error?.code;
+    if (code === 'ERR_NETWORK' || code === 'ECONNABORTED' || code === 'ETIMEDOUT') return true;
+    const msg = String(error?.message || '').toLowerCase();
+    return msg.includes('network error')
+        || msg.includes('request aborted')
+        || msg.startsWith('timeout of');
+}
+
+// ── Corroboration ───────────────────────────────────────────────────────────
+// Before mailing "the API is unreachable", check whether it actually is. One
+// cheap probe answers the question the browser refuses to: GET / on the API is
+// the backend's health route (no auth, no database, no chance of being matched
+// by a blocklist).
+//
+// mode:'no-cors' on purpose. The response is opaque and unreadable, which is
+// fine — the only fact wanted here is whether the round-trip completed at all.
+// It also makes the probe immune to CORS configuration, so a CORS mistake can
+// never be misread as an outage.
+const PROBE_TIMEOUT_MS = 8000;
+// A burst of failures shares one probe: a hard navigation kills every in-flight
+// request at the same instant, and six probes would answer one question.
+const PROBE_CACHE_MS = 5000;
+let probeInFlight = null;
+
+function backendIsReachable() {
+    if (!isBrowser) return Promise.resolve(true);
+    if (probeInFlight) return probeInFlight;
+
+    probeInFlight = (async () => {
+        try {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS);
+            try {
+                await fetch(`${getApiBaseUrl()}/`, {
+                    method: 'GET',
+                    mode: 'no-cors',
+                    cache: 'no-store',
+                    credentials: 'omit',
+                    signal: controller.signal,
+                });
+                return true;   // resolved at all ⇒ the transport works
+            } finally {
+                clearTimeout(timer);
+            }
+        } catch (e) {
+            return false;      // the probe could not reach it either
+        }
+    })();
+
+    // Hold the answer briefly so the rest of the burst reuses it, then let a
+    // later, genuinely new failure ask again.
+    setTimeout(() => { probeInFlight = null; }, PROBE_CACHE_MS);
+    return probeInFlight;
+}
+
+// Every transport failure shares ONE cooldown key. Keying them per endpoint (as
+// getErrorKey does) meant a single session expiry, which aborts every request
+// the page has in flight, mailed one alert PER ENDPOINT — six emails describing
+// one event. There is only one thing to say here regardless of which URL
+// noticed it first: the API could not be reached.
+const TRANSPORT_FAILURE_KEY = 'API_UNREACHABLE';
+// Short window that collapses one burst. Deliberately much shorter than the
+// 15-minute alert cooldown: it exists to dedupe the burst, not to suppress a
+// genuine outage that starts a few minutes later.
+const TRANSPORT_BURST_MS = 60 * 1000;
+let lastTransportBurstAt = 0;
 
 // Track sent errors for client-side rate limiting
 const errorCooldowns = new Map();
@@ -134,11 +228,16 @@ let _isReportingError = false;
 // Check if we're in browser environment
 const isBrowser = typeof window !== 'undefined';
 
-// Set once the browser has committed to leaving the page. Every request still
-// in flight is about to be aborted through no fault of the server, so
-// isClientAbortedRequest() uses this to tell "the user navigated away" apart
-// from "the backend is unreachable". Registered in initErrorTracking().
-let isPageUnloading = false;
+// Whether this page has committed to leaving. Owned by navigationState.js
+// (imported above) because apiClient and staleChunkReload set it too, and both
+// of those are already tangled with this file's imports.
+//
+// THIS IS THE FIX FOR THE ALERT FLOOD. The observed shape of it: one 401 on a
+// background poll → apiClient's handleSessionExpired clears storage and
+// redirects → the five other requests the hub had in flight all abort at the
+// same millisecond → five CRITICAL emails, every one describing a session that
+// simply expired, and every one attributed to "Anonymous" because storage had
+// just been cleared.
 
 /**
  * Get API base URL.
@@ -478,8 +577,14 @@ async function flushOfflineQueue() {
  * @param {Object} response - Response object if available
  */
 export function reportApiError(error, config = {}, response = null) {
-    // A request the client itself abandoned (navigation, offline, explicit
-    // abort) is not a server fault — see isClientAbortedRequest.
+    // The page is leaving. Everything still in flight is about to be killed by
+    // the navigation, and none of it says anything about the server.
+    if (isNavigatingAway()) {
+        return Promise.resolve({ success: false, message: 'Skipped: navigating away' });
+    }
+
+    // A request the client itself abandoned is not a server fault — see
+    // isClientAbortedRequest.
     if (isClientAbortedRequest(error)) {
         if (CONFIG.enableConsoleLog) {
             console.log('[ErrorTracking] Skipping client-aborted request:', error?.message);
@@ -510,6 +615,12 @@ export function reportApiError(error, config = {}, response = null) {
         }
     };
 
+    // A request that got no response at all. Do not guess — ask the server
+    // whether it is there, and collapse the whole burst into one decision.
+    if (isTransportFailure(error)) {
+        return reportTransportFailure(errorData);
+    }
+
     // Check client-side rate limiting
     const errorKey = getErrorKey(errorData);
     if (!canReportError(errorKey)) {
@@ -529,6 +640,67 @@ export function reportApiError(error, config = {}, response = null) {
     markReported(errorKey);
 
     return sendErrorReport(errorData);
+}
+
+/**
+ * Decide whether a response-less request is worth an email, and send at most
+ * one for the whole burst.
+ *
+ * Three gates, cheapest first:
+ *   1. burst window — one decision per minute, however many requests failed
+ *   2. the normal 15-minute alert cooldown, on a single shared key
+ *   3. the probe — is the API actually unreachable, or was it just this client?
+ *
+ * Gate 3 is the one that ends the noise for good. Every previous attempt at
+ * this guessed from client-side signals (navigator.onLine, page-unload flags),
+ * and every one of them leaked, because iOS keeps navigator.onLine true through
+ * a network switch and unload events fire after the abort callbacks. Asking the
+ * server is the only check that cannot be fooled — and it is also the only one
+ * that still fires correctly during a real outage.
+ */
+function reportTransportFailure(errorData) {
+    // The browser says it has no network at all. Whatever failed, it was not
+    // the API. (Trusted only in the negative direction: navigator.onLine going
+    // false is conclusive, it staying true means nothing — which is why the
+    // probe below exists.)
+    if (isBrowser && navigator.onLine === false) {
+        return Promise.resolve({ success: false, message: 'Skipped: browser offline' });
+    }
+
+    const now = Date.now();
+    if (now - lastTransportBurstAt < TRANSPORT_BURST_MS) {
+        if (CONFIG.enableConsoleLog) {
+            console.log('[ErrorTracking] Transport failure inside an existing burst:', errorData.endpoint);
+        }
+        return Promise.resolve({ success: false, message: 'Skipped: burst' });
+    }
+    lastTransportBurstAt = now;
+
+    if (!canReportError(TRANSPORT_FAILURE_KEY)) {
+        return Promise.resolve({ success: false, message: 'Rate limited' });
+    }
+
+    return backendIsReachable().then((reachable) => {
+        if (reachable) {
+            if (CONFIG.enableConsoleLog) {
+                console.log('[ErrorTracking] Request failed but the API answers — client-side, not reported:', errorData.endpoint);
+            }
+            return { success: false, message: 'Skipped: API reachable' };
+        }
+
+        markReported(TRANSPORT_FAILURE_KEY);
+        return sendErrorReport({
+            ...errorData,
+            // Named for what it is, so the alert subject stops reading
+            // "UNKNOWN_ERROR" for the one condition that is now fully known.
+            errorType: 'API_UNREACHABLE',
+            additionalInfo: {
+                ...errorData.additionalInfo,
+                probe: 'GET / did not complete either',
+                online: isBrowser ? navigator.onLine : null,
+            },
+        });
+    });
 }
 
 /**
@@ -582,7 +754,7 @@ export function reportRenderError(error, errorInfo = {}) {
  * @param {PromiseRejectionEvent} event
  */
 export function reportUnhandledRejection(event) {
-    if (_isReportingError) return;
+    if (_isReportingError || isNavigatingAway()) return;
     _isReportingError = true;
     try {
         const error = event.reason;
@@ -600,6 +772,25 @@ export function reportUnhandledRejection(event) {
             if (CONFIG.enableConsoleLog) {
                 console.log('[ErrorTracking] Skipping client-aborted request rejection');
             }
+            return;
+        }
+        // An axios rejection nobody caught can just as easily be a dead
+        // transport as a real fault, and it deserves the same corroboration the
+        // interceptor path gets rather than a free CRITICAL.
+        if (isTransportFailure(error)) {
+            reportTransportFailure({
+                errorType: 'API_UNREACHABLE',
+                message: error?.message || 'Network error',
+                endpoint: error?.config?.url || null,
+                method: error?.config?.method?.toUpperCase() || null,
+                statusCode: 0,
+                page: getCurrentPage(),
+                userAgent: getUserAgent(),
+                ...getUserInfo(),
+                timestamp: new Date().toISOString(),
+                stackTrace: error?.stack,
+                additionalInfo: { errorName: error?.name, errorCode: error?.code, via: 'unhandledrejection' },
+            });
             return;
         }
         const cooldownKey = getContentErrorKey('UNHANDLED_PROMISE_REJECTION', error?.message, getCurrentPage());
@@ -636,13 +827,13 @@ export function reportUnhandledRejection(event) {
  * @param {ErrorEvent} event
  */
 export function reportGlobalError(event) {
-    if (_isReportingError) return;
+    if (_isReportingError || isNavigatingAway()) return;
     _isReportingError = true;
     try {
         if (isStaleChunkError(event.message)) return;
-        if (isIgnorableBrowserError(event.message)) {
+        if (isIgnorableBrowserError(event.message) || isContentlessError(event.message)) {
             if (CONFIG.enableConsoleLog) {
-                console.log('[ErrorTracking] Skipping benign browser notice:', event.message);
+                console.log('[ErrorTracking] Skipping unactionable browser notice:', event.message);
             }
             return;
         }
@@ -731,8 +922,8 @@ export function initErrorTracking() {
     // mistaken for the backend being unreachable (see isClientAbortedRequest).
     // 'pagehide' fires where 'beforeunload' does not on mobile Safari, which is
     // precisely where mid-request navigation is most common.
-    window.addEventListener('pagehide', () => { isPageUnloading = true; });
-    window.addEventListener('beforeunload', () => { isPageUnloading = true; });
+    window.addEventListener('pagehide', markNavigatingAway);
+    window.addEventListener('beforeunload', markNavigatingAway);
 
     // Restore this tab's suppression window so a reload cannot re-send an alert
     // the previous page load already sent.

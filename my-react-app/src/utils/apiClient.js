@@ -6,6 +6,7 @@
 import axios from 'axios';
 import Globals from '../global.js';
 import { setupAxiosInterceptor, reportApiError } from './errorTracking';
+import { markNavigatingAway } from './navigationState.js';
 import { safeRemoveItem } from './safeStorage.js';
 
 // Create axios instance with base configuration
@@ -98,6 +99,16 @@ function handleSessionExpired(error) {
     safeRemoveItem('user');
     safeRemoveItem('sessionToken');
     if (!window.location.pathname.startsWith('/login')) {
+        // Assigning location aborts every other request the page has in
+        // flight, and each abort surfaces to axios as a bare "Network Error"
+        // that looks exactly like the API being down. Announce the navigation
+        // FIRST, in this same tick, so those aborts are recognised for what
+        // they are — the browser's own pagehide/beforeunload events fire far
+        // too late to help (see markNavigatingAway).
+        //
+        // This one line is what was mailing five or six CRITICAL alerts every
+        // time a student's session quietly expired.
+        markNavigatingAway();
         window.location.href = '/login?session=expired';
     }
 }

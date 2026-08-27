@@ -12,6 +12,8 @@
  * to the normal error UI instead of looping forever.
  */
 
+import { markNavigatingAway } from './navigationState.js';
+
 const STALE_CHUNK_PATTERNS = [
     'unable to preload css',
     'failed to fetch dynamically imported module',
@@ -69,6 +71,10 @@ export function reloadOnceForStaleChunk() {
     } catch (e) {
         // Ignore — see above.
     }
+    // Same reason as the session-expiry redirect in apiClient.js: reloading
+    // aborts every in-flight request, and each abort looks like "Network Error"
+    // to axios. Say so before it happens, not after (pagehide is too late).
+    markNavigatingAway();
     window.location.reload();
     return true;
 }

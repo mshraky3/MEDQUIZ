@@ -247,6 +247,92 @@ function reportBootstrapFailure(name, err) {
     notifyBackendError(err, null, { middleware: name }).catch(() => { /* already logged above */ });
 }
 
+/**
+ * Every column in this database that stores a number of SECONDS was created as
+ * numeric(6,2). That allows a maximum of 9999.99 — two hours, forty-six
+ * minutes, forty seconds.
+ *
+ * WHAT THAT COST
+ *
+ * A student who leaves a quiz open longer than that — a tab left overnight, a
+ * phone put down after lunch — submits a duration Postgres refuses with
+ * `numeric field overflow` (22003). POST /quiz-sessions caught it, answered
+ * 500 "Failed to record quiz session", and the finished quiz was gone. Two
+ * confirmed losses in the last week alone: a 10-question quiz with duration
+ * 86730 (24.1 h) and another with 10841 (3.0 h). Neither row exists.
+ *
+ * It was invisible for so long because the schema and the code disagreed and
+ * nothing checked: ensureSchema declares `duration INTEGER`, but the column
+ * predates that line, so ADD COLUMN IF NOT EXISTS never touched it. The code
+ * has believed it was an INTEGER for years while the database enforced
+ * numeric(6,2).
+ *
+ * The same ceiling sits on every other seconds column, including
+ * user_question_attempts.time_taken — which is written inside the bookkeeping
+ * block that deliberately swallows its own errors, so one slow question was
+ * silently dropping a student's per-question history with no 500 to notice.
+ *
+ * numeric(12,2) tops out around 31 billion years, which is enough.
+ *
+ * Guarded by an information_schema lookup rather than run unconditionally:
+ * ALTER COLUMN TYPE rewrites the table and takes an ACCESS EXCLUSIVE lock, and
+ * this runs on every cold start.
+ */
+const SECONDS_COLUMNS = [
+    ['user_quiz_sessions', 'duration'],
+    ['user_quiz_sessions', 'avg_time_per_question'],
+    ['user_question_attempts', 'time_taken'],
+    ['user_analysis', 'average_time_per_question'],
+    ['user_analysis', 'fastest_response'],
+    ['user_analysis', 'slowest_response'],
+    ['user_topic_analysis', 'avg_time'],
+];
+const SECONDS_PRECISION = 12;
+
+async function widenTimeColumns(db) {
+    const { rows } = await db.query(
+        // The ::text casts are load-bearing: information_schema exposes
+        // table_name/column_name as the sql_identifier domain, which has no
+        // equality operator against a text parameter.
+        `SELECT table_name::text AS table_name, column_name::text AS column_name, numeric_precision
+           FROM information_schema.columns
+          WHERE table_schema = 'public'
+            AND data_type = 'numeric'
+            AND numeric_precision < $1
+            AND (table_name::text, column_name::text) IN (${
+                SECONDS_COLUMNS.map((_, i) => `($${i * 2 + 2}::text, $${i * 2 + 3}::text)`).join(', ')
+            })`,
+        [SECONDS_PRECISION, ...SECONDS_COLUMNS.flat()]
+    );
+
+    for (const row of rows) {
+        // Identifiers come from SECONDS_COLUMNS above, never from a request.
+        await db.query(
+            `ALTER TABLE ${row.table_name} ALTER COLUMN ${row.column_name} TYPE numeric(${SECONDS_PRECISION}, 2)`
+        );
+        logger.info('Widened a seconds column past the 9999.99 ceiling', {
+            table: row.table_name, column: row.column_name, was: `numeric(${row.numeric_precision},2)`,
+        });
+    }
+}
+
+/**
+ * Upper bound for any client-supplied number of seconds.
+ *
+ * Twelve hours is far beyond any real sitting and far below the column ceiling,
+ * so it only ever catches the abandoned-tab case. Keeping it well under the
+ * storage limit is deliberate: the widened column is the safety net, this is
+ * the data-quality filter, and neither should be doing the other's job.
+ */
+const MAX_QUIZ_SECONDS = 12 * 60 * 60;
+
+/** Non-negative, finite, and inside MAX_QUIZ_SECONDS. Junk becomes 0, not NaN. */
+function clampSeconds(value, cap = MAX_QUIZ_SECONDS) {
+    const n = Number(value);
+    if (!Number.isFinite(n) || n < 0) return 0;
+    return Math.min(n, cap);
+}
+
 // One-time, idempotent schema bootstrap. Runs once per process (cold start) and
 // is safe to re-run thanks to IF NOT EXISTS. Replaces the old manual
 // POST /init-progress-tables endpoint and guarantees the performance indexes
@@ -415,6 +501,12 @@ function ensureSchema() {
             // the hot paths (/quiz-sessions, /user-analysis, /api/all-questions,
             // /get_all_users). Ensuring them once here removes 10-15 DDL round-trips
             // per request.
+            // The `duration` and `avg_time_per_question` types below are what a
+            // FRESH database gets. On the live database both columns already
+            // existed as numeric(6,2), so ADD COLUMN IF NOT EXISTS silently did
+            // nothing and the types declared here have been a fiction for years.
+            // widenTimeColumns() immediately after is what actually reconciles
+            // them — see the comment on it.
             await db.query(`
                 ALTER TABLE user_quiz_sessions
                     ADD COLUMN IF NOT EXISTS source VARCHAR(50) DEFAULT 'general',
@@ -429,6 +521,15 @@ function ensureSchema() {
                     ADD COLUMN IF NOT EXISTS slowest_question_time INTEGER DEFAULT 0,
                     ADD COLUMN IF NOT EXISTS session_metadata JSONB DEFAULT '{}'
             `);
+            // Isolated: everything after this point in ensureSchema is skipped
+            // if it throws, and the rest of the bootstrap (indexes, track
+            // columns, the username parity pass) has nothing to do with this
+            // migration. A failure here should cost the widening, not the boot.
+            try {
+                await widenTimeColumns(db);
+            } catch (err) {
+                logger.error('Could not widen the seconds columns; the 9999.99 ceiling is still in place', err);
+            }
             await db.query(`ALTER TABLE questions ADD COLUMN IF NOT EXISTS source VARCHAR(50) DEFAULT 'general'`);
             await db.query(`UPDATE questions SET source = 'general' WHERE source IS NULL`);
             // Why the correct answer is correct, shown after a student answers.
@@ -4073,11 +4174,21 @@ app.post('/topic-analysis', requireSession, async (req, res) => {
                             / (user_topic_analysis.total_answered + EXCLUDED.total_answered),
                 last_practiced = NOW()
             RETURNING *`,
-            [user_id, question_type, total_answered, total_correct, accuracy, avg_time]
+            // Clamped for the same reason as POST /quiz-sessions: this is
+            // client-supplied seconds, the column is numeric, and an
+            // abandoned tab sends a value that overflows it. Unclamped, this
+            // endpoint answered 500 and the student's topic stats stopped
+            // updating.
+            [user_id, question_type, total_answered, total_correct, accuracy, clampSeconds(avg_time)]
         );
 
         res.status(201).json(result.rows[0]);
     } catch (err) {
+        // Without this the 5xx still alerts (alertOn5xx hooks the response),
+        // but with no cause attached — the mail would say only "responded 500".
+        // logger.error hands the real Error, with its Postgres code and column,
+        // to the request context for that alert to carry.
+        logger.error('Failed to update topic analysis', err);
         res.status(500).json({ message: 'Failed to update topic analysis' });
     }
 });
@@ -4096,7 +4207,9 @@ app.post('/question-attempts', requireSession, async (req, res) => {
             `INSERT INTO user_question_attempts 
             (user_id, question_id, selected_option, is_correct, time_taken, quiz_session_id)
             VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-            [user_id, question_id, selected_option, is_correct, time_taken, quiz_session_id]
+            // See POST /quiz-sessions — client-supplied seconds into a
+            // numeric column, so it needs the same ceiling.
+            [user_id, question_id, selected_option, is_correct, clampSeconds(time_taken), quiz_session_id]
         );
         res.status(201).json(result.rows[0]);
     } catch (err) {
@@ -4226,6 +4339,24 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
         return res.status(400).json({ message: "Missing required fields" });
     }
 
+    // `duration` is wall-clock since the quiz was opened (QUIZ.jsx measures
+    // Date.now() - quizStartTimeRef), so an abandoned tab produces a number
+    // that is literally true and completely meaningless: 86730 seconds — 24
+    // hours — for a ten-question quiz. widenTimeColumns() means such a value no
+    // longer destroys the submission; clamping means it no longer destroys the
+    // averages either. avg_time_per_question is recomputed from the clamped
+    // duration so the two can never disagree.
+    const durationSeconds = clampSeconds(duration);
+    const wasClamped = durationSeconds !== Number(duration);
+    const avgSeconds = wasClamped
+        ? Number((durationSeconds / total_questions).toFixed(2))
+        : clampSeconds(avg_time_per_question);
+    if (wasClamped) {
+        logger.warn('Quiz duration clamped — the tab was almost certainly left open', {
+            user_id, submitted: duration, stored: durationSeconds, total_questions,
+        });
+    }
+
     // Declared outside the try so the catch can report the value that was
     // actually written. It is derived below from the questions themselves, so
     // it is frequently NOT the source the client sent — and it is the column
@@ -4269,7 +4400,7 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
         });
 
         // Calculate end time based on start time and duration
-        const endTime = new Date(Date.now() + ((Number(duration) || 0) * 1000));
+        const endTime = new Date(Date.now() + (durationSeconds * 1000));
 
         const insertSession = () => db.query(
             `INSERT INTO user_quiz_sessions
@@ -4280,15 +4411,15 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
                 total_questions,
                 correct_answers,
                 quiz_accuracy,
-                duration,
-                avg_time_per_question,
+                durationSeconds,
+                avgSeconds,
                 JSON.stringify(topics_covered),
                 actualSource,
                 quiz_type,
                 difficulty_level,
                 device_type,
-                fastest_question_time,
-                slowest_question_time,
+                clampSeconds(fastest_question_time),
+                clampSeconds(slowest_question_time),
                 JSON.stringify(session_metadata),
                 endTime
             ]
@@ -4321,7 +4452,11 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
                 AND duration IS NOT DISTINCT FROM $4
                 AND start_time > NOW() - INTERVAL '2 minutes'
               ORDER BY id DESC LIMIT 1`,
-            [user_id, total_questions, correct_answers, duration]
+            // durationSeconds, not the raw submitted duration: this has to match
+            // what insertSession() actually wrote, and those differ whenever the
+            // clamp above fired. Matching on the raw value would miss the row
+            // and write the quiz twice.
+            [user_id, total_questions, correct_answers, durationSeconds]
         );
 
         let result;
@@ -4335,25 +4470,58 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
             }
         }
 
+        // Last resort. If Postgres rejects a VALUE rather than failing to talk
+        // to us — a number too large for its column, a string too long, a CHECK
+        // it does not satisfy — then something decorative about this submission
+        // is wrong, and none of it is the student's result. Write the result
+        // anyway, with the decorations neutralised, and shout about it in the
+        // logs so the underlying mismatch still gets fixed.
+        //
+        // This exists because that class of failure is exactly what cost two
+        // students their finished quizzes (numeric field overflow on `duration`
+        // — see widenTimeColumns). Both root causes are fixed above; this is
+        // the net under them, so the NEXT unforeseen column mismatch costs a
+        // log line instead of somebody's work.
+        const REJECTED_VALUE_CLASSES = ['22', '23'];   // data exception, integrity constraint
+        const isRejectedValue = (e) =>
+            typeof e?.code === 'string' && REJECTED_VALUE_CLASSES.includes(e.code.slice(0, 2));
+
+        const insertSessionWithoutDecorations = () => db.query(
+            `INSERT INTO user_quiz_sessions
+            (user_id, total_questions, correct_answers, quiz_accuracy, duration, avg_time_per_question, topics_covered, source, end_time)
+            VALUES ($1, $2, $3, $4, 0, 0, '[]', 'general', NOW()) RETURNING id, session_id`,
+            [user_id, total_questions, correct_answers, quiz_accuracy]
+        );
+
         if (!result) {
             try {
                 result = await insertSession();
             } catch (insertErr) {
-                if (!isTransientConnectionError(insertErr)) throw insertErr;
-                logger.warn('Quiz session INSERT hit a transient connection error; checking whether it landed', {
-                    user_id,
-                    error: insertErr.message,
-                    code: insertErr.code,
-                });
-                const existing = await findAlreadyRecorded();
-                if (existing.rows.length > 0) {
-                    logger.info('Quiz session had already been recorded before the connection dropped', {
-                        id: existing.rows[0].id,
-                    });
-                    result = existing;
+                if (isRejectedValue(insertErr)) {
+                    logger.error(
+                        'Quiz session INSERT rejected on a value; saving the result without its decorations',
+                        insertErr
+                    );
+                    const existing = await findAlreadyRecorded();
+                    result = existing.rows.length > 0 ? existing : await insertSessionWithoutDecorations();
+                } else if (!isTransientConnectionError(insertErr)) {
+                    throw insertErr;
                 } else {
-                    result = await insertSession();
-                    logger.info('Quiz session INSERT succeeded on retry', { user_id });
+                    logger.warn('Quiz session INSERT hit a transient connection error; checking whether it landed', {
+                        user_id,
+                        error: insertErr.message,
+                        code: insertErr.code,
+                    });
+                    const existing = await findAlreadyRecorded();
+                    if (existing.rows.length > 0) {
+                        logger.info('Quiz session had already been recorded before the connection dropped', {
+                            id: existing.rows[0].id,
+                        });
+                        result = existing;
+                    } else {
+                        result = await insertSession();
+                        logger.info('Quiz session INSERT succeeded on retry', { user_id });
+                    }
                 }
             }
         }
@@ -4434,7 +4602,12 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
                         attempt.question_id,
                         attempt.selected_option,
                         attempt.is_correct,
-                        attempt.time_taken,
+                        // Same ceiling story as the session duration, and worse
+                        // consequences: this INSERT lives inside the block that
+                        // swallows its own failures, so one question left open
+                        // too long used to drop the student's whole per-question
+                        // history for that quiz without any 500 to notice.
+                        clampSeconds(attempt.time_taken),
                         result.rows[0].id
                     ]).catch(attemptError => {
                         logger.warn("Failed to record question attempt", {
@@ -4541,8 +4714,10 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
             total_questions,
             correct_answers,
             quiz_accuracy,
-            duration,
-            avg_time_per_question,
+            duration_sent: duration,
+            duration_written: durationSeconds,
+            avg_time_sent: avg_time_per_question,
+            avg_time_written: avgSeconds,
             source_sent: source,
             source_written: actualSource,
             topics_covered,
