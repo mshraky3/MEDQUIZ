@@ -27,7 +27,7 @@ on:
     # 10:00, 16:00 and 21:00 local — morning, afternoon and evening study time.
     - cron: '0 7,13,18 * * *'   # telegram-daily (capped at 3 posts/day server-side)
     - cron: '30 2 * * *'        # daily cleanup + lifecycle emails
-    - cron: '0 8 * * 6'         # weekly: channel summary + weak-topics DMs
+    - cron: '0 8 * * 6'         # weekly: weak-topics DMs (channel topic-summary post is off)
     - cron: '15 * * * *'        # hourly: broadcast drain + welcome emails
     - cron: '0 20 * * *'        # end-of-day: daily signups report (20:00 UTC = 23:00 AST)
   workflow_dispatch:
@@ -103,8 +103,10 @@ jobs:
               call /api/cron/lifecycle-emails  || failed=1
               ;;
             weekly)
-              call /api/cron/telegram-channel-summary || failed=1
-              call /api/cron/telegram-weekly          || failed=1
+              # telegram-channel-summary (the weekly topic-card post to the
+              # channel) is deliberately not called here anymore — the channel
+              # now only gets the daily quiz questions.
+              call /api/cron/telegram-weekly || failed=1
               ;;
             hourly)
               # vercel.json runs these once a day; the endpoints are idempotent

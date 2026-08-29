@@ -114,12 +114,20 @@ export async function runMessageCleanupJob(db) {
         try {
             await deleteMessage(row.chat_id, row.message_id);
             deleted++;
+            await removeSentMessageLog(db, row.id);
         } catch (err) {
-            // Already gone, or the bot lost delete rights — either way, retrying
-            // forever isn't useful, so log and drop the row below regardless.
-            errors.push({ id: row.id, error: err.message });
+            // "message to delete not found" means it's already gone (e.g.
+            // manually deleted) — nothing left to retry, so drop the row. Any
+            // other error (rate limit, brief loss of admin rights, network
+            // blip) is likely transient: keep the row logged so tomorrow's
+            // run retries it, instead of silently abandoning a message that
+            // is still sitting in the channel.
+            if (/message to delete not found/i.test(err.message || '')) {
+                await removeSentMessageLog(db, row.id);
+            } else {
+                errors.push({ id: row.id, error: err.message });
+            }
         }
-        await removeSentMessageLog(db, row.id);
     }
     return { deleted, candidates: due.length, errors };
 }

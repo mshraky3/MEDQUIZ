@@ -173,7 +173,9 @@ router.get('/api/cron/telegram-weekly', cronAuth, async (req, res) => {
 });
 
 // Separate from the DM digest above — this posts ONE topic-summary card to
-// the channel itself. Call it once a week (any external-scheduler time).
+// the channel itself. No longer on the automatic weekly schedule (cron.yml) —
+// the channel is meant to carry only quiz questions now. Still callable
+// manually via /api/telegram-test/channel-summary if that ever changes.
 router.get('/api/cron/telegram-channel-summary', cronAuth, async (req, res) => {
     try {
         const result = await runWeeklyChannelSummaryJob(req.db);
