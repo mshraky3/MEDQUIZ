@@ -280,6 +280,17 @@ const landingCopy = {
             cta: 'احصل على كل هذا الآن',
             ctaNote: 'كل ما سبق مشمول في الاشتراك نفسه — وكل جديد يصلك تلقائياً',
         },
+        // The five study guides. Titles and excerpts are NOT duplicated here —
+        // Landing.jsx reads them straight from i18n/copy/guides.js, so the
+        // landing band, the /guides hub and the prerendered HTML can never
+        // drift apart. Only the framing around them lives in this file.
+        guides: {
+            sectionLabel: 'أدلة التحضير',
+            pill: 'اقرأ قبل أن تبدأ',
+            title: 'أدلة عملية عن طريقة المذاكرة نفسها',
+            body: 'خمسة أدلة مكتوبة بالكامل ومفتوحة للجميع بدون حساب: كيف تستخدم بنك الأسئلة بالترتيب الصحيح، وكيف تبني خطة واقعية، وكيف تحوّل كل خطأ إلى قاعدة لا تتكرر.',
+            all: 'تصفّح كل الأدلة',
+        },
 
 
 
@@ -575,6 +586,13 @@ const landingCopy = {
             ],
             cta: 'Get all of this now',
             ctaNote: 'Everything above is in the same subscription — and every update reaches you automatically',
+        },
+        guides: {
+            sectionLabel: 'Study guides',
+            pill: 'Read before you start',
+            title: 'Practical guides on how to study, not just what to study',
+            body: 'Five complete guides, open to everyone with no account: how to use a question bank in the right order, how to build a plan you can actually keep, and how to turn every mistake into a rule that stops repeating.',
+            all: 'Browse all the guides',
         },
 
 

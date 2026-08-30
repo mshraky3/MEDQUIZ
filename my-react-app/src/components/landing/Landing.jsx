@@ -9,6 +9,10 @@ import { UserContext } from '../../UserContext';
 import { TRACKS, MEDICAL, NURSING, pick } from '../../utils/tracks.js';
 import { useCopy, useLang, LanguageToggle } from '../../i18n';
 import landingCopy from '../../i18n/copy/landing.js';
+// The guide titles/excerpts shown in the study-guides band. Read from the
+// guides copy rather than restated in landing.js, so this band, the /guides
+// hub and the prerendered HTML in src/seo all render the same five titles.
+import guidesCopy from '../../i18n/copy/guides.js';
 import './Landing.css';
 
 // Both below the hero, both scroll-triggered animations (see their own
@@ -68,6 +72,7 @@ const Landing = () => {
   const navigate = useNavigate();
   const { user, sessionToken, logout } = useContext(UserContext);
   const t = useCopy(landingCopy);
+  const guidesHub = useCopy(guidesCopy).hub;
   const { lang, dir } = useLang();
 
   /**
@@ -551,6 +556,33 @@ const Landing = () => {
                 <p className="section-cta-note">{t.news.ctaNote}</p>
               </div>
             )}
+          </section>
+
+          {/* Study guides. These are the only pages on the site a stranger can
+              read in full without an account, and until now the sole internal
+              link to them was one footer entry — which is why Search Console
+              reported them "Discovered — currently not indexed". Linking them
+              from the landing page is half the fix; the other half is the
+              prerendered copy in src/seo/prerenderHtml.js. */}
+          <section className="guides-band" aria-label={t.guides.sectionLabel}>
+            <div className="section-head">
+              <p className="pill subtle">{t.guides.pill}</p>
+              <h2>{t.guides.title}</h2>
+              <p>{t.guides.body}</p>
+            </div>
+            <div className="guides-band-list">
+              {guidesHub.cards.map((card) => (
+                <article key={card.path} className="guides-band-card">
+                  <h3>
+                    <Link to={card.path}>{card.title}</Link>
+                  </h3>
+                  <p>{card.excerpt}</p>
+                </article>
+              ))}
+            </div>
+            <div className="section-cta">
+              <Link to="/guides" className="btn ghost">{t.guides.all}</Link>
+            </div>
           </section>
 
           {/* The steps, played on a phone rather than listed. */}

@@ -1,6 +1,13 @@
 User-agent: *
 Allow: /
 
+# The public content surfaces. Both are explicitly allowed because the
+# Disallow list below is prefix-matched and /questions sits uncomfortably close
+# to /question-reports; spelling it out means a future edit to that line cannot
+# silently de-index 250 pages.
+Allow: /guides
+Allow: /questions
+
 # Admin surfaces — never useful to a crawler, and cheaper to exclude here than
 # to rely on the noindex meta tag alone.
 Disallow: /admin

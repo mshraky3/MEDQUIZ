@@ -1822,3 +1822,64 @@
   line-height: 1.7;
   color: #92400e;
 }
+
+/* --- Study guides band -------------------------------------------------
+   The five public guide articles, surfaced on the landing page.
+
+   These pages were previously linked from one footer entry only, which is
+   why Search Console listed them as "Discovered - currently not indexed".
+   The band is the human half of that fix; the crawler half is the
+   prerendered markup in src/seo/prerenderHtml.js.
+
+   auto-fit rather than a fixed column count so the five cards reflow on
+   their own - no extra breakpoint to keep in sync with .news-list. All
+   spacing is logical/symmetric, so the band mirrors correctly in RTL. */
+.guides-band-list {
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(258px, 1fr));
+  gap: 16px;
+}
+
+.guides-band-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 22px 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card-grad);
+  box-shadow: var(--card-shadow);
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.guides-band-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(16, 185, 129, 0.4);
+  box-shadow: 0 22px 48px rgba(16, 185, 129, 0.12);
+}
+
+.guides-band-card h3 {
+  margin: 0;
+  font-size: 16.5px;
+  line-height: 1.5;
+}
+
+.guides-band-card h3 a {
+  color: #0f1e3d;
+  text-decoration: none;
+}
+
+.guides-band-card h3 a:hover,
+.guides-band-card h3 a:focus-visible {
+  color: var(--accent-emerald);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.guides-band-card p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--dim);
+}

@@ -64,6 +64,12 @@ const SmleStudyPlanGuide = lazy(() => import('./components/guides/SmleStudyPlanG
 const WrongQuestionsMethodGuide = lazy(() => import('./components/guides/WrongQuestionsMethodGuide.jsx'));
 const SmleVsPrometricGuide = lazy(() => import('./components/guides/SmleVsPrometricGuide.jsx'));
 const SmleHighYieldTopicsGuide = lazy(() => import('./components/guides/SmleHighYieldTopicsGuide.jsx'));
+// The public question library. Its data file is ~415 KB, so the components
+// pull it in with their own dynamic import (see usePublicQuestions.js) — these
+// three lazy() calls only split the UI.
+const QuestionsHub = lazy(() => import('./components/questions/QuestionsHub.jsx'));
+const QuestionsSpecialty = lazy(() => import('./components/questions/QuestionsSpecialty.jsx'));
+const QuestionPage = lazy(() => import('./components/questions/QuestionPage.jsx'));
 const TempLinks = lazy(() => import('./components/ADD/TempLinks.jsx'));
 const QuestionReports = lazy(() => import('./components/ADD/QuestionReports.jsx'));
 const ForgotPassword = lazy(() => import('./components/login/ForgotPassword'));
@@ -159,6 +165,14 @@ const router = createBrowserRouter([
   pub('/guides/wrong-questions-method', <WrongQuestionsMethodGuide />),
   pub('/guides/smle-vs-prometric-differences', <SmleVsPrometricGuide />),
   pub('/guides/smle-high-yield-topics', <SmleHighYieldTopicsGuide />),
+
+  // Public question library — the only pages a stranger can read in full with
+  // no account, and the reason they exist: 5,033 explained questions that
+  // Google has never been shown. Prerendered at build time by
+  // scripts/postbuild-seo.mjs from src/seo/data/publicQuestions.json.
+  pub('/questions', <QuestionsHub />),
+  pub('/questions/:specialty', <QuestionsSpecialty />),
+  pub('/questions/:specialty/:slug', <QuestionPage />),
 
   // Signed-in
   authed('/quizs', <QUIZS />),

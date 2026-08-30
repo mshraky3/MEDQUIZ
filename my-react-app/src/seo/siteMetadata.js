@@ -1,3 +1,6 @@
+import guidesCopy from '../i18n/copy/guides.js';
+import { guideArticleHtml, guidesHubHtml, guidesTeaserHtml, siteFooterNavHtml } from './prerenderHtml.js';
+
 const SITE_ORIGIN = 'https://www.smle-question-bank.com';
 const SITE_NAME = 'SQB';
 const DEFAULT_IMAGE = `${SITE_ORIGIN}/og-image.svg`;
@@ -168,8 +171,19 @@ const routeMap = {
             <li>صفحات مساعدة مثل من نحن والأسئلة الشائعة والتواصل.</li>
           </ul>
         </section>
+        <section>
+          <h2>أسئلة تدريبية مجانية بدون حساب</h2>
+          <p>نشرنا عيّنة من بنك الأسئلة مفتوحة للجميع: أسئلة بنمط الاختبار في الطب البشري والتمريض، كل سؤال بخياراته الأربعة وشرح مكتوب يوضّح سبب صحة الإجابة. لا تحتاج حساباً ولا بطاقة دفع لقراءتها.</p>
+          <p><a href="/questions">تصفّح الأسئلة التدريبية المجانية</a></p>
+        </section>
+${guidesTeaserHtml(guidesCopy.ar.hub, {
+        heading: 'أدلة التحضير لاختبار SMLE والبرومترك',
+        intro: 'أدلة مكتوبة بالكامل ومتاحة للجميع بدون حساب: كيف تستخدم بنك الأسئلة، وخطة مذاكرة من 12 أسبوعاً، ومراجعة الأخطاء، والفرق بين SMLE وبرومترك، والمواضيع عالية العائد.'
+    })}
         <nav aria-label="روابط مهمة">
           <a href="/about">من نحن</a>
+          <a href="/guides">أدلة التحضير</a>
+          <a href="/questions">أسئلة تدريبية مجانية</a>
           <a href="/faq">الأسئلة الشائعة</a>
           <a href="/contact">اتصل بنا</a>
           <a href="/signup">إنشاء حساب مجاني</a>
@@ -379,19 +393,7 @@ const routeMap = {
                 { name: 'الأدلة', path: '/guides' }
             ])
         ],
-        prerenderHtml: `
-            <main class="seo-shell" dir="rtl">
-                <h1>أدلة التحضير لاختبار SMLE</h1>
-                <p>صفحة تضم مقالات تعليمية عميقة حول خطط المذاكرة، مراجعة الأخطاء، وإدارة الوقت في اختبار SMLE والبرومترك.</p>
-                <nav aria-label="أدلة التحضير">
-                    <a href="/guides/how-to-use-a-question-bank">كيف تستخدم بنك الأسئلة</a>
-                    <a href="/guides/smle-study-plan">خطة SMLE من 12 أسبوع</a>
-                    <a href="/guides/wrong-questions-method">طريقة مراجعة الأسئلة الخاطئة</a>
-                    <a href="/guides/smle-vs-prometric-differences">الفرق بين SMLE وPrometric</a>
-                    <a href="/guides/smle-high-yield-topics">أهم مواضيع SMLE عالية العائد</a>
-                </nav>
-            </main>
-        `
+        prerenderHtml: guidesHubHtml(guidesCopy.ar.hub)
     },
     '/guides/how-to-use-a-question-bank': {
         title: 'كيف تستخدم بنك الأسئلة لرفع أدائك في SMLE والبرومترك | SQB',
@@ -408,18 +410,7 @@ const routeMap = {
                 { name: 'كيف تستخدم بنك الأسئلة', path: '/guides/how-to-use-a-question-bank' }
             ])
         ],
-        prerenderHtml: `
-            <main class="seo-shell" dir="rtl">
-                <h1>كيف تستخدم بنك الأسئلة لرفع أدائك في SMLE والبرومترك</h1>
-                <p>امتلاك بنك أسئلة كبير لا يرفع درجتك تلقائياً. دليل عملي يشرح الترتيب الصحيح: جلسة تشخيصية أولاً، حل تحت ظروف الاختبار الحقيقية، مراجعة كل سؤال كبيانات، وتوزيع الأسئلة حسب العائد.</p>
-                <nav aria-label="أدلة ذات صلة">
-                    <a href="/guides/smle-study-plan">خطة SMLE من 12 أسبوع</a>
-                    <a href="/guides/wrong-questions-method">طريقة مراجعة الأسئلة الخاطئة</a>
-                    <a href="/guides/smle-vs-prometric-differences">الفرق بين SMLE وPrometric</a>
-                    <a href="/guides/smle-high-yield-topics">أهم مواضيع SMLE عالية العائد</a>
-                </nav>
-            </main>
-        `
+        prerenderHtml: guideArticleHtml(guidesCopy.ar.howToUseBank, { hub: guidesCopy.ar.hub, currentPath: '/guides/how-to-use-a-question-bank' })
     },
     '/guides/smle-study-plan': {
         title: 'خطة SMLE من 12 أسبوع | SQB',
@@ -436,12 +427,7 @@ const routeMap = {
                 { name: 'خطة 12 أسبوع', path: '/guides/smle-study-plan' }
             ])
         ],
-        prerenderHtml: `
-            <main class="seo-shell" dir="rtl">
-                <h1>خطة SMLE من 12 أسبوع</h1>
-                <p>دليل يشرح تقسيم التحضير إلى مراحل، تنظيم اليوم الدراسي، ومراجعة الأخطاء بشكل منهجي لرفع الجاهزية قبل الاختبار.</p>
-            </main>
-        `
+        prerenderHtml: guideArticleHtml(guidesCopy.ar.studyPlan, { hub: guidesCopy.ar.hub, currentPath: '/guides/smle-study-plan' })
     },
     '/guides/wrong-questions-method': {
         title: 'طريقة مراجعة الأسئلة الخاطئة | SQB',
@@ -458,12 +444,7 @@ const routeMap = {
                 { name: 'مراجعة الأخطاء', path: '/guides/wrong-questions-method' }
             ])
         ],
-        prerenderHtml: `
-            <main class="seo-shell" dir="rtl">
-                <h1>طريقة مراجعة الأسئلة الخاطئة</h1>
-                <p>دليل يوضح كيف تصنف الخطأ وتبني آلية مراجعة تمنع تكراره في اختبارات SMLE والبرومترك.</p>
-            </main>
-        `
+        prerenderHtml: guideArticleHtml(guidesCopy.ar.wrongQuestions, { hub: guidesCopy.ar.hub, currentPath: '/guides/wrong-questions-method' })
     },
     '/guides/smle-vs-prometric-differences': {
         title: 'الفرق بين SMLE وPrometric | SQB',
@@ -480,12 +461,7 @@ const routeMap = {
                 { name: 'الفرق بين SMLE وPrometric', path: '/guides/smle-vs-prometric-differences' }
             ])
         ],
-        prerenderHtml: `
-            <main class="seo-shell" dir="rtl">
-                <h1>الفرق بين SMLE وPrometric</h1>
-                <p>مقارنة عملية تساعدك على تعديل طريقة المذاكرة وإدارة الوقت حسب طبيعة كل اختبار.</p>
-            </main>
-        `
+        prerenderHtml: guideArticleHtml(guidesCopy.ar.vsPrometric, { hub: guidesCopy.ar.hub, currentPath: '/guides/smle-vs-prometric-differences' })
     },
     '/guides/smle-high-yield-topics': {
         title: 'أهم مواضيع SMLE عالية العائد | SQB',
@@ -502,12 +478,22 @@ const routeMap = {
                 { name: 'مواضيع SMLE عالية العائد', path: '/guides/smle-high-yield-topics' }
             ])
         ],
-        prerenderHtml: `
-            <main class="seo-shell" dir="rtl">
-                <h1>أهم مواضيع SMLE عالية العائد</h1>
-                <p>خريطة أولويات عملية لتوزيع وقتك على المواضيع الأكثر تأثيرا على الأداء في الاختبار.</p>
-            </main>
-        `
+        prerenderHtml: guideArticleHtml(guidesCopy.ar.highYield, { hub: guidesCopy.ar.hub, currentPath: '/guides/smle-high-yield-topics' })
+    },
+    // Runtime placeholder for /questions and everything under it.
+    //
+    // No prerenderHtml here on purpose: those pages are emitted by
+    // scripts/postbuild-seo.mjs from src/seo/publicQuestions.js, which is also
+    // where their real per-page title, description and schema live. This entry
+    // exists only so a client-side navigation into the library does not fall
+    // through to the site-wide default for the moment before the question data
+    // chunk resolves and the page renders its own <SEO>. Kept deliberately
+    // generic so there is nothing here that can drift out of sync.
+    '/questions': {
+        title: 'أسئلة تدريبية مجانية لاختبار SMLE وSNLE | SQB',
+        description: 'أسئلة تدريبية بنمط اختبار الهيئة السعودية للتخصصات الصحية، مع الإجابة الصحيحة وشرح مكتوب لكل سؤال، مفتوحة بدون حساب.',
+        keywords: 'أسئلة SMLE مجانية, اسئلة SNLE, اسئلة برومترك مجانية, SMLE practice questions, بنك أسئلة مجاني',
+        alternates: ['ar-SA', 'ar', 'x-default']
     },
     '/login': {
         title: 'تسجيل الدخول | SQB',
@@ -675,6 +661,12 @@ function resolveRouteKey(pathname) {
         return '/summaries-detail';
     }
 
+    // /questions/<specialty> and /questions/<specialty>/<slug> share the
+    // placeholder above; the page itself renders the precise metadata.
+    if (pathname.startsWith('/questions/')) {
+        return '/questions';
+    }
+
     return routeMap[pathname] ? pathname : 'default';
 }
 
@@ -705,11 +697,17 @@ export function getSeoConfig(pathname = '/', lang = 'ar') {
 }
 
 export function getPrerenderRoutes() {
+    // The footer nav is appended to every prerendered route, not written into
+    // each one: it is the crawler's equivalent of Footer.jsx, and it is what
+    // gives /guides (and the guide articles below it) an internal link from
+    // every crawlable page instead of none.
+    const footerNav = siteFooterNavHtml();
+
     return Object.entries(routeMap)
         .filter(([path, config]) => path !== 'default' && config.prerenderHtml)
         .map(([path, config]) => ({
             path,
-            html: config.prerenderHtml,
+            html: `${config.prerenderHtml}${footerNav}`,
             seo: getSeoConfig(path)
         }));
 }

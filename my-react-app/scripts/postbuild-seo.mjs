@@ -16,6 +16,8 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import fs from 'node:fs';
 import { getPrerenderRoutes, SITE_ORIGIN } from '../src/seo/siteMetadata.js';
+import { siteFooterNavHtml } from '../src/seo/prerenderHtml.js';
+import { buildPublicQuestionRoutes, QUESTIONS_ROOT } from '../src/seo/publicQuestions.js';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const distDir = path.resolve(scriptDir, '../dist');
@@ -95,6 +97,38 @@ const SITEMAP_HINTS = {
   '/refund-policy': { priority: '0.4', changefreq: 'yearly' }
 };
 const GUIDE_DETAIL_HINT = { priority: '0.8', changefreq: 'weekly' };
+// The published question set is a fixed sample that only changes when
+// exportPublicQuestions.js is re-run, so it is deliberately NOT advertised as
+// weekly — a sitemap that overstates freshness earns less crawl, not more.
+const QUESTION_HUB_HINT = { priority: '0.8', changefreq: 'monthly' };
+const QUESTION_PAGE_HINT = { priority: '0.6', changefreq: 'monthly' };
+
+function questionSitemapHint(routePath) {
+    if (routePath === QUESTIONS_ROOT) return QUESTION_HUB_HINT;
+    // /questions/<specialty> has two segments, /questions/<specialty>/<slug> has three.
+    return routePath.split('/').length === 3 ? QUESTION_HUB_HINT : QUESTION_PAGE_HINT;
+}
+
+/**
+ * Read the published question sample.
+ *
+ * Missing file is not an error: the site builds and deploys perfectly well
+ * without the public library, and failing a deploy because a generated data
+ * file has not been committed yet would be a bad trade. It logs loudly instead.
+ */
+function readPublicQuestions() {
+    const dataPath = path.resolve(scriptDir, '../src/seo/data/publicQuestions.json');
+    if (!fs.existsSync(dataPath)) {
+        console.warn('[postbuild-seo] src/seo/data/publicQuestions.json not found — skipping the public question library. Run backend/scripts/exportPublicQuestions.js --apply to generate it.');
+        return null;
+    }
+    try {
+        return JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+    } catch (err) {
+        console.warn(`[postbuild-seo] Could not parse publicQuestions.json (${err.message}) — skipping the public question library.`);
+        return null;
+    }
+}
 
 function buildSitemap(routes) {
   const indexable = routes.filter(
@@ -105,7 +139,11 @@ function buildSitemap(routes) {
     .map(({ path: routePath, seo }) => {
       const hint =
         SITEMAP_HINTS[routePath] ||
-        (routePath.startsWith('/guides/') ? GUIDE_DETAIL_HINT : { priority: '0.5', changefreq: 'monthly' });
+        (routePath === QUESTIONS_ROOT || routePath.startsWith(`${QUESTIONS_ROOT}/`)
+          ? questionSitemapHint(routePath)
+          : routePath.startsWith('/guides/')
+            ? GUIDE_DETAIL_HINT
+            : { priority: '0.5', changefreq: 'monthly' });
       return [
         '  <url>',
         `    <loc>${seo.url}</loc>`,
@@ -124,7 +162,11 @@ if (!fs.existsSync(templatePath)) {
   console.warn('[postbuild-seo] dist/index.html not found — skipping prerender.');
 } else {
   const template = fs.readFileSync(templatePath, 'utf8');
-  const routes = getPrerenderRoutes();
+  const questionPayload = readPublicQuestions();
+  const questionRoutes = questionPayload
+    ? buildPublicQuestionRoutes(questionPayload, { footerNav: siteFooterNavHtml() })
+    : [];
+  const routes = [...getPrerenderRoutes(), ...questionRoutes];
   let count = 0;
   for (const { path: routePath, html: prerenderHtml, seo } of routes) {
     const outPath = outputPathForRoute(routePath);
@@ -136,6 +178,6 @@ if (!fs.existsSync(templatePath)) {
   const sitemapPath = path.join(distDir, 'sitemap.xml');
   fs.writeFileSync(sitemapPath, buildSitemap(routes), 'utf8');
   console.log(
-    `[postbuild-seo] Prerendered ${count} route(s) and regenerated sitemap.xml (lastmod ${BUILD_DATE}). Origin: ${SITE_ORIGIN}`
+    `[postbuild-seo] Prerendered ${count} route(s) — ${questionRoutes.length} of them from the public question library — and regenerated sitemap.xml (lastmod ${BUILD_DATE}). Origin: ${SITE_ORIGIN}`
   );
 }

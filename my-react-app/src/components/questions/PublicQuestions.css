@@ -1,0 +1,438 @@
+/* Public question library — /questions, /questions/:specialty and the
+   question pages themselves.
+
+   Every rule is prefixed `.pq-`, and the file is only imported by the three
+   components under components/questions/. Nothing here may leak into the rest
+   of the app (see the scoped-stylesheet invariant in docs/DESIGN_MAP.md).
+
+   All spacing is logical or symmetric so the same rules serve LTR and RTL:
+   the page chrome follows the site language, while the question block pins
+   itself to lang="en" dir="ltr" because clinical content is English in both. */
+
+.pq-page {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 28px 20px 72px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  color: var(--text-dark);
+}
+
+.pq-loading {
+  display: grid;
+  place-items: center;
+  min-height: 50vh;
+}
+
+/* --- breadcrumb --- */
+.pq-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  font-size: 13.5px;
+  color: var(--text-light);
+}
+
+.pq-breadcrumb a {
+  color: var(--text-light);
+  text-decoration: none;
+}
+
+.pq-breadcrumb a:hover,
+.pq-breadcrumb a:focus-visible {
+  color: var(--primary-color);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* The separator is a generated character, so it never lands in the
+   accessibility tree or in the text a crawler extracts. */
+.pq-breadcrumb a + a::before {
+  content: '/';
+  margin-inline-end: 10px;
+  color: var(--border-color);
+}
+
+/* --- hero --- */
+.pq-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pq-kicker {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--primary-color);
+}
+
+.pq-page h1 {
+  margin: 0;
+  font-size: clamp(24px, 3.6vw, 33px);
+  line-height: 1.35;
+  color: var(--text-dark);
+}
+
+.pq-hero p:not(.pq-kicker) {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.9;
+  color: var(--text-medium);
+}
+
+.pq-page h2 {
+  margin: 0 0 14px;
+  font-size: 19px;
+  line-height: 1.5;
+  color: var(--text-dark);
+}
+
+/* --- hub: specialty cards --- */
+.pq-track + .pq-track {
+  margin-top: 4px;
+}
+
+.pq-specialty-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(212px, 1fr));
+  gap: 14px;
+}
+
+.pq-specialty-card {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 18px 18px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  text-decoration: none;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pq-specialty-card:hover,
+.pq-specialty-card:focus-visible {
+  transform: translateY(-3px);
+  border-color: var(--primary-light);
+  box-shadow: var(--shadow-md);
+}
+
+.pq-specialty-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.pq-specialty-en {
+  font-size: 13px;
+  color: var(--text-light);
+}
+
+.pq-specialty-count {
+  margin-top: 4px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+/* --- specialty index list --- */
+.pq-list {
+  margin: 0;
+  padding-inline-start: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.pq-list li {
+  line-height: 1.7;
+}
+
+.pq-list a {
+  color: var(--text-dark);
+  text-decoration: none;
+}
+
+.pq-list a:hover,
+.pq-list a:focus-visible {
+  color: var(--primary-color);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* --- the question itself --- */
+.pq-question {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 26px 24px 28px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.pq-stem {
+  margin: 0;
+  font-size: 16.5px;
+  line-height: 1.9;
+  color: var(--text-dark);
+}
+
+.pq-hint {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--text-light);
+}
+
+.pq-options {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  counter-reset: none;
+}
+
+/* The prerendered markup emits plain <li> with a nested letter span; the React
+   version wraps the same content in a <button>. Both get the same box, so the
+   no-JS page and the hydrated page look identical. */
+.pq-option,
+.pq-options > li {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-white);
+}
+
+.pq-option > button,
+.pq-options > li {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 13px 15px;
+  font: inherit;
+  text-align: start;
+  color: var(--text-dark);
+  background: none;
+  border: 0;
+  border-radius: inherit;
+  cursor: pointer;
+}
+
+.pq-options > li:not(.pq-option) {
+  cursor: default;
+}
+
+.pq-option > button:hover {
+  background: var(--bg-light);
+}
+
+.pq-option > button:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.pq-letter {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--bg-light);
+  border: 1px solid var(--border-color);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-medium);
+}
+
+.pq-option-text {
+  flex: 1;
+  line-height: 1.65;
+}
+
+.pq-option.is-correct,
+.pq-options > li.is-correct {
+  border-color: var(--success-color);
+  background: var(--accuracy-high-bg);
+}
+
+.pq-option.is-correct .pq-letter,
+.pq-options > li.is-correct .pq-letter {
+  background: var(--success-color);
+  border-color: var(--success-color);
+  color: #fff;
+}
+
+.pq-option.is-wrong {
+  border-color: var(--error-color);
+  background: var(--accuracy-low-bg);
+}
+
+.pq-option.is-wrong .pq-letter {
+  background: var(--error-color);
+  border-color: var(--error-color);
+  color: #fff;
+}
+
+.pq-correct-tag,
+.pq-your-tag {
+  flex-shrink: 0;
+  align-self: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.pq-correct-tag {
+  background: var(--success-color);
+  color: #fff;
+}
+
+.pq-your-tag {
+  background: var(--error-color);
+  color: #fff;
+}
+
+.pq-explanation {
+  padding-top: 18px;
+  border-top: 1px solid var(--border-light);
+}
+
+.pq-explanation h2 {
+  margin: 0 0 10px;
+  font-size: 16px;
+  color: var(--secondary-dark);
+}
+
+.pq-explanation p {
+  margin: 0;
+  font-size: 15.5px;
+  line-height: 1.95;
+  color: var(--text-medium);
+}
+
+/* --- CTA --- */
+.pq-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 24px 24px 26px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--surface-tint);
+}
+
+.pq-cta h2 {
+  margin: 0;
+}
+
+.pq-cta p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.9;
+  color: var(--text-medium);
+}
+
+.pq-cta-btn {
+  margin-top: 6px;
+  display: inline-block;
+  padding: 12px 22px;
+  border-radius: var(--radius-md);
+  background: var(--primary-color);
+  color: #fff;
+  font-weight: 700;
+  font-size: 15px;
+  text-decoration: none;
+  box-shadow: var(--shadow-sm);
+}
+
+.pq-cta-btn:hover {
+  background: var(--primary-dark);
+}
+
+.pq-cta-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.pq-cta-note {
+  font-size: 12.5px !important;
+  color: var(--text-light) !important;
+}
+
+/* --- related / siblings --- */
+.pq-related ul {
+  margin: 0;
+  padding-inline-start: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.pq-related a,
+.pq-siblings a {
+  color: var(--text-dark);
+  text-decoration: none;
+  line-height: 1.7;
+}
+
+.pq-related a:hover,
+.pq-related a:focus-visible,
+.pq-siblings a:hover,
+.pq-siblings a:focus-visible {
+  color: var(--primary-color);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.pq-related > p {
+  margin: 14px 0 0;
+  font-weight: 600;
+}
+
+.pq-sibling-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.pq-sibling-links a {
+  padding: 7px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 13.5px;
+}
+
+@media (max-width: 600px) {
+  .pq-page {
+    padding: 20px 15px 60px;
+    gap: 26px;
+  }
+
+  .pq-question {
+    padding: 20px 16px 22px;
+  }
+
+  .pq-cta {
+    padding: 20px 18px 22px;
+  }
+
+  /* The tag would otherwise squeeze the option text to a two-word column. */
+  .pq-correct-tag,
+  .pq-your-tag {
+    align-self: flex-start;
+  }
+}
