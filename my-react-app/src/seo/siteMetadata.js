@@ -184,6 +184,7 @@ ${guidesTeaserHtml(guidesCopy.ar.hub, {
           <a href="/about">من نحن</a>
           <a href="/guides">أدلة التحضير</a>
           <a href="/questions">أسئلة تدريبية مجانية</a>
+          <a href="/past-papers">تجميعات الأسئلة</a>
           <a href="/faq">الأسئلة الشائعة</a>
           <a href="/contact">اتصل بنا</a>
           <a href="/signup">إنشاء حساب مجاني</a>
@@ -489,6 +490,15 @@ ${guidesTeaserHtml(guidesCopy.ar.hub, {
     // through to the site-wide default for the moment before the question data
     // chunk resolves and the page renders its own <SEO>. Kept deliberately
     // generic so there is nothing here that can drift out of sync.
+    // Same arrangement as /questions below: a generic placeholder for the
+    // moment before the collection data resolves, with the real per-page
+    // metadata rendered by the page from src/seo/pastPapers.js.
+    '/past-papers': {
+        title: 'تجميعات أسئلة SMLE وSNLE | SQB',
+        description: 'دليل تجميعات أسئلة اختبار الهيئة السعودية للتخصصات الصحية للطب والتمريض، مع أسئلة مفتوحة من كل تجميعة بدون حساب.',
+        keywords: 'smle past papers, تجميعات سملي, تجميعات SMLE, تجميعات SNLE, اسئلة سملي سابقة',
+        alternates: ['ar-SA', 'ar', 'x-default']
+    },
     '/questions': {
         title: 'أسئلة تدريبية مجانية لاختبار SMLE وSNLE | SQB',
         description: 'أسئلة تدريبية بنمط اختبار الهيئة السعودية للتخصصات الصحية، مع الإجابة الصحيحة وشرح مكتوب لكل سؤال، مفتوحة بدون حساب.',
@@ -669,6 +679,10 @@ function resolveRouteKey(pathname) {
     // placeholder above; the page itself renders the precise metadata.
     if (pathname.startsWith('/questions/')) {
         return '/questions';
+    }
+
+    if (pathname.startsWith('/past-papers/')) {
+        return '/past-papers';
     }
 
     return routeMap[pathname] ? pathname : 'default';

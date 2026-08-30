@@ -18,6 +18,7 @@ import fs from 'node:fs';
 import { getPrerenderRoutes, SITE_ORIGIN } from '../src/seo/siteMetadata.js';
 import { siteFooterNavHtml } from '../src/seo/prerenderHtml.js';
 import { buildPublicQuestionRoutes, QUESTIONS_ROOT } from '../src/seo/publicQuestions.js';
+import { buildPastPaperRoutes, PAST_PAPERS_ROOT } from '../src/seo/pastPapers.js';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const distDir = path.resolve(scriptDir, '../dist');
@@ -103,6 +104,8 @@ const GUIDE_DETAIL_HINT = { priority: '0.8', changefreq: 'weekly' };
 const QUESTION_HUB_HINT = { priority: '0.8', changefreq: 'monthly' };
 const QUESTION_PAGE_HINT = { priority: '0.6', changefreq: 'monthly' };
 
+const PAST_PAPER_HINT = { priority: '0.75', changefreq: 'monthly' };
+
 function questionSitemapHint(routePath) {
     if (routePath === QUESTIONS_ROOT) return QUESTION_HUB_HINT;
     // /questions/<specialty> has two segments, /questions/<specialty>/<slug> has three.
@@ -141,7 +144,9 @@ function buildSitemap(routes) {
         SITEMAP_HINTS[routePath] ||
         (routePath === QUESTIONS_ROOT || routePath.startsWith(`${QUESTIONS_ROOT}/`)
           ? questionSitemapHint(routePath)
-          : routePath.startsWith('/guides/')
+          : routePath === PAST_PAPERS_ROOT || routePath.startsWith(`${PAST_PAPERS_ROOT}/`)
+            ? PAST_PAPER_HINT
+            : routePath.startsWith('/guides/')
             ? GUIDE_DETAIL_HINT
             : { priority: '0.5', changefreq: 'monthly' });
       return [
@@ -163,10 +168,14 @@ if (!fs.existsSync(templatePath)) {
 } else {
   const template = fs.readFileSync(templatePath, 'utf8');
   const questionPayload = readPublicQuestions();
+  const footerNav = siteFooterNavHtml();
   const questionRoutes = questionPayload
-    ? buildPublicQuestionRoutes(questionPayload, { footerNav: siteFooterNavHtml() })
+    ? buildPublicQuestionRoutes(questionPayload, { footerNav })
     : [];
-  const routes = [...getPrerenderRoutes(), ...questionRoutes];
+  const pastPaperRoutes = questionPayload
+    ? buildPastPaperRoutes(questionPayload, { footerNav })
+    : [];
+  const routes = [...getPrerenderRoutes(), ...questionRoutes, ...pastPaperRoutes];
   let count = 0;
   for (const { path: routePath, html: prerenderHtml, seo } of routes) {
     const outPath = outputPathForRoute(routePath);
@@ -178,6 +187,6 @@ if (!fs.existsSync(templatePath)) {
   const sitemapPath = path.join(distDir, 'sitemap.xml');
   fs.writeFileSync(sitemapPath, buildSitemap(routes), 'utf8');
   console.log(
-    `[postbuild-seo] Prerendered ${count} route(s) — ${questionRoutes.length} of them from the public question library — and regenerated sitemap.xml (lastmod ${BUILD_DATE}). Origin: ${SITE_ORIGIN}`
+    `[postbuild-seo] Prerendered ${count} route(s) — ${questionRoutes.length} question pages, ${pastPaperRoutes.length} collection pages — and regenerated sitemap.xml (lastmod ${BUILD_DATE}). Origin: ${SITE_ORIGIN}`
   );
 }

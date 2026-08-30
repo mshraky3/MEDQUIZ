@@ -162,11 +162,35 @@ async function main() {
         slugs.add(q.slug);
     }
 
+    // How big each collection is in the bank as a whole, not just in the
+    // published sample. The /past-papers pages state these totals, and this is
+    // the only place they can come from without giving the web build a
+    // database connection.
+    const { rows: collectionRows } = await db.query(
+        `SELECT track, source, count(*)::int AS total
+           FROM questions
+          WHERE source IS NOT NULL
+          GROUP BY 1, 2
+          ORDER BY 1, 3 DESC`
+    );
+    const publishedPerSource = picked.reduce((acc, q) => {
+        acc[q.source] = (acc[q.source] || 0) + 1;
+        return acc;
+    }, {});
+    const collections = collectionRows.map((row) => ({
+        source: row.source,
+        track: row.track,
+        total: row.total,
+        published: publishedPerSource[row.source] || 0,
+    }));
+
     const payload = {
         generatedAt: new Date().toISOString().slice(0, 10),
         perSpecialty: PER_SPECIALTY,
         minExplanation: MIN_EXPLANATION,
         count: picked.length,
+        bankTotal: collectionRows.reduce((sum, row) => sum + row.total, 0),
+        collections,
         questions: picked,
     };
 

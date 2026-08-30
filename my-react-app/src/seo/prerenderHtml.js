@@ -163,6 +163,7 @@ const FOOTER_NAV_LINKS = [
     { href: '/about', label: 'من نحن' },
     { href: '/guides', label: 'أدلة التحضير لاختبار SMLE' },
     { href: '/questions', label: 'أسئلة تدريبية مجانية' },
+    { href: '/past-papers', label: 'تجميعات أسئلة SMLE وSNLE' },
     { href: '/faq', label: 'الأسئلة الشائعة' },
     { href: '/groups', label: 'الاشتراك الجماعي' },
     { href: '/contact', label: 'اتصل بنا' },

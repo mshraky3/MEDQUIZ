@@ -436,3 +436,17 @@
     align-self: flex-start;
   }
 }
+
+/* The "these are not official past papers" note on /past-papers. Styled as a
+   quiet aside rather than a warning banner: it is a factual clarification the
+   reader should see, not an error. */
+.pq-note {
+  margin: 4px 0 0;
+  padding: 12px 15px;
+  border-inline-start: 3px solid var(--border-color);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  background: var(--bg-light);
+  font-size: 13.5px;
+  line-height: 1.85;
+  color: var(--text-light);
+}

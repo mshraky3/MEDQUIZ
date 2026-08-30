@@ -3,6 +3,39 @@
   "perSpecialty": 24,
   "minExplanation": 500,
   "count": 240,
+  "bankTotal": 5033,
+  "collections": [
+    {
+      "source": "MedicalMidgard",
+      "track": "medical",
+      "total": 1280,
+      "published": 53
+    },
+    {
+      "source": "MedicalConfirmed",
+      "track": "medical",
+      "total": 1103,
+      "published": 34
+    },
+    {
+      "source": "MedicalGameBoy",
+      "track": "medical",
+      "total": 545,
+      "published": 9
+    },
+    {
+      "source": "NursingConfirmed",
+      "track": "nursing",
+      "total": 1514,
+      "published": 118
+    },
+    {
+      "source": "NursingMostRepeated",
+      "track": "nursing",
+      "total": 591,
+      "published": 26
+    }
+  ],
   "questions": [
     {
       "id": 25593,

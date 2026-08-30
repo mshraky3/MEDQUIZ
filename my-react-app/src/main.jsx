@@ -70,6 +70,8 @@ const SmleHighYieldTopicsGuide = lazy(() => import('./components/guides/SmleHigh
 const QuestionsHub = lazy(() => import('./components/questions/QuestionsHub.jsx'));
 const QuestionsSpecialty = lazy(() => import('./components/questions/QuestionsSpecialty.jsx'));
 const QuestionPage = lazy(() => import('./components/questions/QuestionPage.jsx'));
+const PastPapersHub = lazy(() => import('./components/pastPapers/PastPapersHub.jsx'));
+const PastPaperCollection = lazy(() => import('./components/pastPapers/PastPaperCollection.jsx'));
 const TempLinks = lazy(() => import('./components/ADD/TempLinks.jsx'));
 const QuestionReports = lazy(() => import('./components/ADD/QuestionReports.jsx'));
 const ForgotPassword = lazy(() => import('./components/login/ForgotPassword'));
@@ -173,6 +175,12 @@ const router = createBrowserRouter([
   pub('/questions', <QuestionsHub />),
   pub('/questions/:specialty', <QuestionsSpecialty />),
   pub('/questions/:specialty/:slug', <QuestionPage />),
+
+  // Collections. "smle past papers" already earns impressions with nothing to
+  // serve it, and the bank is organised by named collection — these pages say
+  // what each one is, and link into the public questions drawn from it.
+  pub('/past-papers', <PastPapersHub />),
+  pub('/past-papers/:slug', <PastPaperCollection />),
 
   // Signed-in
   authed('/quizs', <QUIZS />),

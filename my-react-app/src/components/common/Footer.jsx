@@ -26,6 +26,7 @@ const Footer = () => {
     { to: '/about', label: t.nav.about },
     { to: '/guides', label: t.nav.guides },
     { to: '/questions', label: t.footer.freeQuestions },
+    { to: '/past-papers', label: t.footer.collections },
     { to: '/faq', label: t.nav.faq },
     // Group plans are otherwise advertised in exactly one place (the landing
     // band). This is the link that reaches them from every other page.
