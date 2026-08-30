@@ -515,6 +515,10 @@ ${guidesTeaserHtml(guidesCopy.ar.hub, {
       </main>
     `
     },
+    // /signup and /login carry `noindex` while robots.txt deliberately leaves
+    // both crawlable — see the comment there. Blocking the crawl would stop
+    // Googlebot ever reading this directive, which is the one thing that keeps
+    // a bare auth form out of the results. Do not "tidy" one without the other.
     '/signup': {
         title: 'إنشاء حساب مجاني | SQB',
         description: 'أنشئ حسابك المجاني في منصة SQB وابدأ التدريب على أسئلة SMLE والبرومترك مع تجربة عربية مبسطة وتحليلات تساعدك على تحسين مستواك.',

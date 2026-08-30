@@ -80,7 +80,7 @@ const common = {
         },
         cookies: {
             dialogLabel: 'ملفات تعريف الارتباط',
-            text: 'نستخدم ملفات تعريف الارتباط لتحسين تجربتك وعرض إعلانات مناسبة لك.',
+            text: 'نستخدم ملفات تعريف الارتباط لتحسين تجربتك على المنصة.',
             privacyLink: 'سياسة الخصوصية',
             necessaryOnly: 'الضرورية فقط',
             acceptAll: 'قبول الكل',
@@ -187,7 +187,7 @@ const common = {
         },
         cookies: {
             dialogLabel: 'Cookies',
-            text: 'We use cookies to improve your experience and show relevant ads.',
+            text: 'We use cookies to improve your experience on the platform.',
             privacyLink: 'Privacy Policy',
             necessaryOnly: 'Necessary only',
             acceptAll: 'Accept all',

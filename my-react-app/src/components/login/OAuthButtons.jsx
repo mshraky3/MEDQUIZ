@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import Globals from '../../global.js';
+import { useLang } from '../../i18n';
 
 // Google renders its own official button UI (Google Identity Services) — we
 // don't draw it, we only get to pass the options `renderButton` accepts and
@@ -16,8 +17,27 @@ const GOOGLE_CLIENT_ID = import.meta.env?.VITE_GOOGLE_CLIENT_ID;
 // growing partway across the card.
 const GSI_MAX_WIDTH = 400;
 
-const OAuthButtons = ({ dividerLabel, onSuccess, onError, track, mode = 'signup' }) => {
+/**
+ * @param {'before'|'after'} dividerPosition
+ *   Which side of the Google button the divider sits on. It is a prop rather
+ *   than a constant because the two callers stack the block differently:
+ *   /login puts this component BELOW its email form, so "or" belongs above the
+ *   Google button; /signup puts it ABOVE the email fields, so a label like
+ *   "or create your account manually" has to come after it — otherwise the
+ *   page reads as though Google *is* the manual option.
+ */
+const OAuthButtons = ({ dividerLabel, onSuccess, onError, track, mode = 'signup', dividerPosition = 'before' }) => {
   const boxRef = useRef(null);
+  // GSI draws its own button and picks its own language — by default the
+  // visitor's Google/browser locale, which is how an Arabic "المواصلة باستخدام
+  // Google" ended up in the middle of the English signup page. Passing the
+  // site language puts the button in the language the rest of the page is in.
+  //
+  // Note this is applied via `?hl=` on the GSI script URL, which is fetched
+  // once per page load: switching language in-session re-renders everything
+  // else immediately, but Google's own button keeps its original language
+  // until the next full load.
+  const { lang } = useLang();
   // Google needs `width` as a NUMBER of px — it has no notion of 100%. Without
   // it GSI sizes the button to its own label (~220px) and leaves the rest of
   // the column empty, which is what made this button look like it belonged to
@@ -64,12 +84,14 @@ const OAuthButtons = ({ dividerLabel, onSuccess, onError, track, mode = 'signup'
 
   if (!GOOGLE_CLIENT_ID) return null;
 
+  const divider = <div className="oauth-divider"><span>{dividerLabel}</span></div>;
+
   return (
     <div className="oauth-block">
-      <div className="oauth-divider"><span>{dividerLabel}</span></div>
+      {dividerPosition === 'before' && divider}
       <div className="oauth-buttons">
         <div className="oauth-buttons-google" ref={boxRef}>
-          <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+          <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID} locale={lang}>
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
               onError={() => onError?.(new Error('google_login_failed'))}
@@ -86,6 +108,7 @@ const OAuthButtons = ({ dividerLabel, onSuccess, onError, track, mode = 'signup'
           </GoogleOAuthProvider>
         </div>
       </div>
+      {dividerPosition === 'after' && divider}
     </div>
   );
 };

@@ -524,6 +524,11 @@ const Signup = () => {
                             {!token && (
                                 <OAuthButtons
                                     dividerLabel={t.dividerOr}
+                                    // Google sits above the email fields here, so
+                                    // "or create your account manually" has to come
+                                    // after it — it labels the form below, not the
+                                    // Google button above.
+                                    dividerPosition="after"
                                     onSuccess={handleOAuthSuccess}
                                     onError={handleOAuthError}
                                     track={studyTrack}

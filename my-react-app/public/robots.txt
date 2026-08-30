@@ -27,8 +27,17 @@ Disallow: /summaries
 Disallow: /subscribe
 Disallow: /payment/
 
-# Auth utility pages with nothing to rank for. /signup itself stays crawlable
-# (it is the conversion page); only the per-invite token URLs are excluded.
+# Auth utility pages with nothing to rank for.
+#
+# /signup and /login are deliberately NOT disallowed here even though both
+# serve `noindex`, and that combination is intentional rather than a
+# contradiction: a URL that robots.txt blocks cannot be fetched, so Googlebot
+# never reads the noindex on it and may index the bare URL anyway. Allowing the
+# crawl is what makes the noindex effective. Keep them out of the sitemap
+# (postbuild-seo.mjs already filters noindex routes) and out of this list.
+#
+# Only the per-invite token URLs under /signup/ are excluded, since each is a
+# single-use link with nothing to crawl.
 Disallow: /forgot-password
 Disallow: /signup/
 
