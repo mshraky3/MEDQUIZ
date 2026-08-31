@@ -110,6 +110,12 @@ export async function runTrialEndedJob(db, { limit = 100 } = {}) {
  */
 export const COMEBACK_STAGES = [1, 3];
 
+// How many of the missed questions to actually put in the email. Four is the
+// most that still reads as a reminder rather than a wall — and if a student
+// missed twenty, seeing four of them makes the point about the other sixteen
+// better than listing them would.
+export const COMEBACK_QUESTION_SAMPLE = 4;
+
 export async function runComebackJob(db, { limit = 200 } = {}) {
     const result = { sent: 0, errors: [] };
     const { rows } = await db.query(`
@@ -142,7 +148,23 @@ export async function runComebackJob(db, { limit = 200 } = {}) {
         if (user.comeback_email_stage != null && user.comeback_email_stage >= due) continue;
 
         try {
+            // The questions themselves, not just how many. This email used to
+            // say "you missed 5 of 20" and link to /wrong-questions, which is
+            // behind a login — so its whole argument was a number and a door.
+            // Putting the actual questions in the inbox is the argument: the
+            // student reads one, remembers getting it wrong, and now wants the
+            // explanation. That is the product, demonstrated rather than
+            // described, and it costs one query against data already stored.
             const { rows: wrong } = await db.query(`
+                SELECT q.question_text, q.correct_option, uqa.selected_option, q.explanation
+                  FROM user_question_attempts uqa
+                  JOIN questions q ON q.id = uqa.question_id
+                 WHERE uqa.quiz_session_id = $1 AND uqa.is_correct = FALSE
+                 ORDER BY uqa.attempted_at ASC
+                 LIMIT $2
+            `, [user.session_id, COMEBACK_QUESTION_SAMPLE]);
+
+            const { rows: wrongTotal } = await db.query(`
                 SELECT COUNT(*)::int AS n
                   FROM user_question_attempts
                  WHERE quiz_session_id = $1 AND is_correct = FALSE
@@ -150,12 +172,13 @@ export async function runComebackJob(db, { limit = 200 } = {}) {
 
             const answered = Number(user.total_questions) || 0;
             const correct = Number(user.correct_answers) || 0;
-            const wrongCount = wrong[0]?.n ?? Math.max(0, answered - correct);
+            const wrongCount = wrongTotal[0]?.n ?? Math.max(0, answered - correct);
 
             await sendOneSessionComebackEmail(user.email, String(user.username).split('@')[0], user.track, {
                 questionsAnswered: answered,
                 correct,
                 wrongCount,
+                wrongQuestions: wrong,
             }, { lang: user.preferred_lang, accountId: user.id });
             await db.query(`UPDATE accounts SET comeback_email_stage = $2 WHERE id = $1`, [user.id, due]);
             result.sent++;

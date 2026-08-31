@@ -49,6 +49,20 @@ export const normalizeLang = (lang) =>
 const T = (lang, ar, en) => (normalizeLang(lang) === 'en' ? en : ar);
 
 /**
+ * HTML-escape a value before it goes into an email template.
+ *
+ * Everything else in this file interpolates copy written here; the comeback
+ * email is the first to interpolate QUESTION BANK text — stems, options and
+ * explanations that contain <, > and & as a matter of course (drug doses,
+ * inequalities, "T&A"). Unescaped, those break the layout at best.
+ */
+const esc = (value = '') => String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+
+/**
  * "2 days" in Arabic is not "٢ أيام".
  *
  * Arabic counts in four buckets — singular, dual, the 3–10 plural, and the
@@ -473,6 +487,32 @@ export const sendTrialEndedEmail = async (to, username, track, stats = {}, opts 
  *
  * @param {{questionsAnswered:number, correct:number, wrongCount:number}} stats
  */
+/**
+ * Explanations are authored with `**bold**` stage headings and `- ` bullets.
+ * An email client renders neither, so a student would read the markers as
+ * characters. First sentence, markers gone — enough to remind, not enough to
+ * replace the page it is inviting them back to.
+ */
+function explanationSnippet(text = '', maxChars = 190) {
+    const flat = String(text)
+        .replace(/\*\*/g, '')
+        .replace(/^[\s-]*[-*•]\s+/gm, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    if (!flat) return '';
+    const stop = flat.search(/[.!?](\s|$)/);
+    const firstSentence = stop > 40 ? flat.slice(0, stop + 1) : flat;
+    return firstSentence.length > maxChars
+        ? `${firstSentence.slice(0, maxChars).trimEnd()}…`
+        : firstSentence;
+}
+
+/** Trim a question stem to something that reads in an inbox. */
+function stemSnippet(text = '', maxChars = 200) {
+    const flat = String(text).replace(/\s+/g, ' ').trim();
+    return flat.length > maxChars ? `${flat.slice(0, maxChars).trimEnd()}…` : flat;
+}
+
 export const sendOneSessionComebackEmail = async (to, username, track, stats = {}, opts = {}) => {
   const lang = normalizeLang(opts.lang);
   const c = copyFor(track, lang);
@@ -480,6 +520,30 @@ export const sendOneSessionComebackEmail = async (to, username, track, stats = {
   const correct = Number(stats.correct) || 0;
   const wrongCount = Math.max(0, Number(stats.wrongCount) || 0);
   const accuracy = answered > 0 ? Math.round((correct / answered) * 100) : 0;
+  const missed = Array.isArray(stats.wrongQuestions) ? stats.wrongQuestions : [];
+
+  // The questions themselves. Study content stays in English in both languages
+  // — the exam is written in English and the bank is not translated — so these
+  // blocks are LTR regardless of the surrounding chrome.
+  const missedCards = missed.map((q) => {
+    const snippet = explanationSnippet(q.explanation);
+    return `
+              <tr>
+                <td style="background:#0b1021;border-radius:12px;padding:16px 18px;border:1px solid #1e293b;" dir="ltr" align="left">
+                  <p style="margin:0 0 10px;font-size:13px;color:#e2e8f0;line-height:1.65;">
+                    ${esc(stemSnippet(q.question_text))}
+                  </p>
+                  <p style="margin:0 0 4px;font-size:12px;color:#fca5a5;">
+                    ${T(lang, 'إجابتك', 'You answered')}: ${esc(q.selected_option || '—')}
+                  </p>
+                  <p style="margin:0 0 ${snippet ? '10' : '0'}px;font-size:12px;color:#6ee7b7;">
+                    ${T(lang, 'الصحيحة', 'Correct')}: ${esc(q.correct_option || '—')}
+                  </p>
+                  ${snippet ? `<p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.7;">${esc(snippet)}</p>` : ''}
+                </td>
+              </tr>
+              <tr><td style="height:10px;line-height:10px;">&nbsp;</td></tr>`;
+  }).join('');
 
   const html = wrapLayout(`
         <tr>
@@ -491,9 +555,30 @@ export const sendOneSessionComebackEmail = async (to, username, track, stats = {
             <p style="margin:0 0 24px;font-size:14px;color:#94a3b8;line-height:1.7;">
               ${T(lang,
                 `أجبت عن ${answered} سؤالاً بدقة ${accuracy}% — وهذه مجرد بداية. بنك ${c.exam} أكبر بكثير مما رأيته حتى الآن.`,
-                `You answered ${answered} questions at ${accuracy}% — and that's just a first look. The ${c.exam} bank goes a lot further than what you've seen so far.`)}
+                // No "The" in front: examEn already reads "the Saudi Medical
+                // Licensing Exam (SMLE)", so this sentence has been going out
+                // as "The the Saudi Medical Licensing Exam". A dash instead of
+                // a full stop keeps it mid-sentence, where the lower-case
+                // article the label already carries is the correct one.
+                `You answered ${answered} questions at ${accuracy}% — and that's just a first look, because ${c.exam} bank goes a lot further than what you've seen so far.`)}
             </p>
-            ${wrongCount > 0 ? `
+            ${missedCards ? `
+            <table cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:24px;">
+              <tr>
+                <td align="${lang === 'ar' ? 'right' : 'left'}" style="padding-bottom:12px;">
+                  <p style="margin:0;font-size:13px;font-weight:700;color:#22d3ee;">
+                    ${T(lang,
+                      wrongCount > missed.length
+                        ? `${missed.length} من ${wrongCount} سؤالاً أخطأت فيها`
+                        : 'الأسئلة التي أخطأت فيها',
+                      wrongCount > missed.length
+                        ? `${missed.length} of the ${wrongCount} you missed`
+                        : 'Here is what you missed')}
+                  </p>
+                </td>
+              </tr>
+${missedCards}
+            </table>` : wrongCount > 0 ? `
             <table cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:24px;">
               <tr>
                 <td style="background:#0b1021;border-radius:12px;padding:20px 24px;border:1px solid #1e293b;">
