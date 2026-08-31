@@ -69,7 +69,7 @@ You have none, and you are asking for up to 300 SAR.
 | ID | Task | Status |
 |----|------|--------|
 | S3-01 | Collect five real testimonials | **not started** — 3 power users with 17/21/38 sessions to ask |
-| S3-02 | Build a success-stories page and ask for submissions in-app | **built, empty** — `4eeacb7`; needs an admin review screen, and needs S3-01 to have anything to show |
+| S3-02 | Build a success-stories page and ask for submissions in-app | **done, empty** — `4eeacb7` + admin screen `HEAD`; waiting on S3-01 for content |
 | S3-03 | Put the 14-day refund promise on the pay button | **done** — `08d2710` (3 days monthly / 14 otherwise, per the policy) |
 | S3-04 | Show live counts pulled from the database | **done** — `35ea502` |
 | S3-05 | Name the people behind the question bank | **not started** — also an E-E-A-T signal for Sprint 1 |
@@ -88,7 +88,10 @@ You have none, and you are asking for up to 300 SAR.
    "monthly, 4-month, and annual"). Group checkout therefore shows the
    guarantee without a day count. Adding "including group plans" to the
    4-month line in section 2 would fix it.
-2. The success-stories review queue has endpoints but no admin screen.
+2. ~~The success-stories review queue has endpoints but no admin screen.~~
+   Done — /admin/stories. Note that approving does not publish: run
+   `node scripts/exportSuccessStories.js --apply` in backend/, commit the JSON,
+   and deploy.
 
 ## Sprint 4 — channels and the nursing bet (weeks 5–9)
 
