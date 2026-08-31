@@ -110,11 +110,73 @@ You have none, and you are asking for up to 300 SAR.
 | ID | Task | Status |
 |----|------|--------|
 | S4-01 | Check the nursing track against the official SNLE blueprint | **done** — `docs/SNLE_BLUEPRINT_AUDIT.md`; all four sections out of band, management & leadership is 0% |
-| S4-02 | Lead acquisition with nursing | **not started** — 26 nursing accounts, but 3 of 6 payers are nursing |
-| S4-03 | Sell the group plans directly instead of waiting to be found | **not started** — built, verified, zero seats sold |
-| S4-04 | Decide about Telegram — commit or stop | **not started** — everything built, 2 subscribers and 2 visits to show |
-| S4-05 | Treat AI search as a real channel | **not started** — 18 visits from ChatGPT/Perplexity, more than Bing |
-| S4-06 | Reactivate the 51 dormant trial accounts — once | **not started** — send once, measure, let it go |
+| S4-02 | Lead acquisition with nursing | **done (code)** — `0e42235`, `/guides/snle-blueprint` in both languages |
+| S4-03 | Sell the group plans directly instead of waiting to be found | **done (code)** — `45e6d36`; the outbound selling is still yours |
+| S4-04 | Decide about Telegram — commit or stop | **needs your decision** — evidence below, nothing changed yet |
+| S4-05 | Treat AI search as a real channel | **done** — `b3d14dc`, llms.txt + a `channel` on every landing_view |
+| S4-06 | Reactivate the 51 dormant trial accounts — once | **ready to send** — `663044a`; never run, start with the dry run |
+
+**S4-02 — what shipped, and what did not.** The nursing track had no public page
+of its own: five SMLE guides, an SMLE past-paper hub, an SMLE guides kicker.
+`/guides/snle-blueprint` is the first, written from the official SCFHS applicant
+guide and citing the edition it read. It does not claim we cover the blueprint —
+because `docs/SNLE_BLUEPRINT_AUDIT.md` says we do not. What it is not: nursing is
+still absent from the landing hero, the past-paper hub is still SMLE-first, and
+the Telegram channel posts medical questions only (see S4-04).
+
+**S4-03 — the missing number.** The plan cards said "SAR 60 per account" and
+never what those five people would otherwise pay: SAR 129 each for the same four
+months. The comparison now renders from the server's own plan data. That is the
+whole code contribution; nobody is going to find `/groups` on their own, and
+selling it means going to batch reps and study groups, which is not something
+code does.
+
+**S4-06 — before you send.** Run the dry run first. It writes no rows and no
+schema, exports the target list to `backend/exports/`, and tells you how many
+free questions those accounts still hold:
+
+```bash
+node scripts/reactivateDormantAccounts.js
+```
+
+Then `--preview` (one sample to you), then `--apply`. A week later, `--report`.
+Accounts that already spent all 40 are excluded — `runTrialEndedJob` owns them.
+
+### S4-04 — the Telegram decision
+
+Nothing here has been changed. The facts, so the call can be made on them:
+
+- The channel posts up to **3 medical questions a day**, driven by
+  `.github/workflows/cron.yml` at 07:00, 13:00 and 18:00 UTC. Free.
+- Exposure is bounded: a 90-day dedupe window means about **270 distinct
+  questions** are ever in rotation out of 5,033, and every post is deleted after
+  10 days. The "we are giving away the bank" worry does not survive contact with
+  the code.
+- **Nursing is never posted.** `pickChannelQuestion` is hardcoded to the medical
+  track. The track that converts several times better has no presence at all on
+  the one channel that exists.
+- The maintenance surface is real: ~640 lines of services plus routes, an admin
+  page and three tables, which produced a bug this month (`a03f781`).
+- Result after the site started linking it: 2 subscribers, 2 visits.
+
+**The recommendation: stop the schedule, keep the code and the channel.** Not
+because it costs money — it does not — but because three posts a day into a room
+of two is not an experiment, it is a habit, and it cannot produce a signal either
+way. The channel also has no reason to exist for a student: everything it posts
+is already free on `/questions` and `/demo`. Stopping is deleting three cron
+lines and is reversible in a minute.
+
+**If you would rather commit**, the two things that would actually change the
+number are: post nursing questions (one-line change, and it is the audience that
+converts), and give the channel something the website does not have — a daily
+question with the explanation *discussed*, or the weekly weak-topic digest that
+already exists as a DM. Promotion alone will not fix a channel with nothing on it
+that a student cannot get for free elsewhere.
+
+**Found while working through Sprint 4, not on the list:** the Arabic
+`/refund-policy` page told crawlers "the service is currently free and takes no
+payments" — it has not been free since June, and the page it describes has
+carried a real 3/14-day refund window all along. Fixed in `b3d14dc`.
 
 ## Sprint 5 — pricing, deliberately last (October, not before)
 
