@@ -1,7 +1,7 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+
 import Icon from './Icon.jsx';
-import { useCommon, useLang, LanguageToggle } from '../../i18n';
+import { useCommon, useLang, LanguageToggle, LocaleLink as Link } from '../../i18n';
 import './Footer.css';
 
 /**

@@ -19,6 +19,7 @@ import { getPrerenderRoutes, SITE_ORIGIN } from '../src/seo/siteMetadata.js';
 import { siteFooterNavHtml } from '../src/seo/prerenderHtml.js';
 import { buildPublicQuestionRoutes, QUESTIONS_ROOT } from '../src/seo/publicQuestions.js';
 import { buildPastPaperRoutes, PAST_PAPERS_ROOT } from '../src/seo/pastPapers.js';
+import { SUPPORTED_LANGS, dirFor, stripLocale } from '../src/seo/locales.js';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const distDir = path.resolve(scriptDir, '../dist');
@@ -47,6 +48,12 @@ const setAttr = (html, re, value) =>
 function buildRouteHtml(template, seo, prerenderHtml) {
   let html = template;
 
+  // <html lang/dir>. The template is Arabic/RTL; an English page that keeps
+  // those attributes tells both the browser and the crawler the wrong thing,
+  // and renders left-aligned English inside an RTL document.
+  const lang = seo.lang || 'ar';
+  html = html.replace(/<html[^>]*>/, `<html lang="${lang}" dir="${dirFor(lang)}">`);
+
   // <title>
   html = html.replace(/<title>[\s\S]*?<\/title>/, `<title>${escapeAttr(seo.title)}</title>`);
 
@@ -61,9 +68,21 @@ function buildRouteHtml(template, seo, prerenderHtml) {
   html = setMeta(html, 'name="twitter:title"', seo.title);
   html = setMeta(html, 'name="twitter:description"', seo.description);
   html = setMeta(html, 'name="twitter:url"', seo.url);
+  html = setMeta(html, 'property="og:locale"', seo.locale);
 
   // <link rel="canonical">
   html = setAttr(html, /(<link rel="canonical" href=")[^"]*(")/, seo.url);
+
+  // hreflang. The template hardcodes three alternates all pointing at the
+  // homepage, which is worse than none: it tells Google every page's Arabic
+  // and default version is `/`. Drop them and emit this route's real set.
+  html = html.replace(/\s*<link rel="alternate" hreflang="[^"]*" href="[^"]*"\s*\/?>/g, '');
+  const alternateLinks = (seo.alternates || [])
+    .map((alt) => `
+    <link rel="alternate" hreflang="${escapeAttr(alt.hreflang)}" href="${escapeAttr(alt.href)}" />`)
+    .join('');
+  html = html.replace('</head>', `${alternateLinks}
+  </head>`);
 
   // Replace the static JSON-LD blocks with this route's structured data.
   html = html.replace(/\s*<script type="application\/ld\+json">[\s\S]*?<\/script>/g, '');
@@ -139,7 +158,11 @@ function buildSitemap(routes) {
   );
 
   const urls = indexable
-    .map(({ path: routePath, seo }) => {
+    .map(({ path: localizedRoutePath, seo }) => {
+      // Hints are keyed by the language-neutral path, so /en/about gets the
+      // same priority as /about instead of silently falling through to the
+      // catch-all.
+      const { path: routePath } = stripLocale(localizedRoutePath);
       const hint =
         SITEMAP_HINTS[routePath] ||
         (routePath === QUESTIONS_ROOT || routePath.startsWith(`${QUESTIONS_ROOT}/`)
@@ -168,14 +191,18 @@ if (!fs.existsSync(templatePath)) {
 } else {
   const template = fs.readFileSync(templatePath, 'utf8');
   const questionPayload = readPublicQuestions();
-  const footerNav = siteFooterNavHtml();
-  const questionRoutes = questionPayload
-    ? buildPublicQuestionRoutes(questionPayload, { footerNav })
-    : [];
-  const pastPaperRoutes = questionPayload
-    ? buildPastPaperRoutes(questionPayload, { footerNav })
-    : [];
-  const routes = [...getPrerenderRoutes(), ...questionRoutes, ...pastPaperRoutes];
+  // Every route, in every language. The Arabic tree keeps the bare paths so
+  // nothing already indexed moves; English lives under /en.
+  const routes = SUPPORTED_LANGS.flatMap((lang) => {
+    const footerNav = siteFooterNavHtml(lang);
+    return [
+      ...getPrerenderRoutes(lang),
+      ...(questionPayload ? buildPublicQuestionRoutes(questionPayload, { footerNav, lang }) : []),
+      ...(questionPayload ? buildPastPaperRoutes(questionPayload, { footerNav, lang }) : [])
+    ];
+  });
+  const questionRoutes = routes.filter((r) => r.path.includes(QUESTIONS_ROOT));
+  const pastPaperRoutes = routes.filter((r) => r.path.includes(PAST_PAPERS_ROOT));
   let count = 0;
   for (const { path: routePath, html: prerenderHtml, seo } of routes) {
     const outPath = outputPathForRoute(routePath);
@@ -187,6 +214,6 @@ if (!fs.existsSync(templatePath)) {
   const sitemapPath = path.join(distDir, 'sitemap.xml');
   fs.writeFileSync(sitemapPath, buildSitemap(routes), 'utf8');
   console.log(
-    `[postbuild-seo] Prerendered ${count} route(s) — ${questionRoutes.length} question pages, ${pastPaperRoutes.length} collection pages — and regenerated sitemap.xml (lastmod ${BUILD_DATE}). Origin: ${SITE_ORIGIN}`
+    `[postbuild-seo] Prerendered ${count} route(s) across ${SUPPORTED_LANGS.length} languages — ${questionRoutes.length} question pages, ${pastPaperRoutes.length} collection pages — and regenerated sitemap.xml (lastmod ${BUILD_DATE}). Origin: ${SITE_ORIGIN}`
   );
 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { LocaleLink as Link } from '../../i18n';
 import Spinner from '../common/Spinner.jsx';
 import SEO from '../common/SEO.jsx';
 import { useCopy, useLang } from '../../i18n';
@@ -41,7 +41,7 @@ const PastPapersHub = () => {
 
     return (
         <main className="pq-page" dir={dir}>
-            <SEO {...completePastPaperSeo(pastPapersHubSeo(data))} />
+            <SEO {...completePastPaperSeo(pastPapersHubSeo(data, lang), lang)} />
 
             <nav className="pq-breadcrumb" aria-label={t.breadcrumbRoot}>
                 <Link to="/">{t.breadcrumbHome}</Link>

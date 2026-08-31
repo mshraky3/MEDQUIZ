@@ -21,8 +21,15 @@
 
 import publicQuestionsCopy from '../i18n/copy/publicQuestions.js';
 import { faqHtml, faqPageSchema } from './faqSchema.js';
-
-const SITE_ORIGIN = 'https://www.smle-question-bank.com';
+import {
+    SITE_ORIGIN,
+    absoluteUrl,
+    alternatesFor,
+    dirFor,
+    localizedPath,
+    ogLocale,
+    schemaLang,
+} from './locales.js';
 
 // Specialty keys are the literal `questions.question_type` values, which
 // contain spaces ("obstetrics and gynecology"). URLs get the hyphenated form.
@@ -146,27 +153,31 @@ const OPTION_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
  * whole point of publishing these is to be a page that genuinely answers the
  * question someone searched for.
  */
-export function questionPageHtml(question, related = []) {
+export function questionPageHtml(question, related = [], lang = 'ar') {
+    const t = publicQuestionsCopy[lang] || publicQuestionsCopy.ar;
+    const dir = dirFor(lang);
+    const specialtyLabel = lang === 'en' ? question.specialtyLabelEn : question.specialtyLabelAr;
+
     const options = question.options
         .map((option, i) => {
             const isCorrect = i === question.correctIndex;
             return `        <li${isCorrect ? ' class="is-correct"' : ''}>
           <span class="pq-letter">${OPTION_LETTERS[i]}</span>
           <span>${escapeHtml(option)}</span>
-${isCorrect ? '          <span class="pq-correct-tag">الإجابة الصحيحة</span>\n' : ''}        </li>`;
+${isCorrect ? `          <span class="pq-correct-tag">${escapeHtml(t.question.answerLabel)}</span>\n` : ''}        </li>`;
         })
         .join('\n');
 
     const relatedLinks = related
-        .map((q) => `        <li><a href="${questionPath(q)}">${escapeHtml(q.headline)}</a></li>`)
+        .map((q) => `        <li><a href="${localizedPath(questionPath(q), lang)}">${escapeHtml(q.headline)}</a></li>`)
         .join('\n');
 
     return `
-    <main class="pq-page" dir="rtl">
-      <nav class="pq-breadcrumb" aria-label="مسار التنقل">
-        <a href="/">الرئيسية</a>
-        <a href="${QUESTIONS_ROOT}">أسئلة تدريبية مجانية</a>
-        <a href="${specialtyPath(question.specialty)}">${escapeHtml(question.specialtyLabelAr)}</a>
+    <main class="pq-page" dir="${dir}">
+      <nav class="pq-breadcrumb" aria-label="${escapeHtml(t.breadcrumbLabel)}">
+        <a href="${localizedPath('/', lang)}">${escapeHtml(t.breadcrumbHome)}</a>
+        <a href="${localizedPath(QUESTIONS_ROOT, lang)}">${escapeHtml(t.breadcrumbRoot)}</a>
+        <a href="${localizedPath(specialtyPath(question.specialty), lang)}">${escapeHtml(specialtyLabel)}</a>
       </nav>
       <article class="pq-question" lang="en" dir="ltr">
         <p class="pq-kicker">${escapeHtml(question.specialtyLabelEn)}</p>
@@ -176,61 +187,74 @@ ${isCorrect ? '          <span class="pq-correct-tag">الإجابة الصحي�
 ${options}
         </ol>
         <section class="pq-explanation">
-          <h2>Explanation</h2>
+          <h2>${escapeHtml(t.question.explanationTitle)}</h2>
           <p>${escapeHtml(question.explanation)}</p>
         </section>
       </article>
-      <section class="pq-cta" dir="rtl">
-        <h2>تدرّب على 40 سؤالاً مجاناً</h2>
-        <p>هذا واحد من ${escapeHtml(String(question.specialtyLabelAr))} ضمن بنك أسئلة كامل — كل سؤال فيه بشرح مكتوب. أنشئ حساباً مجانياً واحصل على 40 سؤالاً بدون بطاقة دفع.</p>
-        <a class="pq-cta-btn" href="/signup">إنشاء حساب مجاني</a>
-      </section>
-${related.length ? `      <nav class="pq-related" aria-label="أسئلة ذات صلة" dir="rtl">
-        <h2>أسئلة أخرى في ${escapeHtml(question.specialtyLabelAr)}</h2>
+${ctaHtml(t, lang)}
+${related.length ? `      <nav class="pq-related" aria-label="${escapeHtml(t.question.relatedTitle(specialtyLabel))}" dir="${dir}">
+        <h2>${escapeHtml(t.question.relatedTitle(specialtyLabel))}</h2>
         <ul>
 ${relatedLinks}
         </ul>
-        <p><a href="${specialtyPath(question.specialty)}">كل أسئلة ${escapeHtml(question.specialtyLabelAr)}</a></p>
+        <p><a href="${localizedPath(specialtyPath(question.specialty), lang)}">${escapeHtml(t.question.allInSpecialty(specialtyLabel))}</a></p>
       </nav>` : ''}
     </main>
   `;
 }
 
+/**
+ * The signup CTA, shared by all three page types.
+ *
+ * It reads the same `cta` block the React <SignupCta> renders, so the
+ * prerendered page and the hydrated page now make the same offer in the same
+ * words — they used to differ slightly per page, for no reason anyone could
+ * have defended.
+ */
+function ctaHtml(t, lang) {
+    return `      <section class="pq-cta" dir="${dirFor(lang)}">
+        <h2>${escapeHtml(t.cta.title)}</h2>
+        <p>${escapeHtml(t.cta.body)}</p>
+        <a class="pq-cta-btn" href="${localizedPath('/signup', lang)}">${escapeHtml(t.cta.button)}</a>
+        <p class="pq-cta-note">${escapeHtml(t.cta.note)}</p>
+      </section>`;
+}
+
 /** A specialty index — every published question in one specialty. */
-export function specialtyPageHtml(group, allSpecialties = []) {
+export function specialtyPageHtml(group, allSpecialties = [], lang = 'ar') {
+    const t = publicQuestionsCopy[lang] || publicQuestionsCopy.ar;
+    const dir = dirFor(lang);
+    const label = lang === 'en' ? group.labelEn : group.labelAr;
+
     const items = group.questions
-        .map((q) => `          <li><a href="${questionPath(q)}">${escapeHtml(q.headline)}</a></li>`)
+        .map((q) => `          <li><a href="${localizedPath(questionPath(q), lang)}">${escapeHtml(q.headline)}</a></li>`)
         .join('\n');
 
     const siblings = allSpecialties
         .filter((s) => s.slug !== group.slug)
-        .map((s) => `        <a href="${s.path}">${escapeHtml(s.labelAr)}</a>`)
+        .map((s) => `        <a href="${localizedPath(s.path, lang)}">${escapeHtml(lang === 'en' ? s.labelEn : s.labelAr)}</a>`)
         .join('\n');
 
     return `
-    <main class="pq-page" dir="rtl">
-      <nav class="pq-breadcrumb" aria-label="مسار التنقل">
-        <a href="/">الرئيسية</a>
-        <a href="${QUESTIONS_ROOT}">أسئلة تدريبية مجانية</a>
+    <main class="pq-page" dir="${dir}">
+      <nav class="pq-breadcrumb" aria-label="${escapeHtml(t.breadcrumbLabel)}">
+        <a href="${localizedPath('/', lang)}">${escapeHtml(t.breadcrumbHome)}</a>
+        <a href="${localizedPath(QUESTIONS_ROOT, lang)}">${escapeHtml(t.breadcrumbRoot)}</a>
       </nav>
       <header class="pq-hero">
         <p class="pq-kicker">${escapeHtml(group.labelEn)}</p>
-        <h1>أسئلة ${escapeHtml(group.labelAr)} — تدريب مجاني بدون حساب</h1>
-        <p>${group.questions.length} سؤالاً بنمط الاختبار في ${escapeHtml(group.labelAr)}، كل سؤال بخياراته الأربعة وشرح مكتوب يوضّح سبب صحة الإجابة. مفتوحة للجميع بدون تسجيل.</p>
+        <h1>${escapeHtml(t.specialty.title(label))}</h1>
+        <p>${escapeHtml(t.specialty.intro(group.questions.length, label))}</p>
       </header>
       <section>
-        <h2>الأسئلة</h2>
+        <h2>${escapeHtml(t.specialty.listTitle)}</h2>
         <ol class="pq-list">
 ${items}
         </ol>
       </section>
-      <section class="pq-cta">
-        <h2>هذه عيّنة — البنك الكامل أوسع بكثير</h2>
-        <p>أنشئ حساباً مجانياً واحصل على 40 سؤالاً من بنك الأسئلة الكامل، مع تحليل أدائك وصفحة لمراجعة أخطائك.</p>
-        <a class="pq-cta-btn" href="/signup">إنشاء حساب مجاني</a>
-      </section>
-${siblings ? `      <nav class="pq-siblings" aria-label="تخصصات أخرى">
-        <h2>تخصصات أخرى</h2>
+${ctaHtml(t, lang)}
+${siblings ? `      <nav class="pq-siblings" aria-label="${escapeHtml(t.specialty.siblingsTitle)}">
+        <h2>${escapeHtml(t.specialty.siblingsTitle)}</h2>
 ${siblings}
       </nav>` : ''}
     </main>
@@ -238,16 +262,17 @@ ${siblings}
 }
 
 /** The library hub. */
-export function questionsHubHtml(index) {
-    const trackLabels = { medical: 'الطب البشري — SMLE', nursing: 'التمريض — SNLE' };
+export function questionsHubHtml(index, lang = 'ar') {
+    const t = publicQuestionsCopy[lang] || publicQuestionsCopy.ar;
+    const dir = dirFor(lang);
 
     const groups = index.tracks
         .map((track) => {
             const items = track.specialties
-                .map((s) => `          <li><a href="${s.path}">أسئلة ${escapeHtml(s.labelAr)}</a> — ${s.questions.length} سؤالاً</li>`)
+                .map((s) => `          <li><a href="${localizedPath(s.path, lang)}">${escapeHtml(lang === 'en' ? s.labelEn : s.labelAr)}</a> — ${escapeHtml(t.hub.countLabel(s.questions.length))}</li>`)
                 .join('\n');
             return `      <section>
-        <h2>${escapeHtml(trackLabels[track.key] || track.key)}</h2>
+        <h2>${escapeHtml(t.hub.tracks[track.key] || track.key)}</h2>
         <ul>
 ${items}
         </ul>
@@ -256,46 +281,39 @@ ${items}
         .join('\n');
 
     return `
-    <main class="pq-page" dir="rtl">
-      <nav class="pq-breadcrumb" aria-label="مسار التنقل">
-        <a href="/">الرئيسية</a>
+    <main class="pq-page" dir="${dir}">
+      <nav class="pq-breadcrumb" aria-label="${escapeHtml(t.breadcrumbLabel)}">
+        <a href="${localizedPath('/', lang)}">${escapeHtml(t.breadcrumbHome)}</a>
       </nav>
       <header class="pq-hero">
-        <p class="pq-kicker">Free practice questions</p>
-        <h1>أسئلة تدريبية مجانية لاختبار SMLE وSNLE</h1>
-        <p>${index.total} سؤالاً بنمط الاختبار، مفتوحة للجميع بدون حساب وبدون بطاقة دفع — كل سؤال بخياراته الأربعة وشرح مكتوب يوضّح سبب صحة الإجابة وسبب خطأ البقية. مأخوذة من بنك أسئلة SQB الكامل.</p>
+        <p class="pq-kicker">${escapeHtml(t.hub.kicker)}</p>
+        <h1>${escapeHtml(t.hub.title)}</h1>
+        <p>${escapeHtml(t.hub.intro(index.total))}</p>
       </header>
 ${groups}
-      <section class="pq-cta">
-        <h2>40 سؤالاً مجاناً مع حساب</h2>
-        <p>الأسئلة هنا عيّنة ثابتة. أنشئ حساباً مجانياً لتتدرب على بنك الأسئلة الكامل مع تحليل أدائك حسب التخصص ومراجعة أخطائك.</p>
-        <a class="pq-cta-btn" href="/signup">إنشاء حساب مجاني</a>
-      </section>
-${faqHtml(hubFaqItems(index), publicQuestionsCopy.ar.faqTitle)}
+${ctaHtml(t, lang)}
+${faqHtml(hubFaqItems(index, lang), t.faqTitle)}
     </main>
   `;
 }
 
 /**
- * The hub FAQ, in Arabic, from the same copy the React page renders.
+ * The hub FAQ, from the same copy the React page renders.
  *
  * Kept as a function of the index so the counts in the answers come from the
  * published data rather than being typed in and going stale the next time the
  * export runs.
  */
-export function hubFaqItems(index) {
-    return publicQuestionsCopy.ar.faq(index.total, index.bankTotal || index.total);
+export function hubFaqItems(index, lang = 'ar') {
+    const t = publicQuestionsCopy[lang] || publicQuestionsCopy.ar;
+    return t.faq(index.total, index.bankTotal || index.total);
 }
 
 /* ------------------------------------------------------------------ *
  * SEO config
  * ------------------------------------------------------------------ */
 
-function makeUrl(routePath) {
-    return new URL(routePath, `${SITE_ORIGIN}/`).toString();
-}
-
-function breadcrumbList(items) {
+function breadcrumbList(items, lang) {
     return {
         '@context': 'https://schema.org',
         '@type': 'BreadcrumbList',
@@ -303,7 +321,7 @@ function breadcrumbList(items) {
             '@type': 'ListItem',
             position: i + 1,
             name: item.name,
-            item: makeUrl(item.path),
+            item: absoluteUrl(localizedPath(item.path, lang)),
         })),
     };
 }
@@ -314,12 +332,15 @@ function breadcrumbList(items) {
  * This is the markup answer engines read to quote a page, and it is the reason
  * a question page can be cited by AI search — which already sends this site
  * more traffic than Bing does, with nothing done to earn it.
+ *
+ * `inLanguage` stays "en" in both trees: the clinical content is English on
+ * the Arabic page too, and this schema describes the question, not the chrome.
  */
-function quizSchema(question, routePath) {
+function quizSchema(question, routePath, lang) {
     return {
         '@context': 'https://schema.org',
         '@type': 'Quiz',
-        url: makeUrl(routePath),
+        url: absoluteUrl(localizedPath(routePath, lang)),
         inLanguage: 'en',
         about: { '@type': 'Thing', name: question.specialtyLabelEn },
         educationalLevel: 'Professional',
@@ -339,139 +360,147 @@ function quizSchema(question, routePath) {
     };
 }
 
-export function questionSeo(question) {
+export function questionSeo(question, lang = 'ar') {
+    const t = publicQuestionsCopy[lang] || publicQuestionsCopy.ar;
     const routePath = questionPath(question);
-    const description = `${question.headline} — سؤال تدريبي بنمط ${question.specialtyLabelAr} مع الإجابة الصحيحة وشرح مكتوب. مجاني وبدون حساب.`;
+    const label = lang === 'en' ? question.specialtyLabelEn : question.specialtyLabelAr;
     return {
         path: routePath,
-        title: `${question.headline} | ${question.specialtyLabelEn} | SQB`,
-        description: description.slice(0, 300),
-        keywords: `${question.specialtyLabelEn} MCQ, SMLE practice question, SNLE practice question, أسئلة ${question.specialtyLabelAr}, اسئلة برومترك`,
-        alternates: ['ar-SA', 'ar', 'x-default'],
+        title: t.seo.questionTitle(question.headline, question.specialtyLabelEn),
+        description: t.seo
+            .questionDescription(question.headline, question.specialtyLabelAr, question.specialtyLabelEn)
+            .slice(0, 300),
+        keywords: t.seo.questionKeywords(question.specialtyLabelAr, question.specialtyLabelEn),
         structuredData: [
-            quizSchema(question, routePath),
+            quizSchema(question, routePath, lang),
             breadcrumbList([
-                { name: 'الرئيسية', path: '/' },
-                { name: 'أسئلة تدريبية مجانية', path: QUESTIONS_ROOT },
-                { name: question.specialtyLabelAr, path: specialtyPath(question.specialty) },
+                { name: t.breadcrumbHome, path: '/' },
+                { name: t.breadcrumbRoot, path: QUESTIONS_ROOT },
+                { name: label, path: specialtyPath(question.specialty) },
                 { name: question.headline, path: routePath },
-            ]),
+            ], lang),
         ],
     };
 }
 
-export function specialtySeo(group) {
+export function specialtySeo(group, lang = 'ar') {
+    const t = publicQuestionsCopy[lang] || publicQuestionsCopy.ar;
+    const label = lang === 'en' ? group.labelEn : group.labelAr;
     return {
         path: group.path,
-        title: `أسئلة ${group.labelAr} مجانية — ${group.labelEn} MCQs | SQB`,
-        description: `${group.questions.length} سؤالاً تدريبياً في ${group.labelAr} بنمط اختبار الهيئة السعودية، مع الإجابة الصحيحة وشرح مكتوب لكل سؤال. مفتوحة بدون حساب.`,
-        keywords: `أسئلة ${group.labelAr}, ${group.labelEn} MCQ, ${group.labelEn} questions, اسئلة SMLE, اسئلة SNLE, اسئلة برومترك`,
-        alternates: ['ar-SA', 'ar', 'x-default'],
+        title: t.seo.specialtyTitle(group.labelAr, group.labelEn),
+        description: t.seo.specialtyDescription(group.questions.length, group.labelAr, group.labelEn),
+        keywords: t.seo.specialtyKeywords(group.labelAr, group.labelEn),
         structuredData: [
             {
                 '@context': 'https://schema.org',
                 '@type': 'CollectionPage',
-                name: `أسئلة ${group.labelAr}`,
-                url: makeUrl(group.path),
-                inLanguage: 'ar-SA',
+                name: t.seo.specialtyCollectionName(group.labelAr, group.labelEn),
+                url: absoluteUrl(localizedPath(group.path, lang)),
+                inLanguage: schemaLang(lang),
                 hasPart: group.questions.slice(0, 24).map((q) => ({
                     '@type': 'Question',
                     name: q.headline,
-                    url: makeUrl(questionPath(q)),
+                    url: absoluteUrl(localizedPath(questionPath(q), lang)),
                 })),
             },
             breadcrumbList([
-                { name: 'الرئيسية', path: '/' },
-                { name: 'أسئلة تدريبية مجانية', path: QUESTIONS_ROOT },
-                { name: group.labelAr, path: group.path },
-            ]),
+                { name: t.breadcrumbHome, path: '/' },
+                { name: t.breadcrumbRoot, path: QUESTIONS_ROOT },
+                { name: label, path: group.path },
+            ], lang),
         ],
     };
 }
 
-export function hubSeo(index) {
+export function hubSeo(index, lang = 'ar') {
+    const t = publicQuestionsCopy[lang] || publicQuestionsCopy.ar;
+    const hubUrl = absoluteUrl(localizedPath(QUESTIONS_ROOT, lang));
     return {
         path: QUESTIONS_ROOT,
-        title: `${index.total} سؤال تدريبي مجاني لاختبار SMLE وSNLE | SQB`,
-        description: `${index.total} سؤالاً بنمط اختبار الهيئة السعودية للتخصصات الصحية في الطب والتمريض، مع الإجابة الصحيحة وشرح مكتوب لكل سؤال. مفتوحة للجميع بدون حساب وبدون بطاقة دفع.`,
-        keywords: 'أسئلة SMLE مجانية, اسئلة SNLE, اسئلة برومترك مجانية, SMLE practice questions free, SNLE MCQ, بنك أسئلة مجاني, smle past papers',
-        alternates: ['ar-SA', 'ar', 'x-default'],
+        title: t.seo.hubTitle(index.total),
+        description: t.seo.hubDescription(index.total),
+        keywords: t.seo.hubKeywords,
         structuredData: [
             {
                 '@context': 'https://schema.org',
                 '@type': 'CollectionPage',
-                name: 'أسئلة تدريبية مجانية لاختبار SMLE وSNLE',
-                url: makeUrl(QUESTIONS_ROOT),
-                inLanguage: 'ar-SA',
+                name: t.seo.hubCollectionName,
+                url: hubUrl,
+                inLanguage: schemaLang(lang),
             },
-            faqPageSchema(hubFaqItems(index), makeUrl(QUESTIONS_ROOT)),
+            faqPageSchema(hubFaqItems(index, lang), hubUrl, lang),
             breadcrumbList([
-                { name: 'الرئيسية', path: '/' },
-                { name: 'أسئلة تدريبية مجانية', path: QUESTIONS_ROOT },
-            ]),
+                { name: t.breadcrumbHome, path: '/' },
+                { name: t.breadcrumbRoot, path: QUESTIONS_ROOT },
+            ], lang),
         ].filter(Boolean),
     };
 }
 
-/**
- * Every public-question route, ready for the prerenderer.
- *
- * Returns `{ path, html, seo }` in the same shape getPrerenderRoutes() returns,
- * so scripts/postbuild-seo.mjs can concatenate the two lists and treat them
- * identically — including in the sitemap.
- */
 const DEFAULT_ROBOTS = 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1';
 
 /**
  * Fill in the fields buildRouteHtml() and buildSitemap() read, so these routes
- * are interchangeable with the ones getPrerenderRoutes() returns. Kept local
- * rather than imported from siteMetadata.js so this module has no cross-import
- * back into the app's own SEO config.
+ * are interchangeable with the ones getPrerenderRoutes() returns.
+ *
+ * `url` is the localized URL and `alternates` are the {hreflang, href} pairs
+ * for this route's language set — the two things that make an /en twin a real
+ * alternate rather than a duplicate.
  */
-export function completeSeo(partial) {
+export function completeSeo(partial, lang = 'ar') {
     return {
         title: partial.title,
         description: partial.description,
         keywords: partial.keywords,
         image: `${SITE_ORIGIN}/og-image.svg`,
         imageAlt: partial.title,
-        url: makeUrl(partial.path),
+        url: absoluteUrl(localizedPath(partial.path, lang)),
         type: 'article',
         siteName: 'SQB',
         robots: DEFAULT_ROBOTS,
-        locale: 'ar_SA',
-        alternates: partial.alternates || [],
+        lang,
+        locale: ogLocale(lang),
+        alternates: alternatesFor(partial.path),
         structuredData: partial.structuredData || [],
     };
 }
 
-export function buildPublicQuestionRoutes(payload, { footerNav = '' } = {}) {
+/**
+ * Every public-question route for one language, ready for the prerenderer.
+ *
+ * Returns `{ path, html, seo }` in the same shape getPrerenderRoutes() returns,
+ * so scripts/postbuild-seo.mjs can concatenate the lists and treat them
+ * identically — including in the sitemap. `path` is already localized, so the
+ * Arabic and English trees write to different files.
+ */
+export function buildPublicQuestionRoutes(payload, { footerNav = '', lang = 'ar' } = {}) {
     const index = buildQuestionIndex(payload);
     if (!index.total) return [];
 
     const routes = [
-        { path: QUESTIONS_ROOT, html: questionsHubHtml(index), seo: hubSeo(index) },
+        { path: QUESTIONS_ROOT, html: questionsHubHtml(index, lang), seo: hubSeo(index, lang) },
     ];
 
     for (const group of index.specialties) {
         routes.push({
             path: group.path,
-            html: specialtyPageHtml(group, index.specialties),
-            seo: specialtySeo(group),
+            html: specialtyPageHtml(group, index.specialties, lang),
+            seo: specialtySeo(group, lang),
         });
     }
 
     for (const question of index.questions) {
         routes.push({
             path: questionPath(question),
-            html: questionPageHtml(question, relatedQuestions(index, question)),
-            seo: questionSeo(question),
+            html: questionPageHtml(question, relatedQuestions(index, question), lang),
+            seo: questionSeo(question, lang),
         });
     }
 
     return routes.map((route) => ({
-        path: route.path,
+        path: localizedPath(route.path, lang),
         html: `${route.html}${footerNav}`,
-        seo: completeSeo(route.seo),
+        seo: completeSeo(route.seo, lang),
     }));
 }

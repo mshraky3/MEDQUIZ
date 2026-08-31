@@ -9,6 +9,19 @@ const pastPapersCopy = {
     ar: {
         breadcrumbHome: 'الرئيسية',
         breadcrumbRoot: 'تجميعات الأسئلة',
+        breadcrumbLabel: 'مسار التنقل',
+
+        seo: {
+            hubTitle: (bankTotal) => `تجميعات أسئلة SMLE وSNLE — ${bankTotal} سؤالاً مع الشرح | SQB`,
+            hubDescription: 'دليل تجميعات أسئلة اختبار الهيئة السعودية للتخصصات الصحية للطب والتمريض: ما تحتويه كل تجميعة، وكم سؤالاً فيها، مع أسئلة مفتوحة للاطلاع من كل واحدة بدون حساب.',
+            hubKeywords: 'smle past papers, تجميعات سملي, تجميعات SMLE, تجميعات SNLE, اسئلة سملي سابقة, snle past papers, اسئلة برومترك سابقة',
+            hubCollectionName: 'تجميعات أسئلة SMLE وSNLE',
+            collectionTitle: (label, total, track) => `${label} — ${total} سؤال ${track} مع الشرح | SQB`,
+            collectionDescription: (blurb, total, track) => `${blurb} ${total} سؤالاً بنمط اختبار ${track}، لكل سؤال شرح مكتوب، مع أسئلة مفتوحة للاطلاع بدون حساب.`,
+            collectionKeywords: (labelAr, labelEn, track) => `${labelEn}, ${labelAr}, smle past papers, تجميعات ${track}, اسئلة ${track}`,
+        },
+
+        relatedLinksLabel: 'روابط ذات صلة',
 
         hub: {
             kicker: 'SMLE & SNLE collections',
@@ -65,6 +78,19 @@ const pastPapersCopy = {
     en: {
         breadcrumbHome: 'Home',
         breadcrumbRoot: 'Question collections',
+        breadcrumbLabel: 'Breadcrumb',
+
+        seo: {
+            hubTitle: (bankTotal) => `SMLE and SNLE question collections — ${bankTotal} explained questions | SQB`,
+            hubDescription: 'A guide to the SMLE and SNLE question collections: what each one contains, how many questions it holds, and open sample questions from every collection with no account.',
+            hubKeywords: 'smle past papers, snle past papers, SMLE question collections, SMLE recalls, Saudi Prometric past questions, SNLE recalls',
+            hubCollectionName: 'SMLE and SNLE question collections',
+            collectionTitle: (label, total, track) => `${label} — ${total} explained ${track} questions | SQB`,
+            collectionDescription: (blurb, total, track) => `${blurb} ${total} ${track}-style questions, each with a written explanation, plus open samples you can read without an account.`,
+            collectionKeywords: (labelAr, labelEn, track) => `${labelEn}, smle past papers, ${track} question collection, ${track} recalls, ${track} practice questions`,
+        },
+
+        relatedLinksLabel: 'Related links',
 
         hub: {
             kicker: 'SMLE & SNLE collections',

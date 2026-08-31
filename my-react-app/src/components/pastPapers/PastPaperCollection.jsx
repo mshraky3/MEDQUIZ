@@ -1,5 +1,6 @@
 import React from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { LocaleLink as Link } from '../../i18n';
 import Spinner from '../common/Spinner.jsx';
 import SEO from '../common/SEO.jsx';
 import { useCopy, useLang } from '../../i18n';
@@ -49,7 +50,7 @@ const PastPaperCollection = () => {
 
     return (
         <main className="pq-page" dir={dir}>
-            <SEO {...completePastPaperSeo(collectionSeo(collection))} />
+            <SEO {...completePastPaperSeo(collectionSeo(collection, lang), lang)} />
 
             <nav className="pq-breadcrumb" aria-label={t.breadcrumbRoot}>
                 <Link to="/">{t.breadcrumbHome}</Link>

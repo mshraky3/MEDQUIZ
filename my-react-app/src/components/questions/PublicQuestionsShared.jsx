@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { LocaleLink as Link } from '../../i18n';
 import { QUESTIONS_ROOT } from '../../seo/publicQuestions.js';
 
 /**

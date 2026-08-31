@@ -31,8 +31,15 @@ import {
 
 import pastPapersCopy from '../i18n/copy/pastPapers.js';
 import { faqHtml, faqPageSchema } from './faqSchema.js';
-
-const SITE_ORIGIN = 'https://www.smle-question-bank.com';
+import {
+    SITE_ORIGIN,
+    absoluteUrl,
+    alternatesFor,
+    dirFor,
+    localizedPath,
+    ogLocale,
+    schemaLang,
+} from './locales.js';
 
 export const PAST_PAPERS_ROOT = '/past-papers';
 
@@ -176,28 +183,42 @@ export const HONESTY_NOTE_AR =
     + 'ثم روجعت إجاباتها وأُعيدت صياغتها على نمط الاختبار الحالي. المنصة غير تابعة للهيئة أو Prometric.';
 
 /**
- * The collections FAQ, in Arabic, from the same copy the React pages render.
+ * The collections FAQ, from the same copy the React pages render.
  *
  * The first entry is the "are these official past papers?" answer, and it is
  * first on purpose: it is the question the URL invites, and burying it would
  * make the page's phrasing feel like a trick.
  */
-export function collectionsFaqItems({ bankTotal, collectionCount }) {
-    return pastPapersCopy.ar.faq(bankTotal, collectionCount);
+export function collectionsFaqItems({ bankTotal, collectionCount }, lang = 'ar') {
+    const t = pastPapersCopy[lang] || pastPapersCopy.ar;
+    return t.faq(bankTotal, collectionCount);
 }
 
-export function pastPapersHubHtml(data) {
+/** The signup CTA, shared with the question pages' wording. */
+function ctaHtml(t, lang) {
+    return `      <section class="pq-cta" dir="${dirFor(lang)}">
+        <h2>${escapeHtml(t.cta.title)}</h2>
+        <p>${escapeHtml(t.cta.body)}</p>
+        <a class="pq-cta-btn" href="${localizedPath('/signup', lang)}">${escapeHtml(t.cta.button)}</a>
+        <p class="pq-cta-note">${escapeHtml(t.cta.note)}</p>
+      </section>`;
+}
+
+export function pastPapersHubHtml(data, lang = 'ar') {
+    const t = pastPapersCopy[lang] || pastPapersCopy.ar;
+    const dir = dirFor(lang);
+    const note = lang === 'en' ? HONESTY_NOTE_EN : HONESTY_NOTE_AR;
+
     const groups = data.tracks
         .map((track) => {
-            const label = track.key === 'medical' ? 'الطب البشري — SMLE' : 'التمريض — SNLE';
             const items = track.collections
                 .map((c) => `          <li>
-            <a href="${c.path}">${escapeHtml(c.labelAr)}</a> — ${c.total} سؤالاً
-            <p>${escapeHtml(c.blurbAr)}</p>
+            <a href="${localizedPath(c.path, lang)}">${escapeHtml(lang === 'en' ? c.labelEn : c.labelAr)}</a> — ${escapeHtml(t.hub.countLabel(c.total))}
+            <p>${escapeHtml(lang === 'en' ? c.blurbEn : c.blurbAr)}</p>
           </li>`)
                 .join('\n');
             return `      <section>
-        <h2>${escapeHtml(label)}</h2>
+        <h2>${escapeHtml(t.hub.tracks[track.key] || track.key)}</h2>
         <ul>
 ${items}
         </ul>
@@ -206,80 +227,76 @@ ${items}
         .join('\n');
 
     return `
-    <main class="pq-page" dir="rtl">
-      <nav class="pq-breadcrumb" aria-label="مسار التنقل">
-        <a href="/">الرئيسية</a>
+    <main class="pq-page" dir="${dir}">
+      <nav class="pq-breadcrumb" aria-label="${escapeHtml(t.breadcrumbLabel)}">
+        <a href="${localizedPath('/', lang)}">${escapeHtml(t.breadcrumbHome)}</a>
       </nav>
       <header class="pq-hero">
-        <p class="pq-kicker">SMLE &amp; SNLE collections</p>
-        <h1>تجميعات أسئلة SMLE وSNLE</h1>
-        <p>بنك SQB مبني من ${data.bankTotal} سؤالاً موزّعة على ${data.collections.length} تجميعات، لكل سؤال فيها شرح مكتوب. هذه الصفحة تشرح ما تحتويه كل تجميعة، مع أسئلة مفتوحة للاطلاع من كل واحدة منها بدون حساب.</p>
-        <p class="pq-note">${escapeHtml(HONESTY_NOTE_AR)}</p>
+        <p class="pq-kicker">${escapeHtml(t.hub.kicker)}</p>
+        <h1>${escapeHtml(t.hub.title)}</h1>
+        <p>${escapeHtml(t.hub.intro(data.bankTotal, data.collections.length))}</p>
+        <p class="pq-note">${escapeHtml(note)}</p>
       </header>
 ${groups}
-      <section class="pq-cta">
-        <h2>40 سؤالاً مجاناً من كل التجميعات</h2>
-        <p>أنشئ حساباً مجانياً للتدرب على البنك الكامل مع تحليل أدائك حسب التخصص ومراجعة أخطائك.</p>
-        <a class="pq-cta-btn" href="/signup">إنشاء حساب مجاني</a>
-      </section>
-${faqHtml(collectionsFaqItems(data), pastPapersCopy.ar.faqTitle)}
-      <nav class="pq-siblings" aria-label="روابط ذات صلة">
-        <a href="${QUESTIONS_ROOT}">كل الأسئلة التدريبية المجانية</a>
-        <a href="/guides">أدلة التحضير</a>
+${ctaHtml(t, lang)}
+${faqHtml(collectionsFaqItems(data, lang), t.faqTitle)}
+      <nav class="pq-siblings" aria-label="${escapeHtml(t.relatedLinksLabel)}">
+        <a href="${localizedPath(QUESTIONS_ROOT, lang)}">${escapeHtml(t.links.allQuestions)}</a>
+        <a href="${localizedPath('/guides', lang)}">${escapeHtml(t.links.guides)}</a>
       </nav>
     </main>
   `;
 }
 
-export function collectionPageHtml(collection, allCollections = []) {
+export function collectionPageHtml(collection, allCollections = [], lang = 'ar') {
+    const t = pastPapersCopy[lang] || pastPapersCopy.ar;
+    const dir = dirFor(lang);
+    const isEn = lang === 'en';
+    const note = isEn ? HONESTY_NOTE_EN : HONESTY_NOTE_AR;
+    const trackLabel = collection.track === 'medical' ? 'SMLE' : 'SNLE';
+
     const specialties = collection.specialties
-        .map((s) => `          <li><a href="${s.path}">أسئلة ${escapeHtml(s.labelAr)}</a> — ${s.count} سؤالاً مفتوحاً</li>`)
+        .map((s) => `          <li><a href="${localizedPath(s.path, lang)}">${escapeHtml(isEn ? s.labelEn : s.labelAr)}</a> — ${escapeHtml(t.collection.openCount(s.count))}</li>`)
         .join('\n');
 
     const samples = collection.samples
         .slice(0, 30)
-        .map((q) => `          <li><a href="${questionPath(q)}">${escapeHtml(q.headline)}</a></li>`)
+        .map((q) => `          <li><a href="${localizedPath(questionPath(q), lang)}">${escapeHtml(q.headline)}</a></li>`)
         .join('\n');
 
     const siblings = allCollections
         .filter((c) => c.slug !== collection.slug)
-        .map((c) => `        <a href="${c.path}">${escapeHtml(c.labelAr)}</a>`)
+        .map((c) => `        <a href="${localizedPath(c.path, lang)}">${escapeHtml(isEn ? c.labelEn : c.labelAr)}</a>`)
         .join('\n');
 
-    const trackLabel = collection.track === 'medical' ? 'SMLE' : 'SNLE';
-
     return `
-    <main class="pq-page" dir="rtl">
-      <nav class="pq-breadcrumb" aria-label="مسار التنقل">
-        <a href="/">الرئيسية</a>
-        <a href="${PAST_PAPERS_ROOT}">تجميعات الأسئلة</a>
+    <main class="pq-page" dir="${dir}">
+      <nav class="pq-breadcrumb" aria-label="${escapeHtml(t.breadcrumbLabel)}">
+        <a href="${localizedPath('/', lang)}">${escapeHtml(t.breadcrumbHome)}</a>
+        <a href="${localizedPath(PAST_PAPERS_ROOT, lang)}">${escapeHtml(t.breadcrumbRoot)}</a>
       </nav>
       <header class="pq-hero">
         <p class="pq-kicker">${escapeHtml(collection.labelEn)}</p>
-        <h1>${escapeHtml(collection.labelAr)}</h1>
-        <p>${escapeHtml(collection.blurbAr)} تضم هذه التجميعة ${collection.total} سؤالاً بنمط اختبار ${trackLabel}، لكل سؤال منها شرح مكتوب يوضّح سبب صحة الإجابة.</p>
-        <p class="pq-note">${escapeHtml(HONESTY_NOTE_AR)}</p>
+        <h1>${escapeHtml(isEn ? collection.labelEn : collection.labelAr)}</h1>
+        <p>${escapeHtml(t.collection.intro(isEn ? collection.blurbEn : collection.blurbAr, collection.total, trackLabel))}</p>
+        <p class="pq-note">${escapeHtml(note)}</p>
       </header>
 ${collection.specialties.length ? `      <section>
-        <h2>التخصصات التي تغطيها</h2>
+        <h2>${escapeHtml(t.collection.specialtiesTitle)}</h2>
         <ul>
 ${specialties}
         </ul>
       </section>` : ''}
 ${samples ? `      <section>
-        <h2>أسئلة مفتوحة من هذه التجميعة</h2>
+        <h2>${escapeHtml(t.collection.samplesTitle)}</h2>
         <ol class="pq-list">
 ${samples}
         </ol>
       </section>` : ''}
-      <section class="pq-cta">
-        <h2>البنك الكامل خلف حساب مجاني</h2>
-        <p>الأسئلة المعروضة هنا عيّنة. أنشئ حساباً مجانياً واحصل على 40 سؤالاً من البنك الكامل بدون بطاقة دفع.</p>
-        <a class="pq-cta-btn" href="/signup">إنشاء حساب مجاني</a>
-      </section>
-${faqHtml(collectionsFaqItems(collection), pastPapersCopy.ar.faqTitle)}
-${siblings ? `      <nav class="pq-siblings" aria-label="تجميعات أخرى">
-        <h2>تجميعات أخرى</h2>
+${ctaHtml(t, lang)}
+${faqHtml(collectionsFaqItems(collection, lang), t.faqTitle)}
+${siblings ? `      <nav class="pq-siblings" aria-label="${escapeHtml(t.collection.siblingsTitle)}">
+        <h2>${escapeHtml(t.collection.siblingsTitle)}</h2>
 ${siblings}
       </nav>` : ''}
     </main>
@@ -292,11 +309,7 @@ ${siblings}
 
 const DEFAULT_ROBOTS = 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1';
 
-function makeUrl(routePath) {
-    return new URL(routePath, `${SITE_ORIGIN}/`).toString();
-}
-
-function breadcrumbList(items) {
+function breadcrumbList(items, lang) {
     return {
         '@context': 'https://schema.org',
         '@type': 'BreadcrumbList',
@@ -304,99 +317,110 @@ function breadcrumbList(items) {
             '@type': 'ListItem',
             position: i + 1,
             name: item.name,
-            item: makeUrl(item.path),
+            item: absoluteUrl(localizedPath(item.path, lang)),
         })),
     };
 }
 
-function completeSeo(partial) {
+function completeSeo(partial, lang = 'ar') {
     return {
         title: partial.title,
         description: partial.description,
         keywords: partial.keywords,
         image: `${SITE_ORIGIN}/og-image.svg`,
         imageAlt: partial.title,
-        url: makeUrl(partial.path),
+        url: absoluteUrl(localizedPath(partial.path, lang)),
         type: 'article',
         siteName: 'SQB',
         robots: DEFAULT_ROBOTS,
-        locale: 'ar_SA',
-        alternates: ['ar-SA', 'ar', 'x-default'],
+        lang,
+        locale: ogLocale(lang),
+        alternates: alternatesFor(partial.path),
         structuredData: partial.structuredData || [],
     };
 }
 
-export function pastPapersHubSeo(data) {
+export function pastPapersHubSeo(data, lang = 'ar') {
+    const t = pastPapersCopy[lang] || pastPapersCopy.ar;
+    const hubUrl = absoluteUrl(localizedPath(PAST_PAPERS_ROOT, lang));
     return {
         path: PAST_PAPERS_ROOT,
-        title: `تجميعات أسئلة SMLE وSNLE — ${data.bankTotal} سؤالاً مع الشرح | SQB`,
-        description: `دليل تجميعات أسئلة اختبار الهيئة السعودية للتخصصات الصحية للطب والتمريض: ما تحتويه كل تجميعة، وكم سؤالاً فيها، مع أسئلة مفتوحة للاطلاع من كل واحدة بدون حساب.`,
-        keywords: 'smle past papers, تجميعات سملي, تجميعات SMLE, تجميعات SNLE, اسئلة سملي سابقة, snle past papers, اسئلة برومترك سابقة',
+        title: t.seo.hubTitle(data.bankTotal),
+        description: t.seo.hubDescription,
+        keywords: t.seo.hubKeywords,
         structuredData: [
             {
                 '@context': 'https://schema.org',
                 '@type': 'CollectionPage',
-                name: 'تجميعات أسئلة SMLE وSNLE',
-                url: makeUrl(PAST_PAPERS_ROOT),
-                inLanguage: 'ar-SA',
+                name: t.seo.hubCollectionName,
+                url: hubUrl,
+                inLanguage: schemaLang(lang),
             },
-            faqPageSchema(collectionsFaqItems(data), makeUrl(PAST_PAPERS_ROOT)),
+            faqPageSchema(collectionsFaqItems(data, lang), hubUrl, lang),
             breadcrumbList([
-                { name: 'الرئيسية', path: '/' },
-                { name: 'تجميعات الأسئلة', path: PAST_PAPERS_ROOT },
-            ]),
+                { name: t.breadcrumbHome, path: '/' },
+                { name: t.breadcrumbRoot, path: PAST_PAPERS_ROOT },
+            ], lang),
         ].filter(Boolean),
     };
 }
 
-export function collectionSeo(collection) {
+export function collectionSeo(collection, lang = 'ar') {
+    const t = pastPapersCopy[lang] || pastPapersCopy.ar;
+    const isEn = lang === 'en';
+    const label = isEn ? collection.labelEn : collection.labelAr;
     const trackLabel = collection.track === 'medical' ? 'SMLE' : 'SNLE';
+    const url = absoluteUrl(localizedPath(collection.path, lang));
     return {
         path: collection.path,
-        title: `${collection.labelAr} — ${collection.total} سؤال ${trackLabel} مع الشرح | SQB`,
-        description: `${collection.blurbAr} ${collection.total} سؤالاً بنمط اختبار ${trackLabel}، لكل سؤال شرح مكتوب، مع أسئلة مفتوحة للاطلاع بدون حساب.`,
-        keywords: `${collection.labelEn}, ${collection.labelAr}, smle past papers, تجميعات ${trackLabel}, اسئلة ${trackLabel}`,
+        title: t.seo.collectionTitle(label, collection.total, trackLabel),
+        description: t.seo.collectionDescription(
+            isEn ? collection.blurbEn : collection.blurbAr,
+            collection.total,
+            trackLabel
+        ),
+        keywords: t.seo.collectionKeywords(collection.labelAr, collection.labelEn, trackLabel),
         structuredData: [
             {
                 '@context': 'https://schema.org',
                 '@type': 'CollectionPage',
-                name: collection.labelAr,
-                url: makeUrl(collection.path),
-                inLanguage: 'ar-SA',
+                name: label,
+                url,
+                inLanguage: schemaLang(lang),
                 hasPart: collection.samples.slice(0, 24).map((q) => ({
                     '@type': 'Question',
                     name: q.headline,
-                    url: makeUrl(questionPath(q)),
+                    url: absoluteUrl(localizedPath(questionPath(q), lang)),
                 })),
             },
-            faqPageSchema(collectionsFaqItems(collection), makeUrl(collection.path)),
+            faqPageSchema(collectionsFaqItems(collection, lang), url, lang),
             breadcrumbList([
-                { name: 'الرئيسية', path: '/' },
-                { name: 'تجميعات الأسئلة', path: PAST_PAPERS_ROOT },
-                { name: collection.labelAr, path: collection.path },
-            ]),
+                { name: t.breadcrumbHome, path: '/' },
+                { name: t.breadcrumbRoot, path: PAST_PAPERS_ROOT },
+                { name: label, path: collection.path },
+            ], lang),
         ].filter(Boolean),
     };
 }
 
-/** Every /past-papers route, in the shape the prerenderer expects. */
-export function buildPastPaperRoutes(payload, { footerNav = '' } = {}) {
+/** Every /past-papers route for one language, in the prerenderer's shape. */
+export function buildPastPaperRoutes(payload, { footerNav = '', lang = 'ar' } = {}) {
     const data = buildCollections(payload);
     if (!data.collections.length) return [];
 
     const routes = [
-        { path: PAST_PAPERS_ROOT, html: pastPapersHubHtml(data), seo: pastPapersHubSeo(data) },
+        { path: PAST_PAPERS_ROOT, html: pastPapersHubHtml(data, lang), seo: pastPapersHubSeo(data, lang) },
         ...data.collections.map((collection) => ({
             path: collection.path,
-            html: collectionPageHtml(collection, data.collections),
-            seo: collectionSeo(collection),
+            html: collectionPageHtml(collection, data.collections, lang),
+            seo: collectionSeo(collection, lang),
         })),
     ];
 
     return routes.map((route) => ({
-        path: route.path,
+        path: localizedPath(route.path, lang),
         html: `${route.html}${footerNav}`,
-        seo: completeSeo(route.seo),
+        seo: completeSeo(route.seo, lang),
     }));
 }
 

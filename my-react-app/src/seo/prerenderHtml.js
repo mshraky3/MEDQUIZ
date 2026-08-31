@@ -26,6 +26,8 @@
  * crawlers, never a hydration mismatch.
  */
 
+import { dirFor, localizedPath } from './locales.js';
+
 // Same token grammar GuideArticle.jsx parses: **bold** and [[/path|label]].
 const INLINE_TOKEN = /(\[\[[^\]]+\]\]|\*\*[^*]+\*\*)/g;
 
@@ -42,7 +44,7 @@ export function escapeHtml(value = '') {
  * that escaping rewrites, so the tokens survive intact — and by the time a
  * captured href or label is interpolated it is already attribute-safe.
  */
-export function inlineHtml(value = '') {
+export function inlineHtml(value = '', lang = 'ar') {
     return escapeHtml(value)
         .split(INLINE_TOKEN)
         .filter(Boolean)
@@ -52,19 +54,23 @@ export function inlineHtml(value = '') {
             }
             if (part.startsWith('[[') && part.endsWith(']]')) {
                 const [href, label = href] = part.slice(2, -2).split('|');
-                return `<a href="${href}">${label}</a>`;
+                // Guide copy writes site-relative links; on an English page they
+                // have to resolve to the English twin, or the article silently
+                // hands the reader back to the Arabic site.
+                const target = href.startsWith('/') ? localizedPath(href, lang) : href;
+                return `<a href="${target}">${label}</a>`;
             }
             return part;
         })
         .join('');
 }
 
-function blockHtml(block) {
-    if (block.h3) return `<h3>${inlineHtml(block.h3)}</h3>`;
+function blockHtml(block, lang = 'ar') {
+    if (block.h3) return `<h3>${inlineHtml(block.h3, lang)}</h3>`;
     if (block.ul) {
-        return `<ul>${block.ul.map((item) => `<li>${inlineHtml(item)}</li>`).join('')}</ul>`;
+        return `<ul>${block.ul.map((item) => `<li>${inlineHtml(item, lang)}</li>`).join('')}</ul>`;
     }
-    return `<p>${inlineHtml(block.p)}</p>`;
+    return `<p>${inlineHtml(block.p, lang)}</p>`;
 }
 
 /**
@@ -77,7 +83,8 @@ function blockHtml(block) {
  * a route key should fail the build loudly, not ship another thin page — that
  * failure mode is the entire reason this file exists.
  */
-export function guideArticleHtml(guide, { dir = 'rtl', hub = null, currentPath = null } = {}) {
+export function guideArticleHtml(guide, { lang = 'ar', hub = null, currentPath = null } = {}) {
+    const dir = dirFor(lang);
     if (!guide || !guide.title || !Array.isArray(guide.sections)) {
         throw new Error('[prerenderHtml] guideArticleHtml called with a guide that has no title/sections');
     }
@@ -85,8 +92,8 @@ export function guideArticleHtml(guide, { dir = 'rtl', hub = null, currentPath =
     const sections = guide.sections
         .filter((section) => !section.ad)
         .map((section) => {
-            const blocks = (section.blocks || []).map(blockHtml).join('\n        ');
-            return `      <section>\n        <h2>${inlineHtml(section.heading)}</h2>\n        ${blocks}\n      </section>`;
+            const blocks = (section.blocks || []).map((block) => blockHtml(block, lang)).join('\n        ');
+            return `      <section>\n        <h2>${inlineHtml(section.heading, lang)}</h2>\n        ${blocks}\n      </section>`;
         })
         .join('\n');
 
@@ -97,10 +104,11 @@ export function guideArticleHtml(guide, { dir = 'rtl', hub = null, currentPath =
     if (hub && Array.isArray(hub.cards)) {
         const siblings = hub.cards
             .filter((card) => card.path !== currentPath)
-            .map((card) => `        <a href="${escapeHtml(card.path)}">${inlineHtml(card.title)}</a>`)
+            .map((card) => `        <a href="${escapeHtml(localizedPath(card.path, lang))}">${inlineHtml(card.title, lang)}</a>`)
             .join('\n');
         if (siblings) {
-            related = `\n      <nav class="guide-related" aria-label="أدلة ذات صلة">\n        <h2>${escapeHtml(hub.listLabel)}</h2>\n${siblings}\n      </nav>`;
+            const relatedLabel = lang === 'en' ? 'Related guides' : 'أدلة ذات صلة';
+            related = `\n      <nav class="guide-related" aria-label="${relatedLabel}">\n        <h2>${escapeHtml(hub.listLabel)}</h2>\n${siblings}\n      </nav>`;
         }
     }
 
@@ -108,8 +116,8 @@ export function guideArticleHtml(guide, { dir = 'rtl', hub = null, currentPath =
     <article class="guide-article" dir="${dir}">
       <header class="guide-header">
         <p class="guides-kicker">${escapeHtml(guide.kicker)}</p>
-        <h1>${inlineHtml(guide.title)}</h1>
-        <p>${inlineHtml(guide.intro)}</p>
+        <h1>${inlineHtml(guide.title, lang)}</h1>
+        <p>${inlineHtml(guide.intro, lang)}</p>
       </header>
 ${sections}${related}
     </article>
@@ -128,15 +136,15 @@ ${sections}${related}
  * Anchor text is each guide's real title, not "read more", because the anchor
  * text is most of what a crawler learns about the destination.
  */
-export function guidesTeaserHtml(hub, { heading, intro } = {}) {
+export function guidesTeaserHtml(hub, { heading, intro, lang = 'ar' } = {}) {
     if (!hub || !Array.isArray(hub.cards)) {
         throw new Error('[prerenderHtml] guidesTeaserHtml called with a hub that has no cards');
     }
 
     const items = hub.cards
         .map((card) => `            <li>
-              <a href="${escapeHtml(card.path)}">${inlineHtml(card.title)}</a>
-              <p>${inlineHtml(card.excerpt)}</p>
+              <a href="${escapeHtml(localizedPath(card.path, lang))}">${inlineHtml(card.title, lang)}</a>
+              <p>${inlineHtml(card.excerpt, lang)}</p>
             </li>`)
         .join('\n');
 
@@ -146,7 +154,7 @@ export function guidesTeaserHtml(hub, { heading, intro } = {}) {
           <ul>
 ${items}
           </ul>
-          <p><a href="/guides">${escapeHtml(hub.listLabel)}</a></p>
+          <p><a href="${localizedPath('/guides', lang)}">${escapeHtml(hub.listLabel)}</a></p>
         </section>`;
 }
 
@@ -155,58 +163,61 @@ ${items}
  *
  * It mirrors components/common/Footer.jsx, which is the real site's only path
  * to several of these pages — and which a crawler reading the initial HTML has
- * never been able to see. Labels stay Arabic because the prerendered HTML is
- * the Arabic variant regardless of the visitor's chosen language.
+ * never been able to see. Both the labels and the hrefs follow the language of
+ * the page being emitted, so an English page's footer keeps the reader inside
+ * the English tree rather than dropping them back into the Arabic one.
  */
 const FOOTER_NAV_LINKS = [
-    { href: '/', label: 'الرئيسية' },
-    { href: '/about', label: 'من نحن' },
-    { href: '/guides', label: 'أدلة التحضير لاختبار SMLE' },
-    { href: '/questions', label: 'أسئلة تدريبية مجانية' },
-    { href: '/past-papers', label: 'تجميعات أسئلة SMLE وSNLE' },
-    { href: '/faq', label: 'الأسئلة الشائعة' },
-    { href: '/groups', label: 'الاشتراك الجماعي' },
-    { href: '/contact', label: 'اتصل بنا' },
-    { href: '/signup', label: 'إنشاء حساب مجاني' },
-    { href: '/login', label: 'تسجيل الدخول' },
-    { href: '/terms', label: 'شروط الخدمة' },
-    { href: '/refund-policy', label: 'سياسة الاسترداد' },
-    { href: '/privacy', label: 'سياسة الخصوصية' },
+    { href: '/', ar: 'الرئيسية', en: 'Home' },
+    { href: '/about', ar: 'من نحن', en: 'About SQB' },
+    { href: '/guides', ar: 'أدلة التحضير لاختبار SMLE', en: 'SMLE study guides' },
+    { href: '/questions', ar: 'أسئلة تدريبية مجانية', en: 'Free practice questions' },
+    { href: '/past-papers', ar: 'تجميعات أسئلة SMLE وSNLE', en: 'SMLE & SNLE question collections' },
+    { href: '/faq', ar: 'الأسئلة الشائعة', en: 'Frequently asked questions' },
+    { href: '/groups', ar: 'الاشتراك الجماعي', en: 'Group plans' },
+    { href: '/contact', ar: 'اتصل بنا', en: 'Contact us' },
+    { href: '/signup', ar: 'إنشاء حساب مجاني', en: 'Create a free account' },
+    { href: '/login', ar: 'تسجيل الدخول', en: 'Log in' },
+    { href: '/terms', ar: 'شروط الخدمة', en: 'Terms of service' },
+    { href: '/refund-policy', ar: 'سياسة الاسترداد', en: 'Refund policy' },
+    { href: '/privacy', ar: 'سياسة الخصوصية', en: 'Privacy policy' },
 ];
 
-export function siteFooterNavHtml() {
+export function siteFooterNavHtml(lang = 'ar') {
+    const navLabel = lang === 'en' ? 'Site links' : 'روابط الموقع';
     const links = FOOTER_NAV_LINKS
-        .map(({ href, label }) => `      <a href="${href}">${escapeHtml(label)}</a>`)
+        .map((link) => `      <a href="${localizedPath(link.href, lang)}">${escapeHtml(link[lang] || link.ar)}</a>`)
         .join('\n');
     return `
-    <nav class="seo-footer-nav" aria-label="روابط الموقع" dir="rtl">
+    <nav class="seo-footer-nav" aria-label="${navLabel}" dir="${dirFor(lang)}">
 ${links}
     </nav>
   `;
 }
 
 /** The guides hub, matching GuidesHub.jsx. */
-export function guidesHubHtml(hub, { dir = 'rtl' } = {}) {
+export function guidesHubHtml(hub, { lang = 'ar' } = {}) {
+    const dir = dirFor(lang);
     if (!hub || !Array.isArray(hub.cards)) {
         throw new Error('[prerenderHtml] guidesHubHtml called with a hub that has no cards');
     }
 
     const cards = hub.cards
         .map((card) => `        <article class="guide-card">
-          <h2><a href="${escapeHtml(card.path)}">${inlineHtml(card.title)}</a></h2>
-          <p>${inlineHtml(card.excerpt)}</p>
-          <a class="guide-cta" href="${escapeHtml(card.path)}">${escapeHtml(hub.readMore)}</a>
+          <h2><a href="${escapeHtml(localizedPath(card.path, lang))}">${inlineHtml(card.title, lang)}</a></h2>
+          <p>${inlineHtml(card.excerpt, lang)}</p>
+          <a class="guide-cta" href="${escapeHtml(localizedPath(card.path, lang))}">${escapeHtml(hub.readMore)}</a>
         </article>`)
         .join('\n');
 
-    const notes = (hub.notes || []).map((note) => `<li>${inlineHtml(note)}</li>`).join('');
+    const notes = (hub.notes || []).map((note) => `<li>${inlineHtml(note, lang)}</li>`).join('');
 
     return `
     <main class="guides-page" dir="${dir}">
       <header class="guides-hero">
         <p class="guides-kicker">${escapeHtml(hub.kicker)}</p>
-        <h1>${inlineHtml(hub.title)}</h1>
-        <p>${inlineHtml(hub.intro)}</p>
+        <h1>${inlineHtml(hub.title, lang)}</h1>
+        <p>${inlineHtml(hub.intro, lang)}</p>
       </header>
       <section class="guides-list" aria-label="${escapeHtml(hub.listLabel)}">
 ${cards}

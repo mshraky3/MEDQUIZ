@@ -1,5 +1,6 @@
 import React from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { LocaleLink as Link } from '../../i18n';
 import Spinner from '../common/Spinner.jsx';
 import { useCopy, useLang } from '../../i18n';
 import publicQuestionsCopy from '../../i18n/copy/publicQuestions.js';
@@ -13,7 +14,7 @@ import './PublicQuestions.css';
 const QuestionsSpecialty = () => {
     const { specialty: specialtyParam } = useParams();
     const t = useCopy(publicQuestionsCopy);
-    const { dir } = useLang();
+    const { dir, lang } = useLang();
     const { index, loading, error } = usePublicQuestions();
 
     if (loading) return <div className="pq-loading"><Spinner /></div>;
@@ -23,16 +24,18 @@ const QuestionsSpecialty = () => {
     if (!group) return <PublicQuestionsError t={t} />;
 
     const siblings = index.specialties.filter((s) => s.slug !== group.slug);
+    // Same label the prerendered HTML uses, so the two agree word for word.
+    const label = lang === 'en' ? group.labelEn : group.labelAr;
 
     return (
         <main className="pq-page" dir={dir}>
-            <SEO {...completeSeo(specialtySeo(group))} />
+            <SEO {...completeSeo(specialtySeo(group, lang), lang)} />
             <Breadcrumb t={t} />
 
             <header className="pq-hero">
                 <p className="pq-kicker">{group.labelEn}</p>
-                <h1>{t.specialty.title(group.labelAr)}</h1>
-                <p>{t.specialty.intro(group.questions.length, group.labelAr)}</p>
+                <h1>{t.specialty.title(label)}</h1>
+                <p>{t.specialty.intro(group.questions.length, label)}</p>
             </header>
 
             <section>
@@ -53,7 +56,7 @@ const QuestionsSpecialty = () => {
                     <h2>{t.specialty.siblingsTitle}</h2>
                     <div className="pq-sibling-links">
                         {siblings.map((s) => (
-                            <Link key={s.slug} to={s.path}>{s.labelAr}</Link>
+                            <Link key={s.slug} to={s.path}>{lang === 'en' ? s.labelEn : s.labelAr}</Link>
                         ))}
                     </div>
                 </nav>

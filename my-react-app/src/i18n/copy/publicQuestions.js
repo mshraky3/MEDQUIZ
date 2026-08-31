@@ -10,6 +10,24 @@ const publicQuestionsCopy = {
     ar: {
         breadcrumbHome: 'الرئيسية',
         breadcrumbRoot: 'أسئلة تدريبية مجانية',
+        breadcrumbLabel: 'مسار التنقل',
+
+        // Titles and descriptions for the prerendered <head>. They live with the
+        // rest of the copy so the English tree gets English metadata from the
+        // same place the English page gets its words.
+        seo: {
+            hubTitle: (n) => `${n} سؤال تدريبي مجاني لاختبار SMLE وSNLE | SQB`,
+            hubDescription: (n) => `${n} سؤالاً بنمط اختبار الهيئة السعودية للتخصصات الصحية في الطب والتمريض، مع الإجابة الصحيحة وشرح مكتوب لكل سؤال. مفتوحة للجميع بدون حساب وبدون بطاقة دفع.`,
+            hubKeywords: 'أسئلة SMLE مجانية, اسئلة SNLE, اسئلة برومترك مجانية, SMLE practice questions free, SNLE MCQ, بنك أسئلة مجاني, smle past papers',
+            hubCollectionName: 'أسئلة تدريبية مجانية لاختبار SMLE وSNLE',
+            specialtyTitle: (labelAr, labelEn) => `أسئلة ${labelAr} مجانية — ${labelEn} MCQs | SQB`,
+            specialtyDescription: (n, labelAr) => `${n} سؤالاً تدريبياً في ${labelAr} بنمط اختبار الهيئة السعودية، مع الإجابة الصحيحة وشرح مكتوب لكل سؤال. مفتوحة بدون حساب.`,
+            specialtyKeywords: (labelAr, labelEn) => `أسئلة ${labelAr}, ${labelEn} MCQ, ${labelEn} questions, اسئلة SMLE, اسئلة SNLE, اسئلة برومترك`,
+            specialtyCollectionName: (labelAr) => `أسئلة ${labelAr}`,
+            questionTitle: (headline, labelEn) => `${headline} | ${labelEn} | SQB`,
+            questionDescription: (headline, labelAr) => `${headline} — سؤال تدريبي بنمط ${labelAr} مع الإجابة الصحيحة وشرح مكتوب. مجاني وبدون حساب.`,
+            questionKeywords: (labelAr, labelEn) => `${labelEn} MCQ, SMLE practice question, SNLE practice question, أسئلة ${labelAr}, اسئلة برومترك`,
+        },
 
         hub: {
             kicker: 'Free practice questions',
@@ -76,6 +94,21 @@ const publicQuestionsCopy = {
     en: {
         breadcrumbHome: 'Home',
         breadcrumbRoot: 'Free practice questions',
+        breadcrumbLabel: 'Breadcrumb',
+
+        seo: {
+            hubTitle: (n) => `${n} free SMLE and SNLE practice questions | SQB`,
+            hubDescription: (n) => `${n} exam-style questions for the Saudi Commission for Health Specialties exams in medicine and nursing, each with the correct answer and a written explanation. Open to everyone, no account and no payment card.`,
+            hubKeywords: 'free SMLE questions, SNLE MCQ, free Prometric questions, SMLE practice questions free, Saudi medical licensing exam questions, smle past papers',
+            hubCollectionName: 'Free SMLE and SNLE practice questions',
+            specialtyTitle: (labelAr, labelEn) => `Free ${labelEn} practice questions — SMLE & SNLE MCQs | SQB`,
+            specialtyDescription: (n, labelAr, labelEn) => `${n} exam-style ${labelEn} questions in the Saudi Commission format, each with the correct answer and a written explanation. Open without an account.`,
+            specialtyKeywords: (labelAr, labelEn) => `${labelEn} MCQ, ${labelEn} practice questions, ${labelEn} SMLE questions, SNLE questions, Prometric questions`,
+            specialtyCollectionName: (labelAr, labelEn) => `${labelEn} practice questions`,
+            questionTitle: (headline, labelEn) => `${headline} | ${labelEn} | SQB`,
+            questionDescription: (headline, labelAr, labelEn) => `${headline} — an exam-style ${labelEn} question with the correct answer and a written explanation. Free, no account.`,
+            questionKeywords: (labelAr, labelEn) => `${labelEn} MCQ, SMLE practice question, SNLE practice question, Prometric question, ${labelEn} exam questions`,
+        },
 
         hub: {
             kicker: 'Free practice questions',

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { LocaleLink as Link } from '../../i18n';
 import Spinner from '../common/Spinner.jsx';
 import { useCopy, useLang } from '../../i18n';
 import publicQuestionsCopy from '../../i18n/copy/publicQuestions.js';
@@ -23,7 +24,7 @@ const OPTION_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
 const QuestionPage = () => {
     const { slug } = useParams();
     const t = useCopy(publicQuestionsCopy);
-    const { dir } = useLang();
+    const { dir, lang } = useLang();
     const { index, loading, error } = usePublicQuestions();
     const [picked, setPicked] = useState(null);
 
@@ -37,7 +38,7 @@ const QuestionPage = () => {
 
     return (
         <main className="pq-page" dir={dir}>
-            <SEO {...completeSeo(questionSeo(question))} />
+            <SEO {...completeSeo(questionSeo(question, lang), lang)} />
             <Breadcrumb
                 t={t}
                 trail={[{ to: specialtyPath(question.specialty), label: question.specialtyLabelAr }]}

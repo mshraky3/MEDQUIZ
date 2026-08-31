@@ -15,6 +15,7 @@
  *
  * React-free and browser-free: runs under Node at build time.
  */
+import { schemaLang } from './locales.js';
 
 function escapeHtml(value = '') {
     return String(value)
@@ -28,13 +29,13 @@ function escapeHtml(value = '') {
  * @param {{q: string, a: string}[]} items
  * @param {string} url Absolute URL of the page the FAQ lives on.
  */
-export function faqPageSchema(items, url) {
+export function faqPageSchema(items, url, lang = 'ar') {
     if (!Array.isArray(items) || !items.length) return null;
     return {
         '@context': 'https://schema.org',
         '@type': 'FAQPage',
         url,
-        inLanguage: 'ar-SA',
+        inLanguage: schemaLang(lang),
         mainEntity: items.map((item) => ({
             '@type': 'Question',
             name: item.q,

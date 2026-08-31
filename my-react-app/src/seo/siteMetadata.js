@@ -1,5 +1,14 @@
 import guidesCopy from '../i18n/copy/guides.js';
 import { guideArticleHtml, guidesHubHtml, guidesTeaserHtml, siteFooterNavHtml } from './prerenderHtml.js';
+import { EN_PRERENDER, FAQ_ITEMS_EN, enLandingHtml, enQuestionsTeaserHtml } from './staticPrerenderEn.js';
+import {
+    absoluteUrl,
+    alternatesFor,
+    hasEnglishTwin,
+    localizedPath,
+    ogLocale,
+    stripLocale,
+} from './locales.js';
 
 const SITE_ORIGIN = 'https://www.smle-question-bank.com';
 const SITE_NAME = 'SQB';
@@ -245,6 +254,21 @@ ${guidesTeaserHtml(guidesCopy.ar.hub, {
                 { name: 'الرئيسية', path: '/' },
                 { name: 'الأسئلة الشائعة', path: '/faq' }
             ])
+        ],
+        // The English twin gets English FAQ entities; the same markup describing
+        // Arabic answers on an English page would be describing text that page
+        // does not contain.
+        structuredDataEn: [
+            {
+                '@context': 'https://schema.org',
+                '@type': 'FAQPage',
+                inLanguage: 'en',
+                mainEntity: FAQ_ITEMS_EN.map((item) => ({
+                    '@type': 'Question',
+                    name: item.question,
+                    acceptedAnswer: { '@type': 'Answer', text: item.answer }
+                }))
+            }
         ],
         prerenderHtml: `
       <main class="seo-shell" dir="rtl">
@@ -688,12 +712,24 @@ function resolveRouteKey(pathname) {
     return routeMap[pathname] ? pathname : 'default';
 }
 
-export function getSeoConfig(pathname = '/', lang = 'ar') {
-    const key = resolveRouteKey(pathname);
+/**
+ * SEO config for a pathname.
+ *
+ * The LANGUAGE COMES FROM THE URL, not from the visitor's toggle: /en/x is the
+ * English document and /x is the Arabic one, and that has to hold no matter
+ * which language the reader has selected — otherwise the page's canonical, its
+ * hreflang set and its content stop agreeing, which is the exact failure this
+ * whole scheme exists to fix.
+ */
+export function getSeoConfig(pathname = '/') {
+    const { lang, path } = stripLocale(pathname);
+    // /en/<something with no English twin> is not a page — the router has no
+    // route for it and renders the 404. Falling through to `default` (which is
+    // noindex) keeps that 404 from being dressed up in the metadata of its
+    // Arabic namesake and indexed as a real page.
+    const key = lang === 'en' && !hasEnglishTwin(path) ? 'default' : resolveRouteKey(path);
     const route = routeMap[key] || routeMap.default;
-    const canonicalPath = route.canonicalPath || pathname;
-    // English visitors get an English tab title and description; everything
-    // else about the page's SEO identity stays as indexed. See enOverlay.
+    const canonicalPath = route.canonicalPath || path;
     const overlay = (lang === 'en' && (enOverlay[key] || enOverlay.default)) || null;
     const title = overlay?.title || route.title;
     const description = overlay?.description || route.description;
@@ -704,30 +740,86 @@ export function getSeoConfig(pathname = '/', lang = 'ar') {
         keywords: route.keywords,
         image: route.image || DEFAULT_IMAGE,
         imageAlt: route.imageAlt || title,
-        url: makeUrl(canonicalPath),
-        type: pathname === '/' ? 'website' : 'article',
+        url: absoluteUrl(localizedPath(canonicalPath, lang)),
+        type: path === '/' ? 'website' : 'article',
         siteName: SITE_NAME,
         robots: route.robots || DEFAULT_ROBOTS,
-        locale: 'ar_SA',
-        alternates: route.alternates || [],
-        structuredData: route.structuredData || []
+        lang,
+        locale: ogLocale(lang),
+        // Every variant, including this one, each at its own URL. A route with
+        // no English body published (see prerenderFor) still lists both, because
+        // the React app serves /en for it either way.
+        alternates: alternatesFor(canonicalPath),
+        structuredData: (lang === 'en' && route.structuredDataEn) || route.structuredData || []
     };
 }
 
-export function getPrerenderRoutes() {
-    // The footer nav is appended to every prerendered route, not written into
-    // each one: it is the crawler's equivalent of Footer.jsx, and it is what
-    // gives /guides (and the guide articles below it) an internal link from
-    // every crawlable page instead of none.
-    const footerNav = siteFooterNavHtml();
+/**
+ * The English body for a hand-written route.
+ *
+ * The guide routes regenerate from guidesCopy.en; the rest come from
+ * staticPrerenderEn.js. Returns null when no English body exists, and the
+ * route is then simply not emitted into the English tree — publishing an
+ * English URL containing Arabic prose would be worse than not publishing it.
+ */
+function englishPrerenderFor(path) {
+    if (path === '/') {
+        return enLandingHtml({
+            questionsTeaser: enQuestionsTeaserHtml(),
+            guidesTeaser: guidesTeaserHtml(guidesCopy.en.hub, {
+                lang: 'en',
+                heading: 'Study guides for the SMLE and Prometric exams',
+                intro: 'Five complete guides, open to everyone with no account: how to use a question bank in the right order, a twelve-week plan, reviewing your mistakes, SMLE versus Prometric, and the highest-yield topics.'
+            })
+        });
+    }
+    if (path === '/guides') return guidesHubHtml(guidesCopy.en.hub, { lang: 'en' });
+
+    const guideKey = EN_GUIDE_KEYS[path];
+    if (guideKey) {
+        return guideArticleHtml(guidesCopy.en[guideKey], {
+            lang: 'en',
+            hub: guidesCopy.en.hub,
+            currentPath: path
+        });
+    }
+
+    return EN_PRERENDER[path] || null;
+}
+
+const EN_GUIDE_KEYS = {
+    '/guides/how-to-use-a-question-bank': 'howToUseBank',
+    '/guides/smle-study-plan': 'studyPlan',
+    '/guides/wrong-questions-method': 'wrongQuestions',
+    '/guides/smle-vs-prometric-differences': 'vsPrometric',
+    '/guides/smle-high-yield-topics': 'highYield'
+};
+
+/**
+ * Prerendered routes for one language.
+ *
+ * The footer nav is appended rather than written into each block: it is the
+ * crawler's equivalent of Footer.jsx, and it is what gives /guides (and the
+ * articles below it) an internal link from every crawlable page instead of
+ * none. It is generated per language so an English page's footer keeps the
+ * reader in the English tree.
+ */
+export function getPrerenderRoutes(lang = 'ar') {
+    const footerNav = siteFooterNavHtml(lang);
 
     return Object.entries(routeMap)
         .filter(([path, config]) => path !== 'default' && config.prerenderHtml)
-        .map(([path, config]) => ({
-            path,
-            html: `${config.prerenderHtml}${footerNav}`,
-            seo: getSeoConfig(path)
-        }));
+        .map(([path, config]) => {
+            const html = lang === 'en' ? englishPrerenderFor(path) : config.prerenderHtml;
+            if (!html) return null;
+            const localized = localizedPath(path, lang);
+            return {
+                path: localized,
+                html: `${html}${footerNav}`,
+                seo: getSeoConfig(localized)
+            };
+        })
+        .filter(Boolean);
 }
 
 export { DEFAULT_IMAGE, SITE_NAME, SITE_ORIGIN };

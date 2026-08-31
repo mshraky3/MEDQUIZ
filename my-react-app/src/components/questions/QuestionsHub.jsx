@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { LocaleLink as Link } from '../../i18n';
 import Spinner from '../common/Spinner.jsx';
 import { useCopy, useLang } from '../../i18n';
 import publicQuestionsCopy from '../../i18n/copy/publicQuestions.js';
@@ -13,7 +13,7 @@ import './PublicQuestions.css';
 /** /questions — the library hub, one card per specialty. */
 const QuestionsHub = () => {
     const t = useCopy(publicQuestionsCopy);
-    const { dir } = useLang();
+    const { dir, lang } = useLang();
     const { index, loading, error } = usePublicQuestions();
 
     if (loading) return <div className="pq-loading"><Spinner /></div>;
@@ -23,7 +23,7 @@ const QuestionsHub = () => {
         <main className="pq-page" dir={dir}>
             {/* Overrides the generic placeholder RouteSEO applied for /questions.
                 Same builder the prerendered HTML uses, so the two agree. */}
-            <SEO {...completeSeo(hubSeo(index))} />
+            <SEO {...completeSeo(hubSeo(index, lang), lang)} />
             <Breadcrumb t={t} />
 
             <header className="pq-hero">
@@ -38,8 +38,12 @@ const QuestionsHub = () => {
                     <div className="pq-specialty-grid">
                         {track.specialties.map((specialty) => (
                             <Link key={specialty.slug} className="pq-specialty-card" to={specialty.path}>
-                                <span className="pq-specialty-name">{specialty.labelAr}</span>
-                                <span className="pq-specialty-en">{specialty.labelEn}</span>
+                                <span className="pq-specialty-name">
+                                    {lang === 'en' ? specialty.labelEn : specialty.labelAr}
+                                </span>
+                                {lang !== 'en' && (
+                                    <span className="pq-specialty-en">{specialty.labelEn}</span>
+                                )}
                                 <span className="pq-specialty-count">
                                     {t.hub.countLabel(specialty.questions.length)}
                                 </span>

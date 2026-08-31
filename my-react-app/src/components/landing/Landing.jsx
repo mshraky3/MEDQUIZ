@@ -1,5 +1,5 @@
 import React, { lazy, Suspense, useContext, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { safeTrack, trackFunnel, captureLandingAttribution } from '../../utils/analytics.js';
 import Icon from '../common/Icon.jsx';
 import HeroArt from './HeroArt.jsx';
@@ -7,7 +7,7 @@ import ExamCountdown from './ExamCountdown.jsx';
 import InstallPrompt from '../common/InstallPrompt.jsx';
 import { UserContext } from '../../UserContext';
 import { TRACKS, MEDICAL, NURSING, pick } from '../../utils/tracks.js';
-import { useCopy, useLang, LanguageToggle } from '../../i18n';
+import { useCopy, useLang, LanguageToggle, LocaleLink as Link } from '../../i18n';
 import landingCopy from '../../i18n/copy/landing.js';
 // The guide titles/excerpts shown in the study-guides band. Read from the
 // guides copy rather than restated in landing.js, so this band, the /guides

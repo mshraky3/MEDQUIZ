@@ -19,7 +19,7 @@ import '@fontsource/cairo/800.css'
 import '@fontsource/cairo/900.css'
 import './index.css'
 import App from './App.jsx';
-import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Navigate, Outlet } from 'react-router-dom';
 import { createRoot } from 'react-dom/client';
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
@@ -33,6 +33,7 @@ import Layout from './components/common/Layout.jsx';
 import RequireAuth from './components/common/RequireAuth.jsx';
 import CookieConsent from './components/common/CookieConsent.jsx';
 import Spinner from './components/common/Spinner.jsx';
+import LocaleSync from './components/common/LocaleSync.jsx';
 
 // Every other page is code-split: the landing page no longer downloads the
 // admin panel, quiz engine, summaries, guides, etc. it never uses. Each lazy()
@@ -90,6 +91,7 @@ const AdminGate = lazy(() => import('./components/common/AdminGate.jsx'));
 import Globals from './global.js';
 import { UserProvider } from './UserContext.jsx';
 import { LanguageProvider, AdminShell, useCommon } from './i18n';
+import { hasEnglishTwin, localizedPath } from './seo/locales.js';
 
 import { initErrorTracking } from './utils/errorTracking.js';
 import { reloadOnceForStaleChunk } from './utils/staleChunkReload.js';
@@ -137,7 +139,35 @@ const authedNoFooter = (path, node) => withBoundary(path, <Layout hideFooter><Re
 // Admin stays English/LTR regardless of the site language — AdminShell pins it.
 const admin = (path, node) => withBoundary(path, <AdminShell>{lazyEl(<AdminGate>{lazyEl(node)}</AdminGate>)}</AdminShell>);
 
-const router = createBrowserRouter([
+// Public content is served in two languages at two URLs — Arabic on the bare
+// path, English under /en — so every route that has an English version needs
+// to be reachable at both. Registering the twin here (rather than by hand,
+// twice) is what keeps the router in step with what postbuild-seo.mjs actually
+// prerenders; the two read the same list out of src/seo/locales.js.
+//
+// Routes with no English twin (the signed-in app, admin, invite links) pass
+// through untouched: /en/analysis is not a page, and pretending otherwise
+// would turn a language toggle into a 404.
+const withEnglishTwins = (routes) =>
+  routes.flatMap((route) =>
+    hasEnglishTwin(route.path)
+      ? [route, { ...route, path: localizedPath(route.path, 'en') }]
+      : [route]
+  );
+
+// Pathless root. LocaleSync has to see every navigation, and Layout cannot
+// give it that — the landing route has its own shell and never mounts one.
+const RootShell = () => (
+  <>
+    <LocaleSync />
+    <Outlet />
+  </>
+);
+
+const router = createBrowserRouter([{
+  element: <RootShell />,
+  errorElement: <ErrorBoundary />,
+  children: withEnglishTwins([
   // Landing — its own shell (own topbar/footer), so not wrapped in Layout.
   withBoundary('/', <App />),
 
@@ -219,7 +249,8 @@ const router = createBrowserRouter([
   // Anything else. A real 404 page — NOT the error boundary, which renders
   // nothing when there is no router error.
   { path: '*', element: <Layout><NotFound /></Layout> },
-]);
+  ]),
+}]);
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

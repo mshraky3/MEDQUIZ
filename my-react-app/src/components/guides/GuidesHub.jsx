@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { LocaleLink as Link } from '../../i18n';
 import GoogleAd from '../common/GoogleAd.jsx';
 import { useCopy, useLang } from '../../i18n';
 import guidesCopy from '../../i18n/copy/guides.js';
