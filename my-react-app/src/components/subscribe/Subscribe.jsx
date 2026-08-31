@@ -284,6 +284,19 @@ const Subscribe = () => {
     };
 
     const riyals = selectedPlan ? selectedPlan.priceHalalas / 100 : null;
+
+    // Which refund window this plan actually has, straight from the policy in
+    // i18n/copy/legal.js: 3 days monthly, 14 days for the 4-month and annual
+    // terms. Null for anything the policy does not name — today that is the
+    // group plans, which the guarantee therefore links to without claiming a
+    // number. Keyed off `months` rather than the plan id so a new individual
+    // term inherits the right window instead of silently getting none.
+    const refundDays = (() => {
+        if (!selectedPlan || isGroup) return null;
+        if (selectedPlan.months === 1) return t.guaranteeDays3;
+        if (selectedPlan.months >= 4) return t.guaranteeDays14;
+        return null;
+    })();
     // The student has spent their 40 free questions. Not an expiry and not a
     // lockout — their account still works — so the page only changes its
     // heading to acknowledge where they are.
@@ -408,6 +421,35 @@ const Subscribe = () => {
                         charges them. Everything that is not the act of paying
                         sits below it, so the form is the first thing under the
                         price. */}
+                    {/* The refund guarantee, ABOVE the card fields.
+                        It was already offered and already written down, three
+                        clicks away in /refund-policy — which meant it did no
+                        work at the only moment it matters. Read before the card
+                        number, it turns the purchase into a trial with the
+                        money captured; read afterwards, it is small print.
+
+                        The window is per-plan and must never be generalised:
+                        the policy gives 3 days for monthly and 14 for the
+                        longer terms, so a flat "14-day guarantee" would be a
+                        false promise to every monthly buyer — and monthly is
+                        the cheapest, most-bought plan. Group plans are not
+                        named in the refund policy at all, so they get the link
+                        without a number rather than an invented one. */}
+                    {status === 'ready' && (
+                        <div className="subscribe-guarantee">
+                            <span className="subscribe-guarantee-icon" aria-hidden="true">
+                                <Icon name="shield-check" size={20} />
+                            </span>
+                            <div className="subscribe-guarantee-body">
+                                {refundDays && <strong>{t.guaranteeTitle(refundDays)}</strong>}
+                                <span>{t.guaranteeBody}</span>
+                                <Link to="/refund-policy" target="_blank" rel="noopener">
+                                    {t.guaranteeLink}
+                                </Link>
+                            </div>
+                        </div>
+                    )}
+
                     <div
                         className="mysr-host"
                         ref={hostRef}
