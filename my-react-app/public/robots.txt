@@ -41,4 +41,20 @@ Disallow: /payment/
 Disallow: /forgot-password
 Disallow: /signup/
 
+# Assistant crawlers — OAI-SearchBot, ChatGPT-User, PerplexityBot, ClaudeBot,
+# Claude-SearchBot, Google-Extended, CCBot and the rest — are allowed, by the
+# single `User-agent: *` group above. That is deliberate: more visits arrived
+# here from ChatGPT and Perplexity last month than from Bing, and a page an
+# assistant cannot fetch is a page it cannot cite.
+#
+# If you ever want to say something different to one of them, DO NOT just add
+# `User-agent: PerplexityBot` + `Allow: /` below. robots.txt groups are not
+# additive: a bot obeys only the most specific group that matches it, so a new
+# named group with no Disallow lines would hand that bot /admin, /quizs and
+# every other path the wildcard group excludes. Copy the whole Disallow list
+# into the new group, or do not create one.
+#
+# /llms.txt is generated at build time (scripts/postbuild-seo.mjs) as a plain
+# index of the public pages for assistants that look for one.
+
 Sitemap: https://www.smle-question-bank.com/sitemap.xml

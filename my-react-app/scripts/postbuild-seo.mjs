@@ -197,6 +197,79 @@ function buildSitemap(routes) {
 }
 
 /**
+ * Generate /llms.txt — the site index written for assistants rather than
+ * crawlers (see llmstxt.org).
+ *
+ * Worth having because assistants are already a channel here: more visits
+ * arrived from ChatGPT and Perplexity last month than from Bing. An assistant
+ * that has to guess the shape of a site from one page guesses badly, and the
+ * thing it most often gets wrong about this one is the affiliation — hence the
+ * disclaimer near the top, in the same words the footer uses.
+ *
+ * Generated from the same route list the sitemap is built from, so it cannot
+ * drift from what actually exists. Individual question pages are left out on
+ * purpose: 502 near-identical entries would bury the twenty links that matter.
+ * The English tree is named once rather than mirrored, since every path below
+ * has an /en twin by construction.
+ */
+function buildLlmsTxt(routes) {
+  const arabic = routes.filter(
+    ({ path: routePath, seo }) =>
+      !routePath.startsWith('/en')
+      && !(seo.robots || '').includes('noindex')
+      // /questions/<specialty>/<slug> — the leaves, not the hubs.
+      && !(routePath.startsWith(`${QUESTIONS_ROOT}/`) && routePath.split('/').length > 3)
+  );
+
+  const GROUPS = [
+    ['Study guides', (p) => p === '/guides' || p.startsWith('/guides/')],
+    ['Practice questions, open to everyone', (p) => p === DEMO_ROOT || p === QUESTIONS_ROOT || p.startsWith(`${QUESTIONS_ROOT}/`)],
+    ['Past-paper collections', (p) => p === PAST_PAPERS_ROOT || p.startsWith(`${PAST_PAPERS_ROOT}/`)],
+    ['About the platform', (p) => ['/', '/about', '/faq', '/contact', '/groups', SUCCESS_STORIES_ROOT].includes(p)],
+    ['Policies', (p) => ['/privacy', '/terms', '/refund-policy'].includes(p)],
+  ];
+
+  const line = ({ path: routePath, seo }) =>
+    `- [${seo.title.replace(/\s*\|\s*SQB\s*$/, '')}](${seo.url}): ${seo.description}`;
+
+  const used = new Set();
+  const sections = GROUPS.map(([heading, match]) => {
+    const items = arabic.filter(({ path: p }) => {
+      if (used.has(p) || !match(p)) return false;
+      used.add(p);
+      return true;
+    });
+    return items.length ? `## ${heading}\n\n${items.map(line).join('\n')}` : null;
+  }).filter(Boolean);
+
+  return `# SQB — SMLE & SNLE question bank
+
+> A preparation platform for the Saudi Commission for Health Specialties
+> licensing exams: the SMLE for medicine and the SNLE for nursing. A question
+> bank with a written explanation for every answer, illustrated topic
+> summaries, performance analytics, and study guides. Two separate tracks —
+> medical and nursing — with their own questions, summaries and analytics.
+
+SQB is an independent educational platform. It is **not affiliated with the
+Saudi Commission for Health Specialties (SCFHS) or with Prometric**, and
+nothing on it is an official source for exam rules. Where a page states exam
+logistics it names the SCFHS document it was taken from; the Commission's own
+applicant guide at scfhs.org.sa is what governs.
+
+Pages below are the Arabic versions, which are canonical. Every one of them has
+an English twin at the same path under \`/en\` (for example
+${SITE_ORIGIN}/en/guides). Individual question pages are not listed here —
+browse them from the specialty hubs under ${SITE_ORIGIN}${QUESTIONS_ROOT}.
+
+Free without an account: a 20-question demo, and every question page listed
+under practice questions. A free account adds 40 questions from the bank and
+the first lesson of each specialty.
+
+${sections.join('\n\n')}
+`;
+}
+
+/**
  * Read the exported success stories.
  *
  * An absent or empty file is the NORMAL state, not an error: the page only
@@ -247,7 +320,8 @@ if (!fs.existsSync(templatePath)) {
 
   const sitemapPath = path.join(distDir, 'sitemap.xml');
   fs.writeFileSync(sitemapPath, buildSitemap(routes), 'utf8');
+  fs.writeFileSync(path.join(distDir, 'llms.txt'), buildLlmsTxt(routes), 'utf8');
   console.log(
-    `[postbuild-seo] Prerendered ${count} route(s) across ${SUPPORTED_LANGS.length} languages — ${questionRoutes.length} question pages, ${pastPaperRoutes.length} collection pages — and regenerated sitemap.xml (lastmod ${BUILD_DATE}). Origin: ${SITE_ORIGIN}`
+    `[postbuild-seo] Prerendered ${count} route(s) across ${SUPPORTED_LANGS.length} languages — ${questionRoutes.length} question pages, ${pastPaperRoutes.length} collection pages — and regenerated sitemap.xml and llms.txt (lastmod ${BUILD_DATE}). Origin: ${SITE_ORIGIN}`
   );
 }

@@ -389,7 +389,11 @@ ${guidesTeaserHtml(guidesCopy.ar.hub, {
     },
     '/refund-policy': {
         title: 'سياسة الاسترداد | SQB',
-        description: 'سياسة الاسترداد لمنصة SQB. الخدمة مجانية حالياً ولا تُحصّل أي مدفوعات. تشرح هذه الصفحة شروط الاسترداد المستقبلية في حال تفعيل الاشتراك المدفوع.',
+        // Said "الخدمة مجانية حالياً ولا تُحصّل أي مدفوعات" — the service is
+        // free and takes no payments — long after it started taking payments.
+        // The page itself has described a real refund window since June; only
+        // the crawler's copy of it was still living in the free era.
+        description: 'سياسة الاسترجاع في SQB: استرجاع كامل خلال 3 أيام من شراء الخطة الشهرية، وخلال 14 يوماً لخطة 4 أشهر والخطة السنوية، وكيف تُقدَّم طلبات الاسترجاع.',
         keywords: 'سياسة الاسترداد SQB, refund policy SMLE, استرداد الاشتراك, منصة طبية',
         alternates: ['ar-SA', 'ar', 'x-default'],
         structuredData: [
@@ -401,8 +405,13 @@ ${guidesTeaserHtml(guidesCopy.ar.hub, {
         ],
         prerenderHtml: `
       <main class="seo-shell" dir="rtl">
-        <h1>سياسة الاسترداد</h1>
-        <p>الخدمة مجانية حالياً ولا تُحصّل أي مدفوعات. تشرح هذه الصفحة شروط الاسترداد المستقبلية عند تفعيل الاشتراك المدفوع.</p>
+        <h1>سياسة الاسترجاع</h1>
+        <p>تقدّم SQB اشتراكاً مدفوعاً بثلاث مدد: شهري، و4 أشهر، وسنوي. ومهلة الاسترجاع الكامل تتناسب مع مدة الخطة نفسها.</p>
+        <ul>
+          <li>الخطة الشهرية: استرجاع كامل خلال 3 أيام من تاريخ الشراء.</li>
+          <li>خطة 4 أشهر والخطة السنوية: استرجاع كامل خلال 14 يوماً من تاريخ الشراء.</li>
+        </ul>
+        <p>تُرسل طلبات الاسترجاع عبر البريد الإلكتروني أو واتساب من <a href="/contact">صفحة التواصل</a>. وتُعالَج المدفوعات عبر بوابة ميسر، ولا نخزّن بيانات البطاقة كاملةً على خوادمنا.</p>
       </main>
     `
     },
