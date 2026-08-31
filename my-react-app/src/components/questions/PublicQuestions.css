@@ -450,3 +450,39 @@
   line-height: 1.85;
   color: var(--text-light);
 }
+
+/* --- FAQ block (also used by /past-papers) ---------------------------
+   The answers are visible on purpose: FAQPage markup describing text the
+   reader cannot see is a structured-data violation, not a shortcut. */
+.pq-faq {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.pq-faq-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.pq-faq-item:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.pq-faq-item h3 {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text-dark);
+}
+
+.pq-faq-item p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.9;
+  color: var(--text-medium);
+}

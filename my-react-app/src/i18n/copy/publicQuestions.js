@@ -39,6 +39,26 @@ const publicQuestionsCopy = {
             sourceLabel: 'المصدر',
         },
 
+        faqTitle: 'أسئلة شائعة عن الأسئلة المجانية',
+        faq: (total, bankTotal) => [
+            {
+                q: 'هل هذه الأسئلة مجانية فعلاً؟',
+                a: `نعم. الأسئلة المنشورة هنا وعددها ${total} سؤالاً مفتوحة للجميع: لا تحتاج حساباً، ولا بريداً إلكترونياً، ولا بطاقة دفع. كل سؤال معروض بخياراته الأربعة وإجابته الصحيحة وشرحه المكتوب كاملاً على الصفحة نفسها.`,
+            },
+            {
+                q: 'لماذا الأسئلة والشروحات بالإنجليزية؟',
+                a: 'لأن اختبار الهيئة السعودية للتخصصات الصحية نفسه يُقدَّم بالإنجليزية. ترجمة الأسئلة كانت ستجعل التدريب أسهل من الاختبار الحقيقي، وهذا يضر أكثر مما ينفع. واجهة الموقع بالعربية، أما المحتوى الطبي فيبقى بلغة الاختبار.',
+            },
+            {
+                q: 'ما الفرق بين هذه الأسئلة والبنك الكامل؟',
+                a: `هذه عيّنة ثابتة من ${total} سؤالاً منشورة للاطلاع. البنك الكامل يضم ${bankTotal} سؤالاً، ويأتي معه تحليل أدائك حسب التخصص، وصفحة تجمع أسئلتك الخاطئة، واختبارات محاكية بوقت. تحصل على 40 سؤالاً منه مجاناً عند إنشاء حساب.`,
+            },
+            {
+                q: 'هل الأسئلة محدَّثة على نمط الاختبار الحالي؟',
+                a: 'نعم. البنك مراجَع على نمط أسئلة 2026، وتُضاف إليه تجميعات جديدة بعد مراجعتها. صفحة التجميعات توضّح ما تحتويه كل مجموعة ومتى أُضيفت.',
+            },
+        ],
+
         cta: {
             title: '40 سؤالاً مجاناً مع حساب',
             body: 'الأسئلة المنشورة هنا عيّنة ثابتة. أنشئ حساباً مجانياً لتتدرب على بنك الأسئلة الكامل، مع تحليل أدائك حسب التخصص وصفحة لمراجعة أخطائك.',
@@ -84,6 +104,26 @@ const publicQuestionsCopy = {
             allInSpecialty: (label) => `All ${label} questions`,
             sourceLabel: 'Source',
         },
+
+        faqTitle: 'Questions about the free questions',
+        faq: (total, bankTotal) => [
+            {
+                q: 'Are these questions really free?',
+                a: `Yes. The ${total} questions published here are open to everyone: no account, no email, no payment card. Each one shows its four options, the correct answer and the full written explanation on the page itself.`,
+            },
+            {
+                q: 'Why are the questions and explanations in English?',
+                a: 'Because the SCFHS exam itself is sat in English. Translating the questions would make practice easier than the real thing, which helps nobody. The site interface is available in Arabic; the clinical content stays in the language of the exam.',
+            },
+            {
+                q: 'How is this different from the full bank?',
+                a: `This is a fixed sample of ${total} questions. The full bank holds ${bankTotal}, and comes with performance analytics by specialty, a page collecting every question you got wrong, and timed mock exams. Creating a free account gives you 40 questions from it.`,
+            },
+            {
+                q: 'Are the questions current?',
+                a: 'Yes. The bank is reviewed against the 2026 question style, and new collections are added after review. The collections page sets out what each group contains.',
+            },
+        ],
 
         cta: {
             title: '40 free questions with an account',

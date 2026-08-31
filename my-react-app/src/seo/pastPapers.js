@@ -29,6 +29,9 @@ import {
     specialtyPath,
 } from './publicQuestions.js';
 
+import pastPapersCopy from '../i18n/copy/pastPapers.js';
+import { faqHtml, faqPageSchema } from './faqSchema.js';
+
 const SITE_ORIGIN = 'https://www.smle-question-bank.com';
 
 export const PAST_PAPERS_ROOT = '/past-papers';
@@ -91,6 +94,8 @@ export function collectionPath(slug) {
  */
 export function buildCollections(payload) {
     const index = buildQuestionIndex(payload);
+    const bankTotal = payload?.bankTotal || index.total;
+    const collectionCount = (payload?.collections || []).filter((row) => COLLECTION_META[row.source]).length;
     const published = new Map();
     for (const question of index.questions) {
         if (!published.has(question.source)) published.set(question.source, []);
@@ -127,11 +132,17 @@ export function buildCollections(payload) {
                 path: collectionPath(meta.slug),
                 samples,
                 specialties: [...bySpecialty.values()].sort((a, b) => b.count - a.count),
+                // Carried per collection rather than as a reference back to the
+                // parent: the collection page's FAQ quotes both figures, and a
+                // back-reference would make this structure circular.
+                bankTotal,
+                collectionCount,
             };
         });
 
     return {
-        bankTotal: payload?.bankTotal || index.total,
+        bankTotal,
+        collectionCount,
         publishedTotal: index.total,
         collections,
         bySlug: new Map(collections.map((c) => [c.slug, c])),
@@ -163,6 +174,17 @@ export const HONESTY_NOTE_AR =
     'لا تنشر الهيئة السعودية للتخصصات الصحية ولا Prometric أوراق اختبارات سابقة. '
     + 'ما تجده هنا تجميعات أسئلة أعدّها فريق SQB اعتماداً على ما ينقله المتقدمون بعد الاختبار، '
     + 'ثم روجعت إجاباتها وأُعيدت صياغتها على نمط الاختبار الحالي. المنصة غير تابعة للهيئة أو Prometric.';
+
+/**
+ * The collections FAQ, in Arabic, from the same copy the React pages render.
+ *
+ * The first entry is the "are these official past papers?" answer, and it is
+ * first on purpose: it is the question the URL invites, and burying it would
+ * make the page's phrasing feel like a trick.
+ */
+export function collectionsFaqItems({ bankTotal, collectionCount }) {
+    return pastPapersCopy.ar.faq(bankTotal, collectionCount);
+}
 
 export function pastPapersHubHtml(data) {
     const groups = data.tracks
@@ -200,6 +222,7 @@ ${groups}
         <p>أنشئ حساباً مجانياً للتدرب على البنك الكامل مع تحليل أدائك حسب التخصص ومراجعة أخطائك.</p>
         <a class="pq-cta-btn" href="/signup">إنشاء حساب مجاني</a>
       </section>
+${faqHtml(collectionsFaqItems(data), pastPapersCopy.ar.faqTitle)}
       <nav class="pq-siblings" aria-label="روابط ذات صلة">
         <a href="${QUESTIONS_ROOT}">كل الأسئلة التدريبية المجانية</a>
         <a href="/guides">أدلة التحضير</a>
@@ -254,6 +277,7 @@ ${samples}
         <p>الأسئلة المعروضة هنا عيّنة. أنشئ حساباً مجانياً واحصل على 40 سؤالاً من البنك الكامل بدون بطاقة دفع.</p>
         <a class="pq-cta-btn" href="/signup">إنشاء حساب مجاني</a>
       </section>
+${faqHtml(collectionsFaqItems(collection), pastPapersCopy.ar.faqTitle)}
 ${siblings ? `      <nav class="pq-siblings" aria-label="تجميعات أخرى">
         <h2>تجميعات أخرى</h2>
 ${siblings}
@@ -316,11 +340,12 @@ export function pastPapersHubSeo(data) {
                 url: makeUrl(PAST_PAPERS_ROOT),
                 inLanguage: 'ar-SA',
             },
+            faqPageSchema(collectionsFaqItems(data), makeUrl(PAST_PAPERS_ROOT)),
             breadcrumbList([
                 { name: 'الرئيسية', path: '/' },
                 { name: 'تجميعات الأسئلة', path: PAST_PAPERS_ROOT },
             ]),
-        ],
+        ].filter(Boolean),
     };
 }
 
@@ -344,12 +369,13 @@ export function collectionSeo(collection) {
                     url: makeUrl(questionPath(q)),
                 })),
             },
+            faqPageSchema(collectionsFaqItems(collection), makeUrl(collection.path)),
             breadcrumbList([
                 { name: 'الرئيسية', path: '/' },
                 { name: 'تجميعات الأسئلة', path: PAST_PAPERS_ROOT },
                 { name: collection.labelAr, path: collection.path },
             ]),
-        ],
+        ].filter(Boolean),
     };
 }
 

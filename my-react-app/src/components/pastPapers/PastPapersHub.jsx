@@ -7,6 +7,7 @@ import pastPapersCopy from '../../i18n/copy/pastPapers.js';
 import publicQuestionsCopy from '../../i18n/copy/publicQuestions.js';
 import usePublicQuestions from '../questions/usePublicQuestions.js';
 import { SignupCta } from '../questions/PublicQuestionsShared.jsx';
+import FaqBlock from '../questions/FaqBlock.jsx';
 import {
     HONESTY_NOTE_AR,
     HONESTY_NOTE_EN,
@@ -78,6 +79,8 @@ const PastPapersHub = () => {
             ))}
 
             <SignupCta t={questionsT} />
+
+            <FaqBlock title={t.faqTitle} items={t.faq(data.bankTotal, data.collectionCount)} />
 
             <nav className="pq-siblings" aria-label={t.links.allQuestions}>
                 <div className="pq-sibling-links">

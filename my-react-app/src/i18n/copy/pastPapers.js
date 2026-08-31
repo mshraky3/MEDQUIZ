@@ -26,6 +26,26 @@ const pastPapersCopy = {
             siblingsTitle: 'تجميعات أخرى',
         },
 
+        faqTitle: 'أسئلة شائعة عن التجميعات',
+        faq: (bankTotal, n) => [
+            {
+                q: 'هل هذه أوراق اختبارات SMLE سابقة رسمية؟',
+                a: 'لا. لا تنشر الهيئة السعودية للتخصصات الصحية ولا Prometric أوراق اختبارات سابقة، وأي جهة تدّعي بيع أوراق رسمية فهي غير صادقة. ما تجده هنا تجميعات أسئلة أعدّها فريق SQB اعتماداً على ما ينقله المتقدمون بعد الاختبار، ثم روجعت إجاباتها وأُعيدت صياغتها على نمط الاختبار الحالي.',
+            },
+            {
+                q: 'ما الفرق بين التجميعات؟',
+                a: `البنك مقسّم إلى ${n} تجميعات بمجموع ${bankTotal} سؤالاً. بعضها مرتبط بمصدر معروف بين المتقدمين مثل Midgard وGameBoy، وبعضها مجموعات مبنية على معيار: «الأسئلة المؤكدة» هي ما تكرر وروده في أكثر من مصدر، و«الأكثر تكراراً» هي الأعلى تردداً بين الدورات.`,
+            },
+            {
+                q: 'هل يمكنني الاطلاع على تجميعة كاملة مجاناً؟',
+                a: 'لا. المنشور من كل تجميعة عيّنة مفتوحة للاطلاع بدون حساب. للوصول إلى التجميعات كاملة أنشئ حساباً مجانياً — يمنحك 40 سؤالاً من البنك كله بدون بطاقة دفع.',
+            },
+            {
+                q: 'هل تُحدَّث التجميعات؟',
+                a: 'نعم. تُضاف تجميعات جديدة بعد مراجعة أسئلتها وتدقيق إجاباتها، وتُحدَّث الأعداد على هذه الصفحة مع كل إضافة.',
+            },
+        ],
+
         cta: {
             title: '40 سؤالاً مجاناً من البنك الكامل',
             body: 'الأسئلة المعروضة هنا عيّنة. أنشئ حساباً مجانياً للتدرب على البنك الكامل مع تحليل أدائك حسب التخصص ومراجعة أخطائك.',
@@ -61,6 +81,26 @@ const pastPapersCopy = {
             samplesTitle: 'Open questions from this collection',
             siblingsTitle: 'Other collections',
         },
+
+        faqTitle: 'Questions about the collections',
+        faq: (bankTotal, n) => [
+            {
+                q: 'Are these official past SMLE papers?',
+                a: 'No. Neither SCFHS nor Prometric publishes past exam papers, and anyone claiming to sell official papers is not being straight with you. What you find here are collections assembled by the SQB team from what candidates report after sitting the exam, then answer-checked and rewritten to the current exam style.',
+            },
+            {
+                q: 'What is the difference between the collections?',
+                a: `The bank is split into ${n} collections totalling ${bankTotal} questions. Some carry a name candidates already know, such as Midgard and GameBoy; others are grouped by a rule — "Confirmed" means reported by more than one source, "Most repeated" means highest recurrence across sittings.`,
+            },
+            {
+                q: 'Can I read a whole collection for free?',
+                a: 'No. What is published from each collection is an open sample you can read without an account. For the collections in full, create a free account — it gives you 40 questions from the whole bank, with no payment card.',
+            },
+            {
+                q: 'Are the collections updated?',
+                a: 'Yes. New collections are added once their questions are reviewed and their answers checked, and the counts on this page update with each addition.',
+            },
+        ],
 
         cta: {
             title: '40 free questions from the full bank',

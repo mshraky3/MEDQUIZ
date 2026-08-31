@@ -19,6 +19,9 @@
  * time.
  */
 
+import publicQuestionsCopy from '../i18n/copy/publicQuestions.js';
+import { faqHtml, faqPageSchema } from './faqSchema.js';
+
 const SITE_ORIGIN = 'https://www.smle-question-bank.com';
 
 // Specialty keys are the literal `questions.question_type` values, which
@@ -66,6 +69,9 @@ export function buildQuestionIndex(payload) {
 
     return {
         generatedAt: payload?.generatedAt || null,
+        // The whole bank, not just what is published — the FAQ answers compare
+        // the two, and getting that backwards would understate the product.
+        bankTotal: payload?.bankTotal || null,
         total: questions.length,
         questions,
         specialties,
@@ -265,8 +271,20 @@ ${groups}
         <p>الأسئلة هنا عيّنة ثابتة. أنشئ حساباً مجانياً لتتدرب على بنك الأسئلة الكامل مع تحليل أدائك حسب التخصص ومراجعة أخطائك.</p>
         <a class="pq-cta-btn" href="/signup">إنشاء حساب مجاني</a>
       </section>
+${faqHtml(hubFaqItems(index), publicQuestionsCopy.ar.faqTitle)}
     </main>
   `;
+}
+
+/**
+ * The hub FAQ, in Arabic, from the same copy the React page renders.
+ *
+ * Kept as a function of the index so the counts in the answers come from the
+ * published data rather than being typed in and going stale the next time the
+ * export runs.
+ */
+export function hubFaqItems(index) {
+    return publicQuestionsCopy.ar.faq(index.total, index.bankTotal || index.total);
 }
 
 /* ------------------------------------------------------------------ *
@@ -386,11 +404,12 @@ export function hubSeo(index) {
                 url: makeUrl(QUESTIONS_ROOT),
                 inLanguage: 'ar-SA',
             },
+            faqPageSchema(hubFaqItems(index), makeUrl(QUESTIONS_ROOT)),
             breadcrumbList([
                 { name: 'الرئيسية', path: '/' },
                 { name: 'أسئلة تدريبية مجانية', path: QUESTIONS_ROOT },
             ]),
-        ],
+        ].filter(Boolean),
     };
 }
 
