@@ -16,8 +16,10 @@
  * HTML changes with it.
  *
  * Constraints — this module is imported by scripts/postbuild-seo.mjs under
- * plain Node at build time, so it must stay free of React, JSX, browser
- * globals and any non-.js import specifier.
+ * plain Node at build time, so it must stay free of React, JSX and browser
+ * globals. The one non-.js import is successStories.json, which carries an
+ * explicit import attribute so both Node and Vite accept it; anything else
+ * non-.js still has no business here.
  *
  * The emitted markup mirrors the components' DOM (components/guides/
  * GuideArticle.jsx and GuidesHub.jsx) so the existing Guides.css styles it for
@@ -27,6 +29,9 @@
  */
 
 import { dirFor, localizedPath } from './locales.js';
+// Read at build time to decide whether the footer links to /success-stories.
+// A few hundred bytes when empty, which is its normal state.
+import successStories from './data/successStories.json' with { type: 'json' };
 
 // Same token grammar GuideArticle.jsx parses: **bold** and [[/path|label]].
 const INLINE_TOKEN = /(\[\[[^\]]+\]\]|\*\*[^*]+\*\*)/g;
@@ -167,6 +172,10 @@ ${items}
  * the page being emitted, so an English page's footer keeps the reader inside
  * the English tree rather than dropping them back into the Arabic one.
  */
+// Linked only when stories exist. A nav entry to a page that has not been
+// emitted is a 404 in the footer of every prerendered page on the site.
+const HAS_STORIES = Array.isArray(successStories?.stories) && successStories.stories.length > 0;
+
 const FOOTER_NAV_LINKS = [
     { href: '/', ar: 'الرئيسية', en: 'Home' },
     { href: '/about', ar: 'من نحن', en: 'About SQB' },
@@ -174,6 +183,9 @@ const FOOTER_NAV_LINKS = [
     { href: '/demo', ar: 'جرّب ٢٠ سؤالاً بدون حساب', en: 'Try 20 questions, no account' },
     { href: '/questions', ar: 'أسئلة تدريبية مجانية', en: 'Free practice questions' },
     { href: '/past-papers', ar: 'تجميعات أسئلة SMLE وSNLE', en: 'SMLE & SNLE question collections' },
+    ...(HAS_STORIES
+        ? [{ href: '/success-stories', ar: 'قصص نجاح الطلاب', en: 'Student success stories' }]
+        : []),
     { href: '/faq', ar: 'الأسئلة الشائعة', en: 'Frequently asked questions' },
     { href: '/groups', ar: 'الاشتراك الجماعي', en: 'Group plans' },
     { href: '/contact', ar: 'اتصل بنا', en: 'Contact us' },

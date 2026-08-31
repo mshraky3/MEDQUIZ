@@ -1,0 +1,200 @@
+/* /success-stories and the in-app story prompt. Scoped to .ss-* per
+   docs/DESIGN_MAP.md. Quotes are set larger than body copy and the attribution
+   smaller: the words are the content, the name is the evidence. */
+
+.ss-page {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 30px 18px 60px;
+}
+
+.ss-hero { text-align: center; margin-bottom: 30px; }
+
+.ss-kicker {
+    margin: 0 0 8px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--primary-color, #2563eb);
+}
+
+.ss-hero h1 {
+    margin: 0 0 10px;
+    font-size: clamp(24px, 5vw, 32px);
+    font-weight: 900;
+    color: var(--text-dark, #0f1e3d);
+}
+
+.ss-hero > p { margin: 0; font-size: 15px; color: var(--muted, #64748b); }
+
+.ss-list { display: grid; gap: 16px; }
+
+.ss-story {
+    margin: 0;
+    padding: 22px 24px;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    border-radius: 14px;
+    background: var(--card-bg, #fff);
+}
+
+.ss-story blockquote {
+    margin: 0 0 14px;
+    font-size: 16px;
+    line-height: 1.8;
+    color: var(--text-dark, #0f1e3d);
+}
+
+.ss-story figcaption {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 12px;
+    font-size: 13px;
+    color: var(--muted, #64748b);
+}
+
+.ss-story figcaption strong { font-size: 14px; color: var(--text-dark, #0f1e3d); }
+.ss-result { font-weight: 700; color: #15803d; }
+
+.ss-cta {
+    margin-top: 34px;
+    padding: 26px 22px;
+    border-radius: 15px;
+    background: rgba(37, 99, 235, 0.07);
+    text-align: center;
+}
+
+.ss-cta h2 { margin: 0 0 8px; font-size: 19px; font-weight: 800; color: var(--text-dark, #0f1e3d); }
+.ss-cta > p { margin: 0 0 16px; font-size: 14px; color: var(--muted, #64748b); }
+
+.ss-cta-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+
+.ss-cta-btn {
+    padding: 11px 22px;
+    border-radius: 11px;
+    background: var(--primary-color, #2563eb);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.ss-cta-btn:hover { filter: brightness(1.06); color: #fff; }
+
+.ss-cta-link {
+    padding: 11px 6px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--muted, #64748b);
+    text-decoration: underline;
+}
+
+/* ── The in-app prompt and form ──────────────────────────────────────── */
+.ss-prompt {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin: 18px 0;
+    padding: 16px 18px;
+    border: 1px solid rgba(37, 99, 235, 0.3);
+    border-radius: 13px;
+    background: rgba(37, 99, 235, 0.06);
+    text-align: start;
+}
+
+.ss-prompt-icon { flex: none; margin-top: 2px; color: var(--primary-color, #2563eb); }
+.ss-prompt-body { flex: 1; }
+.ss-prompt-body strong { display: block; margin-bottom: 4px; font-size: 15px; color: var(--text-dark, #0f1e3d); }
+.ss-prompt-body p { margin: 0 0 12px; font-size: 13px; line-height: 1.65; color: var(--muted, #64748b); }
+
+.ss-prompt-dismiss {
+    position: absolute;
+    inset-inline-end: 10px;
+    inset-block-start: 10px;
+    padding: 4px;
+    border: none;
+    background: none;
+    color: var(--muted, #64748b);
+    cursor: pointer;
+}
+
+.ss-prompt-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+
+.ss-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 16px;
+    border: 1px solid rgba(148, 163, 184, 0.4);
+    border-radius: 10px;
+    background: var(--card-bg, #fff);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-dark, #0f1e3d);
+    cursor: pointer;
+}
+
+.ss-btn--primary {
+    border-color: transparent;
+    background: var(--primary-color, #2563eb);
+    color: #fff;
+}
+
+.ss-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.ss-form {
+    margin: 18px 0;
+    padding: 20px;
+    border: 1px solid rgba(148, 163, 184, 0.34);
+    border-radius: 13px;
+    background: var(--card-bg, #fff);
+    text-align: start;
+}
+
+.ss-form h3 { margin: 0 0 14px; font-size: 17px; font-weight: 800; color: var(--text-dark, #0f1e3d); }
+
+.ss-label {
+    display: block;
+    margin: 12px 0 5px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted, #64748b);
+}
+
+.ss-input,
+.ss-textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid rgba(148, 163, 184, 0.42);
+    border-radius: 9px;
+    background: var(--card-bg, #fff);
+    font: inherit;
+    font-size: 14px;
+    color: var(--text-dark, #0f1e3d);
+}
+
+.ss-textarea { resize: vertical; line-height: 1.7; }
+
+.ss-hint { margin: 6px 0 0; font-size: 12px; color: var(--muted, #64748b); }
+
+.ss-consent {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    margin-top: 16px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-dark, #0f1e3d);
+    cursor: pointer;
+}
+
+.ss-consent input { margin-top: 3px; flex: none; }
+
+.ss-error {
+    margin: 12px 0 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: #b91c1c;
+}

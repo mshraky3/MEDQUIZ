@@ -74,6 +74,9 @@ const QuestionPage = lazy(() => import('./components/questions/QuestionPage.jsx'
 // The no-account demo. Shares publicQuestions.json with the /questions pages,
 // so it costs one lazy chunk and no backend at all.
 const DemoQuiz = lazy(() => import('./components/demo/DemoQuiz.jsx'));
+// Renders an honest empty state (and noindex) until real stories are
+// exported — see components/successStories/SuccessStories.jsx.
+const SuccessStories = lazy(() => import('./components/successStories/SuccessStories.jsx'));
 const PastPapersHub = lazy(() => import('./components/pastPapers/PastPapersHub.jsx'));
 const PastPaperCollection = lazy(() => import('./components/pastPapers/PastPaperCollection.jsx'));
 const TempLinks = lazy(() => import('./components/ADD/TempLinks.jsx'));
@@ -216,6 +219,7 @@ const router = createBrowserRouter([{
   // never finished the form — they wanted to see questions, not open an
   // account. This is the same published questions, made playable.
   pub('/demo', <DemoQuiz />),
+  pub('/success-stories', <SuccessStories />),
 
   pub('/past-papers', <PastPapersHub />),
   pub('/past-papers/:slug', <PastPaperCollection />),

@@ -10,6 +10,7 @@ import { rateLimit } from './middleware/rateLimit.js';
 import { sendMail } from './services/mailer.js';
 import errorReportRoutes from './routes/error-report.js';
 import questionReportsRouter from './routes/question-reports.js';
+import successStoriesRouter from './routes/success-stories.js';
 import emailCampaignsRouter from './routes/email-campaigns.js';
 import adminBroadcastRouter, { unsubToken } from './routes/admin-broadcast.js';
 import paymentRoutes from './routes/payment.js';
@@ -1521,6 +1522,41 @@ const ensureTempLinksTables = async () => {
 };
 // Kicked off from bootstrapAll() below.
 
+/**
+ * Students' own accounts of passing, for /success-stories.
+ *
+ * consent_publish is stored rather than assumed: publishing a person's name
+ * and words needs their explicit say-so, and the row records that they gave it.
+ * status starts 'pending' and only an admin moves it — see
+ * routes/success-stories.js, which has no path that approves anything on its
+ * own. One row per account (hence the unique constraint), editable.
+ */
+const ensureSuccessStoriesTable = async () => {
+    try {
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS success_stories (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL UNIQUE REFERENCES accounts(id) ON DELETE CASCADE,
+                display_name TEXT NOT NULL,
+                track VARCHAR(20) NOT NULL DEFAULT '${DEFAULT_TRACK}',
+                specialty TEXT,
+                exam_result TEXT,
+                quote TEXT NOT NULL,
+                lang VARCHAR(5) DEFAULT 'ar',
+                consent_publish BOOLEAN NOT NULL DEFAULT FALSE,
+                status VARCHAR(20) NOT NULL DEFAULT 'pending',
+                admin_note TEXT,
+                created_at TIMESTAMPTZ DEFAULT NOW(),
+                reviewed_at TIMESTAMPTZ
+            )
+        `);
+        await db.query(`CREATE INDEX IF NOT EXISTS idx_success_stories_status ON success_stories(status)`);
+        logger.info('success_stories table ensured');
+    } catch (err) {
+        reportBootstrapFailure('ensureSuccessStoriesTable', err);
+    }
+};
+
 const ensureQuestionReportsTable = async () => {
     try {
         await db.query(`
@@ -1890,6 +1926,7 @@ async function bootstrapAll() {
     await ensureEmailCampaignColumns();
     await ensureTempLinksTables();
     await ensureQuestionReportsTable();
+    await ensureSuccessStoriesTable();
     await ensureSuggestionsTable();
     await ensureSummariesTables();
     await ensureTelegramSchema();
@@ -7807,6 +7844,7 @@ app.use('/api/error-report', rateLimit(db, 'error-report', { windowMs: 60 * 60_0
 
 // Question Reports Routes
 app.use('/api/question-reports', (req, res, next) => { req.db = db; next(); }, questionReportsRouter);
+app.use('/api/success-stories', (req, res, next) => { req.db = db; next(); }, successStoriesRouter);
 
 // Email Campaign Routes (test + cron)
 app.use('/', (req, res, next) => { req.db = db; next(); }, emailCampaignsRouter);

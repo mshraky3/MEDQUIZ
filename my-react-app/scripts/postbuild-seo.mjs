@@ -20,6 +20,7 @@ import { siteFooterNavHtml } from '../src/seo/prerenderHtml.js';
 import { buildPublicQuestionRoutes, QUESTIONS_ROOT } from '../src/seo/publicQuestions.js';
 import { buildPastPaperRoutes, PAST_PAPERS_ROOT } from '../src/seo/pastPapers.js';
 import { buildDemoRoutes, DEMO_ROOT } from '../src/seo/demo.js';
+import { buildSuccessStoriesRoutes, SUCCESS_STORIES_ROOT } from '../src/seo/successStories.js';
 import { SUPPORTED_LANGS, dirFor, stripLocale } from '../src/seo/locales.js';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
@@ -129,6 +130,8 @@ const PAST_PAPER_HINT = { priority: '0.75', changefreq: 'monthly' };
 // answers "free SMLE questions" with something playable rather than readable,
 // but it is a fixed offer, not a feed — monthly, not weekly.
 const DEMO_HINT = { priority: '0.9', changefreq: 'monthly' };
+// Grows whenever a student adds one, so weekly is honest here.
+const STORIES_HINT = { priority: '0.6', changefreq: 'weekly' };
 
 function questionSitemapHint(routePath) {
     if (routePath === QUESTIONS_ROOT) return QUESTION_HUB_HINT;
@@ -171,6 +174,7 @@ function buildSitemap(routes) {
       const hint =
         SITEMAP_HINTS[routePath] ||
         (routePath === DEMO_ROOT ? DEMO_HINT : null) ||
+        (routePath === SUCCESS_STORIES_ROOT ? STORIES_HINT : null) ||
         (routePath === QUESTIONS_ROOT || routePath.startsWith(`${QUESTIONS_ROOT}/`)
           ? questionSitemapHint(routePath)
           : routePath === PAST_PAPERS_ROOT || routePath.startsWith(`${PAST_PAPERS_ROOT}/`)
@@ -192,11 +196,33 @@ function buildSitemap(routes) {
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
 }
 
+/**
+ * Read the exported success stories.
+ *
+ * An absent or empty file is the NORMAL state, not an error: the page only
+ * exists once a student has written something and it has been approved. Same
+ * tolerance as the question export — a missing generated file must never fail
+ * a deploy.
+ */
+function readSuccessStories() {
+    const dataPath = path.resolve(scriptDir, '../src/seo/data/successStories.json');
+    if (!fs.existsSync(dataPath)) return null;
+    try {
+        return JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+    } catch (err) {
+        console.warn(`[postbuild-seo] Could not parse successStories.json (${err.message}) — skipping the stories page.`);
+        return null;
+    }
+}
+
 if (!fs.existsSync(templatePath)) {
   console.warn('[postbuild-seo] dist/index.html not found — skipping prerender.');
 } else {
   const template = fs.readFileSync(templatePath, 'utf8');
   const questionPayload = readPublicQuestions();
+  // Approved, consented stories only — and an empty list is the normal
+  // state until somebody writes one. See readSuccessStories.
+  const storiesPayload = readSuccessStories();
   // Every route, in every language. The Arabic tree keeps the bare paths so
   // nothing already indexed moves; English lives under /en.
   const routes = SUPPORTED_LANGS.flatMap((lang) => {
@@ -204,6 +230,7 @@ if (!fs.existsSync(templatePath)) {
     return [
       ...getPrerenderRoutes(lang),
       ...buildDemoRoutes(lang, { footerNav }),
+      ...buildSuccessStoriesRoutes(storiesPayload, { footerNav, lang }),
       ...(questionPayload ? buildPublicQuestionRoutes(questionPayload, { footerNav, lang }) : []),
       ...(questionPayload ? buildPastPaperRoutes(questionPayload, { footerNav, lang }) : [])
     ];

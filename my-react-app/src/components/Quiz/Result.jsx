@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Icon from '../common/Icon.jsx';
 import ExplanationPanel from '../common/ExplanationPanel.jsx';
@@ -7,6 +7,8 @@ import { getTypeLabel } from '../../utils/typeLabels';
 import { useCopy, useLang } from '../../i18n';
 import quizCopy from '../../i18n/copy/quiz.js';
 import { formatDuration } from '../../utils/formatDuration';
+import { UserContext } from '../../UserContext';
+import StoryPrompt, { useStoryPrompt } from '../successStories/StoryPrompt.jsx';
 
 const Result = ({
   correctAnswers,
@@ -23,6 +25,21 @@ const Result = ({
   const t = useCopy(quizCopy).result;
   const { lang, dir } = useLang();
   const wrongCount = answers.filter(a => !a.isCorrect).length;
+  const { user, sessionToken } = useContext(UserContext);
+
+  // Ask for a success story at the top of a good result, and nowhere else.
+  //
+  // Goodwill is highest in the seconds after someone does well, and this is the
+  // only screen that knows they just did. The bar is deliberately high — a
+  // strong score on a real quiz, not a two-question warm-up — because a
+  // testimonial request after a mediocre result is both useless and slightly
+  // insulting. See useStoryPrompt for the once-only rule.
+  const strongResult = totalQuestions >= 10 && Number(accuracy) >= 80;
+  const { show: showStoryPrompt, dismiss: dismissStoryPrompt } = useStoryPrompt({
+    username: user?.username,
+    sessionToken,
+    eligible: strongResult,
+  });
   // Students review mistakes first; fall back to everything on a perfect run.
   const [filter, setFilter] = useState(wrongCount > 0 ? 'wrong' : 'all');
 
@@ -57,6 +74,14 @@ const Result = ({
       <p>{t.score(correctAnswers, totalQuestions)}</p>
       <p>{t.accuracy} <strong>{accuracy}%</strong></p>
       <p>{t.duration} <strong>{formatDuration(duration)}</strong></p>
+
+      {showStoryPrompt && (
+        <StoryPrompt
+          username={user?.username}
+          sessionToken={sessionToken}
+          onClose={dismissStoryPrompt}
+        />
+      )}
 
       <div className="result-buttons">
         <button onClick={onRetry} className="restart-button">
