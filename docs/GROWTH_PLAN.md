@@ -44,26 +44,22 @@ weakest.
 | ID | Task | Status |
 |----|------|--------|
 | S2-01 | Charge the free allowance on answer, not on serve | **done** — `90f8b34` |
-| S2-02 | Show their own results before showing the price | **not started** |
-| S2-03 | Ship a no-account demo at `/demo` | **not started** |
+| S2-02 | Show their own results before showing the price | **done** — `a8dfa5d` |
+| S2-03 | Ship a no-account demo at `/demo` | **done** — `74a1fba` |
 | S2-04 | Make Google Sign-In the primary signup path | **done** — `775f2ef` |
-| S2-05 | Ask for the exam date at first run, not in settings | **not started** |
-| S2-06 | Fix summary progress recording zero rows | **not started** |
-| S2-07 | Add a day-1 "here are the four you missed" email | **not started** |
+| S2-05 | Ask for the exam date at first run, not in settings | **done** — `98083e4` |
+| S2-06 | Fix summary progress recording zero rows | **done** — `d4a4fa5` |
+| S2-07 | Add a day-1 "here are the four you missed" email | **done** — `1a0e616` |
 
-- **S2-02** — Question 41 is the highest-intent instant in the funnel and it
-  currently renders a price list. Accuracy by specialty, weakest topic and wrong
-  answers are all already computed. Lead with their numbers, put plans below.
-- **S2-03** — 120 people chose a track, 42 requested a code: 78 walked at the
-  form. They wanted to see questions, not open an account. Indexable, so it
-  doubles as Sprint 1 work.
-- **S2-05** — 18 of 116 accounts have an exam date. The five-stage reminder
-  sequence in `lifecycleJobs.js` is fully built and only fires for those 18.
-- **S2-06** — 44 users, 868 minutes in summaries, `summary_progress` empty. A
-  popular feature that cannot be measured, personalised or emailed about.
-- **S2-07** — 34 accounts ran exactly one session and stopped. Every attempt is
-  stored and the wrong-questions page exists; this email writes itself. Goes in
-  `backend/services/lifecycleJobs.js` beside the comeback job.
+Sprint 2 is complete. Two things were found and fixed while working through it
+that were not on the list: answer explanations were rendering their raw
+markdown on all 240 published question pages (`33762fe`), and the day-1 email
+had been going out saying "The the Saudi Medical Licensing Exam".
+
+**Watch after deploy:** free-to-paid conversion (S2-01 changes when people meet
+the paywall), signup conversion (S2-04 changes what the form looks like),
+`demo_start` / `demo_complete` events, and exam-date coverage — the target for
+S2-05 was 60% of new accounts, from 18 of 116 today.
 
 ## Sprint 3 — make it safe to pay you (weeks 4–7)
 
