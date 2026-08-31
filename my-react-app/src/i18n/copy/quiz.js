@@ -93,6 +93,10 @@ const quizCopy = {
                 noneTitle: 'متى موعد اختبارك؟',
                 noneBody: 'أضف تاريخ اختبارك ليظهر العدّاد هنا، وتصلك تذكيرات بخطة مراجعة قبل الموعد.',
                 setCta: 'أضف الموعد',
+                // نصّ السؤال الأول: يشرح ما الذي يفتحه التاريخ، لا يطلبه فقط.
+                askTitle: 'متى موعد اختبارك؟',
+                askBody: 'يفتح تاريخ الاختبار العدّاد وهدفاً يومياً محسوباً على الوقت المتبقي لك، ويجعل التذكيرات تصلك في وقتها. يمكنك تغييره أو حذفه في أي وقت.',
+                askSkip: 'لم أحدّده بعد',
                 changeCta: 'تعديل',
                 clearCta: 'إزالة',
                 saveCta: 'حفظ',
@@ -419,6 +423,12 @@ const quizCopy = {
                 noneTitle: 'When do you sit your exam?',
                 noneBody: 'Add your date to see the countdown here, and get a revision plan by email as it gets closer.',
                 setCta: 'Add my date',
+                // The first ask says what the date unlocks, rather than only
+                // asking for it — it is the anchor for the whole reminder
+                // sequence and for the daily pace target.
+                askTitle: 'When do you sit your exam?',
+                askBody: 'Your exam date turns on the countdown, a daily question target worked out from the time you actually have left, and reminders that arrive when they are useful. You can change or remove it whenever you like.',
+                askSkip: 'Not sure yet',
                 changeCta: 'Change',
                 clearCta: 'Remove',
                 saveCta: 'Save',
