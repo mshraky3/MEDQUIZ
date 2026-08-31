@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import Icon from '../common/Icon.jsx';
 import Spinner from '../common/Spinner.jsx';
 import apiClient from '../../utils/apiClient.js';
+import { calculateBestWorstTopics } from '../../utils/topicStats.js';
 import OverallStats from './OverallStats';
 import TopicAnalysisTable from './TopicAnalysisTable';
 import QuestionAttemptsTable from './QuestionAttemptsTable';
@@ -70,16 +71,6 @@ const CollapsibleSection = ({ title, icon, badge, defaultOpen, children }) => {
   );
 };
 
-/** Same logic the page always had for finding a student's best/worst subject. */
-function calculateBestWorstTopics(topicAnalysis) {
-  if (!Array.isArray(topicAnalysis) || topicAnalysis.length === 0) return { best: null, worst: null };
-  const valid = topicAnalysis.filter((t) => t.total_answered > 0 && t.total_correct !== undefined);
-  if (valid.length === 0) return { best: null, worst: null };
-  const withAccuracy = valid
-    .map((t) => ({ ...t, accuracy: (t.total_correct / t.total_answered) * 100 }))
-    .sort((a, b) => b.accuracy - a.accuracy);
-  return { best: withAccuracy[0], worst: withAccuracy[withAccuracy.length - 1] };
-}
 
 const Analysis = () => {
   const { user, sessionToken } = useContext(UserContext);

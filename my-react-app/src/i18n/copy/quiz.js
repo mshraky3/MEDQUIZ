@@ -275,6 +275,18 @@ const quizCopy = {
             errLoadFailed: 'فشل في تحميل الأسئلة.',
 
             // 402 من الخادم — ليست حالة خطأ: لم يُسحب من الحساب شيء.
+            // شاشة نفاد الرصيد تبدأ بما أنجزه الطالب، لا بقائمة الأسعار.
+            spent: {
+                eyebrow: 'ما أنجزته حتى الآن',
+                title: 'هذا ما بنيته بأسئلتك المجانية',
+                answered: 'سؤالاً أجبت عنه',
+                accuracy: 'نسبة إجاباتك الصحيحة',
+                weakest: (topic, pct) => `${topic} هو تخصصك الأضعف — ${pct}% فقط`,
+                wrong: (n) => `${n} سؤالاً خاطئاً بانتظار المراجعة`,
+                pitch: (topic) => `الاشتراك يفتح بقية البنك، وأول ما ستحتاجه هو تدريب أطول على ${topic}. حسابك وتحليلاتك وأسئلتك الخاطئة تبقى كما هي في الحالتين.`,
+                pitchGeneric: 'الاشتراك يفتح بقية بنك الأسئلة مع شرح لكل إجابة. حسابك وتقدّمك وتحليلاتك تبقى مفتوحة لك في الحالتين.',
+                seeAnalysis: 'عرض تحليلاتي',
+            },
             paywallSpentTitle: 'أنهيت أسئلتك الأربعين المجانية',
             paywallSpentBody: 'حسابك وتقدّمك وتحليلاتك تبقى مفتوحة لك، وكذلك أول درس من كل تخصص. الاشتراك يفتح بقية بنك الأسئلة.',
             // ليست حالة دفع: الرصيد باقٍ، لكن هناك أسئلة سُحبت ولم يُجب عنها.
@@ -605,6 +617,19 @@ const quizCopy = {
             errLoadFailed: 'Failed to load the questions.',
 
             // Server 402 — not an error state: nothing has been taken away.
+            // The allowance-spent screen opens with what the student built,
+            // not with a price list. See components/Quiz/AllowanceSpent.jsx.
+            spent: {
+                eyebrow: 'What you have done so far',
+                title: 'Here is what you built with your free questions',
+                answered: 'questions answered',
+                accuracy: 'answered correctly',
+                weakest: (topic, pct) => `${topic} is costing you the most — ${pct}% so far`,
+                wrong: (n) => `${n} wrong answers waiting to be worked through`,
+                pitch: (topic) => `A subscription opens the rest of the bank, and the first thing it buys you is more ${topic}. Your account, your analytics and your wrong questions stay exactly as they are either way.`,
+                pitchGeneric: 'A subscription opens the rest of the question bank, with a written explanation on every answer. Your account, your progress and your analytics stay open either way.',
+                seeAnalysis: 'See my analytics',
+            },
             paywallSpentTitle: "That's your 40 free questions",
             paywallSpentBody: 'Your account, your progress and your analytics stay open, and so does the first lesson of every specialty. A subscription opens the rest of the question bank.',
             // Not a payment state: the budget is intact, but questions have

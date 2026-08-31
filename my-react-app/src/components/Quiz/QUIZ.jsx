@@ -10,6 +10,7 @@ import './ErrorScreen.css';
 import Result from './Result';
 import Question from './Question';
 import QuizComplete from './QuizComplete';
+import AllowanceSpent from './AllowanceSpent.jsx';
 import { getSourceLabel } from '../../utils/sourceLabels';
 import { UserContext } from '../../UserContext';
 import { useCopy, useLang } from '../../i18n';
@@ -617,9 +618,13 @@ const QUIZ = () => {
     // what they need is to go back and finish. Only the other two sell.
     const backlog = paywalled === 'unanswered_backlog';
     const spent = paywalled === 'free_allowance_exhausted';
-    const title = backlog ? t.paywallBacklogTitle : spent ? t.paywallSpentTitle : t.paywallSubscriberTitle;
-    const body = backlog ? t.paywallBacklogBody : spent ? t.paywallSpentBody : t.paywallSubscriberBody;
+    const title = backlog ? t.paywallBacklogTitle : t.paywallSubscriberTitle;
+    const body = backlog ? t.paywallBacklogBody : t.paywallSubscriberBody;
     const goBack = () => navigate('/quizs', { state: { id } });
+
+    // A spent allowance gets its own screen, because it is the one case where
+    // the student has actually earned something worth showing them first.
+    if (spent) return <AllowanceSpent userId={id} t={t} onBack={goBack} />;
 
     return (
       <div className="quiz-paywall" dir={dir}>
