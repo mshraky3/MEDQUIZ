@@ -46,7 +46,7 @@ weakest.
 | S2-01 | Charge the free allowance on answer, not on serve | **done** — `90f8b34` |
 | S2-02 | Show their own results before showing the price | **not started** |
 | S2-03 | Ship a no-account demo at `/demo` | **not started** |
-| S2-04 | Make Google Sign-In the primary signup path | **not started** |
+| S2-04 | Make Google Sign-In the primary signup path | **done** — `775f2ef` |
 | S2-05 | Ask for the exam date at first run, not in settings | **not started** |
 | S2-06 | Fix summary progress recording zero rows | **not started** |
 | S2-07 | Add a day-1 "here are the four you missed" email | **not started** |
@@ -57,9 +57,6 @@ weakest.
 - **S2-03** — 120 people chose a track, 42 requested a code: 78 walked at the
   form. They wanted to see questions, not open an account. Indexable, so it
   doubles as Sprint 1 work.
-- **S2-04** — 10 of 42 people who requested an email code never entered it.
-  Google Sign-In skips that step and already brought 24 accounts while being the
-  visually secondary option.
 - **S2-05** — 18 of 116 accounts have an exam date. The five-stage reminder
   sequence in `lifecycleJobs.js` is fully built and only fires for those 18.
 - **S2-06** — 44 users, 868 minutes in summaries, `summary_progress` empty. A
