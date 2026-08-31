@@ -108,6 +108,17 @@
     color: var(--primary-dark);
 }
 
+/* The against-buying-alone line. Quieter than the per-seat price above it —
+   it is the reasoning, not the headline, and a card with two shouting numbers
+   has none. */
+.groups-plan-compare {
+    display: block;
+    margin-top: 4px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--muted, #64748b);
+}
+
 .groups-preview-note {
     margin: 0;
     font-size: 12.5px;

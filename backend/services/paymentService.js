@@ -177,6 +177,31 @@ export function listPlans(kind = 'all') {
     return kind === 'all' ? all : all.filter((p) => p.kind === kind);
 }
 
+/**
+ * The same plans, with the one number a group buyer needs to decide.
+ *
+ * A group card says "SAR 299 for 5 accounts" and, per seat, "SAR 60". Neither
+ * says what those five people would otherwise pay, which is the entire
+ * argument: the individual plan of the SAME length is SAR 129. Sixty against a
+ * hundred and twenty-nine is a decision; sixty on its own is a number.
+ *
+ * `compareToHalalas` is the individual plan with matching `months`, and it
+ * ships WITHOUT a plan id on purpose — the price can be shown but never turned
+ * into a checkout, which keeps the rule above (no individual plan is ever
+ * purchasable from /groups) true by construction rather than by discipline.
+ *
+ * Returns copies; PLANS itself is never mutated, since verification compares
+ * against priceHalalas and must not see a decorated object.
+ */
+export function listPlansForDisplay(kind = 'all') {
+    return listPlans(kind).map((plan) => {
+        if (plan.kind !== 'group') return plan;
+        const solo = Object.values(PLANS)
+            .find((p) => p.kind === 'individual' && p.months === plan.months);
+        return solo ? { ...plan, compareToHalalas: solo.priceHalalas } : plan;
+    });
+}
+
 /** True when this plan buys more than one account. */
 export function isGroupPlan(plan) {
     return Boolean(plan) && plan.kind === 'group' && Number(plan.seats) > 1;

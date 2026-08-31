@@ -12,7 +12,7 @@ import express from 'express';
 import { logger } from '../utils/observability.js';
 import {
     isPaymentEnforcementEnabled,
-    listPlans,
+    listPlansForDisplay,
     getCurrency,
     verifyWebhookToken,
     handleWebhookEvent,
@@ -100,7 +100,7 @@ router.get('/config', (req, res) => {
         enabled,
         currency: getCurrency(),
         kind,
-        plans: listPlans(kind),
+        plans: listPlansForDisplay(kind),
         publishableKey: enabled ? (process.env.MOYASAR_PUBLISHABLE_KEY || null) : null,
     });
 });

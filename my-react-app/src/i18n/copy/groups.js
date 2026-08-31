@@ -15,6 +15,10 @@ export default {
         seatsLabel: (n) => `${n} حسابات`,
         monthsLabel: (n) => (n === 4 ? 'لمدة 4 أشهر' : `لمدة ${n} أشهر`),
         perSeat: (n) => `${n} ريال للحساب الواحد`,
+        // The comparison against buying alone for the same period. `solo` is
+        // the individual plan of the same length, sent by the server — never a
+        // number typed here, so it cannot drift from what checkout charges.
+        compare: (perSeat, solo, percent) => `${perSeat} للفرد بدل ${solo} لو اشترك وحده — أوفر بنسبة ${percent}%`,
         priceWithCurrency: (n) => `${n} ريال`,
         previewNote: 'هكذا ستبدو مقاعدك بعد الدفع:',
         seatYouPreview: 'حسابك أنت — يُفعَّل فوراً',
@@ -75,6 +79,8 @@ export default {
         seatsLabel: (n) => `${n} accounts`,
         monthsLabel: (n) => `for ${n} months`,
         perSeat: (n) => `SAR ${n} per account`,
+        // See the note on the Arabic `compare`.
+        compare: (perSeat, solo, percent) => `${perSeat} each, against ${solo} alone — ${percent}% less per person`,
         priceWithCurrency: (n) => `SAR ${n}`,
         previewNote: 'This is how your seats will look after payment:',
         seatYouPreview: 'Your own account — activated instantly',

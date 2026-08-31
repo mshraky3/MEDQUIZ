@@ -34,6 +34,29 @@ import './GroupsPage.css';
  * the public /api/payment/config probe, and only hits the login wall when they
  * choose to buy.
  */
+/**
+ * What one person saves by joining the group instead of buying alone.
+ *
+ * `compareToHalalas` is the individual plan of the SAME length, sent by the
+ * server (listPlansForDisplay in paymentService.js) precisely so this component
+ * never has to pick which plan to compare against. Returns null when the server
+ * sent no comparison, or when the group plan is not actually cheaper per seat —
+ * the card then simply says nothing rather than inventing a saving.
+ */
+function savingsFor(plan) {
+    const solo = Number(plan?.compareToHalalas);
+    const seats = Number(plan?.seats);
+    const total = Number(plan?.priceHalalas);
+    if (!solo || !seats || !total) return null;
+    const perSeat = total / seats;
+    if (perSeat >= solo) return null;
+    return {
+        perSeat: Math.round(perSeat / 100),
+        solo: Math.round(solo / 100),
+        percent: Math.round((1 - perSeat / solo) * 100),
+    };
+}
+
 const GroupsPage = () => {
     const { user, sessionToken } = useContext(UserContext);
     const navigate = useNavigate();
@@ -132,7 +155,9 @@ const GroupsPage = () => {
                     <section className="groups-buy">
                         <h2 className="groups-section-title">{t.chooseTitle}</h2>
                         <div className="groups-plan-grid">
-                            {plans.map((plan) => (
+                            {plans.map((plan) => {
+                              const saving = savingsFor(plan);
+                              return (
                                 <article key={plan.id} className="groups-plan">
                                     <div className="groups-plan-head">
                                         <span className="groups-plan-seats">{t.seatsLabel(plan.seats)}</span>
@@ -143,6 +168,25 @@ const GroupsPage = () => {
                                         <span className="groups-plan-perseat">
                                             {t.perSeat(Math.round((plan.priceHalalas / plan.seats) / 100))}
                                         </span>
+                                        {/* The comparison, which is the whole
+                                            argument for a group plan and was
+                                            missing: "SAR 60 each" means nothing
+                                            until you know the same four months
+                                            cost 129 alone. Rendered only when
+                                            the server sends a same-length
+                                            individual price, and only when it
+                                            is actually cheaper — a card that
+                                            claims a saving there isn't would be
+                                            worse than no card. */}
+                                        {saving && (
+                                            <span className="groups-plan-compare">
+                                                {t.compare(
+                                                    t.priceWithCurrency(saving.perSeat),
+                                                    t.priceWithCurrency(saving.solo),
+                                                    saving.percent
+                                                )}
+                                            </span>
+                                        )}
                                     </div>
 
                                     {/* The placeholders. Seat 1 is always "you" —
@@ -164,7 +208,8 @@ const GroupsPage = () => {
                                             : t.buyCtaGuest(t.priceWithCurrency(plan.priceHalalas / 100))}
                                     </button>
                                 </article>
-                            ))}
+                              );
+                            })}
                         </div>
                         <p className="groups-norenew">{t.noAutoRenew}</p>
                         {!isAuthenticated && (
