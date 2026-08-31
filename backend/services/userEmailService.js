@@ -77,6 +77,14 @@ export const arDays = (n) =>
 /** The whole phrase, since the dual carries the count inside the word itself. */
 export const arDaysCount = (n) => (n === 2 ? 'يومان' : `${n} ${arDays(n)}`);
 
+/** Same four buckets, for "questions" — "2 أسئلة" is wrong the same way. */
+export const arQuestionsCount = (n) =>
+    n === 1 ? 'سؤال واحد' : n === 2 ? 'سؤالان' : n <= 10 ? `${n} أسئلة` : `${n} سؤالاً`;
+
+/** And for months. */
+export const arMonthsCount = (n) =>
+    n === 1 ? 'شهر' : n === 2 ? 'شهران' : n <= 10 ? `${n} أشهر` : `${n} شهراً`;
+
 // Per-track wording. The platform is shared, but "the exam" is not the same
 // exam for a nursing student, and a welcome email that talks about the medical
 // licensing exam reads as if they signed up for the wrong product.
@@ -928,6 +936,91 @@ export const sendExamReminderEmail = async (to, username, track, daysRemaining, 
     html,
     T(lang, `${stage.titleAr}. ${stage.leadAr}`, `${stage.titleEn}. ${stage.leadEn}`),
     { event: 'medqize.lifecycle.exam_reminder' }
+  );
+};
+
+// ─── 9. ONE-OFF REACTIVATION ───────────────────────────────────────────────
+/**
+ * The single message sent to accounts that went quiet months ago.
+ *
+ * Not part of any job, and deliberately not one. The inactivity email fires
+ * on a 2–3 day window, so anyone who drifted further than that fell through
+ * it and has heard nothing since; this is the backfill, sent once by
+ * scripts/reactivateDormantAccounts.js and stamped so it cannot be sent twice.
+ *
+ * It leans on one fact rather than a pitch, because there is exactly one fact
+ * worth their attention: the free allowance is now spent when a question is
+ * ANSWERED, not when it is served, so the questions they left unanswered are
+ * still theirs. That is why the caller passes `remaining` and why this
+ * template refuses to render without it — a reactivation email that says
+ * "come back" and nothing else is the kind of mail this file exists to avoid.
+ *
+ * @param {{remaining:number, monthsAway?:number, lang?:string, accountId?:number|string}} opts
+ */
+export const sendReactivationEmail = async (to, username, track, opts = {}) => {
+  const lang = normalizeLang(opts.lang);
+  const c = copyFor(track, lang);
+  const remaining = Number(opts.remaining);
+  if (!Number.isFinite(remaining) || remaining <= 0) {
+    throw new Error('sendReactivationEmail requires a positive `remaining` free-question count');
+  }
+  const months = Number(opts.monthsAway) || 0;
+  const awayAr = months >= 2 ? `مضى نحو ${arMonthsCount(months)}` : 'مضت فترة';
+  const awayEn = months >= 2 ? `It has been about ${months} months` : 'It has been a while';
+
+  const html = wrapLayout(`
+        <tr>
+          <td align="center" style="padding:36px 40px 32px;">
+            <div style="font-size:48px;margin-bottom:16px;">🎁</div>
+            <h1 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#f8fafc;">
+              ${T(lang,
+                `${username}، لا يزال لديك ${arQuestionsCount(remaining)} مجاناً`,
+                `${username}, you still have ${remaining} free question${remaining === 1 ? '' : 's'}`)}
+            </h1>
+            <p style="margin:0 0 20px;font-size:14px;color:#94a3b8;line-height:1.8;">
+              ${T(lang,
+                `${awayAr} وأنت لم تفتح حسابك. غيّرنا شيئاً في هذه الأثناء يخصّك مباشرة:
+                 الأسئلة المجانية الأربعون لم تعد تُحتسب عند فتح السؤال، بل عند الإجابة عليه فقط.
+                 أي أن ما تركته دون إجابة ما زال في رصيدك.`,
+                `${awayEn} since you last opened your account. One thing changed in the meantime
+                 that affects you directly: the forty free questions are now counted when you
+                 answer one, not when it is shown to you. Anything you left unanswered is still yours.`)}
+            </p>
+            <div style="background:#0b1021;border-radius:12px;padding:18px 22px;margin-bottom:26px;border:1px solid #1e293b;">
+              <p style="margin:0 0 6px;font-size:13px;color:#94a3b8;">
+                ${T(lang, 'رصيدك المتبقي', 'Left in your account')}
+              </p>
+              <p style="margin:0 0 10px;font-size:30px;font-weight:800;color:#22d3ee;">
+                ${remaining} <span style="font-size:14px;font-weight:600;color:#94a3b8;">${T(lang, 'من 40', 'of 40')}</span>
+              </p>
+              <p style="margin:0;font-size:13px;color:#cbd5e1;line-height:1.8;">
+                ${T(lang,
+                  `أسئلة بنمط ${c.exam}، لكل واحد منها شرح مكتوب يوضّح سبب صحة الإجابة.
+                   وتقدّمك وإحصاءاتك السابقة محفوظة كما تركتها.`,
+                  `Questions in the style of ${c.exam}, each with a written explanation of why the
+                   answer is what it is. Your earlier progress and statistics are exactly where you left them.`)}
+              </p>
+            </div>
+            ${button(`${SITE}/quizs`, T(lang, 'استخدم رصيدك', 'Use what is left'))}
+            <p style="margin:22px 0 0;font-size:12px;color:#64748b;line-height:1.7;">
+              ${T(lang,
+                'هذه رسالة واحدة لن تتكرّر. وإن لم تعد بحاجة إلينا، رابط إلغاء الاشتراك بالأسفل ويعمل فوراً.',
+                'This is a one-off message and will not be repeated. If you are done with us, the unsubscribe link below works immediately.')}
+            </p>
+          </td>
+        </tr>
+    `, { lang, accountId: opts.accountId });
+
+  await sendEmail(
+    to,
+    T(lang,
+      `🎁 لديك ${arQuestionsCount(remaining)} مجاناً في حسابك`,
+      `🎁 ${remaining} free question${remaining === 1 ? '' : 's'} still waiting in your account`),
+    html,
+    T(lang,
+      `${username}، لا يزال لديك ${arQuestionsCount(remaining)} مجاناً في SQB، والأسئلة تُحتسب الآن عند الإجابة فقط.`,
+      `${username}, you still have ${remaining} free question${remaining === 1 ? '' : 's'} on SQB, and they are now only spent when you answer.`),
+    { event: 'medqize.lifecycle.reactivation' }
   );
 };
 
