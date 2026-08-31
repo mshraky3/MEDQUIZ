@@ -105,6 +105,7 @@ export const EN_TWIN_PATHS = [
     '/about',
     '/faq',
     '/contact',
+    '/demo',
     '/groups',
     '/privacy',
     '/terms',

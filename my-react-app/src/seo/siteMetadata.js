@@ -523,6 +523,14 @@ ${guidesTeaserHtml(guidesCopy.ar.hub, {
         keywords: 'smle past papers, تجميعات سملي, تجميعات SMLE, تجميعات SNLE, اسئلة سملي سابقة',
         alternates: ['ar-SA', 'ar', 'x-default']
     },
+    // Placeholder only — the real head for /demo is built in seo/demo.js and
+    // applied both at build time and by the page's own <SEO> after hydration.
+    '/demo': {
+        title: 'جرّب بنك الأسئلة — ٢٠ سؤالاً بدون حساب | SQB',
+        description: 'جرّب أسئلة SMLE وSNLE حقيقية بشرح كامل لكل إجابة، بدون تسجيل وبدون بريد إلكتروني.',
+        keywords: 'أسئلة SMLE مجانية, اختبار تجريبي SMLE, تجربة بنك أسئلة, أسئلة تمريض SNLE',
+        alternates: ['ar-SA', 'ar', 'x-default']
+    },
     '/questions': {
         title: 'أسئلة تدريبية مجانية لاختبار SMLE وSNLE | SQB',
         description: 'أسئلة تدريبية بنمط اختبار الهيئة السعودية للتخصصات الصحية، مع الإجابة الصحيحة وشرح مكتوب لكل سؤال، مفتوحة بدون حساب.',

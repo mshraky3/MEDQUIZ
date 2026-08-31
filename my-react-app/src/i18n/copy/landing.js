@@ -29,6 +29,9 @@ const landingCopy = {
             title: 'تدرّب بذكاء، واجتَز اختبار الترخيص بثقة',
             body: 'بنك أسئلة محدّث على نمط البرومترك، مع تفسير واضح لكل إجابة وتحليل فوري يكشف نقاط ضعفك ويرتّب أولويات مراجعتك — كل ما تحتاجه للوصول إلى درجتك المستهدفة في مكان واحد.',
             primary: 'ابدأ بـ 40 سؤالاً مجاناً',
+            // سطر صغير تحت الأزرار لمن لم يقرّر بعد: 78 من 120 اختاروا مساراً
+            // هذا الشهر ثم تركوا نموذج التسجيل — أرادوا رؤية الأسئلة أولاً.
+            tryFirst: 'أو جرّب ٢٠ سؤالاً أولاً — بدون حساب',
             secondary: 'تسجيل الدخول',
             trust: [
                 'تفسير كامل لكل سؤال',
@@ -336,6 +339,9 @@ const landingCopy = {
             title: 'Practise smarter, and walk into your licensing exam confident',
             body: 'A question bank updated to the Prometric style, a clear explanation for every answer, and instant analytics that expose your weak spots and tell you what to revise next — everything you need to hit your target score, in one place.',
             primary: 'Start with 40 free questions',
+            // A quiet line under the buttons for anyone not ready: 78 of the
+            // 120 who picked a track this month left at the signup form.
+            tryFirst: 'Or try 20 questions first — no account needed',
             secondary: 'Log in',
             trust: [
                 'A full explanation for every question',

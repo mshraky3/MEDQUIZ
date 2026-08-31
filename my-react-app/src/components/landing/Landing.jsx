@@ -217,6 +217,14 @@ const Landing = () => {
                   {t.hero.secondary}
                 </button>
               </div>
+              {/* Deliberately a text link, not a third button: it is for the
+                  visitor who is not ready to sign up, and it must not compete
+                  with the two who are. */}
+              <p className="hero-try">
+                <Link to="/demo" onClick={() => safeTrack('demo_click', { from: 'landing_hero' })}>
+                  {t.hero.tryFirst}
+                </Link>
+              </p>
               <ul className="hero-trust">
                 {t.hero.trust.map((item) => <li key={item}>{item}</li>)}
               </ul>

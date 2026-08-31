@@ -19,6 +19,7 @@ import { getPrerenderRoutes, SITE_ORIGIN } from '../src/seo/siteMetadata.js';
 import { siteFooterNavHtml } from '../src/seo/prerenderHtml.js';
 import { buildPublicQuestionRoutes, QUESTIONS_ROOT } from '../src/seo/publicQuestions.js';
 import { buildPastPaperRoutes, PAST_PAPERS_ROOT } from '../src/seo/pastPapers.js';
+import { buildDemoRoutes, DEMO_ROOT } from '../src/seo/demo.js';
 import { SUPPORTED_LANGS, dirFor, stripLocale } from '../src/seo/locales.js';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
@@ -124,6 +125,10 @@ const QUESTION_HUB_HINT = { priority: '0.8', changefreq: 'monthly' };
 const QUESTION_PAGE_HINT = { priority: '0.6', changefreq: 'monthly' };
 
 const PAST_PAPER_HINT = { priority: '0.75', changefreq: 'monthly' };
+// The try-before-signup page. High priority because it is the one page that
+// answers "free SMLE questions" with something playable rather than readable,
+// but it is a fixed offer, not a feed — monthly, not weekly.
+const DEMO_HINT = { priority: '0.9', changefreq: 'monthly' };
 
 function questionSitemapHint(routePath) {
     if (routePath === QUESTIONS_ROOT) return QUESTION_HUB_HINT;
@@ -165,6 +170,7 @@ function buildSitemap(routes) {
       const { path: routePath } = stripLocale(localizedRoutePath);
       const hint =
         SITEMAP_HINTS[routePath] ||
+        (routePath === DEMO_ROOT ? DEMO_HINT : null) ||
         (routePath === QUESTIONS_ROOT || routePath.startsWith(`${QUESTIONS_ROOT}/`)
           ? questionSitemapHint(routePath)
           : routePath === PAST_PAPERS_ROOT || routePath.startsWith(`${PAST_PAPERS_ROOT}/`)
@@ -197,6 +203,7 @@ if (!fs.existsSync(templatePath)) {
     const footerNav = siteFooterNavHtml(lang);
     return [
       ...getPrerenderRoutes(lang),
+      ...buildDemoRoutes(lang, { footerNav }),
       ...(questionPayload ? buildPublicQuestionRoutes(questionPayload, { footerNav, lang }) : []),
       ...(questionPayload ? buildPastPaperRoutes(questionPayload, { footerNav, lang }) : [])
     ];

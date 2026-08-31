@@ -1,0 +1,315 @@
+/* /demo — the no-account trial. Scoped to .demo-* (see docs/DESIGN_MAP.md).
+   Shares the visual language of the public question pages rather than the
+   signed-in quiz engine: this is a marketing surface a stranger lands on. */
+
+.demo {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 28px 18px 60px;
+}
+
+.demo-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 80px 20px;
+    color: var(--muted, #64748b);
+}
+
+.demo-error {
+    padding: 40px 0;
+    text-align: center;
+    color: var(--muted, #64748b);
+}
+
+.demo-hero { text-align: center; margin-bottom: 30px; }
+
+.demo-kicker {
+    margin: 0 0 8px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--primary-color, #2563eb);
+}
+
+.demo-hero h1 {
+    margin: 0 0 10px;
+    font-size: clamp(24px, 5vw, 32px);
+    font-weight: 900;
+    color: var(--text-dark, #0f1e3d);
+}
+
+.demo-hero > p {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--muted, #64748b);
+}
+
+.demo-tracks h2 {
+    margin: 0 0 14px;
+    font-size: 17px;
+    font-weight: 800;
+    text-align: center;
+    color: var(--text-dark, #0f1e3d);
+}
+
+.demo-track-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+}
+
+.demo-track {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 22px 18px;
+    border: 1px solid rgba(148, 163, 184, 0.34);
+    border-radius: 14px;
+    background: var(--card-bg, #fff);
+    text-align: start;
+    cursor: pointer;
+    transition: border-color 0.15s, transform 0.15s;
+}
+
+.demo-track:hover {
+    border-color: var(--primary-color, #2563eb);
+    transform: translateY(-2px);
+}
+
+.demo-track-label { font-size: 18px; font-weight: 800; color: var(--text-dark, #0f1e3d); }
+.demo-track-exam { font-size: 13px; color: var(--muted, #64748b); }
+.demo-track-go { margin-top: 8px; font-size: 13px; font-weight: 800; color: var(--primary-color, #2563eb); }
+
+/* ── Playing ─────────────────────────────────────────────────────────── */
+.demo-bar {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--muted, #64748b);
+}
+
+.demo-rail {
+    height: 4px;
+    margin: 8px 0 22px;
+    border-radius: 2px;
+    background: rgba(148, 163, 184, 0.24);
+    overflow: hidden;
+}
+
+.demo-rail span {
+    display: block;
+    height: 100%;
+    border-radius: 2px;
+    background: var(--primary-color, #2563eb);
+    transition: width 0.25s ease;
+}
+
+.demo-stem {
+    margin: 0 0 18px;
+    font-size: 16px;
+    line-height: 1.75;
+    color: var(--text-dark, #0f1e3d);
+    text-align: start;
+}
+
+.demo-options { margin: 0 0 18px; padding: 0; list-style: none; }
+.demo-options li + li { margin-top: 9px; }
+
+.demo-option {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    width: 100%;
+    padding: 13px 15px;
+    border: 1px solid rgba(148, 163, 184, 0.34);
+    border-radius: 11px;
+    background: var(--card-bg, #fff);
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--text-dark, #0f1e3d);
+    text-align: start;
+    cursor: pointer;
+}
+
+.demo-option:not(:disabled):hover { border-color: var(--primary-color, #2563eb); }
+.demo-option:disabled { cursor: default; }
+
+.demo-option-mark {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: rgba(148, 163, 184, 0.18);
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.demo-option-text { flex: 1; }
+
+.demo-option.is-correct {
+    border-color: #16a34a;
+    background: rgba(22, 163, 74, 0.08);
+    color: #14532d;
+}
+
+.demo-option.is-correct .demo-option-mark { background: rgba(22, 163, 74, 0.2); }
+
+.demo-option.is-wrong {
+    border-color: #dc2626;
+    background: rgba(220, 38, 38, 0.07);
+    color: #7f1d1d;
+}
+
+.demo-option.is-wrong .demo-option-mark { background: rgba(220, 38, 38, 0.18); }
+
+/* ── Feedback ────────────────────────────────────────────────────────── */
+.demo-feedback {
+    padding: 18px;
+    border-radius: 13px;
+    border: 1px solid rgba(220, 38, 38, 0.28);
+    background: rgba(220, 38, 38, 0.05);
+}
+
+.demo-feedback.is-correct {
+    border-color: rgba(22, 163, 74, 0.3);
+    background: rgba(22, 163, 74, 0.06);
+}
+
+.demo-verdict-line {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin: 0 0 10px;
+    font-size: 15px;
+    font-weight: 800;
+    color: #991b1b;
+}
+
+.demo-feedback.is-correct .demo-verdict-line { color: #15803d; }
+
+.demo-answer {
+    margin: 0 0 12px;
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: var(--text-dark, #0f1e3d);
+    text-align: start;
+}
+
+.demo-feedback h3 {
+    margin: 0 0 6px;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted, #64748b);
+}
+
+.demo-explanation {
+    margin: 0 0 16px;
+    font-size: 14.5px;
+    line-height: 1.75;
+    color: var(--text-dark, #0f1e3d);
+    text-align: start;
+}
+
+/* ── Buttons and result ──────────────────────────────────────────────── */
+.demo-cta {
+    display: inline-block;
+    width: 100%;
+    padding: 13px 20px;
+    border: none;
+    border-radius: 11px;
+    background: var(--primary-color, #2563eb);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 800;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.demo-cta:hover { filter: brightness(1.06); color: #fff; }
+
+.demo-result { text-align: center; }
+
+.demo-result h1 {
+    margin: 0 0 12px;
+    font-size: clamp(23px, 5vw, 30px);
+    font-weight: 900;
+    color: var(--text-dark, #0f1e3d);
+}
+
+.demo-verdict {
+    margin: 0 auto 26px;
+    max-width: 30em;
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--muted, #64748b);
+}
+
+.demo-cta-card {
+    padding: 24px 20px;
+    border-radius: 15px;
+    background: rgba(37, 99, 235, 0.07);
+}
+
+.demo-cta-card h2 {
+    margin: 0 0 8px;
+    font-size: 19px;
+    font-weight: 800;
+    color: var(--text-dark, #0f1e3d);
+}
+
+.demo-cta-card > p {
+    margin: 0 0 16px;
+    font-size: 14px;
+    line-height: 1.65;
+    color: var(--muted, #64748b);
+}
+
+.demo-result-links {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 18px;
+    margin-top: 18px;
+}
+
+.demo-link {
+    padding: 4px 2px;
+    border: none;
+    background: none;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--muted, #64748b);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.demo-link:hover { color: var(--primary-color, #2563eb); }
+
+.demo-foot { margin: 26px 0 0; text-align: center; font-size: 13px; }
+.demo-foot a { color: var(--muted, #64748b); text-decoration: none; }
+.demo-foot a:hover { color: var(--primary-color, #2563eb); }
+
+/* Same authored structure as the published question pages — bold stage
+   headings and bullets. See src/seo/explanation.js. */
+.demo-explanation p { margin: 0 0 9px; }
+.demo-explanation p:last-child { margin-bottom: 0; }
+.demo-explanation strong { font-weight: 800; }
+
+.demo-explanation ul {
+    margin: 0 0 11px;
+    padding-inline-start: 19px;
+}
+
+.demo-explanation li { margin-bottom: 4px; line-height: 1.7; }

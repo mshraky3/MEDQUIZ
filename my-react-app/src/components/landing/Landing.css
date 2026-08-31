@@ -1883,3 +1883,23 @@
   line-height: 1.8;
   color: var(--dim);
 }
+
+/* Hero "or try it first" line. A text link under the CTA row, for the visitor
+   who wants to see questions before opening an account — see /demo. Sized and
+   coloured to sit below the buttons rather than beside them: it is an escape
+   hatch, not a third call to action. */
+.hero-try {
+  margin: 12px 0 0;
+  font-size: 14px;
+}
+
+/* The hero sits on a pale gradient, not a dark one — a white link here was
+   invisible. Matches the hero body copy's own colour so it reads as a quiet
+   aside, with the underline doing the work of marking it as a link. */
+.hero-try a {
+  color: var(--muted, #475569);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.hero-try a:hover { color: var(--primary-color, #2563eb); }

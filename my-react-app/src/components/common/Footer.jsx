@@ -25,6 +25,9 @@ const Footer = () => {
   const links = [
     { to: '/about', label: t.nav.about },
     { to: '/guides', label: t.nav.guides },
+    // The only try-before-signup path there is. Placed above the reading
+    // pages because for someone still deciding, playing beats reading.
+    { to: '/demo', label: t.footer.tryDemo },
     { to: '/questions', label: t.footer.freeQuestions },
     { to: '/past-papers', label: t.footer.collections },
     { to: '/faq', label: t.nav.faq },
