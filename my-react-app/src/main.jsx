@@ -81,6 +81,7 @@ const PastPapersHub = lazy(() => import('./components/pastPapers/PastPapersHub.j
 const PastPaperCollection = lazy(() => import('./components/pastPapers/PastPaperCollection.jsx'));
 const TempLinks = lazy(() => import('./components/ADD/TempLinks.jsx'));
 const QuestionReports = lazy(() => import('./components/ADD/QuestionReports.jsx'));
+const SuccessStoriesAdmin = lazy(() => import('./components/ADD/SuccessStoriesAdmin.jsx'));
 const ForgotPassword = lazy(() => import('./components/login/ForgotPassword'));
 const SummariesPage = lazy(() => import('./components/summaries/SummariesPage.jsx'));
 const Subscribe = lazy(() => import('./components/subscribe/Subscribe.jsx'));
@@ -249,6 +250,7 @@ const router = createBrowserRouter([{
   admin('/admin/questions', <ADDQ host={getHostUrl} />),
   admin('/admin/bank', <Bank />),
   admin('/admin/reports', <QuestionReports />),
+  admin('/admin/stories', <SuccessStoriesAdmin />),
   admin('/admin/links', <TempLinks host={getHostUrl} />),
   admin('/admin/email', <AdminBroadcast />),
 

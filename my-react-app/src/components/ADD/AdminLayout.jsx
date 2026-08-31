@@ -29,6 +29,7 @@ const GROUPS = [
             { path: '/admin/questions', label: 'Add Questions', icon: 'plus' },
             { path: '/admin/bank', label: 'Question Bank', icon: 'book-open' },
             { path: '/admin/reports', label: 'Reports', icon: 'flag' },
+            { path: '/admin/stories', label: 'Stories', icon: 'star' },
             { path: '/admin/links', label: 'Temp Links', icon: 'link' },
             { path: '/admin/email', label: 'Bulk Email', icon: 'send' },
         ],
