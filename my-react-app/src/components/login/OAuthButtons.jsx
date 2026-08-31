@@ -10,6 +10,16 @@ import { useLang } from '../../i18n';
 // incomplete provider setup never ships a dead button.
 const GOOGLE_CLIENT_ID = import.meta.env?.VITE_GOOGLE_CLIENT_ID;
 
+/**
+ * Whether this build can offer Google sign-in at all.
+ *
+ * Exported because a caller that treats Google as the PRIMARY route (see
+ * /signup, which collapses its email form behind it) has to know when there is
+ * no primary route to collapse behind — otherwise a missing env var leaves the
+ * page with nothing but a secondary button.
+ */
+export const GOOGLE_SIGN_IN_AVAILABLE = Boolean(GOOGLE_CLIENT_ID);
+
 // Google clamps `width` at 400px and ignores anything larger, so 400 is the
 // widest this button can ever be. .oauth-block caps its column to the same
 // number (see Login.css) — that way the 400 is a deliberate column width the
