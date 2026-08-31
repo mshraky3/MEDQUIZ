@@ -65,6 +65,7 @@ const SmleStudyPlanGuide = lazy(() => import('./components/guides/SmleStudyPlanG
 const WrongQuestionsMethodGuide = lazy(() => import('./components/guides/WrongQuestionsMethodGuide.jsx'));
 const SmleVsPrometricGuide = lazy(() => import('./components/guides/SmleVsPrometricGuide.jsx'));
 const SmleHighYieldTopicsGuide = lazy(() => import('./components/guides/SmleHighYieldTopicsGuide.jsx'));
+const SnleBlueprintGuide = lazy(() => import('./components/guides/SnleBlueprintGuide.jsx'));
 // The public question library. Its data file is ~415 KB, so the components
 // pull it in with their own dynamic import (see usePublicQuestions.js) — these
 // three lazy() calls only split the UI.
@@ -204,6 +205,7 @@ const router = createBrowserRouter([{
   pub('/guides/wrong-questions-method', <WrongQuestionsMethodGuide />),
   pub('/guides/smle-vs-prometric-differences', <SmleVsPrometricGuide />),
   pub('/guides/smle-high-yield-topics', <SmleHighYieldTopicsGuide />),
+  pub('/guides/snle-blueprint', <SnleBlueprintGuide />),
 
   // Public question library — the only pages a stranger can read in full with
   // no account, and the reason they exist: 5,033 explained questions that

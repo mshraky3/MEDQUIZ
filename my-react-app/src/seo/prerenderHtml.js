@@ -179,7 +179,7 @@ const HAS_STORIES = Array.isArray(successStories?.stories) && successStories.sto
 const FOOTER_NAV_LINKS = [
     { href: '/', ar: 'الرئيسية', en: 'Home' },
     { href: '/about', ar: 'من نحن', en: 'About SQB' },
-    { href: '/guides', ar: 'أدلة التحضير لاختبار SMLE', en: 'SMLE study guides' },
+    { href: '/guides', ar: 'أدلة التحضير لاختباري SMLE وSNLE', en: 'SMLE & SNLE study guides' },
     { href: '/demo', ar: 'جرّب ٢٠ سؤالاً بدون حساب', en: 'Try 20 questions, no account' },
     { href: '/questions', ar: 'أسئلة تدريبية مجانية', en: 'Free practice questions' },
     { href: '/past-papers', ar: 'تجميعات أسئلة SMLE وSNLE', en: 'SMLE & SNLE question collections' },

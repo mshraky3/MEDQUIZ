@@ -1,5 +1,5 @@
 /**
- * The public study guides (hub + four articles).
+ * The public study guides (hub + six articles).
  *
  * Rendered by components/guides/GuideArticle.jsx from the same block shapes as
  * the legal documents: `{ p }`, `{ h3 }`, `{ ul }`, plus `{ ad: true }` for the
@@ -13,19 +13,25 @@
 const guidesCopy = {
     ar: {
         hub: {
-            kicker: 'SMLE Guides',
-            title: 'أدلة التحضير لاختبار SMLE والبرومترك',
-            intro: 'مكتبة مخصّصة للمحتوى التعليمي العميق: خطط مذاكرة، استراتيجيات حل الأسئلة، إدارة الوقت، ومناهج مراجعة موجّهة لطلاب الطب والأطباء في السعودية.',
+            kicker: 'SMLE & SNLE Guides',
+            title: 'أدلة التحضير لاختبارات SMLE وSNLE والبرومترك',
+            intro: 'مكتبة مخصّصة للمحتوى التعليمي العميق: التوزيع الرسمي لاختبار التمريض SNLE، وخطط مذاكرة، واستراتيجيات حل الأسئلة، وإدارة الوقت، ومناهج مراجعة موجّهة لطلاب الطب والتمريض في السعودية.',
             listLabel: 'أدلة التحضير',
             readMore: 'اقرأ الدليل الكامل',
             notesTitle: 'كيف تستفيد من الأدلة؟',
             notes: [
                 'ابدأ بخطة زمنية واقعية حسب وقتك اليومي.',
+                'إن كان اختبارك SNLE فابدأ من التوزيع الرسمي: الأقسام الأربعة لها نسب ثابتة، فليكن أسبوعك موزّعاً عليها.',
                 'اربط كل جلسة حل أسئلة بمراجعة أخطائك مباشرة.',
                 'حافظ على التوازن بين Internal Medicine والجراحة وPediatrics وOB/GYN.',
                 'لا تقِس التقدّم بعدد الساعات فقط، بل بجودة التكرار وتصحيح القرار السريري.',
             ],
             cards: [
+                {
+                    path: '/guides/snle-blueprint',
+                    title: 'اختبار SNLE للتمريض: التوزيع الرسمي وشكل الاختبار ودرجة النجاح',
+                    excerpt: 'كل ما تحتاج معرفته عن اختبار الرخصة السعودية للتمريض، منقولاً من الدليل الرسمي للهيئة السعودية للتخصصات الصحية: عدد الأسئلة، توزيع الأقسام ونسبها، درجة النجاح، وسياسة المحاولات.',
+                },
                 {
                     path: '/guides/how-to-use-a-question-bank',
                     title: 'كيف تستخدم بنك الأسئلة لرفع أدائك في SMLE والبرومترك',
@@ -50,6 +56,88 @@ const guidesCopy = {
                     path: '/guides/smle-high-yield-topics',
                     title: 'أهم مواضيع SMLE عالية العائد: كيف توزّع وقتك بذكاء؟',
                     excerpt: 'خريطة أولويات للمواضيع الأكثر تأثيراً على أدائك، مع توزيع أسبوعي يقلّل الهدر ويرفع نسبة إجاباتك الصحيحة.',
+                },
+            ],
+        },
+
+        /**
+         * The only guide on the site written from a primary source rather than
+         * from experience. Every number in it — 200 questions, 20/40/30/10,
+         * the 500 pass mark — is transcribed from the SCFHS applicant guide
+         * named in the last section, and the last section exists so a reader
+         * can check the claim rather than trust it. If SCFHS publishes a new
+         * edition, this page is wrong until someone re-reads it: that is the
+         * cost of publishing exam logistics, and the reason the six pages in
+         * S1-06/07 were not written blind.
+         */
+        snleBlueprint: {
+            kicker: 'SNLE Blueprint',
+            title: 'اختبار SNLE للتمريض: التوزيع الرسمي وشكل الاختبار ودرجة النجاح',
+            intro: 'هذا الدليل يشرح اختبار الرخصة السعودية للتمريض (SNLE) كما تصفه الهيئة السعودية للتخصصات الصحية في دليل المتقدّم الرسمي: كم سؤالاً، وكيف تتوزّع الأقسام ونسبها، وما درجة النجاح، وكم محاولة لديك. كل رقم هنا منقول من ذلك الدليل، ومصدره مذكور في آخر الصفحة حتى تتحقّق منه بنفسك.',
+            sections: [
+                {
+                    heading: '1) شكل الاختبار: كم سؤالاً وكم وقتاً',
+                    blocks: [
+                        { p: 'اختبار SNLE يتكوّن من **200 سؤال اختيار من متعدد**، وقد يتضمّن حتى 10% أسئلة تجريبية (pilot) لا تُحتسب في درجتك. الاختبار مقسوم إلى **جزأين، كل جزء 100 سؤال ومدّته 120 دقيقة**، وبينهما استراحة مجدولة مدّتها 30 دقيقة.' },
+                        { p: 'كل سؤال يحمل أربعة خيارات تختار منها إجابة واحدة هي الأفضل. والاختبار يخلط بين أسئلة استرجاع مباشرة تقيس المعلومة، وأسئلة سيناريو تقيس التفسير والتحليل واتخاذ القرار والاستدلال وحل المشكلات — وهذا الخلط هو ما يجعل الحفظ وحده غير كافٍ.' },
+                    ],
+                },
+                {
+                    heading: '2) التوزيع الرسمي (Blueprint)',
+                    blocks: [
+                        { p: 'الاختبار مبني على أربعة أقسام بنسب ثابتة. هذه هي الخريطة التي يُبنى عليها كل نموذج اختبار:' },
+                        {
+                            ul: [
+                                '**تمريض البالغين — 40%**: التمريض الباطني، والتمريض الجراحي، والعناية الحرجة، وتمريض المجتمع، والصحة النفسية.',
+                                '**تمريض الأمومة والطفل — 30%**: تمريض الولادة، وأمراض النساء، وتمريض حديثي الولادة، وطب الأطفال، وجراحة الأطفال.',
+                                '**أساسيات التمريض — 20%**: أساسيات التمريض، والمهنية، والرعاية المتمحورة حول المريض، والممارسة المبنية على الدليل والبحث، والقيادة والإدارة، وإدارة الجودة والسلامة، والتثقيف الصحي، والتواصل وتقنية المعلومات، والفحص السريري، والأدوية، والعلوم الأساسية.',
+                                '**إدارة وقيادة التمريض — 10%**: الموارد اللازمة لتنسيق رعاية المريض، وجودة الرعاية وسلامتها في الخط الأول، وفرق التمريض والعلاقات بين المهن الصحية، والمعلوماتية التمريضية للتقديم الآمن والنظامي للرعاية، والبحث والممارسة المبنية على الدليل.',
+                            ],
+                        },
+                        { p: 'ينصّ الدليل الرسمي على أن التوزيع قد يختلف بمقدار **±5% في كل مستوى**. أي أن قسم تمريض البالغين قد يظهر بين 35% و45%، وأن إدارة وقيادة التمريض لن تنزل عن 5% مهما حدث. هذا هامش تخطيط، لا إذن بتجاهل قسم كامل.' },
+                    ],
+                },
+                {
+                    heading: '3) درجة النجاح وعدد المحاولات',
+                    blocks: [
+                        { p: '**درجة النجاح هي 500 على مقياس من 200 إلى 800.** حدّدتها الهيئة في أبريل 2017 عبر لجنة من 14 ممرضة وممرضاً في تمرين ضبط معياري (standard setting)، ثم اعتمدتها لجنة التقييم المركزية. لاحظ أن هذه الدرجة ليست نسبة مئوية من الإجابات الصحيحة، بل درجة معيارية.' },
+                        { p: 'ملاحظة مهمة لمن يقارن بين الاختبارين: **درجة النجاح في SMLE للطب هي 560 على المقياس نفسه، لا 500.** الرقمان ليسا متبادلين، وكثير من المصادر غير الرسمية تخلط بينهما.' },
+                        { p: 'أما المحاولات: يحق لك دخول SNLE حتى **أربع مرات في السنة** ابتداءً من محاولتك الأولى حتى تحصل على درجة النجاح. وبعد النجاح يحق لك محاولتان إضافيتان لتحسين درجتك بهدف فرص أفضل في القبول للتدريب، ثم محاولة واحدة سنوياً بعد مرور سنة تقويمية على المحاولة الثانية.' },
+                        { p: 'ولا يُسمح بدخول الاختبار مرتين في نافذة الاختبار نفسها: تُعتمد نتيجة الأول، وتُحتسب الثانية محاولةً ونتيجتها ملغاة.' },
+                    ],
+                },
+                {
+                    heading: '4) من يحقّ له التقديم، وكيف تحجز موعدك',
+                    blocks: [
+                        { p: 'التقديم متاح لمن يحمل **درجة جامعية أولى معترفاً بها (بكالوريوس تمريض أو ما يعادلها)** من برنامج صحي معتمد، أو لمن بدأ سنة الامتياز، أو لمن تبقّى له سنة واحدة على التخرّج. وطلاب الجامعات والكليات السعودية يمكنهم دخول SNLE في سنتهم الأخيرة.' },
+                        { p: 'الترتيب العملي: تقدّم عبر الخدمة الإلكترونية، ثم يصلك تصريح الجدولة (scheduling permit) ومعه فترة الأهلية الخاصة بك عبر البريد الإلكتروني، ثم تحجز موعدك في أحد مراكز Prometric المعتمدة — داخل المملكة أو خارجها. الحجز غير متاح لأكثر من ثلاثة أشهر مقدماً، وجدولة المحاولات خلال السنة مسؤوليتك أنت وحدك.' },
+                        { p: 'النتائج لا تظهر فور انتهائك. يجري تحليل نفسي-قياسي عند إغلاق النافذة، ثم **تُعلن النتائج خلال أسبوعين إلى ستة أسابيع من نهاية نافذة الاختبار**، ويصلك تقريران: بيان النتيجة، وتقرير أداء يقارنك بغيرك من المتقدّمين.' },
+                    ],
+                },
+                {
+                    heading: '5) كيف توزّع مذاكرتك على هذا التوزيع',
+                    blocks: [
+                        { p: 'أسهل طريقة لاستخدام الـblueprint هي أن تجعله جدول وقتك لا مجرد معلومة. إن كان لديك عشر ساعات مذاكرة أسبوعياً، فالتوزيع الأمين لها: أربع ساعات لتمريض البالغين، وثلاث لتمريض الأمومة والطفل، وساعتان للأساسيات، وساعة لإدارة وقيادة التمريض. هذا كل ما تعنيه النسب عملياً.' },
+                        { p: '**والقسم الذي يُهمَل عادةً هو إدارة وقيادة التمريض.** هو عُشر الاختبار — نحو 20 سؤالاً — ومعظم مواد التحضير المتاحة تمرّ عليه مروراً سريعاً أو تتجاهله، لأنه ليس تخصصاً سريرياً يسهل تجميع أسئلته. عامله كقسم قائم بذاته: التفويض ومن يُفوَّض له، وترتيب الأولويات بين المرضى، وتقارير الحوادث والجودة، والعلاقة بالفرق الأخرى، والمعلوماتية التمريضية وسرّية السجل الإلكتروني. مرجع واحد في إدارة التمريض يغطّي هذا القسم أفضل من مئة سؤال سريري إضافي.' },
+                        { p: 'وللأقسام السريرية، أفضل استخدام لبنك الأسئلة هو الحل ثم مراجعة الخطأ فوراً، لا الحل وحده — الطريقة مشروحة بالتفصيل في [[/guides/how-to-use-a-question-bank|دليل استخدام بنك الأسئلة]] و[[/guides/wrong-questions-method|دليل مراجعة الأسئلة الخاطئة]]، وكلاهما ينطبق على SNLE كما ينطبق على SMLE.' },
+                        { p: 'ويمكنك البدء الآن بلا حساب: [[/demo|جرّب 20 سؤالاً]]، أو تصفّح [[/questions|الأسئلة المنشورة مجاناً]] بشرح مكتوب لكل إجابة، ومنها أقسام [[/questions/nursing-fundamentals|أساسيات التمريض]] و[[/questions/medical-surgical-nursing|التمريض الباطني والجراحي]] و[[/questions/maternal-and-newborn-nursing|تمريض الأمومة والمواليد]].' },
+                    ],
+                },
+                {
+                    heading: '6) يوم الاختبار',
+                    blocks: [
+                        { p: 'مراكز الاختبار تفتح الساعة 7:30 صباحاً. **إن تأخّرت أكثر من 30 دقيقة عن الموعد المدوّن في تذكرة الدخول، أو غبت، فلن يُسمح لك بالدخول وتُحتسب محاولة** — إلا بعذر مقبول موثّق توافق عليه اللجنة المشرفة.' },
+                        { p: 'خُذ معك تصريح الجدولة (ورقياً أو على هاتفك) وهوية سارية: جواز السفر، أو الهوية الوطنية/الإقامة داخل المملكة. **يجب أن يطابق اسمك في الهوية اسمك في التصريح مطابقةً تامة.** من يصل بلا تصريح أو بلا هوية مقبولة لا يدخل، ويدفع رسوماً لإعادة الجدولة ضمن فترة أهليته.' },
+                        { p: 'داخل المركز: فحص أمني قبل الدخول، ويُعاد الفحص في كل مرة تعود فيها إلى قاعة الاختبار بعد الاستراحة. يُعطى لك لوح كتابة قابل للمسح وأقلام لاستخدامها في الحسابات، وتُعيدها في نهاية الجلسة، ولا يجوز الكتابة على أي شيء آخر. والجلسات مراقَبة بالصوت والصورة.' },
+                        { p: 'وإن أردت تجربة تشبه الاختبار الحقيقي قبل يومه، توفّر الهيئة اختباراً تجريبياً (mock test) مبنياً على التوزيع نفسه ومسحوباً من بنك أسئلة SNLE، ويُطلب عبر موقعها.' },
+                    ],
+                },
+                {
+                    heading: '7) مصدر هذه المعلومات',
+                    blocks: [
+                        { p: 'كل ما سبق منقول من **دليل المتقدّم لاختبار الرخصة السعودية للتمريض (SNLE — Examination Content Guideline)** الصادر عن الهيئة السعودية للتخصصات الصحية، النسخة المنشورة على موقع الهيئة، وقد رُوجعت في 31 أغسطس 2026.' },
+                        { p: 'الهيئة تحدّث هذا الدليل من حين لآخر — النسخة السابقة اختلفت عن الحالية في بندين فرعيين — ولذلك: **قبل التقديم، افتح دليل المتقدّم الحالي على موقع الهيئة scfhs.org.sa وتأكّد بنفسك.** أي صفحة على الإنترنت، بما فيها هذه، قد تتأخّر عن الدليل الرسمي. ما تقرؤه هنا ليس بديلاً عنه.' },
+                    ],
                 },
             ],
         },
@@ -246,19 +334,25 @@ const guidesCopy = {
 
     en: {
         hub: {
-            kicker: 'SMLE Guides',
-            title: 'Study guides for the SMLE and Prometric exams',
-            intro: 'A library for the deeper material: study plans, question-solving strategy, time management, and review methods aimed at medical students and doctors in Saudi Arabia.',
+            kicker: 'SMLE & SNLE Guides',
+            title: 'Study guides for the SMLE, SNLE and Prometric exams',
+            intro: 'A library for the deeper material: the official SNLE nursing blueprint, study plans, question-solving strategy, time management, and review methods — for doctors and nurses preparing for the Saudi Commission exams.',
             listLabel: 'Study guides',
             readMore: 'Read the full guide',
             notesTitle: 'How to get the most from these guides',
             notes: [
                 'Start with a timeline that is realistic for the hours you actually have.',
+                'Sitting the SNLE? Start from the official blueprint — the four sections carry fixed weights, and your week should carry the same ones.',
                 'Pair every question session with an immediate review of your mistakes.',
                 'Keep Internal Medicine, Surgery, Paediatrics and OB/GYN in balance.',
                 'Do not measure progress in hours — measure it in the quality of your repetition and in better clinical decisions.',
             ],
             cards: [
+                {
+                    path: '/guides/snle-blueprint',
+                    title: 'The SNLE blueprint: how the Saudi nursing licensing exam is built',
+                    excerpt: 'What the SCFHS applicant guide actually says about the SNLE: how many questions, how the four sections are weighted, what score you need to pass, and how many attempts you get.',
+                },
                 {
                     path: '/guides/how-to-use-a-question-bank',
                     title: 'How to use a question bank to improve your SMLE & Prometric performance',
@@ -283,6 +377,82 @@ const guidesCopy = {
                     path: '/guides/smle-high-yield-topics',
                     title: 'High-yield SMLE topics: how to spend your time wisely',
                     excerpt: 'A priority map of the topics that move your score most, with a weekly split that cuts wasted effort and lifts your accuracy.',
+                },
+            ],
+        },
+
+        // See the note on the Arabic snleBlueprint above. Written for the
+        // internationally-trained nurses sitting the SNLE from outside Saudi
+        // Arabia, who are the larger half of this page's likely readership and
+        // the half least able to walk into a college and ask.
+        snleBlueprint: {
+            kicker: 'SNLE Blueprint',
+            title: 'The SNLE blueprint: how the Saudi nursing licensing exam is built',
+            intro: 'This guide sets out the Saudi Nursing Licensure Examination (SNLE) as the Saudi Commission for Health Specialties describes it in its own applicant guide: how many questions, how the four sections are weighted, what score you need, and how many attempts you get. Every figure here is transcribed from that document, and the last section names it so you can check it yourself.',
+            sections: [
+                {
+                    heading: '1) The shape of the exam',
+                    blocks: [
+                        { p: 'The SNLE is **200 multiple-choice questions**, of which up to 10% may be unscored pilot items. It is split into **two parts of 100 questions, 120 minutes each**, with a scheduled 30-minute break between them.' },
+                        { p: 'Every question has four options and one best answer. The paper mixes recall questions that test knowledge with scenario questions that test interpretation, analysis, decision-making, reasoning and problem-solving — which is why memorising alone does not carry you through it.' },
+                    ],
+                },
+                {
+                    heading: '2) The official blueprint',
+                    blocks: [
+                        { p: 'The exam is built from four sections with fixed weights. This is the map every form of the paper is assembled from:' },
+                        {
+                            ul: [
+                                '**Adult Nursing — 40%**: medical nursing, surgical nursing, critical care nursing, community nursing, and mental/psychiatric nursing.',
+                                '**Maternal-Child Nursing — 30%**: maternity nursing, gynecology, neonatal nursing, paediatric medical and paediatric surgical.',
+                                '**Nursing Fundamentals — 20%**: fundamentals of nursing, professionalism, patient-centred care, evidence-based practice and research, leadership and management, quality and safety management, health education and promotion, communication and information technology, physical assessment, pharmacology, and basic sciences.',
+                                '**Nursing Management and Leadership — 10%**: resources to support and coordinate patient care, quality and safe patient care at the frontline, nursing teams and interprofessional relations, nursing informatics for the safe and legal delivery of care, and research and evidence-based practice.',
+                            ],
+                        },
+                        { p: 'The guide states its own tolerance: the distribution may differ by **up to ±5% in each level**. So Adult Nursing can appear anywhere between 35% and 45%, and Nursing Management and Leadership will never drop below 5%. That is a planning margin, not permission to skip a section.' },
+                    ],
+                },
+                {
+                    heading: '3) The pass mark and your attempts',
+                    blocks: [
+                        { p: '**The passing score is 500 on a 200–800 reporting scale.** It was set in April 2017 through a standard-setting exercise with a panel of 14 nurses, and approved by the Central Assessment Committee. It is a scaled score, not a percentage of questions answered correctly.' },
+                        { p: 'One number worth getting right if you are comparing the two exams: **the SMLE pass mark for medicine is 560 on the same scale, not 500.** They are not interchangeable, and a good deal of second-hand advice online confuses them.' },
+                        { p: 'On attempts: you may sit the SNLE **up to four times a year** from your first attempt until you pass. After passing, you are entitled to two further attempts to improve your mark for residency selection, and then one further attempt annually after a calendar year has passed since the second.' },
+                        { p: 'You may not sit twice in the same testing window. If you do, the first dated result is the one announced; the second still counts as an attempt and its result is void.' },
+                    ],
+                },
+                {
+                    heading: '4) Who can apply, and how scheduling works',
+                    blocks: [
+                        { p: 'You need a **recognised primary degree (BSN or equivalent)** from an accredited health science programme, or to have started your internship year, or to be one year away from graduating. Students at Saudi universities and colleges may sit the SNLE in their final year.' },
+                        { p: 'The sequence: apply through the e-application; a scheduling permit is issued with your eligibility period and reaches you by email; then book a seat at an SCFHS-approved Prometric centre, in Saudi Arabia or abroad. Scheduling is not available more than three months ahead, and fitting your attempts into the year is your responsibility, not the Commission’s.' },
+                        { p: 'Results are not instant. Psychometric analysis runs during the window-closing period and **results are announced within two to six weeks of the end of a test window**. You receive two documents: a statement of results, and a feedback report comparing your performance with other candidates.' },
+                    ],
+                },
+                {
+                    heading: '5) Turning the blueprint into a study plan',
+                    blocks: [
+                        { p: 'The most useful thing you can do with a blueprint is spend your week by it. If you have ten study hours, the honest split is four on adult nursing, three on maternal-child, two on fundamentals and one on management and leadership. That is all the percentages mean in practice.' },
+                        { p: '**The section almost everyone skips is management and leadership.** It is a tenth of the paper — roughly 20 questions — and most preparation material passes over it, because it is not a clinical specialty with an obvious bank of questions behind it. Study it as its own subject: delegation and who may be delegated to, prioritising between patients, incident reporting and quality, working with other professions, and nursing informatics and the confidentiality of the electronic record. One nursing-management textbook will do more for this section than another hundred clinical questions.' },
+                        { p: 'For the clinical sections, what raises a score is solving questions and reviewing the wrong ones immediately, not solving alone — the method is set out in [[/guides/how-to-use-a-question-bank|the question-bank guide]] and [[/guides/wrong-questions-method|the wrong-questions guide]], and it applies to the SNLE exactly as it does to the SMLE.' },
+                        { p: 'You can start without an account: [[/demo|try 20 questions]], or read the [[/questions|openly published questions]], each with a written explanation — including [[/questions/nursing-fundamentals|nursing fundamentals]], [[/questions/medical-surgical-nursing|medical-surgical nursing]] and [[/questions/maternal-and-newborn-nursing|maternal and newborn nursing]].' },
+                    ],
+                },
+                {
+                    heading: '6) Test day',
+                    blocks: [
+                        { p: 'Test centres open at 7:30 a.m. **If you are more than 30 minutes late against the time on your admission ticket, or absent, you will not be allowed to sit and it counts as an attempt** — unless you present documented grounds the supervising committee accepts.' },
+                        { p: 'Bring your scheduling permit, on paper or on your phone, and unexpired identification: a passport, or a national/residence identity card inside Saudi Arabia. **The name on your ID must match the name on your permit exactly.** Arrive without either and you will not be admitted, and will pay a fee to reschedule within your eligibility period.' },
+                        { p: 'Inside: a security check before you enter, repeated every time you return to the testing room after the break. You are given laminated writing surfaces and markers for notes and calculations, which you hand back at the end; writing on anything else can be recorded as irregular behaviour. Sessions are monitored in person and by audio and video.' },
+                        { p: 'If you want a rehearsal closer to the real thing, SCFHS offers a mock test built on the same blueprint and sampled from the SNLE item bank, requested through its website.' },
+                    ],
+                },
+                {
+                    heading: '7) Where this comes from',
+                    blocks: [
+                        { p: 'All of the above is transcribed from the **Saudi Nursing Licensure Examination (SNLE) — Examination Content Guideline**, published by the Saudi Commission for Health Specialties, in the edition on the Commission’s website, read on 31 August 2026.' },
+                        { p: 'SCFHS revises that guide from time to time — the previous edition differed from the current one in two sub-sections — so **before you apply, open the current applicant guide at scfhs.org.sa and check for yourself.** Any page on the internet, this one included, can lag behind the official document. This is not a substitute for it.' },
+                    ],
                 },
             ],
         },

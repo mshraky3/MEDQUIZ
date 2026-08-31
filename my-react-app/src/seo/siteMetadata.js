@@ -186,8 +186,8 @@ const routeMap = {
           <p><a href="/questions">تصفّح الأسئلة التدريبية المجانية</a></p>
         </section>
 ${guidesTeaserHtml(guidesCopy.ar.hub, {
-        heading: 'أدلة التحضير لاختبار SMLE والبرومترك',
-        intro: 'أدلة مكتوبة بالكامل ومتاحة للجميع بدون حساب: كيف تستخدم بنك الأسئلة، وخطة مذاكرة من 12 أسبوعاً، ومراجعة الأخطاء، والفرق بين SMLE وبرومترك، والمواضيع عالية العائد.'
+        heading: 'أدلة التحضير لاختبارات SMLE وSNLE والبرومترك',
+        intro: 'أدلة مكتوبة بالكامل ومتاحة للجميع بدون حساب: التوزيع الرسمي لاختبار التمريض SNLE، وكيف تستخدم بنك الأسئلة، وخطة مذاكرة من 12 أسبوعاً، ومراجعة الأخطاء، والفرق بين SMLE وبرومترك، والمواضيع عالية العائد.'
     })}
         <nav aria-label="روابط مهمة">
           <a href="/about">من نحن</a>
@@ -407,18 +407,57 @@ ${guidesTeaserHtml(guidesCopy.ar.hub, {
     `
     },
     '/guides': {
-        title: 'أدلة التحضير لاختبار SMLE | SQB',
-        description: 'مكتبة أدلة عملية للتحضير لاختبار SMLE والبرومترك: خطط مذاكرة، مراجعة الأخطاء، إدارة الوقت، ونصائح أداء عالية العائد.',
-        keywords: 'SMLE study guides, دليل SMLE, خطة مذاكرة SMLE, مراجعة أخطاء SMLE, برومترك طب, نصائح اختبار الهيئة',
+        title: 'أدلة التحضير لاختباري SMLE وSNLE | SQB',
+        description: 'مكتبة أدلة عملية للتحضير لاختبارات الهيئة: التوزيع الرسمي لاختبار التمريض SNLE، وخطط مذاكرة SMLE، ومراجعة الأخطاء، وإدارة الوقت، ونصائح أداء عالية العائد.',
+        keywords: 'SMLE study guides, دليل SMLE, دليل SNLE, خطة مذاكرة SMLE, مراجعة أخطاء SMLE, برومترك طب, نصائح اختبار الهيئة',
         alternates: ['ar-SA', 'ar', 'x-default'],
         structuredData: [
-            routePageData('/guides', 'أدلة التحضير لاختبار SMLE | SQB', 'أدلة ومقالات تعليمية للتحضير لاختبار SMLE والبرومترك.'),
+            routePageData('/guides', 'أدلة التحضير لاختباري SMLE وSNLE | SQB', 'أدلة ومقالات تعليمية للتحضير لاختبارات SMLE وSNLE والبرومترك.'),
             breadcrumbs([
                 { name: 'الرئيسية', path: '/' },
                 { name: 'الأدلة', path: '/guides' }
             ])
         ],
         prerenderHtml: guidesHubHtml(guidesCopy.ar.hub)
+    },
+    /**
+     * The nursing track's first page of its own.
+     *
+     * Everything public on this site so far is SMLE — five guides, the
+     * past-paper hub, the landing copy — while nursing is 26 accounts that
+     * produced half the paying customers. This is the page a nurse searching
+     * "SNLE blueprint" or "درجة النجاح في اختبار SNLE" can land on.
+     *
+     * Unlike its neighbours it carries English structured data of its own: the
+     * others describe their English pages with Arabic schema, which is a
+     * pre-existing wart worth not adding to.
+     */
+    '/guides/snle-blueprint': {
+        title: 'اختبار SNLE: التوزيع الرسمي ودرجة النجاح | SQB',
+        description: 'شرح اختبار الرخصة السعودية للتمريض SNLE من الدليل الرسمي للهيئة: 200 سؤال، وتوزيع الأقسام الأربعة ونسبها، ودرجة النجاح 500، وسياسة المحاولات.',
+        keywords: 'اختبار SNLE, SNLE blueprint, درجة النجاح SNLE, توزيع اختبار التمريض, اختبار الرخصة السعودية للتمريض, رخصة التمريض السعودية',
+        alternates: ['ar-SA', 'ar', 'x-default'],
+        structuredData: [
+            routePageData('/guides/snle-blueprint', 'اختبار SNLE: التوزيع الرسمي ودرجة النجاح | SQB', 'دليل يشرح شكل اختبار SNLE وتوزيعه الرسمي ودرجة النجاح فيه.'),
+            articleSchema('/guides/snle-blueprint', 'اختبار SNLE: التوزيع الرسمي ودرجة النجاح | SQB', 'دليل يشرح شكل اختبار SNLE وتوزيعه الرسمي ودرجة النجاح فيه.', 'اختبار SNLE, SNLE blueprint, درجة النجاح SNLE, توزيع اختبار التمريض'),
+            courseSchema('/guides/snle-blueprint', 'اختبار SNLE: التوزيع الرسمي ودرجة النجاح', 'دليل يشرح شكل اختبار SNLE وتوزيعه الرسمي ودرجة النجاح فيه.', 'اختبار SNLE, SNLE blueprint, درجة النجاح SNLE, توزيع اختبار التمريض'),
+            breadcrumbs([
+                { name: 'الرئيسية', path: '/' },
+                { name: 'الأدلة', path: '/guides' },
+                { name: 'اختبار SNLE', path: '/guides/snle-blueprint' }
+            ])
+        ],
+        structuredDataEn: [
+            routePageData('/guides/snle-blueprint', 'The SNLE blueprint | SQB', 'How the Saudi Nursing Licensure Examination is built: sections, weights, pass mark and attempts.'),
+            articleSchema('/guides/snle-blueprint', 'The SNLE blueprint | SQB', 'How the Saudi Nursing Licensure Examination is built: sections, weights, pass mark and attempts.', 'SNLE blueprint, SNLE passing score, Saudi nursing licensing exam, SNLE exam format'),
+            courseSchema('/guides/snle-blueprint', 'The SNLE blueprint', 'How the Saudi Nursing Licensure Examination is built: sections, weights, pass mark and attempts.', 'SNLE blueprint, SNLE passing score, Saudi nursing licensing exam, SNLE exam format'),
+            breadcrumbs([
+                { name: 'Home', path: '/' },
+                { name: 'Guides', path: '/guides' },
+                { name: 'The SNLE blueprint', path: '/guides/snle-blueprint' }
+            ])
+        ],
+        prerenderHtml: guideArticleHtml(guidesCopy.ar.snleBlueprint, { hub: guidesCopy.ar.hub, currentPath: '/guides/snle-blueprint' })
     },
     '/guides/how-to-use-a-question-bank': {
         title: 'كيف تستخدم بنك الأسئلة لرفع أدائك في SMLE والبرومترك | SQB',
@@ -675,7 +714,8 @@ const enOverlay = {
     '/terms': { title: 'Terms of Service | SQB', description: 'The terms that govern your use of the SQB platform.' },
     '/refund-policy': { title: 'Refund Policy | SQB', description: 'When and how you can request a refund for an SQB subscription.' },
     '/groups': { title: 'Group plans | SQB', description: 'Share one SQB subscription with your study group: 3 accounts for SAR 250 or 5 for SAR 299 over four months, one payment, invite links you hand out yourself.' },
-    '/guides': { title: 'SMLE study guides | SQB', description: 'Practical guides for preparing for the SMLE: study plans, high-yield topics, and how to review your wrong questions.' },
+    '/guides': { title: 'SMLE & SNLE study guides | SQB', description: 'Practical guides for the Saudi Commission exams: the official SNLE nursing blueprint, SMLE study plans, high-yield topics, and how to review your wrong questions.' },
+    '/guides/snle-blueprint': { title: 'The SNLE blueprint: sections, weights and pass mark | SQB', description: 'What the SCFHS applicant guide says about the Saudi Nursing Licensure Examination: 200 questions in two parts, four weighted sections, a pass mark of 500 on the 200–800 scale, and four attempts a year.' },
     '/guides/how-to-use-a-question-bank': { title: 'How to Use a Question Bank to Improve Your SMLE & Prometric Performance | SQB', description: 'A practical guide to using a question bank the right way: a diagnostic session, timed practice, reviewing every answer as data, and weighting questions by topic yield.' },
     '/guides/smle-study-plan': { title: 'The 12-week SMLE study plan | SQB', description: 'A week-by-week SMLE study plan you can actually follow, built around question practice and spaced review.' },
     '/guides/wrong-questions-method': { title: 'How to review your wrong questions | SQB', description: 'A repeatable method for turning every wrong answer into a question you will never miss again.' },
@@ -776,8 +816,8 @@ function englishPrerenderFor(path) {
             questionsTeaser: enQuestionsTeaserHtml(),
             guidesTeaser: guidesTeaserHtml(guidesCopy.en.hub, {
                 lang: 'en',
-                heading: 'Study guides for the SMLE and Prometric exams',
-                intro: 'Five complete guides, open to everyone with no account: how to use a question bank in the right order, a twelve-week plan, reviewing your mistakes, SMLE versus Prometric, and the highest-yield topics.'
+                heading: 'Study guides for the SMLE, SNLE and Prometric exams',
+                intro: 'Six complete guides, open to everyone with no account: the official SNLE nursing blueprint, how to use a question bank in the right order, a twelve-week plan, reviewing your mistakes, SMLE versus Prometric, and the highest-yield topics.'
             })
         });
     }
@@ -796,6 +836,7 @@ function englishPrerenderFor(path) {
 }
 
 const EN_GUIDE_KEYS = {
+    '/guides/snle-blueprint': 'snleBlueprint',
     '/guides/how-to-use-a-question-bank': 'howToUseBank',
     '/guides/smle-study-plan': 'studyPlan',
     '/guides/wrong-questions-method': 'wrongQuestions',
