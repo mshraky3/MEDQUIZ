@@ -35,6 +35,18 @@ be reached to settle it. Publishing wrong exam logistics to candidates is worse
 than publishing nothing. Revisit only with the official SCFHS applicant guide
 open. This leaves real ranking ground to competitors, knowingly.
 
+**Both are now unblocked** (2026-08-31, while doing S4-01). scfhs.org.sa is
+reachable and both official guides were read end to end:
+
+- SNLE — <https://scfhs.org.sa/sites/default/files/2025-09/SNLE%20Applicant%20Guide%20.pdf>
+- SMLE 2026 — <https://scfhs.org.sa/sites/default/files/2026-05/Saudi%20Medical%20Licensure%20Examination%20(SMLE)%20Blueprint_2026_0.pdf>
+
+The facts that could not be settled before are in `docs/SNLE_BLUEPRINT_AUDIT.md`.
+Note the two exams do **not** share a pass mark: SNLE is 500 on the 200–800
+scale, SMLE is 560. Both remain open as tasks — what changed is that the
+blocker did, and the SMLE blueprint is granular enough (per-topic item counts
+over ~15 pages) to carry several pages on its own.
+
 ## Sprint 2 — convert the traffic you already have (weeks 3–6)
 
 17 people used all 40 free questions and 1 subscribed. 38 opened checkout and 3
@@ -97,7 +109,7 @@ You have none, and you are asking for up to 300 SAR.
 
 | ID | Task | Status |
 |----|------|--------|
-| S4-01 | Check the nursing track against the official SNLE blueprint | **not started** — possible uncovered 10% (management & leadership) |
+| S4-01 | Check the nursing track against the official SNLE blueprint | **done** — `docs/SNLE_BLUEPRINT_AUDIT.md`; all four sections out of band, management & leadership is 0% |
 | S4-02 | Lead acquisition with nursing | **not started** — 26 nursing accounts, but 3 of 6 payers are nursing |
 | S4-03 | Sell the group plans directly instead of waiting to be found | **not started** — built, verified, zero seats sold |
 | S4-04 | Decide about Telegram — commit or stop | **not started** — everything built, 2 subscribers and 2 visits to show |
