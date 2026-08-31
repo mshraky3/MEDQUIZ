@@ -20,6 +20,7 @@
  */
 
 import publicQuestionsCopy from '../i18n/copy/publicQuestions.js';
+import { explanationHtml, explanationPlain } from './explanation.js';
 import { faqHtml, faqPageSchema } from './faqSchema.js';
 import {
     SITE_ORIGIN,
@@ -188,7 +189,7 @@ ${options}
         </ol>
         <section class="pq-explanation">
           <h2>${escapeHtml(t.question.explanationTitle)}</h2>
-          <p>${escapeHtml(question.explanation)}</p>
+          ${explanationHtml(question.explanation)}
         </section>
       </article>
 ${ctaHtml(t, lang)}
@@ -351,7 +352,10 @@ function quizSchema(question, routePath, lang) {
             acceptedAnswer: {
                 '@type': 'Answer',
                 text: question.options[question.correctIndex],
-                explanation: question.explanation,
+                // Markers stripped: this string can be surfaced verbatim in a
+                // rich result, where `**Core Concept:**` would be read by a
+                // person as punctuation the site got wrong.
+                explanation: explanationPlain(question.explanation),
             },
             suggestedAnswer: question.options
                 .filter((_, i) => i !== question.correctIndex)

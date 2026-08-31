@@ -486,3 +486,17 @@
   line-height: 1.9;
   color: var(--text-medium);
 }
+
+/* Explanations are authored with bold stage headings and bullets (see
+   src/seo/explanation.js). They used to render as one flat paragraph with the
+   asterisks showing; now they render as the structure they were written in. */
+.pq-explanation p { margin: 0 0 10px; }
+.pq-explanation p:last-child { margin-bottom: 0; }
+.pq-explanation strong { font-weight: 800; }
+
+.pq-explanation ul {
+    margin: 0 0 12px;
+    padding-inline-start: 20px;
+}
+
+.pq-explanation li { margin-bottom: 5px; line-height: 1.7; }
