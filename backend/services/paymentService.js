@@ -194,6 +194,24 @@ export function getCurrency() {
 export const FREE_QUESTION_ALLOWANCE = Number(process.env.FREE_QUESTION_ALLOWANCE || 40);
 
 /**
+ * How far `free_questions_served` may run ahead of `free_questions_used`.
+ *
+ * The allowance is spent on ANSWER, not on serve, because a quiz that is
+ * fetched and abandoned should cost nothing — five of the seventeen accounts
+ * that exhausted their allowance had no completed session at all, so they hit
+ * the paywall having never seen the analytics the subscription actually sells.
+ *
+ * Billing on answer alone would hand a free account unlimited questions: fetch
+ * ten, close the tab, fetch ten more, forever. This cap is what closes that,
+ * and it is why the serve path still writes a counter. Because it defaults to
+ * the allowance itself, the worst a farmer can extract without ever answering
+ * is exactly what they were entitled to anyway.
+ */
+export const FREE_UNANSWERED_CAP = Number(
+    process.env.FREE_UNANSWERED_CAP || FREE_QUESTION_ALLOWANCE
+);
+
+/**
  * Is this a PAYING (or exempt) account? Nothing more.
  *
  * This used to be the single gate for the whole product, which is why an
@@ -262,35 +280,60 @@ export function checkSubscriptionAccess(account) {
  * for the old one-hour engaged-time trial, which had the fatal property of
  * locking a student out of the account we then tried to email them about.
  *
- * `remaining` is not advisory: GET /api/questions clamps its `limit` to it, so
+ * Two numbers come back, and they are not the same thing:
+ *
+ *   remaining — the budget, allowance minus what has actually been ANSWERED.
+ *               This is what the account page and the launcher pill show, and
+ *               running out of it is the paywall.
+ *   servable  — how many this REQUEST may hand over: `remaining`, further
+ *               limited by how much room is left under FREE_UNANSWERED_CAP.
+ *               Running out of this is not a paywall; it means questions
+ *               already fetched are sitting unanswered, and the fix is to
+ *               finish a quiz, not to pay.
+ *
+ * Neither is advisory: GET /api/questions clamps its `limit` to `servable`, so
  * a free user with 5 left cannot ask for 500 and walk away with 500.
  *
- * The counter is accounts.free_questions_used, incremented when a quiz is
- * SUBMITTED (POST /quiz-sessions). It is deliberately not derived from
- * user_question_progress — POST /api/reset-progress wipes that table on
- * demand, which would be an unlimited-refill button.
+ * The counters are accounts.free_questions_used (incremented on SUBMIT, in
+ * POST /quiz-sessions) and accounts.free_questions_served (incremented when
+ * questions are handed out). Both are deliberately columns rather than derived
+ * from user_question_progress, which POST /api/reset-progress wipes on demand —
+ * that would be an unlimited-refill button.
  *
  * @param {object} account - row from accounts, must include free_questions_used
- * @returns {{ allowed: boolean, remaining: number, reason: string }}
+ *                           and free_questions_served
+ * @returns {{ allowed: boolean, remaining: number, servable: number, reason: string }}
  */
 export function checkQuizAccess(account) {
     if (!isPaymentEnforcementEnabled()) {
-        return { allowed: true, remaining: Infinity, reason: 'enforcement_disabled' };
+        return {
+            allowed: true, remaining: Infinity, servable: Infinity, reason: 'enforcement_disabled',
+        };
     }
     if (!account) {
-        return { allowed: false, remaining: 0, reason: 'account_not_found' };
+        return { allowed: false, remaining: 0, servable: 0, reason: 'account_not_found' };
     }
     const paid = checkSubscriptionAccess(account);
     if (paid.allowed) {
-        return { allowed: true, remaining: Infinity, reason: paid.reason };
+        return { allowed: true, remaining: Infinity, servable: Infinity, reason: paid.reason };
     }
     const used = Number(account.free_questions_used) || 0;
+    // Older rows predate the column; treating a missing value as "nothing
+    // outstanding" is the safe direction — it can only ever be too generous to
+    // the student, never lock one out of questions they are entitled to.
+    const served = Number(account.free_questions_served) || 0;
     const remaining = Math.max(0, FREE_QUESTION_ALLOWANCE - used);
-    return {
-        allowed: remaining > 0,
-        remaining,
-        reason: remaining > 0 ? 'free_allowance' : 'free_allowance_exhausted',
-    };
+    const outstanding = Math.max(0, served - used);
+    const servable = Math.max(0, Math.min(remaining, FREE_UNANSWERED_CAP - outstanding));
+
+    if (remaining <= 0) {
+        return { allowed: false, remaining: 0, servable: 0, reason: 'free_allowance_exhausted' };
+    }
+    if (servable <= 0) {
+        // Budget left, but too much already fetched and never answered.
+        return { allowed: false, remaining, servable: 0, reason: 'unanswered_backlog' };
+    }
+    return { allowed: true, remaining, servable, reason: 'free_allowance' };
 }
 
 /**

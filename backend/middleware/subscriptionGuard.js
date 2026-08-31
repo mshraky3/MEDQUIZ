@@ -37,7 +37,8 @@ import { recordFunnelEvent } from '../routes/funnel.js';
 import { logger } from '../utils/observability.js';
 
 const ACCOUNT_FIELDS = `id, subscription_status, subscription_expiry_date,
-                        is_admin_created, grandfathered_at, free_questions_used`;
+                        is_admin_created, grandfathered_at, free_questions_used,
+                        free_questions_served`;
 
 /** Look up the session's account, or null. Shared by both guards. */
 async function loadAccount(db, username) {
@@ -80,16 +81,31 @@ export function quizAccessGuard(db) {
             req.quizAccess = access;
 
             if (!access.allowed) {
-                recordPaywallHit(db, account, access.reason, req);
+                // A backlog is not a paywall and must not be funnelled like
+                // one: the account still has budget, it just has questions
+                // fetched and never answered. Counting it as a paywall_hit
+                // would inflate the one metric this sprint is trying to read.
+                const backlog = access.reason === 'unanswered_backlog';
+                if (!backlog) recordPaywallHit(db, account, access.reason, req);
+
+                let message;
+                if (backlog) {
+                    message = `Finish the questions you already have open to keep going. You still have ${access.remaining} of your ${FREE_QUESTION_ALLOWANCE} free questions left — they are only spent on questions you actually answer.`;
+                } else if (access.reason === 'free_allowance_exhausted') {
+                    message = `You have used all ${FREE_QUESTION_ALLOWANCE} of your free questions. Subscribe to keep practising — your account, your progress and the free lessons stay open.`;
+                } else {
+                    message = 'An active subscription is required to access this feature.';
+                }
+
                 return res.status(402).json({
                     success: false,
-                    expired: true,
+                    // A backlog is recoverable by finishing a quiz, so nothing
+                    // has expired — the client must not show the lockout copy.
+                    expired: !backlog,
                     reason: access.reason,
-                    remaining: 0,
+                    remaining: Number.isFinite(access.remaining) ? access.remaining : 0,
                     allowance: FREE_QUESTION_ALLOWANCE,
-                    message: access.reason === 'free_allowance_exhausted'
-                        ? `You have used all ${FREE_QUESTION_ALLOWANCE} of your free questions. Subscribe to keep practising — your account, your progress and the free lessons stay open.`
-                        : 'An active subscription is required to access this feature.',
+                    message,
                 });
             }
             return next();

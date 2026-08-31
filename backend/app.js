@@ -764,6 +764,17 @@ function ensurePaymentSchema() {
                     ADD COLUMN IF NOT EXISTS free_questions_used INTEGER NOT NULL DEFAULT 0
             `);
 
+            // The anti-abuse half of billing-on-answer. free_questions_used is
+            // spent when a quiz is SUBMITTED; this one counts what was handed
+            // out. The gap between them is the number of questions a free
+            // account is holding without having answered them, and
+            // FREE_UNANSWERED_CAP bounds it — otherwise "fetch ten, close the
+            // tab, repeat" would be an unlimited free tier.
+            await db.query(`
+                ALTER TABLE accounts
+                    ADD COLUMN IF NOT EXISTS free_questions_served INTEGER NOT NULL DEFAULT 0
+            `);
+
             // Grandfather pre-rollout accounts EXACTLY ONCE.
             await db.query(`CREATE TABLE IF NOT EXISTS schema_migrations (name TEXT PRIMARY KEY, applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
             const applied = await db.query(`SELECT 1 FROM schema_migrations WHERE name = '001_grandfather_existing'`);
@@ -844,6 +855,28 @@ function ensurePaymentSchema() {
                 `, [DEFAULT_INVITE_MONTHS]);
                 await db.query(`INSERT INTO schema_migrations (name) VALUES ('004_expire_admin_created') ON CONFLICT DO NOTHING`);
                 logger.info(`Gave ${timed.rowCount} admin-created account(s) a ${DEFAULT_INVITE_MONTHS}-month term instead of permanent access (one-time)`);
+            }
+
+            // Align the new served counter with the old one, EXACTLY ONCE.
+            //
+            // Under the previous rule the allowance was spent on serve, so
+            // free_questions_used already IS what those accounts were served.
+            // Leaving the new column at 0 would make `served - used` negative
+            // for every existing account, and since that gap is what the
+            // unanswered cap measures, each of them would carry a permanent
+            // head start — an account that had been served 20 could fetch a
+            // further 40 without ever answering one. Starting the two equal
+            // costs nobody anything they had already earned.
+            const applied5 = await db.query(`SELECT 1 FROM schema_migrations WHERE name = '005_seed_free_questions_served'`);
+            if (applied5.rows.length === 0) {
+                const aligned = await db.query(`
+                    UPDATE accounts
+                       SET free_questions_served = free_questions_used
+                     WHERE free_questions_served = 0
+                       AND free_questions_used > 0
+                `);
+                await db.query(`INSERT INTO schema_migrations (name) VALUES ('005_seed_free_questions_served') ON CONFLICT DO NOTHING`);
+                logger.info(`Seeded free_questions_served from free_questions_used on ${aligned.rowCount} account(s) (one-time)`);
             }
             _paymentColumnsExist = true; // prime the lazy cache used elsewhere
             logger.info('Payment/subscription schema ensured');
@@ -3913,12 +3946,14 @@ function dedupeByText(rows) {
 
 app.get('/api/questions', requireQuizAccess, async (req, res) => {
 
-    // Free accounts are served at most what is left of their lifetime
-    // allowance. This clamp is the enforcement — the launcher also shows the
-    // remaining count, but a hand-rolled ?limit=500 must not outrun it.
+    // Free accounts are served at most what this request may hand over. That
+    // is `servable`, NOT `remaining`: the budget is what is left to answer,
+    // while servable also subtracts questions already fetched and abandoned
+    // (see checkQuizAccess). This clamp is the enforcement — the launcher also
+    // shows the remaining count, but a hand-rolled ?limit=500 must not outrun it.
     const requested = parseInt(req.query.limit) || 10;
-    const remaining = req.quizAccess?.remaining ?? Infinity;
-    const limit = Math.max(1, Math.min(requested, remaining));
+    const servable = req.quizAccess?.servable ?? req.quizAccess?.remaining ?? Infinity;
+    const limit = Math.max(1, Math.min(requested, servable));
     const typesParam = req.query.types; // e.g., 'mix' or 'medicine,surgery'
     const sourceParam = req.query.source; // e.g., 'general', 'Midgard', 'GameBoy'
     // Progress is always the caller's own — taken from the validated session
@@ -4045,36 +4080,41 @@ app.get('/api/questions', requireQuizAccess, async (req, res) => {
 
         const served = dedupeByText(rows);
 
-        // Spend the free allowance HERE, for what is actually handed out — not
-        // on submit. A quiz that is fetched and then abandoned (closed tab, no
-        // POST /quiz-sessions ever sent) used to cost nothing, so a free
-        // account could take unlimited quizzes by simply never finishing one.
-        // Only accounts being metered (a finite `remaining`) are debited —
+        // Record what was handed out. This is NOT the charge — the allowance is
+        // spent on submit (POST /quiz-sessions), so a quiz that is fetched and
+        // then abandoned costs the student nothing. Five of the seventeen
+        // accounts that used up their 40 had no completed session at all: they
+        // spent the whole trial on quizzes they never finished and met the
+        // paywall having never seen the analytics it sells.
+        //
+        // What this counter buys is the anti-abuse property the old spend-on-
+        // serve rule had for free. `free_questions_served - free_questions_used`
+        // is how much a free account is holding unanswered, and checkQuizAccess
+        // refuses to serve past FREE_UNANSWERED_CAP of it, so "fetch ten, close
+        // the tab, repeat" still terminates.
+        //
+        // Only accounts being metered (a finite `remaining`) are counted —
         // paid/admin/grandfathered accounts and enforcement-disabled installs
         // all report Infinity and are skipped. The WHERE clause is a second,
         // server-side confirmation of the same free-tier condition so a stale
-        // `req.quizAccess` can never spend a paid account's non-existent budget.
-        let freeRemaining = Number.isFinite(req.quizAccess?.remaining) ? req.quizAccess.remaining : null;
+        // `req.quizAccess` can never write against a paid account.
+        const freeRemaining = Number.isFinite(req.quizAccess?.remaining) ? req.quizAccess.remaining : null;
         if (Number.isFinite(req.quizAccess?.remaining) && served.length > 0) {
             try {
-                const spend = await db.query(
+                await db.query(
                     `UPDATE accounts
-                        SET free_questions_used = LEAST($1::int, free_questions_used + $2::int)
-                      WHERE id = $3
+                        SET free_questions_served = free_questions_served + $1::int
+                      WHERE id = $2
                         AND is_admin_created = FALSE
                         AND grandfathered_at IS NULL
                         AND NOT (subscription_status = 'active'
-                                 AND subscription_expiry_date > NOW())
-                      RETURNING free_questions_used`,
-                    [FREE_QUESTION_ALLOWANCE, served.length, req.accountId]
+                                 AND subscription_expiry_date > NOW())`,
+                    [served.length, req.accountId]
                 );
-                if (spend.rows.length > 0) {
-                    freeRemaining = Math.max(0, FREE_QUESTION_ALLOWANCE - spend.rows[0].free_questions_used);
-                }
             } catch (err) {
-                // Never fail a served batch over the counter — worst case a
-                // free user gets a few extra questions this one time.
-                logger.error('Failed to spend free allowance on serve', err);
+                // Never fail a served batch over the counter — worst case one
+                // abandoned quiz goes unrecorded against the cap this once.
+                logger.error('Failed to record served questions against the unanswered cap', err);
             }
         }
         res.json({ questions: served, freeRemaining });
@@ -4538,9 +4578,43 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
             session_id: result.rows[0].session_id
         });
 
-        // The free allowance is spent when questions are SERVED (see
-        // GET /api/questions), not here — submitting no longer touches
-        // free_questions_used at all, so there is nothing to spend or report.
+        // ── Spend the free allowance, for questions actually ANSWERED ──
+        //
+        // This is the charge. Serving only records against the unanswered cap
+        // (see GET /api/questions); nothing is billed until a quiz is finished
+        // and submitted, so an abandoned quiz is free. That is the whole point:
+        // a student who spent their trial on quizzes they closed used to arrive
+        // at the paywall having seen none of what the subscription offers.
+        //
+        // Billed on the questions in the submission rather than a client-sent
+        // count of "answered", since the client controls both — and the number
+        // it cannot lie its way past is the served counter, which the cap reads.
+        // Under-reporting here just walks an account into the backlog block
+        // sooner, so it is self-limiting.
+        //
+        // Runs after the session row is committed and never fails the request:
+        // the student's result is what they earned, and a counter is not worth
+        // a 500 over. The WHERE clause re-confirms the free-tier condition
+        // server-side so a paid account is never debited.
+        const billable = Array.isArray(question_ids) && question_ids.length > 0
+            ? question_ids.length
+            : Number(total_questions) || 0;
+        if (billable > 0) {
+            try {
+                await db.query(
+                    `UPDATE accounts
+                        SET free_questions_used = LEAST($1::int, free_questions_used + $2::int)
+                      WHERE id = $3
+                        AND is_admin_created = FALSE
+                        AND grandfathered_at IS NULL
+                        AND NOT (subscription_status = 'active'
+                                 AND subscription_expiry_date > NOW())`,
+                    [FREE_QUESTION_ALLOWANCE, billable, user_id]
+                );
+            } catch (err) {
+                logger.error('Failed to spend free allowance on submit', err);
+            }
+        }
 
         // ── Everything below is BOOKKEEPING, and must never fail the request ──
         // The session row above is the student's result and it is committed.
@@ -5550,6 +5624,7 @@ app.get('/api/user-subscription/:userId', requireSession, requireOwnUser('userId
         const selectCols = columnsReady
             ? `id, username, email, isactive,
                subscription_status, subscription_expiry_date, free_questions_used,
+               free_questions_served,
                grandfathered_at, account_type, is_admin_created`
             : `id, username, email, isactive`;
 

@@ -273,6 +273,11 @@ const quizCopy = {
             // 402 من الخادم — ليست حالة خطأ: لم يُسحب من الحساب شيء.
             paywallSpentTitle: 'أنهيت أسئلتك الأربعين المجانية',
             paywallSpentBody: 'حسابك وتقدّمك وتحليلاتك تبقى مفتوحة لك، وكذلك أول درس من كل تخصص. الاشتراك يفتح بقية بنك الأسئلة.',
+            // ليست حالة دفع: الرصيد باقٍ، لكن هناك أسئلة سُحبت ولم يُجب عنها.
+            // يُحتسب الرصيد عند الإجابة لا عند السحب، والحل هو إنهاء اختبار.
+            paywallBacklogTitle: 'أنهِ الاختبار الذي بدأته',
+            paywallBacklogBody: 'لديك أسئلة مفتوحة لم تُجب عنها بعد. رصيدك المجاني لا يُخصم إلا على الأسئلة التي تجيب عنها فعلاً، فأنهِ اختباراً واحداً وستُفتح لك بقية أسئلتك.',
+            paywallBacklogCta: 'العودة لإنهاء اختباري',
             paywallSubscriberTitle: 'هذه الميزة للمشتركين',
             paywallSubscriberBody: 'الاختبار الشامل لتخصص كامل متاح للمشتركين فقط. يمكنك دائماً بدء اختبار عادي بأسئلتك المجانية.',
             paywallCta: 'عرض خطط الاشتراك',
@@ -592,6 +597,12 @@ const quizCopy = {
             // Server 402 — not an error state: nothing has been taken away.
             paywallSpentTitle: "That's your 40 free questions",
             paywallSpentBody: 'Your account, your progress and your analytics stay open, and so does the first lesson of every specialty. A subscription opens the rest of the question bank.',
+            // Not a payment state: the budget is intact, but questions have
+            // been fetched and never answered. The allowance is spent on
+            // answering, not on fetching, so the fix is to finish a quiz.
+            paywallBacklogTitle: 'Finish the quiz you started',
+            paywallBacklogBody: 'You have questions open that you have not answered yet. Your free questions are only spent on ones you actually answer, so finish a quiz and the rest open up again.',
+            paywallBacklogCta: 'Back to finish my quiz',
             paywallSubscriberTitle: 'This one is for subscribers',
             paywallSubscriberBody: 'The full-specialty final quiz is a subscriber feature. You can always start a normal quiz with your free questions.',
             paywallCta: 'See subscription plans',

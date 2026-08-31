@@ -610,18 +610,37 @@ const QUIZ = () => {
   // Out of free questions. Deliberately its own screen, not ErrorScreen:
   // nothing failed, and nothing about the account has been taken away.
   if (paywalled) {
+    // Three states, not two. `unanswered_backlog` is the odd one: the account
+    // still HAS free questions, it has simply fetched a pile and answered none
+    // of them (the allowance is spent on answering — see checkQuizAccess).
+    // Sending that student to the pricing page would be a lie and a bad ask;
+    // what they need is to go back and finish. Only the other two sell.
+    const backlog = paywalled === 'unanswered_backlog';
+    const spent = paywalled === 'free_allowance_exhausted';
+    const title = backlog ? t.paywallBacklogTitle : spent ? t.paywallSpentTitle : t.paywallSubscriberTitle;
+    const body = backlog ? t.paywallBacklogBody : spent ? t.paywallSpentBody : t.paywallSubscriberBody;
+    const goBack = () => navigate('/quizs', { state: { id } });
+
     return (
       <div className="quiz-paywall" dir={dir}>
         <div className="quiz-paywall-card">
-          <span className="quiz-paywall-icon" aria-hidden="true"><Icon name="lock" size={40} /></span>
-          <h2>{paywalled === 'free_allowance_exhausted' ? t.paywallSpentTitle : t.paywallSubscriberTitle}</h2>
-          <p>{paywalled === 'free_allowance_exhausted' ? t.paywallSpentBody : t.paywallSubscriberBody}</p>
-          <button type="button" className="quiz-paywall-cta" onClick={() => navigate('/subscribe')}>
-            {t.paywallCta}
+          <span className="quiz-paywall-icon" aria-hidden="true">
+            <Icon name={backlog ? 'refresh' : 'lock'} size={40} />
+          </span>
+          <h2>{title}</h2>
+          <p>{body}</p>
+          <button
+            type="button"
+            className="quiz-paywall-cta"
+            onClick={backlog ? goBack : () => navigate('/subscribe')}
+          >
+            {backlog ? t.paywallBacklogCta : t.paywallCta}
           </button>
-          <button type="button" className="quiz-paywall-secondary" onClick={() => navigate('/quizs', { state: { id } })}>
-            {t.paywallBack}
-          </button>
+          {!backlog && (
+            <button type="button" className="quiz-paywall-secondary" onClick={goBack}>
+              {t.paywallBack}
+            </button>
+          )}
         </div>
       </div>
     );
