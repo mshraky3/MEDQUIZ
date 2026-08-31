@@ -1903,3 +1903,24 @@
 }
 
 .hero-try a:hover { color: var(--primary-color, #2563eb); }
+
+/* Live inventory strip under the hero trust list — counts read from
+   /api/public/stats, never typed into the copy. Separated by dots rather than
+   boxed, so it reads as a factual footnote to the trust list above it rather
+   than competing with it. Renders only when the numbers arrive. */
+.hero-live {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 14px;
+  margin: 10px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted, #64748b);
+}
+
+.hero-live span + span::before {
+  content: '·';
+  margin-inline-end: 14px;
+  opacity: 0.55;
+}

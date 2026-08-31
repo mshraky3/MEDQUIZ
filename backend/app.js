@@ -574,6 +574,17 @@ function ensureSchema() {
             // created later in boot, so it cannot be altered from here.)
             await db.query(`ALTER TABLE accounts  ADD COLUMN IF NOT EXISTS track VARCHAR(20) NOT NULL DEFAULT '${DEFAULT_TRACK}'`);
             await db.query(`ALTER TABLE questions ADD COLUMN IF NOT EXISTS track VARCHAR(20) NOT NULL DEFAULT '${DEFAULT_TRACK}'`);
+
+            // When a question was added, for the "last updated" the landing
+            // page shows. Two statements, not one: adding the column WITH a
+            // default would stamp every existing row with the deploy time and
+            // announce that the entire bank was written today. Added bare (so
+            // every existing row is NULL), then given a default so only rows
+            // inserted from here on carry a real date. MAX() is therefore null
+            // until a question is genuinely added, and the landing page shows
+            // no date until then — the number only ever appears once true.
+            await db.query(`ALTER TABLE questions ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ`);
+            await db.query(`ALTER TABLE questions ALTER COLUMN created_at SET DEFAULT NOW()`);
             await db.query(`CREATE INDEX IF NOT EXISTS idx_accounts_track ON accounts(track)`);
             // Every question lookup filters by track first, then type/source —
             // this index is the one that keeps /api/questions off a seq scan
@@ -7899,9 +7910,19 @@ app.put('/api/preferences/language', requireSession, async (req, res) => {
 });
 
 /**
- * GET /api/public/stats — live usage numbers for the landing page's social
- * proof (real activity, not question-bank inventory — the site never states
- * bank size). Unauthenticated, read-only, no PII: three counts, nothing else.
+ * GET /api/public/stats — live numbers for the landing page.
+ *
+ * Two kinds: recent ACTIVITY, and current INVENTORY. The inventory half is new,
+ * and the comment that used to sit here ("the site never states bank size") is
+ * no longer true — the landing page says how many questions the bank holds,
+ * because "5,033 questions, every one explained" is a verifiable fact and the
+ * claim it replaced ("hundreds of students passed") was not one.
+ *
+ * Hardcoding that number means it is wrong the day after the next import, and
+ * a stale number is exactly the objection people have to the free PDF
+ * collections they use instead. Counted live, it cannot go stale.
+ *
+ * Unauthenticated, read-only, no PII: counts and one date, nothing else.
  *
  * Cached in memory for CACHE_MS so a viral landing page can't turn this into
  * three COUNT(*) queries per pageview. Failures fall back to whatever was
@@ -7916,17 +7937,28 @@ app.get('/api/public/stats', async (req, res) => {
         return res.json({ success: true, ...(_publicStatsCache.data), cached: true });
     }
     try {
-        const [activeWeek, questionsMonth, quizzesMonth] = await Promise.all([
+        const [activeWeek, questionsMonth, quizzesMonth, inventory, decks] = await Promise.all([
             db.query(`SELECT COUNT(DISTINCT user_id)::int AS n FROM login_history WHERE login_time > NOW() - INTERVAL '7 days'`),
             db.query(`SELECT COUNT(*)::int AS n FROM user_question_attempts WHERE quiz_session_id IN (
                           SELECT id FROM user_quiz_sessions WHERE start_time > NOW() - INTERVAL '30 days'
                       )`),
             db.query(`SELECT COUNT(*)::int AS n FROM user_quiz_sessions WHERE start_time > NOW() - INTERVAL '30 days' AND end_time IS NOT NULL`),
+            db.query(`SELECT COUNT(*)::int AS n, MAX(created_at) AS newest FROM questions`),
+            db.query(`SELECT COUNT(*)::int AS n FROM summaries WHERE is_published = TRUE`),
         ]);
+        const newest = inventory.rows[0]?.newest || null;
         const data = {
             activeStudentsThisWeek: activeWeek.rows[0]?.n || 0,
             questionsAnsweredThisMonth: questionsMonth.rows[0]?.n || 0,
             quizzesCompletedThisMonth: quizzesMonth.rows[0]?.n || 0,
+            // Inventory. `questionsTotal` is every question in the bank across
+            // both tracks, which is what the landing page's claim is about.
+            questionsTotal: inventory.rows[0]?.n || 0,
+            summaryDecks: decks.rows[0]?.n || 0,
+            // Null until a question is added after the created_at column
+            // existed — see the migration. The page shows no date rather than
+            // a made-up one.
+            contentUpdatedAt: newest ? new Date(newest).toISOString().slice(0, 10) : null,
         };
         _publicStatsCache = { data, at: now };
         res.json({ success: true, ...data, cached: false });

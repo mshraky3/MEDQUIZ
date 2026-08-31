@@ -1,13 +1,14 @@
-import React, { lazy, Suspense, useContext, useEffect } from 'react';
+import React, { lazy, Suspense, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { safeTrack, trackFunnel, captureLandingAttribution } from '../../utils/analytics.js';
 import Icon from '../common/Icon.jsx';
 import HeroArt from './HeroArt.jsx';
 import ExamCountdown from './ExamCountdown.jsx';
 import InstallPrompt from '../common/InstallPrompt.jsx';
+import Globals from '../../global.js';
 import { UserContext } from '../../UserContext';
 import { TRACKS, MEDICAL, NURSING, pick } from '../../utils/tracks.js';
-import { useCopy, useLang, LanguageToggle, LocaleLink as Link } from '../../i18n';
+import { useCopy, useLang, LanguageToggle, LocaleLink as Link, formatNumber, formatDate } from '../../i18n';
 import landingCopy from '../../i18n/copy/landing.js';
 // The guide titles/excerpts shown in the study-guides band. Read from the
 // guides copy rather than restated in landing.js, so this band, the /guides
@@ -108,6 +109,27 @@ const Landing = () => {
   // First-touch attribution — fires once per browser ever, not on every visit.
   useEffect(() => {
     captureLandingAttribution();
+  }, []);
+
+  // Bank size and deck count, counted from the database on request rather than
+  // typed into the copy. /api/public/stats has existed (and been cached) for a
+  // while with nothing calling it; this is the first consumer.
+  //
+  // Plain fetch, no apiClient: this page is the anonymous entry point and must
+  // not pull axios into the landing bundle, and an anonymous visitor has no
+  // session for the interceptor to attach anyway. Failure is silent — the
+  // static trust list above already carries the page, and a broken number
+  // would undo exactly the credibility this line is meant to build.
+  const [liveStats, setLiveStats] = useState(null);
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch(`${Globals.URL}/api/public/stats`, { signal: controller.signal })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.success && data.questionsTotal > 0) setLiveStats(data);
+      })
+      .catch(() => { /* the line simply does not render */ });
+    return () => controller.abort();
   }, []);
 
   // Mirrors Navbar's definition so both agree on what counts as "logged in".
@@ -228,6 +250,20 @@ const Landing = () => {
               <ul className="hero-trust">
                 {t.hero.trust.map((item) => <li key={item}>{item}</li>)}
               </ul>
+              {/* Counted from the database, not typed here. Renders nothing
+                  until the numbers arrive, so a slow or failed request costs a
+                  line rather than showing a zero or a placeholder. */}
+              {liveStats && (
+                <p className="hero-live">
+                  <span>{t.hero.liveQuestions(formatNumber(liveStats.questionsTotal, lang))}</span>
+                  {liveStats.summaryDecks > 0 && (
+                    <span>{t.hero.liveDecks(formatNumber(liveStats.summaryDecks, lang))}</span>
+                  )}
+                  {liveStats.contentUpdatedAt && (
+                    <span>{t.hero.liveUpdated(formatDate(liveStats.contentUpdatedAt, lang))}</span>
+                  )}
+                </p>
+              )}
             </>
           )}
 

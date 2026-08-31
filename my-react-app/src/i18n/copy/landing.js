@@ -32,6 +32,12 @@ const landingCopy = {
             // سطر صغير تحت الأزرار لمن لم يقرّر بعد: 78 من 120 اختاروا مساراً
             // هذا الشهر ثم تركوا نموذج التسجيل — أرادوا رؤية الأسئلة أولاً.
             tryFirst: 'أو جرّب ٢٠ سؤالاً أولاً — بدون حساب',
+            // شريط أرقام حيّة من قاعدة البيانات (/api/public/stats). الاعتراض
+            // على ملفات PDF المجانية المتداولة أنها قديمة وغير موثّقة — والردّ
+            // الوحيد المقنع هو رقم يُحسب الآن ولا يمكن أن يتقادم.
+            liveQuestions: (n) => `${n} سؤالاً في البنك`,
+            liveDecks: (n) => `${n} ملزمة ملخّصات`,
+            liveUpdated: (date) => `آخر إضافة ${date}`,
             secondary: 'تسجيل الدخول',
             trust: [
                 'تفسير كامل لكل سؤال',
@@ -342,6 +348,14 @@ const landingCopy = {
             // A quiet line under the buttons for anyone not ready: 78 of the
             // 120 who picked a track this month left at the signup form.
             tryFirst: 'Or try 20 questions first — no account needed',
+            // A strip of live numbers counted from the database
+            // (/api/public/stats). The objection to the free PDF collections
+            // people use instead is that they are old and unverified, and the
+            // only convincing answer is a figure that is counted now and
+            // cannot go stale.
+            liveQuestions: (n) => `${n} questions in the bank`,
+            liveDecks: (n) => `${n} summary decks`,
+            liveUpdated: (date) => `newest added ${date}`,
             secondary: 'Log in',
             trust: [
                 'A full explanation for every question',
