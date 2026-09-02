@@ -63,13 +63,17 @@ wrong.)
 
 ## What the bank actually contains
 
-1,907 nursing questions after de-duplication.
+**2,105 nursing questions.** That is the live table, not an estimate of it: the
+collection totals in `src/seo/data/publicQuestions.json` come from a real
+`COUNT(*)` against the database (`backend/scripts/exportPublicQuestions.js`, last
+run 2026-08-30) and read 1,514 + 591 = 2,105, which is exactly the row count of
+the two files under `source-material/clean/`. Every source row is in the table.
 
 | Section | Ours | Target | Band | Gap |
 |---|---|---|---|---|
-| Nursing Fundamentals | **30.0%** | 20% | 15–25% | **+10.0 pts** |
-| Adult Nursing | **31.6%** | 40% | 35–45% | **−8.4 pts** |
-| Maternal-Child Nursing | **38.4%** | 30% | 25–35% | **+8.4 pts** |
+| Nursing Fundamentals | **31.1%** | 20% | 15–25% | **+11.1 pts** |
+| Adult Nursing | **32.7%** | 40% | 35–45% | **−7.3 pts** |
+| Maternal-Child Nursing | **36.2%** | 30% | 25–35% | **+6.2 pts** |
 | Nursing Management and Leadership | **0.0%** | 10% | 5–15% | **−10.0 pts** |
 
 All four sections are outside the blueprint's own tolerance.
@@ -78,12 +82,12 @@ By our specialty, which is how a student actually meets the bank:
 
 | Specialty | Questions | Share |
 |---|---|---|
-| medical surgical nursing | 524 | 27.5% |
-| nursing fundamentals | 431 | 22.6% |
-| pediatric nursing | 376 | 19.7% |
-| maternal and newborn nursing | 356 | 18.7% |
-| nursing pharmacology | 141 | 7.4% |
-| mental health nursing | 79 | 4.1% |
+| medical surgical nursing | 597 | 28.4% |
+| nursing fundamentals | 500 | 23.8% |
+| pediatric nursing | 392 | 18.6% |
+| maternal and newborn nursing | 370 | 17.6% |
+| nursing pharmacology | 154 | 7.3% |
+| mental health nursing | 92 | 4.4% |
 
 The mapping is a judgement call in two places, both taken from the blueprint's
 own sub-section lists: **pharmacology** counts toward Fundamentals (it is a
@@ -103,16 +107,18 @@ option finds it filed inside `nursing fundamentals`:
 
 | Topic | Questions | Share |
 |---|---|---|
-| Delegation & supervision | 65 | 3.4% |
-| Quality & incident reporting | 7 | 0.4% |
-| Teams & conflict | 4 | 0.2% |
+| Delegation & supervision | 72 | 3.4% |
+| Quality & incident reporting | 8 | 0.4% |
+| Teams & conflict | 6 | 0.3% |
 | **Nursing informatics** | **0** | **0.0%** |
+| **Distinct questions matching any of the above** | **80** | **3.8%** |
 
-So roughly 76 questions, about 4% of the bank, against a 10% section — and
-nursing informatics, one of the five sub-sections, has no coverage at all.
+Read the union, not the sum: those rows overlap, so 72 + 8 + 6 is 86 hits but
+only 80 distinct questions. Eighty against a 10% section — and nursing
+informatics, one of the five sub-sections, has no coverage at all.
 
 Two other Adult Nursing sub-sections are thin for the same reason: **critical
-care** (68 questions, 3.6%) and **community nursing** (36, 1.9%) are scattered
+care** (75 questions, 3.6%) and **community nursing** (43, 2.0%) are scattered
 across the other decks rather than owned by one.
 
 ---
@@ -123,7 +129,7 @@ across the other decks rather than owned by one.
 maternal-child is not a defect on its own — practice volume is not an exam. Two
 things here are defects:
 
-1. **A student cannot study management and leadership deliberately.** The 76
+1. **A student cannot study management and leadership deliberately.** The 80
    questions that exist are unreachable as a set; they surface only by chance
    inside Fundamentals quizzes. Ten percent of the exam is being left to luck.
 2. **Nursing informatics has zero questions.** Not thin — absent.
@@ -131,16 +137,17 @@ things here are defects:
 In rough order of return:
 
 - **Add a seventh specialty, `nursing management and leadership`, and re-file
-  the ~76 questions into it.** That alone gives it a real deck at ~4% and makes
-  the gap visible in every analytics screen. Note the constraint the insert
-  script already enforces: *a specialty with no deck is unreachable content*, so
-  this needs a summaries deck authored at the same time — do not ship the
-  specialty empty. The re-filing needs question-by-question review, not a
-  regex; the probe finds candidates, it does not classify them.
-- **Author ~210 management questions** to reach 10% of the bank, with
-  informatics deliberately represented rather than incidentally.
-- **Grow Adult Nursing by ~270** to reach 40%, weighted toward critical care,
-  community and mental health — mental health at 4.1% is the single thinnest
+  the ~80 questions into it.** That alone gives it a real deck at ~3.8% and
+  makes the gap visible in every analytics screen. Note the constraint the
+  insert script already enforces: *a specialty with no deck is unreachable
+  content*, so this needs a summaries deck authored at the same time — do not
+  ship the specialty empty. The re-filing needs question-by-question review, not
+  a regex; the probe finds candidates, it does not classify them.
+- **Author ~145 more management questions** to reach 10% of the bank (that is
+  on top of re-filing the 80 that exist), with informatics deliberately
+  represented rather than incidentally.
+- **Grow Adult Nursing by ~255** to reach 40%, weighted toward critical care,
+  community and mental health — mental health at 4.4% is the single thinnest
   deck in the track and is one of five Adult sub-sections.
 
 The first bullet is a schema change plus a data migration and is not something

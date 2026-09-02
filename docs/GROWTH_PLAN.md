@@ -109,7 +109,7 @@ You have none, and you are asking for up to 300 SAR.
 
 | ID | Task | Status |
 |----|------|--------|
-| S4-01 | Check the nursing track against the official SNLE blueprint | **done** — `docs/SNLE_BLUEPRINT_AUDIT.md`; all four sections out of band, management & leadership is 0% |
+| S4-01 | Check the nursing track against the official SNLE blueprint | **done** — `docs/SNLE_BLUEPRINT_AUDIT.md`; all four sections out of band, management & leadership is 0% (figures corrected in `HEAD` — the first pass de-duplicated rows the database actually holds) |
 | S4-02 | Lead acquisition with nursing | **done (code)** — `0e42235`, `/guides/snle-blueprint` in both languages |
 | S4-03 | Sell the group plans directly instead of waiting to be found | **done (code)** — `45e6d36`; the outbound selling is still yours |
 | S4-04 | Decide about Telegram — commit or stop | **needs your decision** — evidence below, nothing changed yet |
@@ -148,10 +148,14 @@ Nothing here has been changed. The facts, so the call can be made on them:
 
 - The channel posts up to **3 medical questions a day**, driven by
   `.github/workflows/cron.yml` at 07:00, 13:00 and 18:00 UTC. Free.
-- Exposure is bounded: a 90-day dedupe window means about **270 distinct
-  questions** are ever in rotation out of 5,033, and every post is deleted after
-  10 days. The "we are giving away the bank" worry does not survive contact with
-  the code.
+- Exposure is bounded per window, not for ever. The 90-day dedupe window caps it
+  at **270 distinct questions in any 90 days**, and each post is deleted after 10
+  days — but the window then reopens and selection is random, so over a year
+  roughly **900 distinct medical questions** appear publicly, about a third of
+  the 2,928 in that track. (Coupon-collector estimate: 1,095 posts drawn from
+  2,928 with a 90-day exclusion. Nobody has counted the real figure; the table
+  `telegram_sent_questions` holds it.) Each is visible for ten days, so the bank
+  is not sitting on Telegram — but "nothing is being given away" was too strong.
 - **Nursing is never posted.** `pickChannelQuestion` is hardcoded to the medical
   track. The track that converts several times better has no presence at all on
   the one channel that exists.

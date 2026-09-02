@@ -132,15 +132,17 @@ async function loadFromSource() {
             });
         }
     }
-    // The insert de-duplicates by question_text, so the source files overstate
-    // the live bank slightly. Do the same here or the two modes disagree.
-    const seen = new Set();
-    return rows.filter((r) => {
-        const key = (r.text || '').trim().toLowerCase();
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-    });
+    // No de-duplication here, deliberately.
+    //
+    // An earlier version de-duplicated on stem+options, reasoning that the
+    // insert script drops duplicates and so the source files must overstate the
+    // live bank. They do not: the collection totals in
+    // src/seo/data/publicQuestions.json come from a real COUNT(*) against the
+    // database (see backend/scripts/exportPublicQuestions.js), and they are
+    // 1514 + 591 = 2105 — exactly the row count of these two files. Every
+    // source row is in the table. De-duplicating here made this mode disagree
+    // with the live one by about 10% and shifted every percentage below.
+    return rows;
 }
 
 async function loadFromDb() {
