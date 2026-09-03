@@ -23,29 +23,59 @@ Nothing else in this plan matters if nobody arrives.
 | S1-03 | Request indexing for the 7 discovered-but-unindexed URLs | **not started** — manual, in Search Console |
 | S1-04 | Publish 200–400 questions as public pages | **done** — `f065909`, 240 questions at `/questions` |
 | S1-05 | Build a past-papers hub | **done** — `1d1ae3a` |
-| S1-06 | Write six Arabic SMLE logistics pages | **skipped by decision** — see note below |
-| S1-07 | Do the same six pages for SNLE | **skipped by decision** — see note below |
+| S1-06 | Write six Arabic SMLE logistics pages | **done** — `ddf8169`, `/exams/smle/*` in both languages |
+| S1-07 | Do the same six pages for SNLE | **done** — `ddf8169`, `/exams/snle/*` in both languages |
 | S1-08 | Declare and prerender English | **done** — `c53f843`, full `/en` tree |
 | S1-09 | Add FAQPage structured data | **done** — `2db6e98` |
 | S1-10 | Put a weekly indexing check on the calendar | **done** — `docs/SEO_WEEKLY_CHECK.md`, needs running weekly |
 
-**Why S1-06/07 were skipped.** They need exam facts — question count, scoring,
+**Why S1-06/07 were skipped at first**, kept here because the reasoning still
+applies to anything like them. They need exam facts — question count, scoring,
 pass mark — and the sources contradicted each other while scfhs.org.sa could not
 be reached to settle it. Publishing wrong exam logistics to candidates is worse
-than publishing nothing. Revisit only with the official SCFHS applicant guide
-open. This leaves real ranking ground to competitors, knowingly.
+than publishing nothing, so they waited for the official guide rather than for a
+better guess.
 
-**Both are now unblocked** (2026-08-31, while doing S4-01). scfhs.org.sa is
-reachable and both official guides were read end to end:
+**Both are now done** (`ddf8169`). scfhs.org.sa turned out to be reachable, so
+both official guides were read end to end and the pages were written from them:
 
 - SNLE — <https://scfhs.org.sa/sites/default/files/2025-09/SNLE%20Applicant%20Guide%20.pdf>
 - SMLE 2026 — <https://scfhs.org.sa/sites/default/files/2026-05/Saudi%20Medical%20Licensure%20Examination%20(SMLE)%20Blueprint_2026_0.pdf>
 
 The facts that could not be settled before are in `docs/SNLE_BLUEPRINT_AUDIT.md`.
 Note the two exams do **not** share a pass mark: SNLE is 500 on the 200–800
-scale, SMLE is 560. Both remain open as tasks — what changed is that the
-blocker did, and the SMLE blueprint is granular enough (per-topic item counts
-over ~15 pages) to carry several pages on its own.
+scale, SMLE is 560.
+
+**What shipped: `/exams`, thirteen pages, both languages.**
+
+| Path | Covers |
+|---|---|
+| `/exams` | both exams side by side, and what differs |
+| `/exams/format` | 200 questions, 2 x 100, 120 min each, pilot items, timing |
+| `/exams/test-day` | arrival, ID, security, what is provided, what is a violation |
+| `/exams/{smle,snle}` | one hub each, six short answers linking down |
+| `/exams/{smle,snle}/blueprint` | content areas and weights |
+| `/exams/{smle,snle}/passing-score` | the mark, the scale, how it was set, results |
+| `/exams/{smle,snle}/eligibility` | who may sit, e-application, Prometric, windows |
+| `/exams/{smle,snle}/attempts` | four a year, what spends one, improving after a pass |
+
+Three decisions worth knowing about, because they will look like omissions
+otherwise:
+
+1. **`format` and `test-day` are shared, not one per exam.** The two guides
+   describe them in identical terms, so a per-exam version would be the same
+   page at two URLs — thin content, not two rankings. Each exam hub links to
+   both, so each exam still presents six topics.
+2. **The SMLE blueprint page publishes no percentage per content area.** The
+   medical guide gives item counts per topic and no domain weights, so any
+   percentage would be our inference. Inferring exam facts is what got these
+   tasks skipped in the first place. The page says so and links the official
+   table.
+3. **`/guides/snle-blueprint` was folded into `/exams/snle`.** It was written
+   days earlier as one comprehensive page because this structure did not exist
+   yet; keeping both would have put two of our own pages in front of the same
+   query. The guides hub keeps a card pointing at the new section. Nothing had
+   been deployed, so no URL was lost.
 
 ## Sprint 2 — convert the traffic you already have (weeks 3–6)
 
