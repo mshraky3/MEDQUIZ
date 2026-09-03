@@ -505,7 +505,9 @@ export async function grantSubscriptionMonths(db, accountId, months, meta = {}) 
             `UPDATE accounts
                 SET subscription_status = 'active',
                     subscription_expiry_date = $1,
-                    is_admin_created = TRUE
+                    is_admin_created = TRUE,
+                    -- See the note on the same reset in verifyAndActivate.
+                    renewal_reminder_stage = NULL
               WHERE id = $2`,
             [newExpiry, accountId]
         );
@@ -636,7 +638,12 @@ export async function activateSubscriptionFromPayment(db, accountId, payment, ev
         await client.query(
             `UPDATE accounts
                 SET subscription_status = 'active',
-                    subscription_expiry_date = $1
+                    subscription_expiry_date = $1,
+                    -- Restart the renewal ladder for the new term. Without
+                    -- this the sequence in lifecycleJobs would run once per
+                    -- account rather than once per term, and a customer who
+                    -- renewed would never be reminded again.
+                    renewal_reminder_stage = NULL
               WHERE id = $2`,
             [newExpiry, accountId]
         );

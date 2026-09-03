@@ -16,6 +16,7 @@ import {
     sendTrialEndedEmail,
     sendProgressDigestEmail,
     sendExpiryReminderEmail,
+    sendAccessEndedEmail,
     sendExamReminderEmail,
     sendOneSessionComebackEmail,
     arDaysCount,
@@ -190,47 +191,154 @@ export async function runComebackJob(db, { limit = 200 } = {}) {
 }
 
 /**
- * Active subscription expiring within 7 days → renewal reminder.
- * The subscription never auto-renews, so without this email an expiry is
- * simply a silent churn.
+ * The renewal sequence, both sides of the expiry date.
+ *
+ * Nothing in this product auto-renews — there is no tokenisation and no
+ * recurring charge, which is a promise made in the UI and in the Terms. The
+ * consequence is that every expiry is a manual re-sell, and one that is not
+ * reminded is silent churn.
+ *
+ * Until now there was exactly one email, fired once when the subscription came
+ * within seven days of ending, and nothing at all afterwards. So the moment
+ * with the most evidence behind it — the student opens the bank, finds it
+ * locked, and now genuinely knows what the subscription was worth — was the
+ * moment the product said nothing.
+ *
+ * Three rungs, and the copy differs at each:
+ *
+ *   1  seven days out   why there is no automatic charge, and what lapsing costs
+ *   2  the day before   the same fact, without the explanation in the way
+ *   3  three days after their own record of the term, and the door left open
+ *
+ * Three is where it stops. A fourth would be arguing with someone who has
+ * already decided, and this file's whole tone rests on not doing that.
  */
-export async function runExpiryReminderJob(db, { limit = 100 } = {}) {
+export const RENEWAL_STAGES = [
+    { id: 1, at: 7 },   // send once days-to-expiry <= 7
+    { id: 2, at: 1 },   // ... <= 1
+    { id: 3, at: -3 },  // ... <= -3, i.e. three days after it lapsed
+];
+
+/** How far the ladder has been climbed, from days remaining (negative = lapsed). */
+export function dueRenewalStage(daysToExpiry) {
+    if (!Number.isFinite(daysToExpiry)) return null;
+    // Highest rung whose threshold has been passed. The thresholds descend, so
+    // walking them in reverse finds the furthest one reached.
+    for (let i = RENEWAL_STAGES.length - 1; i >= 0; i--) {
+        if (daysToExpiry <= RENEWAL_STAGES[i].at) return RENEWAL_STAGES[i].id;
+    }
+    return null;
+}
+
+/** How long after expiry rung 3 stops being offered, so a dormant account is not mailed months late. */
+const RENEWAL_TAIL_DAYS = 30;
+
+export async function runRenewalSequenceJob(db, { limit = 200 } = {}) {
     const result = { sent: 0, errors: [] };
+    // The window spans both sides of the date: seven days before through
+    // RENEWAL_TAIL_DAYS after. `subscription_status` is deliberately NOT
+    // filtered to 'active' — rung 3 exists precisely for rows whose term has
+    // run out — so the paid-term check is the expiry date plus the exclusions
+    // below.
+    //
+    // 'refunded' is the exclusion that matters. A full refund sets the status
+    // and pushes subscription_expiry_date to NOW() (see handleWebhookEvent), so
+    // a refunded customer lands squarely inside this window — and would be told
+    // three days later what they achieved with the term and invited to buy it
+    // again. They asked for their money back. 'free' and 'grandfathered' are
+    // excluded for the plainer reason that they never bought a term to renew.
     const { rows } = await db.query(`
-        SELECT id, username, email, track, preferred_lang,
-               GREATEST(0, CEIL(EXTRACT(EPOCH FROM (subscription_expiry_date - NOW())) / 86400))::int AS days_remaining
+        SELECT id, username, email, track, preferred_lang, renewal_reminder_stage,
+               CEIL(EXTRACT(EPOCH FROM (subscription_expiry_date - NOW())) / 86400)::int AS days_to_expiry
           FROM accounts
-         WHERE subscription_status = 'active'
-           AND subscription_expiry_date > NOW()
+         WHERE subscription_expiry_date IS NOT NULL
            AND subscription_expiry_date <= NOW() + INTERVAL '7 days'
+           AND subscription_expiry_date >= NOW() - ($1::int * INTERVAL '1 day')
+           AND COALESCE(subscription_status, '') NOT IN ('refunded', 'free', 'grandfathered')
            AND email IS NOT NULL
            AND email_verified = TRUE
            AND isactive = TRUE
-           AND (expiry_reminder_sent_at IS NULL
-                OR expiry_reminder_sent_at < NOW() - INTERVAL '30 days')
-         LIMIT $1
-    `, [limit]);
+           AND COALESCE(email_opt_out, FALSE) = FALSE
+           AND grandfathered_at IS NULL
+           AND is_admin_created = FALSE
+         ORDER BY subscription_expiry_date
+         LIMIT $2
+    `, [RENEWAL_TAIL_DAYS, limit]);
 
     for (const user of rows) {
+        const days = Number(user.days_to_expiry);
+        const due = dueRenewalStage(days);
+        if (due == null) continue;
+        // The stage only moves forward, which is what makes an hourly job send
+        // each rung exactly once. A renewal resets it to NULL (see
+        // paymentService), restarting the ladder for the new term.
+        if (user.renewal_reminder_stage != null && user.renewal_reminder_stage >= due) continue;
+
         try {
-            await sendExpiryReminderEmail(user.email, String(user.username).split('@')[0], user.track, user.days_remaining,
-                { lang: user.preferred_lang, accountId: user.id });
-            await db.query(`UPDATE accounts SET expiry_reminder_sent_at = NOW() WHERE id = $1`, [user.id]);
+            const name = String(user.username).split('@')[0];
+            if (due === 3) {
+                // Their own record of the term they paid for. Anyone who
+                // answered nothing gets the message without the numbers — see
+                // sendAccessEndedEmail.
+                const { rows: st } = await db.query(`
+                    SELECT COUNT(*)::int AS answered,
+                           COUNT(*) FILTER (WHERE is_correct)::int AS correct
+                      FROM user_question_attempts
+                     WHERE user_id = $1
+                `, [user.id]);
+                const answered = st[0]?.answered || 0;
+                const correct = st[0]?.correct || 0;
+
+                // Same sample floor as the exam reminder: three questions at
+                // 33% is noise, not a weakness.
+                const { rows: weak } = await db.query(`
+                    SELECT q.question_type,
+                           ROUND(100.0 * COUNT(*) FILTER (WHERE uqa.is_correct) / COUNT(*))::int AS accuracy
+                      FROM user_question_attempts uqa
+                      JOIN questions q ON q.id = uqa.question_id
+                     WHERE uqa.user_id = $1
+                     GROUP BY q.question_type
+                    HAVING COUNT(*) >= 10
+                     ORDER BY accuracy ASC
+                     LIMIT 1
+                `, [user.id]);
+
+                await sendAccessEndedEmail(user.email, name, user.track, {
+                    questionsAnswered: answered,
+                    accuracy: answered ? Math.round((correct / answered) * 100) : null,
+                    weakestLabel: weak[0] ? specialtyLabel(weak[0].question_type) : null,
+                    weakestAccuracy: weak[0]?.accuracy ?? null,
+                }, { lang: user.preferred_lang, accountId: user.id });
+            } else {
+                await sendExpiryReminderEmail(user.email, name, user.track, Math.max(0, days),
+                    { lang: user.preferred_lang, accountId: user.id });
+            }
+
+            await db.query(
+                `UPDATE accounts SET renewal_reminder_stage = $2 WHERE id = $1`,
+                [user.id, due]
+            );
+
             await notify(db, {
                 userId: user.id,
-                type: 'subscription_expiring',
-                title: `اشتراكك ينتهي بعد ${arDaysCount(user.days_remaining)}`,
-                body: 'الاشتراك لا يُجدَّد تلقائياً — جدّده للحفاظ على وصولك.',
+                type: due === 3 ? 'subscription_ended' : 'subscription_expiring',
+                title: due === 3
+                    ? 'انتهى اشتراكك'
+                    : `اشتراكك ينتهي بعد ${arDaysCount(Math.max(0, days))}`,
+                body: due === 3
+                    ? 'تقدّمك وإحصاءاتك محفوظة — استعد وصولك متى شئت.'
+                    : 'الاشتراك لا يُجدَّد تلقائياً — جدّده للحفاظ على وصولك.',
                 ctaUrl: '/subscribe',
-                dedupeKey: `expiry:${new Date(Date.now()).toISOString().slice(0, 10)}`,
+                dedupeKey: `renewal:${user.id}:${due}`,
             });
             result.sent++;
         } catch (err) {
-            result.errors.push({ job: 'expiry_reminder', userId: user.id, error: err.message });
+            result.errors.push({ job: 'renewal_sequence', userId: user.id, error: err.message });
         }
     }
     return result;
 }
+
 
 /**
  * Weekly progress digest for students who actually studied this week.

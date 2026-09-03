@@ -222,8 +222,39 @@ leaky, which is what Sprints 2 and 3 are for.
 | ID | Task | Status |
 |----|------|--------|
 | S5-01 | Re-test the annual anchor once you have 30+ customers | **blocked** — needs a stable baseline |
-| S5-02 | Build the renewal sequence monthly plans need | **not started** |
-| S5-03 | Make the refund policy term-proportional | **not started** |
+| S5-02 | Build the renewal sequence monthly plans need | **done** — `HEAD`, three rungs either side of the expiry |
+| S5-03 | Make the refund policy term-proportional | **already done** — the policy has scaled with the term since June; the backlog line was stale |
+
+**S5-02 — what the sequence is.** Nothing auto-renews, by design and by
+promise, so every expiry is a manual re-sell. There was one email, fired once
+when a subscription came within seven days of ending, and then silence — which
+meant the moment with the most evidence behind it, the student opening a locked
+question bank, was the moment nothing was said.
+
+| Rung | When | What it says |
+|---|---|---|
+| 1 | 7 days left | why there is no automatic charge, and what lapsing costs |
+| 2 | the day before | the same fact without the explanation in the way |
+| 3 | 3 days after | their own record of the term, and the door left open |
+
+It stops at three. A fourth is arguing with someone who has decided.
+
+Two things worth knowing:
+
+- **The stage resets on every activation.** `renewal_reminder_stage` tracks the
+  current term, not the account. Without the reset in `verifyAndActivate` and
+  `grantSubscription`, a renewing customer would be reminded once and never
+  again — there is a test named after exactly that failure.
+- **Refunded customers are excluded.** A full refund sets the status and pushes
+  the expiry to `NOW()`, which drops the account straight into this window. They
+  would have been told three days later what they achieved with the term and
+  invited to buy it again. Found while reading the refund path, not in testing.
+
+**S5-03 was already true.** The refund policy has scaled its window with the
+plan term since June — three days on monthly, fourteen on the longer plans, with
+the reasoning written into the document. The backlog line was stale, not
+outstanding. What is still open from Sprint 3 is that the policy never names
+group plans, so a group buyer sees the guarantee with no day count.
 
 ---
 

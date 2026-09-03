@@ -738,23 +738,43 @@ export const sendProgressDigestEmail = async (to, username, track, data = {}, op
 
 // ─── 7. SUBSCRIPTION EXPIRING ──────────────────────────────────────────────
 /**
+ * Rung 1 and 2 of the renewal sequence, sent while access is still live.
+ *
  * The subscription does not auto-renew by design, which means every expiry is
  * a manual re-sell that happens only if the student is reminded. Sent ahead of
- * the expiry date while access is still live, so renewing is continuing rather
- * than recovering.
+ * the expiry date, so renewing is continuing rather than recovering.
+ *
+ * The body CHANGES between the two rungs, for the same reason the exam-date
+ * ladder's does: a week out, the useful message explains why there is no
+ * automatic charge and what lapsing costs; the day before, that explanation is
+ * in the way. A sequence that says the same thing twice is a sequence people
+ * filter after the first one.
+ *
+ * Nothing here invents urgency. The date is real, the consequence is real, and
+ * there is no discount that is about to vanish.
  */
 export const sendExpiryReminderEmail = async (to, username, track, daysRemaining, opts = {}) => {
   const lang = normalizeLang(opts.lang);
   const c = copyFor(track, lang);
   const days = Math.max(0, Number(daysRemaining) || 0);
-  const html = wrapLayout(`
-        <tr>
-          <td align="center" style="padding:36px 40px 32px;">
-            <div style="font-size:48px;margin-bottom:16px;">🔔</div>
-            <h1 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#f8fafc;">
-              ${T(lang, `اشتراكك ينتهي بعد ${arDaysCount(days)}`,
-                        `Your subscription ends in ${days} day${days === 1 ? '' : 's'}`)}
-            </h1>
+  const lastCall = days <= 1;
+
+  const heading = lastCall
+    ? T(lang,
+        days === 0 ? 'اشتراكك ينتهي اليوم' : 'اشتراكك ينتهي غداً',
+        days === 0 ? 'Your access ends today' : 'Your access ends tomorrow')
+    : T(lang, `اشتراكك ينتهي بعد ${arDaysCount(days)}`,
+              `Your subscription ends in ${days} day${days === 1 ? '' : 's'}`);
+
+  // A week out: explain. The day before: do not.
+  const body = lastCall
+    ? `
+            <p style="margin:0 0 24px;font-size:14px;color:#94a3b8;line-height:1.8;">
+              ${T(lang,
+                `بعدها يُقفل بنك الأسئلة والملخصات. تقدّمك وإحصاءاتك تبقى كما هي، والتجديد يعيدك إليها في نفس اللحظة.`,
+                `After that the question bank and the summaries lock. Your progress and statistics stay exactly as they are, and renewing puts you back into them at the same point.`)}
+            </p>`
+    : `
             <p style="margin:0 0 24px;font-size:14px;color:#94a3b8;line-height:1.7;">
               ${T(lang,
                 'اشتراكك في SQB لا يُجدَّد تلقائياً — وهذا باختيارنا، حتى لا نخصم من بطاقتك دون علمك. لكنه يعني أن التجديد يحتاج خطوة منك.',
@@ -772,7 +792,16 @@ export const sendExpiryReminderEmail = async (to, username, track, daysRemaining
                 ${T(lang, 'اختر مدة التجديد التي تناسبك — شهرياً أو 4 أشهر أو سنوياً.',
                           'Pick whichever renewal term suits you — monthly, 4-month, or annual.')}
               </p>
-            </div>
+            </div>`;
+
+  const html = wrapLayout(`
+        <tr>
+          <td align="center" style="padding:36px 40px 32px;">
+            <div style="font-size:48px;margin-bottom:16px;">${lastCall ? '⏳' : '🔔'}</div>
+            <h1 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#f8fafc;">
+              ${heading}
+            </h1>
+${body}
             ${button(`${SITE}/subscribe`, T(lang, 'جدّد اشتراكي الآن', 'Renew my access'))}
             <p style="margin:16px 0 0;font-size:12px;color:#475569;">
               ${T(lang, `${c.exam} — نحن معك حتى تجتازه.`, `${c.exam} — we're with you until you pass it.`)}
@@ -783,12 +812,100 @@ export const sendExpiryReminderEmail = async (to, username, track, daysRemaining
 
   await sendEmail(
     to,
-    T(lang, `🔔 اشتراكك في SQB ينتهي بعد ${arDaysCount(days)}`,
-             `🔔 Your SQB access ends in ${days} day${days === 1 ? '' : 's'}`),
+    lastCall
+      ? T(lang, `⏳ ${heading} — والتجديد خطوة واحدة`, `⏳ ${heading} — renewing takes one step`)
+      : T(lang, `🔔 اشتراكك في SQB ينتهي بعد ${arDaysCount(days)}`,
+                `🔔 Your SQB access ends in ${days} day${days === 1 ? '' : 's'}`),
     html,
-    T(lang, `اشتراكك في SQB ينتهي بعد ${days} يوم ولا يُجدَّد تلقائياً. للتجديد: ${SITE}/subscribe`,
-             `Your SQB subscription ends in ${days} days and does not auto-renew. Renew: ${SITE}/subscribe`),
+    T(lang, `${heading}. الاشتراك لا يُجدَّد تلقائياً. للتجديد: ${SITE}/subscribe`,
+             `${heading}. Your subscription does not auto-renew. Renew: ${SITE}/subscribe`),
     { event: 'medqize.lifecycle.expiry_reminder' }
+  );
+};
+
+// ─── 7b. SUBSCRIPTION ENDED ────────────────────────────────────────────────
+/**
+ * The last rung, sent a few days AFTER access lapsed.
+ *
+ * This is the half of the renewal sequence that did not exist: there was one
+ * pre-expiry reminder and then silence, which meant the moment with the most
+ * evidence behind it — the student has now tried to open the bank and found it
+ * locked — was the moment nothing was said.
+ *
+ * Its argument is the student's own record of the term they paid for, because
+ * that is the only honest measure of whether renewing is worth it, and it is
+ * theirs either way. `stats.questionsAnswered` of zero drops the numbers block
+ * entirely: telling someone they paid for a term and answered nothing is not a
+ * sales argument, it is a reason to ask for a refund.
+ *
+ * @param {{questionsAnswered:number, accuracy:number|null,
+ *          weakestLabel:string|null, weakestAccuracy:number|null}} stats
+ */
+export const sendAccessEndedEmail = async (to, username, track, stats = {}, opts = {}) => {
+  const lang = normalizeLang(opts.lang);
+  const c = copyFor(track, lang);
+  const answered = Math.max(0, Number(stats.questionsAnswered) || 0);
+  const accuracy = Number.isFinite(Number(stats.accuracy)) ? Number(stats.accuracy) : null;
+  const weakest = stats.weakestLabel ? esc(stats.weakestLabel) : null;
+  const weakestAccuracy = Number.isFinite(Number(stats.weakestAccuracy))
+    ? Number(stats.weakestAccuracy)
+    : null;
+
+  const statBox = answered > 0
+    ? `
+            <div style="background:#0b1021;border-radius:12px;padding:18px 22px;margin-bottom:22px;border:1px solid #1e293b;">
+              <p style="margin:0 0 10px;font-size:13px;color:#94a3b8;font-weight:700;">
+                ${T(lang, 'ما أنجزته في هذه المدة', 'What you did with the term')}
+              </p>
+              <p style="margin:0 0 6px;font-size:26px;font-weight:800;color:#22d3ee;">
+                ${answered} <span style="font-size:13px;font-weight:600;color:#94a3b8;">${T(lang, 'سؤالاً', answered === 1 ? 'question' : 'questions')}</span>
+              </p>
+              ${accuracy != null ? `<p style="margin:0 0 6px;font-size:13px;color:#e2e8f0;">
+                ${T(lang, `بدقّة ${accuracy}%`, `at ${accuracy}% accuracy`)}
+              </p>` : ''}
+              ${weakest ? `<p style="margin:8px 0 0;font-size:13px;color:#cbd5e1;line-height:1.8;">
+                ${T(lang,
+                  `وأضعف محاورك كان <strong style="color:#f8fafc;">${weakest}</strong>${weakestAccuracy != null ? ` عند ${weakestAccuracy}%` : ''} — وهو أول ما يستحق وقتك عند العودة.`,
+                  `Your weakest area was <strong style="color:#f8fafc;">${weakest}</strong>${weakestAccuracy != null ? `, at ${weakestAccuracy}%` : ''} — the first thing worth your time when you come back.`)}
+              </p>` : ''}
+            </div>`
+    : '';
+
+  const html = wrapLayout(`
+        <tr>
+          <td align="center" style="padding:36px 40px 32px;">
+            <div style="font-size:48px;margin-bottom:16px;">🔒</div>
+            <h1 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#f8fafc;">
+              ${T(lang, `انتهى اشتراكك يا ${username}`, `${username}, your access has ended`)}
+            </h1>
+            <p style="margin:0 0 22px;font-size:14px;color:#94a3b8;line-height:1.8;">
+              ${T(lang,
+                'بنك الأسئلة والملخصات مقفلان الآن. لم يُحذف شيء: حسابك وتقدّمك وإحصاءاتك وقائمة أخطائك كلها في مكانها، وتعود إليها كما تركتها في اللحظة التي تجدّد فيها.',
+                'The question bank and the summaries are locked. Nothing was deleted: your account, your progress, your statistics and your wrong-question list are all where you left them, and renewing puts you back into them unchanged.')}
+            </p>
+${statBox}
+            <p style="margin:0 0 24px;font-size:13px;color:#94a3b8;line-height:1.8;">
+              ${T(lang,
+                `وإن لم يكن الوقت مناسباً الآن فلا بأس — لا يوجد خصم تلقائي ولا رسوم متأخرة، والحساب يبقى مجاناً كما هو.`,
+                `And if now is not the time, that is fine — there is no automatic charge and no late fee, and the account stays as it is, free.`)}
+            </p>
+            ${button(`${SITE}/subscribe`, T(lang, 'استعد وصولك', 'Restore my access'))}
+            <p style="margin:16px 0 0;font-size:12px;color:#475569;">
+              ${T(lang, `${c.exam} — نحن هنا متى عدت.`, `${c.exam} — we are here whenever you come back.`)}
+            </p>
+          </td>
+        </tr>
+    `, { lang, accountId: opts.accountId });
+
+  await sendEmail(
+    to,
+    T(lang, '🔒 انتهى اشتراكك في SQB — تقدّمك محفوظ',
+             '🔒 Your SQB access has ended — your progress is safe'),
+    html,
+    T(lang,
+      `انتهى اشتراكك في SQB. تقدّمك وإحصاءاتك محفوظة، ويمكنك استعادة وصولك في أي وقت: ${SITE}/subscribe`,
+      `Your SQB access has ended. Your progress and statistics are saved, and you can restore access at any time: ${SITE}/subscribe`),
+    { event: 'medqize.lifecycle.access_ended' }
   );
 };
 

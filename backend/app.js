@@ -425,6 +425,24 @@ function ensureSchema() {
                     ADD COLUMN IF NOT EXISTS exam_date           DATE    DEFAULT NULL,
                     ADD COLUMN IF NOT EXISTS exam_reminder_stage INTEGER DEFAULT NULL
             `);
+            // How far the renewal sequence has been walked for the CURRENT
+            // subscription term — see lifecycleJobs.runRenewalSequenceJob and
+            // RENEWAL_STAGES. Nothing here auto-renews, so an expiry with no
+            // sequence behind it is silent churn.
+            //
+            // Stores an ordinal (1, 2, 3) rather than a day count, because the
+            // ladder spans both sides of the expiry date — "seven days left"
+            // and "three days lapsed" are not comparable as day counts, but
+            // they are as positions in a sequence that only moves forward.
+            //
+            // Reset to NULL on every activation (paymentService.verifyAndActivate
+            // and grantSubscription). Without that reset the sequence would run
+            // once per ACCOUNT rather than once per TERM, and a renewing customer
+            // would never be reminded again.
+            await db.query(`
+                ALTER TABLE accounts
+                    ADD COLUMN IF NOT EXISTS renewal_reminder_stage INTEGER DEFAULT NULL
+            `);
             // Which language to write to this student in. The whole site has
             // been bilingual since 2026-08-01, but lifecycle mail was still
             // Arabic-only — an English-speaking user got an Arabic welcome to a

@@ -13,12 +13,13 @@ import {
     sendTrialEndedEmail,
     sendProgressDigestEmail,
     sendExpiryReminderEmail,
+    sendAccessEndedEmail,
     sendExamReminderEmail,
     sendOneSessionComebackEmail,
 } from '../services/userEmailService.js';
 import {
     runTrialEndedJob,
-    runExpiryReminderJob,
+    runRenewalSequenceJob,
     runProgressDigestJob,
     runExamReminderJob,
     runComebackJob,
@@ -113,8 +114,23 @@ const PREVIEWS = {
         examDaysRemaining: req.query.examDays !== undefined ? parseInt(req.query.examDays) : 21,
     }, testOpts(req)),
 
+    // Rungs 1 and 2 of the renewal sequence are one template with two faces:
+    // ?days=7 is the explanatory one, ?days=1 (or 0) the short last call.
     'expiry-reminder': (req) => sendExpiryReminderEmail(
-        TEST_EMAIL, testName(req), testTrack(req), parseInt(req.query.days) || 7, testOpts(req)),
+        TEST_EMAIL, testName(req), testTrack(req),
+        req.query.days !== undefined ? parseInt(req.query.days) : 7, testOpts(req)),
+
+    // Rung 3, after access lapsed. ?answered=0 previews the version with no
+    // numbers, which is what an account that paid and never studied receives.
+    'access-ended': (req) => sendAccessEndedEmail(
+        TEST_EMAIL, testName(req), testTrack(req),
+        {
+            questionsAnswered: req.query.answered !== undefined ? parseInt(req.query.answered) : 318,
+            accuracy: req.query.accuracy !== undefined ? parseInt(req.query.accuracy) : 64,
+            weakestLabel: req.query.weakest || (testLang(req) === 'en' ? 'Surgery' : 'الجراحة'),
+            weakestAccuracy: req.query.weakestAccuracy !== undefined ? parseInt(req.query.weakestAccuracy) : 41,
+        },
+        testOpts(req)),
 
     // The ladder is one template with five faces, so the preview takes ?days
     // and the send-all route below walks every rung.
@@ -366,7 +382,7 @@ router.get('/api/cron/daily-emails', cronAuth, async (req, res) => {
     // tighter cadence than once a day) can never double-send.
     for (const [name, job] of [
         ['trialEnded', runTrialEndedJob],
-        ['expiryReminder', runExpiryReminderJob],
+        ['renewalSequence', runRenewalSequenceJob],
         ['progressDigest', runProgressDigestJob],
         ['examReminder', runExamReminderJob],
         ['comeback', runComebackJob],
@@ -520,10 +536,10 @@ router.get('/api/cron/daily-signups-report', cronAuth, async (req, res) => {
  * immediately after each successful send.
  */
 router.get('/api/cron/lifecycle-emails', cronAuth, async (req, res) => {
-    const out = { trialEnded: 0, expiryReminder: 0, progressDigest: 0, errors: [] };
+    const out = { trialEnded: 0, renewalSequence: 0, progressDigest: 0, errors: [] };
     for (const [name, job] of [
         ['trialEnded', runTrialEndedJob],
-        ['expiryReminder', runExpiryReminderJob],
+        ['renewalSequence', runRenewalSequenceJob],
         ['progressDigest', runProgressDigestJob],
         ['examReminder', runExamReminderJob],
         ['comeback', runComebackJob],
