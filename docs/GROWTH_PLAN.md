@@ -10,6 +10,20 @@ Baseline when this was written (2026-08-30): 5 pages indexed, 271 URLs in the
 sitemap, 7 URLs had ever earned an impression. 116 accounts, 6 paying. 17
 accounts had spent all 40 free questions and 1 of them subscribed.
 
+**Deployment status (2026-09-03): none of this is live.** Every commit in this
+backlog sits on the local branch `seo/public-content` — 35 commits, 106 files,
+never pushed. `main` is still at `a03f781` from 2026-08-29, and that is what
+Vercel serves. So `done` in the tables below means the code is written and
+tested, not that a student or a crawler has ever met it. Three consequences
+worth holding on to:
+
+- **Sprint 1 cannot start working until it deploys.** It is a bet on crawlers,
+  and 574 prerendered routes in a local `dist/` are not visible to any of them.
+- **S1-03 is not merely manual, it is impossible yet.** You cannot ask Search
+  Console to index URLs that do not resolve.
+- **Every "watch after deploy" number is on hold**, including the Sprint 5 price
+  cohorts, which only begin filling once the exposure event is live.
+
 ---
 
 ## Sprint 1 — be findable (weeks 1–4)
@@ -111,7 +125,7 @@ You have none, and you are asking for up to 300 SAR.
 | ID | Task | Status |
 |----|------|--------|
 | S3-01 | Collect five real testimonials | **not started** — 3 power users with 17/21/38 sessions to ask |
-| S3-02 | Build a success-stories page and ask for submissions in-app | **done, empty** — `4eeacb7` + admin screen `HEAD`; waiting on S3-01 for content |
+| S3-02 | Build a success-stories page and ask for submissions in-app | **done, empty** — `4eeacb7` + admin screen `2d7ae78`; waiting on S3-01 for content |
 | S3-03 | Put the 14-day refund promise on the pay button | **done** — `08d2710` (3 days monthly / 14 otherwise, per the policy) |
 | S3-04 | Show live counts pulled from the database | **done** — `35ea502` |
 | S3-05 | Name the people behind the question bank | **not started** — also an E-E-A-T signal for Sprint 1 |
@@ -139,7 +153,7 @@ You have none, and you are asking for up to 300 SAR.
 
 | ID | Task | Status |
 |----|------|--------|
-| S4-01 | Check the nursing track against the official SNLE blueprint | **done** — `docs/SNLE_BLUEPRINT_AUDIT.md`; all four sections out of band, management & leadership is 0% (figures corrected in `HEAD` — the first pass de-duplicated rows the database actually holds) |
+| S4-01 | Check the nursing track against the official SNLE blueprint | **done** — `docs/SNLE_BLUEPRINT_AUDIT.md`; all four sections out of band, management & leadership is 0% (figures corrected in `06a19a7` — the first pass de-duplicated rows the database actually holds) |
 | S4-02 | Lead acquisition with nursing | **done (code)** — `0e42235`, `/guides/snle-blueprint` in both languages |
 | S4-03 | Sell the group plans directly instead of waiting to be found | **done (code)** — `45e6d36`; the outbound selling is still yours |
 | S4-04 | Decide about Telegram — commit or stop | **needs your decision** — evidence below, nothing changed yet |
