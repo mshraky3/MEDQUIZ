@@ -221,9 +221,56 @@ leaky, which is what Sprints 2 and 3 are for.
 
 | ID | Task | Status |
 |----|------|--------|
-| S5-01 | Re-test the annual anchor once you have 30+ customers | **blocked** — needs a stable baseline |
+| S5-01 | Re-test the annual anchor once you have 30+ customers | **still blocked on customers** — the test can't run, so the measurement it needs was built instead |
 | S5-02 | Build the renewal sequence monthly plans need | **done** — `80bb34d`, three rungs either side of the expiry |
 | S5-03 | Make the refund policy term-proportional | **already done** — the policy has scaled with the term since June; the backlog line was stale |
+
+**S5-01 — blocked on customers, not on code, but not left alone.**
+
+The gate is real: 6 paying accounts against the 30 this row asks for, and
+Sprints 2–4 have just changed the funnel underneath. A price read taken now
+would mostly be reading those changes.
+
+What could not wait is the measurement. A price test cannot be reconstructed
+afterwards, because the losing half of it leaves no trace: a payment records
+what somebody paid, and nothing anywhere recorded what the people who did not
+pay had been quoted. Prices come from environment variables, which keep no
+history — change `PLAN_ANNUAL_PRICE_HALALAS` and the old number is simply gone,
+along with the date it changed. So the exposure is now recorded at the moment
+it happens, and the arms of the next test start filling from this commit
+forward. There is nothing before it.
+
+Three things were wrong on the way there:
+
+- **Three events were being thrown away.** `POST /api/funnel` answers 204 to any
+  name not on its whitelist, which is right for an open endpoint and invisible
+  from the browser. `subscribe_plan_select` had been dropped since the five-plan
+  ladder shipped, and both demo events since the demo did — each added in a
+  commit that never touched the whitelist. A test now fails the build when the
+  React source emits a name the server will not store.
+- **No client event was ever attributed to an account.** The route has always
+  verified a username and session token the way the engagement beacon does, but
+  `trackFunnel` never sent them, so `account_id` was NULL on every row the
+  browser wrote — and the join to `payment_events` that `analytics.js` describes
+  in its own header did not exist. It does now, which matters most on
+  `/subscribe`, where everyone is logged in and an anon id dies with a cleared
+  browser or a payment finished on a second device.
+- **Conversion was never readable per plan.** `funnelSnapshot` groups by event
+  name and ignores `props` entirely, so even the plan id already on
+  `subscribe_pay_click` could not be reached from any admin screen.
+
+`scripts/priceTestReport.js` is the reader: exposures grouped by the ladder
+each person saw, followed through pick → card → payment, with money taken from
+`payment_events` rather than from a beacon adblock can drop. It refuses to name
+a winner below 30 buyers, it excludes anyone shown two different ladders, and
+it decides on revenue per thousand exposures rather than conversion — a cheaper
+price that converts better can still earn less, which is the entire question the
+anchor asks. It is read-only and has not been run; there is nothing yet to read.
+
+One limitation worth stating before anyone quotes a number off it: the arms run
+in sequence, not side by side. Nothing here can show two prices at once, so a
+comparison also contains every other thing that changed between the two dates.
+The script says so in its own output when it detects it.
 
 **S5-02 — what the sequence is.** Nothing auto-renews, by design and by
 promise, so every expiry is a manual re-sell. There was one email, fired once

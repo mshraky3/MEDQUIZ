@@ -41,6 +41,30 @@ function anonId() {
 }
 
 /**
+ * Credentials for a funnel beacon, when the person already has them.
+ *
+ * POST /api/funnel has always been able to attribute an event to an account —
+ * it verifies the pair against `accounts` the way the engagement beacon does —
+ * but nothing here ever sent them, so account_id was NULL on every client-side
+ * row and the join to payment_events promised in this file's header did not
+ * exist. It matters most late in the funnel: /subscribe is behind a login, so
+ * every price and payment event can be attributed, and the anon_id alone dies
+ * with a cleared browser or a payment finished on a different device.
+ *
+ * Read from storage rather than passed in, so no call site has to remember.
+ */
+function credentials() {
+    try {
+        const user = JSON.parse(safeGetItem('user') || 'null');
+        const sessionToken = safeGetItem('sessionToken');
+        if (!user?.username || !sessionToken) return null;
+        return { username: user.username, sessionToken };
+    } catch (_) {
+        return null;
+    }
+}
+
+/**
  * Beacon a funnel event to the server and mirror it to Vercel Analytics.
  * Best-effort and silent — a blocked or failed beacon must never affect the
  * page a student is using.
@@ -49,7 +73,7 @@ export function trackFunnel(event, props = {}) {
     safeTrack(event, props);
     try {
         const url = `${Globals.URL}/api/funnel`;
-        const payload = JSON.stringify({ anon_id: anonId(), event, props });
+        const payload = JSON.stringify({ anon_id: anonId(), event, props, ...(credentials() || {}) });
         if (navigator.sendBeacon) {
             navigator.sendBeacon(url, new Blob([payload], { type: 'application/json' }));
         } else {

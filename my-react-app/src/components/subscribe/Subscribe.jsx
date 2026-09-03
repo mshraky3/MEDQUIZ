@@ -15,6 +15,22 @@ import './Subscribe.css';
 
 // Moyasar embedded payment form (Moyasar.js). 1.16.0 is the latest CDN build
 // that resolves; bump this if Moyasar publishes a newer one.
+/**
+ * The price ladder a visitor was shown, as one sortable string:
+ * `annual:30000,four_month:12900,monthly:5000` — id:halalas, id-sorted so the
+ * same ladder always produces the same key no matter what order the API
+ * returned. It goes into a funnel event because prices come from environment
+ * variables, which keep no history: once PLAN_ANNUAL_PRICE_HALALAS changes,
+ * nothing anywhere records what the people who didn't buy had been quoted.
+ *
+ * Read by backend/scripts/priceTestReport.js, which groups on it. Change the
+ * format there and here together.
+ */
+const priceLadder = (plans) => (plans || [])
+    .map((p) => `${p.id}:${p.priceHalalas}`)
+    .sort()
+    .join(',');
+
 const MOYASAR_VERSION = '1.16.0';
 const MOYASAR_CSS = `https://cdn.moyasar.com/mpf/${MOYASAR_VERSION}/moyasar.css`;
 const MOYASAR_JS = `https://cdn.moyasar.com/mpf/${MOYASAR_VERSION}/moyasar.js`;
@@ -106,6 +122,16 @@ const Subscribe = () => {
                 }
 
                 setPlans(cfg.plans);
+                // Exposure, recorded separately from subscribe_view on purpose:
+                // the view fires on arrival and must keep counting arrivals
+                // whatever the config does, while this one only fires when real
+                // prices reached the screen. A price test needs the second
+                // number as its denominator, not the first.
+                trackFunnel('subscribe_prices_shown', {
+                    kind,
+                    ladder: priceLadder(cfg.plans),
+                    currency: cfg.currency || 'SAR',
+                });
                 setCurrency(cfg.currency || 'SAR');
                 setPublishableKey(cfg.publishableKey);
                 setIsTestMode(String(cfg.publishableKey).startsWith('pk_test_'));
@@ -279,7 +305,13 @@ const Subscribe = () => {
 
     const selectPlan = (planId) => {
         if (planId === selectedPlanId) return;
-        trackFunnel('subscribe_plan_select', { plan: planId });
+        // The price travels with the choice: which tier someone moved to is
+        // only half the signal, and "annual" means a different thing at 99 SAR
+        // than at 300.
+        trackFunnel('subscribe_plan_select', {
+            plan: planId,
+            amountHalalas: plans.find((p) => p.id === planId)?.priceHalalas ?? null,
+        });
         setSelectedPlanId(planId);
     };
 
