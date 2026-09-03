@@ -75,9 +75,6 @@ const ExamPage = lazy(() => import('./components/exams/ExamPage.jsx'));
 const QuestionsHub = lazy(() => import('./components/questions/QuestionsHub.jsx'));
 const QuestionsSpecialty = lazy(() => import('./components/questions/QuestionsSpecialty.jsx'));
 const QuestionPage = lazy(() => import('./components/questions/QuestionPage.jsx'));
-// The no-account demo. Shares publicQuestions.json with the /questions pages,
-// so it costs one lazy chunk and no backend at all.
-const DemoQuiz = lazy(() => import('./components/demo/DemoQuiz.jsx'));
 // Renders an honest empty state (and noindex) until real stories are
 // exported — see components/successStories/SuccessStories.jsx.
 const SuccessStories = lazy(() => import('./components/successStories/SuccessStories.jsx'));
@@ -226,10 +223,6 @@ const router = createBrowserRouter([{
   // Collections. "smle past papers" already earns impressions with nothing to
   // serve it, and the bank is organised by named collection — these pages say
   // what each one is, and link into the public questions drawn from it.
-  // Try-before-signup. 78 of the 120 people who picked a track this month
-  // never finished the form — they wanted to see questions, not open an
-  // account. This is the same published questions, made playable.
-  pub('/demo', <DemoQuiz />),
   pub('/success-stories', <SuccessStories />),
 
   pub('/past-papers', <PastPapersHub />),

@@ -103,7 +103,6 @@ ${items}
       <section>
         <h2>${escapeHtml(t.ctaTitle)}</h2>
         <p>${escapeHtml(t.ctaBody)}</p>
-        <p><a href="${p('/demo')}">${escapeHtml(t.ctaDemo)}</a></p>
         <p><a href="${p('/signup')}">${escapeHtml(t.ctaSignup)}</a></p>
       </section>
 ${footerNav}

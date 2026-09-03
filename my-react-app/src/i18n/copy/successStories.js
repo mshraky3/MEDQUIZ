@@ -20,8 +20,7 @@ const successStoriesCopy = {
             ? 'قصة واحدة حتى الآن، منشورة بإذن صاحبها.'
             : `${n} قصة من طلاب حضّروا معنا، منشورة بإذن أصحابها.`),
         ctaTitle: 'ابدأ قصتك',
-        ctaBody: 'جرّب عشرين سؤالاً بدون حساب، أو ابدأ بأربعين سؤالاً مجانياً بحساب مجاني.',
-        ctaDemo: 'جرّب ٢٠ سؤالاً الآن',
+        ctaBody: 'ابدأ بأربعين سؤالاً مجانياً بحساب مجاني، بلا بطاقة دفع.',
         ctaSignup: 'أنشئ حساباً مجانياً',
 
         // ── الطلب داخل التطبيق ──
@@ -66,8 +65,7 @@ const successStoriesCopy = {
             ? 'One story so far, published with its author’s permission.'
             : `${n} students who prepared with us, published with their permission.`),
         ctaTitle: 'Start your own',
-        ctaBody: 'Try twenty questions with no account, or start with forty free ones.',
-        ctaDemo: 'Try 20 questions now',
+        ctaBody: 'Start with forty free questions on a free account, no card needed.',
         ctaSignup: 'Create a free account',
 
         // ── The in-app ask ──

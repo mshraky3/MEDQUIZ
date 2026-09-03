@@ -138,7 +138,7 @@ const examGuidesCopy = {
                         heading: 'تجربة قبل التجربة',
                         blocks: [
                             { p: 'توفّر الهيئة اختباراً تجريبياً رسمياً (mock/practice test) مبنياً على التوزيع نفسه ومسحوباً من بنك أسئلة الاختبار، يُطلب عبر موقعها. وهو أقرب ما يمكنك الوصول إليه من الاختبار الحقيقي قبل يومه.' },
-                            { p: 'وإن أردت البدء الآن بلا حساب وبلا رسوم، [[/demo|جرّب 20 سؤالاً]] أو تصفّح [[/questions|الأسئلة المنشورة مجاناً]] بشرح مكتوب لكل إجابة.' },
+                            { p: 'وإن أردت البدء الآن بلا رسوم، تصفّح [[/questions|الأسئلة المنشورة مجاناً]] بشرح مكتوب لكل إجابة.' },
                         ],
                     },
                 ],
@@ -226,7 +226,7 @@ const examGuidesCopy = {
                             heading: 'قبل أن تبدأ التحضير',
                             blocks: [
                                 { p: 'اقرأ [[/exams/smle/blueprint|التوزيع الرسمي]] أولاً. أكثر خطة مذاكرة تُهدر وقتاً هي التي تُبنى على انطباع عن «المواضيع المهمة» بدل الوثيقة التي يُبنى عليها الاختبار فعلاً.' },
-                                { p: 'ثم ابدأ بحل الأسئلة مبكراً لا متأخراً: [[/guides/smle-study-plan|خطة 12 أسبوعاً]] و[[/guides/wrong-questions-method|طريقة مراجعة الأخطاء]]. ويمكنك تجربة البنك الآن بلا حساب عبر [[/demo|20 سؤالاً]].' },
+                                { p: 'ثم ابدأ بحل الأسئلة مبكراً لا متأخراً: [[/guides/smle-study-plan|خطة 12 أسبوعاً]] و[[/guides/wrong-questions-method|طريقة مراجعة الأخطاء]]. ويمكنك الاطلاع الآن على [[/questions|الأسئلة المنشورة مجاناً]]، لكل سؤال منها شرح مكتوب.' },
                             ],
                         },
                     ],
@@ -447,7 +447,7 @@ const examGuidesCopy = {
                             heading: 'القسم الذي يُهمَل عادةً',
                             blocks: [
                                 { p: '**إدارة وقيادة التمريض** عُشر الاختبار — نحو 20 سؤالاً — ومعظم مواد التحضير المتاحة تمرّ عليه سريعاً أو تتجاهله، لأنه ليس تخصصاً سريرياً يسهل تجميع أسئلته. تفصيله في [[/exams/snle/blueprint|صفحة التوزيع]].' },
-                                { p: 'وللأقسام السريرية، ابدأ من [[/questions/nursing-fundamentals|أسئلة أساسيات التمريض]] و[[/questions/medical-surgical-nursing|التمريض الباطني والجراحي]] المنشورة مجاناً، أو [[/demo|جرّب 20 سؤالاً]] بلا حساب.' },
+                                { p: 'وللأقسام السريرية، ابدأ من [[/questions/nursing-fundamentals|أسئلة أساسيات التمريض]] و[[/questions/medical-surgical-nursing|التمريض الباطني والجراحي]] المنشورة مجاناً، لكل سؤال منها شرح مكتوب.' },
                             ],
                         },
                     ],
@@ -723,7 +723,7 @@ const examGuidesCopy = {
                         heading: 'A rehearsal before the real thing',
                         blocks: [
                             { p: 'SCFHS offers an official practice or mock test built on the same blueprint and sampled from the exam’s own item bank, requested through its website. It is the closest thing to the real paper available before the day.' },
-                            { p: 'To start now with no account and no fee, [[/demo|try 20 questions]] or read the [[/questions|openly published questions]], each with a written explanation.' },
+                            { p: 'To start now with no fee, read the [[/questions|openly published questions]], each with a written explanation.' },
                         ],
                     },
                 ],
@@ -810,7 +810,7 @@ const examGuidesCopy = {
                             heading: 'Before you start preparing',
                             blocks: [
                                 { p: 'Read [[/exams/smle/blueprint|the blueprint]] first. The study plan that wastes the most time is the one built on an impression of which topics matter, rather than on the document the exam is actually assembled from.' },
-                                { p: 'Then start questions early rather than late: [[/guides/smle-study-plan|the 12-week plan]] and [[/guides/wrong-questions-method|the wrong-questions method]]. You can try the bank now with no account: [[/demo|20 questions]].' },
+                                { p: 'Then start questions early rather than late: [[/guides/smle-study-plan|the 12-week plan]] and [[/guides/wrong-questions-method|the wrong-questions method]]. You can read the [[/questions|openly published questions]] now, each with a written explanation.' },
                             ],
                         },
                     ],
@@ -1031,7 +1031,7 @@ const examGuidesCopy = {
                             heading: 'The section almost everyone skips',
                             blocks: [
                                 { p: '**Nursing management and leadership** is a tenth of the paper, roughly 20 questions, and most preparation material passes over it because it is not a clinical specialty with an obvious bank behind it. It is set out on [[/exams/snle/blueprint|the blueprint page]].' },
-                                { p: 'For the clinical sections, start from the openly published [[/questions/nursing-fundamentals|nursing fundamentals]] and [[/questions/medical-surgical-nursing|medical-surgical nursing]] questions, or [[/demo|try 20 questions]] with no account.' },
+                                { p: 'For the clinical sections, start from the openly published [[/questions/nursing-fundamentals|nursing fundamentals]] and [[/questions/medical-surgical-nursing|medical-surgical nursing]] questions, each with a written explanation.' },
                             ],
                         },
                     ],

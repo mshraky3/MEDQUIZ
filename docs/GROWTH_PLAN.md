@@ -101,7 +101,7 @@ weakest.
 |----|------|--------|
 | S2-01 | Charge the free allowance on answer, not on serve | **done** — `90f8b34` |
 | S2-02 | Show their own results before showing the price | **done** — `a8dfa5d` |
-| S2-03 | Ship a no-account demo at `/demo` | **done** — `74a1fba` |
+| S2-03 | Ship a no-account demo at `/demo` | **removed on request** — shipped in `74a1fba`, deleted entirely; an account is required |
 | S2-04 | Make Google Sign-In the primary signup path | **done** — `775f2ef` |
 | S2-05 | Ask for the exam date at first run, not in settings | **done** — `98083e4` |
 | S2-06 | Fix summary progress recording zero rows | **done** — `d4a4fa5` |
@@ -112,10 +112,17 @@ that were not on the list: answer explanations were rendering their raw
 markdown on all 240 published question pages (`33762fe`), and the day-1 email
 had been going out saying "The the Saudi Medical Licensing Exam".
 
+**S2-03 was removed after it went live.** The owner's decision: an account is
+required, so there is no no-account demo. The route, the component, its copy,
+its SEO module, both prerendered pages, the landing CTA, the footer link, the
+success-stories CTA, the six exam-guide sentences that linked to it and the two
+funnel events are all gone. `/questions` still publishes questions without an
+account — that is the SEO surface, not a playable bank, and it was left alone.
+
 **Watch after deploy:** free-to-paid conversion (S2-01 changes when people meet
-the paywall), signup conversion (S2-04 changes what the form looks like),
-`demo_start` / `demo_complete` events, and exam-date coverage — the target for
-S2-05 was 60% of new accounts, from 18 of 116 today.
+the paywall), signup conversion (S2-04 changes what the form looks like), and
+exam-date coverage — the target for S2-05 was 60% of new accounts, from 18 of
+116 today.
 
 ## Sprint 3 — make it safe to pay you (weeks 4–7)
 

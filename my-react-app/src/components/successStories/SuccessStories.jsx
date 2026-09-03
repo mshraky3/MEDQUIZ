@@ -64,8 +64,7 @@ const SuccessStories = () => {
                 <h2>{t.ctaTitle}</h2>
                 <p>{t.ctaBody}</p>
                 <div className="ss-cta-row">
-                    <Link className="ss-cta-btn" to="/demo">{t.ctaDemo}</Link>
-                    <Link className="ss-cta-link" to="/signup">{t.ctaSignup}</Link>
+                    <Link className="ss-cta-btn" to="/signup">{t.ctaSignup}</Link>
                 </div>
             </section>
         </main>

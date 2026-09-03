@@ -28,10 +28,9 @@ const router = express.Router();
  * The whitelist is a security control, not a schedule — but it silently drops
  * unknown names, so an event added to the frontend and not added here is not a
  * gap anyone notices: it is 204 No Content forever. Three had been in that
- * state (`subscribe_plan_select` since the five-plan ladder shipped, the two
- * demo events since the demo did), which is why funnel.test.js now fails the
- * build when the two lists disagree. Add the name here in the same commit that
- * emits it.
+ * state (`subscribe_plan_select` since the five-plan ladder shipped), which is
+ * why funnel.test.js now fails the build when the two lists disagree. Add the
+ * name here in the same commit that emits it.
  */
 export const FUNNEL_EVENTS = new Set([
     'landing_view',
@@ -42,8 +41,6 @@ export const FUNNEL_EVENTS = new Set([
     'signup_otp_verified',
     'signup_otp_failed',
     'trial_started',
-    'demo_start',
-    'demo_complete',
     'paywall_hit',
     'subscribe_view',
     // The price ladder a visitor was actually shown, and which tier they moved

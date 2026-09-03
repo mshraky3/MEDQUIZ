@@ -30,7 +30,6 @@ const Footer = () => {
     { to: '/guides', label: t.nav.guides },
     // The only try-before-signup path there is. Placed above the reading
     // pages because for someone still deciding, playing beats reading.
-    { to: '/demo', label: t.footer.tryDemo },
     // Same rule as the prerendered footer nav: the page does not exist
     // until a student has written something, so neither does the link.
     ...(storyCount > 0 ? [{ to: '/success-stories', label: t.footer.successStories }] : []),

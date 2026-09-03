@@ -19,7 +19,6 @@ import { getPrerenderRoutes, SITE_ORIGIN } from '../src/seo/siteMetadata.js';
 import { siteFooterNavHtml } from '../src/seo/prerenderHtml.js';
 import { buildPublicQuestionRoutes, QUESTIONS_ROOT } from '../src/seo/publicQuestions.js';
 import { buildPastPaperRoutes, PAST_PAPERS_ROOT } from '../src/seo/pastPapers.js';
-import { buildDemoRoutes, DEMO_ROOT } from '../src/seo/demo.js';
 import { buildSuccessStoriesRoutes, SUCCESS_STORIES_ROOT } from '../src/seo/successStories.js';
 import { buildExamRoutes, EXAMS_ROOT } from '../src/seo/examGuides.js';
 import { SUPPORTED_LANGS, dirFor, stripLocale } from '../src/seo/locales.js';
@@ -130,7 +129,6 @@ const PAST_PAPER_HINT = { priority: '0.75', changefreq: 'monthly' };
 // The try-before-signup page. High priority because it is the one page that
 // answers "free SMLE questions" with something playable rather than readable,
 // but it is a fixed offer, not a feed — monthly, not weekly.
-const DEMO_HINT = { priority: '0.9', changefreq: 'monthly' };
 // Grows whenever a student adds one, so weekly is honest here.
 const STORIES_HINT = { priority: '0.6', changefreq: 'weekly' };
 // Exam logistics. High priority because these answer the highest-intent
@@ -180,7 +178,6 @@ function buildSitemap(routes) {
       const { path: routePath } = stripLocale(localizedRoutePath);
       const hint =
         SITEMAP_HINTS[routePath] ||
-        (routePath === DEMO_ROOT ? DEMO_HINT : null) ||
         (routePath === SUCCESS_STORIES_ROOT ? STORIES_HINT : null) ||
         (routePath === EXAMS_ROOT ? EXAMS_HUB_HINT : null) ||
         (routePath.startsWith(`${EXAMS_ROOT}/`) ? EXAMS_PAGE_HINT : null) ||
@@ -236,7 +233,7 @@ function buildLlmsTxt(routes) {
     // the two exams do not share a pass mark.
     ['Exam logistics, transcribed from the SCFHS applicant guides', (p) => p === EXAMS_ROOT || p.startsWith(`${EXAMS_ROOT}/`)],
     ['Study guides', (p) => p === '/guides' || p.startsWith('/guides/')],
-    ['Practice questions, open to everyone', (p) => p === DEMO_ROOT || p === QUESTIONS_ROOT || p.startsWith(`${QUESTIONS_ROOT}/`)],
+    ['Practice questions, open to everyone', (p) => p === QUESTIONS_ROOT || p.startsWith(`${QUESTIONS_ROOT}/`)],
     ['Past-paper collections', (p) => p === PAST_PAPERS_ROOT || p.startsWith(`${PAST_PAPERS_ROOT}/`)],
     ['About the platform', (p) => ['/', '/about', '/faq', '/contact', '/groups', SUCCESS_STORIES_ROOT].includes(p)],
     ['Policies', (p) => ['/privacy', '/terms', '/refund-policy'].includes(p)],
@@ -274,9 +271,10 @@ an English twin at the same path under \`/en\` (for example
 ${SITE_ORIGIN}/en/guides). Individual question pages are not listed here —
 browse them from the specialty hubs under ${SITE_ORIGIN}${QUESTIONS_ROOT}.
 
-Free without an account: a 20-question demo, and every question page listed
-under practice questions. A free account adds 40 questions from the bank and
-the first lesson of each specialty.
+Free without an account: every question page listed under practice questions,
+each with its written explanation. Practising against the bank itself requires
+an account, which is free and adds 40 questions and the first lesson of each
+specialty.
 
 ${sections.join('\n\n')}
 `;
@@ -316,7 +314,6 @@ if (!fs.existsSync(templatePath)) {
     return [
       ...getPrerenderRoutes(lang),
       ...buildExamRoutes({ lang, footerNav }),
-      ...buildDemoRoutes(lang, { footerNav }),
       ...buildSuccessStoriesRoutes(storiesPayload, { footerNav, lang }),
       ...(questionPayload ? buildPublicQuestionRoutes(questionPayload, { footerNav, lang }) : []),
       ...(questionPayload ? buildPastPaperRoutes(questionPayload, { footerNav, lang }) : [])

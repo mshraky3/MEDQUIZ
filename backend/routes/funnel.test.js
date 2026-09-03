@@ -5,8 +5,8 @@
  * open endpoint and wrong for us: an event added to a component and not added
  * to FUNNEL_EVENTS looks exactly like a working beacon from the browser, and
  * the only symptom is a step that never appears in the admin panel. That is how
- * `subscribe_plan_select` and the two demo events were lost — each shipped in a
- * commit that never touched this file.
+ * `subscribe_plan_select` was lost — it shipped in a commit that never touched
+ * this file.
  *
  * So the check is mechanical: scan the React source for trackFunnel('name')
  * and require every name to be one the server will store.
