@@ -222,7 +222,7 @@ leaky, which is what Sprints 2 and 3 are for.
 | ID | Task | Status |
 |----|------|--------|
 | S5-01 | Re-test the annual anchor once you have 30+ customers | **blocked** — needs a stable baseline |
-| S5-02 | Build the renewal sequence monthly plans need | **done** — `HEAD`, three rungs either side of the expiry |
+| S5-02 | Build the renewal sequence monthly plans need | **done** — `80bb34d`, three rungs either side of the expiry |
 | S5-03 | Make the refund policy term-proportional | **already done** — the policy has scaled with the term since June; the backlog line was stale |
 
 **S5-02 — what the sequence is.** Nothing auto-renews, by design and by
