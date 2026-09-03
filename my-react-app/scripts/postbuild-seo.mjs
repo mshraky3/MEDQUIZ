@@ -21,6 +21,7 @@ import { buildPublicQuestionRoutes, QUESTIONS_ROOT } from '../src/seo/publicQues
 import { buildPastPaperRoutes, PAST_PAPERS_ROOT } from '../src/seo/pastPapers.js';
 import { buildDemoRoutes, DEMO_ROOT } from '../src/seo/demo.js';
 import { buildSuccessStoriesRoutes, SUCCESS_STORIES_ROOT } from '../src/seo/successStories.js';
+import { buildExamRoutes, EXAMS_ROOT } from '../src/seo/examGuides.js';
 import { SUPPORTED_LANGS, dirFor, stripLocale } from '../src/seo/locales.js';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
@@ -132,6 +133,12 @@ const PAST_PAPER_HINT = { priority: '0.75', changefreq: 'monthly' };
 const DEMO_HINT = { priority: '0.9', changefreq: 'monthly' };
 // Grows whenever a student adds one, so weekly is honest here.
 const STORIES_HINT = { priority: '0.6', changefreq: 'weekly' };
+// Exam logistics. High priority because these answer the highest-intent
+// queries a candidate has, and yearly because they only change when SCFHS
+// publishes a new applicant guide — claiming weekly on a page that is a
+// transcription of a static PDF would be a lie the crawler learns to discount.
+const EXAMS_HUB_HINT = { priority: '0.9', changefreq: 'yearly' };
+const EXAMS_PAGE_HINT = { priority: '0.8', changefreq: 'yearly' };
 
 function questionSitemapHint(routePath) {
     if (routePath === QUESTIONS_ROOT) return QUESTION_HUB_HINT;
@@ -175,6 +182,8 @@ function buildSitemap(routes) {
         SITEMAP_HINTS[routePath] ||
         (routePath === DEMO_ROOT ? DEMO_HINT : null) ||
         (routePath === SUCCESS_STORIES_ROOT ? STORIES_HINT : null) ||
+        (routePath === EXAMS_ROOT ? EXAMS_HUB_HINT : null) ||
+        (routePath.startsWith(`${EXAMS_ROOT}/`) ? EXAMS_PAGE_HINT : null) ||
         (routePath === QUESTIONS_ROOT || routePath.startsWith(`${QUESTIONS_ROOT}/`)
           ? questionSitemapHint(routePath)
           : routePath === PAST_PAPERS_ROOT || routePath.startsWith(`${PAST_PAPERS_ROOT}/`)
@@ -222,6 +231,10 @@ function buildLlmsTxt(routes) {
   );
 
   const GROUPS = [
+    // First, because it is the part of the site an assistant is most likely to
+    // be asked about and the part it is most likely to get wrong from memory:
+    // the two exams do not share a pass mark.
+    ['Exam logistics, transcribed from the SCFHS applicant guides', (p) => p === EXAMS_ROOT || p.startsWith(`${EXAMS_ROOT}/`)],
     ['Study guides', (p) => p === '/guides' || p.startsWith('/guides/')],
     ['Practice questions, open to everyone', (p) => p === DEMO_ROOT || p === QUESTIONS_ROOT || p.startsWith(`${QUESTIONS_ROOT}/`)],
     ['Past-paper collections', (p) => p === PAST_PAPERS_ROOT || p.startsWith(`${PAST_PAPERS_ROOT}/`)],
@@ -302,6 +315,7 @@ if (!fs.existsSync(templatePath)) {
     const footerNav = siteFooterNavHtml(lang);
     return [
       ...getPrerenderRoutes(lang),
+      ...buildExamRoutes({ lang, footerNav }),
       ...buildDemoRoutes(lang, { footerNav }),
       ...buildSuccessStoriesRoutes(storiesPayload, { footerNav, lang }),
       ...(questionPayload ? buildPublicQuestionRoutes(questionPayload, { footerNav, lang }) : []),

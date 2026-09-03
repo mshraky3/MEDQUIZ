@@ -180,6 +180,7 @@ const FOOTER_NAV_LINKS = [
     { href: '/', ar: 'الرئيسية', en: 'Home' },
     { href: '/about', ar: 'من نحن', en: 'About SQB' },
     { href: '/guides', ar: 'أدلة التحضير لاختباري SMLE وSNLE', en: 'SMLE & SNLE study guides' },
+    { href: '/exams', ar: 'اختبارات الهيئة: الشكل والتوزيع ودرجة النجاح', en: 'The exams: format, blueprint and pass mark' },
     { href: '/demo', ar: 'جرّب ٢٠ سؤالاً بدون حساب', en: 'Try 20 questions, no account' },
     { href: '/questions', ar: 'أسئلة تدريبية مجانية', en: 'Free practice questions' },
     { href: '/past-papers', ar: 'تجميعات أسئلة SMLE وSNLE', en: 'SMLE & SNLE question collections' },

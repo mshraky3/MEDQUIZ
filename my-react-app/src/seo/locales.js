@@ -116,7 +116,7 @@ export const EN_TWIN_PATHS = [
 ];
 
 /** Route subtrees that exist in both languages, including their children. */
-export const EN_TWIN_PREFIXES = ['/guides', '/questions', '/past-papers'];
+export const EN_TWIN_PREFIXES = ['/guides', '/questions', '/past-papers', '/exams'];
 
 const EN_TWIN_SET = new Set(EN_TWIN_PATHS);
 

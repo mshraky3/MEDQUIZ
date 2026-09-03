@@ -65,7 +65,10 @@ const SmleStudyPlanGuide = lazy(() => import('./components/guides/SmleStudyPlanG
 const WrongQuestionsMethodGuide = lazy(() => import('./components/guides/WrongQuestionsMethodGuide.jsx'));
 const SmleVsPrometricGuide = lazy(() => import('./components/guides/SmleVsPrometricGuide.jsx'));
 const SmleHighYieldTopicsGuide = lazy(() => import('./components/guides/SmleHighYieldTopicsGuide.jsx'));
-const SnleBlueprintGuide = lazy(() => import('./components/guides/SnleBlueprintGuide.jsx'));
+// The exam logistics section (/exams). One component serves all thirteen
+// routes — see components/exams/ExamPage.jsx — so this is one chunk, not
+// thirteen, and the copy it renders is the copy the prerender renders.
+const ExamPage = lazy(() => import('./components/exams/ExamPage.jsx'));
 // The public question library. Its data file is ~415 KB, so the components
 // pull it in with their own dynamic import (see usePublicQuestions.js) — these
 // three lazy() calls only split the UI.
@@ -100,6 +103,7 @@ import Globals from './global.js';
 import { UserProvider } from './UserContext.jsx';
 import { LanguageProvider, AdminShell, useCommon } from './i18n';
 import { hasEnglishTwin, localizedPath } from './seo/locales.js';
+import { examRoutePaths } from './seo/examGuides.js';
 
 import { initErrorTracking } from './utils/errorTracking.js';
 import { reloadOnceForStaleChunk } from './utils/staleChunkReload.js';
@@ -205,7 +209,11 @@ const router = createBrowserRouter([{
   pub('/guides/wrong-questions-method', <WrongQuestionsMethodGuide />),
   pub('/guides/smle-vs-prometric-differences', <SmleVsPrometricGuide />),
   pub('/guides/smle-high-yield-topics', <SmleHighYieldTopicsGuide />),
-  pub('/guides/snle-blueprint', <SnleBlueprintGuide />),
+
+  // Exam logistics — what the SCFHS applicant guides say about the SMLE and
+  // the SNLE. Registered from the same list the prerender walks, so a page
+  // cannot exist in one and not the other.
+  ...examRoutePaths().map((path) => pub(path, <ExamPage />)),
 
   // Public question library — the only pages a stranger can read in full with
   // no account, and the reason they exist: 5,033 explained questions that
