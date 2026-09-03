@@ -305,10 +305,24 @@ router.get('/:slug/page/:n', requireSubscriber, async (req, res) => {
 });
 
 // POST /api/summaries/:slug/progress — upsert reading progress
+//
+// `slug` is a SECTION of the reading path (medicine, nursing-fundamentals, …)
+// and "page" means the subtopic within it, because that is the unit students
+// actually move through — the paged R2 viewer this schema was written for is
+// no longer how any of this content is read. See the client's sync effect in
+// components/summaries/SummariesPage.jsx.
 router.post('/:slug/progress', async (req, res) => {
     const { slug } = req.params;
     const lastPage = parseInt(req.body?.last_page, 10);
     const completedFlag = Boolean(req.body?.completed);
+    // How many subtopics the section has. The catalog is authored in the client
+    // (components/summaries/content/*.js) and the server has no copy of it, so
+    // this request is the only way it can learn the shape — without it
+    // page_count stays 0 and every "x of y read" figure divides by nothing.
+    // Bounded rather than trusted: it only ever feeds a progress denominator,
+    // and a nonsense value should be ignored, not stored.
+    const totalPages = parseInt(req.body?.total_pages, 10);
+    const totalPagesValid = Number.isInteger(totalPages) && totalPages > 0 && totalPages <= 500;
     if (!Number.isInteger(lastPage) || lastPage < 1) {
         return res.status(400).json({ message: 'Invalid last_page' });
     }
@@ -318,7 +332,21 @@ router.post('/:slug/progress', async (req, res) => {
             [slug, req.userTrack]
         );
         if (!sres.rows.length) return res.status(404).json({ message: 'Summary not found' });
-        const { id: summaryId, page_count: pageCount } = sres.rows[0];
+        const { id: summaryId } = sres.rows[0];
+        let pageCount = sres.rows[0].page_count;
+
+        if (totalPagesValid && pageCount !== totalPages) {
+            // Content shape changed (or was never known). Not worth failing the
+            // save over if it goes wrong — the progress row is the point.
+            try {
+                await req.db.query(`UPDATE summaries SET page_count = $1 WHERE id = $2`,
+                    [totalPages, summaryId]);
+                pageCount = totalPages;
+            } catch (err) {
+                logger.warn('[Summaries] could not sync page_count', { slug, err: err.message });
+            }
+        }
+
         const isCompleted = completedFlag || (pageCount > 0 && lastPage >= pageCount);
 
         const result = await req.db.query(

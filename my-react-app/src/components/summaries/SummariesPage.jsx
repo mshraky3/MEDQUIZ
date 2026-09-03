@@ -168,6 +168,54 @@ const SummariesPage = () => {
 
     useEffect(() => () => clearTimeout(celebrateTimer.current), []);
 
+    // ---- server-side reading progress --------------------------------------
+    // Everything above this line lives in localStorage and nowhere else. 44
+    // students have spent 868 minutes in the summaries and summary_progress has
+    // never held a single row, because POST /api/summaries/:slug/progress was
+    // built and then never called from anywhere. That left this progress
+    // trapped in one browser: invisible to analytics, unusable in email, and
+    // gone the moment a student opens the app on their phone instead.
+    //
+    // "Page" on the server means subtopic-within-section (see the route). Fired
+    // on open and on every tick, deduped so re-rendering the same position does
+    // not re-POST.
+    //
+    // Raw fetch rather than apiClient on purpose: apiClient reports failures to
+    // the error tracker, and the four legacy decks still in the summaries table
+    // have no section in the authored catalog, so a stray 404 here would page
+    // the owner about telemetry nobody is waiting on. This must be silent, and
+    // it must never be able to interrupt someone reading.
+    const lastSyncedRef = useRef('');
+    useEffect(() => {
+        if (!openSub?.section || !openSub?.subtopic || !user || !sessionToken) return;
+        const { section, subtopic } = openSub;
+        const subtopics = section.subtopics || [];
+        const ordinal = subtopics.findIndex((s) => s.id === subtopic.id) + 1;
+        if (ordinal < 1) return;
+        const sectionComplete = subtopics.length > 0 && subtopics.every((s) => done[s.id]);
+
+        const signature = `${section.id}:${ordinal}:${sectionComplete}`;
+        if (lastSyncedRef.current === signature) return;
+        lastSyncedRef.current = signature;
+
+        fetch(`${Globals.URL}/api/summaries/${encodeURIComponent(section.id)}/progress`
+            + `?username=${encodeURIComponent(user.username)}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${sessionToken}`,
+            },
+            body: JSON.stringify({
+                last_page: ordinal,
+                total_pages: subtopics.length,
+                completed: sectionComplete,
+            }),
+        }).catch(() => {
+            // Allow a later navigation to retry this same position.
+            lastSyncedRef.current = '';
+        });
+    }, [openSub, done, user, sessionToken]);
+
     const savePath = (updater) => setPath((prev) => {
         const next = typeof updater === 'function' ? updater(prev) : updater;
         safeSetItem(pathKey, JSON.stringify(next));

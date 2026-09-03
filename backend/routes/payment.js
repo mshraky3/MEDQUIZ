@@ -12,7 +12,7 @@ import express from 'express';
 import { logger } from '../utils/observability.js';
 import {
     isPaymentEnforcementEnabled,
-    listPlans,
+    listPlansForDisplay,
     getCurrency,
     verifyWebhookToken,
     handleWebhookEvent,
@@ -100,7 +100,7 @@ router.get('/config', (req, res) => {
         enabled,
         currency: getCurrency(),
         kind,
-        plans: listPlans(kind),
+        plans: listPlansForDisplay(kind),
         publishableKey: enabled ? (process.env.MOYASAR_PUBLISHABLE_KEY || null) : null,
     });
 });
@@ -165,7 +165,8 @@ router.get('/status/:userId', requirePaymentEnabled, requireOwnSession, async (r
         const { userId } = req.params;
         const r = await req.db.query(
             `SELECT id, subscription_status, subscription_expiry_date,
-                    is_admin_created, grandfathered_at, free_questions_used
+                    is_admin_created, grandfathered_at, free_questions_used,
+                    free_questions_served
              FROM accounts WHERE id = $1`,
             [userId]
         );

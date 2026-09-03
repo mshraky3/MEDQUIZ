@@ -83,20 +83,34 @@ const SEO = ({
     setMeta('meta[name="twitter:image:alt"]', { name: 'twitter:image:alt' }, imageAlt || fullTitle);
     setMeta('meta[name="twitter:url"]', { name: 'twitter:url' }, url);
 
-    document.head.querySelectorAll(`link[rel="alternate"][${MANAGED_ATTRIBUTE}="true"]`).forEach((element) => {
+    // ALL of them, not just the ones this component added. A prerendered page
+    // arrives with its own hreflang set written by scripts/postbuild-seo.mjs
+    // and index.html ships a static set of its own; matching only on the
+    // managed attribute left those in place and appended a second copy beside
+    // them, so every prerendered route served two hreflang sets — one of them
+    // (index.html's) pointing every language at the homepage.
+    document.head.querySelectorAll('link[rel="alternate"]').forEach((element) => {
       element.remove();
     });
 
-    alternates.forEach((hrefLang) => {
+    // {hreflang, href} pairs, not bare language tags. These used to be strings
+    // and every one of them was given THIS page's url — an "alternate" that
+    // resolves to the same document as the canonical, which tells a crawler
+    // nothing. Each variant now points at its own URL (see src/seo/locales.js).
+    alternates.forEach((alternate) => {
+      if (!alternate || !alternate.hreflang || !alternate.href) return;
       const element = document.createElement('link');
       element.setAttribute('rel', 'alternate');
-      element.setAttribute('hreflang', hrefLang);
-      element.setAttribute('href', url);
+      element.setAttribute('hreflang', alternate.hreflang);
+      element.setAttribute('href', alternate.href);
       element.setAttribute(MANAGED_ATTRIBUTE, 'true');
       document.head.appendChild(element);
     });
 
-    document.head.querySelectorAll(`script[${MANAGED_SCRIPT_ATTRIBUTE}="true"]`).forEach((element) => {
+    // Same reasoning as the alternates above: the prerendered <head> already
+    // carries this route's JSON-LD, so keeping only the managed ones meant the
+    // page ended up declaring each schema twice.
+    document.head.querySelectorAll('script[type="application/ld+json"]').forEach((element) => {
       element.remove();
     });
 

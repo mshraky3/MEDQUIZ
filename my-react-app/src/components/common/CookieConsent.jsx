@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import Icon from './Icon.jsx';
 import './CookieConsent.css';
 import { safeGetItem, safeSetItem } from '../../utils/safeStorage.js';
-import { useCommon, useLang } from '../../i18n';
+import { useCommon, useLang, useLocalePath } from '../../i18n';
 
 const CookieConsent = () => {
     const [showBanner, setShowBanner] = useState(false);
     const t = useCommon();
     const { dir } = useLang();
+    const localePath = useLocalePath();
 
     useEffect(() => {
         const consent = safeGetItem('cookie-consent');
@@ -45,7 +46,7 @@ const CookieConsent = () => {
                     <span className="cookie-consent-icon" aria-hidden="true"><Icon name="cookie" size={18} /></span>
                     <p>
                         {t.cookies.text}{' '}
-                        <a href="/privacy" className="cookie-consent-link">{t.cookies.privacyLink}</a>
+                        <a href={localePath('/privacy')} className="cookie-consent-link">{t.cookies.privacyLink}</a>
                     </p>
                 </div>
                 <div className="cookie-consent-actions">

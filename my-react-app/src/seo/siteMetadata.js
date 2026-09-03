@@ -1,3 +1,15 @@
+import guidesCopy from '../i18n/copy/guides.js';
+import { guideArticleHtml, guidesHubHtml, guidesTeaserHtml, siteFooterNavHtml } from './prerenderHtml.js';
+import { EN_PRERENDER, FAQ_ITEMS_EN, enLandingHtml, enQuestionsTeaserHtml } from './staticPrerenderEn.js';
+import {
+    absoluteUrl,
+    alternatesFor,
+    hasEnglishTwin,
+    localizedPath,
+    ogLocale,
+    stripLocale,
+} from './locales.js';
+
 const SITE_ORIGIN = 'https://www.smle-question-bank.com';
 const SITE_NAME = 'SQB';
 const DEFAULT_IMAGE = `${SITE_ORIGIN}/og-image.svg`;
@@ -168,8 +180,20 @@ const routeMap = {
             <li>صفحات مساعدة مثل من نحن والأسئلة الشائعة والتواصل.</li>
           </ul>
         </section>
+        <section>
+          <h2>أسئلة تدريبية مجانية بدون حساب</h2>
+          <p>نشرنا عيّنة من بنك الأسئلة مفتوحة للجميع: أسئلة بنمط الاختبار في الطب البشري والتمريض، كل سؤال بخياراته الأربعة وشرح مكتوب يوضّح سبب صحة الإجابة. لا تحتاج حساباً ولا بطاقة دفع لقراءتها.</p>
+          <p><a href="/questions">تصفّح الأسئلة التدريبية المجانية</a></p>
+        </section>
+${guidesTeaserHtml(guidesCopy.ar.hub, {
+        heading: 'أدلة التحضير لاختبارات SMLE وSNLE والبرومترك',
+        intro: 'أدلة مكتوبة بالكامل ومتاحة للجميع بدون حساب: التوزيع الرسمي لاختبار التمريض SNLE، وكيف تستخدم بنك الأسئلة، وخطة مذاكرة من 12 أسبوعاً، ومراجعة الأخطاء، والفرق بين SMLE وبرومترك، والمواضيع عالية العائد.'
+    })}
         <nav aria-label="روابط مهمة">
           <a href="/about">من نحن</a>
+          <a href="/guides">أدلة التحضير</a>
+          <a href="/questions">أسئلة تدريبية مجانية</a>
+          <a href="/past-papers">تجميعات الأسئلة</a>
           <a href="/faq">الأسئلة الشائعة</a>
           <a href="/contact">اتصل بنا</a>
           <a href="/signup">إنشاء حساب مجاني</a>
@@ -230,6 +254,21 @@ const routeMap = {
                 { name: 'الرئيسية', path: '/' },
                 { name: 'الأسئلة الشائعة', path: '/faq' }
             ])
+        ],
+        // The English twin gets English FAQ entities; the same markup describing
+        // Arabic answers on an English page would be describing text that page
+        // does not contain.
+        structuredDataEn: [
+            {
+                '@context': 'https://schema.org',
+                '@type': 'FAQPage',
+                inLanguage: 'en',
+                mainEntity: FAQ_ITEMS_EN.map((item) => ({
+                    '@type': 'Question',
+                    name: item.question,
+                    acceptedAnswer: { '@type': 'Answer', text: item.answer }
+                }))
+            }
         ],
         prerenderHtml: `
       <main class="seo-shell" dir="rtl">
@@ -350,7 +389,11 @@ const routeMap = {
     },
     '/refund-policy': {
         title: 'سياسة الاسترداد | SQB',
-        description: 'سياسة الاسترداد لمنصة SQB. الخدمة مجانية حالياً ولا تُحصّل أي مدفوعات. تشرح هذه الصفحة شروط الاسترداد المستقبلية في حال تفعيل الاشتراك المدفوع.',
+        // Said "الخدمة مجانية حالياً ولا تُحصّل أي مدفوعات" — the service is
+        // free and takes no payments — long after it started taking payments.
+        // The page itself has described a real refund window since June; only
+        // the crawler's copy of it was still living in the free era.
+        description: 'سياسة الاسترجاع في SQB: استرجاع كامل خلال 3 أيام من شراء الخطة الشهرية، وخلال 14 يوماً لخطة 4 أشهر والخطة السنوية، وكيف تُقدَّم طلبات الاسترجاع.',
         keywords: 'سياسة الاسترداد SQB, refund policy SMLE, استرداد الاشتراك, منصة طبية',
         alternates: ['ar-SA', 'ar', 'x-default'],
         structuredData: [
@@ -362,36 +405,29 @@ const routeMap = {
         ],
         prerenderHtml: `
       <main class="seo-shell" dir="rtl">
-        <h1>سياسة الاسترداد</h1>
-        <p>الخدمة مجانية حالياً ولا تُحصّل أي مدفوعات. تشرح هذه الصفحة شروط الاسترداد المستقبلية عند تفعيل الاشتراك المدفوع.</p>
+        <h1>سياسة الاسترجاع</h1>
+        <p>تقدّم SQB اشتراكاً مدفوعاً بثلاث مدد: شهري، و4 أشهر، وسنوي. ومهلة الاسترجاع الكامل تتناسب مع مدة الخطة نفسها.</p>
+        <ul>
+          <li>الخطة الشهرية: استرجاع كامل خلال 3 أيام من تاريخ الشراء.</li>
+          <li>خطة 4 أشهر والخطة السنوية: استرجاع كامل خلال 14 يوماً من تاريخ الشراء.</li>
+        </ul>
+        <p>تُرسل طلبات الاسترجاع عبر البريد الإلكتروني أو واتساب من <a href="/contact">صفحة التواصل</a>. وتُعالَج المدفوعات عبر بوابة ميسر، ولا نخزّن بيانات البطاقة كاملةً على خوادمنا.</p>
       </main>
     `
     },
     '/guides': {
-        title: 'أدلة التحضير لاختبار SMLE | SQB',
-        description: 'مكتبة أدلة عملية للتحضير لاختبار SMLE والبرومترك: خطط مذاكرة، مراجعة الأخطاء، إدارة الوقت، ونصائح أداء عالية العائد.',
-        keywords: 'SMLE study guides, دليل SMLE, خطة مذاكرة SMLE, مراجعة أخطاء SMLE, برومترك طب, نصائح اختبار الهيئة',
+        title: 'أدلة التحضير لاختباري SMLE وSNLE | SQB',
+        description: 'مكتبة أدلة عملية للتحضير لاختبارات الهيئة: التوزيع الرسمي لاختبار التمريض SNLE، وخطط مذاكرة SMLE، ومراجعة الأخطاء، وإدارة الوقت، ونصائح أداء عالية العائد.',
+        keywords: 'SMLE study guides, دليل SMLE, دليل SNLE, خطة مذاكرة SMLE, مراجعة أخطاء SMLE, برومترك طب, نصائح اختبار الهيئة',
         alternates: ['ar-SA', 'ar', 'x-default'],
         structuredData: [
-            routePageData('/guides', 'أدلة التحضير لاختبار SMLE | SQB', 'أدلة ومقالات تعليمية للتحضير لاختبار SMLE والبرومترك.'),
+            routePageData('/guides', 'أدلة التحضير لاختباري SMLE وSNLE | SQB', 'أدلة ومقالات تعليمية للتحضير لاختبارات SMLE وSNLE والبرومترك.'),
             breadcrumbs([
                 { name: 'الرئيسية', path: '/' },
                 { name: 'الأدلة', path: '/guides' }
             ])
         ],
-        prerenderHtml: `
-            <main class="seo-shell" dir="rtl">
-                <h1>أدلة التحضير لاختبار SMLE</h1>
-                <p>صفحة تضم مقالات تعليمية عميقة حول خطط المذاكرة، مراجعة الأخطاء، وإدارة الوقت في اختبار SMLE والبرومترك.</p>
-                <nav aria-label="أدلة التحضير">
-                    <a href="/guides/how-to-use-a-question-bank">كيف تستخدم بنك الأسئلة</a>
-                    <a href="/guides/smle-study-plan">خطة SMLE من 12 أسبوع</a>
-                    <a href="/guides/wrong-questions-method">طريقة مراجعة الأسئلة الخاطئة</a>
-                    <a href="/guides/smle-vs-prometric-differences">الفرق بين SMLE وPrometric</a>
-                    <a href="/guides/smle-high-yield-topics">أهم مواضيع SMLE عالية العائد</a>
-                </nav>
-            </main>
-        `
+        prerenderHtml: guidesHubHtml(guidesCopy.ar.hub)
     },
     '/guides/how-to-use-a-question-bank': {
         title: 'كيف تستخدم بنك الأسئلة لرفع أدائك في SMLE والبرومترك | SQB',
@@ -408,18 +444,7 @@ const routeMap = {
                 { name: 'كيف تستخدم بنك الأسئلة', path: '/guides/how-to-use-a-question-bank' }
             ])
         ],
-        prerenderHtml: `
-            <main class="seo-shell" dir="rtl">
-                <h1>كيف تستخدم بنك الأسئلة لرفع أدائك في SMLE والبرومترك</h1>
-                <p>امتلاك بنك أسئلة كبير لا يرفع درجتك تلقائياً. دليل عملي يشرح الترتيب الصحيح: جلسة تشخيصية أولاً، حل تحت ظروف الاختبار الحقيقية، مراجعة كل سؤال كبيانات، وتوزيع الأسئلة حسب العائد.</p>
-                <nav aria-label="أدلة ذات صلة">
-                    <a href="/guides/smle-study-plan">خطة SMLE من 12 أسبوع</a>
-                    <a href="/guides/wrong-questions-method">طريقة مراجعة الأسئلة الخاطئة</a>
-                    <a href="/guides/smle-vs-prometric-differences">الفرق بين SMLE وPrometric</a>
-                    <a href="/guides/smle-high-yield-topics">أهم مواضيع SMLE عالية العائد</a>
-                </nav>
-            </main>
-        `
+        prerenderHtml: guideArticleHtml(guidesCopy.ar.howToUseBank, { hub: guidesCopy.ar.hub, currentPath: '/guides/how-to-use-a-question-bank' })
     },
     '/guides/smle-study-plan': {
         title: 'خطة SMLE من 12 أسبوع | SQB',
@@ -436,12 +461,7 @@ const routeMap = {
                 { name: 'خطة 12 أسبوع', path: '/guides/smle-study-plan' }
             ])
         ],
-        prerenderHtml: `
-            <main class="seo-shell" dir="rtl">
-                <h1>خطة SMLE من 12 أسبوع</h1>
-                <p>دليل يشرح تقسيم التحضير إلى مراحل، تنظيم اليوم الدراسي، ومراجعة الأخطاء بشكل منهجي لرفع الجاهزية قبل الاختبار.</p>
-            </main>
-        `
+        prerenderHtml: guideArticleHtml(guidesCopy.ar.studyPlan, { hub: guidesCopy.ar.hub, currentPath: '/guides/smle-study-plan' })
     },
     '/guides/wrong-questions-method': {
         title: 'طريقة مراجعة الأسئلة الخاطئة | SQB',
@@ -458,12 +478,7 @@ const routeMap = {
                 { name: 'مراجعة الأخطاء', path: '/guides/wrong-questions-method' }
             ])
         ],
-        prerenderHtml: `
-            <main class="seo-shell" dir="rtl">
-                <h1>طريقة مراجعة الأسئلة الخاطئة</h1>
-                <p>دليل يوضح كيف تصنف الخطأ وتبني آلية مراجعة تمنع تكراره في اختبارات SMLE والبرومترك.</p>
-            </main>
-        `
+        prerenderHtml: guideArticleHtml(guidesCopy.ar.wrongQuestions, { hub: guidesCopy.ar.hub, currentPath: '/guides/wrong-questions-method' })
     },
     '/guides/smle-vs-prometric-differences': {
         title: 'الفرق بين SMLE وPrometric | SQB',
@@ -480,12 +495,7 @@ const routeMap = {
                 { name: 'الفرق بين SMLE وPrometric', path: '/guides/smle-vs-prometric-differences' }
             ])
         ],
-        prerenderHtml: `
-            <main class="seo-shell" dir="rtl">
-                <h1>الفرق بين SMLE وPrometric</h1>
-                <p>مقارنة عملية تساعدك على تعديل طريقة المذاكرة وإدارة الوقت حسب طبيعة كل اختبار.</p>
-            </main>
-        `
+        prerenderHtml: guideArticleHtml(guidesCopy.ar.vsPrometric, { hub: guidesCopy.ar.hub, currentPath: '/guides/smle-vs-prometric-differences' })
     },
     '/guides/smle-high-yield-topics': {
         title: 'أهم مواضيع SMLE عالية العائد | SQB',
@@ -502,12 +512,49 @@ const routeMap = {
                 { name: 'مواضيع SMLE عالية العائد', path: '/guides/smle-high-yield-topics' }
             ])
         ],
-        prerenderHtml: `
-            <main class="seo-shell" dir="rtl">
-                <h1>أهم مواضيع SMLE عالية العائد</h1>
-                <p>خريطة أولويات عملية لتوزيع وقتك على المواضيع الأكثر تأثيرا على الأداء في الاختبار.</p>
-            </main>
-        `
+        prerenderHtml: guideArticleHtml(guidesCopy.ar.highYield, { hub: guidesCopy.ar.hub, currentPath: '/guides/smle-high-yield-topics' })
+    },
+    // Runtime placeholder for /questions and everything under it.
+    //
+    // No prerenderHtml here on purpose: those pages are emitted by
+    // scripts/postbuild-seo.mjs from src/seo/publicQuestions.js, which is also
+    // where their real per-page title, description and schema live. This entry
+    // exists only so a client-side navigation into the library does not fall
+    // through to the site-wide default for the moment before the question data
+    // chunk resolves and the page renders its own <SEO>. Kept deliberately
+    // generic so there is nothing here that can drift out of sync.
+    // Same arrangement as /questions below: a generic placeholder for the
+    // moment before the collection data resolves, with the real per-page
+    // metadata rendered by the page from src/seo/pastPapers.js.
+    '/past-papers': {
+        title: 'تجميعات أسئلة SMLE وSNLE | SQB',
+        description: 'دليل تجميعات أسئلة اختبار الهيئة السعودية للتخصصات الصحية للطب والتمريض، مع أسئلة مفتوحة من كل تجميعة بدون حساب.',
+        keywords: 'smle past papers, تجميعات سملي, تجميعات SMLE, تجميعات SNLE, اسئلة سملي سابقة',
+        alternates: ['ar-SA', 'ar', 'x-default']
+    },
+    // Placeholder only — the real head for /demo is built in seo/demo.js and
+    // applied both at build time and by the page's own <SEO> after hydration.
+    '/demo': {
+        title: 'جرّب بنك الأسئلة — ٢٠ سؤالاً بدون حساب | SQB',
+        description: 'جرّب أسئلة SMLE وSNLE حقيقية بشرح كامل لكل إجابة، بدون تسجيل وبدون بريد إلكتروني.',
+        keywords: 'أسئلة SMLE مجانية, اختبار تجريبي SMLE, تجربة بنك أسئلة, أسئلة تمريض SNLE',
+        alternates: ['ar-SA', 'ar', 'x-default']
+    },
+    // Placeholder for the whole /exams section — see resolveRouteKey. No
+    // `prerenderHtml`: those files are written by buildExamRoutes in
+    // seo/examGuides.js, which postbuild-seo.mjs calls directly. Putting a body
+    // here as well would emit /exams twice with different content.
+    '/exams': {
+        title: 'اختبارات الهيئة السعودية: SMLE وSNLE | SQB',
+        description: 'شكل اختبارات الهيئة السعودية للتخصصات الصحية وتوزيعها ودرجات النجاح وشروط التقديم وعدد المحاولات، منقولة من أدلة الهيئة الرسمية.',
+        keywords: 'اختبار SMLE, اختبار SNLE, الهيئة السعودية للتخصصات الصحية, درجة النجاح, شروط التقديم',
+        alternates: ['ar-SA', 'ar', 'x-default']
+    },
+    '/questions': {
+        title: 'أسئلة تدريبية مجانية لاختبار SMLE وSNLE | SQB',
+        description: 'أسئلة تدريبية بنمط اختبار الهيئة السعودية للتخصصات الصحية، مع الإجابة الصحيحة وشرح مكتوب لكل سؤال، مفتوحة بدون حساب.',
+        keywords: 'أسئلة SMLE مجانية, اسئلة SNLE, اسئلة برومترك مجانية, SMLE practice questions, بنك أسئلة مجاني',
+        alternates: ['ar-SA', 'ar', 'x-default']
     },
     '/login': {
         title: 'تسجيل الدخول | SQB',
@@ -529,6 +576,10 @@ const routeMap = {
       </main>
     `
     },
+    // /signup and /login carry `noindex` while robots.txt deliberately leaves
+    // both crawlable — see the comment there. Blocking the crawl would stop
+    // Googlebot ever reading this directive, which is the one thing that keeps
+    // a bare auth form out of the results. Do not "tidy" one without the other.
     '/signup': {
         title: 'إنشاء حساب مجاني | SQB',
         description: 'أنشئ حسابك المجاني في منصة SQB وابدأ التدريب على أسئلة SMLE والبرومترك مع تجربة عربية مبسطة وتحليلات تساعدك على تحسين مستواك.',
@@ -643,7 +694,8 @@ const enOverlay = {
     '/terms': { title: 'Terms of Service | SQB', description: 'The terms that govern your use of the SQB platform.' },
     '/refund-policy': { title: 'Refund Policy | SQB', description: 'When and how you can request a refund for an SQB subscription.' },
     '/groups': { title: 'Group plans | SQB', description: 'Share one SQB subscription with your study group: 3 accounts for SAR 250 or 5 for SAR 299 over four months, one payment, invite links you hand out yourself.' },
-    '/guides': { title: 'SMLE study guides | SQB', description: 'Practical guides for preparing for the SMLE: study plans, high-yield topics, and how to review your wrong questions.' },
+    '/guides': { title: 'SMLE & SNLE study guides | SQB', description: 'Practical guides for the Saudi Commission exams: SMLE study plans, high-yield topics, and how to review your wrong questions.' },
+    '/exams': { title: 'The Saudi licensing exams: SMLE and SNLE | SQB', description: 'Format, blueprint, passing score, eligibility, attempts and test day for the SMLE and SNLE, transcribed from the SCFHS applicant guides.' },
     '/guides/how-to-use-a-question-bank': { title: 'How to Use a Question Bank to Improve Your SMLE & Prometric Performance | SQB', description: 'A practical guide to using a question bank the right way: a diagnostic session, timed practice, reviewing every answer as data, and weighting questions by topic yield.' },
     '/guides/smle-study-plan': { title: 'The 12-week SMLE study plan | SQB', description: 'A week-by-week SMLE study plan you can actually follow, built around question practice and spaced review.' },
     '/guides/wrong-questions-method': { title: 'How to review your wrong questions | SQB', description: 'A repeatable method for turning every wrong answer into a question you will never miss again.' },
@@ -675,15 +727,44 @@ function resolveRouteKey(pathname) {
         return '/summaries-detail';
     }
 
+    // /questions/<specialty> and /questions/<specialty>/<slug> share the
+    // placeholder above; the page itself renders the precise metadata.
+    if (pathname.startsWith('/questions/')) {
+        return '/questions';
+    }
+
+    if (pathname.startsWith('/past-papers/')) {
+        return '/past-papers';
+    }
+
+    // Every /exams page shares one placeholder; ExamPage.jsx then renders the
+    // precise metadata for the route it resolved, the same way QuestionsHub
+    // does. The prerendered HTML already carries the real tags.
+    if (pathname === '/exams' || pathname.startsWith('/exams/')) {
+        return '/exams';
+    }
+
     return routeMap[pathname] ? pathname : 'default';
 }
 
-export function getSeoConfig(pathname = '/', lang = 'ar') {
-    const key = resolveRouteKey(pathname);
+/**
+ * SEO config for a pathname.
+ *
+ * The LANGUAGE COMES FROM THE URL, not from the visitor's toggle: /en/x is the
+ * English document and /x is the Arabic one, and that has to hold no matter
+ * which language the reader has selected — otherwise the page's canonical, its
+ * hreflang set and its content stop agreeing, which is the exact failure this
+ * whole scheme exists to fix.
+ */
+export function getSeoConfig(pathname = '/') {
+    const { lang, path } = stripLocale(pathname);
+    // /en/<something with no English twin> is not a page — the router has no
+    // route for it and renders the 404. Falling through to `default` (which is
+    // noindex) keeps that 404 from being dressed up in the metadata of its
+    // Arabic namesake and indexed as a real page.
+    const key = lang === 'en' && !hasEnglishTwin(path) ? 'default' : resolveRouteKey(path);
     const route = routeMap[key] || routeMap.default;
-    const canonicalPath = route.canonicalPath || pathname;
-    // English visitors get an English tab title and description; everything
-    // else about the page's SEO identity stays as indexed. See enOverlay.
+    const canonicalPath = route.canonicalPath || path;
     const overlay = (lang === 'en' && (enOverlay[key] || enOverlay.default)) || null;
     const title = overlay?.title || route.title;
     const description = overlay?.description || route.description;
@@ -694,24 +775,86 @@ export function getSeoConfig(pathname = '/', lang = 'ar') {
         keywords: route.keywords,
         image: route.image || DEFAULT_IMAGE,
         imageAlt: route.imageAlt || title,
-        url: makeUrl(canonicalPath),
-        type: pathname === '/' ? 'website' : 'article',
+        url: absoluteUrl(localizedPath(canonicalPath, lang)),
+        type: path === '/' ? 'website' : 'article',
         siteName: SITE_NAME,
         robots: route.robots || DEFAULT_ROBOTS,
-        locale: 'ar_SA',
-        alternates: route.alternates || [],
-        structuredData: route.structuredData || []
+        lang,
+        locale: ogLocale(lang),
+        // Every variant, including this one, each at its own URL. A route with
+        // no English body published (see prerenderFor) still lists both, because
+        // the React app serves /en for it either way.
+        alternates: alternatesFor(canonicalPath),
+        structuredData: (lang === 'en' && route.structuredDataEn) || route.structuredData || []
     };
 }
 
-export function getPrerenderRoutes() {
+/**
+ * The English body for a hand-written route.
+ *
+ * The guide routes regenerate from guidesCopy.en; the rest come from
+ * staticPrerenderEn.js. Returns null when no English body exists, and the
+ * route is then simply not emitted into the English tree — publishing an
+ * English URL containing Arabic prose would be worse than not publishing it.
+ */
+function englishPrerenderFor(path) {
+    if (path === '/') {
+        return enLandingHtml({
+            questionsTeaser: enQuestionsTeaserHtml(),
+            guidesTeaser: guidesTeaserHtml(guidesCopy.en.hub, {
+                lang: 'en',
+                heading: 'Study guides for the SMLE, SNLE and Prometric exams',
+                intro: 'Six complete guides, open to everyone with no account: the official SNLE nursing blueprint, how to use a question bank in the right order, a twelve-week plan, reviewing your mistakes, SMLE versus Prometric, and the highest-yield topics.'
+            })
+        });
+    }
+    if (path === '/guides') return guidesHubHtml(guidesCopy.en.hub, { lang: 'en' });
+
+    const guideKey = EN_GUIDE_KEYS[path];
+    if (guideKey) {
+        return guideArticleHtml(guidesCopy.en[guideKey], {
+            lang: 'en',
+            hub: guidesCopy.en.hub,
+            currentPath: path
+        });
+    }
+
+    return EN_PRERENDER[path] || null;
+}
+
+const EN_GUIDE_KEYS = {
+    '/guides/how-to-use-a-question-bank': 'howToUseBank',
+    '/guides/smle-study-plan': 'studyPlan',
+    '/guides/wrong-questions-method': 'wrongQuestions',
+    '/guides/smle-vs-prometric-differences': 'vsPrometric',
+    '/guides/smle-high-yield-topics': 'highYield'
+};
+
+/**
+ * Prerendered routes for one language.
+ *
+ * The footer nav is appended rather than written into each block: it is the
+ * crawler's equivalent of Footer.jsx, and it is what gives /guides (and the
+ * articles below it) an internal link from every crawlable page instead of
+ * none. It is generated per language so an English page's footer keeps the
+ * reader in the English tree.
+ */
+export function getPrerenderRoutes(lang = 'ar') {
+    const footerNav = siteFooterNavHtml(lang);
+
     return Object.entries(routeMap)
         .filter(([path, config]) => path !== 'default' && config.prerenderHtml)
-        .map(([path, config]) => ({
-            path,
-            html: config.prerenderHtml,
-            seo: getSeoConfig(path)
-        }));
+        .map(([path, config]) => {
+            const html = lang === 'en' ? englishPrerenderFor(path) : config.prerenderHtml;
+            if (!html) return null;
+            const localized = localizedPath(path, lang);
+            return {
+                path: localized,
+                html: `${html}${footerNav}`,
+                seo: getSeoConfig(localized)
+            };
+        })
+        .filter(Boolean);
 }
 
 export { DEFAULT_IMAGE, SITE_NAME, SITE_ORIGIN };

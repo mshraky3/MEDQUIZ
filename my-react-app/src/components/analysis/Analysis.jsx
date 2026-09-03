@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import Icon from '../common/Icon.jsx';
 import Spinner from '../common/Spinner.jsx';
 import apiClient from '../../utils/apiClient.js';
+import { calculateBestWorstTopics } from '../../utils/topicStats.js';
 import OverallStats from './OverallStats';
 import TopicAnalysisTable from './TopicAnalysisTable';
 import QuestionAttemptsTable from './QuestionAttemptsTable';
@@ -70,16 +71,6 @@ const CollapsibleSection = ({ title, icon, badge, defaultOpen, children }) => {
   );
 };
 
-/** Same logic the page always had for finding a student's best/worst subject. */
-function calculateBestWorstTopics(topicAnalysis) {
-  if (!Array.isArray(topicAnalysis) || topicAnalysis.length === 0) return { best: null, worst: null };
-  const valid = topicAnalysis.filter((t) => t.total_answered > 0 && t.total_correct !== undefined);
-  if (valid.length === 0) return { best: null, worst: null };
-  const withAccuracy = valid
-    .map((t) => ({ ...t, accuracy: (t.total_correct / t.total_answered) * 100 }))
-    .sort((a, b) => b.accuracy - a.accuracy);
-  return { best: withAccuracy[0], worst: withAccuracy[withAccuracy.length - 1] };
-}
 
 const Analysis = () => {
   const { user, sessionToken } = useContext(UserContext);
@@ -103,6 +94,11 @@ const Analysis = () => {
   const [lastQuizAttempts, setLastQuizAttempts] = useState([]);
   const [wrongCount, setWrongCount] = useState(null);
   const [examInfo, setExamInfo] = useState(null);
+  // { topicsRead, topicsTotal } — how much of the summaries the student has
+  // actually worked through. Until now this was unanswerable: reading progress
+  // lived only in the reader's localStorage, so 868 minutes of it were
+  // invisible here. See the sync in components/summaries/SummariesPage.jsx.
+  const [summaryCoverage, setSummaryCoverage] = useState(null);
 
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
@@ -115,7 +111,7 @@ const Analysis = () => {
 
   const fetchAll = useCallback(async (signal) => {
     try {
-      const [uaRes, streakRes, topicsRes, wrongRes, examRes] = await Promise.all([
+      const [uaRes, streakRes, topicsRes, wrongRes, examRes, sumRes] = await Promise.all([
         apiClient.get(`/user-analysis/${id}`, { signal }),
         apiClient.get(`/user-streaks/${id}`, { signal }),
         apiClient.get(`/topic-analysis/user/${id}`, { signal }),
@@ -123,6 +119,9 @@ const Analysis = () => {
         // the full wrong-question list is fetched by /wrong-questions itself.
         apiClient.get(`/wrong-questions/user/${id}`, { params: { limit: 1 }, signal }),
         apiClient.get('/api/exam-date', { signal }),
+        // Failure is not worth failing the page over — every other card here
+        // still renders without it, so this one resolves to null instead.
+        apiClient.get('/api/summaries', { signal }).catch(() => null),
       ]);
 
       setUserAnalysis(uaRes.data);
@@ -130,6 +129,16 @@ const Analysis = () => {
       setTopicAnalysis(topicsRes.data || []);
       setWrongCount(wrongRes.data?.total ?? 0);
       setExamInfo(examRes.data?.exam || null);
+
+      // page_count is only known for decks somebody has opened (the catalog is
+      // authored client-side), so the denominator fills in over time rather
+      // than being right on day one. Shown without one until then — a total
+      // that is quietly too small would be worse than no total.
+      const decks = sumRes?.data?.summaries || [];
+      setSummaryCoverage(decks.length ? {
+        topicsRead: decks.reduce((n, s) => n + (s.progress?.max_page_reached || 0), 0),
+        topicsTotal: decks.reduce((n, s) => n + (s.page_count || 0), 0),
+      } : null);
 
       const latestQuizId = uaRes.data?.latest_quiz?.id;
       if (latestQuizId) {
@@ -255,6 +264,15 @@ const Analysis = () => {
           <ul className="an-next-facts">
             {wrongCount != null && wrongCount > 0 && (
               <li><Icon name="alert-triangle" size={14} /> {t.nextStep.wrongCount(wrongCount)}</li>
+            )}
+            {summaryCoverage != null && summaryCoverage.topicsRead > 0 && (
+              <li>
+                <Icon name="book-open" size={14} />{' '}
+                {summaryCoverage.topicsTotal >= summaryCoverage.topicsRead
+                  && summaryCoverage.topicsTotal > 0
+                  ? t.nextStep.summaryCoverage(summaryCoverage.topicsRead, summaryCoverage.topicsTotal)
+                  : t.nextStep.summaryRead(summaryCoverage.topicsRead)}
+              </li>
             )}
             <li>
               <Icon name="calendar" size={14} />{' '}

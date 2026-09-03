@@ -1,6 +1,13 @@
 User-agent: *
 Allow: /
 
+# The public content surfaces. Both are explicitly allowed because the
+# Disallow list below is prefix-matched and /questions sits uncomfortably close
+# to /question-reports; spelling it out means a future edit to that line cannot
+# silently de-index 250 pages.
+Allow: /guides
+Allow: /questions
+
 # Admin surfaces — never useful to a crawler, and cheaper to exclude here than
 # to rely on the noindex meta tag alone.
 Disallow: /admin
@@ -20,9 +27,34 @@ Disallow: /summaries
 Disallow: /subscribe
 Disallow: /payment/
 
-# Auth utility pages with nothing to rank for. /signup itself stays crawlable
-# (it is the conversion page); only the per-invite token URLs are excluded.
+# Auth utility pages with nothing to rank for.
+#
+# /signup and /login are deliberately NOT disallowed here even though both
+# serve `noindex`, and that combination is intentional rather than a
+# contradiction: a URL that robots.txt blocks cannot be fetched, so Googlebot
+# never reads the noindex on it and may index the bare URL anyway. Allowing the
+# crawl is what makes the noindex effective. Keep them out of the sitemap
+# (postbuild-seo.mjs already filters noindex routes) and out of this list.
+#
+# Only the per-invite token URLs under /signup/ are excluded, since each is a
+# single-use link with nothing to crawl.
 Disallow: /forgot-password
 Disallow: /signup/
+
+# Assistant crawlers — OAI-SearchBot, ChatGPT-User, PerplexityBot, ClaudeBot,
+# Claude-SearchBot, Google-Extended, CCBot and the rest — are allowed, by the
+# single `User-agent: *` group above. That is deliberate: more visits arrived
+# here from ChatGPT and Perplexity last month than from Bing, and a page an
+# assistant cannot fetch is a page it cannot cite.
+#
+# If you ever want to say something different to one of them, DO NOT just add
+# `User-agent: PerplexityBot` + `Allow: /` below. robots.txt groups are not
+# additive: a bot obeys only the most specific group that matches it, so a new
+# named group with no Disallow lines would hand that bot /admin, /quizs and
+# every other path the wildcard group excludes. Copy the whole Disallow list
+# into the new group, or do not create one.
+#
+# /llms.txt is generated at build time (scripts/postbuild-seo.mjs) as a plain
+# index of the public pages for assistants that look for one.
 
 Sitemap: https://www.smle-question-bank.com/sitemap.xml

@@ -1,16 +1,17 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { UserContext } from '../../UserContext';
 import Icon from './Icon.jsx';
 import NotificationBell from './NotificationBell.jsx';
-import { useCommon, useLang, LanguageToggle, formatDate } from '../../i18n';
+import { useCommon, useLang, LanguageToggle, LocaleLink as Link, useLocaleNavigate, formatDate } from '../../i18n';
+import { stripLocale } from '../../seo/locales.js';
 import './Navbar.css';
 
 const Navbar = () => {
   const { user, sessionToken, logout } = useContext(UserContext);
   const t = useCommon();
   const { lang, dir } = useLang();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -44,7 +45,9 @@ const Navbar = () => {
   const homePath = isAuthenticated ? '/quizs' : '/';
 
   const handleGoBack = () => {
-    if (location.pathname === '/quizs' || location.pathname === '/') {
+    // Compared language-neutrally: /en is the same page as /.
+    const here = stripLocale(location.pathname).path;
+    if (here === '/quizs' || here === '/') {
       navigate(homePath);
     } else {
       navigate(homePath, user && user.id ? { state: { id: user.id } } : undefined);

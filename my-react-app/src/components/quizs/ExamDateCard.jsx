@@ -3,6 +3,7 @@ import axios from 'axios';
 import Globals from '../../global.js';
 import Icon from '../common/Icon.jsx';
 import { useCopy, useLang, formatNumber } from '../../i18n';
+import { safeGetItem, safeSetItem } from '../../utils/safeStorage.js';
 import quizCopy from '../../i18n/copy/quiz.js';
 import './HubCards.css';
 
@@ -29,6 +30,20 @@ import './HubCards.css';
 const PACE_MIN_DAYS = 2;
 const PACE_MAX_DAYS = 120;
 
+// How long a "not sure yet" is respected before the ask comes back.
+//
+// 18 of 116 accounts have an exam date, and the five-stage reminder sequence in
+// services/lifecycleJobs.js — already built, already scheduled — therefore
+// reaches 18 people. The empty card below has been sitting on the hub the whole
+// time and almost nobody fills it in, because a card among cards is not a
+// question. So the card asks once, properly, and then gets out of the way.
+//
+// Not permanent, because "not sure yet" is usually true rather than a refusal:
+// candidates book a seat weeks after they start revising. Asking again a
+// fortnight later catches the person whose answer has since changed, and two
+// asks in a month is not nagging.
+const ASK_AGAIN_AFTER_DAYS = 14;
+
 const ExamDateCard = ({ username, sessionToken, questionsRemaining }) => {
     const t = useCopy(quizCopy).hub;
     const { lang } = useLang();
@@ -39,6 +54,11 @@ const ExamDateCard = ({ username, sessionToken, questionsRemaining }) => {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
     const [draft, setDraft] = useState('');
+    // Distinguishes "no date set" from "we have not asked the server yet",
+    // so the first-run ask cannot flash up before the answer arrives.
+    const [loaded, setLoaded] = useState(false);
+    const askKey = `sqb.examAsk.${username || 'anon'}`;
+    const [askDismissedAt, setAskDismissedAt] = useState(() => Number(safeGetItem(askKey)) || 0);
 
     const auth = useCallback(() => ({
         params: { username },
@@ -50,7 +70,8 @@ const ExamDateCard = ({ username, sessionToken, questionsRemaining }) => {
         let cancelled = false;
         axios.get(`${Globals.URL}/api/exam-date`, auth())
             .then(({ data }) => { if (!cancelled && data?.success) setExam(data.exam); })
-            .catch(() => { /* the card simply stays in its empty state */ });
+            .catch(() => { /* the card simply stays in its empty state */ })
+            .finally(() => { if (!cancelled) setLoaded(true); });
         return () => { cancelled = true; };
     }, [username, sessionToken, auth]);
 
@@ -80,6 +101,12 @@ const ExamDateCard = ({ username, sessionToken, questionsRemaining }) => {
             });
             setExam(null);
         } catch (_) { /* leave the card as-is; nothing was lost */ }
+    };
+
+    const dismissAsk = () => {
+        const now = Date.now();
+        safeSetItem(askKey, String(now));
+        setAskDismissedAt(now);
     };
 
     const startEditing = () => {
@@ -119,6 +146,59 @@ const ExamDateCard = ({ username, sessionToken, questionsRemaining }) => {
                 </div>
                 <p className="hubcard-note">{e.remindersOn}</p>
             </section>
+        );
+    }
+
+    // ── First-run ask ─────────────────────────────────────────────────────
+    // Only once the server has answered, only when there is genuinely no date,
+    // and only if the last "not sure yet" has aged out. Dismissable with one
+    // click and never blocking: the hub is behind it and stays usable.
+    const askAgeDays = askDismissedAt ? (Date.now() - askDismissedAt) / 86400000 : Infinity;
+    if (loaded && !exam && askAgeDays >= ASK_AGAIN_AFTER_DAYS) {
+        return (
+            <>
+                <section className="hubcard hubcard--exam is-empty" aria-label={e.title}>
+                    <span className="hubcard-empty-icon" aria-hidden="true"><Icon name="calendar" size={22} /></span>
+                    <div className="hubcard-empty-body">
+                        <h3>{e.noneTitle}</h3>
+                        <p>{e.noneBody}</p>
+                    </div>
+                    <button type="button" className="goalx-btn goalx-btn--primary" onClick={startEditing}>
+                        {e.setCta}
+                    </button>
+                </section>
+                <div className="examask" role="dialog" aria-modal="true" aria-labelledby="examask-title">
+                    <div className="examask-card">
+                        <span className="examask-icon" aria-hidden="true"><Icon name="calendar" size={26} /></span>
+                        <h2 id="examask-title">{e.askTitle}</h2>
+                        <p>{e.askBody}</p>
+                        <label className="goalx-label" htmlFor="examask-input">{e.dateLabel}</label>
+                        <input
+                            id="examask-input"
+                            className="hubcard-date"
+                            type="date"
+                            value={draft}
+                            min={todayISO}
+                            onChange={(ev) => setDraft(ev.target.value)}
+                        />
+                        {error && <p className="goalx-error">{error}</p>}
+                        <div className="examask-actions">
+                            <button
+                                type="button"
+                                className="goalx-btn goalx-btn--primary"
+                                onClick={save}
+                                disabled={saving || !draft}
+                            >
+                                {e.saveCta}
+                            </button>
+                            <button type="button" className="goalx-btn" onClick={dismissAsk} disabled={saving}>
+                                {e.askSkip}
+                            </button>
+                        </div>
+                        <p className="hubcard-note">{e.remindersOn}</p>
+                    </div>
+                </div>
+            </>
         );
     }
 

@@ -17,7 +17,7 @@
  * code; only the read/validate endpoints are here.
  */
 import express from 'express';
-import { PLANS, getCurrency } from '../services/paymentService.js';
+import { listPlansForDisplay, getCurrency } from '../services/paymentService.js';
 import { logger } from '../utils/observability.js';
 
 const router = express.Router();
@@ -116,7 +116,7 @@ router.get('/mine', resolveSession, async (req, res) => {
             // Nothing renews automatically — stated here so the page cannot
             // forget to say it.
             autoRenew: false,
-            plans: Object.values(PLANS).filter((p) => p.kind === 'group'),
+            plans: listPlansForDisplay('group'),
             groups: withSeats,
         });
     } catch (err) {

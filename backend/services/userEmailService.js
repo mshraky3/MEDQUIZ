@@ -49,6 +49,20 @@ export const normalizeLang = (lang) =>
 const T = (lang, ar, en) => (normalizeLang(lang) === 'en' ? en : ar);
 
 /**
+ * HTML-escape a value before it goes into an email template.
+ *
+ * Everything else in this file interpolates copy written here; the comeback
+ * email is the first to interpolate QUESTION BANK text — stems, options and
+ * explanations that contain <, > and & as a matter of course (drug doses,
+ * inequalities, "T&A"). Unescaped, those break the layout at best.
+ */
+const esc = (value = '') => String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+
+/**
  * "2 days" in Arabic is not "٢ أيام".
  *
  * Arabic counts in four buckets — singular, dual, the 3–10 plural, and the
@@ -62,6 +76,14 @@ export const arDays = (n) =>
 
 /** The whole phrase, since the dual carries the count inside the word itself. */
 export const arDaysCount = (n) => (n === 2 ? 'يومان' : `${n} ${arDays(n)}`);
+
+/** Same four buckets, for "questions" — "2 أسئلة" is wrong the same way. */
+export const arQuestionsCount = (n) =>
+    n === 1 ? 'سؤال واحد' : n === 2 ? 'سؤالان' : n <= 10 ? `${n} أسئلة` : `${n} سؤالاً`;
+
+/** And for months. */
+export const arMonthsCount = (n) =>
+    n === 1 ? 'شهر' : n === 2 ? 'شهران' : n <= 10 ? `${n} أشهر` : `${n} شهراً`;
 
 // Per-track wording. The platform is shared, but "the exam" is not the same
 // exam for a nursing student, and a welcome email that talks about the medical
@@ -473,6 +495,32 @@ export const sendTrialEndedEmail = async (to, username, track, stats = {}, opts 
  *
  * @param {{questionsAnswered:number, correct:number, wrongCount:number}} stats
  */
+/**
+ * Explanations are authored with `**bold**` stage headings and `- ` bullets.
+ * An email client renders neither, so a student would read the markers as
+ * characters. First sentence, markers gone — enough to remind, not enough to
+ * replace the page it is inviting them back to.
+ */
+function explanationSnippet(text = '', maxChars = 190) {
+    const flat = String(text)
+        .replace(/\*\*/g, '')
+        .replace(/^[\s-]*[-*•]\s+/gm, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    if (!flat) return '';
+    const stop = flat.search(/[.!?](\s|$)/);
+    const firstSentence = stop > 40 ? flat.slice(0, stop + 1) : flat;
+    return firstSentence.length > maxChars
+        ? `${firstSentence.slice(0, maxChars).trimEnd()}…`
+        : firstSentence;
+}
+
+/** Trim a question stem to something that reads in an inbox. */
+function stemSnippet(text = '', maxChars = 200) {
+    const flat = String(text).replace(/\s+/g, ' ').trim();
+    return flat.length > maxChars ? `${flat.slice(0, maxChars).trimEnd()}…` : flat;
+}
+
 export const sendOneSessionComebackEmail = async (to, username, track, stats = {}, opts = {}) => {
   const lang = normalizeLang(opts.lang);
   const c = copyFor(track, lang);
@@ -480,6 +528,30 @@ export const sendOneSessionComebackEmail = async (to, username, track, stats = {
   const correct = Number(stats.correct) || 0;
   const wrongCount = Math.max(0, Number(stats.wrongCount) || 0);
   const accuracy = answered > 0 ? Math.round((correct / answered) * 100) : 0;
+  const missed = Array.isArray(stats.wrongQuestions) ? stats.wrongQuestions : [];
+
+  // The questions themselves. Study content stays in English in both languages
+  // — the exam is written in English and the bank is not translated — so these
+  // blocks are LTR regardless of the surrounding chrome.
+  const missedCards = missed.map((q) => {
+    const snippet = explanationSnippet(q.explanation);
+    return `
+              <tr>
+                <td style="background:#0b1021;border-radius:12px;padding:16px 18px;border:1px solid #1e293b;" dir="ltr" align="left">
+                  <p style="margin:0 0 10px;font-size:13px;color:#e2e8f0;line-height:1.65;">
+                    ${esc(stemSnippet(q.question_text))}
+                  </p>
+                  <p style="margin:0 0 4px;font-size:12px;color:#fca5a5;">
+                    ${T(lang, 'إجابتك', 'You answered')}: ${esc(q.selected_option || '—')}
+                  </p>
+                  <p style="margin:0 0 ${snippet ? '10' : '0'}px;font-size:12px;color:#6ee7b7;">
+                    ${T(lang, 'الصحيحة', 'Correct')}: ${esc(q.correct_option || '—')}
+                  </p>
+                  ${snippet ? `<p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.7;">${esc(snippet)}</p>` : ''}
+                </td>
+              </tr>
+              <tr><td style="height:10px;line-height:10px;">&nbsp;</td></tr>`;
+  }).join('');
 
   const html = wrapLayout(`
         <tr>
@@ -491,9 +563,30 @@ export const sendOneSessionComebackEmail = async (to, username, track, stats = {
             <p style="margin:0 0 24px;font-size:14px;color:#94a3b8;line-height:1.7;">
               ${T(lang,
                 `أجبت عن ${answered} سؤالاً بدقة ${accuracy}% — وهذه مجرد بداية. بنك ${c.exam} أكبر بكثير مما رأيته حتى الآن.`,
-                `You answered ${answered} questions at ${accuracy}% — and that's just a first look. The ${c.exam} bank goes a lot further than what you've seen so far.`)}
+                // No "The" in front: examEn already reads "the Saudi Medical
+                // Licensing Exam (SMLE)", so this sentence has been going out
+                // as "The the Saudi Medical Licensing Exam". A dash instead of
+                // a full stop keeps it mid-sentence, where the lower-case
+                // article the label already carries is the correct one.
+                `You answered ${answered} questions at ${accuracy}% — and that's just a first look, because ${c.exam} bank goes a lot further than what you've seen so far.`)}
             </p>
-            ${wrongCount > 0 ? `
+            ${missedCards ? `
+            <table cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:24px;">
+              <tr>
+                <td align="${lang === 'ar' ? 'right' : 'left'}" style="padding-bottom:12px;">
+                  <p style="margin:0;font-size:13px;font-weight:700;color:#22d3ee;">
+                    ${T(lang,
+                      wrongCount > missed.length
+                        ? `${missed.length} من ${wrongCount} سؤالاً أخطأت فيها`
+                        : 'الأسئلة التي أخطأت فيها',
+                      wrongCount > missed.length
+                        ? `${missed.length} of the ${wrongCount} you missed`
+                        : 'Here is what you missed')}
+                  </p>
+                </td>
+              </tr>
+${missedCards}
+            </table>` : wrongCount > 0 ? `
             <table cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:24px;">
               <tr>
                 <td style="background:#0b1021;border-radius:12px;padding:20px 24px;border:1px solid #1e293b;">
@@ -645,23 +738,43 @@ export const sendProgressDigestEmail = async (to, username, track, data = {}, op
 
 // ─── 7. SUBSCRIPTION EXPIRING ──────────────────────────────────────────────
 /**
+ * Rung 1 and 2 of the renewal sequence, sent while access is still live.
+ *
  * The subscription does not auto-renew by design, which means every expiry is
  * a manual re-sell that happens only if the student is reminded. Sent ahead of
- * the expiry date while access is still live, so renewing is continuing rather
- * than recovering.
+ * the expiry date, so renewing is continuing rather than recovering.
+ *
+ * The body CHANGES between the two rungs, for the same reason the exam-date
+ * ladder's does: a week out, the useful message explains why there is no
+ * automatic charge and what lapsing costs; the day before, that explanation is
+ * in the way. A sequence that says the same thing twice is a sequence people
+ * filter after the first one.
+ *
+ * Nothing here invents urgency. The date is real, the consequence is real, and
+ * there is no discount that is about to vanish.
  */
 export const sendExpiryReminderEmail = async (to, username, track, daysRemaining, opts = {}) => {
   const lang = normalizeLang(opts.lang);
   const c = copyFor(track, lang);
   const days = Math.max(0, Number(daysRemaining) || 0);
-  const html = wrapLayout(`
-        <tr>
-          <td align="center" style="padding:36px 40px 32px;">
-            <div style="font-size:48px;margin-bottom:16px;">🔔</div>
-            <h1 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#f8fafc;">
-              ${T(lang, `اشتراكك ينتهي بعد ${arDaysCount(days)}`,
-                        `Your subscription ends in ${days} day${days === 1 ? '' : 's'}`)}
-            </h1>
+  const lastCall = days <= 1;
+
+  const heading = lastCall
+    ? T(lang,
+        days === 0 ? 'اشتراكك ينتهي اليوم' : 'اشتراكك ينتهي غداً',
+        days === 0 ? 'Your access ends today' : 'Your access ends tomorrow')
+    : T(lang, `اشتراكك ينتهي بعد ${arDaysCount(days)}`,
+              `Your subscription ends in ${days} day${days === 1 ? '' : 's'}`);
+
+  // A week out: explain. The day before: do not.
+  const body = lastCall
+    ? `
+            <p style="margin:0 0 24px;font-size:14px;color:#94a3b8;line-height:1.8;">
+              ${T(lang,
+                `بعدها يُقفل بنك الأسئلة والملخصات. تقدّمك وإحصاءاتك تبقى كما هي، والتجديد يعيدك إليها في نفس اللحظة.`,
+                `After that the question bank and the summaries lock. Your progress and statistics stay exactly as they are, and renewing puts you back into them at the same point.`)}
+            </p>`
+    : `
             <p style="margin:0 0 24px;font-size:14px;color:#94a3b8;line-height:1.7;">
               ${T(lang,
                 'اشتراكك في SQB لا يُجدَّد تلقائياً — وهذا باختيارنا، حتى لا نخصم من بطاقتك دون علمك. لكنه يعني أن التجديد يحتاج خطوة منك.',
@@ -679,7 +792,16 @@ export const sendExpiryReminderEmail = async (to, username, track, daysRemaining
                 ${T(lang, 'اختر مدة التجديد التي تناسبك — شهرياً أو 4 أشهر أو سنوياً.',
                           'Pick whichever renewal term suits you — monthly, 4-month, or annual.')}
               </p>
-            </div>
+            </div>`;
+
+  const html = wrapLayout(`
+        <tr>
+          <td align="center" style="padding:36px 40px 32px;">
+            <div style="font-size:48px;margin-bottom:16px;">${lastCall ? '⏳' : '🔔'}</div>
+            <h1 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#f8fafc;">
+              ${heading}
+            </h1>
+${body}
             ${button(`${SITE}/subscribe`, T(lang, 'جدّد اشتراكي الآن', 'Renew my access'))}
             <p style="margin:16px 0 0;font-size:12px;color:#475569;">
               ${T(lang, `${c.exam} — نحن معك حتى تجتازه.`, `${c.exam} — we're with you until you pass it.`)}
@@ -690,12 +812,100 @@ export const sendExpiryReminderEmail = async (to, username, track, daysRemaining
 
   await sendEmail(
     to,
-    T(lang, `🔔 اشتراكك في SQB ينتهي بعد ${arDaysCount(days)}`,
-             `🔔 Your SQB access ends in ${days} day${days === 1 ? '' : 's'}`),
+    lastCall
+      ? T(lang, `⏳ ${heading} — والتجديد خطوة واحدة`, `⏳ ${heading} — renewing takes one step`)
+      : T(lang, `🔔 اشتراكك في SQB ينتهي بعد ${arDaysCount(days)}`,
+                `🔔 Your SQB access ends in ${days} day${days === 1 ? '' : 's'}`),
     html,
-    T(lang, `اشتراكك في SQB ينتهي بعد ${days} يوم ولا يُجدَّد تلقائياً. للتجديد: ${SITE}/subscribe`,
-             `Your SQB subscription ends in ${days} days and does not auto-renew. Renew: ${SITE}/subscribe`),
+    T(lang, `${heading}. الاشتراك لا يُجدَّد تلقائياً. للتجديد: ${SITE}/subscribe`,
+             `${heading}. Your subscription does not auto-renew. Renew: ${SITE}/subscribe`),
     { event: 'medqize.lifecycle.expiry_reminder' }
+  );
+};
+
+// ─── 7b. SUBSCRIPTION ENDED ────────────────────────────────────────────────
+/**
+ * The last rung, sent a few days AFTER access lapsed.
+ *
+ * This is the half of the renewal sequence that did not exist: there was one
+ * pre-expiry reminder and then silence, which meant the moment with the most
+ * evidence behind it — the student has now tried to open the bank and found it
+ * locked — was the moment nothing was said.
+ *
+ * Its argument is the student's own record of the term they paid for, because
+ * that is the only honest measure of whether renewing is worth it, and it is
+ * theirs either way. `stats.questionsAnswered` of zero drops the numbers block
+ * entirely: telling someone they paid for a term and answered nothing is not a
+ * sales argument, it is a reason to ask for a refund.
+ *
+ * @param {{questionsAnswered:number, accuracy:number|null,
+ *          weakestLabel:string|null, weakestAccuracy:number|null}} stats
+ */
+export const sendAccessEndedEmail = async (to, username, track, stats = {}, opts = {}) => {
+  const lang = normalizeLang(opts.lang);
+  const c = copyFor(track, lang);
+  const answered = Math.max(0, Number(stats.questionsAnswered) || 0);
+  const accuracy = Number.isFinite(Number(stats.accuracy)) ? Number(stats.accuracy) : null;
+  const weakest = stats.weakestLabel ? esc(stats.weakestLabel) : null;
+  const weakestAccuracy = Number.isFinite(Number(stats.weakestAccuracy))
+    ? Number(stats.weakestAccuracy)
+    : null;
+
+  const statBox = answered > 0
+    ? `
+            <div style="background:#0b1021;border-radius:12px;padding:18px 22px;margin-bottom:22px;border:1px solid #1e293b;">
+              <p style="margin:0 0 10px;font-size:13px;color:#94a3b8;font-weight:700;">
+                ${T(lang, 'ما أنجزته في هذه المدة', 'What you did with the term')}
+              </p>
+              <p style="margin:0 0 6px;font-size:26px;font-weight:800;color:#22d3ee;">
+                ${answered} <span style="font-size:13px;font-weight:600;color:#94a3b8;">${T(lang, 'سؤالاً', answered === 1 ? 'question' : 'questions')}</span>
+              </p>
+              ${accuracy != null ? `<p style="margin:0 0 6px;font-size:13px;color:#e2e8f0;">
+                ${T(lang, `بدقّة ${accuracy}%`, `at ${accuracy}% accuracy`)}
+              </p>` : ''}
+              ${weakest ? `<p style="margin:8px 0 0;font-size:13px;color:#cbd5e1;line-height:1.8;">
+                ${T(lang,
+                  `وأضعف محاورك كان <strong style="color:#f8fafc;">${weakest}</strong>${weakestAccuracy != null ? ` عند ${weakestAccuracy}%` : ''} — وهو أول ما يستحق وقتك عند العودة.`,
+                  `Your weakest area was <strong style="color:#f8fafc;">${weakest}</strong>${weakestAccuracy != null ? `, at ${weakestAccuracy}%` : ''} — the first thing worth your time when you come back.`)}
+              </p>` : ''}
+            </div>`
+    : '';
+
+  const html = wrapLayout(`
+        <tr>
+          <td align="center" style="padding:36px 40px 32px;">
+            <div style="font-size:48px;margin-bottom:16px;">🔒</div>
+            <h1 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#f8fafc;">
+              ${T(lang, `انتهى اشتراكك يا ${username}`, `${username}, your access has ended`)}
+            </h1>
+            <p style="margin:0 0 22px;font-size:14px;color:#94a3b8;line-height:1.8;">
+              ${T(lang,
+                'بنك الأسئلة والملخصات مقفلان الآن. لم يُحذف شيء: حسابك وتقدّمك وإحصاءاتك وقائمة أخطائك كلها في مكانها، وتعود إليها كما تركتها في اللحظة التي تجدّد فيها.',
+                'The question bank and the summaries are locked. Nothing was deleted: your account, your progress, your statistics and your wrong-question list are all where you left them, and renewing puts you back into them unchanged.')}
+            </p>
+${statBox}
+            <p style="margin:0 0 24px;font-size:13px;color:#94a3b8;line-height:1.8;">
+              ${T(lang,
+                `وإن لم يكن الوقت مناسباً الآن فلا بأس — لا يوجد خصم تلقائي ولا رسوم متأخرة، والحساب يبقى مجاناً كما هو.`,
+                `And if now is not the time, that is fine — there is no automatic charge and no late fee, and the account stays as it is, free.`)}
+            </p>
+            ${button(`${SITE}/subscribe`, T(lang, 'استعد وصولك', 'Restore my access'))}
+            <p style="margin:16px 0 0;font-size:12px;color:#475569;">
+              ${T(lang, `${c.exam} — نحن هنا متى عدت.`, `${c.exam} — we are here whenever you come back.`)}
+            </p>
+          </td>
+        </tr>
+    `, { lang, accountId: opts.accountId });
+
+  await sendEmail(
+    to,
+    T(lang, '🔒 انتهى اشتراكك في SQB — تقدّمك محفوظ',
+             '🔒 Your SQB access has ended — your progress is safe'),
+    html,
+    T(lang,
+      `انتهى اشتراكك في SQB. تقدّمك وإحصاءاتك محفوظة، ويمكنك استعادة وصولك في أي وقت: ${SITE}/subscribe`,
+      `Your SQB access has ended. Your progress and statistics are saved, and you can restore access at any time: ${SITE}/subscribe`),
+    { event: 'medqize.lifecycle.access_ended' }
   );
 };
 
@@ -843,6 +1053,91 @@ export const sendExamReminderEmail = async (to, username, track, daysRemaining, 
     html,
     T(lang, `${stage.titleAr}. ${stage.leadAr}`, `${stage.titleEn}. ${stage.leadEn}`),
     { event: 'medqize.lifecycle.exam_reminder' }
+  );
+};
+
+// ─── 9. ONE-OFF REACTIVATION ───────────────────────────────────────────────
+/**
+ * The single message sent to accounts that went quiet months ago.
+ *
+ * Not part of any job, and deliberately not one. The inactivity email fires
+ * on a 2–3 day window, so anyone who drifted further than that fell through
+ * it and has heard nothing since; this is the backfill, sent once by
+ * scripts/reactivateDormantAccounts.js and stamped so it cannot be sent twice.
+ *
+ * It leans on one fact rather than a pitch, because there is exactly one fact
+ * worth their attention: the free allowance is now spent when a question is
+ * ANSWERED, not when it is served, so the questions they left unanswered are
+ * still theirs. That is why the caller passes `remaining` and why this
+ * template refuses to render without it — a reactivation email that says
+ * "come back" and nothing else is the kind of mail this file exists to avoid.
+ *
+ * @param {{remaining:number, monthsAway?:number, lang?:string, accountId?:number|string}} opts
+ */
+export const sendReactivationEmail = async (to, username, track, opts = {}) => {
+  const lang = normalizeLang(opts.lang);
+  const c = copyFor(track, lang);
+  const remaining = Number(opts.remaining);
+  if (!Number.isFinite(remaining) || remaining <= 0) {
+    throw new Error('sendReactivationEmail requires a positive `remaining` free-question count');
+  }
+  const months = Number(opts.monthsAway) || 0;
+  const awayAr = months >= 2 ? `مضى نحو ${arMonthsCount(months)}` : 'مضت فترة';
+  const awayEn = months >= 2 ? `It has been about ${months} months` : 'It has been a while';
+
+  const html = wrapLayout(`
+        <tr>
+          <td align="center" style="padding:36px 40px 32px;">
+            <div style="font-size:48px;margin-bottom:16px;">🎁</div>
+            <h1 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#f8fafc;">
+              ${T(lang,
+                `${username}، لا يزال لديك ${arQuestionsCount(remaining)} مجاناً`,
+                `${username}, you still have ${remaining} free question${remaining === 1 ? '' : 's'}`)}
+            </h1>
+            <p style="margin:0 0 20px;font-size:14px;color:#94a3b8;line-height:1.8;">
+              ${T(lang,
+                `${awayAr} وأنت لم تفتح حسابك. غيّرنا شيئاً في هذه الأثناء يخصّك مباشرة:
+                 الأسئلة المجانية الأربعون لم تعد تُحتسب عند فتح السؤال، بل عند الإجابة عليه فقط.
+                 أي أن ما تركته دون إجابة ما زال في رصيدك.`,
+                `${awayEn} since you last opened your account. One thing changed in the meantime
+                 that affects you directly: the forty free questions are now counted when you
+                 answer one, not when it is shown to you. Anything you left unanswered is still yours.`)}
+            </p>
+            <div style="background:#0b1021;border-radius:12px;padding:18px 22px;margin-bottom:26px;border:1px solid #1e293b;">
+              <p style="margin:0 0 6px;font-size:13px;color:#94a3b8;">
+                ${T(lang, 'رصيدك المتبقي', 'Left in your account')}
+              </p>
+              <p style="margin:0 0 10px;font-size:30px;font-weight:800;color:#22d3ee;">
+                ${remaining} <span style="font-size:14px;font-weight:600;color:#94a3b8;">${T(lang, 'من 40', 'of 40')}</span>
+              </p>
+              <p style="margin:0;font-size:13px;color:#cbd5e1;line-height:1.8;">
+                ${T(lang,
+                  `أسئلة بنمط ${c.exam}، لكل واحد منها شرح مكتوب يوضّح سبب صحة الإجابة.
+                   وتقدّمك وإحصاءاتك السابقة محفوظة كما تركتها.`,
+                  `Questions in the style of ${c.exam}, each with a written explanation of why the
+                   answer is what it is. Your earlier progress and statistics are exactly where you left them.`)}
+              </p>
+            </div>
+            ${button(`${SITE}/quizs`, T(lang, 'استخدم رصيدك', 'Use what is left'))}
+            <p style="margin:22px 0 0;font-size:12px;color:#64748b;line-height:1.7;">
+              ${T(lang,
+                'هذه رسالة واحدة لن تتكرّر. وإن لم تعد بحاجة إلينا، رابط إلغاء الاشتراك بالأسفل ويعمل فوراً.',
+                'This is a one-off message and will not be repeated. If you are done with us, the unsubscribe link below works immediately.')}
+            </p>
+          </td>
+        </tr>
+    `, { lang, accountId: opts.accountId });
+
+  await sendEmail(
+    to,
+    T(lang,
+      `🎁 لديك ${arQuestionsCount(remaining)} مجاناً في حسابك`,
+      `🎁 ${remaining} free question${remaining === 1 ? '' : 's'} still waiting in your account`),
+    html,
+    T(lang,
+      `${username}، لا يزال لديك ${arQuestionsCount(remaining)} مجاناً في SQB، والأسئلة تُحتسب الآن عند الإجابة فقط.`,
+      `${username}, you still have ${remaining} free question${remaining === 1 ? '' : 's'} on SQB, and they are now only spent when you answer.`),
+    { event: 'medqize.lifecycle.reactivation' }
   );
 };
 

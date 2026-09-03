@@ -1,7 +1,8 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+
 import Icon from './Icon.jsx';
-import { useCommon, useLang, LanguageToggle } from '../../i18n';
+import { useCommon, useLang, LanguageToggle, LocaleLink as Link } from '../../i18n';
+import storiesData from '../../seo/data/successStories.json';
 import './Footer.css';
 
 /**
@@ -17,6 +18,8 @@ import './Footer.css';
  * was removed, and this is now the only internal link to it — dropping both
  * would strand a whole content section with no path in.
  */
+const storyCount = Array.isArray(storiesData?.stories) ? storiesData.stories.length : 0;
+
 const Footer = () => {
   const currentYear = new Date().getFullYear();
   const t = useCommon();
@@ -25,6 +28,14 @@ const Footer = () => {
   const links = [
     { to: '/about', label: t.nav.about },
     { to: '/guides', label: t.nav.guides },
+    // The only try-before-signup path there is. Placed above the reading
+    // pages because for someone still deciding, playing beats reading.
+    { to: '/demo', label: t.footer.tryDemo },
+    // Same rule as the prerendered footer nav: the page does not exist
+    // until a student has written something, so neither does the link.
+    ...(storyCount > 0 ? [{ to: '/success-stories', label: t.footer.successStories }] : []),
+    { to: '/questions', label: t.footer.freeQuestions },
+    { to: '/past-papers', label: t.footer.collections },
     { to: '/faq', label: t.nav.faq },
     // Group plans are otherwise advertised in exactly one place (the landing
     // band). This is the link that reaches them from every other page.

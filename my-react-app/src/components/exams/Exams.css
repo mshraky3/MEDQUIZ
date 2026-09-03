@@ -1,0 +1,62 @@
+/* /exams — the exam logistics pages.
+ *
+ * The article itself is styled by Guides.css, which ExamPage also imports:
+ * these pages are the same object as a study guide (one column of long-form
+ * prose) and restyling them would make two things that read alike look
+ * unalike. All this file adds is the sibling-links block underneath.
+ *
+ * Scoped to .exams-* only, per docs/DESIGN_MAP.md — no bare element selectors,
+ * nothing that reaches outside this component's subtree.
+ */
+
+.exams-page {
+    /* The article inside supplies the page padding; this only needs to not
+       fight it, so the wrapper is a plain block. */
+    margin: 0;
+}
+
+.exams-related {
+    max-width: var(--container-page, 860px);
+    margin: 0 auto;
+    padding: 0 var(--page-pad-inline) var(--space-12);
+}
+
+.exams-related h2 {
+    font-size: var(--text-lg);
+    color: var(--text-dark);
+    margin: 0 0 var(--space-3);
+}
+
+.exams-related ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-2);
+    /* Two columns once there is room; the titles are long enough that three
+       would wrap every one of them. */
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.exams-related li {
+    margin: 0;
+}
+
+.exams-related a {
+    display: block;
+    padding: var(--space-3) var(--space-4);
+    background: var(--bg-white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-dark);
+    text-decoration: none;
+    font-weight: 600;
+    line-height: 1.6;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.exams-related a:hover,
+.exams-related a:focus-visible {
+    border-color: var(--primary-light);
+    box-shadow: var(--shadow-sm);
+}

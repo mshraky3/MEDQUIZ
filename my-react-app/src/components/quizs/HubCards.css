@@ -263,3 +263,68 @@
   .hubcard-count-n { font-size: 26px; }
   .streak-day-dot { width: 22px; height: 22px; }
 }
+
+/* ── First-run exam-date ask ──────────────────────────────────────────────
+   Shown once (see ASK_AGAIN_AFTER_DAYS in ExamDateCard.jsx) when an account
+   has no exam date. Sits above the hub rather than replacing it: the date is
+   worth asking for properly, but not worth holding the product hostage over,
+   so the overlay is dismissable and the page behind it is intact.
+   The z-index is the ladder token from index.css, never a raw number. */
+.examask {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-modal-backdrop);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(15, 30, 61, 0.55);
+    backdrop-filter: blur(3px);
+}
+
+.examask-card {
+    width: min(420px, 100%);
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 26px 24px 20px;
+    border-radius: 16px;
+    background: var(--card-bg, #fff);
+    box-shadow: 0 24px 60px rgba(15, 30, 61, 0.28);
+    text-align: center;
+}
+
+.examask-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    margin-bottom: 12px;
+    border-radius: 50%;
+    background: rgba(37, 99, 235, 0.12);
+    color: var(--primary-color, #2563eb);
+}
+
+.examask-card h2 {
+    margin: 0 0 8px;
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text-dark, #0f1e3d);
+}
+
+.examask-card > p {
+    margin: 0 0 18px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--muted, #64748b);
+}
+
+.examask-card .goalx-label { text-align: start; }
+
+.examask-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.examask-actions .goalx-btn { flex: 1; }

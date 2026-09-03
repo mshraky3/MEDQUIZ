@@ -19,7 +19,7 @@ import '@fontsource/cairo/800.css'
 import '@fontsource/cairo/900.css'
 import './index.css'
 import App from './App.jsx';
-import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Navigate, Outlet } from 'react-router-dom';
 import { createRoot } from 'react-dom/client';
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
@@ -33,6 +33,7 @@ import Layout from './components/common/Layout.jsx';
 import RequireAuth from './components/common/RequireAuth.jsx';
 import CookieConsent from './components/common/CookieConsent.jsx';
 import Spinner from './components/common/Spinner.jsx';
+import LocaleSync from './components/common/LocaleSync.jsx';
 
 // Every other page is code-split: the landing page no longer downloads the
 // admin panel, quiz engine, summaries, guides, etc. it never uses. Each lazy()
@@ -64,8 +65,27 @@ const SmleStudyPlanGuide = lazy(() => import('./components/guides/SmleStudyPlanG
 const WrongQuestionsMethodGuide = lazy(() => import('./components/guides/WrongQuestionsMethodGuide.jsx'));
 const SmleVsPrometricGuide = lazy(() => import('./components/guides/SmleVsPrometricGuide.jsx'));
 const SmleHighYieldTopicsGuide = lazy(() => import('./components/guides/SmleHighYieldTopicsGuide.jsx'));
+// The exam logistics section (/exams). One component serves all thirteen
+// routes — see components/exams/ExamPage.jsx — so this is one chunk, not
+// thirteen, and the copy it renders is the copy the prerender renders.
+const ExamPage = lazy(() => import('./components/exams/ExamPage.jsx'));
+// The public question library. Its data file is ~415 KB, so the components
+// pull it in with their own dynamic import (see usePublicQuestions.js) — these
+// three lazy() calls only split the UI.
+const QuestionsHub = lazy(() => import('./components/questions/QuestionsHub.jsx'));
+const QuestionsSpecialty = lazy(() => import('./components/questions/QuestionsSpecialty.jsx'));
+const QuestionPage = lazy(() => import('./components/questions/QuestionPage.jsx'));
+// The no-account demo. Shares publicQuestions.json with the /questions pages,
+// so it costs one lazy chunk and no backend at all.
+const DemoQuiz = lazy(() => import('./components/demo/DemoQuiz.jsx'));
+// Renders an honest empty state (and noindex) until real stories are
+// exported — see components/successStories/SuccessStories.jsx.
+const SuccessStories = lazy(() => import('./components/successStories/SuccessStories.jsx'));
+const PastPapersHub = lazy(() => import('./components/pastPapers/PastPapersHub.jsx'));
+const PastPaperCollection = lazy(() => import('./components/pastPapers/PastPaperCollection.jsx'));
 const TempLinks = lazy(() => import('./components/ADD/TempLinks.jsx'));
 const QuestionReports = lazy(() => import('./components/ADD/QuestionReports.jsx'));
+const SuccessStoriesAdmin = lazy(() => import('./components/ADD/SuccessStoriesAdmin.jsx'));
 const ForgotPassword = lazy(() => import('./components/login/ForgotPassword'));
 const SummariesPage = lazy(() => import('./components/summaries/SummariesPage.jsx'));
 const Subscribe = lazy(() => import('./components/subscribe/Subscribe.jsx'));
@@ -82,6 +102,8 @@ const AdminGate = lazy(() => import('./components/common/AdminGate.jsx'));
 import Globals from './global.js';
 import { UserProvider } from './UserContext.jsx';
 import { LanguageProvider, AdminShell, useCommon } from './i18n';
+import { hasEnglishTwin, localizedPath } from './seo/locales.js';
+import { examRoutePaths } from './seo/examGuides.js';
 
 import { initErrorTracking } from './utils/errorTracking.js';
 import { reloadOnceForStaleChunk } from './utils/staleChunkReload.js';
@@ -129,7 +151,35 @@ const authedNoFooter = (path, node) => withBoundary(path, <Layout hideFooter><Re
 // Admin stays English/LTR regardless of the site language — AdminShell pins it.
 const admin = (path, node) => withBoundary(path, <AdminShell>{lazyEl(<AdminGate>{lazyEl(node)}</AdminGate>)}</AdminShell>);
 
-const router = createBrowserRouter([
+// Public content is served in two languages at two URLs — Arabic on the bare
+// path, English under /en — so every route that has an English version needs
+// to be reachable at both. Registering the twin here (rather than by hand,
+// twice) is what keeps the router in step with what postbuild-seo.mjs actually
+// prerenders; the two read the same list out of src/seo/locales.js.
+//
+// Routes with no English twin (the signed-in app, admin, invite links) pass
+// through untouched: /en/analysis is not a page, and pretending otherwise
+// would turn a language toggle into a 404.
+const withEnglishTwins = (routes) =>
+  routes.flatMap((route) =>
+    hasEnglishTwin(route.path)
+      ? [route, { ...route, path: localizedPath(route.path, 'en') }]
+      : [route]
+  );
+
+// Pathless root. LocaleSync has to see every navigation, and Layout cannot
+// give it that — the landing route has its own shell and never mounts one.
+const RootShell = () => (
+  <>
+    <LocaleSync />
+    <Outlet />
+  </>
+);
+
+const router = createBrowserRouter([{
+  element: <RootShell />,
+  errorElement: <ErrorBoundary />,
+  children: withEnglishTwins([
   // Landing — its own shell (own topbar/footer), so not wrapped in Layout.
   withBoundary('/', <App />),
 
@@ -160,6 +210,31 @@ const router = createBrowserRouter([
   pub('/guides/smle-vs-prometric-differences', <SmleVsPrometricGuide />),
   pub('/guides/smle-high-yield-topics', <SmleHighYieldTopicsGuide />),
 
+  // Exam logistics — what the SCFHS applicant guides say about the SMLE and
+  // the SNLE. Registered from the same list the prerender walks, so a page
+  // cannot exist in one and not the other.
+  ...examRoutePaths().map((path) => pub(path, <ExamPage />)),
+
+  // Public question library — the only pages a stranger can read in full with
+  // no account, and the reason they exist: 5,033 explained questions that
+  // Google has never been shown. Prerendered at build time by
+  // scripts/postbuild-seo.mjs from src/seo/data/publicQuestions.json.
+  pub('/questions', <QuestionsHub />),
+  pub('/questions/:specialty', <QuestionsSpecialty />),
+  pub('/questions/:specialty/:slug', <QuestionPage />),
+
+  // Collections. "smle past papers" already earns impressions with nothing to
+  // serve it, and the bank is organised by named collection — these pages say
+  // what each one is, and link into the public questions drawn from it.
+  // Try-before-signup. 78 of the 120 people who picked a track this month
+  // never finished the form — they wanted to see questions, not open an
+  // account. This is the same published questions, made playable.
+  pub('/demo', <DemoQuiz />),
+  pub('/success-stories', <SuccessStories />),
+
+  pub('/past-papers', <PastPapersHub />),
+  pub('/past-papers/:slug', <PastPaperCollection />),
+
   // Signed-in
   authed('/quizs', <QUIZS />),
   authed('/quiz/:numQuestions', <QUIZ />),
@@ -185,6 +260,7 @@ const router = createBrowserRouter([
   admin('/admin/questions', <ADDQ host={getHostUrl} />),
   admin('/admin/bank', <Bank />),
   admin('/admin/reports', <QuestionReports />),
+  admin('/admin/stories', <SuccessStoriesAdmin />),
   admin('/admin/links', <TempLinks host={getHostUrl} />),
   admin('/admin/email', <AdminBroadcast />),
 
@@ -197,7 +273,8 @@ const router = createBrowserRouter([
   // Anything else. A real 404 page — NOT the error boundary, which renders
   // nothing when there is no router error.
   { path: '*', element: <Layout><NotFound /></Layout> },
-]);
+  ]),
+}]);
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

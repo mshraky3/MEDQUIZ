@@ -93,6 +93,10 @@ const quizCopy = {
                 noneTitle: 'متى موعد اختبارك؟',
                 noneBody: 'أضف تاريخ اختبارك ليظهر العدّاد هنا، وتصلك تذكيرات بخطة مراجعة قبل الموعد.',
                 setCta: 'أضف الموعد',
+                // نصّ السؤال الأول: يشرح ما الذي يفتحه التاريخ، لا يطلبه فقط.
+                askTitle: 'متى موعد اختبارك؟',
+                askBody: 'يفتح تاريخ الاختبار العدّاد وهدفاً يومياً محسوباً على الوقت المتبقي لك، ويجعل التذكيرات تصلك في وقتها. يمكنك تغييره أو حذفه في أي وقت.',
+                askSkip: 'لم أحدّده بعد',
                 changeCta: 'تعديل',
                 clearCta: 'إزالة',
                 saveCta: 'حفظ',
@@ -271,8 +275,25 @@ const quizCopy = {
             errLoadFailed: 'فشل في تحميل الأسئلة.',
 
             // 402 من الخادم — ليست حالة خطأ: لم يُسحب من الحساب شيء.
+            // شاشة نفاد الرصيد تبدأ بما أنجزه الطالب، لا بقائمة الأسعار.
+            spent: {
+                eyebrow: 'ما أنجزته حتى الآن',
+                title: 'هذا ما بنيته بأسئلتك المجانية',
+                answered: 'سؤالاً أجبت عنه',
+                accuracy: 'نسبة إجاباتك الصحيحة',
+                weakest: (topic, pct) => `${topic} هو تخصصك الأضعف — ${pct}% فقط`,
+                wrong: (n) => `${n} سؤالاً خاطئاً بانتظار المراجعة`,
+                pitch: (topic) => `الاشتراك يفتح بقية البنك، وأول ما ستحتاجه هو تدريب أطول على ${topic}. حسابك وتحليلاتك وأسئلتك الخاطئة تبقى كما هي في الحالتين.`,
+                pitchGeneric: 'الاشتراك يفتح بقية بنك الأسئلة مع شرح لكل إجابة. حسابك وتقدّمك وتحليلاتك تبقى مفتوحة لك في الحالتين.',
+                seeAnalysis: 'عرض تحليلاتي',
+            },
             paywallSpentTitle: 'أنهيت أسئلتك الأربعين المجانية',
             paywallSpentBody: 'حسابك وتقدّمك وتحليلاتك تبقى مفتوحة لك، وكذلك أول درس من كل تخصص. الاشتراك يفتح بقية بنك الأسئلة.',
+            // ليست حالة دفع: الرصيد باقٍ، لكن هناك أسئلة سُحبت ولم يُجب عنها.
+            // يُحتسب الرصيد عند الإجابة لا عند السحب، والحل هو إنهاء اختبار.
+            paywallBacklogTitle: 'أنهِ الاختبار الذي بدأته',
+            paywallBacklogBody: 'لديك أسئلة مفتوحة لم تُجب عنها بعد. رصيدك المجاني لا يُخصم إلا على الأسئلة التي تجيب عنها فعلاً، فأنهِ اختباراً واحداً وستُفتح لك بقية أسئلتك.',
+            paywallBacklogCta: 'العودة لإنهاء اختباري',
             paywallSubscriberTitle: 'هذه الميزة للمشتركين',
             paywallSubscriberBody: 'الاختبار الشامل لتخصص كامل متاح للمشتركين فقط. يمكنك دائماً بدء اختبار عادي بأسئلتك المجانية.',
             paywallCta: 'عرض خطط الاشتراك',
@@ -414,6 +435,12 @@ const quizCopy = {
                 noneTitle: 'When do you sit your exam?',
                 noneBody: 'Add your date to see the countdown here, and get a revision plan by email as it gets closer.',
                 setCta: 'Add my date',
+                // The first ask says what the date unlocks, rather than only
+                // asking for it — it is the anchor for the whole reminder
+                // sequence and for the daily pace target.
+                askTitle: 'When do you sit your exam?',
+                askBody: 'Your exam date turns on the countdown, a daily question target worked out from the time you actually have left, and reminders that arrive when they are useful. You can change or remove it whenever you like.',
+                askSkip: 'Not sure yet',
                 changeCta: 'Change',
                 clearCta: 'Remove',
                 saveCta: 'Save',
@@ -590,8 +617,27 @@ const quizCopy = {
             errLoadFailed: 'Failed to load the questions.',
 
             // Server 402 — not an error state: nothing has been taken away.
+            // The allowance-spent screen opens with what the student built,
+            // not with a price list. See components/Quiz/AllowanceSpent.jsx.
+            spent: {
+                eyebrow: 'What you have done so far',
+                title: 'Here is what you built with your free questions',
+                answered: 'questions answered',
+                accuracy: 'answered correctly',
+                weakest: (topic, pct) => `${topic} is costing you the most — ${pct}% so far`,
+                wrong: (n) => `${n} wrong answers waiting to be worked through`,
+                pitch: (topic) => `A subscription opens the rest of the bank, and the first thing it buys you is more ${topic}. Your account, your analytics and your wrong questions stay exactly as they are either way.`,
+                pitchGeneric: 'A subscription opens the rest of the question bank, with a written explanation on every answer. Your account, your progress and your analytics stay open either way.',
+                seeAnalysis: 'See my analytics',
+            },
             paywallSpentTitle: "That's your 40 free questions",
             paywallSpentBody: 'Your account, your progress and your analytics stay open, and so does the first lesson of every specialty. A subscription opens the rest of the question bank.',
+            // Not a payment state: the budget is intact, but questions have
+            // been fetched and never answered. The allowance is spent on
+            // answering, not on fetching, so the fix is to finish a quiz.
+            paywallBacklogTitle: 'Finish the quiz you started',
+            paywallBacklogBody: 'You have questions open that you have not answered yet. Your free questions are only spent on ones you actually answer, so finish a quiz and the rest open up again.',
+            paywallBacklogCta: 'Back to finish my quiz',
             paywallSubscriberTitle: 'This one is for subscribers',
             paywallSubscriberBody: 'The full-specialty final quiz is a subscriber feature. You can always start a normal quiz with your free questions.',
             paywallCta: 'See subscription plans',

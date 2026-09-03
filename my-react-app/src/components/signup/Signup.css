@@ -221,3 +221,15 @@
 }
 
 .track-locked strong { color: var(--text-dark, #0f1e3d); font-weight: 800; }
+
+/* The email fallback sits directly under the Google button and reads as the
+   second of two choices, so it has to be the same width as the first. Google
+   clamps its own button at 400px (see .oauth-block in Login.css) while the
+   signup card's content column is wider — left alone, the secondary option
+   came out visibly wider than the primary one it is meant to sit beneath. */
+.signup-email-fallback {
+    display: block;
+    width: 100%;
+    max-width: 400px;
+    margin-inline: auto;
+}

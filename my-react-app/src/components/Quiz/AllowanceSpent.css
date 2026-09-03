@@ -1,0 +1,156 @@
+/* The allowance-spent screen. Scoped to .alw-* — see docs/DESIGN_MAP.md on
+   keeping component stylesheets from leaking. Deliberately shaped like the
+   analysis "do this next" card rather than like a paywall: what it shows is
+   the student's own work, and the ask is the last thing on it. */
+
+.alw {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - var(--navbar-h, 64px));
+    padding: 28px 16px;
+}
+
+.alw-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - var(--navbar-h, 64px));
+}
+
+.alw-card {
+    width: min(460px, 100%);
+    padding: 30px 26px 24px;
+    border-radius: 18px;
+    background: var(--card-bg, #fff);
+    box-shadow: 0 18px 48px rgba(15, 30, 61, 0.14);
+    text-align: center;
+}
+
+.alw-eyebrow {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--primary-color, #2563eb);
+}
+
+.alw-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    margin-bottom: 14px;
+    border-radius: 50%;
+    background: rgba(37, 99, 235, 0.12);
+    color: var(--primary-color, #2563eb);
+}
+
+.alw-card h2 {
+    margin: 0 0 18px;
+    font-size: 21px;
+    font-weight: 800;
+    line-height: 1.4;
+    color: var(--text-dark, #0f1e3d);
+}
+
+/* The two numbers that are the whole argument. */
+.alw-figures {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.alw-figure {
+    flex: 1;
+    padding: 14px 8px;
+    border-radius: 12px;
+    background: rgba(37, 99, 235, 0.07);
+}
+
+.alw-figure-n {
+    display: block;
+    font-size: 28px;
+    font-weight: 900;
+    line-height: 1.1;
+    color: var(--primary-color, #2563eb);
+}
+
+.alw-figure-l {
+    display: block;
+    margin-top: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted, #64748b);
+}
+
+.alw-facts {
+    margin: 0 0 18px;
+    padding: 0;
+    list-style: none;
+    text-align: start;
+}
+
+.alw-facts li {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    padding: 8px 0;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text-dark, #0f1e3d);
+    border-top: 1px solid rgba(148, 163, 184, 0.22);
+}
+
+.alw-facts li svg {
+    flex: none;
+    margin-top: 2px;
+    color: var(--primary-color, #2563eb);
+}
+
+.alw-pitch {
+    margin: 0 0 20px;
+    font-size: 14px;
+    line-height: 1.65;
+    color: var(--muted, #64748b);
+}
+
+.alw-cta {
+    width: 100%;
+    padding: 13px 18px;
+    border: none;
+    border-radius: 12px;
+    background: var(--primary-color, #2563eb);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.alw-cta:hover { filter: brightness(1.06); }
+
+.alw-secondary {
+    display: flex;
+    justify-content: center;
+    gap: 18px;
+    margin-top: 14px;
+}
+
+.alw-link {
+    padding: 4px 2px;
+    border: none;
+    background: none;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted, #64748b);
+    cursor: pointer;
+}
+
+.alw-link:hover { color: var(--primary-color, #2563eb); }
+
+@media (max-width: 420px) {
+    .alw-figures { flex-direction: column; }
+}

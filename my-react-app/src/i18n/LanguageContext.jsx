@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { safeGetItem, safeSetItem } from '../utils/safeStorage.js';
+import { hasEnglishTwin, stripLocale } from '../seo/locales.js';
 
 /**
  * Site language ("ar" | "en").
@@ -22,8 +23,8 @@ export const LanguageContext = createContext({
     lang: DEFAULT_LANG,
     dir: 'rtl',
     setLang: () => { },
-    toggleLang: () => { },
     pushEnglishOnly: () => () => { },
+    syncLangFromPath: () => { },
 });
 
 /** Normalizes anything (stored value, navigator tag) to a supported language. */
@@ -36,14 +37,33 @@ const normalize = (value) => {
 };
 
 /**
- * An explicit choice always wins. Otherwise we read the browser's languages in
- * priority order: an Arabic speaker lands on Arabic, everyone else on English.
- * Falls back to Arabic only when the browser tells us nothing usable, since
- * the audience is predominantly Saudi.
+ * The language to open in.
+ *
+ * The URL decides first: /en/x IS the English document — it has its own
+ * canonical, its own hreflang entry and English prerendered content, so
+ * serving Arabic chrome there would make the page disagree with everything it
+ * claims about itself.
+ *
+ * An explicit choice (the toggle) comes next. Browser sniffing comes LAST, and
+ * deliberately does not apply to pages that have an /en twin. That rule is not
+ * cosmetic: a bare public path is the Arabic document, and Googlebot crawls
+ * with navigator.languages = ["en-US"] and no stored preference. Sniffing there
+ * meant Googlebot fetched Arabic prerendered HTML, watched React repaint it in
+ * English, and indexed an Arabic page carrying Arabic <title>, canonical and
+ * og:locale over an English body. Every public page was doing this.
+ *
+ * The cost is one click for a first-time English visitor who lands on the
+ * Arabic root — and the toggle now takes them to /en and remembers it.
  */
 export function detectLanguage() {
+    const pathname = typeof window !== 'undefined' ? window.location.pathname : '/';
+    const { lang: urlLang, path } = stripLocale(pathname);
+    if (urlLang === 'en') return 'en';
+
     const stored = normalize(safeGetItem(STORAGE_KEY));
     if (stored) return stored;
+
+    if (hasEnglishTwin(path)) return DEFAULT_LANG;
 
     if (typeof navigator !== 'undefined') {
         const tags = navigator.languages && navigator.languages.length
@@ -98,17 +118,33 @@ export const LanguageProvider = ({ children }) => {
         safeSetItem(STORAGE_KEY, normalized);
     }, []);
 
-    const toggleLang = useCallback(() => {
+    /**
+     * Re-read the language from a pathname after a client-side navigation.
+     *
+     * LanguageProvider sits outside the router (it wraps RouterProvider), so it
+     * cannot use useLocation. <LocaleSync> is mounted inside instead and calls
+     * this on every location change. Storage is deliberately NOT written here:
+     * following a link into /en should not silently rewrite the language the
+     * visitor chose for the rest of the site. Only the toggle writes.
+     */
+    const syncLangFromPath = useCallback((pathname) => {
+        const { lang: urlLang, path } = stripLocale(pathname || '/');
         setLangState((current) => {
-            const next = current === 'ar' ? 'en' : 'ar';
-            safeSetItem(STORAGE_KEY, next);
-            return next;
+            if (urlLang === 'en') return 'en';
+            const stored = normalize(safeGetItem(STORAGE_KEY));
+            if (stored) return stored;
+            // A bare path that has an /en twin is the Arabic document, so
+            // arriving at one means Arabic — same reasoning as detectLanguage.
+            if (hasEnglishTwin(path)) return DEFAULT_LANG;
+            // Pages with no second URL (the signed-in app) have no opinion:
+            // whoever is reading keeps the language they were already reading.
+            return current;
         });
     }, []);
 
     const value = useMemo(
-        () => ({ lang, dir, setLang, toggleLang, pushEnglishOnly }),
-        [lang, dir, setLang, toggleLang, pushEnglishOnly]
+        () => ({ lang, dir, setLang, pushEnglishOnly, syncLangFromPath }),
+        [lang, dir, setLang, pushEnglishOnly, syncLangFromPath]
     );
 
     return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;

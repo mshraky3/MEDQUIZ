@@ -10,7 +10,7 @@ import { TRACKS, normalizeTrack, pick } from '../../utils/tracks.js';
 import { useCopy, useLang } from '../../i18n';
 import { formatDate } from '../../i18n/format.js';
 import authCopy from '../../i18n/copy/auth.js';
-import OAuthButtons from '../login/OAuthButtons.jsx';
+import OAuthButtons, { GOOGLE_SIGN_IN_AVAILABLE } from '../login/OAuthButtons.jsx';
 import TrackModal from '../common/TrackModal.jsx';
 import '../login/Login.css';
 import './Signup.css';
@@ -64,6 +64,17 @@ const Signup = () => {
     const [oauthSession, setOauthSession] = useState(null);
     const navigate = useNavigate();
     const { token } = useParams();
+    // Email/password is the FALLBACK, not the default. Of 42 people who asked
+    // for an email code, 10 never entered it — the OTP round trip is where
+    // this form loses them, and Google skips it entirely (24 accounts in two
+    // weeks while it was the visually secondary option). Collapsed to one
+    // button so the default view is a single obvious way in.
+    //
+    // Invite and group-seat links have no Google button at all, and neither
+    // does a build without VITE_GOOGLE_CLIENT_ID — in both cases there is
+    // nothing for the email form to be a fallback TO, so it opens expanded
+    // rather than leaving the card with no primary way to sign up.
+    const [emailFormOpen, setEmailFormOpen] = useState(!!token || !GOOGLE_SIGN_IN_AVAILABLE);
     const location = useLocation();
     const t = useCopy(authCopy).signup;
     const terms = useCopy(authCopy).terms;
@@ -524,11 +535,30 @@ const Signup = () => {
                             {!token && (
                                 <OAuthButtons
                                     dividerLabel={t.dividerOr}
+                                    // Google sits above the email route here, so
+                                    // the "or" divider has to come after it —
+                                    // it separates Google from the fallback
+                                    // below, not from the heading above.
+                                    dividerPosition="after"
                                     onSuccess={handleOAuthSuccess}
                                     onError={handleOAuthError}
                                     track={studyTrack}
                                 />
                             )}
+                            {/* Outside the collapse: a failed Google
+                                sign-in sets this too. */}
+                            {error && <div className="alert-box error">{error}</div>}
+                            {!emailFormOpen && (
+                                <button
+                                    type="button"
+                                    className="btn ghost large signup-email-fallback"
+                                    onClick={() => setEmailFormOpen(true)}
+                                >
+                                    {t.emailInstead}
+                                </button>
+                            )}
+                            {emailFormOpen && (
+                              <>
                             <div className="login-field">
                                 <label className="login-label" htmlFor="email">{t.emailLabel}</label>
                                 <input
@@ -586,7 +616,6 @@ const Signup = () => {
                                     <Link to="/privacy" target="_blank" rel="noopener" className="link-primary">{t.privacyLink}</Link>
                                 </span>
                             </label>
-                            {error && <div className="alert-box error">{error}</div>}
                             <button
                                 type="submit"
                                 className="btn primary large"
@@ -596,6 +625,8 @@ const Signup = () => {
                                     <div className="loading-spinner"><Spinner size="sm" />{token ? t.creatingAccount : t.sending}</div>
                                 ) : (isGroupSeat ? t.submitSeat : isTempLink ? t.submitInvite : t.submitFree)}
                             </button>
+                              </>
+                            )}
                             <div className="login-footer-text">
                                 {t.haveAccount}{' '}
                                 <Link to="/login" className="link-primary">{t.loginLink}</Link>

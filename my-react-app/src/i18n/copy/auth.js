@@ -117,7 +117,9 @@ const authCopy = {
             troubleQuestion: 'تواجه مشكلة؟',
             contactSupport: 'تواصل مع الدعم',
 
-            dividerOr: 'أو أنشئ حسابك يدوياً',
+            // كان يعنون الحقول تحته حين كانت ظاهرة دائماً؛ الآن يعنون زراً واحداً.
+            dividerOr: 'أو',
+            emailInstead: 'التسجيل بالبريد الإلكتروني',
             oauthError: 'تعذر إنشاء الحساب عبر جوجل. حاول مرة أخرى.',
 
             otpLabel: 'رمز التحقق',
@@ -328,7 +330,10 @@ const authCopy = {
             troubleQuestion: 'Having trouble?',
             contactSupport: 'Contact support',
 
-            dividerOr: 'or create your account manually',
+            // Labelled the fields below it while they were always visible;
+            // now it labels a single button.
+            dividerOr: 'or',
+            emailInstead: 'Sign up with email',
             oauthError: 'Could not sign up with Google. Please try again.',
 
             otpLabel: 'Verification code',

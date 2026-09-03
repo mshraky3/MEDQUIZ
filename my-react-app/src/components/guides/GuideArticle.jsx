@@ -1,6 +1,6 @@
 import React from 'react';
 import GoogleAd from '../common/GoogleAd.jsx';
-import { useLang } from '../../i18n';
+import { useLang, useLocalePath } from '../../i18n';
 import './Guides.css';
 
 /**
@@ -13,7 +13,7 @@ import './Guides.css';
 
 const TOKEN = /(\[\[[^\]]+\]\]|\*\*[^*]+\*\*)/g;
 
-const renderInline = (text, keyPrefix) =>
+const renderInline = (text, keyPrefix, localePath = (p) => p) =>
     String(text).split(TOKEN).filter(Boolean).map((part, i) => {
         const key = `${keyPrefix}-${i}`;
         if (part.startsWith('**') && part.endsWith('**')) {
@@ -21,21 +21,24 @@ const renderInline = (text, keyPrefix) =>
         }
         if (part.startsWith('[[') && part.endsWith(']]')) {
             const [href, label = href] = part.slice(2, -2).split('|');
-            return <a key={key} href={href}>{label}</a>;
+            return <a key={key} href={localePath(href)}>{label}</a>;
         }
         return <React.Fragment key={key}>{part}</React.Fragment>;
     });
 
 const Block = ({ block, id }) => {
-    if (block.h3) return <h3>{renderInline(block.h3, id)}</h3>;
+    // Guides cross-link to other guides and to /signup. Read in English, those
+    // hrefs have to point into the English tree or the article is a way out of it.
+    const localePath = useLocalePath();
+    if (block.h3) return <h3>{renderInline(block.h3, id, localePath)}</h3>;
     if (block.ul) {
         return (
             <ul>
-                {block.ul.map((item, i) => <li key={i}>{renderInline(item, `${id}-${i}`)}</li>)}
+                {block.ul.map((item, i) => <li key={i}>{renderInline(item, `${id}-${i}`, localePath)}</li>)}
             </ul>
         );
     }
-    return <p>{renderInline(block.p, id)}</p>;
+    return <p>{renderInline(block.p, id, localePath)}</p>;
 };
 
 const GuideArticle = ({ guide }) => {

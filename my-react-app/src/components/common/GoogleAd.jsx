@@ -2,6 +2,20 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { safeGetItem } from '../../utils/safeStorage.js';
 
+// Master switch. Ads are OFF, and the cookie banner says so — it used to
+// promise "relevant ads" to every visitor while no ad could actually serve
+// (see the data-ad-slot TODO below: the unit was shipped without a slot id,
+// so AdSense had nothing to fill). Leaving the script injecting under that
+// copy meant asking consent for tracking the site was not doing.
+//
+// To turn ads back on, all three have to move together:
+//   1. flip this to true,
+//   2. set a real data-ad-slot on the <ins> below,
+//   3. restore the ads clause in the cookie banner (`consent.text` in
+//      src/i18n/common.js, both languages).
+// The privacy policy already describes AdSense, so it needs no change either way.
+const ADS_ENABLED = false;
+
 const ADSENSE_SCRIPT_SRC = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9286976335875618';
 const ADSENSE_CLIENT_ID = 'ca-pub-9286976335875618';
 
@@ -78,7 +92,7 @@ const GoogleAd = ({ disabled = false }) => {
   const insRef = useRef(null);
 
   useEffect(() => {
-    if (disabled || typeof window === 'undefined') {
+    if (!ADS_ENABLED || disabled || typeof window === 'undefined') {
       setEligible(false);
       setShouldShow(false);
       return undefined;

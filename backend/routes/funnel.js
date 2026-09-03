@@ -22,7 +22,17 @@ import { logger } from '../utils/observability.js';
 
 const router = express.Router();
 
-/** Every event a client or the server is allowed to record. Anything else is dropped. */
+/**
+ * Every event a client or the server is allowed to record. Anything else is dropped.
+ *
+ * The whitelist is a security control, not a schedule — but it silently drops
+ * unknown names, so an event added to the frontend and not added here is not a
+ * gap anyone notices: it is 204 No Content forever. Three had been in that
+ * state (`subscribe_plan_select` since the five-plan ladder shipped, the two
+ * demo events since the demo did), which is why funnel.test.js now fails the
+ * build when the two lists disagree. Add the name here in the same commit that
+ * emits it.
+ */
 export const FUNNEL_EVENTS = new Set([
     'landing_view',
     'landing_cta_signup_click',
@@ -32,8 +42,17 @@ export const FUNNEL_EVENTS = new Set([
     'signup_otp_verified',
     'signup_otp_failed',
     'trial_started',
+    'demo_start',
+    'demo_complete',
     'paywall_hit',
     'subscribe_view',
+    // The price ladder a visitor was actually shown, and which tier they moved
+    // to. Together these are the denominator and the middle of any price test:
+    // subscribe_view says someone arrived, but not what they were quoted, and
+    // a price that was never displayed cannot be reconstructed afterwards from
+    // env vars that carry no history. See scripts/priceTestReport.js.
+    'subscribe_prices_shown',
+    'subscribe_plan_select',
     'subscribe_pay_click',
     'payment_success',
     'payment_failed',

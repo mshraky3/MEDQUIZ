@@ -10,6 +10,7 @@ import { rateLimit } from './middleware/rateLimit.js';
 import { sendMail } from './services/mailer.js';
 import errorReportRoutes from './routes/error-report.js';
 import questionReportsRouter from './routes/question-reports.js';
+import successStoriesRouter from './routes/success-stories.js';
 import emailCampaignsRouter from './routes/email-campaigns.js';
 import adminBroadcastRouter, { unsubToken } from './routes/admin-broadcast.js';
 import paymentRoutes from './routes/payment.js';
@@ -424,6 +425,24 @@ function ensureSchema() {
                     ADD COLUMN IF NOT EXISTS exam_date           DATE    DEFAULT NULL,
                     ADD COLUMN IF NOT EXISTS exam_reminder_stage INTEGER DEFAULT NULL
             `);
+            // How far the renewal sequence has been walked for the CURRENT
+            // subscription term — see lifecycleJobs.runRenewalSequenceJob and
+            // RENEWAL_STAGES. Nothing here auto-renews, so an expiry with no
+            // sequence behind it is silent churn.
+            //
+            // Stores an ordinal (1, 2, 3) rather than a day count, because the
+            // ladder spans both sides of the expiry date — "seven days left"
+            // and "three days lapsed" are not comparable as day counts, but
+            // they are as positions in a sequence that only moves forward.
+            //
+            // Reset to NULL on every activation (paymentService.verifyAndActivate
+            // and grantSubscription). Without that reset the sequence would run
+            // once per ACCOUNT rather than once per TERM, and a renewing customer
+            // would never be reminded again.
+            await db.query(`
+                ALTER TABLE accounts
+                    ADD COLUMN IF NOT EXISTS renewal_reminder_stage INTEGER DEFAULT NULL
+            `);
             // Which language to write to this student in. The whole site has
             // been bilingual since 2026-08-01, but lifecycle mail was still
             // Arabic-only — an English-speaking user got an Arabic welcome to a
@@ -574,6 +593,17 @@ function ensureSchema() {
             // created later in boot, so it cannot be altered from here.)
             await db.query(`ALTER TABLE accounts  ADD COLUMN IF NOT EXISTS track VARCHAR(20) NOT NULL DEFAULT '${DEFAULT_TRACK}'`);
             await db.query(`ALTER TABLE questions ADD COLUMN IF NOT EXISTS track VARCHAR(20) NOT NULL DEFAULT '${DEFAULT_TRACK}'`);
+
+            // When a question was added, for the "last updated" the landing
+            // page shows. Two statements, not one: adding the column WITH a
+            // default would stamp every existing row with the deploy time and
+            // announce that the entire bank was written today. Added bare (so
+            // every existing row is NULL), then given a default so only rows
+            // inserted from here on carry a real date. MAX() is therefore null
+            // until a question is genuinely added, and the landing page shows
+            // no date until then — the number only ever appears once true.
+            await db.query(`ALTER TABLE questions ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ`);
+            await db.query(`ALTER TABLE questions ALTER COLUMN created_at SET DEFAULT NOW()`);
             await db.query(`CREATE INDEX IF NOT EXISTS idx_accounts_track ON accounts(track)`);
             // Every question lookup filters by track first, then type/source —
             // this index is the one that keeps /api/questions off a seq scan
@@ -764,6 +794,17 @@ function ensurePaymentSchema() {
                     ADD COLUMN IF NOT EXISTS free_questions_used INTEGER NOT NULL DEFAULT 0
             `);
 
+            // The anti-abuse half of billing-on-answer. free_questions_used is
+            // spent when a quiz is SUBMITTED; this one counts what was handed
+            // out. The gap between them is the number of questions a free
+            // account is holding without having answered them, and
+            // FREE_UNANSWERED_CAP bounds it — otherwise "fetch ten, close the
+            // tab, repeat" would be an unlimited free tier.
+            await db.query(`
+                ALTER TABLE accounts
+                    ADD COLUMN IF NOT EXISTS free_questions_served INTEGER NOT NULL DEFAULT 0
+            `);
+
             // Grandfather pre-rollout accounts EXACTLY ONCE.
             await db.query(`CREATE TABLE IF NOT EXISTS schema_migrations (name TEXT PRIMARY KEY, applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
             const applied = await db.query(`SELECT 1 FROM schema_migrations WHERE name = '001_grandfather_existing'`);
@@ -844,6 +885,28 @@ function ensurePaymentSchema() {
                 `, [DEFAULT_INVITE_MONTHS]);
                 await db.query(`INSERT INTO schema_migrations (name) VALUES ('004_expire_admin_created') ON CONFLICT DO NOTHING`);
                 logger.info(`Gave ${timed.rowCount} admin-created account(s) a ${DEFAULT_INVITE_MONTHS}-month term instead of permanent access (one-time)`);
+            }
+
+            // Align the new served counter with the old one, EXACTLY ONCE.
+            //
+            // Under the previous rule the allowance was spent on serve, so
+            // free_questions_used already IS what those accounts were served.
+            // Leaving the new column at 0 would make `served - used` negative
+            // for every existing account, and since that gap is what the
+            // unanswered cap measures, each of them would carry a permanent
+            // head start — an account that had been served 20 could fetch a
+            // further 40 without ever answering one. Starting the two equal
+            // costs nobody anything they had already earned.
+            const applied5 = await db.query(`SELECT 1 FROM schema_migrations WHERE name = '005_seed_free_questions_served'`);
+            if (applied5.rows.length === 0) {
+                const aligned = await db.query(`
+                    UPDATE accounts
+                       SET free_questions_served = free_questions_used
+                     WHERE free_questions_served = 0
+                       AND free_questions_used > 0
+                `);
+                await db.query(`INSERT INTO schema_migrations (name) VALUES ('005_seed_free_questions_served') ON CONFLICT DO NOTHING`);
+                logger.info(`Seeded free_questions_served from free_questions_used on ${aligned.rowCount} account(s) (one-time)`);
             }
             _paymentColumnsExist = true; // prime the lazy cache used elsewhere
             logger.info('Payment/subscription schema ensured');
@@ -1477,6 +1540,41 @@ const ensureTempLinksTables = async () => {
 };
 // Kicked off from bootstrapAll() below.
 
+/**
+ * Students' own accounts of passing, for /success-stories.
+ *
+ * consent_publish is stored rather than assumed: publishing a person's name
+ * and words needs their explicit say-so, and the row records that they gave it.
+ * status starts 'pending' and only an admin moves it — see
+ * routes/success-stories.js, which has no path that approves anything on its
+ * own. One row per account (hence the unique constraint), editable.
+ */
+const ensureSuccessStoriesTable = async () => {
+    try {
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS success_stories (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL UNIQUE REFERENCES accounts(id) ON DELETE CASCADE,
+                display_name TEXT NOT NULL,
+                track VARCHAR(20) NOT NULL DEFAULT '${DEFAULT_TRACK}',
+                specialty TEXT,
+                exam_result TEXT,
+                quote TEXT NOT NULL,
+                lang VARCHAR(5) DEFAULT 'ar',
+                consent_publish BOOLEAN NOT NULL DEFAULT FALSE,
+                status VARCHAR(20) NOT NULL DEFAULT 'pending',
+                admin_note TEXT,
+                created_at TIMESTAMPTZ DEFAULT NOW(),
+                reviewed_at TIMESTAMPTZ
+            )
+        `);
+        await db.query(`CREATE INDEX IF NOT EXISTS idx_success_stories_status ON success_stories(status)`);
+        logger.info('success_stories table ensured');
+    } catch (err) {
+        reportBootstrapFailure('ensureSuccessStoriesTable', err);
+    }
+};
+
 const ensureQuestionReportsTable = async () => {
     try {
         await db.query(`
@@ -1846,6 +1944,7 @@ async function bootstrapAll() {
     await ensureEmailCampaignColumns();
     await ensureTempLinksTables();
     await ensureQuestionReportsTable();
+    await ensureSuccessStoriesTable();
     await ensureSuggestionsTable();
     await ensureSummariesTables();
     await ensureTelegramSchema();
@@ -3913,12 +4012,14 @@ function dedupeByText(rows) {
 
 app.get('/api/questions', requireQuizAccess, async (req, res) => {
 
-    // Free accounts are served at most what is left of their lifetime
-    // allowance. This clamp is the enforcement — the launcher also shows the
-    // remaining count, but a hand-rolled ?limit=500 must not outrun it.
+    // Free accounts are served at most what this request may hand over. That
+    // is `servable`, NOT `remaining`: the budget is what is left to answer,
+    // while servable also subtracts questions already fetched and abandoned
+    // (see checkQuizAccess). This clamp is the enforcement — the launcher also
+    // shows the remaining count, but a hand-rolled ?limit=500 must not outrun it.
     const requested = parseInt(req.query.limit) || 10;
-    const remaining = req.quizAccess?.remaining ?? Infinity;
-    const limit = Math.max(1, Math.min(requested, remaining));
+    const servable = req.quizAccess?.servable ?? req.quizAccess?.remaining ?? Infinity;
+    const limit = Math.max(1, Math.min(requested, servable));
     const typesParam = req.query.types; // e.g., 'mix' or 'medicine,surgery'
     const sourceParam = req.query.source; // e.g., 'general', 'Midgard', 'GameBoy'
     // Progress is always the caller's own — taken from the validated session
@@ -4045,36 +4146,41 @@ app.get('/api/questions', requireQuizAccess, async (req, res) => {
 
         const served = dedupeByText(rows);
 
-        // Spend the free allowance HERE, for what is actually handed out — not
-        // on submit. A quiz that is fetched and then abandoned (closed tab, no
-        // POST /quiz-sessions ever sent) used to cost nothing, so a free
-        // account could take unlimited quizzes by simply never finishing one.
-        // Only accounts being metered (a finite `remaining`) are debited —
+        // Record what was handed out. This is NOT the charge — the allowance is
+        // spent on submit (POST /quiz-sessions), so a quiz that is fetched and
+        // then abandoned costs the student nothing. Five of the seventeen
+        // accounts that used up their 40 had no completed session at all: they
+        // spent the whole trial on quizzes they never finished and met the
+        // paywall having never seen the analytics it sells.
+        //
+        // What this counter buys is the anti-abuse property the old spend-on-
+        // serve rule had for free. `free_questions_served - free_questions_used`
+        // is how much a free account is holding unanswered, and checkQuizAccess
+        // refuses to serve past FREE_UNANSWERED_CAP of it, so "fetch ten, close
+        // the tab, repeat" still terminates.
+        //
+        // Only accounts being metered (a finite `remaining`) are counted —
         // paid/admin/grandfathered accounts and enforcement-disabled installs
         // all report Infinity and are skipped. The WHERE clause is a second,
         // server-side confirmation of the same free-tier condition so a stale
-        // `req.quizAccess` can never spend a paid account's non-existent budget.
-        let freeRemaining = Number.isFinite(req.quizAccess?.remaining) ? req.quizAccess.remaining : null;
+        // `req.quizAccess` can never write against a paid account.
+        const freeRemaining = Number.isFinite(req.quizAccess?.remaining) ? req.quizAccess.remaining : null;
         if (Number.isFinite(req.quizAccess?.remaining) && served.length > 0) {
             try {
-                const spend = await db.query(
+                await db.query(
                     `UPDATE accounts
-                        SET free_questions_used = LEAST($1::int, free_questions_used + $2::int)
-                      WHERE id = $3
+                        SET free_questions_served = free_questions_served + $1::int
+                      WHERE id = $2
                         AND is_admin_created = FALSE
                         AND grandfathered_at IS NULL
                         AND NOT (subscription_status = 'active'
-                                 AND subscription_expiry_date > NOW())
-                      RETURNING free_questions_used`,
-                    [FREE_QUESTION_ALLOWANCE, served.length, req.accountId]
+                                 AND subscription_expiry_date > NOW())`,
+                    [served.length, req.accountId]
                 );
-                if (spend.rows.length > 0) {
-                    freeRemaining = Math.max(0, FREE_QUESTION_ALLOWANCE - spend.rows[0].free_questions_used);
-                }
             } catch (err) {
-                // Never fail a served batch over the counter — worst case a
-                // free user gets a few extra questions this one time.
-                logger.error('Failed to spend free allowance on serve', err);
+                // Never fail a served batch over the counter — worst case one
+                // abandoned quiz goes unrecorded against the cap this once.
+                logger.error('Failed to record served questions against the unanswered cap', err);
             }
         }
         res.json({ questions: served, freeRemaining });
@@ -4538,9 +4644,43 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
             session_id: result.rows[0].session_id
         });
 
-        // The free allowance is spent when questions are SERVED (see
-        // GET /api/questions), not here — submitting no longer touches
-        // free_questions_used at all, so there is nothing to spend or report.
+        // ── Spend the free allowance, for questions actually ANSWERED ──
+        //
+        // This is the charge. Serving only records against the unanswered cap
+        // (see GET /api/questions); nothing is billed until a quiz is finished
+        // and submitted, so an abandoned quiz is free. That is the whole point:
+        // a student who spent their trial on quizzes they closed used to arrive
+        // at the paywall having seen none of what the subscription offers.
+        //
+        // Billed on the questions in the submission rather than a client-sent
+        // count of "answered", since the client controls both — and the number
+        // it cannot lie its way past is the served counter, which the cap reads.
+        // Under-reporting here just walks an account into the backlog block
+        // sooner, so it is self-limiting.
+        //
+        // Runs after the session row is committed and never fails the request:
+        // the student's result is what they earned, and a counter is not worth
+        // a 500 over. The WHERE clause re-confirms the free-tier condition
+        // server-side so a paid account is never debited.
+        const billable = Array.isArray(question_ids) && question_ids.length > 0
+            ? question_ids.length
+            : Number(total_questions) || 0;
+        if (billable > 0) {
+            try {
+                await db.query(
+                    `UPDATE accounts
+                        SET free_questions_used = LEAST($1::int, free_questions_used + $2::int)
+                      WHERE id = $3
+                        AND is_admin_created = FALSE
+                        AND grandfathered_at IS NULL
+                        AND NOT (subscription_status = 'active'
+                                 AND subscription_expiry_date > NOW())`,
+                    [FREE_QUESTION_ALLOWANCE, billable, user_id]
+                );
+            } catch (err) {
+                logger.error('Failed to spend free allowance on submit', err);
+            }
+        }
 
         // ── Everything below is BOOKKEEPING, and must never fail the request ──
         // The session row above is the student's result and it is committed.
@@ -5550,6 +5690,7 @@ app.get('/api/user-subscription/:userId', requireSession, requireOwnUser('userId
         const selectCols = columnsReady
             ? `id, username, email, isactive,
                subscription_status, subscription_expiry_date, free_questions_used,
+               free_questions_served,
                grandfathered_at, account_type, is_admin_created`
             : `id, username, email, isactive`;
 
@@ -7721,6 +7862,7 @@ app.use('/api/error-report', rateLimit(db, 'error-report', { windowMs: 60 * 60_0
 
 // Question Reports Routes
 app.use('/api/question-reports', (req, res, next) => { req.db = db; next(); }, questionReportsRouter);
+app.use('/api/success-stories', (req, res, next) => { req.db = db; next(); }, successStoriesRouter);
 
 // Email Campaign Routes (test + cron)
 app.use('/', (req, res, next) => { req.db = db; next(); }, emailCampaignsRouter);
@@ -7824,9 +7966,19 @@ app.put('/api/preferences/language', requireSession, async (req, res) => {
 });
 
 /**
- * GET /api/public/stats — live usage numbers for the landing page's social
- * proof (real activity, not question-bank inventory — the site never states
- * bank size). Unauthenticated, read-only, no PII: three counts, nothing else.
+ * GET /api/public/stats — live numbers for the landing page.
+ *
+ * Two kinds: recent ACTIVITY, and current INVENTORY. The inventory half is new,
+ * and the comment that used to sit here ("the site never states bank size") is
+ * no longer true — the landing page says how many questions the bank holds,
+ * because "5,033 questions, every one explained" is a verifiable fact and the
+ * claim it replaced ("hundreds of students passed") was not one.
+ *
+ * Hardcoding that number means it is wrong the day after the next import, and
+ * a stale number is exactly the objection people have to the free PDF
+ * collections they use instead. Counted live, it cannot go stale.
+ *
+ * Unauthenticated, read-only, no PII: counts and one date, nothing else.
  *
  * Cached in memory for CACHE_MS so a viral landing page can't turn this into
  * three COUNT(*) queries per pageview. Failures fall back to whatever was
@@ -7841,17 +7993,28 @@ app.get('/api/public/stats', async (req, res) => {
         return res.json({ success: true, ...(_publicStatsCache.data), cached: true });
     }
     try {
-        const [activeWeek, questionsMonth, quizzesMonth] = await Promise.all([
+        const [activeWeek, questionsMonth, quizzesMonth, inventory, decks] = await Promise.all([
             db.query(`SELECT COUNT(DISTINCT user_id)::int AS n FROM login_history WHERE login_time > NOW() - INTERVAL '7 days'`),
             db.query(`SELECT COUNT(*)::int AS n FROM user_question_attempts WHERE quiz_session_id IN (
                           SELECT id FROM user_quiz_sessions WHERE start_time > NOW() - INTERVAL '30 days'
                       )`),
             db.query(`SELECT COUNT(*)::int AS n FROM user_quiz_sessions WHERE start_time > NOW() - INTERVAL '30 days' AND end_time IS NOT NULL`),
+            db.query(`SELECT COUNT(*)::int AS n, MAX(created_at) AS newest FROM questions`),
+            db.query(`SELECT COUNT(*)::int AS n FROM summaries WHERE is_published = TRUE`),
         ]);
+        const newest = inventory.rows[0]?.newest || null;
         const data = {
             activeStudentsThisWeek: activeWeek.rows[0]?.n || 0,
             questionsAnsweredThisMonth: questionsMonth.rows[0]?.n || 0,
             quizzesCompletedThisMonth: quizzesMonth.rows[0]?.n || 0,
+            // Inventory. `questionsTotal` is every question in the bank across
+            // both tracks, which is what the landing page's claim is about.
+            questionsTotal: inventory.rows[0]?.n || 0,
+            summaryDecks: decks.rows[0]?.n || 0,
+            // Null until a question is added after the created_at column
+            // existed — see the migration. The page shows no date rather than
+            // a made-up one.
+            contentUpdatedAt: newest ? new Date(newest).toISOString().slice(0, 10) : null,
         };
         _publicStatsCache = { data, at: now };
         res.json({ success: true, ...data, cached: false });

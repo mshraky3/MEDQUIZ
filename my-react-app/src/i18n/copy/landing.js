@@ -29,6 +29,15 @@ const landingCopy = {
             title: 'تدرّب بذكاء، واجتَز اختبار الترخيص بثقة',
             body: 'بنك أسئلة محدّث على نمط البرومترك، مع تفسير واضح لكل إجابة وتحليل فوري يكشف نقاط ضعفك ويرتّب أولويات مراجعتك — كل ما تحتاجه للوصول إلى درجتك المستهدفة في مكان واحد.',
             primary: 'ابدأ بـ 40 سؤالاً مجاناً',
+            // سطر صغير تحت الأزرار لمن لم يقرّر بعد: 78 من 120 اختاروا مساراً
+            // هذا الشهر ثم تركوا نموذج التسجيل — أرادوا رؤية الأسئلة أولاً.
+            tryFirst: 'أو جرّب ٢٠ سؤالاً أولاً — بدون حساب',
+            // شريط أرقام حيّة من قاعدة البيانات (/api/public/stats). الاعتراض
+            // على ملفات PDF المجانية المتداولة أنها قديمة وغير موثّقة — والردّ
+            // الوحيد المقنع هو رقم يُحسب الآن ولا يمكن أن يتقادم.
+            liveQuestions: (n) => `${n} سؤالاً في البنك`,
+            liveDecks: (n) => `${n} ملزمة ملخّصات`,
+            liveUpdated: (date) => `آخر إضافة ${date}`,
             secondary: 'تسجيل الدخول',
             trust: [
                 'تفسير كامل لكل سؤال',
@@ -280,6 +289,17 @@ const landingCopy = {
             cta: 'احصل على كل هذا الآن',
             ctaNote: 'كل ما سبق مشمول في الاشتراك نفسه — وكل جديد يصلك تلقائياً',
         },
+        // The five study guides. Titles and excerpts are NOT duplicated here —
+        // Landing.jsx reads them straight from i18n/copy/guides.js, so the
+        // landing band, the /guides hub and the prerendered HTML can never
+        // drift apart. Only the framing around them lives in this file.
+        guides: {
+            sectionLabel: 'أدلة التحضير',
+            pill: 'اقرأ قبل أن تبدأ',
+            title: 'أدلة عملية عن طريقة المذاكرة نفسها',
+            body: 'خمسة أدلة مكتوبة بالكامل ومفتوحة للجميع بدون حساب: كيف تستخدم بنك الأسئلة بالترتيب الصحيح، وكيف تبني خطة واقعية، وكيف تحوّل كل خطأ إلى قاعدة لا تتكرر.',
+            all: 'تصفّح كل الأدلة',
+        },
 
 
 
@@ -294,7 +314,7 @@ const landingCopy = {
             visitor: {
                 pill: 'جاهز للبدء؟',
                 title: 'كل يوم تأجيل هو يوم تدريب يكسبه غيرك عليك',
-                body: 'أنشئ حسابك، أكّد بريدك، وابدأ فوراً بـ 40 سؤالاً مجانياً — انضم إلى مئات الطلاب الذين اجتازوا اختبارهم بعد التدريب هنا.',
+                body: 'أنشئ حسابك، أكّد بريدك، وابدأ فوراً بـ 40 سؤالاً مجانياً — من بنك يضم 5,033 سؤالاً، لكل واحد منها شرح مكتوب، ويُحدَّث بتجميعات شهرية.',
                 primary: 'إنشاء حساب',
                 secondary: 'تسجيل الدخول',
                 note: '40 سؤالاً مجاناً · ثم من 50 ريالاً شهرياً · دفع آمن عبر ميسر · بدون تجديد تلقائي',
@@ -325,6 +345,17 @@ const landingCopy = {
             title: 'Practise smarter, and walk into your licensing exam confident',
             body: 'A question bank updated to the Prometric style, a clear explanation for every answer, and instant analytics that expose your weak spots and tell you what to revise next — everything you need to hit your target score, in one place.',
             primary: 'Start with 40 free questions',
+            // A quiet line under the buttons for anyone not ready: 78 of the
+            // 120 who picked a track this month left at the signup form.
+            tryFirst: 'Or try 20 questions first — no account needed',
+            // A strip of live numbers counted from the database
+            // (/api/public/stats). The objection to the free PDF collections
+            // people use instead is that they are old and unverified, and the
+            // only convincing answer is a figure that is counted now and
+            // cannot go stale.
+            liveQuestions: (n) => `${n} questions in the bank`,
+            liveDecks: (n) => `${n} summary decks`,
+            liveUpdated: (date) => `newest added ${date}`,
             secondary: 'Log in',
             trust: [
                 'A full explanation for every question',
@@ -576,6 +607,13 @@ const landingCopy = {
             cta: 'Get all of this now',
             ctaNote: 'Everything above is in the same subscription — and every update reaches you automatically',
         },
+        guides: {
+            sectionLabel: 'Study guides',
+            pill: 'Read before you start',
+            title: 'Practical guides on how to study, not just what to study',
+            body: 'Five complete guides, open to everyone with no account: how to use a question bank in the right order, how to build a plan you can actually keep, and how to turn every mistake into a rule that stops repeating.',
+            all: 'Browse all the guides',
+        },
 
 
 
@@ -590,7 +628,7 @@ const landingCopy = {
             visitor: {
                 pill: 'Ready to start?',
                 title: 'Every day you put it off is a day of practice someone else gains on you',
-                body: 'Create your account, confirm your email, and start with 40 free questions — join the hundreds of students who passed their exam after training here.',
+                body: 'Create your account, confirm your email, and start with 40 free questions — from a bank of 5,033, every one of them explained, updated with monthly collections.',
                 primary: 'Create an account',
                 secondary: 'Log in',
                 note: '40 free questions · then from SAR 50 a month · Secure payment via Moyasar · No auto-renewal',

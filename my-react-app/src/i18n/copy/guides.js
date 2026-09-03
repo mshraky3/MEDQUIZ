@@ -1,5 +1,11 @@
 /**
- * The public study guides (hub + four articles).
+ * The public study guides (hub + five articles).
+ *
+ * The hub's first card points OUT of this file, at /exams/snle. The exam
+ * logistics — format, blueprint, pass mark, attempts, test day — live in their
+ * own section (see i18n/copy/examGuides.js) because they are reference pages
+ * about the exam rather than advice about studying for it. The card is here so
+ * that a reader who found the guides library still finds them.
  *
  * Rendered by components/guides/GuideArticle.jsx from the same block shapes as
  * the legal documents: `{ p }`, `{ h3 }`, `{ ul }`, plus `{ ad: true }` for the
@@ -13,19 +19,28 @@
 const guidesCopy = {
     ar: {
         hub: {
-            kicker: 'SMLE Guides',
-            title: 'أدلة التحضير لاختبار SMLE والبرومترك',
-            intro: 'مكتبة مخصّصة للمحتوى التعليمي العميق: خطط مذاكرة، استراتيجيات حل الأسئلة، إدارة الوقت، ومناهج مراجعة موجّهة لطلاب الطب والأطباء في السعودية.',
+            kicker: 'SMLE & SNLE Guides',
+            title: 'أدلة التحضير لاختبارات SMLE وSNLE والبرومترك',
+            intro: 'مكتبة مخصّصة للمحتوى التعليمي العميق: التوزيع الرسمي لاختبار التمريض SNLE، وخطط مذاكرة، واستراتيجيات حل الأسئلة، وإدارة الوقت، ومناهج مراجعة موجّهة لطلاب الطب والتمريض في السعودية.',
             listLabel: 'أدلة التحضير',
             readMore: 'اقرأ الدليل الكامل',
             notesTitle: 'كيف تستفيد من الأدلة؟',
             notes: [
                 'ابدأ بخطة زمنية واقعية حسب وقتك اليومي.',
+                'إن كان اختبارك SNLE فابدأ من التوزيع الرسمي: الأقسام الأربعة لها نسب ثابتة، فليكن أسبوعك موزّعاً عليها.',
                 'اربط كل جلسة حل أسئلة بمراجعة أخطائك مباشرة.',
                 'حافظ على التوازن بين Internal Medicine والجراحة وPediatrics وOB/GYN.',
                 'لا تقِس التقدّم بعدد الساعات فقط، بل بجودة التكرار وتصحيح القرار السريري.',
             ],
             cards: [
+                {
+                    // Not a /guides page: the exam logistics live in their own
+                    // section, and a card here is how a reader of the guides
+                    // library finds them.
+                    path: '/exams/snle',
+                    title: 'اختبار SNLE للتمريض: التوزيع ودرجة النجاح وشروط التقديم',
+                    excerpt: 'كل ما تحتاج معرفته عن اختبار الرخصة السعودية للتمريض، منقولاً من الدليل الرسمي للهيئة: عدد الأسئلة، توزيع الأقسام ونسبها، درجة النجاح، وعدد المحاولات، ويوم الاختبار.',
+                },
                 {
                     path: '/guides/how-to-use-a-question-bank',
                     title: 'كيف تستخدم بنك الأسئلة لرفع أدائك في SMLE والبرومترك',
@@ -246,19 +261,26 @@ const guidesCopy = {
 
     en: {
         hub: {
-            kicker: 'SMLE Guides',
-            title: 'Study guides for the SMLE and Prometric exams',
-            intro: 'A library for the deeper material: study plans, question-solving strategy, time management, and review methods aimed at medical students and doctors in Saudi Arabia.',
+            kicker: 'SMLE & SNLE Guides',
+            title: 'Study guides for the SMLE, SNLE and Prometric exams',
+            intro: 'A library for the deeper material: the official SNLE nursing blueprint, study plans, question-solving strategy, time management, and review methods — for doctors and nurses preparing for the Saudi Commission exams.',
             listLabel: 'Study guides',
             readMore: 'Read the full guide',
             notesTitle: 'How to get the most from these guides',
             notes: [
                 'Start with a timeline that is realistic for the hours you actually have.',
+                'Sitting the SNLE? Start from the official blueprint — the four sections carry fixed weights, and your week should carry the same ones.',
                 'Pair every question session with an immediate review of your mistakes.',
                 'Keep Internal Medicine, Surgery, Paediatrics and OB/GYN in balance.',
                 'Do not measure progress in hours — measure it in the quality of your repetition and in better clinical decisions.',
             ],
             cards: [
+                {
+                    // See the note on the Arabic card: /exams, not /guides.
+                    path: '/exams/snle',
+                    title: 'The SNLE: blueprint, pass mark, eligibility and attempts',
+                    excerpt: 'What the SCFHS applicant guide actually says about the SNLE: how many questions, how the four sections are weighted, what score you need, how many attempts you get, and what happens on the day.',
+                },
                 {
                     path: '/guides/how-to-use-a-question-bank',
                     title: 'How to use a question bank to improve your SMLE & Prometric performance',

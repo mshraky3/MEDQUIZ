@@ -41,6 +41,30 @@ function anonId() {
 }
 
 /**
+ * Credentials for a funnel beacon, when the person already has them.
+ *
+ * POST /api/funnel has always been able to attribute an event to an account —
+ * it verifies the pair against `accounts` the way the engagement beacon does —
+ * but nothing here ever sent them, so account_id was NULL on every client-side
+ * row and the join to payment_events promised in this file's header did not
+ * exist. It matters most late in the funnel: /subscribe is behind a login, so
+ * every price and payment event can be attributed, and the anon_id alone dies
+ * with a cleared browser or a payment finished on a different device.
+ *
+ * Read from storage rather than passed in, so no call site has to remember.
+ */
+function credentials() {
+    try {
+        const user = JSON.parse(safeGetItem('user') || 'null');
+        const sessionToken = safeGetItem('sessionToken');
+        if (!user?.username || !sessionToken) return null;
+        return { username: user.username, sessionToken };
+    } catch (_) {
+        return null;
+    }
+}
+
+/**
  * Beacon a funnel event to the server and mirror it to Vercel Analytics.
  * Best-effort and silent — a blocked or failed beacon must never affect the
  * page a student is using.
@@ -49,7 +73,7 @@ export function trackFunnel(event, props = {}) {
     safeTrack(event, props);
     try {
         const url = `${Globals.URL}/api/funnel`;
-        const payload = JSON.stringify({ anon_id: anonId(), event, props });
+        const payload = JSON.stringify({ anon_id: anonId(), event, props, ...(credentials() || {}) });
         if (navigator.sendBeacon) {
             navigator.sendBeacon(url, new Blob([payload], { type: 'application/json' }));
         } else {
@@ -67,6 +91,60 @@ export function trackFunnel(event, props = {}) {
 
 const ATTRIBUTION_KEY = 'sqb_attribution_captured';
 const UTM_PARAMS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'gclid', 'fbclid'];
+
+/**
+ * Referrer hosts worth naming, newest channel first.
+ *
+ * The assistants are here because they are already a channel: more visits
+ * arrived from ChatGPT and Perplexity last month than from Bing. The raw
+ * referrer was being stored, but counting a channel meant eyeballing free text
+ * — so `landing_view` now carries a `channel` alongside it and the raw string
+ * stays for anything this list gets wrong.
+ *
+ * Matched on the registrable host and its subdomains, so `www.perplexity.ai`
+ * and `search.marginalia.nu` both resolve. Order matters only in that the
+ * first match wins.
+ */
+const REFERRER_CHANNELS = [
+    ['ai', ['chatgpt.com', 'openai.com', 'perplexity.ai', 'claude.ai', 'anthropic.com',
+        'gemini.google.com', 'copilot.microsoft.com', 'you.com', 'phind.com', 'poe.com']],
+    ['search', ['google.', 'bing.com', 'duckduckgo.com', 'yandex.', 'yahoo.', 'ecosia.org',
+        'brave.com', 'search.marginalia.nu']],
+    ['social', ['t.me', 'telegram.me', 'twitter.com', 'x.com', 'instagram.com', 'facebook.com',
+        'linkedin.com', 'tiktok.com', 'snapchat.com', 'reddit.com', 'youtube.com']],
+    ['chat', ['whatsapp.com', 'wa.me', 'wa.link']],
+];
+
+/**
+ * Bucket a referrer into a channel.
+ *
+ * Returns 'direct' for no referrer, 'internal' for our own pages, and
+ * 'other' for a host we do not recognise — never null, so a count of
+ * landing_view events by channel always adds up to the total.
+ *
+ * A caveat worth remembering before trusting the 'ai' number: assistants that
+ * open a link inside their own app often send no referrer at all, so this
+ * undercounts them and inflates 'direct'. It is a floor, not a measurement.
+ */
+export function classifyReferrer(referrer, selfHost = '') {
+    if (!referrer) return 'direct';
+    let host;
+    try {
+        host = new URL(referrer).hostname.toLowerCase();
+    } catch (_) {
+        return 'other';
+    }
+    if (selfHost && (host === selfHost || host.endsWith(`.${selfHost}`))) return 'internal';
+    for (const [channel, hosts] of REFERRER_CHANNELS) {
+        // A trailing dot in the pattern ('google.') matches every ccTLD.
+        if (hosts.some((h) => (h.endsWith('.')
+            ? host === h.slice(0, -1) || host.includes(h)
+            : host === h || host.endsWith(`.${h}`)))) {
+            return channel;
+        }
+    }
+    return 'other';
+}
 
 /**
  * Records where a visitor came from — once per browser, on their first ever
@@ -92,8 +170,10 @@ export function captureLandingAttribution() {
             if (value) utm[key] = value.slice(0, 200);
         }
 
+        const referrer = document.referrer || '';
         trackFunnel('landing_view', {
-            referrer: document.referrer ? document.referrer.slice(0, 300) : null,
+            referrer: referrer ? referrer.slice(0, 300) : null,
+            channel: classifyReferrer(referrer, window.location.hostname),
             landingPath: window.location.pathname,
             ...utm,
         });

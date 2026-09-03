@@ -89,6 +89,14 @@ const supportCopy = {
             perMonth: (n) => `${n} ريال/شهر`,
             perSeat: (n) => `${n} ريال للحساب`,
             noAutoRenew: 'دفعة واحدة فقط — لا يوجد تجديد تلقائي ولا خصم متكرر.',
+            // ضمان الاسترجاع فوق نموذج الدفع لا تحته: المدة تختلف باختلاف الخطة
+            // (٣ أيام للشهرية، ١٤ يوماً لغيرها) كما في سياسة الاسترجاع نفسها،
+            // فلا يجوز عرض رقم واحد للجميع.
+            guaranteeTitle: (days) => `استرجاع كامل خلال ${days}`,
+            guaranteeDays3: '٣ أيام',
+            guaranteeDays14: '١٤ يوماً',
+            guaranteeBody: 'إن لم تجد المنصة مفيدة، اطلب الاسترجاع عبر البريد أو واتساب وسنعيد المبلغ كاملاً.',
+            guaranteeLink: 'اقرأ سياسة الاسترجاع',
             crossToGroup: 'تذاكرون مجموعة؟ اشتراك جماعي بسعر أقل للحساب ←',
             crossToIndividual: 'تريد اشتراكاً لحسابك وحدك؟ اعرض الخطط الفردية ←',
             perks: [
@@ -232,6 +240,14 @@ const supportCopy = {
             perMonth: (n) => `SAR ${n}/mo`,
             perSeat: (n) => `SAR ${n} per account`,
             noAutoRenew: 'One payment only — no automatic renewal, no recurring charge.',
+            // The guarantee sits above the card form, not below it. The window
+            // differs by plan — 3 days monthly, 14 days otherwise, exactly as
+            // the refund policy states — so there is no single number to show.
+            guaranteeTitle: (days) => `Full refund within ${days}`,
+            guaranteeDays3: '3 days',
+            guaranteeDays14: '14 days',
+            guaranteeBody: 'If the platform is not what you needed, ask by email or WhatsApp and you get all of it back.',
+            guaranteeLink: 'Read the refund policy',
             crossToGroup: 'Studying as a group? Group plans cost less per account →',
             crossToIndividual: 'Just want a subscription for yourself? See the individual plans →',
             perks: [

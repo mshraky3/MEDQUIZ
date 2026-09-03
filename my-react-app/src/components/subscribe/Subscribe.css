@@ -425,3 +425,50 @@
         font-size: 17px;
     }
 }
+
+/* Refund guarantee, above the card fields. Sized to be read rather than
+   skimmed past — it is the strongest de-risking tool on this page and it was
+   previously a link in the footnotes. Not styled as a warning or an alert:
+   it is good news, so it borrows the success palette. */
+.subscribe-guarantee {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    margin: 0 0 16px;
+    padding: 14px 16px;
+    border: 1px solid rgba(22, 163, 74, 0.32);
+    border-radius: 12px;
+    background: rgba(22, 163, 74, 0.07);
+    text-align: start;
+}
+
+.subscribe-guarantee-icon {
+    flex: none;
+    display: inline-flex;
+    margin-top: 1px;
+    color: #16a34a;
+}
+
+.subscribe-guarantee-body {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.subscribe-guarantee-body strong {
+    font-size: 14px;
+    font-weight: 800;
+    color: #14532d;
+}
+
+.subscribe-guarantee-body span { color: var(--text-dark, #0f1e3d); }
+
+.subscribe-guarantee-body a {
+    align-self: flex-start;
+    font-size: 12px;
+    font-weight: 700;
+    color: #15803d;
+    text-decoration: underline;
+}
