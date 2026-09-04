@@ -1909,7 +1909,24 @@ const ensureOAuthColumns = async () => {
 //    numeric(12,2). This bump is the whole point of the fix: without it
 //    bootstrapAll() returns at the version check above and the migration never
 //    runs, which is exactly what happened on the first deploy of it.
-const SCHEMA_BOOTSTRAP_VERSION = 8;
+// 9: Four schema changes landed across four commits between 2026-08-31 and
+//    09-03 without ever bumping this constant, so bootstrapAll() has been
+//    returning at the version check below on every cold start since — none of
+//    them ever ran against production:
+//      - accounts.free_questions_served ("Stop charging students for
+//        questions they never answered")
+//      - questions.created_at ("Count the bank instead of claiming a number
+//        that was true in August")
+//      - success_stories table, via ensureSuccessStoriesTable() ("Build the
+//        place testimonials go, and ship it empty")
+//      - accounts.renewal_reminder_stage ("Say something after the
+//        subscription ends, not only before it")
+//    Confirmed 2026-09-04 from ~20 "column ... does not exist" alerts (42703)
+//    cascading through /api/public/stats, /api/user-subscription/:id and quiz
+//    loading. Exactly the failure mode version 7 -> 8 above was written to
+//    prevent — bump this every time a statement is added to ensureSchema()
+//    or to any ensureXxx() called from bootstrapAll(), no exceptions.
+const SCHEMA_BOOTSTRAP_VERSION = 9;
 async function bootstrapAll() {
     try {
         await db.query(`
