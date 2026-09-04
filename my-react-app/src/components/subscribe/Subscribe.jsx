@@ -229,6 +229,16 @@ const Subscribe = () => {
                         country: 'SA',
                         label: 'SMLE Question Bank',
                         validate_merchant_url: 'https://api.moyasar.com/v1/applepay/initiate',
+                        // Moyasar's own default is ['SA'] only ("to prevent
+                        // fraudulent transactions"), which silently blocked
+                        // every non-Saudi Apple Wallet with no error a student
+                        // could act on. Widened to the GCC plus the two
+                        // non-GCC countries SMLE/SNLE candidates most often
+                        // study from. This is independent of the account-wide
+                        // card block Moyasar enforces server-side (see
+                        // blocked_card_country in the dashboard) — that half
+                        // needs Moyasar support to lift, not a code change.
+                        supported_countries: ['SA', 'AE', 'KW', 'QA', 'BH', 'OM', 'EG', 'JO'],
                     },
                     // seats rides along so accounting can tell one payment that
                     // activated five accounts from one that activated one. The
