@@ -16,13 +16,12 @@ import landingCopy from '../../i18n/copy/landing.js';
 import guidesCopy from '../../i18n/copy/guides.js';
 import './Landing.css';
 
-// Both below the hero, both scroll-triggered animations (see their own
-// files), so neither needs to be ready for first paint. Landing.jsx is
-// eager (it's the LCP route, per main.jsx) and previously imported these two
-// statically — which meant ProductShowcase.css and InstallShowcase.css rode
-// along in the ONE eager CSS bundle every route downloads, including a
-// visitor going straight to /login who never sees this page at all.
-const ProductShowcase = lazy(() => import('./ProductShowcase.jsx'));
+// Below the hero, a scroll-triggered animation (see its own file), so it
+// doesn't need to be ready for first paint. Landing.jsx is eager (it's the
+// LCP route, per main.jsx) and previously imported this statically — which
+// meant InstallShowcase.css rode along in the ONE eager CSS bundle every
+// route downloads, including a visitor going straight to /login who never
+// sees this page at all.
 const InstallShowcase = lazy(() => import('../common/InstallShowcase.jsx'));
 
 /**
@@ -142,10 +141,6 @@ const Landing = () => {
   const displayName = user?.username
     ? String(user.username).split('@')[0].split(/[ _.]/).filter(Boolean)[0] || ''
     : '';
-
-  // The specialty names shown inside the analytics replica, so the mock is
-  // labelled with this visitor's own track rather than hardcoded English.
-  const showcaseSpecialties = TRACKS[MEDICAL].specialties.map((sp) => pick(sp.label, lang));
 
   // `placement` differentiates the 4 signup CTAs (hero / price card / CTA
   // band / mobile bar), which previously all fired the exact same event with
@@ -314,22 +309,6 @@ const Landing = () => {
             )}
           </section>
 
-          {/* Replaces the old adjective grid: the product, shown working. */}
-          <Suspense fallback={null}>
-            <ProductShowcase copy={t.showcase} specialtyLabels={showcaseSpecialties} />
-          </Suspense>
-
-          {/* Seeing the product work is the moment the visitor stops reading
-              and starts wanting it — so the tour ends with a way in. */}
-          {!isAuthenticated && (
-            <div className="section-cta">
-              <Link to="/signup" className="btn primary" onClick={() => trackSignupClick('showcase')}>
-                {t.showcase.cta}
-              </Link>
-              <p className="section-cta-note">{t.showcase.ctaNote}</p>
-            </div>
-          )}
-
           {/* Explanations get a section of their own, and it sits above the
               comparison table on purpose: it is the single thing this bank has
               that the free PDF collections passed around in group chats do not,
@@ -432,37 +411,6 @@ const Landing = () => {
             )}
           </section>
 
-          <section className="cost-section" aria-label={t.costOfWaiting.sectionLabel}>
-            <div className="section-head">
-              <p className="pill subtle">{t.costOfWaiting.pill}</p>
-              <h2>{t.costOfWaiting.title}</h2>
-              <p>{t.costOfWaiting.body}</p>
-            </div>
-            <div className="cost-grid">
-              {t.costOfWaiting.items.map((item) => (
-                <div key={item.title} className="cost-item">
-                  <span className="cost-item-icon" aria-hidden="true"><Icon name={item.icon} size={24} /></span>
-                  <div>
-                    <h3>{item.title}</h3>
-                    <p>{item.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <p className="cost-note">{t.costOfWaiting.note}</p>
-
-            {/* This section ends on the price of doing nothing; the button is
-                the alternative to doing nothing. */}
-            {!isAuthenticated && (
-              <div className="section-cta">
-                <Link to="/signup" className="btn primary" onClick={() => trackSignupClick('cost')}>
-                  {t.costOfWaiting.cta}
-                </Link>
-                <p className="section-cta-note">{t.costOfWaiting.ctaNote}</p>
-              </div>
-            )}
-          </section>
-
           <section className="value-section" aria-label={t.value.sectionLabel}>
             <div className="section-head">
               <p className="pill subtle">{t.value.pill}</p>
@@ -470,19 +418,23 @@ const Landing = () => {
               <p>{t.value.body}</p>
             </div>
 
-            <div className="value-grid">
-              <div className="value-points">
-                {t.value.points.map((point) => (
-                  <div key={point.title} className="value-point">
-                    <span className="feature-icon" aria-hidden="true"><Icon name={point.icon} size={24} /></span>
-                    <div>
-                      <h3>{point.title}</h3>
-                      <p>{point.desc}</p>
-                    </div>
+            <div className="value-points">
+              {t.value.points.map((point) => (
+                <div key={point.title} className="value-point">
+                  <span className="feature-icon" aria-hidden="true"><Icon name={point.icon} size={24} /></span>
+                  <div>
+                    <h3>{point.title}</h3>
+                    <p>{point.desc}</p>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
+            </div>
 
+            {/* Individual and group plans as two equal-weight cards, side by
+                side — the group plan used to be a subdued band beneath the
+                individual card and was easy to scroll past. /groups renders
+                for logged-out visitors too, so the card can link there directly. */}
+            <div className="pricing-cards">
               <aside className="price-card" aria-label={t.value.priceCardLabel}>
                 <p className="price-card-plan">{t.value.plan}</p>
                 <div className="price-card-amount">
@@ -500,31 +452,22 @@ const Landing = () => {
                 </Link>
                 <p className="price-card-note">{t.value.note}</p>
               </aside>
-            </div>
 
-            {/* Group plans used to be mentioned in one clause of the price
-                card's small print, and reachable only from two pages that both
-                sit behind the login wall — so nobody who had not already been
-                told about them ever found them. This band is their only public
-                shop window; /groups now renders for logged-out visitors too. */}
-            <div className="group-band">
-              <div className="group-band-head">
-                <span className="group-band-icon" aria-hidden="true"><Icon name="users" size={22} /></span>
-                <div>
-                  <h3>{t.value.group.title}</h3>
-                  <p>{t.value.group.body}</p>
+              <aside className="price-card price-card-group" aria-label={t.value.group.title}>
+                <span className="price-card-badge">{t.value.group.badge}</span>
+                <p className="price-card-plan">{t.value.group.title}</p>
+                <p className="price-card-group-body">{t.value.group.body}</p>
+                <div className="price-card-group-tiers">
+                  {t.value.group.tiers.map((tier) => (
+                    <div key={tier.label} className="group-tier">
+                      <span className="group-tier-label">{tier.label}</span>
+                      <span className="group-tier-price">{tier.price}</span>
+                      <span className="group-tier-each">{tier.each}</span>
+                    </div>
+                  ))}
                 </div>
-              </div>
-              <div className="group-band-tiers">
-                {t.value.group.tiers.map((tier) => (
-                  <div key={tier.label} className="group-tier">
-                    <span className="group-tier-label">{tier.label}</span>
-                    <span className="group-tier-price">{tier.price}</span>
-                    <span className="group-tier-each">{tier.each}</span>
-                  </div>
-                ))}
-              </div>
-              <Link to="/groups" className="btn group-band-cta">{t.value.group.cta}</Link>
+                <Link to="/groups" className="btn primary price-card-cta">{t.value.group.cta}</Link>
+              </aside>
             </div>
           </section>
 

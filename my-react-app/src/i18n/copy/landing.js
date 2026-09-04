@@ -95,75 +95,6 @@ const landingCopy = {
             ctaNote: '40 سؤالاً مجاناً · بدون بطاقة دفع',
         },
 
-        // Replaces the old four-icon "features" grid. Instead of describing the
-        // product in adjectives, the section REBUILDS it: each panel is a live,
-        // animated replica of the real screen, driven by the same CSS the app
-        // uses. No screenshots — an image would go stale the first time the UI
-        // changed, and would ship a 300 KB PNG to every mobile visitor.
-        showcase: {
-            sectionLabel: 'جولة داخل المنصة',
-            pill: 'كل الأدوات في مكان واحد',
-            title: 'شاهد المنصة قبل أن تسجّل',
-            body: 'هذه ليست صوراً — بل الشاشات الفعلية للمنصة، تتحرك أمامك كما ستستخدمها تماماً.',
-            liveTag: 'معاينة حيّة',
-            items: [
-                {
-                    key: 'quiz',
-                    icon: 'clipboard',
-                    kicker: 'الأسئلة',
-                    title: 'سؤال بنمط الاختبار، وتفسير فوري',
-                    desc: 'تختار إجابتك فتظهر لك الإجابة الصحيحة وسبب صحتها فوراً — لا تنتظر نهاية الاختبار لتعرف أين أخطأت.',
-                },
-                {
-                    key: 'analysis',
-                    icon: 'bar-chart',
-                    kicker: 'التحليلات',
-                    title: 'دقتك في كل تخصص، بنظرة واحدة',
-                    desc: 'حلقات تقدّم لكل تخصص، وتحديد تلقائي لأضعف نقطة لديك — لتعرف من أين تبدأ مراجعتك بدل التخمين.',
-                },
-                {
-                    key: 'annotate',
-                    icon: 'highlighter',
-                    kicker: 'الملخصات',
-                    title: 'علّم وارسم على الملخصات',
-                    desc: 'أداة تحديد ورسم مدمجة داخل الملخصات المصوّرة — ظلّل النقاط المهمة وارسم عليها، وتبقى ملاحظاتك محفوظة.',
-                },
-                {
-                    key: 'wrong',
-                    icon: 'refresh',
-                    kicker: 'أخطاؤك',
-                    title: 'كل سؤال أخطأت فيه، مجموعاً وقابلاً للبحث',
-                    desc: 'صفحة واحدة تجمع أخطاءك مع بحث فوري وفلترة بالتخصص — مراجعة الأخطاء هي أسرع طريق لرفع درجتك.',
-                },
-            ],
-            // Text inside the animated replicas. Kept here so the mock screens
-            // are translated like everything else.
-            mock: {
-                quizProgress: 'سؤال ٧ من ١٠',
-                quizStem: 'رجل ٦٢ عاماً يعاني ألماً صدرياً ضاغطاً منذ ساعتين، ينتشر إلى الفك الأيسر مع تعرّق. ما أنسب خطوة أولى؟',
-                quizOptions: ['تصوير مقطعي للصدر', 'تخطيط قلب كهربائي فوراً', 'اختبار جهد', 'تصوير صدر بالأشعة'],
-                quizCorrectIndex: 1,
-                quizExplain: 'تخطيط القلب خلال ١٠ دقائق هو المعيار في أي ألم صدري مشتبه بكونه إقفارياً — فهو ما يحدد مسار العلاج فوراً.',
-                quizCorrectTag: 'إجابة صحيحة',
-                analysisTitle: 'دقتك حسب التخصص',
-                analysisWeak: 'أضعف تخصص',
-                analysisOverall: 'الدقة العامة',
-                annotateTitle: 'علامة الـSteeple في الخانوق',
-                annotateTools: ['تحديد', 'قلم', 'ممحاة'],
-                annotateNote: 'تضيّق تحت المزمار',
-                wrongSearch: 'الأطفال',
-                wrongCount: 'ثلاث نتائج',
-                wrongItems: [
-                    { q: 'أنسب علاج أولي للخانوق المتوسط…', you: 'مضاد حيوي', right: 'ديكساميثازون' },
-                    { q: 'أشيع مسبب لالتهاب القصيبات…', you: 'المكورة الرئوية', right: 'الفيروس المخلوي RSV' },
-                ],
-                wrongYou: 'إجابتك',
-                wrongRight: 'الصحيحة',
-            },
-            cta: 'جرّب هذه الشاشات بنفسك',
-            ctaNote: '40 سؤالاً مجاناً · بدون بطاقة دفع',
-        },
-
         compare: {
             sectionLabel: 'مقارنة طرق التحضير',
             pill: 'قارن بنفسك',
@@ -185,33 +116,6 @@ const landingCopy = {
             ],
             cta: 'جرّب SQB بـ 40 سؤالاً مجاناً',
             ctaNote: 'قارن بنفسك قبل أن تدفع ريالاً واحداً',
-        },
-
-        costOfWaiting: {
-            sectionLabel: 'التكلفة الحقيقية للتأجيل',
-            pill: 'قبل أن تقرر',
-            title: 'الرسوب لا يكلّفك درجة فقط — يكلّفك وقتاً ومالاً',
-            body: 'قبل أن تقارن الأسعار، قارن التكلفة الحقيقية للمحاولة غير المستعدة: تسجيل جديد، انتظار الدورة القادمة، وتأخر يمتد لأشهر قبل أن تحصل على ترخيصك وتبدأ عملك.',
-            items: [
-                {
-                    icon: 'refresh',
-                    title: 'تسجيل جديد ودفع رسوم الاختبار مجدداً',
-                    desc: 'أي محاولة إضافية تعني دفع رسوم الاختبار من جديد — قبل أن تُحتسب تكلفة وقتك.',
-                },
-                {
-                    icon: 'calendar',
-                    title: 'انتظار الدورة القادمة',
-                    desc: 'مواعيد الاختبار محدودة على مدار السنة — رسوب دورة واحدة قد يعني أشهراً من الانتظار قبل فرصتك التالية.',
-                },
-                {
-                    icon: 'trending-down',
-                    title: 'تأخر الترخيص وبداية العمل',
-                    desc: 'كل شهر تأخير في الترخيص هو شهر دخل مؤجَّل — التكلفة الأكبر، وإن كانت لا تظهر في أي فاتورة.',
-                },
-            ],
-            note: '300 ريال لسنة كاملة من التحضير أقل بكثير من تكلفة محاولة واحدة إضافية.',
-            cta: 'ابدأ التحضير الآن مجاناً',
-            ctaNote: 'ابدأ اليوم بدل أن تدفع ثمن التأجيل لاحقاً',
         },
 
         value: {
@@ -248,6 +152,7 @@ const landingCopy = {
             // The public shop window for the group plans. Prices here must stay
             // in step with PLANS.group_3 / group_5 in backend/services/paymentService.js.
             group: {
+                badge: 'وفّر حتى ٥٣٪ للحساب',
                 title: 'تذاكرون مجموعة؟ الاشتراك الجماعي أرخص بكثير',
                 body: 'دفعة واحدة تفعّل حسابك فوراً وتعطيك روابط دعوة لبقية المقاعد، توزّعها على أصدقائك. كل المقاعد تنتهي في نفس التاريخ، وكل رابط يفتح حساباً واحداً فقط.',
                 tiers: [
@@ -412,75 +317,6 @@ const landingCopy = {
             ctaNote: '40 free questions · No payment card',
         },
 
-        // Replaces the old four-icon "features" grid. Instead of describing the
-        // product in adjectives, the section REBUILDS it: each panel is a live,
-        // animated replica of the real screen, driven by the same CSS the app
-        // uses. No screenshots — an image would go stale the first time the UI
-        // changed, and would ship a 300 KB PNG to every mobile visitor.
-        showcase: {
-            sectionLabel: 'A tour inside the platform',
-            pill: 'Every tool in one place',
-            title: 'See the platform before you sign up',
-            body: 'These are not screenshots — they are the real screens, moving exactly the way you will use them.',
-            liveTag: 'Live preview',
-            items: [
-                {
-                    key: 'quiz',
-                    icon: 'clipboard',
-                    kicker: 'Questions',
-                    title: 'An exam-style question, explained the moment you answer',
-                    desc: 'Pick an option and the correct answer — and the reasoning behind it — appears immediately. You never wait until the end of a quiz to find out where you went wrong.',
-                },
-                {
-                    key: 'analysis',
-                    icon: 'bar-chart',
-                    kicker: 'Analytics',
-                    title: 'Your accuracy in every specialty, at a glance',
-                    desc: 'A progress ring per specialty and your weakest one flagged automatically — so you know where revision starts instead of guessing.',
-                },
-                {
-                    key: 'annotate',
-                    icon: 'highlighter',
-                    kicker: 'Summaries',
-                    title: 'Highlight and draw straight on the summaries',
-                    desc: 'A highlighter and pen built into the illustrated summaries — mark what matters, draw on the images, and your notes stay put.',
-                },
-                {
-                    key: 'wrong',
-                    icon: 'refresh',
-                    kicker: 'Your mistakes',
-                    title: 'Every question you got wrong, collected and searchable',
-                    desc: 'One page gathering all your mistakes, with instant search and a specialty filter. Reworking your own errors is the fastest way to move your score.',
-                },
-            ],
-            // Text inside the animated replicas. Kept here so the mock screens
-            // are translated like everything else.
-            mock: {
-                quizProgress: 'Question 7 of 10',
-                quizStem: 'A 62-year-old man has two hours of crushing chest pain radiating to the left jaw, with sweating. What is the most appropriate first step?',
-                quizOptions: ['CT chest', 'Immediate 12-lead ECG', 'Exercise stress test', 'Chest X-ray'],
-                quizCorrectIndex: 1,
-                quizExplain: 'An ECG within 10 minutes is the standard for any suspected ischaemic chest pain — it is what decides the treatment pathway straight away.',
-                quizCorrectTag: 'Correct',
-                analysisTitle: 'Accuracy by specialty',
-                analysisWeak: 'Weakest',
-                analysisOverall: 'Overall accuracy',
-                annotateTitle: 'Steeple sign in croup',
-                annotateTools: ['Highlight', 'Pen', 'Erase'],
-                annotateNote: 'Subglottic narrowing',
-                wrongSearch: 'croup',
-                wrongCount: '3 results',
-                wrongItems: [
-                    { q: 'First-line treatment for moderate croup…', you: 'Antibiotics', right: 'Dexamethasone' },
-                    { q: 'Commonest cause of bronchiolitis…', you: 'Pneumococcus', right: 'RSV' },
-                ],
-                wrongYou: 'You',
-                wrongRight: 'Correct',
-            },
-            cta: 'Try these screens yourself',
-            ctaNote: '40 free questions · No payment card',
-        },
-
         compare: {
             sectionLabel: 'Comparing ways to prepare',
             pill: 'See for yourself',
@@ -502,33 +338,6 @@ const landingCopy = {
             ],
             cta: 'Try SQB with 40 free questions',
             ctaNote: 'See it for yourself before you pay a riyal',
-        },
-
-        costOfWaiting: {
-            sectionLabel: 'The real cost of waiting',
-            pill: 'Before you decide',
-            title: "Failing doesn't just cost you a grade — it costs you time and money",
-            body: "Before you compare prices, compare the real cost of an unprepared attempt: registering again, waiting for the next sitting window, and months of delay before you're licensed and earning.",
-            items: [
-                {
-                    icon: 'refresh',
-                    title: 'Re-registering and paying the exam fee again',
-                    desc: 'Every extra attempt means paying the exam fee again — before your time is even counted.',
-                },
-                {
-                    icon: 'calendar',
-                    title: 'Waiting for the next sitting window',
-                    desc: 'Exam dates are limited across the year — failing one sitting can mean months before your next shot.',
-                },
-                {
-                    icon: 'trending-down',
-                    title: 'A delayed licence, a delayed start',
-                    desc: 'Every month your licence is delayed is a month of income postponed — the biggest cost, even though it never shows up on an invoice.',
-                },
-            ],
-            note: 'SAR 300 for a full year of preparation is far less than the cost of a single extra attempt.',
-            cta: 'Start preparing now, free',
-            ctaNote: 'Start today instead of paying for the delay later',
         },
 
         value: {
@@ -565,6 +374,7 @@ const landingCopy = {
             // The public shop window for the group plans. Prices here must stay
             // in step with PLANS.group_3 / group_5 in backend/services/paymentService.js.
             group: {
+                badge: 'Save up to 53% per seat',
                 title: 'Studying as a group? A group plan costs far less each',
                 body: 'One payment activates your own account straight away and gives you invite links for the other seats to hand out. Every seat ends on the same date, and each link opens exactly one account.',
                 tiers: [

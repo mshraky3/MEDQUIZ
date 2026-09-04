@@ -138,14 +138,14 @@ CSS is listed in load order. `+shell` = `index.css` + `Navbar.css` + `Footer.css
 #### `/` — Landing
 
 - **Tier** pub · **Component** `landing/Landing.jsx` (eager, LCP route) via `App.jsx`
-- **CSS** `Landing.css` (1824) · `ProductShowcase.css` (536) · `InstallShowcase.css` (431) · `Footer.css`
+- **CSS** `Landing.css` (~1800) · `InstallShowcase.css` (431) · `Footer.css`
 - **Shell** its own — *not* `Layout`. Own topbar + `<Footer/>` in a `min-height:100vh` flex column.
 - **Root** `.landing-body` — defines 18 local tokens (`--card`, `--text`, `--pill`, `--border`, `--shadow`, `--accent-*` …)
 - **Layout** full-bleed `.hero` at `calc(100svh - 64px)` (svh deliberate — avoids the mobile URL-bar overflow trap), then `.landing-shell` sections capped at 1280px with staggered `nth-of-type` entrance animations.
-- **Sections** hero (+ `HeroArt` SVG, `ExamCountdown`) → tracks → explain sample → compare table → cost-of-waiting → value → `ProductShowcase` → flow → news → `InstallShowcase` → CTA band
+- **Sections** hero (+ `HeroArt` SVG, `ExamCountdown`) → tracks → explain sample → compare table → value (why-subscribe points, then a `.pricing-cards` row of two equal-weight peer cards — individual `.price-card` and `.price-card-group` — replacing the old subdued group-plan band) → flow → news → `InstallShowcase` → CTA band. The product-tour (`ProductShowcase`) and the standalone "cost of waiting" section were removed 2026-09 — a free account already lets visitors try the real product, and cost-of-waiting duplicated the pricing section's first point verbatim.
 - **Responsive** 1024 / 860 / 768 / 600 / 560. The compare table scrolls inside `.compare-scroll` (`min-width:680px`, 560 on mobile) — correctly contained.
 - **Verified** no horizontal overflow at 375 / 768 / 1280.
-- **Defects** `B2` (pale text on the `ps-*` showcase), `D5` (no reduced-motion guard on the section stagger), `A4` (latent — `.pill` is also defined in `Login.css`)
+- **Defects** `B2` (pale text on the `ps-*` showcase) — resolved by removing `ProductShowcase` entirely. `D5` (no reduced-motion guard on the section stagger), `A4` (latent — `.pill` is also defined in `Login.css`)
 
 #### `/login` · `/forgot-password`
 

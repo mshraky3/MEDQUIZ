@@ -780,64 +780,20 @@
 }
 
 /* ── Value + pricing section ─────────────────────────────────────── */
-.value-grid {
+.value-points {
   margin-top: 28px;
   display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
-  gap: 28px;
-  align-items: start;
-}
-
-.cost-grid {
-  margin-top: 24px;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 18px;
 }
 
-.cost-item {
+/* The individual and group plans as two equal-weight cards. */
+.pricing-cards {
+  margin-top: 28px;
   display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 16px;
-  align-items: start;
-  padding: 22px 20px;
-  border: 1px solid rgba(248, 113, 113, 0.25);
-  border-radius: var(--radius);
-  background: var(--card-grad);
-  box-shadow: var(--card-shadow);
-}
-
-.cost-item .feature-icon {
-  margin-bottom: 0;
-  animation: none;
-  background: linear-gradient(150deg, rgba(248, 113, 113, 0.20), rgba(251, 146, 60, 0.16));
-  border-color: rgba(248, 113, 113, 0.30);
-  color: #dc2626;
-}
-
-.cost-item h3 {
-  margin: 0 0 6px;
-  color: #0f1e3d;
-  font-size: 16px;
-}
-
-.cost-item p {
-  margin: 0;
-  color: var(--muted);
-  font-size: 14px;
-  line-height: 1.7;
-}
-
-.cost-note {
-  margin: 18px 0 0;
-  text-align: center;
-  font-weight: 700;
-  color: #b45309;
-}
-
-.value-points {
-  display: grid;
-  gap: 18px;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: stretch;
 }
 
 .value-point {
@@ -1026,10 +982,11 @@
   background: rgba(37, 99, 235, 0.5);
 }
 
-/* Pricing card — same family as the cta-band so it reads as "the offer". */
+/* Pricing card — same family as the cta-band so it reads as "the offer".
+   Not position:sticky: the two plan cards now sit side by side as equal
+   peers in .pricing-cards, not beside a taller points column, so there is
+   nothing left for either card to stick past. */
 .price-card {
-  position: sticky;
-  top: 24px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -1162,52 +1119,47 @@
   color: rgba(255, 255, 255, 0.78);
 }
 
-/* ── Group-plan band — the only public entry point to /groups ────── */
+/* ── Group-plan card — a peer of the individual price-card, not a
+   footnote beneath it, so it can't be scrolled past unnoticed. Same
+   card language (flex column, white CTA button) as .price-card, in an
+   emerald gradient so the two read as compared options. The only public
+   entry point to /groups. */
 
-.group-band {
-  margin-top: 28px;
-  padding: clamp(20px, 3vw, 28px);
-  border: 1px solid rgba(37, 99, 235, 0.28);
-  border-radius: calc(var(--radius) + 4px);
-  background: rgba(37, 99, 235, 0.05);
-  display: grid;
-  gap: 18px;
+.price-card-group {
+  justify-content: space-between;
+  background:
+    radial-gradient(ellipse at 85% 115%, rgba(14, 165, 233, 0.35) 0%, transparent 55%),
+    radial-gradient(ellipse at 0% 0%, rgba(110, 231, 183, 0.4) 0%, transparent 50%),
+    linear-gradient(135deg, var(--accent-emerald) 0%, #059669 55%, #047857 100%);
+  border-color: rgba(16, 185, 129, 0.4);
+  box-shadow: 0 30px 64px rgba(5, 150, 105, 0.28);
 }
 
-.group-band-head {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
+.price-card-group .price-card-cta.btn.primary {
+  color: #047857;
 }
 
-.group-band-icon {
-  flex: 0 0 auto;
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: rgba(37, 99, 235, 0.12);
-  color: var(--primary-color, #2563eb);
-}
-
-.group-band-head h3 {
-  margin: 0 0 6px;
-  font-size: clamp(18px, 2.2vw, 21px);
+.price-card-badge {
+  align-self: flex-start;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  font-size: 12.5px;
   font-weight: 800;
-  color: var(--text-dark);
+  color: #ffffff;
 }
 
-.group-band-head p {
+.price-card-group-body {
   margin: 0;
   font-size: 14.5px;
   line-height: 1.75;
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.92);
 }
 
-.group-band-tiers {
+.price-card-group-tiers {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 12px;
 }
 
@@ -1215,7 +1167,6 @@
   display: grid;
   gap: 2px;
   padding: 14px 16px;
-  border: 1px solid rgba(37, 99, 235, 0.22);
   border-radius: 12px;
   background: #fff;
   text-align: start;
@@ -1237,21 +1188,7 @@
 .group-tier-each {
   font-size: 12.5px;
   font-weight: 600;
-  color: var(--primary-color, #2563eb);
-}
-
-.group-band-cta.btn {
-  justify-self: start;
-  background: var(--primary-color, #2563eb);
-  color: #fff;
-  font-weight: 700;
-}
-
-@media (max-width: 560px) {
-  .group-band-cta.btn {
-    justify-self: stretch;
-    text-align: center;
-  }
+  color: #047857;
 }
 
 /* ── Purchase-objection FAQ — 2×2 card grid near the offer ───────── */
@@ -1490,16 +1427,9 @@
 
   .flow-section,
   .cta-band-content,
-  .value-grid,
+  .value-points,
+  .pricing-cards,
   .explain-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .price-card {
-    position: static;
-  }
-
-  .cost-grid {
     grid-template-columns: 1fr;
   }
 
