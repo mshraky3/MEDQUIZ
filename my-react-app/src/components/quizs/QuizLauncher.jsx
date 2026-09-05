@@ -308,20 +308,22 @@ const QuizLauncher = ({ id, contentStatus }) => {
 
     if (bankEmpty) {
         return (
-            <div dir={dir}>
-                <div className="quiz-main">
-                    <h1>{t.emptyTitle(trackLabel(myTrack, lang))}</h1>
-                    <p className="quiz-subtitle">{t.emptyBody(examLabel(myTrack, lang))}</p>
-                    <button className="quick-start-btn" onClick={() => navigate('/quizs')}>
-                        {t.emptyBack}
-                    </button>
+            <div className="ql-page" dir={dir}>
+                <div className="ql">
+                    <div className="ql-blank">
+                        <h1>{t.emptyTitle(trackLabel(myTrack, lang))}</h1>
+                        <p>{t.emptyBody(examLabel(myTrack, lang))}</p>
+                        <button type="button" className="ql-start" onClick={() => navigate('/quizs')}>
+                            {t.emptyBack}
+                        </button>
+                    </div>
                 </div>
             </div>
         );
     }
 
     return (
-        <div dir={dir}>
+        <div className="ql-page" dir={dir}>
             <div className={`ql${anyModalOpen ? ' is-dimmed' : ''}`}>
                 <header className="ql-head">
                     <h1>{t.title}</h1>

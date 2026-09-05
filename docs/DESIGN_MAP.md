@@ -242,7 +242,7 @@ CSS is listed in load order. `+shell` = `index.css` + `Navbar.css` + `Footer.css
   longer load here — see `/account`. `QUIZS.css` now holds only what the two
   views share: the `.quiz-selection` root tokens, the bank-empty state and the
   mock-exam modals.
-- **Root** `.quiz-selection` (+ `.hubx`) — defines local `--card`, `--card-hover`, `--text`, `--accent-strong`, `--border`, `--shadow`
+- **Roots** hub: `.quiz-selection.hubx` — defines local `--card`, `--card-hover`, `--text`, `--accent-strong`, `--border`, `--shadow`. Launcher: **`.ql-page`, deliberately outside `.quiz-selection`**. That wrapper used to carry `h1`/`p` element rules (48px headings, 18px body, 2.5rem paragraph margins) which outranked the launcher's own class selectors — the hint line rendered half again too large under 40px of dead space and no `.ql-*` rule could win. Those element rules are deleted; **do not reintroduce bare element selectors under `.quiz-selection`.**
 - **Layout** hub sections (greeting + stat rail, study-loop journey, specialty
   ledger, Telegram strip) capped at 1400px; launcher's four full-screen config
   modals (type / source / timer / question-count)

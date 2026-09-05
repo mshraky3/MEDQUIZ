@@ -36,6 +36,13 @@ const MIN_ACCURACY_SAMPLE = 10;
 // same colour wherever it appears.
 const accuracyTone = (pct) => (pct >= 75 ? 'high' : pct >= 50 ? 'mid' : 'low');
 
+// Under this, more questions is not the answer — the study material is.
+const STRUGGLING_ACCURACY = 50;
+
+// And a performance report is only worth being sent to once it has enough
+// answers behind it to actually point somewhere.
+const REPORT_WORTH_READING = 100;
+
 /**
  * The post-login home, built as a study dashboard rather than a menu of cards.
  *
@@ -158,12 +165,14 @@ const QUIZS = () => {
         navigate('/quiz/10', { state: { id, types, source: SOURCE, timer: null, mode: readQuizMode() } });
     };
 
+    // Deliberately NOT wrapped in .quiz-selection. That class restyles bare
+    // h1/p (18px body, 2.5rem bottom margins, a centred entrance animation)
+    // for the hub's benefit, and those element selectors outrank the
+    // launcher's own class-based rules — which is why its hint text rendered
+    // half again too large under 40px of dead space. The launcher owns its
+    // page now; see .ql-page in QuizLauncher.css.
     if (view === 'launcher') {
-        return (
-            <div className="quiz-selection">
-                <QuizLauncher id={id} contentStatus={content} />
-            </div>
-        );
+        return <QuizLauncher id={id} contentStatus={content} />;
     }
 
     // Usernames are often full email addresses. Take the local part first,
@@ -265,12 +274,23 @@ const QUIZS = () => {
         }
     ];
 
-    // Where to point someone next: a new user starts by reading; once there is
-    // history, a weak specialty is the highest-value place to practise;
-    // otherwise send them to review the numbers.
-    const nextStep = bankEmpty && summariesEmpty
-        ? null
-        : (!hasHistory ? (summariesEmpty ? 'quiz' : 'summaries') : (weakestKey ? 'quiz' : 'analysis'));
+    // Where to point someone next.
+    //
+    // The old rule only ever chose between "drill" and "open the report" once
+    // a student had taken a single quiz, which meant it recommended reading
+    // analytics to someone answering a quarter of their questions correctly.
+    // A report does not teach anything: below a passing-ish accuracy the
+    // highest-value next hour is the study material, and it stays that way
+    // however many quizzes have been taken. Above it, drilling is what moves
+    // the number, and the report is worth a look only once there is enough
+    // history in it to point somewhere.
+    const accuracyNow = hasHistory ? Math.round(stats.avg_accuracy) : null;
+    const nextStep = (bankEmpty && summariesEmpty) ? null
+        : summariesEmpty ? 'quiz'
+            : !hasHistory ? 'summaries'
+                : accuracyNow < STRUGGLING_ACCURACY ? 'summaries'
+                    : bankAnswered >= REPORT_WORTH_READING ? 'analysis'
+                        : 'quiz';
 
     // These sit in the header now rather than in a bordered strip of their own
     // inside the performance panel. They are the answer to "where am I", which
@@ -419,9 +439,13 @@ const QUIZS = () => {
                                     <span className="hubx-spec-name">
                                         <span className="hubx-spec-icon" aria-hidden="true"><Icon name={r.icon} size={17} /></span>
                                         <span className="hubx-spec-label">{r.label}</span>
+                                        {/* Never "start here": that phrase belongs to
+                                            the study loop above, and two of them on
+                                            one page is two different answers to the
+                                            same question. */}
                                         {isNext && (
                                             <span className="hubx-tag">
-                                                {r.key === weakestKey ? t.weakest : t.startHere}
+                                                {r.key === weakestKey ? t.weakest : t.leastCovered}
                                             </span>
                                         )}
                                     </span>
