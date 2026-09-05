@@ -101,156 +101,10 @@
   margin-bottom: 1.2rem !important;
 }
 
-/* ── Collection picker ─────────────────────────────────────────────────────
-   Only rendered for tracks whose bank has more than one collection (nursing:
-   Most Repeated / Confirmed). Sits above the launch buttons because it scopes
-   every one of them. */
-.bank-source-picker {
-  width: 100%;
-  max-width: 520px;
-  margin-bottom: 1.2rem;
-  padding: 14px;
-  border-radius: 16px;
-  border: 1px solid var(--border);
-  background: var(--card);
-  box-shadow: var(--shadow-sm, 0 1px 2px rgba(15, 23, 42, 0.06));
-  animation: qs-fade-in-up 0.6s ease-out 0.12s both;
-}
-
-/* The mode picker borrows the source picker's chip styling; it only needs its
-   two options side by side and a hint line long enough to wrap gracefully. */
-.quiz-mode-picker .bank-source-options {
-  grid-template-columns: 1fr 1fr;
-}
-
-.quiz-mode-picker .bank-source-chip-count {
-  font-size: 11px;
-  line-height: 1.35;
-  text-align: center;
-}
-
-.bank-source-legend {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  margin-bottom: 10px;
-  font-size: 13px;
-  font-weight: 800;
-  color: var(--muted);
-}
-
-.bank-source-options {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 8px;
-}
-
-.bank-source-chip {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  padding: 11px 10px;
-  border-radius: 12px;
-  border: 1.5px solid var(--border);
-  background: var(--surface-2, #f5f8fd);
-  font-family: inherit;
-  color: var(--text);
-  cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
-}
-
-.bank-source-chip:hover {
-  border-color: rgba(37, 99, 235, 0.45);
-}
-
-.bank-source-chip:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-.bank-source-chip.is-active {
-  border-color: var(--accent-strong);
-  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-  color: #ffffff;
-}
-
-.bank-source-chip-name {
-  font-size: 14px;
-  font-weight: 800;
-  line-height: 1.3;
-}
-
-.bank-source-chip-count {
-  font-size: 11.5px;
-  font-weight: 600;
-  opacity: 0.75;
-}
-
-.bank-source-chip-priority {
-  margin-top: 2px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 10.5px;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  background: rgba(37, 99, 235, 0.12);
-  color: var(--accent-strong);
-}
-
-.bank-source-chip.is-active .bank-source-chip-priority {
-  background: rgba(255, 255, 255, 0.25);
-  color: #ffffff;
-}
-
-/* How much of this source has already been answered — the concrete, visible
-   answer to "will questions repeat" instead of something a student has to
-   ask about. */
-.bank-source-chip-progress {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  width: 100%;
-  margin-top: 4px;
-}
-
-.bank-source-chip-bar {
-  width: 100%;
-  height: 4px;
-  border-radius: 999px;
-  background: rgba(15, 23, 42, 0.12);
-  overflow: hidden;
-}
-
-.bank-source-chip-bar-fill {
-  display: block;
-  height: 100%;
-  border-radius: 999px;
-  background: var(--accent-strong);
-}
-
-.bank-source-chip.is-active .bank-source-chip-bar {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-.bank-source-chip.is-active .bank-source-chip-bar-fill {
-  background: #ffffff;
-}
-
-.bank-source-chip-progress-text {
-  font-size: 10.5px;
-  font-weight: 700;
-  opacity: 0.75;
-}
-
-.bank-source-hint {
-  margin: 8px 0 0;
-  font-size: 12px;
-  color: var(--muted);
-  text-align: center;
-}
+/* The mode/collection pickers, the launch-size buttons and the type, count and
+   timer modals all used to live in this file. They are one form now, styled by
+   QuizLauncher.css — see the header note there. What remains below is shared
+   with the bank-empty state and the mock-exam modals, which kept their shape. */
 
 .quick-start-btn {
   width: 100%;
@@ -279,70 +133,6 @@
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
-.options-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.2rem;
-  width: 100%;
-  max-width: 1400px;
-}
-
-.quiz-option-btn {
-  padding: 18px 32px;
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--text);
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  cursor: pointer;
-  transition: transform 0.24s cubic-bezier(0.34, 1.4, 0.64, 1), box-shadow 0.24s ease, border-color 0.24s ease, background 0.24s ease;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.09);
-  backdrop-filter: blur(10px);
-  position: relative;
-  overflow: hidden;
-  animation: qs-fade-in-up 0.5s ease-out both;
-}
-
-.quiz-option-btn:active {
-  transform: translateY(1px) scale(0.97);
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.11);
-}
-
-.quiz-option-btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent);
-  transition: left 0.6s ease;
-}
-
-.quiz-option-btn:hover::before {
-  left: 100%;
-}
-
-.quiz-option-btn:hover {
-  background: var(--card-hover);
-  border-color: rgba(59, 130, 246, 0.4);
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
-}
-
-.quiz-option-btn.final-quiz-btn {
-  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-  color: #ffffff;
-  border: none;
-  font-weight: 800;
-}
-
-.quiz-option-btn.final-quiz-btn:hover {
-  animation: qs-glow 2s ease-in-out infinite;
-  transform: translateY(-4px) scale(1.02);
-}
-
 @media (max-width: 800px) {
   .quiz-selection h1 {
     font-size: 28px;
@@ -352,15 +142,10 @@
     font-size: 18px;
   }
 
-  .quiz-option-btn,
   .secondary-btn,
   .quick-start-btn {
     padding: 0.9rem 2rem;
     font-size: 16px;
-  }
-
-  .options-container {
-    gap: 1rem;
   }
 }
 
@@ -378,16 +163,11 @@
     font-size: 16px;
   }
 
-  .quiz-option-btn,
   .secondary-btn,
   .quick-start-btn {
     padding: 0.8rem 1.5rem;
     font-size: 14px;
     border-radius: 10px;
-  }
-
-  .options-container {
-    grid-template-columns: 1fr;
   }
 }
 
@@ -412,7 +192,6 @@
 }
 
 /* Custom Modal */
-.custom-type-selector-modal,
 .custom-source-selector-modal {
   position: fixed;
   top: 0;
@@ -448,77 +227,6 @@
   font-weight: 800;
   margin-bottom: 1.5rem;
   text-align: center;
-}
-
-/* Type-selector chips — same visual language as .bank-source-chip above
-   (grid of small pill-cards, gradient when active) so the whole "choose your
-   quiz" screen reads as one picker pattern instead of chips in one section
-   and plain checkboxes in another. Multi-select, so each chip is a <label>
-   wrapping a real (visually-hidden, still focusable) checkbox rather than a
-   bare button — keyboard and screen-reader users get a real checkbox group,
-   and the active look is driven by React's own selectedTypes state via
-   .is-active rather than a hand-rolled DOM box kept in sync from a
-   useEffect. */
-.type-chip-group {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
-.type-chip {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  padding: 11px 10px;
-  border-radius: 12px;
-  border: 1.5px solid var(--border);
-  background: var(--surface-2, #f5f8fd);
-  color: var(--text);
-  cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
-}
-
-.type-chip:hover {
-  border-color: rgba(37, 99, 235, 0.45);
-}
-
-.type-chip:has(.type-chip-input:focus-visible) {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-.type-chip.is-active {
-  border-color: var(--accent-strong);
-  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-  color: #ffffff;
-}
-
-.type-chip-input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-.type-chip-name {
-  font-size: 14px;
-  font-weight: 800;
-  line-height: 1.3;
-  text-align: center;
-}
-
-.type-chip-pct {
-  font-size: 11.5px;
-  font-weight: 600;
-  opacity: 0.75;
 }
 
 /* Source Selection Styles */
@@ -562,26 +270,9 @@
   outline-offset: 2px;
 }
 
-.source-info {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  background: rgba(37, 99, 235, 0.08);
-  color: var(--accent-strong);
-  padding: 12px 16px;
-  border-radius: 12px;
-  margin-bottom: 16px;
-  font-size: 14px;
-  /* Logical property so the accent bar stays on the reading edge in RTL. */
-  border-inline-start: 3px solid var(--accent);
-  text-align: center;
-  font-weight: 700;
-}
-
-/* Modal Buttons — one primary, one secondary, one quiet, all on the site's
-   indigo/blue ramp. The mix button used to be a lime→cyan gradient that
-   appeared nowhere else in the product. */
+/* Modal buttons — one primary, one quiet, both on the site's indigo/blue
+   ramp. (A third, "mix all", went with the type modal when the launcher
+   became a single form.) */
 .custom-modal-buttons {
   display: flex;
   flex-direction: column;
@@ -590,7 +281,6 @@
 }
 
 .custom-start-btn,
-.custom-mix-btn,
 .custom-cancel-btn {
   padding: 14px 20px;
   font-family: inherit;
@@ -604,7 +294,6 @@
 }
 
 .custom-start-btn:focus-visible,
-.custom-mix-btn:focus-visible,
 .custom-cancel-btn:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
@@ -625,18 +314,6 @@
   opacity: 0.55;
   cursor: not-allowed;
   box-shadow: none;
-}
-
-.custom-mix-btn {
-  background: #ffffff;
-  color: var(--accent-strong);
-  border: 1.5px solid rgba(37, 99, 235, 0.4);
-}
-
-.custom-mix-btn:hover {
-  background: rgba(37, 99, 235, 0.07);
-  border-color: var(--accent-strong);
-  transform: translateY(-2px);
 }
 
 .custom-cancel-btn {
@@ -680,14 +357,8 @@
     padding: 12px 18px;
   }
 
-  .source-info {
-    font-size: 13px;
-    padding: 8px 12px;
-  }
-
   .custom-start-btn,
-  .custom-mix-btn,
-  .custom-cancel-btn {
+.custom-cancel-btn {
     font-size: 14px;
     padding: 10px 16px;
   }
@@ -706,14 +377,8 @@
     padding: 10px 16px;
   }
 
-  .source-info {
-    font-size: 12px;
-    padding: 6px 10px;
-  }
-
   .custom-start-btn,
-  .custom-mix-btn,
-  .custom-cancel-btn {
+.custom-cancel-btn {
     font-size: 13px;
     padding: 8px 14px;
   }
@@ -731,14 +396,8 @@
     padding: 8px 14px;
   }
 
-  .source-info {
-    font-size: 11px;
-    padding: 5px 8px;
-  }
-
   .custom-start-btn,
-  .custom-mix-btn,
-  .custom-cancel-btn {
+.custom-cancel-btn {
     font-size: 12px;
     padding: 7px 12px;
   }
@@ -757,14 +416,8 @@
     padding: 7px 12px;
   }
 
-  .source-info {
-    font-size: 10px;
-    padding: 4px 6px;
-  }
-
   .custom-start-btn,
-  .custom-mix-btn,
-  .custom-cancel-btn {
+.custom-cancel-btn {
     font-size: 11px;
     padding: 6px 10px;
   }
@@ -819,13 +472,6 @@
   transform: scale(1.05);
 }
 
-.timer-info {
-  font-size: 1rem;
-  color: #475569;
-  margin-bottom: 1rem;
-  text-align: center;
-}
-
 .custom-timer-input {
   margin: 1.5rem 0;
   text-align: center;
@@ -866,10 +512,6 @@
     font-size: 0.9rem;
   }
 
-  .timer-info {
-    font-size: 0.9rem;
-  }
-
   .custom-timer-input label {
     font-size: 0.9rem;
   }
@@ -892,10 +534,6 @@
     font-size: 0.8rem;
   }
 
-  .timer-info {
-    font-size: 0.8rem;
-  }
-
   .custom-timer-input label {
     font-size: 0.8rem;
   }
@@ -907,21 +545,6 @@
 }
 
 /* Custom Questions Modal Styles */
-.custom-questions-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(15, 23, 42, 0.45);
-  backdrop-filter: blur(4px);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: var(--z-modal-backdrop);
-  padding: 1rem;
-  animation: qs-fade-in 0.3s ease-out;
-}
 
 .custom-questions-modal .custom-modal-content {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.98) 100%);
@@ -938,335 +561,29 @@
   animation: qs-scale-in 0.4s ease-out;
 }
 
-.custom-questions-modal h2 {
-  color: #0f1e3d;
-  margin-bottom: 1rem;
-  font-size: 1.5rem;
-  font-weight: 800;
-}
-
-.questions-info {
-  color: var(--text-light);
-  margin-bottom: 1.5rem;
-  font-size: 1rem;
-}
-
-.custom-questions-input {
-  margin-bottom: 2rem;
-}
-
-.custom-questions-input label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 600;
-  color: #1e293b;
-  font-size: 1rem;
-}
-
 /* Quick preset buttons for mobile */
-.quick-preset-buttons {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: center;
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
-}
-
-.preset-btn {
-  background: rgba(15, 23, 42, 0.04);
-  border: 1px solid rgba(15, 23, 42, 0.10);
-  border-radius: 10px;
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #1e293b;
-  cursor: pointer;
-  transition-property: var(--transition-props);
-  transition-duration: 0.2s;
-  transition-timing-function: ease;
-  min-width: 50px;
-  min-height: 44px;
-}
-
-.preset-btn:hover {
-  background: rgba(59, 130, 246, 0.15);
-  border-color: rgba(59, 130, 246, 0.4);
-}
-
-.preset-btn:active {
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
-  color: #ffffff;
-  transform: scale(0.95);
-}
 
 /* Input container with controls */
-.input-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-.custom-questions-number-input {
-  width: 120px;
-  padding: 0.8rem;
-  border: 1px solid rgba(15, 23, 42, 0.10);
-  border-radius: 10px;
-  font-size: 1rem;
-  text-align: center;
-  transition: border-color 0.3s ease;
-  min-height: 44px;
-  background: rgba(15, 23, 42, 0.04);
-  color: #0f1e3d;
-  font-weight: 600;
-}
-
-.custom-questions-number-input:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-}
-
-.custom-questions-number-input::-webkit-outer-spin-button,
-.custom-questions-number-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-.custom-questions-number-input[type=number] {
-  -moz-appearance: textfield;
-  appearance: textfield;
-}
 
 /* Input control buttons */
-.input-controls {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.control-btn {
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
-  color: #ffffff;
-  border: none;
-  border-radius: 10px;
-  width: 36px;
-  height: 36px;
-  font-size: 1.2rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition-property: var(--transition-props);
-  transition-duration: 0.2s;
-  transition-timing-function: ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 44px;
-  min-width: 44px;
-}
-
-.control-btn:hover {
-  background: linear-gradient(135deg, #2563eb, #0e48ac);
-  transform: scale(1.05);
-}
-
-.control-btn:active {
-  transform: scale(0.95);
-}
 
 /* Range slider for mobile */
-.range-slider-container {
-  margin-top: 1rem;
-}
-
-.range-slider-container label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 600;
-  color: #1e293b;
-  font-size: 0.9rem;
-}
-
-.questions-range-slider {
-  width: 100%;
-  height: 8px;
-  border-radius: 4px;
-  background: rgba(15, 23, 42, 0.04);
-  outline: none;
-  -webkit-appearance: none;
-  appearance: none;
-  cursor: pointer;
-}
-
-.questions-range-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
-  cursor: pointer;
-  border: 2px solid rgba(15, 23, 42, 0.10);
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
-}
-
-.questions-range-slider::-moz-range-thumb {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
-  cursor: pointer;
-  border: 2px solid rgba(15, 23, 42, 0.10);
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
-}
-
-.range-labels {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 0.5rem;
-  font-size: 0.8rem;
-  color: var(--text-light);
-}
 
 /* Custom Questions Modal Responsive Styles */
 @media (max-width: 600px) {
-  .custom-questions-modal {
-    padding: 0.5rem;
-  }
 
   .custom-questions-modal .custom-modal-content {
     padding: 1.5rem;
     margin: 0;
     max-height: 95vh;
   }
-
-  .custom-questions-modal h2 {
-    font-size: 1.3rem;
-    margin-bottom: 0.8rem;
-  }
-
-  .questions-info {
-    font-size: 0.9rem;
-    margin-bottom: 1rem;
-  }
-
-  .quick-preset-buttons {
-    gap: 0.4rem;
-    margin-bottom: 0.8rem;
-  }
-
-  .preset-btn {
-    padding: 0.4rem 0.8rem;
-    font-size: 0.8rem;
-    min-width: 45px;
-  }
-
-  .input-container {
-    gap: 0.4rem;
-    margin-bottom: 0.8rem;
-  }
-
-  .custom-questions-number-input {
-    width: 100px;
-    /* Stays 16px — below that, iOS Safari zooms the page on focus. */
-    padding: 0.6rem;
-  }
-
-  .control-btn {
-    width: 32px;
-    height: 32px;
-    font-size: 1rem;
-  }
-
-  .range-slider-container {
-    margin-top: 0.8rem;
-  }
-
-  .range-slider-container label {
-    font-size: 0.8rem;
-  }
 }
 
 @media (max-width: 480px) {
-  .custom-questions-modal {
-    padding: 0.25rem;
-  }
 
   .custom-questions-modal .custom-modal-content {
     padding: 1rem;
     border-radius: 8px;
-  }
-
-  .custom-questions-modal h2 {
-    font-size: 1.2rem;
-    margin-bottom: 0.6rem;
-  }
-
-  .questions-info {
-    font-size: 0.8rem;
-    margin-bottom: 0.8rem;
-  }
-
-  .quick-preset-buttons {
-    gap: 0.3rem;
-    margin-bottom: 0.6rem;
-  }
-
-  .preset-btn {
-    padding: 0.3rem 0.6rem;
-    font-size: 0.75rem;
-    min-width: 40px;
-    min-height: 40px;
-  }
-
-  .input-container {
-    gap: 0.3rem;
-    margin-bottom: 0.6rem;
-  }
-
-  .custom-questions-input label {
-    font-size: 0.8rem;
-  }
-
-  .custom-questions-number-input {
-    width: 80px;
-    /* Stays 16px — see the earlier breakpoint above. */
-    padding: 0.5rem;
-  }
-
-  .control-btn {
-    width: 28px;
-    height: 28px;
-    font-size: 0.9rem;
-    min-height: 40px;
-    min-width: 40px;
-  }
-
-  .range-slider-container {
-    margin-top: 0.6rem;
-  }
-
-  .range-slider-container label {
-    font-size: 0.75rem;
-  }
-
-  .questions-range-slider {
-    height: 6px;
-  }
-
-  .questions-range-slider::-webkit-slider-thumb {
-    width: 20px;
-    height: 20px;
-  }
-
-  .questions-range-slider::-moz-range-thumb {
-    width: 20px;
-    height: 20px;
-  }
-
-  .range-labels {
-    font-size: 0.7rem;
   }
 }
 
@@ -1275,55 +592,11 @@
   .custom-questions-modal .custom-modal-content {
     padding: 0.8rem;
   }
-
-  .quick-preset-buttons {
-    gap: 0.2rem;
-  }
-
-  .preset-btn {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.7rem;
-    min-width: 35px;
-  }
-
-  .custom-questions-number-input {
-    width: 70px;
-    /* Stays 16px — see the earlier breakpoints above. */
-    padding: 0.4rem;
-  }
-
-  .control-btn {
-    width: 24px;
-    height: 24px;
-    font-size: 0.8rem;
-    min-height: 36px;
-    min-width: 36px;
-  }
 }
 
 /* ==================== FINAL QUIZ STYLES ==================== */
 
 /* Final Quiz Button - matches other quiz option buttons */
-.quiz-option-btn.final-quiz-btn {
-  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  padding: 1rem 2.5rem;
-  font-size: 18px;
-  font-weight: bold;
-  cursor: pointer;
-  transition-property: var(--transition-props);
-  transition-duration: 0.3s;
-  transition-timing-function: ease;
-  box-shadow: 0 4px 8px rgba(255, 107, 107, 0.2);
-}
-
-.quiz-option-btn.final-quiz-btn:hover {
-  background: linear-gradient(135deg, #ee5a24 0%, #d63031 100%);
-  transform: scale(1.05);
-  box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
-}
 
 /* Final Quiz Modal Overrides */
 .custom-source-selector-modal:has(.final-quiz-description),

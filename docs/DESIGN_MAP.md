@@ -237,8 +237,11 @@ CSS is listed in load order. `+shell` = `index.css` + `Navbar.css` + `Footer.css
   cards (`ExamDateCard`, `StreakCard`, `GoalCard`) moved to `/account`
   (2026-09) — they're personal study-plan settings, not part of the hub's own
   job, and duplicated navigation weight right above the panel that matters.
-- **CSS** `QUIZS.css` (~1650) · `QuizsHub.css` (673) +shell. `GoalCard.css` /
-  `HubCards.css` no longer load here — see `/account`.
+- **CSS** `QUIZS.css` (~920, down from ~1650) · `QuizsHub.css` (hub) ·
+  `QuizLauncher.css` (launcher) +shell. `GoalCard.css` / `HubCards.css` no
+  longer load here — see `/account`. `QUIZS.css` now holds only what the two
+  views share: the `.quiz-selection` root tokens, the bank-empty state and the
+  mock-exam modals.
 - **Root** `.quiz-selection` (+ `.hubx`) — defines local `--card`, `--card-hover`, `--text`, `--accent-strong`, `--border`, `--shadow`
 - **Layout** hub sections (greeting + stat rail, study-loop journey, specialty
   ledger, Telegram strip) capped at 1400px; launcher's four full-screen config
@@ -262,12 +265,17 @@ CSS is listed in load order. `+shell` = `index.css` + `Navbar.css` + `Footer.css
   (`.section-title { text-align:right }` hardcoded; `.final-quiz-description
   { border-left }`), `D5` (no reduced-motion guard) remain unverified since
   the 2026-08-25 audit.
-- **2026-09 addition:** the launcher's source chips now show a per-source
-  completion bar (`completedPct`, from `GET /api/track-content-status`) and a
-  standing hint that questions don't repeat until a source is finished. The
-  type-selector went from a hand-rolled checkbox+DOM-injected-box pattern to
-  `.type-chip` labels styled like `.bank-source-chip` — one picker language
-  for the whole screen instead of two.
+- **2026-09 launcher rebuild** `?view=custom` was five surfaces for one
+  decision — mode panel, source panel, quick-start button, a row of size
+  buttons, then three stacked full-screen modals (specialties → count →
+  timer). It is a single form now (`.ql-*`, `QuizLauncher.css`): five chip
+  rows, all visible and changeable at once, and a footer that states the quiz
+  the button will start. Only the mock-exam modal survives, because it is a
+  different activity with its own question-count lookup. Source chips carry
+  `completedPct` (from `GET /api/track-content-status`) plus a standing note
+  that questions don't repeat until a source is finished. Dropping the three
+  modals took ~710 lines of now-dead rules out of `QUIZS.css` and 12 dead keys
+  out of `quiz.js`'s launcher block.
 
 #### `/quiz/:numQuestions` — quiz runner
 

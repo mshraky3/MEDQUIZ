@@ -1,0 +1,310 @@
+/*
+ * /quizs?view=custom — "choose your quiz".
+ *
+ * Replaces a flow that spread one decision over five surfaces: a mode panel, a
+ * source panel, a quick-start button, a row of size buttons, and then three
+ * stacked full-screen modals (specialties -> count -> timer) before the quiz
+ * actually started. Nothing on screen ever said what you were about to begin,
+ * and changing an earlier answer meant backing out of the stack.
+ *
+ * It is one form now. Every choice is a row of chips, all of them visible and
+ * changeable at once, and the footer states the quiz it will start. The only
+ * modal left is the mock exam, which is a genuinely different thing with its
+ * own question-count lookup.
+ *
+ * Tokens and logical properties throughout, so RTL (the default) needs no
+ * per-element overrides. Chips share the visual language of the hub's ledger
+ * so the two screens read as one product.
+ */
+
+.ql {
+    width: 100%;
+    max-width: 860px;
+    margin-inline: auto;
+    padding: 20px 14px 88px;
+    text-align: start;
+}
+
+/* Pushed back while the mock-exam modal is open, matching what .quiz-main
+   already did for the modals this screen used to stack. */
+.ql.is-dimmed {
+    opacity: 0.35;
+    transform: scale(0.97);
+    filter: blur(1px);
+    pointer-events: none;
+}
+
+/* ------------------------------------------------------------- header --- */
+
+.ql-head { margin-bottom: 16px; }
+
+.ql-head h1 {
+    margin: 0 0 6px;
+    font-size: clamp(1.3rem, 1.1rem + 1vw, 1.75rem);
+    font-weight: 800;
+    line-height: 1.3;
+    color: var(--text-dark, #0f1e3d);
+    animation: none;
+}
+
+.ql-head p {
+    margin: 0;
+    font-size: var(--text-sm, 0.875rem);
+    line-height: 1.7;
+    color: var(--text-light, #5b6779);
+    animation: none;
+}
+
+/* -------------------------------------------------------------- panel --- */
+
+.ql-panel {
+    background: var(--surface, #fff);
+    border: 1px solid var(--border-light, #e6ecf7);
+    border-radius: var(--radius-lg, 16px);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+.ql-field { padding: 16px 18px; }
+.ql-field + .ql-field { box-shadow: inset 0 1px 0 var(--border-light, #e6ecf7); }
+
+.ql-field-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-bottom: 10px;
+    font-size: var(--text-xs, 0.75rem);
+    font-weight: 800;
+    color: var(--text-light, #5b6779);
+}
+
+.ql-field-label svg { color: var(--primary-color, #2563eb); flex-shrink: 0; }
+
+.ql-chips {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+    gap: 8px;
+}
+
+/* --------------------------------------------------------------- chip --- */
+
+.ql-chip {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    min-height: 52px;
+    padding: 10px 12px;
+    border: 1.5px solid var(--border-color, #d4deee);
+    border-radius: var(--radius-md, 12px);
+    background: var(--surface-2, #f5f8fd);
+    color: var(--text-dark, #0f1e3d);
+    font-family: inherit;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color var(--transition-fast), background var(--transition-fast), color var(--transition-fast);
+}
+
+.ql-chip:hover { border-color: rgba(37, 99, 235, 0.45); }
+
+.ql-chip.is-active {
+    border-color: var(--primary-dark, #1d4ed8);
+    background: linear-gradient(135deg, var(--primary-light, #3b82f6), var(--primary-dark, #1d4ed8));
+    color: #fff;
+}
+
+/* The specialty chips carry a real checkbox so the group stays a checkbox
+   group for keyboards and screen readers; the input itself is hidden and the
+   chip's own .is-active class (driven by React state) does the drawing. */
+.ql-chip-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.ql-chip:focus-visible,
+.ql-chip:has(.ql-chip-input:focus-visible) {
+    outline: 3px solid var(--primary-light, #3b82f6);
+    outline-offset: 2px;
+}
+
+.ql-chip-name {
+    font-size: var(--text-sm, 0.875rem);
+    font-weight: 800;
+    line-height: 1.3;
+}
+
+.ql-chip-sub {
+    font-size: 0.7rem;
+    font-weight: 600;
+    line-height: 1.4;
+    opacity: 0.78;
+}
+
+.ql-chip-badge {
+    margin-top: 1px;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: rgba(37, 99, 235, 0.12);
+    color: var(--primary-dark, #1d4ed8);
+    font-size: 0.64rem;
+    font-weight: 800;
+}
+
+.ql-chip.is-active .ql-chip-badge { background: rgba(255, 255, 255, 0.25); color: #fff; }
+
+/* Deliberately no progress bar on these chips. A bar here would be drawing the
+   same number the "x% done" line already states, and at realistic early
+   coverage (~1%) it draws nothing at all — the chip is far too narrow for the
+   hub's segmented meter to be legible. The sentence does the job. */
+
+.ql-hint {
+    margin: 10px 0 0;
+    font-size: var(--text-xs, 0.75rem);
+    line-height: 1.7;
+    color: var(--text-light, #5b6779);
+}
+
+/* ------------------------------------------------- inline number input --- */
+/* Replaces a whole modal that existed to ask for one number. */
+
+.ql-number {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.ql-number label {
+    font-size: var(--text-xs, 0.75rem);
+    font-weight: 700;
+    color: var(--text-light, #5b6779);
+}
+
+.ql-number input {
+    width: 110px;
+    min-height: 44px;
+    padding: 8px 12px;
+    border: 1.5px solid var(--border-color, #d4deee);
+    border-radius: var(--radius-sm, 8px);
+    background: var(--surface, #fff);
+    color: var(--text-dark, #0f1e3d);
+    font-family: inherit;
+    font-size: var(--text-base, 1rem);
+    font-weight: 700;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+.ql-number input:focus-visible {
+    outline: 3px solid var(--primary-light, #3b82f6);
+    outline-offset: 1px;
+}
+
+/* ------------------------------------------------------------- launch --- */
+/* Inside the panel, as its footer: the form and the thing it will do are one
+   object, and the summary is the sentence the old flow never said out loud. */
+
+.ql-launch {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px 18px;
+    background: var(--surface-tint, #e1eafb);
+    box-shadow: inset 0 1px 0 var(--border-light, #e6ecf7);
+}
+
+.ql-summary {
+    margin: 0;
+    font-size: var(--text-xs, 0.75rem);
+    font-weight: 700;
+    line-height: 1.7;
+    color: var(--primary-dark, #1d4ed8);
+    text-align: center;
+}
+
+.ql-start {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    width: 100%;
+    min-height: 52px;
+    padding: 12px 24px;
+    border: 0;
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--primary-color, #2563eb), var(--primary-dark, #1d4ed8));
+    color: #fff;
+    font-family: inherit;
+    font-size: var(--text-base, 1rem);
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.28);
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.ql-start:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(37, 99, 235, 0.34); }
+.ql-start:active { transform: translateY(0); }
+.ql-start:focus-visible { outline: 3px solid var(--primary-dark, #1d4ed8); outline-offset: 3px; }
+
+/* --------------------------------------------------------- mock exam ---- */
+/* Deliberately outside the panel and quieter: it is a different activity, not
+   another setting on this one. */
+
+.ql-final {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    margin-top: 14px;
+    padding: 14px 18px;
+    border: 1.5px solid var(--border-color, #d4deee);
+    border-radius: var(--radius-md, 12px);
+    background: var(--surface, #fff);
+    font-family: inherit;
+    text-align: start;
+    cursor: pointer;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.ql-final:hover { border-color: var(--primary-light, #3b82f6); box-shadow: var(--shadow-sm); }
+.ql-final:focus-visible { outline: 3px solid var(--primary-light, #3b82f6); outline-offset: 2px; }
+
+.ql-final-icon {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: #fee2e2;
+    color: #b91c1c;
+    flex-shrink: 0;
+}
+
+.ql-final-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ql-final-text strong { font-size: var(--text-sm, 0.9rem); font-weight: 800; color: var(--text-dark, #0f1e3d); }
+.ql-final-text span { font-size: var(--text-xs, 0.75rem); line-height: 1.6; color: var(--text-light, #5b6779); }
+.ql-final-go { margin-inline-start: auto; color: var(--text-light, #5b6779); flex-shrink: 0; }
+
+/* ---------------------------------------------------------- responsive -- */
+
+@media (min-width: 720px) {
+    .ql { padding: 26px 20px 88px; }
+    .ql-field { padding: 18px 22px; }
+    .ql-launch { flex-direction: row-reverse; align-items: center; padding: 18px 22px; }
+    .ql-summary { flex: 1; text-align: start; }
+    .ql-start { width: auto; min-width: 220px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ql-chip,
+    .ql-start,
+    .ql-final { transition: none; }
+}

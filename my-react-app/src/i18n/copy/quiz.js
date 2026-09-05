@@ -197,6 +197,11 @@ const quizCopy = {
             sourceDoneLabel: (pct) => `اكتمل ${pct} بالمئة من هذا المصدر`,
             sourceRepeatHint: 'لن يتكرر عليك أي سؤال من مصدر معيّن حتى تُنهي كل أسئلته.',
 
+            typesLegend: 'التخصصات',
+            typesAll: 'كل التخصصات',
+            countLegend: 'عدد الأسئلة',
+            timerLegend: 'الوقت',
+
             modeGroupLabel: 'نمط الاختبار',
             modeLegend: 'نمط الاختبار',
             modeStudy: 'نمط المذاكرة',
@@ -204,19 +209,13 @@ const quizCopy = {
             modeExam: 'نمط الاختبار',
             modeExamHint: 'بدون كشف — تراجع إجاباتك في النهاية',
 
-            quickStart: 'ابدأ سريعاً: 10 أسئلة مختلطة',
             customCount: 'عدد مخصص',
             questionsCount: (n) => `${n} سؤال`,
             finalQuiz: 'اختبار نهائي',
 
-            typeTitle: 'اختر نوع الأسئلة',
-            bankLabel: 'البنك:',
             startQuiz: 'ابدأ الاختبار',
-            mixAll: 'خلط جميع الأنواع',
             cancel: 'إلغاء',
 
-            timerTitle: 'ضبط المؤقت',
-            timerInfo: 'اختر مدة المؤقت أو «بدون مؤقت» لوقت غير محدود',
             noTimer: 'بدون مؤقت',
             timerOptions: [
                 { label: '5 دقائق', value: 5 },
@@ -226,14 +225,8 @@ const quizCopy = {
                 { label: 'مخصص', value: 'custom' },
             ],
             customMinutesLabel: 'مدة مخصصة (دقائق):',
-            backToTypes: 'العودة للأنواع',
 
-            customQuestionsTitle: 'عدد أسئلة مخصص',
-            customQuestionsInfo: 'أدخل عدد الأسئلة المطلوب (1–500)',
             customQuestionsLabel: 'عدد الأسئلة:',
-            customQuestionsPlaceholder: 'أدخل رقماً',
-            orUseSlider: 'أو استخدم الشريط:',
-            continue: 'متابعة',
 
             finalTypeTitle: 'اختبار نهائي — اختر النوع',
             finalTypeDesc: 'مراجعة شاملة لجميع أسئلة النوع المختار',
@@ -548,6 +541,11 @@ const quizCopy = {
             sourceDoneLabel: (pct) => `${pct} percent of this source completed`,
             sourceRepeatHint: "Questions from a source won't repeat until you finish all of it.",
 
+            typesLegend: 'Specialties',
+            typesAll: 'All specialties',
+            countLegend: 'How many questions',
+            timerLegend: 'Time',
+
             modeGroupLabel: 'Quiz mode',
             modeLegend: 'Quiz mode',
             modeStudy: 'Study mode',
@@ -555,19 +553,13 @@ const quizCopy = {
             modeExam: 'Exam mode',
             modeExamHint: 'No reveal — review your answers at the end',
 
-            quickStart: 'Quick start: 10 mixed questions',
             customCount: 'Custom number',
             questionsCount: (n) => `${n} questions`,
             finalQuiz: 'Final quiz',
 
-            typeTitle: 'Choose your question types',
-            bankLabel: 'Bank:',
             startQuiz: 'Start the quiz',
-            mixAll: 'Mix all types',
             cancel: 'Cancel',
 
-            timerTitle: 'Set the timer',
-            timerInfo: 'Pick how long you get, or “no timer” for unlimited time',
             noTimer: 'No timer',
             timerOptions: [
                 { label: '5 minutes', value: 5 },
@@ -577,14 +569,8 @@ const quizCopy = {
                 { label: 'Custom', value: 'custom' },
             ],
             customMinutesLabel: 'Custom length (minutes):',
-            backToTypes: 'Back to types',
 
-            customQuestionsTitle: 'Custom number of questions',
-            customQuestionsInfo: 'Enter how many questions you want (1–500)',
             customQuestionsLabel: 'Number of questions:',
-            customQuestionsPlaceholder: 'Enter a number',
-            orUseSlider: 'Or use the slider:',
-            continue: 'Continue',
 
             finalTypeTitle: 'Final quiz — choose the type',
             finalTypeDesc: 'A complete review of every question in the type you choose',
