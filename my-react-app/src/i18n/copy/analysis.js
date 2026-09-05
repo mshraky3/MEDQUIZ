@@ -114,8 +114,12 @@ const analysisCopy = {
             overviewHint: (topic) => `أداؤك في أسئلة ${topic}:`,
             total: 'إجمالي الأسئلة:',
             correct: 'إجابات صحيحة:',
-            accuracy: 'الدقة:',
-            avgTime: 'متوسط الوقت:',
+            accuracy: 'الدقة',
+            // Compact facts for the ledger row, where a label/value pair per
+            // number would be four rows of chrome for four numbers.
+            rowAnswered: (n) => `${n} سؤال`,
+            rowCorrect: (n) => `${n} صحيحة`,
+            rowAvgTime: (s) => `${s} ث/سؤال`,
         },
 
         lastQuiz: {
@@ -131,7 +135,13 @@ const analysisCopy = {
             avgPerQuestion: 'متوسط الوقت لكل سؤال:',
             seconds: (s) => `${s}ث`,
             notRecorded: 'غير مسجل',
-            topics: 'المواضيع:',
+            // Captions under each figure — no trailing colon, unlike the
+            // label/value pairs these replaced.
+            figQuestions: 'سؤال',
+            figCorrect: 'صحيحة',
+            figAccuracy: 'الدقة',
+            figDuration: 'المدة',
+            figPerQuestion: 'لكل سؤال',
             refresh: 'تحديث',
             noPrevious: 'لا يوجد اختبار سابق.',
         },
@@ -409,8 +419,12 @@ const analysisCopy = {
             overviewHint: (topic) => `How you do on ${topic} questions:`,
             total: 'Total questions:',
             correct: 'Correct answers:',
-            accuracy: 'Accuracy:',
-            avgTime: 'Average time:',
+            accuracy: 'Accuracy',
+            // Compact facts for the ledger row, where a label/value pair per
+            // number would be four rows of chrome for four numbers.
+            rowAnswered: (n) => `${n} answered`,
+            rowCorrect: (n) => `${n} correct`,
+            rowAvgTime: (s) => `${s}s per question`,
         },
 
         lastQuiz: {
@@ -426,7 +440,13 @@ const analysisCopy = {
             avgPerQuestion: 'Average time per question:',
             seconds: (s) => `${s}s`,
             notRecorded: 'Not recorded',
-            topics: 'Topics:',
+            // Captions under each figure — no trailing colon, unlike the
+            // label/value pairs these replaced.
+            figQuestions: 'Questions',
+            figCorrect: 'Correct',
+            figAccuracy: 'Accuracy',
+            figDuration: 'Duration',
+            figPerQuestion: 'Per question',
             refresh: 'Refresh',
             noPrevious: 'You have not taken a quiz yet.',
         },

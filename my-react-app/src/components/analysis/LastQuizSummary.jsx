@@ -4,102 +4,81 @@ import { getSourceLabel } from '../../utils/sourceLabels';
 import { useCopy, useLang } from '../../i18n';
 import analysisCopy from '../../i18n/copy/analysis.js';
 import { formatDuration } from '../../utils/formatDuration';
-import './analysisShared.css';
+import './analysisPanels.css';
 
+/**
+ * One quiz's numbers.
+ *
+ * Was a card carrying a centred blurb and six full-width pastel bars, inside a
+ * blurred panel, inside the drill that already names it. It is six figures, so
+ * it is laid out as six figures.
+ */
 const LastQuizSummary = ({ latest_quiz, onRefresh }) => {
     const t = useCopy(analysisCopy).lastQuiz;
     const { lang } = useLang();
 
+    if (!latest_quiz?.id) {
+        return <p className="ap-empty">{t.noPrevious}</p>;
+    }
+
+    const total = latest_quiz.total_questions ?? 0;
+    const correct = latest_quiz.correct_answers ?? 0;
+    const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
+    const topicsCovered = latest_quiz.topics_covered?.length > 0
+        ? latest_quiz.topics_covered.join('، ')
+        : null;
+
+    const figures = [
+        { k: 'total', value: total, label: t.figQuestions },
+        { k: 'correct', value: correct, label: t.figCorrect },
+        { k: 'accuracy', value: `${accuracy}%`, label: t.figAccuracy },
+        {
+            k: 'duration',
+            value: latest_quiz.duration > 0 ? formatDuration(latest_quiz.duration) : t.notRecorded,
+            label: t.figDuration,
+        },
+        {
+            k: 'per',
+            value: latest_quiz.avg_time_per_question > 0
+                ? t.seconds(parseFloat(latest_quiz.avg_time_per_question).toFixed(1))
+                : t.notRecorded,
+            label: t.figPerQuestion,
+        },
+    ];
+
     return (
-        <section className="streak-section">
-            <h3 className="section-header">{t.title}</h3>
-            {latest_quiz?.id ? (
-                <div className="questions-grid">
-                    <div className="question-card">
-                        <div className="question-header">
-                            <div className="question-meta">
-                                <span className="type-badge">
-                                    <Icon name="bar-chart" size={15} /> {t.badge}
-                                </span>
-                                <span className="source-badge">
-                                    <Icon name="book-open" size={15} /> {getSourceLabel(latest_quiz.source, lang)}
-                                </span>
-                                <span className="date-badge">
-                                    <Icon name="calendar" size={15} /> {t.dateBadge}
-                                </span>
-                            </div>
-                        </div>
+        <div className="ap-strip">
+            <div className="ap-strip-head">
+                <span className="ap-badge">
+                    <Icon name="book-open" size={14} /> {getSourceLabel(latest_quiz.source, lang)}
+                </span>
+                {topicsCovered && (
+                    <span className="ap-badge"><Icon name="book" size={14} /> {topicsCovered}</span>
+                )}
+                <span className={`ap-acc tone-${accuracy >= 75 ? 'high' : accuracy >= 50 ? 'mid' : 'low'}`}>
+                    <bdi>{accuracy}%</bdi>
+                </span>
+            </div>
 
-                        <div className="question-content">
-                            <div className="quiz-summary-text">
-                                <h4>{t.heading}</h4>
-                                <p>{t.hint}</p>
-                            </div>
-
-                            <div className="answers-section">
-                                <div className="answer-row">
-                                    <span className="answer-label primary">{t.total}</span>
-                                    <span className="answer-text primary">{latest_quiz.total_questions ?? 0}</span>
-                                </div>
-
-                                <div className="answer-row">
-                                    <span className="answer-label correct">{t.correct}</span>
-                                    <span className="answer-text correct">{latest_quiz.correct_answers ?? 0}</span>
-                                </div>
-
-                                <div className="answer-row">
-                                    <span className="answer-label accuracy">{t.accuracy}</span>
-                                    <span className="answer-text accuracy">
-                                        {latest_quiz.total_questions > 0
-                                            ? ((latest_quiz.correct_answers / latest_quiz.total_questions) * 100).toFixed(2)
-                                            : "0.00"
-                                        }%
-                                    </span>
-                                </div>
-
-                                <div className="answer-row">
-                                    <span className="answer-label time">{t.duration}</span>
-                                    <span className="answer-text time">
-                                        {latest_quiz.duration && latest_quiz.duration > 0
-                                            ? formatDuration(latest_quiz.duration)
-                                            : t.notRecorded}
-                                    </span>
-                                </div>
-
-                                <div className="answer-row">
-                                    <span className="answer-label time">{t.avgPerQuestion}</span>
-                                    <span className="answer-text time">
-                                        {latest_quiz.avg_time_per_question && latest_quiz.avg_time_per_question > 0
-                                            ? t.seconds(parseFloat(latest_quiz.avg_time_per_question).toFixed(1))
-                                            : t.notRecorded}
-                                    </span>
-                                </div>
-
-                                <div className="answer-row">
-                                    <span className="answer-label topics">{t.topics}</span>
-                                    <span className="answer-text topics">
-                                        {latest_quiz.topics_covered && latest_quiz.topics_covered.length > 0
-                                            ? latest_quiz.topics_covered.join(', ')
-                                            : 'mix'}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div className="question-actions">
-                                <button
-                                    onClick={onRefresh || (() => window.location.reload())}
-                                    className="see-more-button"
-                                >
-                                    <Icon name="refresh" size={15} /> {t.refresh}
-                                </button>
-                            </div>
-                        </div>
+            <div className="ap-figures">
+                {figures.map((f) => (
+                    <div className="ap-figure" key={f.k}>
+                        <b><bdi>{f.value}</bdi></b>
+                        <span>{f.label}</span>
                     </div>
-                </div>
-            ) : (
-                <p className="no-streak">{t.noPrevious}</p>
-            )}
-        </section>
+                ))}
+            </div>
+
+            <div className="ap-strip-foot">
+                <button
+                    type="button"
+                    className="ap-more"
+                    onClick={onRefresh || (() => window.location.reload())}
+                >
+                    <Icon name="refresh" size={14} /> {t.refresh}
+                </button>
+            </div>
+        </div>
     );
 };
 

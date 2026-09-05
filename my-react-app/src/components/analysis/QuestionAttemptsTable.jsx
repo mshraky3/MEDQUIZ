@@ -5,7 +5,7 @@ import { getSourceLabel } from '../../utils/sourceLabels';
 import { getTypeLabel } from '../../utils/typeLabels';
 import { useCopy, useLang } from '../../i18n';
 import analysisCopy from '../../i18n/copy/analysis.js';
-import './analysisShared.css';
+import './analysisPanels.css';
 
 /**
  * questionAttempts is already scoped to one quiz session and carries its own
@@ -13,6 +13,9 @@ import './analysisShared.css';
  * explanation) joined in server-side — see GET /question-attempts/session/:id.
  * This used to cross-reference a separately-fetched full question bank
  * (/api/all-questions, ~5,000 rows) just to label a handful of attempts.
+ *
+ * Cards are the right shape here — each one is a separate question to read —
+ * they only needed to stop being translucent panels inside translucent panels.
  */
 const QuestionAttemptsTable = ({ questionAttempts }) => {
     const t = useCopy(analysisCopy).attempts;
@@ -29,78 +32,72 @@ const QuestionAttemptsTable = ({ questionAttempts }) => {
         setShowAll(prev => !prev);
     }, []);
 
+    if (attempts.length === 0) {
+        return (
+            <>
+                <h4 className="ap-title">{t.title}</h4>
+                <p className="ap-empty">{t.empty}</p>
+            </>
+        );
+    }
+
     return (
-        <section className="streak-section">
-            <h3 className="section-header">{t.title}</h3>
+        <>
+            {/* Kept, unlike the other panels' headings: this drill holds two
+                blocks, so they have to be told apart. */}
+            <h4 className="ap-title">{t.title}</h4>
 
-            {attempts.length > 0 ? (
-                <>
-                    <div className="questions-grid">
-                        {displayedAttempts.map((attempt, index) => {
-                            const questionText = attempt.question_text || t.unknownQuestion;
-                            const correctAnswer = attempt.correct_option || '—';
-                            const questionSource = getSourceLabel(attempt.source, lang);
-                            const questionType = attempt.question_type
-                                ? getTypeLabel(attempt.question_type, lang)
-                                : '';
-                            const isCorrect = attempt.is_correct;
-                            return (
-                                <div key={attempt.id || index} className="question-card">
-                                    <div className="question-header">
-                                        <div className="question-meta">
-                                            <span className="type-badge">
-                                                <Icon name="book" size={15} /> {questionType}
-                                            </span>
-                                            <span className="source-badge">
-                                                <Icon name="book-open" size={15} /> {questionSource}
-                                            </span>
-                                            <span className={`result-badge ${isCorrect ? 'correct' : 'wrong'}`}>
-                                                {isCorrect ? <><Icon name="check-circle" size={13} /> {t.correct}</> : <><Icon name="x-circle" size={13} /> {t.wrong}</>}
-                                            </span>
-                                        </div>
+            <div className="ap-reviews">
+                {displayedAttempts.map((attempt, index) => {
+                    const isCorrect = attempt.is_correct;
+                    return (
+                        <article key={attempt.id || index} className="ap-review">
+                            <div className="ap-review-head">
+                                {attempt.question_type && (
+                                    <span className="ap-badge">
+                                        <Icon name="book" size={14} /> {getTypeLabel(attempt.question_type, lang)}
+                                    </span>
+                                )}
+                                <span className="ap-badge">
+                                    <Icon name="book-open" size={14} /> {getSourceLabel(attempt.source, lang)}
+                                </span>
+                                <span className={`ap-result ${isCorrect ? 'is-correct' : 'is-wrong'}`}>
+                                    <Icon name={isCorrect ? 'check-circle' : 'x-circle'} size={13} />
+                                    {isCorrect ? t.correct : t.wrong}
+                                </span>
+                            </div>
+
+                            <div className="ap-review-body">
+                                <p className="ap-question">{attempt.question_text || t.unknownQuestion}</p>
+
+                                <div className="ap-answers">
+                                    <div className={`ap-answer ${isCorrect ? 'is-correct' : 'is-wrong'}`}>
+                                        <span className="ap-answer-label">{t.yourAnswer}</span>
+                                        <span className="ap-answer-value">{attempt.selected_option}</span>
                                     </div>
-
-                                    <div className="question-content">
-                                        <div className="question-text">
-                                            {questionText}
+                                    {!isCorrect && (
+                                        <div className="ap-answer is-correct">
+                                            <span className="ap-answer-label">{t.correctAnswer}</span>
+                                            <span className="ap-answer-value">{attempt.correct_option || '—'}</span>
                                         </div>
-
-                                        <div className="answers-section">
-                                            <div className="answer-row">
-                                                <span className="answer-label wrong">{t.yourAnswer}</span>
-                                                <span className={`answer-text ${isCorrect ? 'correct' : 'wrong'}`}>
-                                                    {attempt.selected_option}
-                                                </span>
-                                            </div>
-                                            <div className="answer-row">
-                                                <span className="answer-label correct">{t.correctAnswer}</span>
-                                                <span className="answer-text correct">{correctAnswer}</span>
-                                            </div>
-                                        </div>
-
-                                        <ExplanationPanel explanation={attempt.explanation} />
-                                    </div>
+                                    )}
                                 </div>
-                            );
-                        })}
-                    </div>
 
-                    {attempts.length > 5 && (
-                        <div className="see-all-container">
-                            <button
-                                onClick={toggleShowAll}
-                                className="see-all-button"
-                            >
-                                {showAll ? t.showLess : t.showAll(attempts.length)}
-                            </button>
-                        </div>
-                    )}
-                </>
-            ) : (
-                <p className="no-streak">{t.empty}</p>
+                                <ExplanationPanel explanation={attempt.explanation} />
+                            </div>
+                        </article>
+                    );
+                })}
+            </div>
+
+            {attempts.length > 5 && (
+                <div className="ap-more-wrap">
+                    <button type="button" onClick={toggleShowAll} className="ap-more">
+                        {showAll ? t.showLess : t.showAll(attempts.length)}
+                    </button>
+                </div>
             )}
-
-        </section>
+        </>
     );
 };
 

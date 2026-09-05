@@ -18,6 +18,10 @@ import { readQuizMode } from '../../utils/quizMode.js';
 import { useCopy, useLang } from '../../i18n';
 import analysisCopy from '../../i18n/copy/analysis.js';
 import './Analysis.css';
+// The drill contents' own stylesheet. Imported here too because this file
+// renders the best/needs-work pair with the same classes, and used to get
+// them by accident through whichever sub-component happened to load first.
+import './analysisPanels.css';
 
 // Every quiz-start call site in the app (QUIZS.jsx, QuizLauncher.jsx) uses
 // this same sentinel for "the unified bank, no specific monthly collection" —
@@ -316,29 +320,23 @@ const Analysis = () => {
         <CollapsibleSection title={t.drill.overview} icon="bar-chart" defaultOpen>
           <OverallStats userAnalysis={userAnalysis} />
           {(best || worst) && (
-            <div className="questions-grid an-bestworst-grid">
-              {best && (
-                <div className="question-card">
-                  <div className="question-header">
-                    <span className="type-badge tone-high"><Icon name="trophy" size={14} /> {t.bestWorst.best}</span>
+            <div className="ap-grid an-bestworst-grid">
+              {[
+                best && { k: 'best', icon: 'trophy', label: t.bestWorst.best, row: best },
+                worst && { k: 'worst', icon: 'trending-down', label: t.bestWorst.needsWork, row: worst },
+              ].filter(Boolean).map(({ k, icon, label, row }) => (
+                <div className="ap-card" key={k}>
+                  <div className="ap-card-head">
+                    <span className="ap-badge"><Icon name={icon} size={14} /> {label}</span>
+                    <span className={`ap-acc tone-${accuracyTone(row.accuracy)}`}>
+                      <bdi>{row.accuracy.toFixed(0)}%</bdi>
+                    </span>
                   </div>
-                  <div className="question-content">
-                    <p className="topic-performance-text">{getTypeLabel(best.question_type, lang)}</p>
-                    <span className={`an-stat-value tone-${accuracyTone(best.accuracy)}`}>{best.accuracy.toFixed(0)}%</span>
-                  </div>
-                </div>
-              )}
-              {worst && (
-                <div className="question-card">
-                  <div className="question-header">
-                    <span className="type-badge tone-low"><Icon name="trending-down" size={14} /> {t.bestWorst.needsWork}</span>
-                  </div>
-                  <div className="question-content">
-                    <p className="topic-performance-text">{getTypeLabel(worst.question_type, lang)}</p>
-                    <span className={`an-stat-value tone-${accuracyTone(worst.accuracy)}`}>{worst.accuracy.toFixed(0)}%</span>
+                  <div className="ap-card-body">
+                    <p className="ap-highlight">{getTypeLabel(row.question_type, lang)}</p>
                   </div>
                 </div>
-              )}
+              ))}
             </div>
           )}
         </CollapsibleSection>

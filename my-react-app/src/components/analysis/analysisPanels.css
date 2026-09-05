@@ -1,0 +1,413 @@
+/*
+ * The contents of /analysis's collapsible drills — OverallStats,
+ * TopicAnalysisTable, LastQuizSummary and QuestionAttemptsTable.
+ *
+ * These four used to render out of analysisShared.css, which is the page's
+ * dark-glassmorphism era: near-black fills at 4-15% opacity plus backdrop
+ * blur, shadows up to `0 25px 80px rgba(15,23,42,.35)`, and label/value pairs
+ * drawn as full-width pastel bars. On this page's opaque white shell that
+ * stacked four nested grey panels around a single number, and two of the
+ * pastel colours (#fbbf24 labels, #c4b5fd values) were barely legible on a
+ * light background at all.
+ *
+ * analysisShared.css is deliberately NOT edited: WrongQuestions and the other
+ * drills still render its `.question-card` / `.answer-text.correct|wrong`
+ * family for real right/wrong indication, and this page has already been burnt
+ * once by shared-class collisions (DESIGN_AUDIT_2026-08-25.md, A1). These are
+ * their own `.ap-*` classes on their own file instead.
+ *
+ * Tokens and logical properties throughout; RTL is the default direction.
+ */
+
+/* A quiet subheading, used only where one drill holds two distinct blocks.
+   Where a block is the only thing in its drill it carries no heading at all —
+   the drill's own toggle already names it, and the old `.section-header`
+   (1.8rem, centred, gradient underline, glow) repeated that name a second
+   time directly underneath it. */
+.ap-title {
+    margin: 0 0 10px;
+    font-size: var(--text-sm, 0.9rem);
+    font-weight: 800;
+    color: var(--text-dark, #0f1e3d);
+}
+
+.ap-empty {
+    margin: 0;
+    padding: 22px 16px;
+    border-radius: var(--radius-md, 12px);
+    background: var(--surface-2, #f5f8fd);
+    color: var(--text-light, #5b6779);
+    font-size: var(--text-sm, 0.875rem);
+    line-height: 1.7;
+    text-align: center;
+}
+
+/* ------------------------------------------------------------- badges --- */
+/* One neutral badge. They used to be a navy gradient (type), a blue gradient
+   (source) and a purple gradient (date) — three different fills for three
+   labels that are all just "what this is". */
+
+.ap-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 11px;
+    border-radius: 999px;
+    background: var(--surface-2, #f5f8fd);
+    border: 1px solid var(--border-color, #d4deee);
+    color: var(--text-medium, #475569);
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.ap-badge svg { color: var(--primary-color, #2563eb); flex-shrink: 0; }
+
+/* Accuracy is the one number that earns colour, on the same ramp Analysis.jsx
+   already uses for the hero card's tone-high/mid/low. */
+.ap-acc {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 11px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.ap-acc.tone-high { background: var(--accuracy-high-bg); color: var(--accuracy-high); }
+.ap-acc.tone-mid { background: var(--accuracy-mid-bg); color: var(--accuracy-mid); }
+.ap-acc.tone-low { background: var(--accuracy-low-bg); color: var(--accuracy-low); }
+.ap-acc.tone-neutral { background: var(--surface-2, #f5f8fd); color: var(--text-light, #5b6779); }
+
+/* -------------------------------------------------------------- cards --- */
+/* Used by OverallStats, where each card really is a separate entity (the
+   headline figures, then one card per source). */
+
+.ap-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
+    align-items: start;
+    gap: 14px;
+}
+
+.ap-card {
+    background: var(--surface, #fff);
+    border: 1px solid var(--border-color, #d4deee);
+    border-radius: var(--radius-lg, 16px);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+.ap-card-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2, 8px);
+    padding: 12px 14px;
+    background: var(--surface-tint, #e1eafb);
+    border-bottom: 1px solid var(--border-color, #d4deee);
+}
+
+.ap-card-body { padding: 8px 14px 14px; }
+
+/* A card whose whole body is one named thing — the best/needs-work pair. */
+.ap-highlight {
+    margin: 6px 0;
+    font-size: var(--text-base, 1rem);
+    font-weight: 800;
+    color: var(--text-dark, #0f1e3d);
+}
+
+/* Label/value pairs as plain rows on a hairline, not as stacked pastel bars
+   inside a tinted panel inside a tinted card. */
+.ap-stats { display: flex; flex-direction: column; }
+
+.ap-stat {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 0;
+}
+
+.ap-stat + .ap-stat { box-shadow: inset 0 1px 0 var(--border-light, #e6ecf7); }
+
+.ap-stat-label {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-light, #5b6779);
+}
+
+.ap-stat-value {
+    font-size: 13.5px;
+    font-weight: 800;
+    color: var(--text-dark, #0f1e3d);
+    font-variant-numeric: tabular-nums;
+    text-align: end;
+}
+
+/* ------------------------------------------------------------- ledger --- */
+/* Per-specialty performance. Was a grid of cards, each repeating the same
+   blurb ("Overview / how you do on X questions") above four pastel bars — for
+   data whose entire point is comparing specialties against each other, which
+   is what rows on a shared baseline do and cards do not. Matches the hub's
+   specialty ledger, so the two pages read as one product. */
+
+.ap-rows { list-style: none; margin: 0; padding: 0; }
+
+.ap-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 8px 14px;
+    padding: 13px 12px;
+    border-radius: var(--radius-md, 12px);
+    transition: background var(--transition-fast);
+}
+
+.ap-row + .ap-row { box-shadow: inset 0 1px 0 var(--border-light, #e6ecf7); }
+.ap-row:hover { background: var(--surface-2, #f5f8fd); }
+
+.ap-row-name {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+    font-size: var(--text-sm, 0.875rem);
+    font-weight: 800;
+    color: var(--text-dark, #0f1e3d);
+}
+
+.ap-row-icon {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    background: var(--surface-tint, #e1eafb);
+    color: var(--primary-dark, #1d4ed8);
+    flex-shrink: 0;
+}
+
+.ap-row-facts {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    font-size: var(--text-xs, 0.75rem);
+    font-weight: 700;
+    color: var(--text-light, #5b6779);
+    font-variant-numeric: tabular-nums;
+}
+
+.ap-row-facts b { color: var(--text-dark, #0f1e3d); font-weight: 800; }
+
+/* Phone: name and accuracy share the top line, the facts wrap underneath.
+   Placed explicitly because the DOM order (name, facts, accuracy) is the
+   desktop reading order, not this one. */
+.ap-row .ap-row-name { grid-row: 1; grid-column: 1; }
+.ap-row .ap-acc { grid-row: 1; grid-column: 2; justify-self: end; }
+
+@media (min-width: 640px) {
+    .ap-row { grid-template-columns: minmax(150px, auto) 1fr auto; }
+    .ap-row-facts { grid-column: auto; justify-content: flex-start; }
+
+    .ap-row .ap-row-name,
+    .ap-row .ap-acc {
+        grid-row: auto;
+        grid-column: auto;
+    }
+}
+
+/* --------------------------------------------------------- stat strip --- */
+/* One quiz's numbers. Was a single card carrying a centred blurb and six
+   pastel bars; it is six figures, so it is laid out as six figures. */
+
+.ap-strip {
+    background: var(--surface, #fff);
+    border: 1px solid var(--border-color, #d4deee);
+    border-radius: var(--radius-lg, 16px);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+.ap-strip-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 14px;
+    background: var(--surface-tint, #e1eafb);
+    border-bottom: 1px solid var(--border-color, #d4deee);
+}
+
+.ap-figures {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+    gap: 2px;
+    padding: 2px;
+    background: var(--border-light, #e6ecf7);
+}
+
+.ap-figure {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 14px 10px;
+    background: var(--surface, #fff);
+    text-align: center;
+}
+
+.ap-figure b {
+    font-size: 1.15rem;
+    font-weight: 800;
+    line-height: 1.1;
+    color: var(--text-dark, #0f1e3d);
+    font-variant-numeric: tabular-nums;
+}
+
+.ap-figure span {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-light, #5b6779);
+}
+
+.ap-strip-foot {
+    display: flex;
+    justify-content: flex-end;
+    padding: 12px 14px;
+}
+
+/* ------------------------------------------------------------ reviews --- */
+/* One card per answered question. Cards are right here — each is a separate
+   thing to read — they just needed to stop being translucent. */
+
+.ap-reviews { display: flex; flex-direction: column; gap: 12px; }
+
+.ap-review {
+    background: var(--surface, #fff);
+    border: 1px solid var(--border-color, #d4deee);
+    border-radius: var(--radius-lg, 16px);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+.ap-review-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 14px;
+    background: var(--surface-2, #f5f8fd);
+    border-bottom: 1px solid var(--border-light, #e6ecf7);
+}
+
+.ap-result {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-inline-start: auto;
+    padding: 4px 11px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.ap-result.is-correct { background: var(--accuracy-high-bg); color: var(--accuracy-high); }
+.ap-result.is-wrong { background: var(--accuracy-low-bg); color: var(--accuracy-low); }
+
+.ap-review-body { padding: 14px; }
+
+/* Exam material reads LTR whatever direction the page is in — the same rule
+   QUIZ.css states for the stem and options. */
+.ap-question {
+    margin-bottom: 12px;
+    padding: 11px 13px;
+    border-radius: var(--radius-md, 12px);
+    background: var(--surface-2, #f5f8fd);
+    border-inline-start: 3px solid var(--primary-color, #2563eb);
+    direction: ltr;
+    text-align: left;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-dark, #0f1e3d);
+    word-wrap: break-word;
+}
+
+.ap-answers { display: flex; flex-direction: column; gap: 8px; }
+
+.ap-answer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 12px;
+    border-radius: var(--radius-sm, 8px);
+    background: var(--surface-2, #f5f8fd);
+    border: 1px solid var(--border-light, #e6ecf7);
+}
+
+.ap-answer-label {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--text-light, #5b6779);
+    flex-shrink: 0;
+}
+
+.ap-answer-value {
+    font-size: 13.5px;
+    font-weight: 800;
+    color: var(--text-dark, #0f1e3d);
+    direction: ltr;
+    text-align: end;
+    word-break: break-word;
+}
+
+.ap-answer.is-correct { background: var(--accuracy-high-bg); border-color: transparent; }
+.ap-answer.is-correct .ap-answer-value { color: var(--accuracy-high); }
+.ap-answer.is-wrong { background: var(--accuracy-low-bg); border-color: transparent; }
+.ap-answer.is-wrong .ap-answer-value { color: var(--accuracy-low); }
+
+/* ------------------------------------------------------------ actions --- */
+
+.ap-more {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 40px;
+    padding: 8px 18px;
+    border: 1.5px solid var(--border-color, #d4deee);
+    border-radius: 999px;
+    background: var(--surface, #fff);
+    color: var(--primary-dark, #1d4ed8);
+    font-family: inherit;
+    font-size: var(--text-xs, 0.8rem);
+    font-weight: 700;
+    cursor: pointer;
+    transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.ap-more:hover {
+    background: var(--primary-color, #2563eb);
+    border-color: var(--primary-color, #2563eb);
+    color: #fff;
+}
+
+.ap-more:focus-visible {
+    outline: 3px solid var(--primary-light, #3b82f6);
+    outline-offset: 2px;
+}
+
+.ap-more-wrap { display: flex; justify-content: center; margin-top: 14px; }
+
+@media (prefers-reduced-motion: reduce) {
+    .ap-row,
+    .ap-more { transition: none; }
+}

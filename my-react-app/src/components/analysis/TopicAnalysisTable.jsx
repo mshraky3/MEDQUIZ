@@ -1,85 +1,69 @@
 import React from 'react';
 import Icon from '../common/Icon.jsx';
 import { getTypeLabel } from '../../utils/typeLabels';
+import { TRACK_KEYS, specialtiesOf } from '../../utils/tracks.js';
 import { useCopy, useLang } from '../../i18n';
 import analysisCopy from '../../i18n/copy/analysis.js';
-import './analysisShared.css';
+import './analysisPanels.css';
 
+// Specialty keys never overlap between tracks, so one flat lookup covers both
+// and this component does not need to know which track it is rendering.
+const ICON_BY_TYPE = TRACK_KEYS.reduce((acc, track) => {
+  specialtiesOf(track).forEach(({ key, icon }) => { acc[key] = icon; });
+  return acc;
+}, {});
+
+const tone = (pct) => (pct >= 75 ? 'high' : pct >= 50 ? 'mid' : 'low');
+
+/**
+ * Per-specialty performance.
+ *
+ * Was a grid of cards, each one repeating the same blurb ("Performance
+ * overview / how you do on X questions") above four full-width pastel bars —
+ * for data whose whole purpose is comparing specialties against each other,
+ * which rows on a shared baseline do and separate cards do not.
+ */
 const TopicAnalysisTable = ({ topicAnalysis, topics }) => {
   const t = useCopy(analysisCopy).topics;
   const { lang } = useLang();
   // Use topics prop if available (for trial), otherwise use topicAnalysis (for normal accounts)
   const data = topics || topicAnalysis;
 
-  // Add error handling for undefined or null data
   if (!data || !Array.isArray(data) || data.length === 0) {
-    return (
-      <section className="streak-section">
-        <h3 className="section-header">{t.title}</h3>
-        <p className="no-streak">{t.empty}</p>
-      </section>
-    );
+    return <p className="ap-empty">{t.empty}</p>;
   }
 
   return (
-    <section className="streak-section">
-      <h3 className="section-header">{t.title}</h3>
-      <div className="questions-grid">
-        {data.map((topic, index) => {
-          const accuracy = parseFloat(
-            ((topic.total_correct / topic.total_answered) * 100 || 0).toFixed(2)
-          );
-          return (
-            <div key={index} className="question-card">
-              <div className="question-header">
-                <div className="question-meta">
-                  <span className="type-badge">
-                    <Icon name="book" size={15} /> {getTypeLabel(topic.question_type, lang)}
-                  </span>
-                  <span className="accuracy-badge" style={{
-                    background: accuracy >= 80 ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' :
-                      accuracy >= 60 ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' :
-                        'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-                    color: 'white'
-                  }}>
-                    <Icon name="bar-chart" size={15} /> {accuracy}%
-                  </span>
-                </div>
-              </div>
+    <ul className="ap-rows">
+      {data.map((topic, index) => {
+        const answered = Number(topic.total_answered) || 0;
+        const correct = Number(topic.total_correct) || 0;
+        const accuracy = answered > 0 ? Math.round((correct / answered) * 100) : 0;
+        const label = getTypeLabel(topic.question_type, lang);
+        return (
+          <li key={index} className="ap-row">
+            <span className="ap-row-name">
+              <span className="ap-row-icon" aria-hidden="true">
+                <Icon name={ICON_BY_TYPE[topic.question_type] || 'book'} size={16} />
+              </span>
+              {label}
+            </span>
 
-              <div className="question-content">
-                <div className="topic-performance-text">
-                  <h4>{t.overview}</h4>
-                  <p>{t.overviewHint(getTypeLabel(topic.question_type, lang))}</p>
-                </div>
+            <span className="ap-row-facts">
+              <span>{t.rowAnswered(answered)}</span>
+              <span>{t.rowCorrect(correct)}</span>
+              {topic.avg_time > 0 && (
+                <span>{t.rowAvgTime(parseFloat(topic.avg_time).toFixed(1))}</span>
+              )}
+            </span>
 
-                <div className="answers-section">
-                  <div className="answer-row">
-                    <span className="answer-label primary">{t.total}</span>
-                    <span className="answer-text primary">{topic.total_answered}</span>
-                  </div>
-
-                  <div className="answer-row">
-                    <span className="answer-label correct">{t.correct}</span>
-                    <span className="answer-text correct">{topic.total_correct}</span>
-                  </div>
-
-                  <div className="answer-row">
-                    <span className="answer-label accuracy">{t.accuracy}</span>
-                    <span className="answer-text accuracy">{accuracy}%</span>
-                  </div>
-
-                  <div className="answer-row">
-                    <span className="answer-label time">{t.avgTime}</span>
-                    <span className="answer-text time">{parseFloat(topic.avg_time || 0).toFixed(2)}s</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </section>
+            <span className={`ap-acc tone-${tone(accuracy)}`} aria-label={`${t.accuracy} ${accuracy}%`}>
+              <bdi>{accuracy}%</bdi>
+            </span>
+          </li>
+        );
+      })}
+    </ul>
   );
 };
 
