@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+import React, { lazy, Suspense, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCommon, useCopy, useLang } from '../../i18n';
 import faqCopy from '../../i18n/copy/faq.js';
 import './FAQ.css';
+
+// Lazy: the animated walkthrough (and its CSS) should only cost anyone who
+// actually opens this one FAQ item, not every visitor to the page.
+const InstallShowcase = lazy(() => import('../common/InstallShowcase.jsx'));
 
 const FAQ = () => {
     const [openIndex, setOpenIndex] = useState(null);
@@ -47,6 +51,14 @@ const FAQ = () => {
                                     {faq.answer.split('\n').map((line, i) => (
                                         <p key={i}>{line}</p>
                                     ))}
+                                    {/* The animated "add to home screen" walkthrough,
+                                        moved here from the landing page — it only
+                                        mounts once this item is actually opened. */}
+                                    {faq.richContent === 'install' && (
+                                        <Suspense fallback={null}>
+                                            <InstallShowcase />
+                                        </Suspense>
+                                    )}
                                 </div>
                             )}
                         </div>

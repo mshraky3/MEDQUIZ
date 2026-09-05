@@ -1,28 +1,17 @@
-import React, { lazy, Suspense, useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { safeTrack, trackFunnel, captureLandingAttribution } from '../../utils/analytics.js';
 import Icon from '../common/Icon.jsx';
 import HeroArt from './HeroArt.jsx';
 import ExamCountdown from './ExamCountdown.jsx';
 import InstallPrompt from '../common/InstallPrompt.jsx';
+import { Reveal } from './useScrollReveal.jsx';
 import Globals from '../../global.js';
 import { UserContext } from '../../UserContext';
 import { TRACKS, MEDICAL, NURSING, pick } from '../../utils/tracks.js';
 import { useCopy, useLang, LanguageToggle, LocaleLink as Link, formatNumber, formatDate } from '../../i18n';
 import landingCopy from '../../i18n/copy/landing.js';
-// The guide titles/excerpts shown in the study-guides band. Read from the
-// guides copy rather than restated in landing.js, so this band, the /guides
-// hub and the prerendered HTML in src/seo all render the same five titles.
-import guidesCopy from '../../i18n/copy/guides.js';
 import './Landing.css';
-
-// Below the hero, a scroll-triggered animation (see its own file), so it
-// doesn't need to be ready for first paint. Landing.jsx is eager (it's the
-// LCP route, per main.jsx) and previously imported this statically — which
-// meant InstallShowcase.css rode along in the ONE eager CSS bundle every
-// route downloads, including a visitor going straight to /login who never
-// sees this page at all.
-const InstallShowcase = lazy(() => import('../common/InstallShowcase.jsx'));
 
 /**
  * The worked example inside the explanations section — a shortened but
@@ -72,7 +61,6 @@ const Landing = () => {
   const navigate = useNavigate();
   const { user, sessionToken, logout } = useContext(UserContext);
   const t = useCopy(landingCopy);
-  const guidesHub = useCopy(guidesCopy).hub;
   const { lang, dir } = useLang();
 
   /**
@@ -103,6 +91,16 @@ const Landing = () => {
       specialties: TRACKS[NURSING].specialties.map((sp) => pick(sp.label, lang)),
       ready: true,
     },
+  ];
+
+  // The three columns of the "why SQB" comparison, rendered as cards rather
+  // than a table. Icons only — the actual comparison values stay in
+  // landing.js's compare.rows, keyed sqb/files/courses same as before, so no
+  // copy restructuring was needed for the numbers themselves.
+  const compareColumns = [
+    { key: 'sqb', label: t.compare.colSqb, icon: 'sparkles', badge: t.compare.badge },
+    { key: 'files', label: t.compare.colFiles, icon: 'folder' },
+    { key: 'courses', label: t.compare.colCourses, icon: 'users' },
   ];
 
   // First-touch attribution — fires once per browser ever, not on every visit.
@@ -142,9 +140,10 @@ const Landing = () => {
     ? String(user.username).split('@')[0].split(/[ _.]/).filter(Boolean)[0] || ''
     : '';
 
-  // `placement` differentiates the 4 signup CTAs (hero / price card / CTA
-  // band / mobile bar), which previously all fired the exact same event with
-  // the exact same payload — making it impossible to tell which one converts.
+  // `placement` differentiates the signup CTAs (hero / tracks cards / price
+  // card / CTA band / mobile bar), which previously all fired the exact same
+  // event with the exact same payload — making it impossible to tell which
+  // one converts.
   const trackSignupClick = (placement) => {
     trackFunnel('landing_cta_signup_click', { placement });
   };
@@ -266,9 +265,10 @@ const Landing = () => {
         <div className="landing-shell">
 
           {/* Two tracks, one platform. Placed high on the page so a nursing
-              student knows within seconds whether this is for them — and,
-              just as importantly, what the current state of their content is. */}
-          <section className="tracks-section" aria-labelledby="tracks-h">
+              student knows within seconds whether this is for them — and each
+              card is now its own conversion point, not just a description,
+              since the two tracks lead to different accounts. */}
+          <Reveal as="section" className="tracks-section" aria-labelledby="tracks-h">
             <div className="section-head">
               <p className="pill subtle">{t.tracks.pill}</p>
               <h2 id="tracks-h">{t.tracks.title}</h2>
@@ -292,29 +292,77 @@ const Landing = () => {
                     {st.specialties.map((sp) => <li key={sp}>{sp}</li>)}
                   </ul>
                   {!st.ready && <p className="track-tile-note">{t.tracks.soonNote}</p>}
+                  {/* Pre-selects this track at signup and skips the picker
+                      modal there — clicking here already was the deliberate
+                      choice that modal exists to force. See Signup.jsx. */}
+                  {!isAuthenticated && (
+                    <Link
+                      to={`/signup?track=${st.key}`}
+                      className="btn primary track-tile-cta"
+                      onClick={() => trackSignupClick(`tracks_${st.key}`)}
+                    >
+                      {t.tracks.cardCta(st.title)}
+                    </Link>
+                  )}
                 </article>
               ))}
             </div>
 
-            {/* The section that makes someone decide "this is for me" is the
-                one that has to let them act on it — previously the nearest
-                signup button was two screens further down. */}
+            {!isAuthenticated && (
+              <p className="section-cta-note tracks-note">{t.tracks.ctaNote}</p>
+            )}
+          </Reveal>
+
+          {/* Moved directly after the tracks pick: the strongest objection a
+              visitor has right after "which track is mine" is "why not just
+              use free files", so it gets answered next, before anything else
+              is asked of them. */}
+          <Reveal as="section" className="compare-section" aria-label={t.compare.sectionLabel}>
+            <div className="section-head">
+              <p className="pill subtle">{t.compare.pill}</p>
+              <h2>{t.compare.title}</h2>
+              <p>{t.compare.body}</p>
+            </div>
+            <div className="compare-cards">
+              {compareColumns.map((col) => (
+                <article key={col.key} className={`compare-card${col.key === 'sqb' ? ' is-featured' : ''}`}>
+                  <div className="compare-card-head">
+                    <span className="compare-card-icon" aria-hidden="true"><Icon name={col.icon} size={20} /></span>
+                    <h3>{col.label}</h3>
+                    {col.badge && <span className="compare-card-badge">{col.badge}</span>}
+                  </div>
+                  <ul className="compare-card-list">
+                    {t.compare.rows.map((row) => (
+                      <li key={row.label}>
+                        <span className="compare-card-row-label">
+                          {col.key === 'sqb' && <Icon name="check-circle" size={13} aria-hidden="true" />}
+                          {row.label}
+                        </span>
+                        <span className="compare-card-row-value">{row[col.key]}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+              ))}
+            </div>
+
+            {/* Same reasoning as the tracks CTA: a comparison is a decision
+                moment, and a decision moment needs a button. */}
             {!isAuthenticated && (
               <div className="section-cta">
-                <Link to="/signup" className="btn primary" onClick={() => trackSignupClick('tracks')}>
-                  {t.tracks.cta}
+                <Link to="/signup" className="btn primary" onClick={() => trackSignupClick('compare')}>
+                  {t.compare.cta}
                 </Link>
-                <p className="section-cta-note">{t.tracks.ctaNote}</p>
+                <p className="section-cta-note">{t.compare.ctaNote}</p>
               </div>
             )}
-          </section>
+          </Reveal>
 
-          {/* Explanations get a section of their own, and it sits above the
-              comparison table on purpose: it is the single thing this bank has
-              that the free PDF collections passed around in group chats do not,
-              so it is the strongest argument on the page and has to be made
-              before the price is. */}
-          <section className="explain-section" aria-label={t.explain.sectionLabel}>
+          {/* Explanations get a section of their own — the single thing this
+              bank has that the free PDF collections passed around in group
+              chats do not, so it is made right after the comparison names the
+              gap, while the reader is already thinking about it. */}
+          <Reveal as="section" className="explain-section" aria-label={t.explain.sectionLabel}>
             <div className="section-head">
               <p className="pill subtle">{t.explain.pill}</p>
               <h2>{t.explain.title}</h2>
@@ -365,68 +413,60 @@ const Landing = () => {
                 <p className="section-cta-note">{t.explain.ctaNote}</p>
               </div>
             )}
-          </section>
+          </Reveal>
 
-          <section className="compare-section" aria-label={t.compare.sectionLabel}>
-            <div className="section-head">
-              <p className="pill subtle">{t.compare.pill}</p>
-              <h2>{t.compare.title}</h2>
-              <p>{t.compare.body}</p>
-            </div>
-            <div className="compare-scroll" role="region" aria-label={t.compare.tableLabel} tabIndex="0">
-              <table className="compare-table">
-                <thead>
-                  <tr>
-                    <th scope="col">{t.compare.colAspect}</th>
-                    <th scope="col" className="compare-sqb-col">
-                      {t.compare.colSqb} <span className="compare-badge">{t.compare.badge}</span>
-                    </th>
-                    <th scope="col">{t.compare.colFiles}</th>
-                    <th scope="col">{t.compare.colCourses}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {t.compare.rows.map((row) => (
-                    <tr key={row.label}>
-                      <th scope="row">{row.label}</th>
-                      <td className="compare-sqb-col"><Icon name="check-circle" size={16} aria-hidden="true" /> {row.sqb}</td>
-                      <td>{row.files}</td>
-                      <td>{row.courses}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <p className="compare-hint" aria-hidden="true">{t.compare.hint}</p>
-
-            {/* Same reasoning as the tracks CTA: a comparison table is a
-                decision moment, and a decision moment needs a button. */}
-            {!isAuthenticated && (
-              <div className="section-cta">
-                <Link to="/signup" className="btn primary" onClick={() => trackSignupClick('compare')}>
-                  {t.compare.cta}
-                </Link>
-                <p className="section-cta-note">{t.compare.ctaNote}</p>
+          {/* How easy it is to actually start, placed right before the price
+              — "here's how simple this is" immediately ahead of "here's what
+              it costs" reads as a much shorter step than it did further up
+              the page, before pricing. */}
+          <Reveal as="section" className="flow-section">
+            <div className="flow-card">
+              <div className="flow-head">
+                <p className="pill subtle">{t.flow.pill}</p>
+                <h2>{t.flow.title}</h2>
+                <p>{t.flow.body}</p>
               </div>
-            )}
-          </section>
+              <div className="steps">
+                {t.flow.steps.map((step, index) => (
+                  <div key={step.label} className="step">
+                    <div className="step-index">0{index + 1}</div>
+                    <div>
+                      <h4>{step.label}</h4>
+                      <p>{step.hint}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
 
-          <section className="value-section" aria-label={t.value.sectionLabel}>
+              {/* Step 1 of the flow is "create your account" — so step 1 is
+                  reachable from the card that describes it. */}
+              {!isAuthenticated && (
+                <div className="section-cta">
+                  <Link to="/signup" className="btn primary" onClick={() => trackSignupClick('flow')}>
+                    {t.flow.cta}
+                  </Link>
+                  <p className="section-cta-note">{t.flow.ctaNote}</p>
+                </div>
+              )}
+            </div>
+          </Reveal>
+
+          <Reveal as="section" className="value-section" aria-label={t.value.sectionLabel}>
             <div className="section-head">
               <p className="pill subtle">{t.value.pill}</p>
               <h2>{t.value.title}</h2>
               <p>{t.value.body}</p>
             </div>
 
-            <div className="value-points">
+            {/* Short, scannable chips rather than four paragraphs — the case
+                for subscribing is made by the heading above and the price
+                card below; this row is a skim, not a second read. */}
+            <div className="value-highlights">
               {t.value.points.map((point) => (
-                <div key={point.title} className="value-point">
-                  <span className="feature-icon" aria-hidden="true"><Icon name={point.icon} size={24} /></span>
-                  <div>
-                    <h3>{point.title}</h3>
-                    <p>{point.desc}</p>
-                  </div>
-                </div>
+                <span key={point.title} className="value-highlight">
+                  <Icon name={point.icon} size={16} aria-hidden="true" />
+                  {point.title}
+                </span>
               ))}
             </div>
 
@@ -469,109 +509,9 @@ const Landing = () => {
                 <Link to="/groups" className="btn primary price-card-cta">{t.value.group.cta}</Link>
               </aside>
             </div>
-          </section>
+          </Reveal>
 
-
-          <section className="flow-section">
-            <div className="flow-card">
-              <div className="flow-head">
-                <p className="pill subtle">{t.flow.pill}</p>
-                <h2>{t.flow.title}</h2>
-                <p>{t.flow.body}</p>
-              </div>
-              <div className="steps">
-                {t.flow.steps.map((step, index) => (
-                  <div key={step.label} className="step">
-                    <div className="step-index">0{index + 1}</div>
-                    <div>
-                      <h4>{step.label}</h4>
-                      <p>{step.hint}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Step 1 of the flow is "create your account" — so step 1 is
-                  reachable from the card that describes it. */}
-              {!isAuthenticated && (
-                <div className="section-cta">
-                  <Link to="/signup" className="btn primary" onClick={() => trackSignupClick('flow')}>
-                    {t.flow.cta}
-                  </Link>
-                  <p className="section-cta-note">{t.flow.ctaNote}</p>
-                </div>
-              )}
-            </div>
-          </section>
-
-          <section className="news-section" aria-label={t.news.sectionLabel}>
-            <div className="section-head">
-              <p className="pill subtle">{t.news.pill}</p>
-              <h2>{t.news.title}</h2>
-              <p>{t.news.body}</p>
-            </div>
-            <div className="news-list">
-              {t.news.items.map((item) => (
-                <article key={item.title} className="news-item">
-                  <span className="news-item-icon" aria-hidden="true"><Icon name={item.icon} size={22} /></span>
-                  <div className="news-item-body">
-                    <div className="news-item-top">
-                      <h3>{item.title}</h3>
-                      <time className="news-item-date">{item.date}</time>
-                    </div>
-                    <p>{item.desc}</p>
-                  </div>
-                </article>
-              ))}
-            </div>
-
-            {/* Everything listed above is already included in the same
-                subscription — say so where it is being read. */}
-            {!isAuthenticated && (
-              <div className="section-cta">
-                <Link to="/signup" className="btn primary" onClick={() => trackSignupClick('news')}>
-                  {t.news.cta}
-                </Link>
-                <p className="section-cta-note">{t.news.ctaNote}</p>
-              </div>
-            )}
-          </section>
-
-          {/* Study guides. These are the only pages on the site a stranger can
-              read in full without an account, and until now the sole internal
-              link to them was one footer entry — which is why Search Console
-              reported them "Discovered — currently not indexed". Linking them
-              from the landing page is half the fix; the other half is the
-              prerendered copy in src/seo/prerenderHtml.js. */}
-          <section className="guides-band" aria-label={t.guides.sectionLabel}>
-            <div className="section-head">
-              <p className="pill subtle">{t.guides.pill}</p>
-              <h2>{t.guides.title}</h2>
-              <p>{t.guides.body}</p>
-            </div>
-            <div className="guides-band-list">
-              {guidesHub.cards.map((card) => (
-                <article key={card.path} className="guides-band-card">
-                  <h3>
-                    <Link to={card.path}>{card.title}</Link>
-                  </h3>
-                  <p>{card.excerpt}</p>
-                </article>
-              ))}
-            </div>
-            <div className="section-cta">
-              <Link to="/guides" className="btn ghost">{t.guides.all}</Link>
-            </div>
-          </section>
-
-          {/* The steps, played on a phone rather than listed. */}
-          <Suspense fallback={null}>
-            <InstallShowcase />
-          </Suspense>
-
-
-
-          <section className="cta-band">
+          <Reveal as="section" className="cta-band">
             <div className="cta-band-content">
               <div>
                 {isAuthenticated ? (
@@ -611,7 +551,7 @@ const Landing = () => {
                 )}
               </div>
             </div>
-          </section>
+          </Reveal>
         </div>
 
         <div className="mobile-cta">
@@ -636,7 +576,10 @@ const Landing = () => {
           )}
         </div>
 
-        {/* Floating, dismissible install banner (mobile only) */}
+        {/* Floating, dismissible install banner (mobile only — it already
+            returns null on desktop, so this is the "nudge, not a section"
+            for every screen size). The full animated walkthrough now lives on
+            /faq for whoever wants the step-by-step version. */}
         <InstallPrompt />
       </div>
     </>

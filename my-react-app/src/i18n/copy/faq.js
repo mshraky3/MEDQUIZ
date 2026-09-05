@@ -67,6 +67,11 @@ const faqCopy = {
                 question: 'هل يمكنني استخدام المنصة على الجوال؟',
                 answer: 'نعم. المنصة مصمّمة لتعمل بشكل ممتاز على جميع الأجهزة — الهواتف والأجهزة اللوحية وأجهزة الكمبيوتر — ولا تحتاج إلى تحميل أي تطبيق؛ استخدمها مباشرة من المتصفح.',
             },
+            {
+                question: 'هل يمكنني تثبيت SQB كتطبيق على جوالي أو حاسوبي؟',
+                answer: 'نعم — أضف SQB إلى الشاشة الرئيسية وافتحه بضغطة واحدة كأي تطبيق، بدون متجر تطبيقات وبدون تحميل. الخطوات لهواتف آيفون وأندرويد بالأسفل.',
+                richContent: 'install',
+            },
         ],
     },
 
@@ -133,6 +138,11 @@ const faqCopy = {
             {
                 question: 'Can I use the platform on my phone?',
                 answer: 'Yes. The platform is built to work well on every device — phones, tablets and desktops — and there is no app to download; just use it straight from your browser.',
+            },
+            {
+                question: 'Can I install SQB as an app on my phone or computer?',
+                answer: 'Yes — add SQB to your home screen and open it in one tap, like any app, with no app store and no download. The steps for iPhone and Android are below.',
+                richContent: 'install',
             },
         ],
     },

@@ -64,7 +64,7 @@ const landingCopy = {
                 {
                     icon: 'lightbulb',
                     title: 'تفسير لكل سؤال، بلا استثناء',
-                    desc: 'ليست تفسيرات لبعض الأسئلة الصعبة فقط — كل سؤال في بنكك له تفسير كامل، مكتوب بنفس البنية: الفكرة، العرض السريري، التشخيص، العلاج.',
+                    desc: 'كل سؤال في بنكك له تفسير كامل بنفس البنية: الفكرة، العرض السريري، التشخيص، العلاج.',
                 },
                 {
                     icon: 'target',
@@ -74,7 +74,7 @@ const landingCopy = {
                 {
                     icon: 'refresh',
                     title: 'وضع مذاكرة ووضع اختبار',
-                    desc: 'في وضع المذاكرة يظهر التفسير فور اختيارك للإجابة. وفي وضع الاختبار لا يظهر شيء حتى تنتهي — تماماً كأجواء الاختبار الحقيقي. أنت من يختار.',
+                    desc: 'يظهر التفسير فوراً في وضع المذاكرة، وينتظر حتى الانتهاء في وضع الاختبار — أنت من يختار.',
                 },
             ],
             sampleTitle: 'شرح الإجابة',
@@ -91,7 +91,7 @@ const landingCopy = {
             soonNote: 'يمكنك إنشاء حسابك على هذا المسار الآن، وسنبلغك بالبريد فور رفع المحتوى.',
             medicalDesc: 'بنك أسئلة وملخصات كاملة للباطنة والجراحة والأطفال والنساء والولادة.',
             nursingDesc: 'مسار مستقل بأسئلته وملخصاته وتحليلات أدائه الخاصة — منفصل تماماً عن مسار الطب.',
-            cta: 'اختر مسارك وابدأ مجاناً',
+            cardCta: (title) => `ابدأ مسار ${title}`,
             ctaNote: '40 سؤالاً مجاناً · بدون بطاقة دفع',
         },
 
@@ -100,9 +100,6 @@ const landingCopy = {
             pill: 'قارن بنفسك',
             title: 'لماذا SQB بدل الملفات المتناثرة والدورات المكلفة؟',
             body: 'معظم المتقدمين يجمعون تجميعات من مصادر متفرقة أو يدفعون آلاف الريالات لدورات تحضيرية. إليك المقارنة الصريحة.',
-            tableLabel: 'جدول المقارنة',
-            hint: 'اسحب الجدول جانبياً لعرض المقارنة كاملة',
-            colAspect: 'وجه المقارنة',
             colSqb: 'منصة SQB',
             badge: 'الخيار الذكي',
             colFiles: 'ملفات وتجميعات متناثرة',
@@ -126,12 +123,12 @@ const landingCopy = {
             // limited sitting calendar, a delayed licence. Nothing invents a
             // deadline, a vanishing discount or a seat cap.
             title: 'السؤال ليس «كم يكلفني الاشتراك؟» — بل «كم يكلفني الرسوب؟»',
-            body: 'رسوب واحد يعني رسوم اختبار جديدة، وأشهراً حتى الدورة القادمة، وتأخراً في التوظيف والتدريب. اشتراك سنة كامل هنا يكلف 300 ريال — أقل من ستة ريالات في الأسبوع. الفرق بين الرقمين هو كل ما في الأمر.',
+            body: 'اشتراك سنة كاملة هنا أقل من ستة ريالات في الأسبوع — والرسوب يكلفك أكثر من ذلك بكثير.',
             points: [
-                { icon: 'trending-down', title: 'ثمن المحاولة الثانية أعلى من الاشتراك بكثير', desc: 'إعادة الاختبار تعني دفع رسوم الاختبار كاملة من جديد، وشهوراً من الانتظار، وسنةً تُضاف إلى تخرجك قبل أن تبدأ عملك. 300 ريال في مقابل ذلك ليست تكلفة — بل تأمين.' },
-                { icon: 'target', title: 'لا تدخل الاختبار وأنت تجهل نقاط ضعفك', desc: 'أكثر من يرسب لا يرسب لأنه لم يذاكر، بل لأنه ذاكر ما يتقنه أصلاً. التحليلات هنا تكشف التخصص الذي يخسّرك الدرجات وتعيد تدريبك عليه تحديداً.' },
-                { icon: 'refresh', title: 'أسئلة محدّثة، لا ملفات عمرها ثلاث سنوات', desc: 'التجميعات المتداولة مجاناً غالباً قديمة وغير مدقّقة — وقد تحفظ منها إجابة خاطئة. نضيف تجميعات مراجَعة تواكب أحدث نمط لأسئلة الهيئة السعودية.' },
-                { icon: 'check-circle', title: 'جرّب قبل أن تدفع', desc: '40 سؤالاً مجاناً بلا حد زمني، وأول درس من كل تخصص مفتوح لك للأبد. ثم دفعة واحدة عبر ميسر، وبدون تجديد تلقائي.' },
+                { icon: 'trending-down', title: 'ثمن المحاولة الثانية أعلى من الاشتراك بكثير' },
+                { icon: 'target', title: 'لا تدخل الاختبار وأنت تجهل نقاط ضعفك' },
+                { icon: 'refresh', title: 'أسئلة محدّثة، لا ملفات عمرها ثلاث سنوات' },
+                { icon: 'check-circle', title: 'جرّب قبل أن تدفع' },
             ],
             priceCardLabel: 'تفاصيل الاشتراك',
             plan: 'شهر · 4 أشهر · سنة — دفعة واحدة في كل الحالات',
@@ -139,13 +136,11 @@ const landingCopy = {
             currency: 'ريال / شهر',
             perMonth: 'أربعة أشهر بـ 129 ريالاً بدلاً من 200 · 300 ريال للسنة · واشتراكات جماعية للأصدقاء',
             included: [
-                'بنك أسئلة شامل محدّث بنمط اختبارك — SMLE أو SNLE — مع تجميعات جديدة باستمرار',
-                'تفسير واضح لكل إجابة — تعرف لماذا هي الصحيحة، ولماذا البقية خطأ',
-                'ملخصات مركّزة للمواضيع عالية التكرار بدل تشتت الملفات والمصادر',
-                'اختبارات محاكية بتوقيت حقيقي تهيّئك لأجواء الاختبار الفعلي',
-                'لوحة تحليلات تكشف نقاط ضعفك وتعيد تدريبك عليها تلقائياً',
-                'مراجعة أسئلتك الخاطئة في أي وقت حتى تتقنها',
-                'يعمل على الجوال والكمبيوتر، وتقدّمك محفوظ ومتزامن دائماً',
+                'بنك أسئلة شامل لاختبارك — SMLE أو SNLE — يُحدَّث باستمرار',
+                'تفسير واضح لكل إجابة',
+                'ملخصات مركّزة على النقاط عالية التكرار',
+                'اختبارات محاكية بتوقيت حقيقي',
+                'تحليلات تكشف نقاط ضعفك وتتيح لك مراجعة أخطائك حتى تتقنها',
             ],
             cta: 'ابدأ بـ 40 سؤالاً مجاناً',
             note: '40 سؤالاً مجاناً أولاً · دفع آمن عبر ميسر · مدى / Visa / Mastercard / Apple Pay · بدون تجديد تلقائي',
@@ -176,36 +171,6 @@ const landingCopy = {
             cta: 'ابدأ بالخطوة الأولى',
             ctaNote: 'التسجيل يستغرق أقل من دقيقة',
         },
-
-        news: {
-            sectionLabel: 'آخر التحديثات',
-            pill: 'جديد المنصة',
-            title: 'آخر التحديثات والإضافات',
-            body: 'نطوّر المنصة باستمرار — إليك آخر ما أضفناه وحدّثناه مؤخراً.',
-            items: [
-                { icon: 'shield-check', title: 'إطلاق مسار التمريض SNLE', desc: 'مسار التمريض صار متاحاً بالكامل: بنك أسئلة مستقل وملخصات مصوّرة تغطي أساسيات التمريض، والتمريض الباطني والجراحي، وتمريض الأمومة والمواليد، وتمريض الأطفال، والصحة النفسية، والأدوية وحسابات الجرعات — مع تحليل أداء خاص بالمسار. اختر «تمريض» عند إنشاء حسابك.', date: '31 يوليو 2026' },
-                { icon: 'sparkles', title: 'صور طبية حقيقية داخل الملخصات', desc: 'الملخصات صارت مصوّرة بأشعة وصور مجهرية ورسوم تشريحية حقيقية — علامة الـSteeple في الخانوق، وعلامة الإبهام في التهاب لسان المزمار، والنزف فوق وتحت الجافية على الأشعة المقطعية، وبلورات النقرس تحت الضوء المستقطب. مع مخططات جديدة في كل تخصص وأسئلة تفاعلية أكثر بعد كل ملخص.', date: '25 يوليو 2026' },
-                { icon: 'phone', title: 'اختصار SQB على شاشة جوالك', desc: 'ثبّت SQB على الشاشة الرئيسية لجوالك وافتحه بضغطة واحدة كأي تطبيق — بدون متجر تطبيقات وبدون تحميل. الخطوات كاملة للآيفون والأندرويد في القسم التالي.', date: '25 يوليو 2026' },
-                { icon: 'target', title: 'تحديث الأسئلة لنمط 2026 Midgard & Gameboy', desc: 'تمت مراجعة بنك الأسئلة وتحديثه بالكامل ليواكب أحدث نمط اختبار 2026 (Midgard & Gameboy)، لتتدرب على الأقرب لما ستراه فعلياً في الاختبار.', date: '15 يوليو 2026' },
-                { icon: 'calendar', title: 'إضافة التجميعات الشهرية لشهري 5 و6', desc: 'انضمت التجميعات الشهرية الجديدة لشهر مايو ويونيو إلى بنك الأسئلة، بعد مراجعة وتدقيق كامل لكل سؤال.', date: '15 يوليو 2026' },
-                { icon: 'book-open', title: 'تطوير وتحديث الملخصات', desc: 'أعدنا صياغة الملخصات وحدّثنا محتواها لتكون أكثر وضوحاً وتركيزاً على النقاط عالية الأهمية.', date: '15 يوليو 2026' },
-            ],
-            cta: 'احصل على كل هذا الآن',
-            ctaNote: 'كل ما سبق مشمول في الاشتراك نفسه — وكل جديد يصلك تلقائياً',
-        },
-        // The five study guides. Titles and excerpts are NOT duplicated here —
-        // Landing.jsx reads them straight from i18n/copy/guides.js, so the
-        // landing band, the /guides hub and the prerendered HTML can never
-        // drift apart. Only the framing around them lives in this file.
-        guides: {
-            sectionLabel: 'أدلة التحضير',
-            pill: 'اقرأ قبل أن تبدأ',
-            title: 'أدلة عملية عن طريقة المذاكرة نفسها',
-            body: 'خمسة أدلة مكتوبة بالكامل ومفتوحة للجميع بدون حساب: كيف تستخدم بنك الأسئلة بالترتيب الصحيح، وكيف تبني خطة واقعية، وكيف تحوّل كل خطأ إلى قاعدة لا تتكرر.',
-            all: 'تصفّح كل الأدلة',
-        },
-
-
 
         ctaBand: {
             returning: {
@@ -286,7 +251,7 @@ const landingCopy = {
                 {
                     icon: 'lightbulb',
                     title: 'Every question, not just the hard ones',
-                    desc: 'These are not explanations on a selected few. Every question in your bank has a full one, written to the same structure: concept, presentation, diagnosis, management.',
+                    desc: 'Every question in your bank has a full explanation, written to the same structure: concept, presentation, diagnosis, management.',
                 },
                 {
                     icon: 'target',
@@ -296,7 +261,7 @@ const landingCopy = {
                 {
                     icon: 'refresh',
                     title: 'Study mode and exam mode',
-                    desc: 'In study mode the explanation opens the moment you answer. In exam mode nothing is revealed until you finish, exactly like the real thing. You choose which.',
+                    desc: 'Study mode reveals it the moment you answer; exam mode waits until you finish — you choose.',
                 },
             ],
             sampleTitle: 'Why this answer',
@@ -313,7 +278,7 @@ const landingCopy = {
             soonNote: 'You can create your account on this track now — we will email you the moment the content goes live.',
             medicalDesc: 'A full question bank and summaries for internal medicine, surgery, paediatrics, and obstetrics & gynaecology.',
             nursingDesc: 'A standalone track with its own questions, summaries and performance analytics — completely separate from the medical track.',
-            cta: 'Pick your track and start free',
+            cardCta: (title) => `Start the ${title} track`,
             ctaNote: '40 free questions · No payment card',
         },
 
@@ -322,9 +287,6 @@ const landingCopy = {
             pill: 'See for yourself',
             title: 'Why SQB instead of scattered files and expensive courses?',
             body: 'Most candidates stitch together question collections from random sources, or pay thousands for a prep course. Here is the honest comparison.',
-            tableLabel: 'Comparison table',
-            hint: 'Swipe the table sideways to see the full comparison',
-            colAspect: 'What matters',
             colSqb: 'SQB',
             badge: 'The smart choice',
             colFiles: 'Scattered files and collections',
@@ -348,12 +310,12 @@ const landingCopy = {
             // limited sitting calendar, a delayed licence. Nothing invents a
             // deadline, a vanishing discount or a seat cap.
             title: 'The question is not “what does a subscription cost?” — it is “what does failing cost me?”',
-            body: 'One failed attempt means paying the exam fee again, months until the next sitting window, and a delayed start to your training and your income. A full year here costs less than two riyals a week. The gap between those two numbers is the whole argument.',
+            body: 'A full year here costs less than two riyals a week — failing costs a lot more than that.',
             points: [
-                { icon: 'trending-down', title: 'A second attempt costs far more than a subscription', desc: 'Resitting means the full exam fee again, months of waiting, and another year added before you start earning. Against that, SAR 300 is not a cost — it is insurance.' },
-                { icon: 'target', title: "Don't walk in blind to your own weak spots", desc: 'Most people who fail did revise — they revised what they were already good at. The analytics here name the specialty that is losing you marks and drill you on that one.' },
-                { icon: 'refresh', title: 'Current questions, not files three years old', desc: 'The collections passed around for free are usually old and unverified — you can memorise a wrong answer from them. We add reviewed collections that track the latest SCFHS question style.' },
-                { icon: 'check-circle', title: 'Try it before you pay', desc: '40 free questions with no time limit, and the first lesson of every specialty open to you for good. Then one payment through Moyasar, and no auto-renewal.' },
+                { icon: 'trending-down', title: 'A second attempt costs far more than a subscription' },
+                { icon: 'target', title: "Don't walk in blind to your own weak spots" },
+                { icon: 'refresh', title: 'Current questions, not files three years old' },
+                { icon: 'check-circle', title: 'Try it before you pay' },
             ],
             priceCardLabel: 'Subscription details',
             plan: 'A month, four months or a year — one payment either way',
@@ -361,13 +323,11 @@ const landingCopy = {
             currency: 'SAR / month',
             perMonth: 'Four months for SAR 129, down from 200 · SAR 300 for a year · group plans for study partners',
             included: [
-                'A comprehensive question bank matched to your exam — SMLE or SNLE — with new collections added continually',
-                'A clear explanation for every answer: why it is right, and why the others are not',
-                'Focused summaries of the highest-yield topics, instead of a mess of files and sources',
-                'Timed mock exams that put you in real exam conditions',
-                'An analytics dashboard that finds your weak spots and drills you on them automatically',
-                'Review your wrong questions any time until you own them',
-                'Works on mobile and desktop, with your progress always saved and in sync',
+                'A full question bank for your exam — SMLE or SNLE — updated continually',
+                'A clear explanation for every answer',
+                'Focused, high-yield summaries',
+                'Timed mock exams under real exam conditions',
+                "Analytics that find your weak spots and let you drill your wrong questions until they're gone",
             ],
             cta: 'Start with 40 free questions',
             note: '40 free questions first · Secure payment via Moyasar · mada / Visa / Mastercard / Apple Pay · No auto-renewal',
@@ -398,32 +358,6 @@ const landingCopy = {
             cta: 'Start with step one',
             ctaNote: 'Signing up takes under a minute',
         },
-
-        news: {
-            sectionLabel: 'Latest updates',
-            pill: "What's new",
-            title: 'Latest updates and additions',
-            body: 'We keep developing the platform — here is what we have added and improved recently.',
-            items: [
-                { icon: 'shield-check', title: 'The SNLE nursing track is live', desc: 'The nursing track is now fully available: a standalone question bank and illustrated summaries covering nursing fundamentals, medical-surgical nursing, maternal and newborn nursing, paediatric nursing, mental health, and pharmacology with dosage calculations — plus performance analytics specific to the track. Choose “Nursing” when you create your account.', date: '31 July 2026' },
-                { icon: 'sparkles', title: 'Real medical imaging inside the summaries', desc: 'The summaries are now illustrated with genuine radiographs, micrographs and anatomical figures — the steeple sign in croup, the thumb sign in epiglottitis, extradural and subdural haemorrhage on CT, and gout crystals under polarised light. Plus new diagrams in every specialty and more interactive questions after each summary.', date: '25 July 2026' },
-                { icon: 'phone', title: 'An SQB shortcut on your phone screen', desc: 'Add SQB to your phone’s home screen and open it in a single tap like any app — no app store, no download. Full steps for iPhone and Android are in the next section.', date: '25 July 2026' },
-                { icon: 'target', title: 'Questions updated to the 2026 Midgard & Gameboy format', desc: 'The question bank has been fully reviewed and updated to the latest 2026 exam format (Midgard & Gameboy), so you practise on what is closest to what you will actually see.', date: '15 July 2026' },
-                { icon: 'calendar', title: 'May and June monthly collections added', desc: 'The new May and June monthly collections have joined the question bank, after a full review and verification of every question.', date: '15 July 2026' },
-                { icon: 'book-open', title: 'Summaries rewritten and updated', desc: 'We rewrote the summaries and refreshed their content so they are clearer and more focused on the high-yield points.', date: '15 July 2026' },
-            ],
-            cta: 'Get all of this now',
-            ctaNote: 'Everything above is in the same subscription — and every update reaches you automatically',
-        },
-        guides: {
-            sectionLabel: 'Study guides',
-            pill: 'Read before you start',
-            title: 'Practical guides on how to study, not just what to study',
-            body: 'Five complete guides, open to everyone with no account: how to use a question bank in the right order, how to build a plan you can actually keep, and how to turn every mistake into a rule that stops repeating.',
-            all: 'Browse all the guides',
-        },
-
-
 
         ctaBand: {
             returning: {

@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useContext } from 'react';
 import Icon from '../common/Icon.jsx';
-import { useNavigate, useParams, useLocation, Link } from 'react-router-dom';
+import { useNavigate, useParams, useLocation, useSearchParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { safeTrack, trackFunnel } from '../../utils/analytics.js';
 import Globals from '../../global.js';
 import Spinner from '../common/Spinner.jsx';
 import { UserContext } from '../../UserContext';
-import { TRACKS, normalizeTrack, pick } from '../../utils/tracks.js';
+import { TRACKS, TRACK_KEYS, normalizeTrack, pick } from '../../utils/tracks.js';
 import { useCopy, useLang } from '../../i18n';
 import { formatDate } from '../../i18n/format.js';
 import authCopy from '../../i18n/copy/auth.js';
@@ -64,6 +64,12 @@ const Signup = () => {
     const [oauthSession, setOauthSession] = useState(null);
     const navigate = useNavigate();
     const { token } = useParams();
+    const [searchParams] = useSearchParams();
+    // Set when a visitor arrived via a track-specific CTA on the landing page
+    // (e.g. /signup?track=medical) — lets a deliberate choice made there skip
+    // the picker modal below instead of asking again immediately.
+    const trackFromUrl = searchParams.get('track');
+    const preselectedTrack = TRACK_KEYS.includes(trackFromUrl) ? trackFromUrl : null;
     // Email/password is the FALLBACK, not the default. Of 42 people who asked
     // for an email code, 10 never entered it — the OTP round trip is where
     // this form loses them, and Google skips it entirely (24 accounts in two
@@ -91,6 +97,12 @@ const Signup = () => {
             setShowTrackModal(true);
         } else if (token) {
             validateTempLink();
+        } else if (preselectedTrack) {
+            // Already chosen on the landing page's per-track card — that click
+            // was itself the deliberate choice the modal exists to force, so
+            // don't ask again. "Change track" below still reopens the modal.
+            setStudyTrack(preselectedTrack);
+            trackFunnel('signup_track_selected', { track: preselectedTrack, source: 'landing_card' });
         } else {
             // Regular signup: ask which kind of student this is, first thing.
             setShowTrackModal(true);

@@ -138,6 +138,18 @@
     display: none;
 }
 
+/* The install walkthrough carries its own pill/heading (built for the
+   landing page, where it stood alone) — redundant here since the FAQ
+   question already asks the same thing, so only the interactive part
+   (the phone mock + steps) renders inside the answer. */
+.faq-answer .install-section > .section-head {
+    display: none;
+}
+
+.faq-answer .install-section {
+    margin-top: 4px;
+}
+
 @keyframes fadeInDown {
     from {
         opacity: 0;
