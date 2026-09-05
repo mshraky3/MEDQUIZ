@@ -16,9 +16,7 @@ const common = {
         brand: 'SQB',
         nav: {
             home: 'الرئيسية',
-            analysis: 'التحليل',
             wrongQuestions: 'أسئلتي الخاطئة',
-            studyContent: 'المحتوى الدراسي',
             contact: 'تواصل معنا',
             guides: 'أدلة التحضير',
             about: 'من نحن',
@@ -129,9 +127,7 @@ const common = {
         brand: 'SQB',
         nav: {
             home: 'Home',
-            analysis: 'Analytics',
             wrongQuestions: 'My Wrong Questions',
-            studyContent: 'Study Material',
             contact: 'Contact',
             guides: 'Study Guides',
             about: 'About',

@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { UserContext } from '../../UserContext';
 import Icon from './Icon.jsx';
 import NotificationBell from './NotificationBell.jsx';
+import apiClient from '../../utils/apiClient.js';
 import { useCommon, useLang, LanguageToggle, LocaleLink as Link, useLocaleNavigate, formatDate } from '../../i18n';
 import { stripLocale } from '../../seo/locales.js';
 import './Navbar.css';
@@ -15,6 +16,7 @@ const Navbar = () => {
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [hasGroup, setHasGroup] = useState(false);
   const userMenuRef = useRef(null);
 
   // Close the user dropdown on an outside click, on Escape, or when the
@@ -37,6 +39,20 @@ const Navbar = () => {
 
   // A visitor is only "home" inside the app once they hold a valid session.
   const isAuthenticated = !!(user && user.id && sessionToken);
+
+  // "My group" only means something for someone who owns a group (there are
+  // seat links to manage) — a solo subscriber or a group seat-holder would
+  // land on /groups' own buy pitch, which reads as broken from a menu item
+  // named "my group". Fetched once per session, same endpoint AccountPage
+  // already uses to answer the same question.
+  useEffect(() => {
+    if (!isAuthenticated) { setHasGroup(false); return; }
+    let cancelled = false;
+    apiClient.get('/api/groups/mine')
+      .then(({ data }) => { if (!cancelled) setHasGroup(Boolean(data?.groups?.length)); })
+      .catch(() => { /* advisory only — the link just stays hidden */ });
+    return () => { cancelled = true; };
+  }, [isAuthenticated]);
 
   // Authenticated users' "home" is the quizzes dashboard; everyone else's is
   // the public landing page. This is the single source of truth so the brand,
@@ -100,10 +116,12 @@ const Navbar = () => {
                   <Icon name="user" size={17} />
                   <span>{t.nav.account}</span>
                 </Link>
-                <Link to="/groups" className="user-menu-link" role="menuitem">
-                  <Icon name="users" size={17} />
-                  <span>{t.nav.myGroup}</span>
-                </Link>
+                {hasGroup && (
+                  <Link to="/groups" className="user-menu-link" role="menuitem">
+                    <Icon name="users" size={17} />
+                    <span>{t.nav.myGroup}</span>
+                  </Link>
+                )}
                 <button
                   type="button"
                   onClick={handleLogout}
@@ -122,15 +140,12 @@ const Navbar = () => {
       <div className="navbar-center">
         <div className={`navbar-nav-links ${menuOpen ? 'nav-links-open' : ''}`}>
           {isAuthenticated ? (
-            // Inside the app the nav is about studying, not marketing —
-            // the marketing pages stay reachable from the footer.
-            <>
-              <Link to={homePath} className="nav-link" onClick={() => setMenuOpen(false)}>{t.nav.home}</Link>
-              <Link to="/analysis" className="nav-link" onClick={() => setMenuOpen(false)}>{t.nav.analysis}</Link>
-              <Link to="/wrong-questions" className="nav-link" onClick={() => setMenuOpen(false)}>{t.nav.wrongQuestions}</Link>
-              <Link to="/summaries" className="nav-link" onClick={() => setMenuOpen(false)}>{t.nav.studyContent}</Link>
-              <Link to="/contact" className="nav-link" onClick={() => setMenuOpen(false)}>{t.nav.contact}</Link>
-            </>
+            // Inside the app, Home/Analytics/Study Material all duplicate an
+            // entry point already on the dashboard itself (the brand link,
+            // and the journey's Summaries/Analysis steps), and Contact is
+            // already in the footer. Wrong Questions has no other entry point
+            // anywhere in the app, so it's the one link that has to live here.
+            <Link to="/wrong-questions" className="nav-link" onClick={() => setMenuOpen(false)}>{t.nav.wrongQuestions}</Link>
           ) : (
             <>
               <Link to="/guides" className="nav-link" onClick={() => setMenuOpen(false)}>{t.nav.guides}</Link>
