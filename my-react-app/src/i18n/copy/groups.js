@@ -50,7 +50,7 @@ export default {
 
         loading: 'جاري تحميل مقاعدك...',
         loadError: 'تعذّر تحميل بيانات مجموعتك. حدّث الصفحة وحاول مرة أخرى.',
-        backToQuizzes: 'العودة إلى الاختبارات',
+        backToHome: 'العودة إلى الرئيسية',
 
         // ── Seat claim (/join/:token) ────────────────────────────────────
         claim: {
@@ -111,7 +111,7 @@ export default {
 
         loading: 'Loading your seats…',
         loadError: 'We could not load your group. Refresh the page and try again.',
-        backToQuizzes: 'Back to quizzes',
+        backToHome: 'Back to home',
 
         claim: {
             validating: 'Checking your invite…',

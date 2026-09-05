@@ -285,9 +285,7 @@ const GroupsPage = () => {
 
                 {state === 'ready' && (
                     isAuthenticated ? (
-                        <button type="button" className="groups-back" onClick={() => navigate('/quizs')}>
-                            {t.backToQuizzes}
-                        </button>
+                        <Link to="/" className="groups-back">{t.backToHome}</Link>
                     ) : (
                         // A guest has no /quizs to go back to, and /subscribe is
                         // itself behind the login wall — so the individual plans
