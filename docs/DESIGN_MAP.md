@@ -182,10 +182,11 @@ CSS is listed in load order. `+shell` = `index.css` + `Navbar.css` + `Footer.css
 
 #### `/account`
 
-- **Tier** auth · **Component** `account/AccountPage.jsx`
-- **CSS** `Login.css` → `AccountPage.css` (209) +shell
+- **Tier** auth · **Component** `account/AccountPage.jsx` + `quizs/ExamDateCard`, `quizs/StreakCard`, `quizs/GoalCard` (moved here 2026-09, unchanged from their `/quizs` selves)
+- **CSS** `Login.css` → `AccountPage.css` (~220) → `quizs/HubCards.css`, `quizs/GoalCard.css` +shell
 - **Root** `.account-page` — same `Login.css`-without-`.login-body` situation as `/groups`
 - **Container** `var(--container-form, 620px)` · breakpoint 480
+- **Sections** Account & subscription (now headed, matching the free-tier card below it) → free-tier meter (if applicable) → Study plan (the three relocated cards) → Actions (Subscribe/Renew, Group, Contact us, Back to quizzes)
 - **Defects** `A4` (latent)
 
 ### 2.2 Content & legal
@@ -232,12 +233,30 @@ CSS is listed in load order. `+shell` = `index.css` + `Navbar.css` + `Footer.css
 
 #### `/quizs` — quiz hub
 
-- **Component** `quizs/QUIZS.jsx` + `QuizLauncher`, `GoalCard`, `StreakCard`, `ExamDateCard`
-- **CSS** `QUIZS.css` (1669) · `QuizsHub.css` (673) · `GoalCard.css` (353) · `HubCards.css` (265) +shell
+- **Component** `quizs/QUIZS.jsx` + `QuizLauncher`. The exam-date/streak/goal
+  cards (`ExamDateCard`, `StreakCard`, `GoalCard`) moved to `/account`
+  (2026-09) — they're personal study-plan settings, not part of the hub's own
+  job, and duplicated navigation weight right above the panel that matters.
+- **CSS** `QUIZS.css` (~1650) · `QuizsHub.css` (673) +shell. `GoalCard.css` /
+  `HubCards.css` no longer load here — see `/account`.
 - **Root** `.quiz-selection` (+ `.hubx`) — defines local `--card`, `--card-hover`, `--text`, `--accent-strong`, `--border`, `--shadow`
-- **Layout** hub-card grid capped at 1400px; four full-screen config modals (type / source / timer / question-count)
+- **Layout** hub sections (greeting, study-loop journey, performance panel)
+  capped at 1400px; launcher's four full-screen config modals (type / source
+  / timer / question-count)
 - **Breakpoints** 1024 / 800 / 768 / 600 / 480 / 360
-- **Defects** **`A2` (all four modals sit at z-index 1000 — under the 1030 navbar)**, `A3` (`pulse` is defined twice inside this one file; `fadeIn` conflicts), `C2` (`.section-title { text-align:right }` hardcoded; `.final-quiz-description { border-left }`), `D5` (7 keyframes, no reduced-motion guard)
+- **Defects** ~~`A2` (all four modals sit at z-index 1000)~~ — **resolved**,
+  verified 2026-09: modals read `var(--z-modal-backdrop)`. ~~`A3` (`pulse`
+  defined twice; `fadeIn` conflicts)~~ — **resolved**, verified 2026-09: this
+  file's keyframes are namespaced `qs-*` with no duplicates. `C2`
+  (`.section-title { text-align:right }` hardcoded; `.final-quiz-description
+  { border-left }`), `D5` (no reduced-motion guard) remain unverified since
+  the 2026-08-25 audit.
+- **2026-09 addition:** the launcher's source chips now show a per-source
+  completion bar (`completedPct`, from `GET /api/track-content-status`) and a
+  standing hint that questions don't repeat until a source is finished. The
+  type-selector went from a hand-rolled checkbox+DOM-injected-box pattern to
+  `.type-chip` labels styled like `.bank-source-chip` — one picker language
+  for the whole screen instead of two.
 
 #### `/quiz/:numQuestions` — quiz runner
 
@@ -251,7 +270,7 @@ CSS is listed in load order. `+shell` = `index.css` + `Navbar.css` + `Footer.css
 
 - **Component** `analysis/Analysis.jsx` composing **7** sub-components
 - **CSS loaded together** `Analysis.css` (343) · `analysisShared.css` (1954) · `QuizHistory.css` (805) · `Progress.css` (397) · `FinalExams.css` (741) +shell
-- **Sub-components** `OverallStats`, `TopicAnalysisTable`, `QuestionAttemptsTable`, `LastQuizSummary` (all → `analysisShared.css`), plus `QuizHistory`, `Progress`, `FinalExams` (own files)
+- **Sub-components** `TopicAnalysisTable`, `QuestionAttemptsTable`, `LastQuizSummary` (→ `analysisShared.css`), plus `QuizHistory`, `Progress`, `FinalExams` (own files). `OverallStats` moved to its own `OverallStats.css` (2026-09) — it no longer imports `analysisShared.css` at all, so its cards stopped inheriting that file's dark-glassmorphism styling (near-black translucent fills + blur, tuned for a dark backdrop) that was rendering as washed-out smudges on this page's opaque white shell. Scoped rather than fixed in place, since `.question-card` / `.answer-text.correct` / `.answer-text.wrong` are still legitimately used elsewhere on this page (and on `/wrong-questions`) for real right/wrong indication.
 - **Structure** collapsible `.an-drill` sections. A sub-component's CSS loads whether or not its section is expanded.
 - **Defects** **`A1` — 49 selectors are defined in 2+ of these three stylesheets, and 44 of them have genuinely different values.** Also `A3` (the `slideDown` collision breaks the navbar's own entrance animation — verified), `B2` (`#4ade80` / `#fca5a5` / `#93c5fd` answer colours), `B4` (`.question-text { max-width:300px; text-align:center }` applied globally), `D4` (32 `!important` in `analysisShared.css`, including `!important` wars across three files' media queries)
 
@@ -299,7 +318,7 @@ Legacy redirects: `/ADD_ACCOUNT`, `/ADDQ`, `/Bank`, `/TEMP_LINKS`, `/question-re
 
 | Component | CSS | z-index | Notes |
 |---|---|---|---|
-| `Navbar` | `Navbar.css` (621) | **1030** | fixed; `.user-menu-dropdown` is **1100 — above `--z-modal` (1050)** |
+| `Navbar` | `Navbar.css` (621) | **1030** | fixed; `.user-menu-dropdown` is a local `z-index: 1` (it lives inside the navbar's own stacking context, so a local value is correct — this table previously said 1100/above `--z-modal`, which was stale against the A2 fix already recorded in `DESIGN_AUDIT_2026-08-25.md`). Authed nav-links are just "My Wrong Questions" (2026-09) — Home/Analytics/Study Material/Contact were removed as duplicates of the brand link, the hub's own journey cards, and the footer. The dropdown's "My group" link is now conditional on actually owning a group (`GET /api/groups/mine`), fetched once on mount. |
 | `Footer` | `Footer.css` (142) | — | `margin-top:auto`; 1100px cap; breakpoint 640 |
 | `CookieConsent` | `CookieConsent.css` | **10000** | mounted at the app root, outside the router |
 | `CongratulationsPopup` | `CongratulationsPopup.css` | **10000** | |
