@@ -3,12 +3,20 @@ import Icon from '../common/Icon.jsx';
 import { getSourceLabel } from '../../utils/sourceLabels';
 import { useCopy, useLang } from '../../i18n';
 import analysisCopy from '../../i18n/copy/analysis.js';
-import './analysisShared.css';
+import './OverallStats.css';
+
+// Matches Analysis.jsx's own accuracyTone exactly, so the hero "weakest
+// topic" card and these per-source cards use one consistent colour language.
+function accuracyTone(pct) {
+    if (pct == null || Number.isNaN(pct)) return 'neutral';
+    if (pct >= 75) return 'high';
+    if (pct >= 50) return 'mid';
+    return 'low';
+}
 
 const OverallStats = ({ userAnalysis }) => {
     const t = useCopy(analysisCopy).overall;
     const { lang } = useLang();
-    // Remove debug logging in production
 
     const calculateAccuracy = () => {
         if (userAnalysis?.avg_accuracy !== undefined) {
@@ -26,58 +34,53 @@ const OverallStats = ({ userAnalysis }) => {
     };
 
     return (
-        <section className="streak-section">
-            <h3 className="section-header">{t.title}</h3>
+        <section className="ov-section">
+            <h3 className="ov-title">{t.title}</h3>
 
             {userAnalysis ? (
-                <div className="questions-grid">
-                    <div className="question-card">
-                        <div className="question-header">
-                            <div className="question-meta">
-                                <span className="type-badge">
-                                    <Icon name="bar-chart" size={15} /> {t.glance}
-                                </span>
-                                <span className="accuracy-badge" style={{
-                                    background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-                                    color: 'white'
-                                }}>
-                                    <Icon name="target" size={15} /> {calculateAccuracy()}%
-                                </span>
-                            </div>
+                <div className="ov-grid">
+                    <div className="ov-card">
+                        <div className="ov-card-head">
+                            <span className="ov-badge">
+                                <Icon name="bar-chart" size={15} /> {t.glance}
+                            </span>
+                            <span className={`ov-accuracy tone-${accuracyTone(Number(calculateAccuracy()))}`}>
+                                <Icon name="target" size={15} /> {calculateAccuracy()}%
+                            </span>
                         </div>
 
-                        <div className="question-content">
-                            <div className="topic-performance-text">
+                        <div className="ov-card-body">
+                            <div className="ov-blurb">
                                 <h4>{t.journey}</h4>
                                 <p>{t.journeyHint}</p>
                             </div>
 
-                            <div className="answers-section">
-                                <div className="answer-row">
-                                    <span className="answer-label primary">{t.totalSessions}</span>
-                                    <span className="answer-text primary">{userAnalysis.total_quizzes ?? 0}</span>
+                            <div className="ov-stats">
+                                <div className="ov-stat">
+                                    <span className="ov-stat-label">{t.totalSessions}</span>
+                                    <span className="ov-stat-value">{userAnalysis.total_quizzes ?? 0}</span>
                                 </div>
 
-                                <div className="answer-row">
-                                    <span className="answer-label accuracy">{t.avgAccuracy}</span>
-                                    <span className="answer-text accuracy">{calculateAccuracy()}%</span>
+                                <div className="ov-stat">
+                                    <span className="ov-stat-label">{t.avgAccuracy}</span>
+                                    <span className="ov-stat-value">{calculateAccuracy()}%</span>
                                 </div>
 
-                                <div className="answer-row">
-                                    <span className="answer-label correct">{t.answered}</span>
-                                    <span className="answer-text correct">{userAnalysis.total_questions_answered ?? 0}</span>
+                                <div className="ov-stat">
+                                    <span className="ov-stat-label">{t.answered}</span>
+                                    <span className="ov-stat-value">{userAnalysis.total_questions_answered ?? 0}</span>
                                 </div>
 
-                                <div className="answer-row">
-                                    <span className="answer-label time">{t.totalTime}</span>
-                                    <span className="answer-text time">
+                                <div className="ov-stat">
+                                    <span className="ov-stat-label">{t.totalTime}</span>
+                                    <span className="ov-stat-value">
                                         {userAnalysis.total_duration ? (userAnalysis.total_duration / 60).toFixed(1) : 0} {t.minutes}
                                     </span>
                                 </div>
 
-                                <div className="answer-row">
-                                    <span className="answer-label time">{t.avgSession}</span>
-                                    <span className="answer-text time">
+                                <div className="ov-stat">
+                                    <span className="ov-stat-label">{t.avgSession}</span>
+                                    <span className="ov-stat-value">
                                         {userAnalysis.avg_duration ? (userAnalysis.avg_duration / 60).toFixed(1) : 0} {t.minutes}
                                     </span>
                                 </div>
@@ -85,61 +88,53 @@ const OverallStats = ({ userAnalysis }) => {
                         </div>
                     </div>
 
-                    {/* Source Breakdown as Cards */}
                     {userAnalysis.source_breakdown && userAnalysis.source_breakdown.length > 0 ? (
                         userAnalysis.source_breakdown.map((source, index) => (
-                            <div key={index} className="question-card">
-                                <div className="question-header">
-                                    <div className="question-meta">
-                                        <span className="source-badge">
-                                            <Icon name="book-open" size={15} /> {getSourceLabel(source.source, lang)}
-                                        </span>
-                                        <span className="accuracy-badge" style={{
-                                            background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
-                                            color: 'white'
-                                        }}>
-                                            <Icon name="bar-chart" size={15} /> {source.avg_accuracy}%
-                                        </span>
-                                    </div>
+                            <div key={index} className="ov-card">
+                                <div className="ov-card-head">
+                                    <span className="ov-badge">
+                                        <Icon name="book-open" size={15} /> {getSourceLabel(source.source, lang)}
+                                    </span>
+                                    <span className={`ov-accuracy tone-${accuracyTone(Number(source.avg_accuracy))}`}>
+                                        <Icon name="bar-chart" size={15} /> {source.avg_accuracy}%
+                                    </span>
                                 </div>
 
-                                <div className="question-content">
-                                    <div className="topic-performance-text">
+                                <div className="ov-card-body">
+                                    <div className="ov-blurb">
                                         <h4>{t.bySource}</h4>
                                         <p>{t.bySourceHint(getSourceLabel(source.source, lang))}</p>
                                     </div>
 
-                                    <div className="answers-section">
-                                        <div className="answer-row">
-                                            <span className="answer-label primary">{t.quizzes}</span>
-                                            <span className="answer-text primary">{source.quiz_count}</span>
+                                    <div className="ov-stats">
+                                        <div className="ov-stat">
+                                            <span className="ov-stat-label">{t.quizzes}</span>
+                                            <span className="ov-stat-value">{source.quiz_count}</span>
                                         </div>
 
-                                        <div className="answer-row">
-                                            <span className="answer-label correct">{t.questions}</span>
-                                            <span className="answer-text correct">{source.total_questions}</span>
+                                        <div className="ov-stat">
+                                            <span className="ov-stat-label">{t.questions}</span>
+                                            <span className="ov-stat-value">{source.total_questions}</span>
                                         </div>
 
-                                        <div className="answer-row">
-                                            <span className="answer-label accuracy">{t.accuracy}</span>
-                                            <span className="answer-text accuracy">{source.avg_accuracy}%</span>
+                                        <div className="ov-stat">
+                                            <span className="ov-stat-label">{t.accuracy}</span>
+                                            <span className="ov-stat-value">{source.avg_accuracy}%</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         ))
                     ) : (
-                        <div className="question-card">
-                            <div className="question-header">
-                                <div className="question-meta">
-                                    <span className="type-badge">
-                                        <Icon name="book-open" size={15} /> {t.sourceBreakdown}
-                                    </span>
-                                </div>
+                        <div className="ov-card">
+                            <div className="ov-card-head">
+                                <span className="ov-badge">
+                                    <Icon name="book-open" size={15} /> {t.sourceBreakdown}
+                                </span>
                             </div>
 
-                            <div className="question-content">
-                                <div className="topic-performance-text">
+                            <div className="ov-card-body">
+                                <div className="ov-blurb">
                                     <h4>{t.noDataYet}</h4>
                                     <p>{t.noDataHint}</p>
                                 </div>
@@ -148,7 +143,7 @@ const OverallStats = ({ userAnalysis }) => {
                     )}
                 </div>
             ) : (
-                <p className="no-streak">{t.noOverall}</p>
+                <p className="ov-empty">{t.noOverall}</p>
             )}
         </section>
     );
