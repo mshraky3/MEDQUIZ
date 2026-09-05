@@ -7,9 +7,6 @@ import './QuizsHub.css';
 
 import AchievementBadges from '../common/AchievementBadges.jsx';
 import Icon from '../common/Icon.jsx';
-import GoalCard from './GoalCard.jsx';
-import ExamDateCard from './ExamDateCard.jsx';
-import StreakCard from './StreakCard.jsx';
 import QuizLauncher from './QuizLauncher.jsx';
 import { UserContext } from '../../UserContext';
 import { getTypeLabel } from '../../utils/typeLabels';
@@ -51,9 +48,6 @@ const QUIZS = () => {
     const openLauncher = () => navigate({ pathname: '/quizs', search: '?view=custom' });
     const [stats, setStats] = useState(null);
     const [topics, setTopics] = useState([]);
-    // The whole /user-streaks payload, not just the count: StreakCard renders
-    // the last seven days from `active_days`, which a bare number cannot give.
-    const [streak, setStreak] = useState(null);
     const [state, setState] = useState('loading'); // loading | ready | error
     // Null until the content check lands. Drives the empty state shown while a
     // track's bank is still being loaded — the nursing bank starts out empty,
@@ -98,9 +92,8 @@ const QUIZS = () => {
         const currentUser = userRef.current;
         if (!id || !currentUser || !sessionToken) { setState('error'); return; }
         setState('loading');
-        const [analysisRes, streakRes, topicRes, contentRes] = await Promise.allSettled([
+        const [analysisRes, topicRes, contentRes] = await Promise.allSettled([
             protectedGet(`/user-analysis/${id}`),
-            protectedGet(`/user-streaks/${id}`),
             protectedGet(`/topic-analysis/user/${id}`),
             protectedGet('/api/track-content-status')
         ]);
@@ -126,7 +119,6 @@ const QUIZS = () => {
                 avg_accuracy: d.avg_accuracy || 0
             });
         }
-        if (streakRes.status === 'fulfilled') setStreak(streakRes.value.data || null);
         if (topicRes.status === 'fulfilled' && Array.isArray(topicRes.value.data)) setTopics(topicRes.value.data);
         setState(analysisRes.status === 'fulfilled' ? 'ready' : 'error');
     }, [id, sessionToken, setUser]);
@@ -164,8 +156,13 @@ const QUIZS = () => {
         const hit = topics.find((t) => t.question_type === key);
         const answered = hit ? parseInt(hit.total_answered, 10) || 0 : 0;
         const accuracy = hit ? Math.round(parseFloat(hit.accuracy) || 0) : 0;
-        const available = !content || (content.questionsByType?.[key] || 0) > 0;
-        return { key, icon, label: getTypeLabel(key, lang), answered, accuracy, available };
+        // Pool size for this specialty, already fetched for the `available`
+        // check below — reused here so "100%" next to a tiny pool reads as
+        // "8 of 8 answered" instead of a bare, misleadingly final-looking "8
+        // questions" with no sense of how big the topic actually is.
+        const total = content?.questionsByType?.[key] || 0;
+        const available = !content || total > 0;
+        return { key, icon, label: getTypeLabel(key, lang), answered, accuracy, available, total };
     });
     // Content checks are advisory: until the request lands (or if it fails) we
     // assume content exists rather than flashing an empty state at everyone.
@@ -321,36 +318,10 @@ const QUIZS = () => {
                 </ol>
             </nav>
 
-            {/* The three commitment cards — how long you have, whether today
-                has been used, and what you promised yourself this week.
-
-                They sit directly under the study loop rather than above it: the
-                loop is what the page is FOR, and three status cards ahead of it
-                pushed the actual instruction below the fold. They are also one
-                row of three rather than a 2-up row plus a full-width goal card,
-                which is what made this stretch of the page so tall. Hidden
-                while the bank is empty — nothing to make progress against.
-
-                GoalCard's `sources` comes from the content-status response
-                rather than a constant, so the collection picker only ever
-                offers collections this track actually has loaded — and stays
-                hidden entirely for medical, whose bank is unified by design. */}
-            {!bankEmpty && user?.username && sessionToken && (
-                <div className="hub-cards-row">
-                    <ExamDateCard
-                        username={user.username}
-                        sessionToken={sessionToken}
-                        questionsRemaining={content?.totalQuestions || 0}
-                    />
-                    <StreakCard streak={streak} onStartToday={() => startQuiz('mix')} />
-                    <GoalCard
-                        username={user.username}
-                        sessionToken={sessionToken}
-                        specialties={SPECIALTIES}
-                        sources={content?.selectableSources || []}
-                    />
-                </div>
-            )}
+            {/* The exam-date/streak/goal cards that used to live here moved to
+                /account — they're personal study-plan settings, not part of
+                what this page is for, and duplicated navigation weight right
+                above the panel that actually matters. */}
 
             {/* One performance panel: headline numbers on top, per-specialty
                 rings below. These used to be two separate boxes that both
@@ -414,7 +385,13 @@ const QUIZS = () => {
                                         <Icon name={r.icon} size={15} /> {r.label}
                                     </span>
                                     <span className="hubx-spec-sub">
-                                        {loading ? <span className="hubx-skel" /> : started ? <><bdi>{fmt(r.answered)}</bdi> {t.specQuestions}</> : t.specNotStarted}
+                                        {loading
+                                            ? <span className="hubx-skel" />
+                                            : started
+                                                ? (r.total >= r.answered && r.total > 0
+                                                    ? t.specCoverage(fmt(r.answered), fmt(r.total))
+                                                    : <><bdi>{fmt(r.answered)}</bdi> {t.specQuestions}</>)
+                                                : t.specNotStarted}
                                     </span>
                                     {isWeak && <span className="hubx-tag">{t.weakest}</span>}
                                     <button

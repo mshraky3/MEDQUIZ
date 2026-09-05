@@ -298,32 +298,6 @@ const QuizLauncher = ({ id, contentStatus }) => {
         setCongratulationsData(null);
     };
 
-    // Render the custom checkbox visual state for the type selector.
-    useEffect(() => {
-        if (!showTypeSelector) return;
-        const listeners = [];
-        const labels = document.querySelectorAll('.custom-checkbox-group label');
-        labels.forEach(label => {
-            const checkbox = label.querySelector('input[type="checkbox"]');
-            if (!checkbox) return;
-            let customBox = label.querySelector('.checkbox-custom');
-            if (!customBox) {
-                customBox = document.createElement('span');
-                customBox.classList.add('checkbox-custom');
-                label.insertBefore(customBox, checkbox);
-            }
-            if (checkbox.checked) customBox.classList.add('checked');
-            else customBox.classList.remove('checked');
-            const handler = () => {
-                if (checkbox.checked) customBox.classList.add('checked');
-                else customBox.classList.remove('checked');
-            };
-            checkbox.addEventListener('change', handler);
-            listeners.push({ checkbox, handler });
-        });
-        return () => listeners.forEach(({ checkbox, handler }) => checkbox.removeEventListener('change', handler));
-    }, [showTypeSelector, selectedTypes]);
-
     const anyModalOpen = showTypeSelector || showTimerSelector || showCustomQuestions ||
         showFinalQuizType || showFinalQuizTime || showCongratulations;
 
@@ -396,31 +370,45 @@ const QuizLauncher = ({ id, contentStatus }) => {
                                     <bdi>{totalSourceQuestions}</bdi> {t.questionsUnit}
                                 </span>
                             </button>
-                            {sources.map((s) => (
-                                <button
-                                    type="button"
-                                    key={s.key}
-                                    className={`bank-source-chip${selectedSource === s.key ? ' is-active' : ''}`}
-                                    aria-pressed={selectedSource === s.key}
-                                    onClick={() => setSelectedSource(s.key)}
-                                >
-                                    <span className="bank-source-chip-name">
-                                        <bdi>{getSourceLabel(s.key, lang)}</bdi>
-                                    </span>
-                                    <span className="bank-source-chip-count">
-                                        <bdi>{s.total}</bdi> {t.questionsUnit}
-                                    </span>
-                                    {s.priority && (
-                                        <span
-                                            className="bank-source-chip-priority"
-                                            aria-label={t.sourcePriorityLabel(s.priority)}
-                                        >
-                                            {t.sourcePriorityBadge(s.priority)}
+                            {sources.map((s) => {
+                                const donePct = Math.min(100, Math.max(0, s.completedPct || 0));
+                                return (
+                                    <button
+                                        type="button"
+                                        key={s.key}
+                                        className={`bank-source-chip${selectedSource === s.key ? ' is-active' : ''}`}
+                                        aria-pressed={selectedSource === s.key}
+                                        onClick={() => setSelectedSource(s.key)}
+                                    >
+                                        <span className="bank-source-chip-name">
+                                            <bdi>{getSourceLabel(s.key, lang)}</bdi>
                                         </span>
-                                    )}
-                                </button>
-                            ))}
+                                        <span className="bank-source-chip-count">
+                                            <bdi>{s.total}</bdi> {t.questionsUnit}
+                                        </span>
+                                        {s.priority && (
+                                            <span
+                                                className="bank-source-chip-priority"
+                                                aria-label={t.sourcePriorityLabel(s.priority)}
+                                            >
+                                                {t.sourcePriorityBadge(s.priority)}
+                                            </span>
+                                        )}
+                                        {/* How much of THIS source has already been
+                                            seen — the concrete answer to "will
+                                            questions repeat", which used to be
+                                            invisible until someone asked. */}
+                                        <span className="bank-source-chip-progress" aria-label={t.sourceDoneLabel(donePct)}>
+                                            <span className="bank-source-chip-bar">
+                                                <span className="bank-source-chip-bar-fill" style={{ width: `${donePct}%` }} />
+                                            </span>
+                                            <span className="bank-source-chip-progress-text">{t.sourceDone(donePct)}</span>
+                                        </span>
+                                    </button>
+                                );
+                            })}
                         </div>
+                        <p className="bank-source-hint">{t.sourceRepeatHint}</p>
                     </div>
                 )}
 
@@ -462,20 +450,22 @@ const QuizLauncher = ({ id, contentStatus }) => {
                                 <bdi>{selectedSource ? getSourceLabel(selectedSource, lang) : bankLabel(myTrack, lang)}</bdi>
                             </strong>
                         </p>
-                        <div className="custom-checkbox-group">
-                            {availableTypes.map((type) => (
-                                <label key={type}>
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedTypes.includes(type)}
-                                        onChange={() => handleCheckboxChange(type)}
-                                    />
-                                    <span>{getTypeLabel(type, lang)}</span>
-                                    <span className="checkbox-type-count">
-                                        <bdi>{progressByType[type] || 0}%</bdi>
-                                    </span>
-                                </label>
-                            ))}
+                        <div className="type-chip-group" role="group" aria-label={t.typeTitle}>
+                            {availableTypes.map((type) => {
+                                const checked = selectedTypes.includes(type);
+                                return (
+                                    <label key={type} className={`type-chip${checked ? ' is-active' : ''}`}>
+                                        <input
+                                            type="checkbox"
+                                            className="type-chip-input"
+                                            checked={checked}
+                                            onChange={() => handleCheckboxChange(type)}
+                                        />
+                                        <span className="type-chip-name">{getTypeLabel(type, lang)}</span>
+                                        <span className="type-chip-pct"><bdi>{progressByType[type] || 0}%</bdi></span>
+                                    </label>
+                                );
+                            })}
                         </div>
                         <div className="custom-modal-buttons">
                             <button onClick={handleStartQuiz} disabled={selectedTypes.length === 0} className="custom-start-btn">

@@ -204,6 +204,54 @@
   color: #ffffff;
 }
 
+/* How much of this source has already been answered — the concrete, visible
+   answer to "will questions repeat" instead of something a student has to
+   ask about. */
+.bank-source-chip-progress {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.bank-source-chip-bar {
+  width: 100%;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.12);
+  overflow: hidden;
+}
+
+.bank-source-chip-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent-strong);
+}
+
+.bank-source-chip.is-active .bank-source-chip-bar {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.bank-source-chip.is-active .bank-source-chip-bar-fill {
+  background: #ffffff;
+}
+
+.bank-source-chip-progress-text {
+  font-size: 10.5px;
+  font-weight: 700;
+  opacity: 0.75;
+}
+
+.bank-source-hint {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+}
+
 .quick-start-btn {
   width: 100%;
   max-width: 520px;
@@ -402,99 +450,75 @@
   text-align: center;
 }
 
-/* Custom Checkbox Styles — the modal is RTL, so the box sits at the inline
-   start (right in Arabic) and the hover nudge follows the same direction. */
-.custom-checkbox-group label {
-  position: relative;
-  padding-block: 14px;
-  padding-inline-start: 46px;
-  padding-inline-end: 16px;
-  cursor: pointer;
-  font-size: 15px;
-  color: var(--text);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+/* Type-selector chips — same visual language as .bank-source-chip above
+   (grid of small pill-cards, gradient when active) so the whole "choose your
+   quiz" screen reads as one picker pattern instead of chips in one section
+   and plain checkboxes in another. Multi-select, so each chip is a <label>
+   wrapping a real (visually-hidden, still focusable) checkbox rather than a
+   bare button — keyboard and screen-reader users get a real checkbox group,
+   and the active look is driven by React's own selectedTypes state via
+   .is-active rather than a hand-rolled DOM box kept in sync from a
+   useEffect. */
+.type-chip-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
   margin-bottom: 10px;
-  text-align: start;
-  user-select: none;
-  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
-  background: var(--surface-2, #f5f8fd);
-  border: 1.5px solid var(--border);
+}
+
+.type-chip {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 11px 10px;
   border-radius: 12px;
-  font-weight: 600;
+  border: 1.5px solid var(--border);
+  background: var(--surface-2, #f5f8fd);
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
 }
 
-.checkbox-type-count {
-  flex-shrink: 0;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--muted);
-  background: rgba(37, 99, 235, 0.08);
-  border-radius: 999px;
-  padding: 2px 9px;
-  line-height: 1.6;
+.type-chip:hover {
+  border-color: rgba(37, 99, 235, 0.45);
 }
 
-.custom-checkbox-group label:has(input:checked) .checkbox-type-count {
-  color: var(--accent-strong);
-  background: rgba(59, 130, 246, 0.14);
-}
-
-.custom-checkbox-group label:hover {
-  background: rgba(37, 99, 235, 0.06);
-  border-color: rgba(37, 99, 235, 0.4);
-  transform: translateX(-4px);
-}
-
-.custom-checkbox-group label:has(input:checked) {
-  border-color: var(--accent-strong);
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.10), rgba(99, 102, 241, 0.08));
-}
-
-.custom-checkbox-group label:has(input:focus-visible) {
+.type-chip:has(.type-chip-input:focus-visible) {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
-.custom-checkbox-group input[type="checkbox"] {
-  position: absolute;
-  opacity: 0;
-  cursor: pointer;
-  height: 0;
-  width: 0;
-}
-
-.checkbox-custom {
-  position: absolute;
-  top: 50%;
-  inset-inline-start: 14px;
-  transform: translateY(-50%);
-  height: 20px;
-  width: 20px;
-  background: #ffffff;
-  border: 1.5px solid var(--border);
-  border-radius: 6px;
-  transition: background 0.2s ease, border-color 0.2s ease;
-}
-
-.checkbox-custom.checked {
-  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+.type-chip.is-active {
   border-color: var(--accent-strong);
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #ffffff;
 }
 
-.checkbox-custom.checked::after {
-  content: "";
+.type-chip-input {
   position: absolute;
-  display: block;
-  left: 6px;
-  top: 2px;
-  width: 5px;
-  height: 10px;
-  border: solid #ffffff;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.type-chip-name {
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.3;
+  text-align: center;
+}
+
+.type-chip-pct {
+  font-size: 11.5px;
+  font-weight: 600;
+  opacity: 0.75;
 }
 
 /* Source Selection Styles */
@@ -644,19 +668,11 @@
     padding: 1.5rem;
     max-width: 90vw;
   }
-
-  .custom-checkbox-group {
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  }
 }
 
 @media (max-width: 800px) {
   .custom-modal-content {
     padding: 1.5rem;
-  }
-
-  .custom-checkbox-group label {
-    font-size: 15px;
   }
 
   .custom-source-btn {
@@ -685,18 +701,6 @@
     margin: 10px;
   }
 
-  .custom-checkbox-group {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  .custom-checkbox-group label {
-    font-size: 14px;
-    padding-block: 12px;
-    padding-inline-start: 42px;
-    padding-inline-end: 16px;
-  }
-
   .custom-source-btn {
     font-size: 14px;
     padding: 10px 16px;
@@ -720,13 +724,6 @@
     padding: 1rem;
     max-width: 98vw;
     margin: 5px;
-  }
-
-  .custom-checkbox-group label {
-    font-size: 13px;
-    padding-block: 10px;
-    padding-inline-start: 38px;
-    padding-inline-end: 14px;
   }
 
   .custom-source-btn {
@@ -753,13 +750,6 @@
     padding: 0.8rem;
     max-width: 100vw;
     margin: 2px;
-  }
-
-  .custom-checkbox-group label {
-    font-size: 12px;
-    padding-block: 8px;
-    padding-inline-start: 34px;
-    padding-inline-end: 12px;
   }
 
   .custom-source-btn {

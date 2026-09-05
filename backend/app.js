@@ -3842,7 +3842,8 @@ app.get('/api/track-content-status', requireSession, async (req, res) => {
         // enough to scope it to this track without a track column on
         // user_question_progress — same pattern the /quiz route uses.
         const trackTypes = specialtyKeys(track);
-        const [byType, bySource, summaryCount, completedByType] = await Promise.all([
+        const trackSources = PICKABLE_SOURCES[track] || [];
+        const [byType, bySource, summaryCount, completedByType, completedBySource] = await Promise.all([
             db.query(
                 `SELECT question_type, COUNT(*)::int AS total
                  FROM questions WHERE track = $1 GROUP BY question_type`,
@@ -3864,6 +3865,17 @@ app.get('/api/track-content-status', requireSession, async (req, res) => {
                  WHERE user_id = $1 AND question_type = ANY($2::text[])
                  GROUP BY question_type`,
                 [req.accountId, trackTypes]
+            ),
+            // Same shape as completedByType above, grouped by source instead of
+            // specialty — feeds the choose-quiz screen's per-source completion
+            // indicator, which previously had no way to tell a genuinely
+            // exhausted source from one nobody has touched yet.
+            db.query(
+                `SELECT source, COUNT(*)::int AS completed
+                 FROM user_question_progress
+                 WHERE user_id = $1 AND source = ANY($2::text[])
+                 GROUP BY source`,
+                [req.accountId, trackSources]
             ),
         ]);
 
@@ -3890,10 +3902,21 @@ app.get('/api/track-content-status', requireSession, async (req, res) => {
         // questions are uploaded).
         const countBySource = {};
         bySource.rows.forEach((r) => { countBySource[r.source] = r.total; });
+        const completedCountBySource = {};
+        completedBySource.rows.forEach((r) => { completedCountBySource[r.source] = r.completed; });
         const priorityOrder = SOURCE_PRIORITY[track] || [];
         const selectableSources = (PICKABLE_SOURCES[track] || [])
             .filter((s) => (countBySource[s] || 0) > 0)
-            .map((s) => ({ key: s, total: countBySource[s], priority: priorityOrder.indexOf(s) + 1 || undefined }));
+            .map((s) => {
+                const total = countBySource[s] || 0;
+                const completed = Math.min(completedCountBySource[s] || 0, total);
+                return {
+                    key: s,
+                    total,
+                    priority: priorityOrder.indexOf(s) + 1 || undefined,
+                    completedPct: total > 0 ? Math.round((completed / total) * 100) : 0,
+                };
+            });
 
         res.json({
             track,

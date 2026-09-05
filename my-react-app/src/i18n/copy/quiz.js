@@ -165,6 +165,10 @@ const quizCopy = {
             specAria: (label, acc, n) => `${label}: دقة ${acc} بالمئة من ${n} سؤال`,
             specAriaEmpty: (label) => `${label}: لم تبدأ بعد`,
             specQuestions: 'سؤال',
+            // Used instead of the bare count whenever the topic's pool size is
+            // known — makes a small, fully-correct sample look like what it is
+            // rather than reading as "100% of the topic is done".
+            specCoverage: (answered, total) => `${answered} من ${total} سؤال`,
             specNotStarted: 'لم تبدأ بعد',
             weakest: 'أضعف تخصص',
             soon: 'قريباً',
@@ -187,6 +191,9 @@ const quizCopy = {
             questionsUnit: 'سؤال',
             sourcePriorityBadge: (rank) => `الأولوية ${rank}`,
             sourcePriorityLabel: (rank) => `الأولوية ${rank} في ترتيب المذاكرة الموصى به`,
+            sourceDone: (pct) => `${pct}% مكتمل`,
+            sourceDoneLabel: (pct) => `اكتمل ${pct} بالمئة من هذا المصدر`,
+            sourceRepeatHint: 'لن يتكرر عليك أي سؤال من مصدر معيّن حتى تُنهي كل أسئلته.',
 
             modeGroupLabel: 'نمط الاختبار',
             modeLegend: 'نمط الاختبار',
@@ -507,6 +514,10 @@ const quizCopy = {
             specAria: (label, acc, n) => `${label}: ${acc} per cent accuracy across ${n} questions`,
             specAriaEmpty: (label) => `${label}: not started yet`,
             specQuestions: 'questions',
+            // Used instead of the bare count whenever the topic's pool size is
+            // known — makes a small, fully-correct sample look like what it is
+            // rather than reading as "100% of the topic is done".
+            specCoverage: (answered, total) => `${answered} of ${total} answered`,
             specNotStarted: 'Not started yet',
             weakest: 'Weakest specialty',
             soon: 'Soon',
@@ -529,6 +540,9 @@ const quizCopy = {
             questionsUnit: 'questions',
             sourcePriorityBadge: (rank) => `Priority ${rank}`,
             sourcePriorityLabel: (rank) => `Priority ${rank} in the recommended study order`,
+            sourceDone: (pct) => `${pct}% done`,
+            sourceDoneLabel: (pct) => `${pct} percent of this source completed`,
+            sourceRepeatHint: "Questions from a source won't repeat until you finish all of it.",
 
             modeGroupLabel: 'Quiz mode',
             modeLegend: 'Quiz mode',
