@@ -16,7 +16,6 @@ const common = {
         brand: 'SQB',
         nav: {
             home: 'الرئيسية',
-            wrongQuestions: 'أسئلتي الخاطئة',
             contact: 'تواصل معنا',
             guides: 'أدلة التحضير',
             about: 'من نحن',
@@ -127,7 +126,6 @@ const common = {
         brand: 'SQB',
         nav: {
             home: 'Home',
-            wrongQuestions: 'My Wrong Questions',
             contact: 'Contact',
             guides: 'Study Guides',
             about: 'About',

@@ -2,7 +2,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Icon from '../common/Icon.jsx';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../../utils/apiClient.js';
-import './analysisShared.css';
+// The review cards are the same ones /analysis renders for its last-quiz
+// review — one review card in the product, not two.
+import './analysisPanels.css';
+import './WrongQuestions.css';
 import Spinner from '../common/Spinner.jsx';
 import ExplanationPanel from '../common/ExplanationPanel.jsx';
 import { getSourceLabel } from '../../utils/sourceLabels';
@@ -192,124 +195,100 @@ const WrongQuestions = () => {
     );
 
     return (
-        <div className="analysis-wrapper fade-in" dir={dir}>
-                <div className="screen-header">
+        <div className="wq-page" dir={dir}>
+            <header className="wq-head">
+                <h1 className="wq-title">{t.title}</h1>
+                <p className="wq-sub">{t.subtitle}</p>
+            </header>
 
-                    <h2 className="screen-title">{t.title}</h2>
-                    <p className="screen-subtitle">
-                        {t.subtitle}
-                    </p>
+            {loading && wrongQuestions.length === 0 && !isFiltering ? (
+                <div className="wq-loading">
+                    <Spinner size="lg" />
+                    <p>{t.loading}</p>
                 </div>
+            ) : error ? (
+                <div className="wq-state is-error">
+                    <h3><Icon name="x-circle" size={19} /> {error}</h3>
+                    <button type="button" onClick={() => fetchWrongQuestions(0, false)} className="wq-cta">
+                        {t.retry}
+                    </button>
+                </div>
+            ) : trulyEmpty ? (
+                <div className="wq-state">
+                    <h3><Icon name="sparkles" size={19} /> {t.emptyTitle}</h3>
+                    <p>{t.emptyBody}</p>
+                    <button type="button" onClick={() => navigate('/quizs')} className="wq-cta">
+                        {t.emptyCta}
+                    </button>
+                </div>
+            ) : (
+                <>
+                    {searchBar}
 
-                {loading && wrongQuestions.length === 0 && !isFiltering ? (
-                    <div className="loading-state">
-                        <Spinner size="lg" />
-                        <p>{t.loading}</p>
-                    </div>
-                ) : error ? (
-                    <div className="error-state">
-                        <p><Icon name="x-circle" size={15} /> {error}</p>
-                        <button
-                            onClick={() => fetchWrongQuestions(0, false)}
-                            className="primary-button"
-                        >
-                            {t.retry}
-                        </button>
-                    </div>
-                ) : trulyEmpty ? (
-                    <div className="no-data-state">
-                        <h3><Icon name="sparkles" size={20} /> {t.emptyTitle}</h3>
-                        <p>{t.emptyBody}</p>
-                        <button
-                            onClick={() => navigate('/quizs')}
-                            className="primary-button"
-                        >
-                            {t.emptyCta}
-                        </button>
-                    </div>
-                ) : (
-                    <>
-                        <div className="stats-summary">
-                            <div className="stat-card">
-                                <h3>{t.totalWrong}</h3>
-                                <p className="stat-number">{totalQuestions}</p>
-                            </div>
-                            <div className="stat-card">
-                                <h3>{t.loaded}</h3>
-                                <p className="stat-number">{wrongQuestions.length}</p>
-                            </div>
+                    {wrongQuestions.length === 0 ? (
+                        <div className="wq-state">
+                            <h3>{t.noResultsTitle}</h3>
+                            <p>{t.noResultsBody}</p>
+                            <button type="button" onClick={clearSearch} className="wq-cta">
+                                {t.noResultsCta}
+                            </button>
                         </div>
+                    ) : (
+                        <>
+                            <p className="wq-summary">{t.summary(totalQuestions, wrongQuestions.length)}</p>
 
-                        <section className="streak-section">
-                            <h3 className="section-header">{t.listTitle}</h3>
-
-                            {searchBar}
-
-                            {wrongQuestions.length === 0 ? (
-                                <div className="no-data-state">
-                                    <h3>{t.noResultsTitle}</h3>
-                                    <p>{t.noResultsBody}</p>
-                                    <button onClick={clearSearch} className="primary-button">
-                                        {t.noResultsCta}
-                                    </button>
-                                </div>
-                            ) : (
-                                <div className="questions-grid">
-                                    {wrongQuestions.map((question, index) => (
-                                        <div key={question.id || index} className="question-card">
-                                            <div className="question-header">
-                                                <div className="question-meta">
-                                                    <span className="type-badge">
-                                                        <Icon name="book" size={15} /> {getTypeLabel(question.question_type, lang)}
-                                                    </span>
-                                                    <span className="source-badge">
-                                                        <Icon name="book-open" size={15} /> {getSourceLabel(question.source, lang)}
-                                                    </span>
-                                                    <span className="date-badge">
-                                                        <Icon name="calendar" size={15} /> {formatDate(question.attempted_at, lang)}
-                                                    </span>
-                                                </div>
-                                            </div>
-
-                                            <div className="question-content">
-                                                <div className="question-text">
-                                                    {question.question_text}
-                                                </div>
-
-                                                <div className="answers-section">
-                                                    <div className="answer-row">
-                                                        <span className="answer-label wrong">{t.yourAnswer}</span>
-                                                        <span className="answer-text wrong">{question.selected_option}</span>
-                                                    </div>
-                                                    <div className="answer-row">
-                                                        <span className="answer-label correct">{t.correctAnswer}</span>
-                                                        <span className="answer-text correct">{question.correct_option}</span>
-                                                    </div>
-                                                </div>
-
-                                                <ExplanationPanel explanation={question.explanation} />
-                                            </div>
+                            <div className="ap-reviews">
+                                {wrongQuestions.map((question, index) => (
+                                    <article key={question.id || index} className="ap-review">
+                                        <div className="ap-review-head">
+                                            <span className="ap-badge">
+                                                <Icon name="book" size={14} /> {getTypeLabel(question.question_type, lang)}
+                                            </span>
+                                            <span className="ap-badge">
+                                                <Icon name="book-open" size={14} /> {getSourceLabel(question.source, lang)}
+                                            </span>
+                                            <span className="ap-badge">
+                                                <Icon name="calendar" size={14} /> {formatDate(question.attempted_at, lang)}
+                                            </span>
                                         </div>
-                                    ))}
-                                </div>
-                            )}
 
-                            {hasMore && wrongQuestions.length > 0 && (
-                                <div className="load-more-container">
+                                        <div className="ap-review-body">
+                                            <p className="ap-question">{question.question_text}</p>
+
+                                            <div className="ap-answers">
+                                                <div className="ap-answer is-wrong">
+                                                    <span className="ap-answer-label">{t.yourAnswer}</span>
+                                                    <span className="ap-answer-value">{question.selected_option}</span>
+                                                </div>
+                                                <div className="ap-answer is-correct">
+                                                    <span className="ap-answer-label">{t.correctAnswer}</span>
+                                                    <span className="ap-answer-value">{question.correct_option}</span>
+                                                </div>
+                                            </div>
+
+                                            <ExplanationPanel explanation={question.explanation} />
+                                        </div>
+                                    </article>
+                                ))}
+                            </div>
+
+                            {hasMore && (
+                                <div className="wq-more-wrap">
                                     <button
+                                        type="button"
                                         onClick={loadMoreQuestions}
-                                        className="load-more-button"
+                                        className="wq-more"
                                         disabled={loading}
                                     >
                                         {loading ? t.loadingMore : t.loadMore(Math.min(limit, totalQuestions - wrongQuestions.length))}
                                     </button>
                                 </div>
                             )}
-                        </section>
-                    </>
-                )}
-
-            </div>
+                        </>
+                    )}
+                </>
+            )}
+        </div>
     );
 };
 

@@ -289,9 +289,10 @@ const analysisCopy = {
             emptyTitle: 'ممتاز!',
             emptyBody: 'لم تخطئ في أي سؤال بعد.',
             emptyCta: 'ابدأ اختبار',
-            totalWrong: 'إجمالي الإجابات الخاطئة',
-            loaded: 'الأسئلة المحملة',
-            listTitle: 'أسئلتك الخاطئة',
+            // Replaced two stat cards, one of which reported how many rows had
+            // been paginated in so far — a detail of this screen's plumbing
+            // rather than anything a student needs.
+            summary: (total, shown) => `معروض ${shown} من ${total} سؤالاً خاطئاً`,
             yourAnswer: 'إجابتك:',
             correctAnswer: 'الإجابة الصحيحة:',
             loadingMore: 'جاري التحميل...',
@@ -592,9 +593,10 @@ const analysisCopy = {
             emptyTitle: 'Excellent!',
             emptyBody: 'You have not got a single question wrong yet.',
             emptyCta: 'Start a quiz',
-            totalWrong: 'Total wrong answers',
-            loaded: 'Questions loaded',
-            listTitle: 'Your wrong questions',
+            // Replaced two stat cards, one of which reported how many rows had
+            // been paginated in so far — a detail of this screen's plumbing
+            // rather than anything a student needs.
+            summary: (total, shown) => `Showing ${shown} of ${total} wrong questions`,
             yourAnswer: 'Your answer:',
             correctAnswer: 'Correct answer:',
             loadingMore: 'Loading…',

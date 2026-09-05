@@ -66,6 +66,10 @@ const QUIZS = () => {
     const openLauncher = () => navigate({ pathname: '/quizs', search: '?view=custom' });
     const [stats, setStats] = useState(null);
     const [topics, setTopics] = useState([]);
+    // How many questions this student has got wrong. The review list used to
+    // be a navbar link with no context; here it can say how much is waiting,
+    // which is the difference between a menu item and a reason to click.
+    const [wrongCount, setWrongCount] = useState(null);
     const [state, setState] = useState('loading'); // loading | ready | error
     // Null until the content check lands. Drives the empty state shown while a
     // track's bank is still being loaded — the nursing bank starts out empty,
@@ -110,10 +114,12 @@ const QUIZS = () => {
         const currentUser = userRef.current;
         if (!id || !currentUser || !sessionToken) { setState('error'); return; }
         setState('loading');
-        const [analysisRes, topicRes, contentRes] = await Promise.allSettled([
+        const [analysisRes, topicRes, contentRes, wrongRes] = await Promise.allSettled([
             protectedGet(`/user-analysis/${id}`),
             protectedGet(`/topic-analysis/user/${id}`),
-            protectedGet('/api/track-content-status')
+            protectedGet('/api/track-content-status'),
+            // limit=1 — this only wants the total the endpoint reports.
+            protectedGet(`/wrong-questions/user/${id}?limit=1`)
         ]);
         if (!aliveRef.current) return;
         if (contentRes.status === 'fulfilled') {
@@ -138,6 +144,7 @@ const QUIZS = () => {
             });
         }
         if (topicRes.status === 'fulfilled' && Array.isArray(topicRes.value.data)) setTopics(topicRes.value.data);
+        if (wrongRes.status === 'fulfilled') setWrongCount(wrongRes.value.data?.total ?? null);
         setState(analysisRes.status === 'fulfilled' ? 'ready' : 'error');
     }, [id, sessionToken, setUser]);
 
@@ -465,6 +472,21 @@ const QUIZS = () => {
                     <p className="hubx-empty">{t.noHistory}</p>
                 )}
             </section>
+
+            {/* The wrong-answer review list. It used to be a permanent navbar
+                link with no context; it lives here instead, where it can say
+                how many are actually waiting — and it disappears when there
+                are none, rather than offering an empty room. */}
+            {wrongCount > 0 && (
+                <button type="button" className="hubx-review" onClick={() => navigate('/wrong-questions')}>
+                    <span className="hubx-review-icon" aria-hidden="true"><Icon name="alert-triangle" size={19} /></span>
+                    <span className="hubx-review-text">
+                        <strong>{t.reviewTitle}</strong>
+                        <span>{t.reviewBody(fmt(wrongCount))}</span>
+                    </span>
+                    <span className="hubx-review-go" aria-hidden="true"><Icon name={arrow} size={18} /></span>
+                </button>
+            )}
 
             {/* Its own strip rather than a fourth cell in the stats row, where a
                 promo sat among three figures and read as one of them. */}

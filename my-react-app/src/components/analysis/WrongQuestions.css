@@ -1,0 +1,278 @@
+/*
+ * /wrong-questions — the wrong-answer review list.
+ *
+ * This page was the last thing rendering out of analysisShared.css, which is
+ * now deleted: its page furniture lives here, and the question cards
+ * themselves reuse .ap-review from analysisPanels.css, the same markup
+ * /analysis uses for its last-quiz review. One review card in the product,
+ * not two.
+ *
+ * The search and filter chips below are carried over from that file
+ * unchanged in spirit — they were already the newest, cleanest thing in it —
+ * with the hardcoded hexes swapped for tokens.
+ */
+
+.wq-page {
+    width: 100%;
+    max-width: var(--container-wide, 1100px);
+    margin-inline: auto;
+    padding: 24px 20px 72px;
+}
+
+/* ------------------------------------------------------------- header --- */
+/* Was a 48px centred title under a 100px gradient bar. It is a page heading. */
+
+.wq-head { margin-bottom: 18px; }
+
+.wq-title {
+    margin: 0 0 6px;
+    font-size: var(--text-2xl, 1.5rem);
+    font-weight: 800;
+    color: var(--text-dark, #0f1e3d);
+}
+
+.wq-sub {
+    margin: 0;
+    max-width: 62ch;
+    font-size: var(--text-sm, 0.875rem);
+    line-height: 1.7;
+    color: var(--text-light, #5b6779);
+}
+
+/* -------------------------------------------------------------- tools --- */
+
+.wq-tools {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    border: 1px solid var(--border-color, #d4deee);
+    border-radius: var(--radius-lg, 16px);
+    background: var(--surface, #fff);
+    box-shadow: var(--shadow-sm);
+}
+
+.wq-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.wq-search-icon {
+    position: absolute;
+    inset-inline-start: 13px;
+    display: grid;
+    place-items: center;
+    color: var(--text-light, #5b6779);
+    pointer-events: none;
+}
+
+.wq-search-input {
+    width: 100%;
+    min-height: 46px;
+    padding-block: 11px;
+    padding-inline: 40px 40px;
+    border: 1.5px solid var(--border-color, #d4deee);
+    border-radius: var(--radius-md, 12px);
+    background: var(--surface, #fff);
+    font-family: inherit;
+    /* 16px — below that, iOS Safari zooms the page on focus. */
+    font-size: 16px;
+    color: var(--text-dark, #0f1e3d);
+}
+
+.wq-search-input::placeholder { color: #a3b0c4; }
+
+.wq-search-input:focus-visible {
+    outline: none;
+    border-color: var(--primary-color, #2563eb);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* Safari renders its own clear affordance on type="search"; we ship our own
+   so the control looks the same in every browser. */
+.wq-search-input::-webkit-search-decoration,
+.wq-search-input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+
+.wq-search-clear {
+    position: absolute;
+    inset-inline-end: 8px;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border: none;
+    border-radius: 50%;
+    background: var(--surface-2, #f5f8fd);
+    color: var(--text-light, #5b6779);
+    cursor: pointer;
+}
+
+.wq-search-clear:hover { background: var(--surface-tint, #e1eafb); color: var(--text-dark, #0f1e3d); }
+.wq-search-clear:focus-visible { outline: 3px solid var(--primary-light, #3b82f6); outline-offset: 2px; }
+
+.wq-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+
+.wq-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 36px;
+    padding: 7px 13px;
+    border: 1px solid var(--border-color, #d4deee);
+    border-radius: 999px;
+    background: var(--surface, #fff);
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-medium, #475569);
+    cursor: pointer;
+    transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+
+.wq-chip:hover { border-color: var(--primary-light, #3b82f6); color: var(--primary-color, #2563eb); }
+.wq-chip:focus-visible { outline: 3px solid var(--primary-light, #3b82f6); outline-offset: 2px; }
+
+.wq-chip.is-on {
+    background: var(--primary-color, #2563eb);
+    border-color: var(--primary-color, #2563eb);
+    color: #fff;
+}
+
+.wq-chip-n {
+    font-size: 0.72rem;
+    font-weight: 800;
+    opacity: 0.7;
+    font-variant-numeric: tabular-nums;
+}
+
+.wq-results {
+    margin: 0;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-light, #5b6779);
+}
+
+/* ------------------------------------------------------------ summary --- */
+/* Was two stat cards: "total wrong" and "loaded". The second one is a
+   pagination detail, not a thing a student has any use for knowing — it is a
+   clause on one line now, next to the number that does matter. */
+
+.wq-summary {
+    margin: 0 0 14px;
+    font-size: var(--text-sm, 0.875rem);
+    font-weight: 700;
+    color: var(--text-medium, #475569);
+    font-variant-numeric: tabular-nums;
+}
+
+.wq-summary b { color: var(--text-dark, #0f1e3d); font-weight: 800; }
+
+/* ------------------------------------------------------------- states --- */
+
+.wq-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 48px 20px;
+    border: 1px solid var(--border-color, #d4deee);
+    border-radius: var(--radius-lg, 16px);
+    background: var(--surface, #fff);
+    text-align: center;
+}
+
+.wq-state h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-size: var(--text-lg, 1.125rem);
+    font-weight: 800;
+    color: var(--text-dark, #0f1e3d);
+}
+
+.wq-state p {
+    margin: 0;
+    max-width: 46ch;
+    font-size: var(--text-sm, 0.875rem);
+    line-height: 1.8;
+    color: var(--text-light, #5b6779);
+}
+
+.wq-state.is-error h3 { color: var(--error-color, #dc2626); }
+
+/* ------------------------------------------------------------ actions --- */
+
+.wq-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 46px;
+    padding: 11px 24px;
+    border: 0;
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--primary-color, #2563eb), var(--primary-dark, #1d4ed8));
+    color: #fff;
+    font-family: inherit;
+    font-size: var(--text-sm, 0.9rem);
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.28);
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.wq-cta:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(37, 99, 235, 0.34); }
+.wq-cta:focus-visible { outline: 3px solid var(--primary-dark, #1d4ed8); outline-offset: 3px; }
+
+/* The "load more" button was solid green — the app's success colour, on a
+   control that reports no success. */
+.wq-more-wrap { display: flex; justify-content: center; margin-top: 18px; }
+
+.wq-more {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 44px;
+    padding: 10px 22px;
+    border: 1.5px solid var(--border-color, #d4deee);
+    border-radius: 999px;
+    background: var(--surface, #fff);
+    color: var(--primary-dark, #1d4ed8);
+    font-family: inherit;
+    font-size: var(--text-sm, 0.875rem);
+    font-weight: 700;
+    cursor: pointer;
+    transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.wq-more:hover:not(:disabled) {
+    background: var(--primary-color, #2563eb);
+    border-color: var(--primary-color, #2563eb);
+    color: #fff;
+}
+
+.wq-more:disabled { opacity: 0.55; cursor: not-allowed; }
+.wq-more:focus-visible { outline: 3px solid var(--primary-light, #3b82f6); outline-offset: 2px; }
+
+.wq-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 56px 20px;
+    color: var(--text-light, #5b6779);
+    font-size: var(--text-sm, 0.875rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .wq-chip,
+    .wq-cta,
+    .wq-more { transition: none; }
+}

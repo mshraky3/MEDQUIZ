@@ -137,31 +137,30 @@ const Navbar = () => {
         )}
       </div>
 
+      {/* Signed in, this bar is chrome and nothing else: identity, language,
+          notifications, back. Every destination in the product is reachable
+          from the dashboard, which is the screen built to do that job — a
+          second, permanently-visible copy of the same links only ever
+          competed with it. Signed out there is no dashboard, so the marketing
+          nav stays. The empty div is deliberate: .navbar is a three-column
+          grid, and dropping the middle child moves navbar-left into it. */}
       <div className="navbar-center">
-        <div className={`navbar-nav-links ${menuOpen ? 'nav-links-open' : ''}`}>
-          {isAuthenticated ? (
-            // Inside the app, Home/Analytics/Study Material all duplicate an
-            // entry point already on the dashboard itself (the brand link,
-            // and the journey's Summaries/Analysis steps), and Contact is
-            // already in the footer. Wrong Questions has no other entry point
-            // anywhere in the app, so it's the one link that has to live here.
-            <Link to="/wrong-questions" className="nav-link" onClick={() => setMenuOpen(false)}>{t.nav.wrongQuestions}</Link>
-          ) : (
-            <>
-              <Link to="/guides" className="nav-link" onClick={() => setMenuOpen(false)}>{t.nav.guides}</Link>
-              <Link to="/about" className="nav-link" onClick={() => setMenuOpen(false)}>{t.nav.about}</Link>
-              <Link to="/faq" className="nav-link" onClick={() => setMenuOpen(false)}>{t.nav.faq}</Link>
-              <Link to="/contact" className="nav-link" onClick={() => setMenuOpen(false)}>{t.nav.contact}</Link>
-            </>
-          )}
-        </div>
+        {!isAuthenticated && (
+          <div className={`navbar-nav-links ${menuOpen ? 'nav-links-open' : ''}`}>
+            <Link to="/guides" className="nav-link" onClick={() => setMenuOpen(false)}>{t.nav.guides}</Link>
+            <Link to="/about" className="nav-link" onClick={() => setMenuOpen(false)}>{t.nav.about}</Link>
+            <Link to="/faq" className="nav-link" onClick={() => setMenuOpen(false)}>{t.nav.faq}</Link>
+            <Link to="/contact" className="nav-link" onClick={() => setMenuOpen(false)}>{t.nav.contact}</Link>
+          </div>
+        )}
       </div>
 
       <div className="navbar-left">
         {isAuthenticated && <NotificationBell />}
         <LanguageToggle className="navbar-lang-toggle" />
+        {/* Nothing to open when the nav links are gone. */}
         <button
-          className="navbar-hamburger"
+          className={`navbar-hamburger${isAuthenticated ? ' is-hidden' : ''}`}
           onClick={() => setMenuOpen(!menuOpen)}
           aria-label={t.nav.menu}
         >

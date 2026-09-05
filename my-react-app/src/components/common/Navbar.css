@@ -200,6 +200,11 @@
 }
 
 /* Hamburger menu button */
+/* Signed-in: there are no nav links, so there is nothing to toggle. Kept as a
+   modifier rather than removing the element so the media query below stays
+   the single place that decides when a hamburger is shown at all. */
+.navbar-hamburger.is-hidden { display: none !important; }
+
 .navbar-hamburger {
   display: none;
   flex-direction: column;

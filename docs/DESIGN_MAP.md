@@ -292,15 +292,17 @@ CSS is listed in load order. `+shell` = `index.css` + `Navbar.css` + `Footer.css
 - **Sub-components** `OverallStats`, `TopicAnalysisTable`, `LastQuizSummary`, `QuestionAttemptsTable` all render from **`analysisPanels.css`** (`.ap-*`) as of 2026-09; `QuizHistory`, `Progress`, `FinalExams` keep their own files.
 - **2026-09 drill rebuild** those four used to render from `analysisShared.css` — the page's dark-glassmorphism era: near-black fills at 4-15% opacity over a backdrop blur, shadows up to `0 25px 80px rgba(15,23,42,.35)`, and label/value pairs drawn as full-width pastel bars. On the opaque white shell that stacked **four nested grey panels around a single number**, and two of the pastel colours were genuinely illegible on a light background (`#fbbf24` labels, `#c4b5fd` values). Each panel also rendered a `.section-header` (1.8rem, centred, gradient underline) repeating the name its own drill toggle already showed, plus a blurb paragraph repeated per card. Now: `TopicAnalysisTable` is a row ledger matching the hub's (per-specialty data is comparison data), `LastQuizSummary` is a figure strip, `QuestionAttemptsTable` keeps cards but opaque, badges are one neutral style, and only accuracy and correct/wrong carry colour.
 - **`analysisShared.css` is no longer shared** — `WrongQuestions.jsx` is its only consumer. The page furniture this route still needs (`.button-bar`, `.primary-button`, `.secondary-button`, `.danger-*`, `.reset-modal-*`) moved into `Analysis.css` **scoped under `.an-wrapper`**, because that file still defines its own `.primary-button` for `/wrong-questions` and stylesheets never unload within a session (§1). `/analysis` had been picking those rules up only by accident, through whichever drill sub-component imported the shared file first.
-- **Still on the old styling:** `/wrong-questions`, the last consumer of `analysisShared.css`.
+- `analysisShared.css` was deleted outright in the following pass — see `/wrong-questions`, its last consumer.
 - **Structure** collapsible `.an-drill` sections. A sub-component's CSS loads whether or not its section is expanded.
 - **Defects** **`A1` — 49 selectors are defined in 2+ of these three stylesheets, and 44 of them have genuinely different values.** Also `A3` (the `slideDown` collision breaks the navbar's own entrance animation — verified), `B2` (`#4ade80` / `#fca5a5` / `#93c5fd` answer colours), `B4` (`.question-text { max-width:300px; text-align:center }` applied globally), `D4` (32 `!important` in `analysisShared.css`, including `!important` wars across three files' media queries)
 
 #### `/wrong-questions`
 
-- **Component** `analysis/WrongQuestions.jsx` · **CSS** `analysisShared.css` +shell
-- **Root** `.wq-*` classes, but it renders `.question-card` / `.question-text` / `.answer-row`
-- **Defects** `A1`, `B2`, `B4`
+- **Component** `analysis/WrongQuestions.jsx` · **CSS** `WrongQuestions.css` (page furniture) + `analysisPanels.css` (the review cards) +shell
+- **Root** `.wq-page` · **Container** `var(--container-wide, 1100px)`
+- **Notes** the review card is `.ap-review`, the same one `/analysis` renders for its last-quiz review — one review card in the product, not two. Server-side search with a debounce, an abort on superseded queries, and per-specialty facet counts; the logic was always sound and is untouched.
+- **2026-09** was the last consumer of `analysisShared.css`. Its 48px centred title under a gradient bar became a page heading; the two stat cards ("total wrong" and "questions loaded" — the second being a pagination detail) became one summary line; the green "load more" lost the success colour it had no business wearing. **`analysisShared.css` is deleted** (1,788 lines).
+- **Defects** `A1` / `B2` / `B4` all resolved by the rewrite — the classes they described are gone.
 
 #### `/summaries` · `/summaries/:slug`
 
@@ -340,7 +342,7 @@ Legacy redirects: `/ADD_ACCOUNT`, `/ADDQ`, `/Bank`, `/TEMP_LINKS`, `/question-re
 
 | Component | CSS | z-index | Notes |
 |---|---|---|---|
-| `Navbar` | `Navbar.css` (621) | **1030** | fixed; `.user-menu-dropdown` is a local `z-index: 1` (it lives inside the navbar's own stacking context, so a local value is correct — this table previously said 1100/above `--z-modal`, which was stale against the A2 fix already recorded in `DESIGN_AUDIT_2026-08-25.md`). Authed nav-links are just "My Wrong Questions" (2026-09) — Home/Analytics/Study Material/Contact were removed as duplicates of the brand link, the hub's own journey cards, and the footer. The dropdown's "My group" link is now conditional on actually owning a group (`GET /api/groups/mine`), fetched once on mount. |
+| `Navbar` | `Navbar.css` (621) | **1030** | fixed; `.user-menu-dropdown` is a local `z-index: 1` (it lives inside the navbar's own stacking context, so a local value is correct — this table previously said 1100/above `--z-modal`, which was stale against the A2 fix already recorded in `DESIGN_AUDIT_2026-08-25.md`). **Signed in, the bar carries no nav links at all** (2026-09): brand, notifications, language, back, user menu — chrome only. Home/Analytics/Study Material/Contact went first as duplicates of the brand link, the hub's journey cards and the footer; Wrong Questions followed once it had a proper home on the hub (`.hubx-review`, which can state how many are waiting). The hamburger is hidden for authed users since there is nothing to open, and `.navbar-center` stays in the DOM as an empty div because `.navbar` is a three-column grid. Signed-out visitors keep the marketing nav — there is no dashboard to carry it for them. The dropdown's "My group" link is conditional on actually owning a group (`GET /api/groups/mine`), fetched once on mount. |
 | `Footer` | `Footer.css` (142) | — | `margin-top:auto`; 1100px cap; breakpoint 640 |
 | `CookieConsent` | `CookieConsent.css` | **10000** | mounted at the app root, outside the router |
 | `CongratulationsPopup` | `CongratulationsPopup.css` | **10000** | |
