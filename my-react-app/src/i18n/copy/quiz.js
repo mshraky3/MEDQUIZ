@@ -150,25 +150,27 @@ const quizCopy = {
                 empty: 'لم تذاكر هذا الأسبوع بعد — ابدأ اختباراً لتظهر أرقامك هنا.',
             },
 
-            performanceTitle: 'أداؤك',
-            performanceNote: 'ابدأ بأضعف تخصص لأكبر أثر',
+            performanceTitle: 'تخصصاتك',
+            bankNote: (answered, total) => `أجبت ${answered} من ${total} سؤالاً في بنكك`,
             kpiSummary: 'ملخص أدائك',
-            kpiAccuracy: 'الدقة',
-            kpiQuizzes: 'اختبار',
-            kpiQuestions: 'سؤال',
+            kpiAccuracy: 'دقتك',
+            kpiQuizzes: 'اختبارات',
+            kpiQuestions: 'سؤال أجبته',
+            kpiRemaining: 'سؤال بانتظارك',
             kpiStreak: 'يوم متتالٍ',
-            telegramCtaTitle: 'انضم لقناتنا',
-            telegramCtaSubtitle: 'أسئلة يومية ونصائح',
+            telegramCtaTitle: 'قناة SQB على تيليجرام',
+            telegramCtaSubtitle: 'أسئلة يومية ونصائح للاختبار',
+            telegramCtaButton: 'انضم للقناة',
 
             loadError: 'تعذّر تحميل بياناتك.',
             retry: 'إعادة المحاولة',
-            specAria: (label, acc, n) => `${label}: دقة ${acc} بالمئة من ${n} سؤال`,
             specAriaEmpty: (label) => `${label}: لم تبدأ بعد`,
-            specQuestions: 'سؤال',
-            // Used instead of the bare count whenever the topic's pool size is
-            // known — makes a small, fully-correct sample look like what it is
-            // rather than reading as "100% of the topic is done".
+            // The coverage line under each specialty's meter. The old card
+            // showed a bare answered-count under an accuracy ring, which is how
+            // "100%" ended up sitting on top of eight questions out of 765.
             specCoverage: (answered, total) => `${answered} من ${total} سؤال`,
+            specCoverageAria: (label, answered, total) => `${label}: أجبت ${answered} من ${total} سؤال`,
+            specAccuracyOf: (n) => `دقة · ${n} سؤال`,
             specNotStarted: 'لم تبدأ بعد',
             weakest: 'أضعف تخصص',
             soon: 'قريباً',
@@ -499,25 +501,27 @@ const quizCopy = {
                 empty: 'Nothing this week yet — start a quiz and your numbers appear here.',
             },
 
-            performanceTitle: 'Your performance',
-            performanceNote: 'Start with your weakest specialty for the biggest gain',
+            performanceTitle: 'Your specialties',
+            bankNote: (answered, total) => `${answered} of your bank's ${total} questions answered`,
             kpiSummary: 'Your performance summary',
             kpiAccuracy: 'Accuracy',
             kpiQuizzes: 'Quizzes',
-            kpiQuestions: 'Questions',
+            kpiQuestions: 'Questions answered',
+            kpiRemaining: 'Questions waiting',
             kpiStreak: 'Day streak',
-            telegramCtaTitle: 'Join our channel',
-            telegramCtaSubtitle: 'Daily questions & tips',
+            telegramCtaTitle: 'SQB on Telegram',
+            telegramCtaSubtitle: 'Daily questions and exam tips',
+            telegramCtaButton: 'Join the channel',
 
             loadError: 'We could not load your data.',
             retry: 'Try again',
-            specAria: (label, acc, n) => `${label}: ${acc} per cent accuracy across ${n} questions`,
             specAriaEmpty: (label) => `${label}: not started yet`,
-            specQuestions: 'questions',
-            // Used instead of the bare count whenever the topic's pool size is
-            // known — makes a small, fully-correct sample look like what it is
-            // rather than reading as "100% of the topic is done".
+            // The coverage line under each specialty's meter. The old card
+            // showed a bare answered-count under an accuracy ring, which is how
+            // "100%" ended up sitting on top of eight questions out of 765.
             specCoverage: (answered, total) => `${answered} of ${total} answered`,
+            specCoverageAria: (label, answered, total) => `${label}: ${answered} of ${total} answered`,
+            specAccuracyOf: (n) => `accuracy · ${n} answered`,
             specNotStarted: 'Not started yet',
             weakest: 'Weakest specialty',
             soon: 'Soon',

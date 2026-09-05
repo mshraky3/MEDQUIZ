@@ -35,11 +35,17 @@
 .hubx .hubx-top {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 18px;
     padding: 22px;
     border-radius: var(--radius-lg, 16px);
     background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 55%, #3b82f6 100%);
     box-shadow: var(--shadow-md);
+}
+
+.hubx .hubx-top-row {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
 .hubx .hubx-greet h1 {
@@ -110,92 +116,58 @@
     outline-offset: 3px;
 }
 
-/* ------------------------------------------------------- KPI strip ------- */
-/* Lives INSIDE the performance panel now. Previously these were four separate
-   bordered cards in their own section, which said the same thing as the
-   specialty rings directly underneath — two boxes telling one story. */
+/* ------------------------------------------------------- stat rail ------- */
+/* Four figures on the header itself, under a hairline. They were a bordered
+   strip of tiles inside the performance panel — a box of boxes, saying "where
+   am I" a full screen below the greeting that asks it. The fourth figure is
+   questions REMAINING, which is the one number that grows in a student's
+   favour on a page where every other number starts near zero. */
 
-.hubx .hubx-kpis {
+/* 2x2 on a phone rather than a 3-then-1 wrap, which stranded the last figure
+   on a line of its own. Flex from 560px up, where all four fit on one line. */
+.hubx .hubx-stats {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 2px;
-    margin-bottom: 16px;
-    padding: 4px;
-    border-radius: var(--radius-md, 12px);
-    background: var(--bg-light, #eef2fb);
-    overflow: hidden;
+    gap: 14px 24px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.22);
 }
 
-.hubx .hubx-kpi {
+@media (min-width: 560px) {
+    .hubx .hubx-stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px 32px;
+    }
+}
+
+.hubx .hubx-stat {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
     gap: 2px;
-    padding: 12px 8px;
-    background: var(--surface, #fff);
-    border-radius: 9px;
 }
 
-.hubx .hubx-kpi-icon { color: var(--primary-color, #2563eb); line-height: 0; }
-
-.hubx .hubx-kpi-value {
-    min-height: 26px;
-    font-size: 1.35rem;
+.hubx .hubx-stat b {
+    font-size: 1.5rem;
     font-weight: 800;
-    line-height: 1.2;
-    color: var(--text-dark, #0f1e3d);
+    line-height: 1.1;
+    color: #fff;
     font-variant-numeric: tabular-nums;
 }
 
-.hubx .hubx-kpi-label { font-size: var(--text-xs, 0.75rem); font-weight: 600; color: var(--text-light, #64748b); }
-
-/* The 4th KPI cell — a Telegram join CTA rather than a stat, since the hub
-   only ever has three numbers to show (the streak moved to its own card).
-   Left as a blank grid cell otherwise on every screen ≥560px wide. */
-.hubx .hubx-kpi--telegram {
-    background: linear-gradient(135deg, #2aabee, #229ed9);
-    color: #fff;
-    text-decoration: none;
-    cursor: pointer;
-    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+.hubx .hubx-stat span {
+    font-size: var(--text-xs, 0.75rem);
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.78);
 }
 
-.hubx .hubx-kpi--telegram:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(34, 158, 217, 0.35);
-}
-
-.hubx .hubx-kpi--telegram:focus-visible {
-    outline: 3px solid #fff;
-    outline-offset: 2px;
-}
-
-.hubx .hubx-kpi--telegram .hubx-kpi-icon--badge {
-    display: grid;
-    place-items: center;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.24);
-    color: #fff;
-}
-
-.hubx .hubx-kpi--telegram .hubx-kpi-label { color: rgba(255, 255, 255, 0.85); }
-
-.hubx .hubx-kpi-value--sm {
-    min-height: 0;
-    font-size: 0.95rem;
-    font-weight: 800;
-}
-
-.hubx .hubx-kpi.is-loading .hubx-kpi-value::after {
+.hubx .hubx-stat.is-loading b::after {
     content: '';
     display: block;
     width: 42px;
     height: 20px;
     border-radius: 6px;
-    background: linear-gradient(90deg, #eef2fb 25%, #dfe7f6 37%, #eef2fb 63%);
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.18) 25%, rgba(255, 255, 255, 0.32) 37%, rgba(255, 255, 255, 0.18) 63%);
     background-size: 400% 100%;
     animation: hubx-shimmer 1.3s ease-in-out infinite;
 }
@@ -238,90 +210,147 @@
     color: var(--text-light, #64748b);
 }
 
-/* Specialty cards. Previously a list of thin bars, which read as dead space
-   for a new user (four empty grey lines) and wasted the horizontal room. A
-   ring carries a percentage legibly at small size, and the card gives the
-   empty state somewhere to live: the icon fills the ring and the button says
-   "ابدأ" instead of "تدرّب". */
+/* Specialty ledger. This was four cards, each dominated by a ring rendering
+   ACCURACY — a filled circle that every reader takes for completion. A student
+   who had answered 8 of 765 obstetrics questions and got them all right saw a
+   full "100%" ring and concluded the topic was finished. Rows instead: the
+   meter is COVERAGE (the thing a ring implies), accuracy is a labelled number
+   beside it, and both sit next to the raw counts that make them legible.
+   Rows also compare against a shared baseline, which four separate rings
+   cannot, and they stack cleanly on a phone. */
 .hubx .hubx-specs {
     list-style: none;
     margin: 0;
     padding: 0;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
 }
 
 .hubx .hubx-spec {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    padding: 16px 10px 14px;
-    border: 1.5px solid var(--hubx-line);
-    border-radius: var(--radius-md, 12px);
-    background: var(--surface, #fff);
-    text-align: center;
-    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-}
-
-.hubx .hubx-spec:hover { border-color: var(--primary-light, #3b82f6); box-shadow: var(--shadow-sm); }
-
-.hubx .hubx-spec-ring { position: relative; display: block; width: 64px; height: 64px; }
-/* Direct child only: the ring's own progress <svg> needs the -90deg spin so
-   its stroke starts at 12 o'clock. Using a descendant selector here also hit
-   the specialty Icon's <svg>, which sits two levels deeper inside
-   .hubx-spec-pct — that unintentionally forced it to 64px and rotated it
-   90deg off, making stethoscope/scalpel/baby/venus unrecognizable. */
-.hubx .hubx-spec-ring > svg { width: 64px; height: 64px; transform: rotate(-90deg); }
-.hubx .hubx-ring-bg { fill: none; stroke: var(--bg-light, #eef2fb); stroke-width: 7; }
-.hubx .hubx-ring-fg {
-    fill: none;
-    stroke: var(--primary-color, #2563eb);
-    stroke-width: 7;
-    stroke-linecap: round;
-    transition: stroke-dashoffset 0.7s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.hubx .hubx-spec-pct {
-    position: absolute;
-    inset: 0;
     display: grid;
-    place-items: center;
-    font-size: 0.95rem;
-    font-weight: 800;
-    color: var(--text-dark, #0f1e3d);
-    font-variant-numeric: tabular-nums;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 10px 14px;
+    padding: 14px 12px;
+    border: 1.5px solid transparent;
+    border-radius: var(--radius-md, 12px);
+    transition: background var(--transition-fast), border-color var(--transition-fast);
 }
 
-.hubx .hubx-spec.is-empty .hubx-spec-pct { color: var(--text-light, #94a3b8); }
+.hubx .hubx-spec + .hubx-spec { box-shadow: inset 0 1px 0 var(--hubx-line); }
+.hubx .hubx-spec:hover { background: var(--surface-2, #f5f8fd); }
+
+/* Phone: name and accuracy share the top line, the meter and the button each
+   take a full row underneath. Explicit placement because the DOM order
+   (name, meter, accuracy, button) is the desktop reading order, not this one. */
+.hubx .hubx-spec-name { grid-column: 1; grid-row: 1; }
+.hubx .hubx-spec-acc { grid-column: 2; grid-row: 1; }
+.hubx .hubx-spec-meter { grid-column: 1 / -1; }
+.hubx .hubx-practise { grid-column: 1 / -1; width: 100%; }
+
+/* The suggested specialty. Amber, and the only row that carries any fill. */
+.hubx .hubx-spec.is-next {
+    border-color: #f59e0b;
+    background: #fffbeb;
+    box-shadow: none;
+}
+
+.hubx .hubx-spec.is-next + .hubx-spec { box-shadow: none; }
 
 .hubx .hubx-spec-name {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 9px;
+    min-width: 0;
     font-size: var(--text-sm, 0.875rem);
-    font-weight: 700;
+    font-weight: 800;
     color: var(--text-dark, #0f1e3d);
     line-height: 1.4;
 }
 
-.hubx .hubx-spec-name svg { color: var(--primary-color, #2563eb); flex-shrink: 0; }
-.hubx .hubx-spec-sub { font-size: var(--text-xs, 0.75rem); font-weight: 600; color: var(--text-light, #64748b); }
+.hubx .hubx-spec-icon {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    background: var(--surface-tint, #e1eafb);
+    color: var(--primary-dark, #1d4ed8);
+    flex-shrink: 0;
+}
 
-/* Weakest specialty: amber ring + badge. Emphasis only — the others stay
-   equally usable. */
-.hubx .hubx-spec.is-weak { border-color: #f59e0b; }
-.hubx .hubx-spec.is-weak .hubx-ring-fg { stroke: #d97706; }
+.hubx .hubx-spec.is-next .hubx-spec-icon { background: #fde68a; color: #92400e; }
+.hubx .hubx-spec-label { min-width: 0; }
+
+/* Coverage meter. Ten discrete blocks rather than a continuous bar: real
+   coverage early on is ~1%, which a bar draws as an invisible sliver that
+   reads as a broken widget. One lit block of ten says "barely started" on
+   purpose — and that is the honest headline, since the rest of the bank is
+   what the subscription is for. */
+.hubx .hubx-spec-meter {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    min-width: 0;
+}
+
+.hubx .hubx-segs {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 3px;
+}
+
+.hubx .hubx-seg {
+    height: 11px;
+    border-radius: 3px;
+    background: #dde5f3;
+}
+
+.hubx .hubx-seg.is-on { background: var(--primary-color, #2563eb); }
+.hubx .hubx-spec.is-next .hubx-seg.is-on { background: #d97706; }
+
+.hubx .hubx-spec-sub {
+    font-size: var(--text-xs, 0.75rem);
+    font-weight: 700;
+    color: var(--text-light, #64748b);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Accuracy. Keeps its real value at any sample size, but only takes a
+   good/bad colour once there are enough answers behind it to mean one —
+   see MIN_ACCURACY_SAMPLE in QUIZS.jsx. */
+.hubx .hubx-spec-acc {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    font-variant-numeric: tabular-nums;
+}
+
+.hubx .hubx-spec-acc b {
+    font-size: 1.1rem;
+    font-weight: 800;
+    line-height: 1.1;
+}
+
+.hubx .hubx-spec-acc span {
+    font-size: 0.66rem;
+    font-weight: 600;
+    color: var(--text-light, #64748b);
+    white-space: nowrap;
+}
+
+.hubx .hubx-spec-acc .tone-high { color: var(--accuracy-high, #16a34a); }
+.hubx .hubx-spec-acc .tone-mid { color: var(--accuracy-mid, #d97706); }
+.hubx .hubx-spec-acc .tone-low { color: var(--accuracy-low, #dc2626); }
+.hubx .hubx-spec-acc .is-thin { color: var(--text-light, #64748b); }
 
 .hubx .hubx-tag {
-    padding: 2px 8px;
+    padding: 2px 9px;
     border-radius: 999px;
-    background: #fef3c7;
+    background: #fde68a;
     color: #92400e;
     font-size: 0.68rem;
     font-style: normal;
-    font-weight: 700;
+    font-weight: 800;
     white-space: nowrap;
 }
 
@@ -336,9 +365,8 @@
 }
 
 .hubx .hubx-practise {
-    margin-top: 4px;
     min-height: 40px;
-    padding: 6px 20px;
+    padding: 6px 22px;
     border: 1.5px solid var(--border-color, #d4deee);
     border-radius: 999px;
     background: var(--surface, #fff);
@@ -357,8 +385,8 @@
     color: #fff;
 }
 
-.hubx .hubx-spec.is-weak .hubx-practise { border-color: #d97706; color: #92400e; }
-.hubx .hubx-spec.is-weak .hubx-practise:hover { background: #d97706; border-color: #d97706; color: #fff; }
+.hubx .hubx-spec.is-next .hubx-practise { background: #d97706; border-color: #d97706; color: #fff; }
+.hubx .hubx-spec.is-next .hubx-practise:hover { background: #b45309; border-color: #b45309; }
 
 .hubx .hubx-practise:focus-visible,
 .hubx .hubx-link:focus-visible,
@@ -537,20 +565,38 @@
 
 .hubx .hubx-step-btn:hover .hubx-step-cta { filter: brightness(1.08); }
 
-/* Per-step accent — the same three colours used elsewhere for these areas. */
-.hubx .hubx-step--sum  .hubx-step-icon { background: #dcfce7; color: var(--secondary-dark); }
-.hubx .hubx-step--sum  .hubx-step-cta  { background: #16a34a; }
-.hubx .hubx-step--sum  .hubx-step-btn:hover { border-color: #22c55e; }
-.hubx .hubx-step--quiz .hubx-step-icon { background: #dbeafe; color: #1d4ed8; }
-.hubx .hubx-step--quiz .hubx-step-cta  { background: #2563eb; }
-.hubx .hubx-step--quiz .hubx-step-btn:hover { border-color: #3b82f6; }
-.hubx .hubx-step--ana  .hubx-step-icon { background: #ede9fe; color: #6d28d9; }
-.hubx .hubx-step--ana  .hubx-step-cta  { background: #7c3aed; }
-.hubx .hubx-step--ana  .hubx-step-btn:hover { border-color: #8b5cf6; }
+/* One accent, not three. These are three peer destinations, and giving each a
+   different button colour (green / blue / purple) made the row read as a
+   colour swatch rather than a sequence — nothing about analytics is purple.
+   They share the app's blue, and emphasis is carried by which step is
+   suggested, which is information rather than decoration. */
+.hubx .hubx-step-icon {
+    background: var(--surface-tint, #e1eafb);
+    color: var(--primary-dark, #1d4ed8);
+}
 
-/* Suggested entry point. Emphasis only — every step stays clickable. */
-.hubx .hubx-step.is-next .hubx-step-btn { border-color: #f59e0b; box-shadow: 0 0 0 3px rgba(245, 158, 11, .15); }
-.hubx .hubx-step.is-next .hubx-step-n { background: #f59e0b; color: #fff; }
+.hubx .hubx-step-cta {
+    background: var(--surface-2, #f5f8fd);
+    color: var(--primary-dark, #1d4ed8);
+    box-shadow: inset 0 0 0 1.5px var(--hubx-line);
+}
+
+.hubx .hubx-step-btn:hover { border-color: var(--primary-light, #3b82f6); }
+
+/* Suggested entry point — the only filled button in the row. */
+.hubx .hubx-step.is-next .hubx-step-btn {
+    border-color: var(--primary-color, #2563eb);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, .12);
+}
+
+.hubx .hubx-step.is-next .hubx-step-icon { background: var(--primary-color, #2563eb); color: #fff; }
+.hubx .hubx-step.is-next .hubx-step-n { background: var(--primary-color, #2563eb); color: #fff; }
+
+.hubx .hubx-step.is-next .hubx-step-cta {
+    background: var(--primary-color, #2563eb);
+    color: #fff;
+    box-shadow: none;
+}
 
 /* Connector. Points down when stacked, along the reading direction when in a
    row; the icon itself is a left chevron, correct for RTL flow. */
@@ -566,13 +612,55 @@
 
 .hubx .hubx-step-arrow svg { transform: rotate(-90deg); }
 
-/* ----------------------------------------------------------- responsive -- */
+/* ---------------------------------------------------------- telegram ----- */
+/* Its own strip. It used to be the fourth cell of the KPI grid, which put a
+   promo in a row of the student's own figures and made it read as one. */
 
-@media (min-width: 560px) {
-    .hubx .hubx-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-
-    .hubx .hubx-specs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.hubx .hubx-tg {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border-radius: var(--radius-md, 12px);
+    background: linear-gradient(135deg, #2aabee, #229ed9);
+    color: #fff;
+    text-decoration: none;
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
 }
+
+.hubx .hubx-tg:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(34, 158, 217, 0.35); }
+.hubx .hubx-tg:focus-visible { outline: 3px solid var(--primary-light, #3b82f6); outline-offset: 3px; }
+
+.hubx .hubx-tg-icon {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.22);
+    flex-shrink: 0;
+}
+
+.hubx .hubx-tg-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.hubx .hubx-tg-text strong { font-size: var(--text-sm, 0.9rem); font-weight: 800; }
+.hubx .hubx-tg-text span { font-size: var(--text-xs, 0.75rem); color: rgba(255, 255, 255, 0.85); }
+
+.hubx .hubx-tg-go {
+    margin-inline-start: auto;
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 8px 20px;
+    border-radius: 999px;
+    background: #fff;
+    color: #0c7cb0;
+    font-size: var(--text-xs, 0.8rem);
+    font-weight: 800;
+}
+
+/* ----------------------------------------------------------- responsive -- */
 
 @media (min-width: 720px) {
     /* Single full-width column on purpose. The journey is the centrepiece, so
@@ -580,16 +668,34 @@
        put it in a ~400px column where the three steps could only stack. */
     .quiz-selection.hubx { padding: 26px 24px 88px; }
 
-    .hubx .hubx-top {
+    .hubx .hubx-top { padding: 26px 28px; }
+
+    .hubx .hubx-top-row {
         flex-direction: row;
-        align-items: center;
+        align-items: flex-end;
         justify-content: space-between;
-        padding: 26px 28px;
     }
 
     .hubx .hubx-actions { flex-shrink: 0; }
     .hubx .hubx-mastery { padding: 22px; }
     .hubx .hubx-journey { padding: 22px; }
+
+    /* Name | meter | accuracy | button, with the meter taking the slack so the
+       track is long enough for "you are at the start of it" to be the message. */
+    .hubx .hubx-spec {
+        grid-template-columns: minmax(160px, auto) minmax(140px, 1fr) 92px auto;
+        gap: 18px;
+    }
+
+    .hubx .hubx-spec-name,
+    .hubx .hubx-spec-acc,
+    .hubx .hubx-spec-meter,
+    .hubx .hubx-practise {
+        grid-column: auto;
+        grid-row: auto;
+    }
+
+    .hubx .hubx-practise { width: auto; }
 }
 
 /* Three across, connected by arrows. Needs ~900px: 3 cards + 2 connectors do
@@ -606,11 +712,11 @@
 
 @media (prefers-reduced-motion: reduce) {
     .hubx .hubx-btn,
-    .hubx .hubx-ring-fg,
     .hubx .hubx-practise,
+    .hubx .hubx-tg,
     .hubx .hubx-link { transition: none; }
 
-    .hubx .hubx-kpi.is-loading .hubx-kpi-value::after,
+    .hubx .hubx-stat.is-loading b::after,
     .hubx .hubx-skel { animation: none; }
 }
 

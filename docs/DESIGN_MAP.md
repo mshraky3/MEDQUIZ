@@ -240,9 +240,20 @@ CSS is listed in load order. `+shell` = `index.css` + `Navbar.css` + `Footer.css
 - **CSS** `QUIZS.css` (~1650) · `QuizsHub.css` (673) +shell. `GoalCard.css` /
   `HubCards.css` no longer load here — see `/account`.
 - **Root** `.quiz-selection` (+ `.hubx`) — defines local `--card`, `--card-hover`, `--text`, `--accent-strong`, `--border`, `--shadow`
-- **Layout** hub sections (greeting, study-loop journey, performance panel)
-  capped at 1400px; launcher's four full-screen config modals (type / source
-  / timer / question-count)
+- **Layout** hub sections (greeting + stat rail, study-loop journey, specialty
+  ledger, Telegram strip) capped at 1400px; launcher's four full-screen config
+  modals (type / source / timer / question-count)
+- **2026-09 hub rebuild** the four specialty ring cards became a row ledger.
+  The rings drew *accuracy*, which reads as completion — 8 of 765 obstetrics
+  questions answered correctly rendered a full "100%" circle. Rows now carry a
+  ten-block coverage meter (discrete blocks because real early coverage is ~1%,
+  which a continuous bar draws as an invisible sliver), the raw `answered / pool`
+  counts, and accuracy as a labelled number that only takes a good/bad colour
+  above `MIN_ACCURACY_SAMPLE` answers. "Weakest specialty" likewise needs a real
+  sample now; below it the least-covered specialty is suggested instead. The KPI
+  tile strip moved onto the header as a stat rail (plus a questions-remaining
+  figure), the Telegram CTA moved out of that grid into its own strip, and the
+  journey's three per-step colours (green/blue/purple) collapsed to one accent.
 - **Breakpoints** 1024 / 800 / 768 / 600 / 480 / 360
 - **Defects** ~~`A2` (all four modals sit at z-index 1000)~~ — **resolved**,
   verified 2026-09: modals read `var(--z-modal-backdrop)`. ~~`A3` (`pulse`

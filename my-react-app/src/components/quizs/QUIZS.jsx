@@ -18,6 +18,24 @@ import quizCopy from '../../i18n/copy/quiz.js';
 // Single unified bank — see QuizLauncher.jsx.
 const SOURCE = 'MidgardGameBoy';
 
+// Blocks in a specialty's coverage meter. A continuous bar is the obvious
+// choice and the wrong one here: a student who has answered 18 of 1,308
+// questions is at 1.4%, which renders as an invisible sliver and reads as a
+// broken widget. Ten discrete blocks always light at least one, so "barely
+// started" looks deliberate — which is also the honest message.
+const METER_BLOCKS = 10;
+
+// Below this many answered questions, an accuracy figure is noise: 100% off
+// eight questions is not a strength and 0% off two is not a weakness. Under
+// the threshold the number is still shown (it is their real score) but stays
+// grey rather than being coloured as good or bad, and it cannot nominate a
+// specialty as the weakest one.
+const MIN_ACCURACY_SAMPLE = 10;
+
+// Same thresholds as Analysis.jsx's accuracyTone, so a percentage means the
+// same colour wherever it appears.
+const accuracyTone = (pct) => (pct >= 75 ? 'high' : pct >= 50 ? 'mid' : 'low');
+
 /**
  * The post-login home, built as a study dashboard rather than a menu of cards.
  *
@@ -156,22 +174,47 @@ const QUIZS = () => {
         const hit = topics.find((t) => t.question_type === key);
         const answered = hit ? parseInt(hit.total_answered, 10) || 0 : 0;
         const accuracy = hit ? Math.round(parseFloat(hit.accuracy) || 0) : 0;
-        // Pool size for this specialty, already fetched for the `available`
-        // check below — reused here so "100%" next to a tiny pool reads as
-        // "8 of 8 answered" instead of a bare, misleadingly final-looking "8
-        // questions" with no sense of how big the topic actually is.
+        // Pool size for this specialty. This is the number the old ring left
+        // out, which is how "100%" could sit on top of eight answered
+        // questions and read as "topic finished".
         const total = content?.questionsByType?.[key] || 0;
         const available = !content || total > 0;
-        return { key, icon, label: getTypeLabel(key, lang), answered, accuracy, available, total };
+        const coverage = total > 0 ? (answered / total) * 100 : 0;
+        const blocks = answered > 0
+            ? Math.max(1, Math.min(METER_BLOCKS, Math.round((coverage / 100) * METER_BLOCKS)))
+            : 0;
+        return {
+            key, icon, label: getTypeLabel(key, lang),
+            answered, accuracy, available, total, blocks,
+            solidSample: answered >= MIN_ACCURACY_SAMPLE,
+        };
     });
     // Content checks are advisory: until the request lands (or if it fails) we
     // assume content exists rather than flashing an empty state at everyone.
     const bankEmpty = content ? !content.hasQuestions : false;
     const summariesEmpty = content ? !content.hasSummaries : false;
-    const attempted = rows.filter((r) => r.answered > 0);
-    const weakestKey = attempted.length >= 2
-        ? attempted.reduce((a, b) => (a.accuracy <= b.accuracy ? a : b)).key
+
+    // The whole bank in one line: what is answered, and what is still waiting.
+    // Summed from the same rows the list below renders, so the header and the
+    // rows can never disagree.
+    const bankTotal = rows.reduce((n, r) => n + r.total, 0);
+    const bankAnswered = rows.reduce((n, r) => n + r.answered, 0);
+    const bankRemaining = Math.max(0, bankTotal - bankAnswered);
+
+    // Where to send them next. Accuracy only gets to nominate a weakest
+    // specialty once at least two of them carry a real sample — otherwise the
+    // "weakest" is whichever one they happened to get wrong twice. With no
+    // qualifying sample the least-covered specialty is suggested instead,
+    // which is always true and always actionable.
+    const rated = rows.filter((r) => r.solidSample);
+    const weakestKey = rated.length >= 2
+        ? rated.reduce((a, b) => (a.accuracy <= b.accuracy ? a : b)).key
         : null;
+    const startable = rows.filter((r) => r.available && r.total > 0);
+    const leastCoveredKey = !weakestKey && startable.length > 0
+        ? startable.reduce((a, b) => (a.answered / a.total <= b.answered / b.total ? a : b)).key
+        : null;
+    const suggestKey = weakestKey || leastCoveredKey;
 
     const fmt = (n) => formatNumber(n, lang);
     // The journey chevrons point "forward", which is leftwards in Arabic and
@@ -222,45 +265,59 @@ const QUIZS = () => {
         ? null
         : (!hasHistory ? (summariesEmpty ? 'quiz' : 'summaries') : (weakestKey ? 'quiz' : 'analysis'));
 
-    // The streak used to be a fourth tile here. It moved to its own card above
-    // (StreakCard) because a streak is the one number on this page that needs
-    // a "is today done?" answer next to it — repeating it as a bare tile would
-    // just be the same figure twice.
+    // These sit in the header now rather than in a bordered strip of their own
+    // inside the performance panel. They are the answer to "where am I", which
+    // belongs next to the greeting — and one bordered box fewer on a page whose
+    // main complaint was boxes inside boxes.
     const tiles = [
-        { k: 'acc', icon: 'target', value: hasHistory ? `${Math.round(stats.avg_accuracy)}%` : '—', label: t.kpiAccuracy },
-        { k: 'quiz', icon: 'clipboard', value: hasHistory ? fmt(stats.total_quizzes) : '—', label: t.kpiQuizzes },
-        { k: 'q', icon: 'check-circle', value: hasHistory ? fmt(stats.total_questions_answered) : '—', label: t.kpiQuestions }
+        { k: 'q', value: hasHistory ? fmt(stats.total_questions_answered) : '—', label: t.kpiQuestions },
+        { k: 'quiz', value: hasHistory ? fmt(stats.total_quizzes) : '—', label: t.kpiQuizzes },
+        { k: 'acc', value: hasHistory ? `${Math.round(stats.avg_accuracy)}%` : '—', label: t.kpiAccuracy },
+        // The one number that reframes an almost-empty page: not "you have done
+        // very little" but "this much is still yours to use".
+        { k: 'left', value: bankTotal > 0 ? fmt(bankRemaining) : '—', label: t.kpiRemaining },
     ];
 
     return (
         <div className="quiz-selection hubx" dir={dir}>
             <header className="hubx-top">
-                <div className="hubx-greet">
-                    <h1>{firstName
-                        ? <>{t.greetingNamePrefix}<bdi>{firstName}</bdi>{t.greetingNameSuffix}</>
-                        : t.greeting}</h1>
-                    <p>{t.subtitle}</p>
+                <div className="hubx-top-row">
+                    <div className="hubx-greet">
+                        <h1>{firstName
+                            ? <>{t.greetingNamePrefix}<bdi>{firstName}</bdi>{t.greetingNameSuffix}</>
+                            : t.greeting}</h1>
+                        <p>{t.subtitle}</p>
+                    </div>
+                    <div className="hubx-actions">
+                        <button
+                            type="button"
+                            className="hubx-btn hubx-btn--primary"
+                            onClick={() => startQuiz('mix')}
+                            disabled={bankEmpty}
+                        >
+                            <Icon name="rocket" size={19} />
+                            <span>{t.quickStart}</span>
+                            <small>{bankEmpty ? t.unavailable : t.quickStartHint}</small>
+                        </button>
+                        <button
+                            type="button"
+                            className="hubx-btn hubx-btn--ghost"
+                            onClick={openLauncher}
+                            disabled={bankEmpty}
+                        >
+                            <Icon name="settings" size={17} />
+                            <span>{t.customize}</span>
+                        </button>
+                    </div>
                 </div>
-                <div className="hubx-actions">
-                    <button
-                        type="button"
-                        className="hubx-btn hubx-btn--primary"
-                        onClick={() => startQuiz('mix')}
-                        disabled={bankEmpty}
-                    >
-                        <Icon name="rocket" size={19} />
-                        <span>{t.quickStart}</span>
-                        <small>{bankEmpty ? t.unavailable : t.quickStartHint}</small>
-                    </button>
-                    <button
-                        type="button"
-                        className="hubx-btn hubx-btn--ghost"
-                        onClick={openLauncher}
-                        disabled={bankEmpty}
-                    >
-                        <Icon name="settings" size={17} />
-                        <span>{t.customize}</span>
-                    </button>
+
+                <div className="hubx-stats" aria-label={t.kpiSummary}>
+                    {tiles.map((tile) => (
+                        <div className={`hubx-stat${loading ? ' is-loading' : ''}`} key={tile.k}>
+                            <b><bdi>{loading ? '' : tile.value}</bdi></b>
+                            <span>{tile.label}</span>
+                        </div>
+                    ))}
                 </div>
             </header>
 
@@ -323,36 +380,19 @@ const QUIZS = () => {
                 what this page is for, and duplicated navigation weight right
                 above the panel that actually matters. */}
 
-            {/* One performance panel: headline numbers on top, per-specialty
-                rings below. These used to be two separate boxes that both
-                showed the same story in different shapes. */}
+            {/* The specialty list. Was four cards, each with a ring showing
+                ACCURACY — which every reader took for completion, so a student
+                who had answered 8 of 765 obstetrics questions correctly saw a
+                full "100%" circle and reasonably concluded they were done with
+                obstetrics. It is a ledger now: how much of each specialty's
+                pool is used up, how they score on what they have answered, and
+                one button to practise it. */}
             <section className="hubx-mastery" aria-labelledby="hubx-mastery-h">
                 <div className="hubx-sec-head">
                     <h2 id="hubx-mastery-h">{t.performanceTitle}</h2>
-                    {weakestKey && <span className="hubx-sec-note">{t.performanceNote}</span>}
-                </div>
-
-                <div className="hubx-kpis" aria-label={t.kpiSummary}>
-                    {tiles.map((tile) => (
-                        <div className={`hubx-kpi${loading ? ' is-loading' : ''}`} key={tile.k}>
-                            <span className="hubx-kpi-icon"><Icon name={tile.icon} size={15} /></span>
-                            <span className="hubx-kpi-value"><bdi>{loading ? '' : tile.value}</bdi></span>
-                            <span className="hubx-kpi-label">{tile.label}</span>
-                        </div>
-                    ))}
-                    <a
-                        className="hubx-kpi hubx-kpi--telegram"
-                        href="https://t.me/sqb_exam"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={() => { try { track('hub_telegram_cta'); } catch (e) { /* analytics is best-effort */ } }}
-                    >
-                        <span className="hubx-kpi-icon hubx-kpi-icon--badge" aria-hidden="true">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z" /></svg>
-                        </span>
-                        <span className="hubx-kpi-value hubx-kpi-value--sm">{t.telegramCtaTitle}</span>
-                        <span className="hubx-kpi-label">{t.telegramCtaSubtitle}</span>
-                    </a>
+                    {bankTotal > 0 && (
+                        <span className="hubx-sec-note">{t.bankNote(fmt(bankAnswered), fmt(bankTotal))}</span>
+                    )}
                 </div>
 
                 {state === 'error' ? (
@@ -365,35 +405,48 @@ const QUIZS = () => {
                 ) : (
                     <ul className="hubx-specs">
                         {rows.map((r) => {
-                            const isWeak = r.key === weakestKey;
+                            const isNext = r.key === suggestKey;
                             const started = r.answered > 0;
-                            const C = 163.36; // 2πr for r=26
                             return (
-                                <li className={`hubx-spec${isWeak ? ' is-weak' : ''}${started ? '' : ' is-empty'}`} key={r.key}>
-                                    <span className="hubx-spec-ring" role="img"
-                                        aria-label={started ? t.specAria(r.label, r.accuracy, r.answered) : t.specAriaEmpty(r.label)}>
-                                        <svg viewBox="0 0 64 64" aria-hidden="true">
-                                            <circle className="hubx-ring-bg" cx="32" cy="32" r="26" />
-                                            <circle className="hubx-ring-fg" cx="32" cy="32" r="26"
-                                                style={{ strokeDasharray: C, strokeDashoffset: loading || !started ? C : C * (1 - r.accuracy / 100) }} />
-                                        </svg>
-                                        <span className="hubx-spec-pct">
-                                            {loading ? '' : started ? <bdi>{r.accuracy}%</bdi> : <Icon name={r.icon} size={20} />}
+                                <li className={`hubx-spec${isNext ? ' is-next' : ''}${started ? '' : ' is-empty'}`} key={r.key}>
+                                    <span className="hubx-spec-name">
+                                        <span className="hubx-spec-icon" aria-hidden="true"><Icon name={r.icon} size={17} /></span>
+                                        <span className="hubx-spec-label">{r.label}</span>
+                                        {isNext && (
+                                            <span className="hubx-tag">
+                                                {r.key === weakestKey ? t.weakest : t.startHere}
+                                            </span>
+                                        )}
+                                    </span>
+
+                                    <span className="hubx-spec-meter">
+                                        <span
+                                            className="hubx-segs"
+                                            role="img"
+                                            aria-label={started ? t.specCoverageAria(r.label, fmt(r.answered), fmt(r.total)) : t.specAriaEmpty(r.label)}
+                                        >
+                                            {Array.from({ length: METER_BLOCKS }, (_, i) => (
+                                                <span key={i} className={`hubx-seg${i < r.blocks ? ' is-on' : ''}`} />
+                                            ))}
+                                        </span>
+                                        <span className="hubx-spec-sub">
+                                            {loading
+                                                ? <span className="hubx-skel" />
+                                                : r.total > 0
+                                                    ? t.specCoverage(fmt(r.answered), fmt(r.total))
+                                                    : t.specNotStarted}
                                         </span>
                                     </span>
-                                    <span className="hubx-spec-name">
-                                        <Icon name={r.icon} size={15} /> {r.label}
+
+                                    {/* Accuracy keeps its real value but only earns a
+                                        colour once the sample can carry one. */}
+                                    <span className="hubx-spec-acc">
+                                        <b className={started && r.solidSample ? `tone-${accuracyTone(r.accuracy)}` : 'is-thin'}>
+                                            {loading ? '' : started ? <bdi>{r.accuracy}%</bdi> : '—'}
+                                        </b>
+                                        <span>{started ? t.specAccuracyOf(fmt(r.answered)) : t.specNotStarted}</span>
                                     </span>
-                                    <span className="hubx-spec-sub">
-                                        {loading
-                                            ? <span className="hubx-skel" />
-                                            : started
-                                                ? (r.total >= r.answered && r.total > 0
-                                                    ? t.specCoverage(fmt(r.answered), fmt(r.total))
-                                                    : <><bdi>{fmt(r.answered)}</bdi> {t.specQuestions}</>)
-                                                : t.specNotStarted}
-                                    </span>
-                                    {isWeak && <span className="hubx-tag">{t.weakest}</span>}
+
                                     <button
                                         type="button"
                                         className="hubx-practise"
@@ -412,6 +465,25 @@ const QUIZS = () => {
                     <p className="hubx-empty">{t.noHistory}</p>
                 )}
             </section>
+
+            {/* Its own strip rather than a fourth cell in the stats row, where a
+                promo sat among three figures and read as one of them. */}
+            <a
+                className="hubx-tg"
+                href="https://t.me/sqb_exam"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => { try { track('hub_telegram_cta'); } catch (e) { /* analytics is best-effort */ } }}
+            >
+                <span className="hubx-tg-icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z" /></svg>
+                </span>
+                <span className="hubx-tg-text">
+                    <strong>{t.telegramCtaTitle}</strong>
+                    <span>{t.telegramCtaSubtitle}</span>
+                </span>
+                <span className="hubx-tg-go">{t.telegramCtaButton}</span>
+            </a>
 
             {id && <AchievementBadges userId={id} />}
         </div>
