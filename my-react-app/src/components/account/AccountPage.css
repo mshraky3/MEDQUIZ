@@ -173,6 +173,13 @@
     color: var(--primary-color, #2563eb);
 }
 
+/* The study-plan cards bring their own bottom margin from the /quizs hub,
+   where they sit directly above the next section. Here they're already
+   inside a padded .account-card, so that margin would just double up. */
+.account-card .hub-cards-row {
+    margin-bottom: 0;
+}
+
 .account-loading {
     display: flex;
     flex-direction: column;

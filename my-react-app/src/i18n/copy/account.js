@@ -6,6 +6,10 @@ export default {
         loading: 'جاري تحميل تفاصيل اشتراكك...',
         loadError: 'تعذّر تحميل تفاصيل اشتراكك. حدّث الصفحة وحاول مرة أخرى.',
 
+        sectionHeading: 'حسابي واشتراكي',
+        studyPlanHeading: 'خطة المذاكرة',
+        contactCta: 'تواصل معنا',
+
         emailLabel: 'البريد المسجَّل',
         statusLabel: 'الحالة',
         planLabel: 'الخطة',
@@ -57,6 +61,10 @@ export default {
         heading: 'My subscription',
         loading: 'Loading your subscription…',
         loadError: 'We could not load your subscription. Refresh the page and try again.',
+
+        sectionHeading: 'My account & subscription',
+        studyPlanHeading: 'Study plan',
+        contactCta: 'Contact us',
 
         emailLabel: 'Registered email',
         statusLabel: 'Status',

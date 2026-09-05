@@ -9,10 +9,19 @@ import SEO from '../common/SEO.jsx';
 import { useCopy, useLang } from '../../i18n';
 import { formatDate } from '../../i18n/format.js';
 import accountCopy from '../../i18n/copy/account.js';
+import { specialtiesOf, userTrack } from '../../utils/tracks.js';
+import ExamDateCard from '../quizs/ExamDateCard.jsx';
+import StreakCard from '../quizs/StreakCard.jsx';
+import GoalCard from '../quizs/GoalCard.jsx';
 // The subscribe/renew CTA below matches the button style used on the page it
 // navigates to (/subscribe, styled via Login.css) — was previously the
 // plainer global default, a jarring style change across a single click.
 import '../login/Login.css';
+// These two style the three study-plan cards below, unchanged from their
+// home on the /quizs hub — reused as-is rather than reskinned to match
+// .account-card, since they're already the polished version.
+import '../quizs/HubCards.css';
+import '../quizs/GoalCard.css';
 import './AccountPage.css';
 
 /**
@@ -40,6 +49,13 @@ const AccountPage = () => {
     // What they actually bought, from the most recent paid payment. null for an
     // account that has never paid.
     const [purchase, setPurchase] = useState(null);
+    // Feed the three study-plan cards below (moved here from the /quizs hub).
+    // Fetched separately from the subscription/group data above and allowed to
+    // simply stay null on failure — this page's actual job is stating what the
+    // account has, and that must not fail just because a secondary card's data
+    // did not load.
+    const [content, setContent] = useState(null);
+    const [streak, setStreak] = useState(null);
 
     useEffect(() => {
         if (!user?.id || !sessionToken) {
@@ -68,6 +84,21 @@ const AccountPage = () => {
             setState('ready');
         }).catch(() => {
             if (!cancelled) setState('error');
+        });
+
+        Promise.allSettled([
+            axios.get(`${Globals.URL}/api/track-content-status`, {
+                params: { username: user.username },
+                headers: { Authorization: `Bearer ${sessionToken}` },
+            }),
+            axios.get(`${Globals.URL}/user-streaks/${user.id}`, {
+                params: { username: user.username },
+                headers: { Authorization: `Bearer ${sessionToken}` },
+            }),
+        ]).then(([contentRes, streakRes]) => {
+            if (cancelled) return;
+            if (contentRes.status === 'fulfilled') setContent(contentRes.value.data);
+            if (streakRes.status === 'fulfilled') setStreak(streakRes.value.data);
         });
 
         return () => { cancelled = true; };
@@ -109,6 +140,9 @@ const AccountPage = () => {
     // no-auto-renew line, exactly like a paid one.
     const isLegacy = sub != null && (sub.grandfathered_at || (sub.is_admin_created && !sub.subscription_expiry_date));
 
+    const myTrack = userTrack(user);
+    const specialties = specialtiesOf(myTrack);
+
     return (
         <div className="account-page" dir={dir}>
             <SEO title={t.pageTitle} robots="noindex, nofollow" />
@@ -127,6 +161,7 @@ const AccountPage = () => {
                 {state === 'ready' && sub && (
                     <>
                         <section className="account-card">
+                            <h2 className="account-subheading">{t.sectionHeading}</h2>
                             <dl className="account-facts">
                                 <div>
                                     <dt>{t.emailLabel}</dt>
@@ -205,6 +240,24 @@ const AccountPage = () => {
                             </section>
                         )}
 
+                        <section className="account-card">
+                            <h2 className="account-subheading">{t.studyPlanHeading}</h2>
+                            <div className="hub-cards-row">
+                                <ExamDateCard
+                                    username={user.username}
+                                    sessionToken={sessionToken}
+                                    questionsRemaining={content?.totalQuestions || 0}
+                                />
+                                <StreakCard streak={streak} onStartToday={() => navigate('/quizs')} />
+                                <GoalCard
+                                    username={user.username}
+                                    sessionToken={sessionToken}
+                                    specialties={specialties}
+                                    sources={content?.selectableSources || []}
+                                />
+                            </div>
+                        </section>
+
                         <div className="account-actions">
                             {!isLegacy && (
                                 <button type="button" className="btn primary" onClick={() => navigate('/subscribe')}>
@@ -214,6 +267,10 @@ const AccountPage = () => {
                             <button type="button" className="account-secondary" onClick={() => navigate('/groups')}>
                                 <Icon name="users" size={16} />
                                 {hasGroup ? t.groupCta : t.groupBuyCta}
+                            </button>
+                            <button type="button" className="account-secondary" onClick={() => navigate('/contact')}>
+                                <Icon name="message-circle" size={16} />
+                                {t.contactCta}
                             </button>
                             <button type="button" className="account-secondary" onClick={() => navigate('/quizs')}>
                                 {t.backToQuizzes}
