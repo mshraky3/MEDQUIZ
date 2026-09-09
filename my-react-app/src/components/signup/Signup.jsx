@@ -15,6 +15,25 @@ import TrackModal from '../common/TrackModal.jsx';
 import '../login/Login.css';
 import './Signup.css';
 
+/**
+ * Where a brand-new account lands: question one, not the hub.
+ *
+ * Of 63 accounts created between 4 August and 2 September, 32 ever answered a
+ * question — the largest single loss anywhere in the funnel, and it happens
+ * between "account created" and "first question". Every screen in that gap is
+ * somewhere to stop, so there are none left: no hub, no launcher, no picking a
+ * collection or a size before seeing anything.
+ *
+ * `types` and `source` are deliberately omitted — QUIZ.jsx documents its
+ * stateless defaults as `mix` over the whole of the account's own track, which
+ * is exactly what a first quiz wants, and repeating the bank sentinel here
+ * would be a fourth copy of it. `mode: 'study'` is the one real choice: it
+ * reveals the explanation on the first answer rather than at the end, and the
+ * explanations are the part the free collections do not have.
+ */
+const FIRST_QUIZ_SIZE = 10;
+const firstQuiz = (id) => ({ path: `/quiz/${FIRST_QUIZ_SIZE}`, state: { id, mode: 'study' } });
+
 const Signup = () => {
     const { setUser } = useContext(UserContext);
     const [form, setForm] = useState({
@@ -235,9 +254,11 @@ const Signup = () => {
             // Straight into the app, whatever the subscription state. A brand
             // new free account has 40 questions to spend — sending it to the
             // paywall before it has seen a single question is how the old trial
-            // flow lost people.
+            // flow lost people. And straight into a quiz rather than the hub,
+            // for the reason above `firstQuiz`.
+            const { path, state } = firstQuiz(loginRes.data.user?.id);
             setTimeout(() => {
-                navigate('/quizs', { replace: true, state: loginRes.data });
+                navigate(path, { replace: true, state });
             }, 1200);
         } catch (err) {
             setTimeout(() => {
@@ -369,11 +390,23 @@ const Signup = () => {
     const handleOAuthSuccess = (data) => {
         setError('');
         if (data.showTerms) {
-            setOauthSession({ username: data.user?.username || data.user?.email, sessionToken: data.sessionToken });
+            setOauthSession({
+                username: data.user?.username || data.user?.email,
+                sessionToken: data.sessionToken,
+                id: data.user?.id,
+            });
             setUser(data.user, data.sessionToken);
             setShowTermsPopup(true);
             return;
         }
+        // No terms to accept means this Google identity already had an account
+        // that had already accepted them — a returning user who happened to
+        // arrive at /signup, not a new one. A brand-new account cannot reach
+        // here: POST /api/auth/google inserts it with terms_accepted = false,
+        // so it always takes the branch above and finishes in
+        // handleAcceptOAuthTerms. Returning users get their hub; dropping
+        // somebody with history into a fresh ten-question quiz would throw away
+        // the analysis and the wrong-answer list they came back for.
         setUser(data.user, data.sessionToken);
         safeTrack('signup_success', { entryType: 'google-oauth', studyTrack });
         navigate('/quizs', { replace: true, state: data });
@@ -394,7 +427,8 @@ const Signup = () => {
                 { headers: { Authorization: `Bearer ${oauthSession.sessionToken}` } }
             );
             safeTrack('signup_success', { entryType: 'google-oauth', studyTrack });
-            navigate('/quizs', { replace: true });
+            const { path, state } = firstQuiz(oauthSession.id);
+            navigate(path, { replace: true, state });
         } catch (err) {
             setError(t.errCreate);
         } finally {
