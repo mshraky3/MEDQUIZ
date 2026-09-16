@@ -6,6 +6,7 @@
  */
 
 import { sendQuizPoll, sendMessage, sendPhoto, deleteMessage, siteButton, SITE_URL } from './telegramClient.js';
+import { deleteMessagesAsUser, isUserbotConfigured } from './telegramUserClient.js';
 import { weeklyDigestMessage } from './telegramMessages.js';
 import { renderTopicCard } from './telegramImageService.js';
 import {
@@ -105,11 +106,41 @@ export async function postChannelAnnouncement(db, { text, buttonText, buttonUrl,
     return { sent: true, messageId: message.message_id };
 }
 
-/** Deletes channel messages past their scheduled delete_after. DM messages are never logged here (see telegramContentService). */
+/**
+ * Deletes channel messages past their scheduled delete_after. DM messages are
+ * never logged here (see telegramContentService).
+ *
+ * Goes through the userbot (telegramUserClient) when it's configured — the
+ * Bot API's deleteMessage refuses anything older than ~48h even for an admin
+ * bot, and every channel post here has a 7-10 day TTL, so the bot-token path
+ * below is really only a fallback for before the one-time userbot login is
+ * done (see scripts/telegramUserLogin.js).
+ */
 export async function runMessageCleanupJob(db) {
     const due = await findMessagesDueForDeletion(db);
     let deleted = 0;
     const errors = [];
+
+    if (isUserbotConfigured()) {
+        const byChat = new Map();
+        for (const row of due) {
+            if (!byChat.has(row.chat_id)) byChat.set(row.chat_id, []);
+            byChat.get(row.chat_id).push(row);
+        }
+        for (const [chatId, rows] of byChat) {
+            try {
+                await deleteMessagesAsUser(chatId, rows.map((r) => Number(r.message_id)));
+                for (const row of rows) {
+                    await removeSentMessageLog(db, row.id);
+                    deleted++;
+                }
+            } catch (err) {
+                for (const row of rows) errors.push({ id: row.id, error: err.message });
+            }
+        }
+        return { deleted, candidates: due.length, errors };
+    }
+
     for (const row of due) {
         try {
             await deleteMessage(row.chat_id, row.message_id);
