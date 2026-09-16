@@ -22,11 +22,22 @@ function token() {
 
 async function call(method, payload) {
     const url = `${API_BASE}/bot${token()}/${method}`;
-    const { data } = await axios.post(url, payload, { timeout: 10000 });
-    if (!data.ok) {
-        throw new Error(`Telegram API ${method} failed: ${data.description || 'unknown error'}`);
+    try {
+        const { data } = await axios.post(url, payload, { timeout: 10000 });
+        if (!data.ok) {
+            throw new Error(`Telegram API ${method} failed: ${data.description || 'unknown error'}`);
+        }
+        return data.result;
+    } catch (err) {
+        // axios rejects on any non-2xx status BEFORE the `!data.ok` check above ever
+        // runs, so most real Telegram error descriptions (which come back on 4xx) were
+        // getting replaced by axios's generic "Request failed with status code 400" —
+        // masking the actual reason (e.g. callers matching on error text, like the
+        // "already gone" check in telegramJobs.runMessageCleanupJob, never matched).
+        const description = err.response?.data?.description;
+        if (description) throw new Error(`Telegram API ${method} failed: ${description}`);
+        throw err;
     }
-    return data.result;
 }
 
 /** Inline "visit the site" button attached to most bot/channel messages — the actual funnel. */
@@ -84,10 +95,14 @@ export async function sendPhoto(chatId, photoBuffer, { caption, replyMarkup, fil
 }
 
 /**
- * Delete a message the bot sent. Channel posts: works at any age (the bot is
- * an admin there). Private-chat messages: Telegram hard-caps this at 48
- * hours regardless of admin status — there is no way around that via the
- * Bot API, so callers should not rely on this succeeding for old DMs.
+ * Delete a message the bot sent, via the Bot API. Telegram hard-caps this at
+ * ~48 hours regardless of admin/can_delete_messages status — confirmed
+ * directly against @sqb_exam, contrary to what this comment used to claim.
+ * There is no way around that via the Bot API. Since channel posts here live
+ * 7-10 days before cleanup, this function can't actually delete them once
+ * they're due — see services/telegramUserClient.js, which does the real
+ * deletion as a logged-in user account (no age limit for channel admins).
+ * This stays as the fallback runMessageCleanupJob uses until that's set up.
  */
 export function deleteMessage(chatId, messageId) {
     return call('deleteMessage', { chat_id: chatId, message_id: messageId });
