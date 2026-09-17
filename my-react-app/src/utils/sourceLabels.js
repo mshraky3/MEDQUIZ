@@ -8,6 +8,9 @@
 // languages; only the month collections actually differ.
 export const SOURCE_LABELS = {
     ar: {
+        // medical track — the newest collection, added after the 2026H2
+        // rebuild's three, drawn from raw Telegram exam-recall text.
+        MedicalMonthlyRecall: 'تجميعات شهرية',
         // medical track — the 2026H2 rebuild's three collections.
         MedicalGameBoy: 'GameBoy',
         MedicalConfirmed: 'Confirmed',
@@ -31,6 +34,7 @@ export const SOURCE_LABELS = {
         GameBoy: 'GameBoy',
     },
     en: {
+        MedicalMonthlyRecall: 'Monthly Recall',
         MedicalGameBoy: 'GameBoy',
         MedicalConfirmed: 'Confirmed',
         MedicalMidgard: 'Midgard',

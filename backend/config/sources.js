@@ -11,6 +11,10 @@
  *
  *   medical — the 2026H2 rebuild replaced the old unified "MidgardGameBoy"
  *     bank with three genuine collections: GameBoy, Confirmed and Midgard.
+ *     MonthlyRecall was added after that as a fourth, drawn from raw
+ *     Telegram-compiled exam-recall text rather than the re-authored source
+ *     material the other three came from (see
+ *     source-material/medical/questions/MonthlyRecall/_PROGRESS.md).
  *     KEPT_SOURCES/UNIFIED_BANK describe the retired single-bank era; they stay
  *     exported only because historical quiz sessions and a couple of test
  *     scripts still reference them, not because they route any live query.
@@ -42,10 +46,11 @@ export const UNIFIED_BANK = 'MidgardGameBoy';
 export const KEPT_SOURCES = ['MidgardGameBoy', 'January25', 'FebMarApr25', 'May26', 'June26'];
 
 /**
- * The medical bank's three collections, ordered by recommended study
- * priority (see SOURCE_PRIORITY) — GameBoy first, Midgard last.
+ * The medical bank's four collections, ordered by recommended study
+ * priority (see SOURCE_PRIORITY) — MonthlyRecall first (freshest exam-recall
+ * content), then GameBoy, Confirmed, Midgard last.
  */
-export const MEDICAL_SOURCES = ['MedicalGameBoy', 'MedicalConfirmed', 'MedicalMidgard'];
+export const MEDICAL_SOURCES = ['MedicalMonthlyRecall', 'MedicalGameBoy', 'MedicalConfirmed', 'MedicalMidgard'];
 
 /**
  * The nursing bank's two collections, ordered by recommended study priority

@@ -2,8 +2,8 @@
  * Assertions for config/sources.js — the source-resolution rules that decide
  * which questions a quiz can draw from.
  *
- * Both tracks now offer a real picker: medical's three 2026H2 collections
- * (GameBoy, Confirmed, Midgard) and nursing's two. A regression that widens
+ * Both tracks now offer a real picker: medical's four collections
+ * (MonthlyRecall, GameBoy, Confirmed, Midgard) and nursing's two. A regression that widens
  * MEDICAL_SOURCES/NURSING_SOURCES to include a retired or foreign source would
  * silently let a quiz draw from the wrong bank, which is what this guards.
  *
@@ -21,6 +21,7 @@ const cases = [
     ['medical, no source', undefined, MEDICAL, MEDICAL_SOURCES],
     ['medical, "mix"', 'mix', MEDICAL, MEDICAL_SOURCES],
     ['medical, unified sentinel', 'MidgardGameBoy', MEDICAL, MEDICAL_SOURCES],
+    ['medical, MonthlyRecall', 'MedicalMonthlyRecall', MEDICAL, ['MedicalMonthlyRecall']],
     ['medical, GameBoy', 'MedicalGameBoy', MEDICAL, ['MedicalGameBoy']],
     ['medical, Confirmed', 'MedicalConfirmed', MEDICAL, ['MedicalConfirmed']],
     ['medical, Midgard', 'MedicalMidgard', MEDICAL, ['MedicalMidgard']],
@@ -57,7 +58,7 @@ for (const [name, source, track, expected] of cases) {
 // Distinct from what resolveSources will honour, though both tracks now offer
 // exactly their full selectable set (a real picker on both sides).
 const pickableCases = [
-    ['medical offers all three collections', PICKABLE_SOURCES[MEDICAL], MEDICAL_SOURCES],
+    ['medical offers all four collections', PICKABLE_SOURCES[MEDICAL], MEDICAL_SOURCES],
     ['nursing offers both collections', PICKABLE_SOURCES[NURSING], NURSING_SOURCES],
 ];
 

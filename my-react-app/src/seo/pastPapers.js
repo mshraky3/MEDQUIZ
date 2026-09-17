@@ -51,6 +51,13 @@ export const PAST_PAPERS_ROOT = '/past-papers';
  * buildCollections().
  */
 const COLLECTION_META = {
+    MedicalMonthlyRecall: {
+        slug: 'smle-monthly-recall',
+        labelAr: 'تجميعات شهرية للطب البشري',
+        labelEn: 'Monthly Recall collection (SMLE)',
+        blurbAr: 'أسئلة SMLE مستخرجة من تجميعات الطلاب الشهرية، مع شرح لكل سؤال.',
+        blurbEn: 'SMLE questions extracted from students\' monthly exam-recall compilations, each with an explanation.',
+    },
     MedicalMidgard: {
         slug: 'smle-midgard',
         labelAr: 'تجميعة Midgard للطب البشري',
