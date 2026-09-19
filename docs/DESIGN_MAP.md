@@ -257,6 +257,7 @@ CSS is listed in load order. `+shell` = `index.css` + `Navbar.css` + `Footer.css
   tile strip moved onto the header as a stat rail (plus a questions-remaining
   figure), the Telegram CTA moved out of that grid into its own strip, and the
   journey's three per-step colours (green/blue/purple) collapsed to one accent.
+- **2026-09** `AchievementBadges.css` (the hub's badge pills) had the same glass recipe as the popup; it is a solid `--surface` chip with `--border-color` now.
 - **Breakpoints** 1024 / 800 / 768 / 600 / 480 / 360
 - **Defects** ~~`A2` (all four modals sit at z-index 1000)~~ — **resolved**,
   verified 2026-09: modals read `var(--z-modal-backdrop)`. ~~`A3` (`pulse`
@@ -293,6 +294,7 @@ CSS is listed in load order. `+shell` = `index.css` + `Navbar.css` + `Footer.css
 - **2026-09 drill rebuild** those four used to render from `analysisShared.css` — the page's dark-glassmorphism era: near-black fills at 4-15% opacity over a backdrop blur, shadows up to `0 25px 80px rgba(15,23,42,.35)`, and label/value pairs drawn as full-width pastel bars. On the opaque white shell that stacked **four nested grey panels around a single number**, and two of the pastel colours were genuinely illegible on a light background (`#fbbf24` labels, `#c4b5fd` values). Each panel also rendered a `.section-header` (1.8rem, centred, gradient underline) repeating the name its own drill toggle already showed, plus a blurb paragraph repeated per card. Now: `TopicAnalysisTable` is a row ledger matching the hub's (per-specialty data is comparison data), `LastQuizSummary` is a figure strip, `QuestionAttemptsTable` keeps cards but opaque, badges are one neutral style, and only accuracy and correct/wrong carry colour.
 - **`analysisShared.css` is no longer shared** — `WrongQuestions.jsx` is its only consumer. The page furniture this route still needs (`.button-bar`, `.primary-button`, `.secondary-button`, `.danger-*`, `.reset-modal-*`) moved into `Analysis.css` **scoped under `.an-wrapper`**, because that file still defines its own `.primary-button` for `/wrong-questions` and stylesheets never unload within a session (§1). `/analysis` had been picking those rules up only by accident, through whichever drill sub-component imported the shared file first.
 - `analysisShared.css` was deleted outright in the following pass — see `/wrong-questions`, its last consumer.
+- **2026-09 glass sweep** the panels still living in `QuizHistory.css`, `Progress.css` and `FinalExams.css` (`.quiz-history-container`, `.session-card`, `.question-card`, `.answers-section`, `.main-progress`, `.breakdown-card`, `.insight-card`) were the same 4%-slate fill over `backdrop-filter: blur()`. They are now opaque `--surface-2` + `--border-color` with no blur and no leftover white inset highlight; `.answer-text` lost its blur, and the black-inked `rgba(0,0,0,.15)` shadows became `--shadow-sm`.
 - **Structure** collapsible `.an-drill` sections. A sub-component's CSS loads whether or not its section is expanded.
 - **Defects** **`A1` — 49 selectors are defined in 2+ of these three stylesheets, and 44 of them have genuinely different values.** Also `A3` (the `slideDown` collision breaks the navbar's own entrance animation — verified), `B2` (`#4ade80` / `#fca5a5` / `#93c5fd` answer colours), `B4` (`.question-text { max-width:300px; text-align:center }` applied globally), `D4` (32 `!important` in `analysisShared.css`, including `!important` wars across three files' media queries)
 
@@ -336,6 +338,8 @@ All admin routes are wrapped by `AdminShell` (pins LTR + English) → `AdminGate
 
 Legacy redirects: `/ADD_ACCOUNT`, `/ADDQ`, `/Bank`, `/TEMP_LINKS`, `/question-reports`.
 
+**2026-09** the admin card surfaces (`.stat-card` and its `-large` / `-small` / `-mini` variants, `.admin-section`, `.table-card`, `.recent-section`, `.add-user-form`, `.add-question-container`, Bank's `.question-card`) carried the same glass recipe on a plain `#ffffff` page. They are opaque `--surface-2` + `--border-color` now — near-identical to look at, but no longer see-through and no `blur(20px)` on every card of a long list.
+
 **Admin defects** `A2` (`add.css`'s `.modal-overlay` at z 1000 ties with the admin navbar), `B5` (undefined theme tokens with drifted fallbacks), `B2` (`#4ade80` status text on pale green)
 
 ### 2.5 Global chrome
@@ -345,7 +349,7 @@ Legacy redirects: `/ADD_ACCOUNT`, `/ADDQ`, `/Bank`, `/TEMP_LINKS`, `/question-re
 | `Navbar` | `Navbar.css` (621) | **1030** | fixed; `.user-menu-dropdown` is a local `z-index: 1` (it lives inside the navbar's own stacking context, so a local value is correct — this table previously said 1100/above `--z-modal`, which was stale against the A2 fix already recorded in `DESIGN_AUDIT_2026-08-25.md`). **Signed in, the bar carries no nav links at all** (2026-09): brand, notifications, language, back, user menu — chrome only. Home/Analytics/Study Material/Contact went first as duplicates of the brand link, the hub's journey cards and the footer; Wrong Questions followed once it had a proper home on the hub (`.hubx-review`, which can state how many are waiting). The hamburger is hidden for authed users since there is nothing to open, and `.navbar-center` stays in the DOM as an empty div because `.navbar` is a three-column grid. Signed-out visitors keep the marketing nav — there is no dashboard to carry it for them. The dropdown's "My group" link is conditional on actually owning a group (`GET /api/groups/mine`), fetched once on mount. |
 | `Footer` | `Footer.css` (142) | — | `margin-top:auto`; 1100px cap; breakpoint 640 |
 | `CookieConsent` | `CookieConsent.css` | **10000** | mounted at the app root, outside the router |
-| `CongratulationsPopup` | `CongratulationsPopup.css` | **10000** | |
+| `CongratulationsPopup` | `CongratulationsPopup.css` | 1050 (`--z-modal`) | Opens over `QuizLauncher` when a type × source is finished. Solid `--surface` panel on a 0.55-slate scrim, built like `TrackModal`. **Rebuilt 2026-09:** it was a 4%-slate "glass" panel, so the scrim showed straight through it (measured 1.3–2.2:1 on the title, body copy and chips; now ≥ 5.2:1). Every class is `congratulations-`-prefixed — its old generic `.restart-button` / `.type-badge` / `.source-badge` collided with `QUIZ.css`'s result screen and the QuizHistory badges. |
 | `InstallPrompt` | `InstallPrompt.css` | 1200 | |
 | `TrackModal` | `TrackModal.css` | 1050 | correct — above the navbar |
 | `NotificationBell` | `NotificationBell.css` | — | |
@@ -378,7 +382,7 @@ Specifically re-check this file when you:
 - define a token on a page root → note it in the page block, and check §1
 - fix an audit item → strike it here **and** in `DESIGN_AUDIT_2026-08-25.md`
 
-And four invariants that are now load-bearing — breaking one silently reopens a
+And five invariants that are now load-bearing — breaking one silently reopens a
 whole class of bug:
 
 - **Scoped stylesheets stay scoped.** `QuizHistory.css`, `FinalExams.css` and
@@ -390,3 +394,11 @@ whole class of bug:
   read it. Editing any of them directly reintroduces the drift it replaced.
 - **`z-index` comes from the ladder in `index.css`.** A raw number is how six
   modals ended up underneath the navbar.
+- **Panels are opaque; `backdrop-filter` is for scrims and app chrome only.** Any
+  surface that can sit on a scrim — modal, popup, dropdown — needs a solid
+  `--surface` / `--surface-2`. The `rgba(15,23,42,.04)` + `blur()` "glass" panel was a
+  mechanical light-theme swap of the dark theme's `rgba(255,255,255,.05)` (`17f451f`):
+  on a light page it merely looks washed out, on a scrim it makes the content
+  unreadable — the login Terms popup, then the Congratulations popup, the same bug
+  twice. Small `.03`–`.08` tints on inputs, chips, hover states and bar tracks are
+  fine; it is the *panel* fill plus blur that is banned.

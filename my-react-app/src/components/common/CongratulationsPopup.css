@@ -1,282 +1,225 @@
+/* ── Congratulations popup ─────────────────────────────────────────────────
+   Opens over QuizLauncher when a student has finished every question of one
+   type in one source. Built like the site's other modals (TrackModal, the
+   analysis reset modal): the scrim behind the panel does the dimming and the
+   blur, and the panel itself is a solid --surface.
+
+   It used to be a 4%-slate "glass" panel. That fill was a mechanical swap of
+   the dark theme's rgba(255,255,255,.05) (17f451f) and only works over a light
+   page — here the panel sits on a dark scrim, so the scrim showed straight
+   through it and dark text landed on a dark background (1.3–2.2:1 measured).
+
+   Every class is prefixed `congratulations-`. This file loads with the launcher
+   and a stylesheet never unloads, and its old generic names (.restart-button,
+   .close-button, .type-badge, .source-badge) leaked into QUIZ.css's result
+   screen and the QuizHistory / FinalExams badges. See docs/DESIGN_MAP.md §1. */
+
 .congratulations-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(15, 23, 42, 0.45);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    inset: 0;
+    z-index: var(--z-modal);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: var(--z-modal);
-    animation: congrats-fade-in 0.3s ease;
+    padding: var(--space-4);
+    overflow-y: auto;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    animation: congrats-fade-in 0.22s ease-out;
 }
 
 .congratulations-popup {
-    background: rgba(15, 23, 42, 0.04);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-radius: 24px;
-    padding: 30px;
+    width: 100%;
     max-width: 500px;
-    width: 90%;
+    margin: auto;
+    padding: 32px 28px 28px;
+    border-radius: var(--radius-xl);
+    background: var(--surface);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
     text-align: center;
-    box-shadow: var(--shadow-lg, 0 14px 36px rgba(15, 23, 42, 0.16));
-    animation: slideIn 0.4s ease;
-    position: relative;
-    overflow: hidden;
-    border: 1px solid rgba(15, 23, 42, 0.10);
+    animation: congrats-pop-in 0.3s ease-out;
 }
 
-.congratulations-popup::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: linear-gradient(45deg, transparent, rgba(35, 109, 237, 0.1), transparent);
-    animation: congrats-shimmer 3s infinite;
-}
+/* ── Header ─────────────────────────────────────────────────────────────── */
 
-.congratulations-header {
-    margin-bottom: 25px;
-    position: relative;
-    z-index: 1;
-}
-
-.celebration-icon {
-    font-size: 4rem;
-    margin-bottom: 10px;
-    animation: bounce 2s infinite;
+.congratulations-icon {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 14px;
+    border-radius: 50%;
+    background: var(--surface-tint);
+    color: var(--primary-color);
+    box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.08);
+    animation: congrats-icon-pop 0.5s 0.15s ease-out backwards;
 }
 
 .congratulations-header h2 {
-    color: var(--text-dark, #0f1e3d);
-    font-size: 2rem;
-    font-weight: 700;
     margin: 0;
-    text-shadow: 0 0 20px rgba(35, 109, 237, 0.3);
-    background: linear-gradient(135deg, #236ded 0%, #6d9ef3 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    font-size: var(--text-3xl);
+    font-weight: 800;
+    line-height: 1.3;
+    color: var(--text-dark);
 }
 
-.congratulations-content {
-    margin-bottom: 30px;
-    position: relative;
-    z-index: 1;
+/* ── Achievement ────────────────────────────────────────────────────────── */
+
+.congratulations-achievement {
+    margin: 22px 0 20px;
+    padding: 20px 18px;
+    border-radius: var(--radius-lg);
+    background: var(--surface-2);
+    border: 1px solid var(--border-color);
 }
 
-.achievement-badge {
-    background: rgba(15, 23, 42, 0.04);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: var(--shadow-md, 0 4px 14px rgba(15, 23, 42, 0.10));
-    border: 1px solid rgba(15, 23, 42, 0.10);
+.congratulations-achievement-icon {
+    display: grid;
+    place-items: center;
+    margin-bottom: 8px;
+    color: var(--primary-color);
 }
 
-.badge-icon {
-    font-size: 3rem;
-    margin-bottom: 10px;
-    animation: congrats-pulse 2s infinite;
+.congratulations-achievement h3 {
+    margin: 0 0 6px;
+    font-size: var(--text-xl);
+    font-weight: 800;
+    line-height: 1.35;
+    color: var(--text-dark);
 }
 
-.achievement-badge h3 {
-    color: #1e293b;
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin: 0 0 10px 0;
-}
-
-.achievement-badge p {
-    color: var(--text-light);
-    font-size: 1rem;
+.congratulations-achievement p {
     margin: 0;
-    line-height: 1.4;
+    font-size: var(--text-sm);
+    line-height: 1.7;
+    color: var(--text-medium);
 }
 
-.achievement-details {
-    color: #1e293b;
-    margin-bottom: 20px;
-}
+/* ── What was completed ─────────────────────────────────────────────────── */
 
-.achievement-details p {
-    margin: 0 0 15px 0;
-    font-size: 1.1rem;
-    font-weight: 500;
-}
-
-.cardinality-info {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-
-.type-badge,
-.source-badge {
-    background: rgba(35, 109, 237, 0.15);
-    color: var(--primary-dark);
-    padding: 8px 16px;
-    border-radius: 20px;
+.congratulations-scope p {
+    margin: 0 0 12px;
+    font-size: var(--text-sm);
     font-weight: 600;
-    font-size: 0.9rem;
-    border: 1px solid rgba(35, 109, 237, 0.3);
+    line-height: 1.6;
+    color: var(--text-medium);
 }
+
+.congratulations-chips {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+}
+
+.congratulations-chip {
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: var(--surface-tint);
+    border: 1px solid rgba(37, 99, 235, 0.22);
+    color: var(--primary-dark);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    line-height: 1.5;
+}
+
+/* ── Actions ────────────────────────────────────────────────────────────── */
 
 .congratulations-actions {
     display: flex;
-    gap: 15px;
-    justify-content: center;
     flex-wrap: wrap;
-    position: relative;
-    z-index: 1;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 26px;
 }
 
-.restart-button,
-.close-button {
-    padding: 12px 24px;
-    border: none;
-    border-radius: 12px;
-    font-size: 1rem;
-    font-weight: 600;
+.congratulations-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 150px;
+    min-height: 48px;
+    padding: 10px 22px;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: var(--text-base);
+    font-weight: 800;
     cursor: pointer;
     transition-property: var(--transition-props);
-    transition-duration: 0.3s;
+    transition-duration: 0.15s;
     transition-timing-function: ease;
-    min-width: 150px;
 }
 
-.restart-button {
-    background: linear-gradient(135deg, #236ded 0%, #1054ca 100%);
-    color: #ffffff;
-    box-shadow: 0 4px 15px rgba(35, 109, 237, 0.3);
+.congratulations-btn:focus-visible {
+    outline: 3px solid var(--primary-dark);
+    outline-offset: 3px;
 }
 
-.restart-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(35, 109, 237, 0.4);
-    background: linear-gradient(135deg, #6d9ef3 0%, #236ded 100%);
+.congratulations-btn--primary {
+    border: 0;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    color: #fff;
+    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.28);
 }
 
-.close-button {
-    background: rgba(15, 23, 42, 0.04);
-    color: var(--text-dark, #1e293b);
-    border: 1px solid rgba(15, 23, 42, 0.10);
-    box-shadow: var(--shadow-sm, 0 1px 2px rgba(15, 23, 42, 0.06));
+.congratulations-btn--primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 24px rgba(37, 99, 235, 0.34);
 }
 
-.close-button:hover {
-    transform: translateY(-2px);
-    background: rgba(15, 23, 42, 0.04);
-    box-shadow: var(--shadow-md, 0 4px 14px rgba(15, 23, 42, 0.10));
-    border-color: rgba(15, 23, 42, 0.10);
+.congratulations-btn--primary:active {
+    transform: translateY(0);
 }
 
-/* Animations */
+.congratulations-btn--secondary {
+    border: 1.5px solid var(--border-color);
+    background: var(--surface);
+    color: var(--text-dark);
+}
+
+.congratulations-btn--secondary:hover {
+    border-color: var(--primary-light);
+    background: var(--surface-2);
+    box-shadow: var(--shadow-sm);
+}
+
+/* ── Animations ─────────────────────────────────────────────────────────────
+   One-shot, no loops: this is a modal the student has to read and answer, so
+   nothing on it keeps moving. Reduced motion is handled by the global block in
+   index.css. */
+
 @keyframes congrats-fade-in {
-    from {
-        opacity: 0;
-    }
-
-    to {
-        opacity: 1;
-    }
+    from { opacity: 0; }
+    to   { opacity: 1; }
 }
 
-@keyframes slideIn {
-    from {
-        opacity: 0;
-        transform: translateY(-50px) scale(0.8);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
+@keyframes congrats-pop-in {
+    from { opacity: 0; transform: translateY(12px) scale(0.96); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-@keyframes bounce {
-
-    0%,
-    20%,
-    50%,
-    80%,
-    100% {
-        transform: translateY(0);
-    }
-
-    40% {
-        transform: translateY(-10px);
-    }
-
-    60% {
-        transform: translateY(-5px);
-    }
+@keyframes congrats-icon-pop {
+    0%   { transform: scale(0.6); }
+    60%  { transform: scale(1.12); }
+    100% { transform: scale(1); }
 }
 
-@keyframes congrats-pulse {
-    0% {
-        transform: scale(1);
-    }
+/* ── Small screens ──────────────────────────────────────────────────────── */
 
-    50% {
-        transform: scale(1.1);
-    }
-
-    100% {
-        transform: scale(1);
-    }
-}
-
-@keyframes congrats-shimmer {
-    0% {
-        transform: translateX(-100%) translateY(-100%) rotate(45deg);
-    }
-
-    100% {
-        transform: translateX(100%) translateY(100%) rotate(45deg);
-    }
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
+@media (max-width: 480px) {
     .congratulations-popup {
-        padding: 20px;
-        margin: 20px;
-    }
-
-    .celebration-icon {
-        font-size: 3rem;
-    }
-
-    .congratulations-header h2 {
-        font-size: 1.5rem;
-    }
-
-    .badge-icon {
-        font-size: 2.5rem;
-    }
-
-    .achievement-badge h3 {
-        font-size: 1.2rem;
+        padding: 26px 20px 22px;
+        border-radius: 20px;
     }
 
     .congratulations-actions {
         flex-direction: column;
-        align-items: center;
     }
 
-    .restart-button,
-    .close-button {
+    .congratulations-btn {
         width: 100%;
-        max-width: 200px;
     }
 }

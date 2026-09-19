@@ -14,15 +14,11 @@
 /* Quiz History Component Styles */
 
 .quiz-history-container {
-  background: rgba(15, 23, 42, 0.04);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--surface-2);
   border-radius: var(--radius-lg);
   padding: var(--space-6);
-  box-shadow:
-    0 8px 32px rgba(15, 23, 42, 0.09),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(15, 23, 42, 0.10);
+  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.09);
+  border: 1px solid var(--border-color);
   position: relative;
 }
 
@@ -454,9 +450,7 @@
 }
 
 :is(.quiz-history-container, .quiz-history-loading, .quiz-history-error) .answers-section {
-  background: rgba(15, 23, 42, 0.04);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: var(--surface-2);
   border-radius: 16px;
   padding: var(--space-4);
   margin-bottom: var(--space-2);
@@ -464,8 +458,8 @@
   position: relative;
   z-index: 1;
   min-height: auto;
-  border: 1px solid rgba(15, 23, 42, 0.10);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
 }
 
 :is(.quiz-history-container, .quiz-history-loading, .quiz-history-error) .answer-row {
@@ -518,8 +512,6 @@
   text-align: end;
   overflow-wrap: break-word;
   word-wrap: break-word;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
 }
 
 :is(.quiz-history-container, .quiz-history-loading, .quiz-history-error) .answer-text.correct {

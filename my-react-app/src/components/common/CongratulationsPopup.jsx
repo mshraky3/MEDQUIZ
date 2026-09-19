@@ -20,37 +20,45 @@ const CongratulationsPopup = ({
 
     return (
         <div className="congratulations-overlay">
-            <div className="congratulations-popup" dir={dir}>
+            <div
+                className="congratulations-popup"
+                dir={dir}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="congratulations-title"
+            >
                 <div className="congratulations-header">
-                    <div className="celebration-icon"><Icon name="sparkles" size={40} /></div>
-                    <h2>{t.title}</h2>
+                    <div className="congratulations-icon"><Icon name="sparkles" size={32} /></div>
+                    <h2 id="congratulations-title">{t.title}</h2>
                 </div>
 
                 <div className="congratulations-content">
-                    <div className="achievement-badge">
-                        <div className="badge-icon"><Icon name="trophy" size={36} /></div>
+                    <div className="congratulations-achievement">
+                        <div className="congratulations-achievement-icon"><Icon name="trophy" size={30} /></div>
                         <h3>{achievementName}</h3>
                         <p>{achievementDescription}</p>
                     </div>
 
-                    <div className="achievement-details">
+                    <div className="congratulations-scope">
                         <p>{t.completedAll}</p>
-                        <div className="cardinality-info">
-                            <span className="type-badge">{type}</span>
-                            <span className="source-badge">{source}</span>
+                        <div className="congratulations-chips">
+                            <span className="congratulations-chip">{type}</span>
+                            <span className="congratulations-chip">{source}</span>
                         </div>
                     </div>
                 </div>
 
                 <div className="congratulations-actions">
                     <button
-                        className="restart-button"
+                        type="button"
+                        className="congratulations-btn congratulations-btn--primary"
                         onClick={onRestart}
                     >
                         <Icon name="refresh" size={16} /> {t.restart}
                     </button>
                     <button
-                        className="close-button"
+                        type="button"
+                        className="congratulations-btn congratulations-btn--secondary"
                         onClick={onClose}
                     >
                         <Icon name="x" size={16} /> {t.close}

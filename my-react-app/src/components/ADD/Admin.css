@@ -35,14 +35,12 @@
 }
 
 .admin-page-wrapper .stat-card {
-  background: rgba(15, 23, 42, 0.04);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--surface-2);
   border-radius: 20px;
   padding: 2rem;
   color: #1e293b;
   text-align: center;
-  border: 1px solid rgba(15, 23, 42, 0.10);
+  border: 1px solid var(--border-color);
 }
 
 .admin-page-wrapper .stat-card h4 {
@@ -132,14 +130,12 @@
 }
 
 .admin-page-wrapper .admin-section {
-  background: rgba(15, 23, 42, 0.04);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--surface-2);
   border-radius: 12px;
   padding: 25px;
   margin-bottom: 25px;
   box-shadow: 0 8px 32px rgba(15, 23, 42, 0.14);
-  border: 1px solid rgba(15, 23, 42, 0.10);
+  border: 1px solid var(--border-color);
 }
 
 .admin-page-wrapper .section-header {
@@ -884,11 +880,10 @@
 }
 
 .admin-page-wrapper .stat-card-large {
-  background: rgba(15, 23, 42, 0.04);
-  backdrop-filter: blur(20px);
+  background: var(--surface-2);
   border-radius: 16px;
   padding: 1.5rem;
-  border: 1px solid rgba(15, 23, 42, 0.10);
+  border: 1px solid var(--border-color);
   transition-property: var(--transition-props);
   transition-duration: 0.3s;
   transition-timing-function: ease;
@@ -996,11 +991,10 @@
 }
 
 .admin-page-wrapper .stat-card-small {
-  background: rgba(15, 23, 42, 0.04);
-  backdrop-filter: blur(20px);
+  background: var(--surface-2);
   border-radius: 12px;
   padding: 1rem 1.25rem;
-  border: 1px solid rgba(15, 23, 42, 0.10);
+  border: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -1320,11 +1314,10 @@
 }
 
 .admin-page-wrapper .table-card {
-  background: rgba(15, 23, 42, 0.04);
-  backdrop-filter: blur(20px);
+  background: var(--surface-2);
   border-radius: 16px;
   padding: 1.25rem;
-  border: 1px solid rgba(15, 23, 42, 0.10);
+  border: 1px solid var(--border-color);
 }
 
 .admin-page-wrapper .table-card.warning-card {

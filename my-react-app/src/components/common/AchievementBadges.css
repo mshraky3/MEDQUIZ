@@ -9,10 +9,8 @@
 
 /* Small achievement badge - similar to streak badge */
 .achievement-badge-small {
-    background: rgba(15, 23, 42, 0.04);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(15, 23, 42, 0.10);
+    background: var(--surface);
+    border: 1px solid var(--border-color);
     border-radius: 25px;
     padding: 8px 12px 6px 12px;
     display: flex;
@@ -20,9 +18,7 @@
     gap: 6px;
     font-size: 0.8rem;
     font-weight: 600;
-    box-shadow:
-        0 2px 8px rgba(15, 23, 42, 0.09),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    box-shadow: var(--shadow-sm);
     transition-property: var(--transition-props);
     transition-duration: 0.3s;
     transition-timing-function: ease;
@@ -33,8 +29,7 @@
 
 .achievement-badge-small:hover {
     transform: scale(1.05);
-    background: rgba(15, 23, 42, 0.04);
-    border-color: rgba(35, 109, 237, 0.3);
+    border-color: rgba(37, 99, 235, 0.3);
     box-shadow:
         0 4px 12px rgba(15, 23, 42, 0.11),
         0 0 15px rgba(35, 109, 237, 0.15);

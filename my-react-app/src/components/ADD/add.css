@@ -108,10 +108,9 @@
     align-items: center;
     gap: 14px;
     padding: 18px;
-    background: rgba(15, 23, 42, 0.04);
-    backdrop-filter: blur(20px);
+    background: var(--surface-2);
     border-radius: 14px;
-    border: 1px solid rgba(15, 23, 42, 0.10);
+    border: 1px solid var(--border-color);
     transition-property: var(--transition-props);
     transition-duration: 0.3s;
     transition-timing-function: ease;
@@ -196,11 +195,10 @@
 
 /* Recent Section */
 .admin-page-wrapper .recent-section {
-    background: rgba(15, 23, 42, 0.04);
-    backdrop-filter: blur(20px);
+    background: var(--surface-2);
     border-radius: 16px;
     padding: 20px;
-    border: 1px solid rgba(15, 23, 42, 0.10);
+    border: 1px solid var(--border-color);
 }
 
 .admin-page-wrapper .recent-section h3 {
@@ -720,11 +718,10 @@
 }
 
 .admin-page-wrapper .add-user-form {
-    background: rgba(15, 23, 42, 0.04);
-    backdrop-filter: blur(20px);
+    background: var(--surface-2);
     padding: 30px;
     border-radius: 16px;
-    border: 1px solid rgba(15, 23, 42, 0.10);
+    border: 1px solid var(--border-color);
 }
 
 .admin-page-wrapper .form-group {

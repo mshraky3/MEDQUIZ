@@ -100,14 +100,10 @@
 }
 
 .final-exams-container .session-card {
-  background: rgba(15, 23, 42, 0.04);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--surface-2);
   border-radius: 16px;
-  border: 1px solid rgba(15, 23, 42, 0.10);
-  box-shadow:
-    0 4px 16px rgba(15, 23, 42, 0.09),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.09);
   overflow: hidden;
   transition-property: var(--transition-props);
   transition-duration: 0.3s;
@@ -456,14 +452,10 @@
 
 /* Question Card - Exact same as QuizHistory */
 .final-exams-container .question-card {
-  background: rgba(15, 23, 42, 0.04);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: var(--surface-2);
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(15, 23, 42, 0.10);
-  box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
   transition-property: var(--transition-props);
   transition-duration: 0.2s;
   transition-timing-function: ease;
@@ -549,9 +541,7 @@
 }
 
 .final-exams-container .answers-section {
-  background: rgba(15, 23, 42, 0.04);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: var(--surface-2);
   border-radius: 16px;
   padding: var(--space-4);
   margin-bottom: var(--space-2);
@@ -559,8 +549,8 @@
   position: relative;
   z-index: 1;
   min-height: auto;
-  border: 1px solid rgba(15, 23, 42, 0.10);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
 }
 
 .final-exams-container .answer-row {
@@ -605,8 +595,6 @@
   text-align: end;
   overflow-wrap: break-word;
   word-wrap: break-word;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
 }
 
 .final-exams-container .answer-text.correct {

@@ -74,16 +74,12 @@
 }
 
 .main-progress {
-  background: linear-gradient(135deg, rgba(35, 109, 237, 0.15) 0%, rgba(16, 84, 202, 0.1) 100%);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: linear-gradient(135deg, var(--surface-tint) 0%, var(--surface-2) 100%);
   color: #1e293b;
   border-radius: var(--radius-xl);
   padding: var(--space-6);
-  box-shadow:
-    0 10px 25px rgba(15, 23, 42, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(35, 109, 237, 0.2);
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.14);
+  border: 1px solid rgba(37, 99, 235, 0.2);
 }
 
 .progress-header {
@@ -103,12 +99,11 @@
 .progress-percentage {
   font-size: var(--text-2xl);
   font-weight: 700;
-  background: rgba(35, 109, 237, 0.2);
+  background: var(--surface);
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
-  backdrop-filter: blur(10px);
   color: var(--primary-dark);
-  border: 1px solid rgba(35, 109, 237, 0.3);
+  border: 1px solid rgba(37, 99, 235, 0.3);
 }
 
 .progress-bar {
@@ -173,15 +168,11 @@
 }
 
 .breakdown-card {
-  background: rgba(15, 23, 42, 0.04);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(15, 23, 42, 0.10);
+  background: var(--surface-2);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: var(--space-4);
-  box-shadow:
-    0 4px 12px rgba(15, 23, 42, 0.09),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.09);
   transition-property: var(--transition-props);
   transition-duration: 0.2s;
   transition-timing-function: ease;
@@ -266,18 +257,14 @@
 }
 
 .insight-card {
-  background: rgba(15, 23, 42, 0.04);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(15, 23, 42, 0.10);
+  background: var(--surface-2);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: var(--space-4);
   display: flex;
   align-items: flex-start;
   gap: var(--space-3);
-  box-shadow:
-    0 4px 12px rgba(15, 23, 42, 0.09),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.09);
   transition-property: var(--transition-props);
   transition-duration: 0.2s;
   transition-timing-function: ease;
