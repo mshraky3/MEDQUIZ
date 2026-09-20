@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import compression from 'compression';
+import { SUPABASE_CA } from './config/supabaseCa.js';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import { Pool } from 'pg';
@@ -117,9 +118,12 @@ const db = new Pool({
     // points to (Koyeb, backed by Neon) uses a publicly-trusted certificate,
     // so this should need no CA bundle — but verify connectivity right after
     // this deploys, since it can't be tested without a live connection.
-    ssl: {
-        rejectUnauthorized: true
-    },
+    // A Supabase host presents a certificate chain rooted in Supabase's own CA,
+    // which Node does not trust by default. Trust exactly that CA there and keep
+    // full verification on; every other host is treated exactly as before.
+    ssl: String(process.env.DBHOST || '').endsWith('.supabase.com')
+        ? { rejectUnauthorized: true, ca: SUPABASE_CA }
+        : { rejectUnauthorized: true },
     // Connection pooling optimizations (serverless-safe settings)
     // Was 5. The /login connection leak (client acquired outside its own
     // try/finally, so a thrown error skipped release()) meant this pool could
