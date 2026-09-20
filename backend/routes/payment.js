@@ -13,6 +13,7 @@ import { logger } from '../utils/observability.js';
 import {
     isPaymentEnforcementEnabled,
     listPlansForDisplay,
+    getOfferInfo,
     getCurrency,
     verifyWebhookToken,
     handleWebhookEvent,
@@ -83,6 +84,11 @@ function requirePaymentEnabled(req, res, next) {
  *
  * Returns a plan ladder (not one price) so the price pickers can render.
  * `plans` carries {id, kind, months, seats, priceHalalas} for each tier.
+ * `offer` is the dated National Day offer while it is on sale, else null; when
+ * it is on, the offered plans already carry the offer price as `priceHalalas`
+ * (the amount the checkout charges) and the base price as `compareAtHalalas`.
+ * Nothing about the offer is cached: a stale `offer` would advertise a price
+ * the server has stopped honouring.
  *
  * ?kind=individual (default) — the three personal terms, for /subscribe.
  * ?kind=group                — the two multi-seat plans, for /groups.
@@ -92,6 +98,7 @@ function requirePaymentEnabled(req, res, next) {
  * the ordinary checkout, where nothing explains the invite links.
  */
 router.get('/config', (req, res) => {
+    res.set('Cache-Control', 'no-store');
     const enabled = isPaymentEnforcementEnabled();
     const kind = ['individual', 'group', 'all'].includes(req.query.kind)
         ? req.query.kind
@@ -101,6 +108,7 @@ router.get('/config', (req, res) => {
         currency: getCurrency(),
         kind,
         plans: listPlansForDisplay(kind),
+        offer: getOfferInfo(),
         publishableKey: enabled ? (process.env.MOYASAR_PUBLISHABLE_KEY || null) : null,
     });
 });

@@ -29,7 +29,7 @@ const faqCopy = {
             },
             {
                 question: 'كم تكلفة الاشتراك؟',
-                answer: 'اختر المدة التي تناسبك — وكلها دفعة واحدة بدون تجديد تلقائي:\n• شهر واحد: 50 ريالاً\n• أربعة أشهر: 129 ريالاً\n• سنة كاملة: 300 ريال\n\nوالدفع عبر بوابة ميسر السعودية المرخّصة (مدى، Visa، Mastercard، Apple Pay).',
+                answer: 'اختر المدة التي تناسبك — وكلها دفعة واحدة بدون تجديد تلقائي:\n• شهر واحد: 50 ريالاً\n• أربعة أشهر: 129 ريالاً\n• سنة كاملة: 300 ريال\n\nوقد نطرح أحياناً أسعاراً خاصة لفترات محدودة (مثل عرض اليوم الوطني)، والسعر المعروض في صفحة الدفع قبل إتمام الشراء هو السعر الذي تدفعه.\n\nوالدفع عبر بوابة ميسر السعودية المرخّصة (مدى، Visa، Mastercard، Apple Pay).',
             },
             {
                 question: 'هل يوجد اشتراك جماعي لي ولأصدقائي؟',
@@ -101,7 +101,7 @@ const faqCopy = {
             },
             {
                 question: 'How much does the subscription cost?',
-                answer: 'Pick the term that suits you — all of them are a single payment with no auto-renewal:\n• One month: SAR 50\n• Four months: SAR 129\n• A full year: SAR 300\n\nPayment goes through Moyasar, the licensed Saudi gateway (mada, Visa, Mastercard, Apple Pay).',
+                answer: 'Pick the term that suits you — all of them are a single payment with no auto-renewal:\n• One month: SAR 50\n• Four months: SAR 129\n• A full year: SAR 300\n\nWe sometimes run special prices for limited periods (such as the National Day offer); the price shown at checkout, before you pay, is the price you are charged.\n\nPayment goes through Moyasar, the licensed Saudi gateway (mada, Visa, Mastercard, Apple Pay).',
             },
             {
                 question: 'Is there a group subscription for me and my friends?',

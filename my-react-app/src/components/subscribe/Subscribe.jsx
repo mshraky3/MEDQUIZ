@@ -8,6 +8,8 @@ import Spinner from '../common/Spinner.jsx';
 import Icon from '../common/Icon.jsx';
 import { useCopy, useLang } from '../../i18n';
 import supportCopy from '../../i18n/copy/support.js';
+import nationalDayCopy from '../../i18n/copy/nationalDay.js';
+import { NationalDayBanner } from '../common/NationalDayOffer.jsx';
 // The card shell (.login-card, .btn, .alert-box) lives in Login.css. Import it
 // explicitly — landing on /subscribe directly would otherwise render unstyled.
 import '../login/Login.css';
@@ -68,6 +70,7 @@ const Subscribe = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const t = useCopy(supportCopy).subscribe;
+    const tnd = useCopy(nationalDayCopy);
     const { dir } = useLang();
     // loading  → fetching config / injecting Moyasar
     // ready    → the card form is on screen and usable
@@ -78,6 +81,10 @@ const Subscribe = () => {
     const [status, setStatus] = useState('loading');
     const [error, setError] = useState('');
     const [plans, setPlans] = useState([]); // [{id, months, priceHalalas}], from /api/payment/config
+    // The National Day offer while one is on sale, straight from /config. The
+    // plans above already carry the offer price as priceHalalas — that is the
+    // amount Moyasar is asked to charge — so this is only for the banner.
+    const [ndOffer, setNdOffer] = useState(null);
     const [currency, setCurrency] = useState('SAR');
     const [publishableKey, setPublishableKey] = useState(null);
     const [selectedPlanId, setSelectedPlanId] = useState(null);
@@ -122,6 +129,7 @@ const Subscribe = () => {
                 }
 
                 setPlans(cfg.plans);
+                setNdOffer(cfg.offer?.active ? cfg.offer : null);
                 // Exposure, recorded separately from subscribe_view on purpose:
                 // the view fires on arrival and must keep counting arrivals
                 // whatever the config does, while this one only fires when real
@@ -131,6 +139,10 @@ const Subscribe = () => {
                     kind,
                     ladder: priceLadder(cfg.plans),
                     currency: cfg.currency || 'SAR',
+                    // Which campaign the ladder belongs to, so an offer-priced
+                    // ladder is never mistaken for a permanent one in the
+                    // price-test report.
+                    offer: cfg.offer?.active ? cfg.offer.id : null,
                 });
                 setCurrency(cfg.currency || 'SAR');
                 setPublishableKey(cfg.publishableKey);
@@ -369,6 +381,8 @@ const Subscribe = () => {
                         )}
                     </div>
 
+                    {ndOffer && plans.some((p) => p.offerId) && <NationalDayBanner offer={ndOffer} />}
+
                     {plans.length > 0 && (
                         <div className="subscribe-plans">
                             {plans.map((plan) => {
@@ -419,7 +433,11 @@ const Subscribe = () => {
                     </div>
 
                     {selectedOffer && (
-                        <p className="subscribe-save-note">{t.saveNote(selectedOffer.saved, selectedOffer.pct)}</p>
+                        <p className="subscribe-save-note">
+                            {selectedPlan?.offerId
+                                ? tnd.saveNote(selectedOffer.saved, selectedOffer.pct)
+                                : t.saveNote(selectedOffer.saved, selectedOffer.pct)}
+                        </p>
                     )}
 
                     {isTestMode && (

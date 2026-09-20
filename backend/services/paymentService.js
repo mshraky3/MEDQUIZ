@@ -178,27 +178,208 @@ export function listPlans(kind = 'all') {
 }
 
 /**
- * The same plans, with the one number a group buyer needs to decide.
+ * ── National Day offer — the 96th Saudi National Day, 23 September 2026 ──────
  *
- * A group card says "SAR 299 for 5 accounts" and, per seat, "SAR 60". Neither
- * says what those five people would otherwise pay, which is the entire
- * argument: the individual plan of the SAME length is SAR 129. Sixty against a
- * hundred and twenty-nine is a decision; sixty on its own is a number.
+ * A price cut on the four-month and annual plans and the two group plans. The
+ * ONE-MONTH plan is deliberately absent: at 50 SAR it has no room left to
+ * discount, and it is the price everything else is measured against.
  *
- * `compareToHalalas` is the individual plan with matching `months`, and it
- * ships WITHOUT a plan id on purpose — the price can be shown but never turned
- * into a checkout, which keeps the rule above (no individual plan is ever
- * purchasable from /groups) true by construction rather than by discipline.
+ * THE BASE LADDER THIS OFFER SITS ON — kept here so a revert never needs
+ * archaeology. PLANS above is untouched by the offer and stays exactly this:
+ *   monthly 50 · four_month 129 (compare-at 200) · annual 300
+ *   group_3 250 · group_5 299        (SAR; halalas x100 in PLANS)
+ * Full record and revert steps: docs/NATIONAL_DAY_OFFER_2026-09.md.
+ *
+ *   individual   4 months  129 → 96     annual  300 → 196
+ *   group        3 accounts 250 → 196   5 accounts 299 → 296
+ *
+ * The group prices continue the individual ones as 96 / 196 / 296 — one, three
+ * and five accounts, four months each — so the whole ladder reads as one
+ * offer. Per account that is 96 / 65 / 59: every larger group is cheaper per
+ * head than the one before, and all of them undercut buying alone.
+ *
+ * WHY THIS LIVES IN CODE AND NOT IN THE PLAN_* ENV VARS. The offer must be able
+ * to end by itself. A price cut that someone has to remember to undo is how a
+ * "limited" offer becomes the price, and a countdown that outlives its own
+ * deadline is exactly the invented urgency the landing copy promises never to
+ * use. So the window and the offer prices are constants here, the ordinary
+ * PLANS stay the base ladder, and the effective price is computed from the
+ * clock. Once an end date is set nothing has to be redeployed to close it.
+ *
+ * NO END DATE YET. The owner has not fixed one; they will supply it. Until
+ * then `endsAtMs` is null and the offer is open-ended: it stays on, the pages
+ * show no countdown and no date (only "limited time"), and nothing closes it.
+ * That is deliberate, and it is also the risk — a forgotten open-ended offer is
+ * the base price quietly replaced — so the end date is the first thing to ask
+ * for. Set NATIONAL_DAY_OFFER_ENDS_AT (below) or replace the null.
+ *
+ * ONE SOURCE OF TRUTH. /config, /groups/mine, the checkout amount, the landing
+ * page and the verification floor below all read this block, so the number a
+ * visitor is quoted is the number Moyasar charges and the number the server
+ * will accept.
+ *
+ * Overrides (all optional, read once at boot like the PLAN_* vars): an ISO
+ * instant for NATIONAL_DAY_OFFER_STARTS_AT / _ENDS_AT, and a halalas amount
+ * for NATIONAL_DAY_4MONTH_PRICE_HALALAS, _ANNUAL_, _GROUP3_, _GROUP5_. To set
+ * the end date — or to end the offer right now with any past instant — set
+ * _ENDS_AT and redeploy.
+ */
+const positiveInt = (raw, fallback) => {
+    const n = Math.round(Number(raw));
+    return Number.isFinite(n) && n > 0 ? n : fallback;
+};
+
+/** An ISO instant from the environment, or the fallback — null when there is none. */
+const isoInstant = (raw, fallbackIso = null) => {
+    const ms = Date.parse(raw || '');
+    if (Number.isFinite(ms)) return ms;
+    return fallbackIso ? Date.parse(fallbackIso) : null;
+};
+
+export const NATIONAL_DAY_OFFER = {
+    id: 'national_day_96',
+    // Riyadh time (UTC+3). Live from the start of 20 September.
+    startsAtMs: isoInstant(process.env.NATIONAL_DAY_OFFER_STARTS_AT, '2026-09-20T00:00:00+03:00'),
+    // null = open-ended, see "NO END DATE YET" above. When the owner gives a
+    // date, write it as an ISO instant with the +03:00 offset, e.g.
+    // '2026-09-30T23:59:59+03:00', or set NATIONAL_DAY_OFFER_ENDS_AT.
+    endsAtMs: isoInstant(process.env.NATIONAL_DAY_OFFER_ENDS_AT),
+    // Only meaningful once there is a deadline. A checkout opened before it keeps its offer price in the
+    // browser. Without this a student who pays at 23:58 and is verified at
+    // 00:01 would be charged 96 and refused activation ("amount_mismatch"),
+    // which is the one failure this service must never produce: money taken,
+    // access not given. Six hours is generous for a card form and short enough
+    // that the offer price cannot be reached from a page left open overnight.
+    graceMs: 6 * 60 * 60 * 1000,
+    // A strike-through "was" price is only drawn when the cut is at least this
+    // large. Group_5 moves from 299 to 296; presenting a 3-riyal saving as a
+    // discount would cheapen the offer, so that plan shows its new price alone.
+    minVisibleDiscount: 0.10,
+    prices: {
+        four_month: positiveInt(process.env.NATIONAL_DAY_4MONTH_PRICE_HALALAS, 9600),
+        annual: positiveInt(process.env.NATIONAL_DAY_ANNUAL_PRICE_HALALAS, 19600),
+        group_3: positiveInt(process.env.NATIONAL_DAY_GROUP3_PRICE_HALALAS, 19600),
+        group_5: positiveInt(process.env.NATIONAL_DAY_GROUP5_PRICE_HALALAS, 29600),
+    },
+};
+
+/** True while the offer is on sale. `nowMs` is injectable so tests own the clock. */
+export function isOfferLive(nowMs = Date.now()) {
+    const { startsAtMs, endsAtMs } = NATIONAL_DAY_OFFER;
+    return nowMs >= startsAtMs && (endsAtMs == null || nowMs <= endsAtMs);
+}
+
+/**
+ * The offer's price for a plan, or null when the offer does not touch it — the
+ * monthly plan, or any plan whose offer price is not actually lower than its
+ * base price (so a base price later cut below the offer can never be raised
+ * by the offer).
+ */
+function offerPriceFor(plan) {
+    const price = NATIONAL_DAY_OFFER.prices[plan?.id];
+    return price != null && price < plan.priceHalalas ? price : null;
+}
+
+/**
+ * What a visitor is charged for `plan` right now. Display and checkout only —
+ * verification uses minAcceptableHalalas, which is deliberately more forgiving.
+ */
+export function effectivePriceHalalas(plan, nowMs = Date.now()) {
+    const offer = isOfferLive(nowMs) ? offerPriceFor(plan) : null;
+    return offer ?? plan.priceHalalas;
+}
+
+/**
+ * The lowest amount a payment for `plan` may carry and still be honoured.
+ *
+ * `atMs` is when the payment was created, not when we happen to verify it: the
+ * webhook can arrive minutes late, and a payment made in time must not be
+ * judged by the clock of a slow retry. The offer price is accepted from the
+ * start of the window until `graceMs` after its end; outside that it is the
+ * base price again, so an old page cannot buy at 96 next week.
+ */
+export function minAcceptableHalalas(plan, atMs = Date.now()) {
+    const offer = offerPriceFor(plan);
+    const { startsAtMs, endsAtMs, graceMs } = NATIONAL_DAY_OFFER;
+    // No end date: the offer price is honoured from the start onwards.
+    if (offer != null && atMs >= startsAtMs && (endsAtMs == null || atMs <= endsAtMs + graceMs)) {
+        return Math.min(plan.priceHalalas, offer);
+    }
+    return plan.priceHalalas;
+}
+
+/** When Moyasar says a payment was created; the current time if it says nothing usable. */
+export function paymentInstantMs(payment) {
+    const ms = Date.parse(payment?.created_at || '');
+    return Number.isFinite(ms) ? ms : Date.now();
+}
+
+/**
+ * The offer as the frontend needs it, or null when nothing is on sale.
+ * `now` is the server clock: a visitor's own clock can be minutes out, and a
+ * countdown that disagrees with the deadline it counts toward is worse than
+ * none, so the page measures against the server's "now", not its own.
+ */
+export function getOfferInfo(nowMs = Date.now()) {
+    if (!isOfferLive(nowMs)) return null;
+    return {
+        id: NATIONAL_DAY_OFFER.id,
+        active: true,
+        startsAt: new Date(NATIONAL_DAY_OFFER.startsAtMs).toISOString(),
+        // null while the offer has no end date; the pages then show "limited
+        // time" and no countdown rather than a deadline nobody has set.
+        endsAt: NATIONAL_DAY_OFFER.endsAtMs == null
+            ? null
+            : new Date(NATIONAL_DAY_OFFER.endsAtMs).toISOString(),
+        now: nowMs,
+    };
+}
+
+/**
+ * The same plans, decorated for display, with the numbers a buyer decides on.
+ *
+ * GROUP COMPARISON. A group card says "SAR 296 for 5 accounts" and, per seat,
+ * "SAR 59". Neither says what those five people would otherwise pay, which is
+ * the entire argument: the individual plan of the SAME length is SAR 96 right
+ * now. Fifty-nine against ninety-six is a decision; fifty-nine on its own is a
+ * number. `compareToHalalas` is the individual plan with matching `months`,
+ * priced as it is TODAY (offer included), and it ships WITHOUT a plan id on
+ * purpose — the price can be shown but never turned into a checkout, which
+ * keeps the rule above (no individual plan is ever purchasable from /groups)
+ * true by construction rather than by discipline.
+ *
+ * OFFER. While the offer is live an offered plan carries its offer price as
+ * `priceHalalas` — that is the amount the checkout charges — plus
+ * `regularPriceHalalas` (the base price), `offerId`, and `compareAtHalalas`
+ * (the struck-through "was", set to the base price, or 0 when the cut is too
+ * small to advertise). Outside the window none of that is present and the
+ * plans are exactly as before, including four_month's own compare-at.
  *
  * Returns copies; PLANS itself is never mutated, since verification compares
- * against priceHalalas and must not see a decorated object.
+ * against the base price and must not see a decorated object.
  */
-export function listPlansForDisplay(kind = 'all') {
+export function listPlansForDisplay(kind = 'all', nowMs = Date.now()) {
+    const live = isOfferLive(nowMs);
+
+    const decorate = (plan) => {
+        const offer = live ? offerPriceFor(plan) : null;
+        if (offer == null) return plan;
+        const cut = 1 - offer / plan.priceHalalas;
+        return {
+            ...plan,
+            priceHalalas: offer,
+            regularPriceHalalas: plan.priceHalalas,
+            compareAtHalalas: cut >= NATIONAL_DAY_OFFER.minVisibleDiscount ? plan.priceHalalas : 0,
+            offerId: NATIONAL_DAY_OFFER.id,
+        };
+    };
+
     return listPlans(kind).map((plan) => {
-        if (plan.kind !== 'group') return plan;
+        const shown = decorate(plan);
+        if (plan.kind !== 'group') return shown;
         const solo = Object.values(PLANS)
             .find((p) => p.kind === 'individual' && p.months === plan.months);
-        return solo ? { ...plan, compareToHalalas: solo.priceHalalas } : plan;
+        return solo ? { ...shown, compareToHalalas: decorate(solo).priceHalalas } : shown;
     });
 }
 
@@ -784,8 +965,13 @@ export async function verifyAndActivate(db, paymentId, userId) {
     if (!plan) {
         return { success: false, reason: 'unknown_plan', plan: payment.metadata?.plan ?? null };
     }
-    if (Number(payment.amount) < plan.priceHalalas) {
-        return { success: false, reason: 'amount_mismatch', amount: payment.amount, expected: plan.priceHalalas };
+    // The floor is judged at the moment the payment was CREATED and includes
+    // the offer price while an offer covered that moment — see
+    // minAcceptableHalalas. Comparing against the base price alone would
+    // refuse every payment made at the National Day price.
+    const expected = minAcceptableHalalas(plan, paymentInstantMs(payment));
+    if (Number(payment.amount) < expected) {
+        return { success: false, reason: 'amount_mismatch', amount: payment.amount, expected };
     }
     // A missing currency must fail, not fall back to "assume it matches" —
     // `payment.currency || getCurrency()` made the check pass whenever
@@ -903,7 +1089,10 @@ export async function handleWebhookEvent(db, payload) {
     if (!plan) {
         return { handled: false, reason: 'unknown_plan' };
     }
-    if (Number(payment.amount) < plan.priceHalalas) {
+    // Same rule as verifyAndActivate — the webhook and the redirect are two
+    // doors into one activation and must never disagree about what a payment
+    // was worth.
+    if (Number(payment.amount) < minAcceptableHalalas(plan, paymentInstantMs(payment))) {
         return { handled: false, reason: 'amount_mismatch' };
     }
     // See the identical check in verifyAndActivate: a missing currency must

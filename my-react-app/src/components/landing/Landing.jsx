@@ -11,6 +11,10 @@ import { UserContext } from '../../UserContext';
 import { TRACKS, MEDICAL, NURSING, pick } from '../../utils/tracks.js';
 import { useCopy, useLang, LanguageToggle, LocaleLink as Link, formatNumber, formatDate } from '../../i18n';
 import landingCopy from '../../i18n/copy/landing.js';
+import nationalDayCopy from '../../i18n/copy/nationalDay.js';
+import { NationalDayStrip } from '../common/NationalDayOffer.jsx';
+import { useNationalDayOffer } from '../../utils/nationalDay.js';
+import NationalDaySection from './NationalDaySection.jsx';
 import './Landing.css';
 
 /**
@@ -61,7 +65,13 @@ const Landing = () => {
   const navigate = useNavigate();
   const { user, sessionToken, logout } = useContext(UserContext);
   const t = useCopy(landingCopy);
+  const tnd = useCopy(nationalDayCopy);
   const { lang, dir } = useLang();
+
+  // The National Day offer, or null when none is on sale (or the request
+  // failed). Everything below that changes for the offer branches on this one
+  // value, so with it null the page is byte-for-byte the ordinary page.
+  const nd = useNationalDayOffer();
 
   /**
    * The two student populations the platform serves. `ready` reflects whether
@@ -132,6 +142,27 @@ const Landing = () => {
   // Mirrors Navbar's definition so both agree on what counts as "logged in".
   const isAuthenticated = !!(user && user.id && sessionToken);
 
+  // Someone whose plan is already running has nothing to buy in the offer, so
+  // the individual-plan buttons are withheld from them. Same test the Navbar
+  // uses for its "active until" chip.
+  const isSubscribed = isAuthenticated
+    && user.subscription_status === 'active'
+    && !!user.subscription_expiry_date
+    && new Date(user.subscription_expiry_date).getTime() > Date.now();
+
+  // While the offer is on, the price card, the group tiers and the "cost" row
+  // of the comparison read their numbers from the server instead of the static
+  // copy — otherwise the page would say 129 in one place and 96 in another.
+  const ndPricingLine = nd
+    ? tnd.pricing.line(nd.plans.fourMonth.price, nd.plans.fourMonth.was, nd.plans.annual.price, nd.plans.annual.was)
+    : null;
+  const ndGroupTiers = nd
+    ? [nd.plans.group3, nd.plans.group5].filter(Boolean).map((g) => tnd.pricing.tier(g.seats, g.months, g.price, g.perSeat))
+    : null;
+  const ndGroupPct = nd
+    ? Math.max(0, ...[nd.plans.group3, nd.plans.group5].filter(Boolean).map((g) => g.seatSavingPct))
+    : 0;
+
   // Usernames ARE email addresses on this platform, so greeting someone by
   // `user.username` printed "Welcome back, alshraky3@gmail.com" across the
   // hero. Take the local part, and only its first word, exactly as the study
@@ -167,7 +198,8 @@ const Landing = () => {
     <>
       {/* Explicit dir: index.css sets body{direction:ltr}, which would cancel
           the documentElement dir for everything inside. */}
-      <div className="landing-body" dir={dir} lang={lang}>
+      <div className={`landing-body${nd ? ' has-nd' : ''}`} dir={dir} lang={lang}>
+        {nd && <NationalDayStrip offer={nd.offer} plans={nd.plans} />}
         <header className="landing-topbar">
           <span className="landing-brand">SQB</span>
           <div className="landing-topbar-actions">
@@ -264,6 +296,19 @@ const Landing = () => {
 
         <div className="landing-shell">
 
+          {/* The National Day celebration and offer. First thing under the
+              hero on purpose: a visitor who arrives for the occasion should
+              not have to scroll past the product pitch to find it. */}
+          {nd && (
+            <NationalDaySection
+              offer={nd.offer}
+              plans={nd.plans}
+              isAuthenticated={isAuthenticated}
+              isSubscribed={isSubscribed}
+              onCta={trackSignupClick}
+            />
+          )}
+
           {/* Two tracks, one platform. Placed high on the page so a nursing
               student knows within seconds whether this is for them — and each
               card is now its own conversion point, not just a description,
@@ -332,13 +377,18 @@ const Landing = () => {
                     {col.badge && <span className="compare-card-badge">{col.badge}</span>}
                   </div>
                   <ul className="compare-card-list">
-                    {t.compare.rows.map((row) => (
+                    {t.compare.rows.map((row, rowIndex) => (
                       <li key={row.label}>
                         <span className="compare-card-row-label">
                           {col.key === 'sqb' && <Icon name="check-circle" size={13} aria-hidden="true" />}
                           {row.label}
                         </span>
-                        <span className="compare-card-row-value">{row[col.key]}</span>
+                        {/* Row 0 is the cost row in both languages. */}
+                        <span className="compare-card-row-value">
+                          {nd && col.key === 'sqb' && rowIndex === 0
+                            ? tnd.pricing.compareCost(nd.plans.annual.price)
+                            : row[col.key]}
+                        </span>
                       </li>
                     ))}
                   </ul>
@@ -481,7 +531,7 @@ const Landing = () => {
                   <span className="price-card-value">{t.value.amount}</span>
                   <span className="price-card-cur">{t.value.currency}</span>
                 </div>
-                <p className="price-card-permonth">{t.value.perMonth}</p>
+                <p className="price-card-permonth">{ndPricingLine || t.value.perMonth}</p>
                 <ul className="price-card-list">
                   {t.value.included.map((item) => (
                     <li key={item}>{item}</li>
@@ -494,11 +544,13 @@ const Landing = () => {
               </aside>
 
               <aside className="price-card price-card-group" aria-label={t.value.group.title}>
-                <span className="price-card-badge">{t.value.group.badge}</span>
+                <span className="price-card-badge">
+                  {nd && ndGroupPct > 0 ? tnd.pricing.groupBadge(ndGroupPct) : t.value.group.badge}
+                </span>
                 <p className="price-card-plan">{t.value.group.title}</p>
                 <p className="price-card-group-body">{t.value.group.body}</p>
                 <div className="price-card-group-tiers">
-                  {t.value.group.tiers.map((tier) => (
+                  {(ndGroupTiers && ndGroupTiers.length ? ndGroupTiers : t.value.group.tiers).map((tier) => (
                     <div key={tier.label} className="group-tier">
                       <span className="group-tier-label">{tier.label}</span>
                       <span className="group-tier-price">{tier.price}</span>

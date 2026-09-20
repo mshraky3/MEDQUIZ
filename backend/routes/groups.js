@@ -17,7 +17,7 @@
  * code; only the read/validate endpoints are here.
  */
 import express from 'express';
-import { listPlansForDisplay, getCurrency } from '../services/paymentService.js';
+import { listPlansForDisplay, getOfferInfo, getCurrency } from '../services/paymentService.js';
 import { logger } from '../utils/observability.js';
 
 const router = express.Router();
@@ -117,6 +117,7 @@ router.get('/mine', resolveSession, async (req, res) => {
             // forget to say it.
             autoRenew: false,
             plans: listPlansForDisplay('group'),
+            offer: getOfferInfo(),
             groups: withSeats,
         });
     } catch (err) {

@@ -38,6 +38,18 @@
   --card-shadow: 0 8px 28px rgba(37, 99, 235, 0.08), 0 2px 8px rgba(15, 23, 42, 0.04);
 }
 
+/* Height of the National Day strip (components/common/NationalDayOffer.css).
+   Zero with no offer; 40px once one arrives, eased in by the transition on
+   .landing-body below. Registered as a <length> so the browser can interpolate
+   it — where @property is unsupported it simply steps, which is still correct.
+   The strip's own height, the topbar offset and the hero height all read this
+   one value, so they can never disagree. */
+@property --nd-bar-h {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 0px;
+}
+
 @keyframes orbDrift {
   0%, 100% { transform: translate(0, 0) scale(1); }
   33% { transform: translate(28px, -32px) scale(1.07); }
@@ -69,6 +81,11 @@
     linear-gradient(160deg, #eaf1ff 0%, #f5f8ff 38%, #ffffff 100%);
   color: var(--text);
   font-family: var(--font-family-primary, 'Inter', system-ui, -apple-system, sans-serif);
+  transition: --nd-bar-h 0.35s ease;
+}
+
+.landing-body.has-nd {
+  --nd-bar-h: 40px;
 }
 
 /* Floating colour orbs — soft, blurred, drifting behind the content. */
@@ -105,7 +122,7 @@
    global navbar */
 .landing-topbar {
   position: absolute;
-  top: 0;
+  top: var(--nd-bar-h, 0px);
   inset-inline: 0;
   z-index: 5;
   max-width: 1280px;
@@ -264,8 +281,8 @@
      cue below it — past the fold on a 13" laptop. Measured against 1280×860
      with the longest (Arabic) copy. */
   gap: clamp(12px, 1.6vw, 18px);
-  min-height: calc(100vh - 64px);
-  min-height: calc(100svh - 64px);
+  min-height: calc(100vh - 64px - var(--nd-bar-h, 0px));
+  min-height: calc(100svh - 64px - var(--nd-bar-h, 0px));
   padding: clamp(32px, 4vw, 56px) clamp(16px, 5vw, 64px) clamp(52px, 5.5vw, 76px);
   position: relative;
   overflow: hidden;

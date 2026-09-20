@@ -1,0 +1,165 @@
+/* National Day offer — shared surfaces (top strip, checkout banner, countdown).
+   Campaign code: see the removal note in i18n/copy/nationalDay.js.
+
+   Every class is nd- prefixed. This app's CSS is global and Vite never unloads a
+   stylesheet, so a generic name here would collide with whatever chunk loaded
+   first (DESIGN_MAP §1). Panels are opaque — no backdrop-filter, no see-through
+   tints (DESIGN_MAP invariant 5).
+
+   Palette. Green is the Saudi flag green; gold is sand, used once per surface.
+   White on #006c35 is 6.9:1, on #04432a 12:1; #04432a on the gold chip is 7:1. */
+
+.nd-strip,
+.nd-banner {
+  --nd-green: #006c35;
+  --nd-green-deep: #04432a;
+  --nd-gold: #e7c15a;
+}
+
+/* The gold "96" tab. */
+.nd-chip {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  min-width: 30px;
+  height: 22px;
+  padding-inline: 7px;
+  box-sizing: border-box;
+  border-radius: 6px;
+  background: var(--nd-gold);
+  color: var(--nd-green-deep);
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1;
+  direction: ltr;
+  font-variant-numeric: tabular-nums;
+}
+
+.nd-countdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── The strip across the top of the landing page ───────────────────────────
+   Its height is --nd-bar-h, an animated custom property set on .landing-body
+   (Landing.css). Topbar offset and hero height read the same variable, so when
+   the offer arrives after first paint the whole page eases down together rather
+   than jumping. */
+.nd-strip {
+  position: relative;
+  z-index: 6; /* above .landing-topbar (5) */
+  box-sizing: border-box;
+  height: var(--nd-bar-h, 40px);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding-inline: 16px;
+  background: linear-gradient(90deg, var(--nd-green-deep), var(--nd-green) 50%, var(--nd-green-deep));
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  transition-property: background-color, color;
+  transition-duration: var(--transition-fast, 150ms);
+}
+
+.nd-strip:focus-visible {
+  outline: 2px solid var(--nd-gold);
+  outline-offset: -4px;
+}
+
+.nd-strip-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.nd-strip-text strong {
+  font-weight: 800;
+}
+
+.nd-strip-deal {
+  padding-inline-start: 10px;
+  border-inline-start: 1px solid rgba(255, 255, 255, 0.32);
+  font-weight: 500;
+}
+
+.nd-strip-deal-full { display: none; }
+
+.nd-strip-clock {
+  padding-inline-start: 14px;
+  border-inline-start: 1px solid rgba(255, 255, 255, 0.28);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.nd-strip-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--nd-gold);
+  font-weight: 800;
+}
+
+.nd-strip:hover .nd-strip-cta-text {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Room for the full deal and the countdown only where there is room. */
+@media (min-width: 900px) {
+  .nd-strip-deal-short { display: none; }
+  .nd-strip-deal-full { display: inline; }
+}
+
+@media (max-width: 760px) {
+  .nd-strip-clock { display: none; }
+}
+
+@media (max-width: 520px) {
+  .nd-strip { gap: 10px; font-size: 13px; }
+  .nd-strip-cta-text { display: none; }
+  .nd-strip-text { flex: 0 1 auto; overflow: hidden; }
+  .nd-strip-deal { overflow: hidden; text-overflow: ellipsis; }
+}
+
+/* ── The compact banner on /subscribe and /groups ─────────────────────────── */
+.nd-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-sizing: border-box;
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--nd-green-deep), var(--nd-green));
+  color: #ffffff;
+  text-align: start;
+}
+
+.nd-banner-body {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.nd-banner-body strong {
+  font-size: 14.5px;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.nd-banner .nd-countdown,
+.nd-banner-date {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.nd-banner .nd-countdown svg { color: var(--nd-gold); }

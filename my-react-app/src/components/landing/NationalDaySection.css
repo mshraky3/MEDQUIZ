@@ -1,0 +1,377 @@
+/* National Day celebration section (landing).
+   Campaign code — see the removal note in i18n/copy/nationalDay.js.
+
+   nd- prefixed throughout (global CSS, chunks never unload). Opaque panel, no
+   backdrop-filter. Tokens are declared on the section root, not :root, so
+   nothing here can leak into another page.
+
+   One memorable object: the "96" numeral. The row of triangles along the top
+   edge borrows from Najdi door and Sadu weaving patterns — Saudi geometry, on
+   purpose in place of the flag, the shahada or the official National Day logo,
+   none of which should be imitated in a commercial page. */
+
+.nd-section {
+  --nd-green: #006c35;
+  --nd-green-deep: #04432a;
+  --nd-gold: #e7c15a;
+  --nd-ink: #0d2a1c;
+  --nd-muted: #45594d;
+  --nd-mint: #e4f3ea;
+  --nd-rule: #dbe9e0;
+
+  position: relative;
+  overflow: hidden;
+  border-radius: 28px;
+  background:
+    radial-gradient(ellipse 60% 90% at 0% 0%, rgba(255, 255, 255, 0.10), transparent 60%),
+    linear-gradient(150deg, var(--nd-green-deep) 0%, var(--nd-green) 100%);
+  color: #ffffff;
+  box-shadow: 0 30px 64px rgba(4, 67, 42, 0.28);
+  scroll-margin-top: 16px;
+}
+
+/* A row of gold triangles hanging from the top edge. */
+.nd-frieze {
+  height: 12px;
+  background: conic-gradient(from 135deg at top, transparent, var(--nd-gold) 1deg 89deg, transparent 90deg)
+    50% 0 / 24px 12px repeat-x;
+}
+
+.nd-inner {
+  display: grid;
+  gap: clamp(24px, 3.5vw, 36px);
+  padding: clamp(24px, 4vw, 44px);
+  padding-top: clamp(28px, 4.4vw, 48px);
+}
+
+/* ── Header: the numeral, then what it means ─────────────────────────────── */
+.nd-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(20px, 4vw, 48px);
+}
+
+.nd-numeral {
+  color: var(--nd-gold);
+  font-size: clamp(104px, 15vw, 184px);
+  font-weight: 900;
+  line-height: 0.8;
+  letter-spacing: -0.05em;
+  direction: ltr;
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+  /* direction:ltr keeps the digits in order, but on its own it also pins the
+     text to the LEFT of a stretched grid cell — on a phone, where the numeral
+     stacks above right-aligned Arabic copy, that put it on the wrong edge.
+     Shrink-wrapping it and aligning to the container's start fixes both. */
+  justify-self: start;
+}
+
+.nd-head-copy {
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+  text-align: start;
+}
+
+.nd-head-copy h2 {
+  margin: 0;
+  max-width: 24ch;
+  font-size: clamp(25px, 3.2vw, 38px);
+  font-weight: 800;
+  line-height: 1.35;
+  color: #ffffff;
+  /* Keeps "SAR 96" together instead of orphaning it on a second line. */
+  text-wrap: balance;
+}
+
+.nd-head-copy p {
+  margin: 0;
+  max-width: 58ch;
+  font-size: 15.5px;
+  line-height: 1.85;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+/* The countdown and the date it counts to, as one solid pill. */
+.nd-head-copy .nd-clock {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+  margin-top: 4px;
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: #052f1e;
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1.5;
+  color: #ffffff;
+}
+
+.nd-clock .nd-countdown svg { color: var(--nd-gold); }
+.nd-clock-date { color: rgba(255, 255, 255, 0.82); font-weight: 600; }
+.nd-limited { color: #ffffff; font-weight: 700; }
+
+/* ── The three offers ─────────────────────────────────────────────────────── */
+.nd-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.nd-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 22px;
+  border-radius: 18px;
+  background: #ffffff;
+  color: var(--nd-ink);
+  text-align: start;
+}
+
+.nd-card-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--nd-green-deep);
+}
+
+.nd-tag {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--nd-gold);
+  font-size: 11.5px;
+  font-weight: 800;
+  line-height: 1.4;
+  color: var(--nd-green-deep);
+}
+
+.nd-price {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.nd-price strong {
+  font-size: clamp(46px, 5vw, 58px);
+  font-weight: 900;
+  line-height: 1;
+  color: var(--nd-green);
+}
+
+.nd-price span {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--nd-muted);
+}
+
+/* The price it used to be. Struck through, and quiet next to the new one. */
+.nd-price s,
+.nd-group-price s {
+  font-size: 18px;
+  font-weight: 600;
+  color: #5b6e62;
+  text-decoration-thickness: 2px;
+  text-decoration-color: #b4443b;
+}
+
+.nd-card-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--nd-muted);
+}
+
+.nd-save {
+  padding: 3px 10px;
+  border-radius: 8px;
+  background: var(--nd-mint);
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--nd-green-deep);
+}
+
+/* ── Group card: two rows, seats on one side, price on the other ─────────── */
+.nd-group-rows {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nd-group-rows li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--nd-rule);
+}
+
+.nd-group-seats {
+  display: grid;
+  gap: 2px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--nd-ink);
+}
+
+.nd-group-seats small {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #1f6b43;
+}
+
+.nd-group-price {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--nd-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.nd-group-price strong {
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--nd-green);
+}
+
+/* ── Buttons ──────────────────────────────────────────────────────────────── */
+.nd-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 48px;
+  margin-top: auto;
+  padding: 0 18px;
+  border: 2px solid var(--nd-green);
+  border-radius: 12px;
+  background: var(--nd-green);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 800;
+  text-align: center;
+  text-decoration: none;
+  transition-property: background-color, color, border-color;
+  transition-duration: var(--transition-fast, 150ms);
+}
+
+.nd-cta:hover {
+  background: var(--nd-green-deep);
+  border-color: var(--nd-green-deep);
+}
+
+.nd-cta:active { transform: translateY(1px); }
+
+.nd-cta:focus-visible {
+  outline: 3px solid var(--nd-green-deep);
+  outline-offset: 3px;
+}
+
+.nd-cta.is-outline {
+  background: transparent;
+  color: var(--nd-green);
+}
+
+.nd-cta.is-outline:hover {
+  background: var(--nd-mint);
+  color: var(--nd-green-deep);
+  border-color: var(--nd-green-deep);
+}
+
+/* ── The monthly plan, beside the offer ─────────────────────────────────── */
+.nd-monthly {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 24px;
+  padding: 16px 22px;
+  border-radius: 16px;
+  background: #052f1e;
+  color: #ffffff;
+  text-align: start;
+}
+
+.nd-monthly-plan {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 14px;
+}
+
+.nd-monthly-plan strong { font-size: 15px; font-weight: 800; }
+
+.nd-monthly-price {
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--nd-gold);
+  font-variant-numeric: tabular-nums;
+}
+
+.nd-monthly-plan small {
+  flex-basis: 100%;
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.nd-monthly-compare {
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 700;
+  line-height: 1.6;
+  color: #ffffff;
+}
+
+/* ── Small print ──────────────────────────────────────────────────────────── */
+.nd-foot {
+  display: grid;
+  gap: 6px;
+}
+
+.nd-foot p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.75;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+@media (max-width: 960px) {
+  .nd-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .nd-card-group { grid-column: 1 / -1; }
+}
+
+@media (max-width: 768px) {
+  /* .landing-shell has no top padding on phones — the section must bring its own gap. */
+  .nd-section { margin-top: 24px; }
+}
+
+@media (max-width: 700px) {
+  .nd-section { border-radius: 22px; }
+  .nd-head { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .nd-numeral { font-size: 104px; }
+}
+
+@media (max-width: 620px) {
+  .nd-cards { grid-template-columns: minmax(0, 1fr); }
+  .nd-card { padding: 20px; }
+}

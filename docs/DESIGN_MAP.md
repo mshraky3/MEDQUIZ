@@ -138,11 +138,12 @@ CSS is listed in load order. `+shell` = `index.css` + `Navbar.css` + `Footer.css
 #### `/` — Landing
 
 - **Tier** pub · **Component** `landing/Landing.jsx` (eager, LCP route) via `App.jsx`
-- **CSS** `Landing.css` (~1800) · `InstallShowcase.css` (431) · `Footer.css`
+- **CSS** `Landing.css` (~1800) · `InstallShowcase.css` (431) · `Footer.css` · `NationalDayOffer.css` + `NationalDaySection.css` (campaign, see below)
 - **Shell** its own — *not* `Layout`. Own topbar + `<Footer/>` in a `min-height:100vh` flex column.
 - **Root** `.landing-body` — defines 18 local tokens (`--card`, `--text`, `--pill`, `--border`, `--shadow`, `--accent-*` …)
 - **Layout** full-bleed `.hero` at `calc(100svh - 64px)` (svh deliberate — avoids the mobile URL-bar overflow trap), then `.landing-shell` sections capped at 1280px with staggered `nth-of-type` entrance animations.
-- **Sections** hero (+ `HeroArt` SVG, `ExamCountdown`) → tracks → explain sample → compare table → value (why-subscribe points, then a `.pricing-cards` row of two equal-weight peer cards — individual `.price-card` and `.price-card-group` — replacing the old subdued group-plan band) → flow → news → `InstallShowcase` → CTA band. The product-tour (`ProductShowcase`) and the standalone "cost of waiting" section were removed 2026-09 — a free account already lets visitors try the real product, and cost-of-waiting duplicated the pricing section's first point verbatim.
+- **National Day offer (campaign, Sep 2026)** — present only while `GET /api/payment/config` says an offer is live; with no offer, or a failed request, the page is exactly the ordinary page (verified both ways). A slim green `.nd-strip` (`common/NationalDayOffer.jsx`) sits above the topbar and links to `#national-day` (it carries a countdown only once the offer has an end date; until then the pages say "limited time" and show no date), the celebration section (`landing/NationalDaySection.jsx`: gold "96" numeral, three white price cards, a row of Najdi-style triangles along the top edge — deliberately not the flag, shahada or official logo). The strip's height is `--nd-bar-h`, a registered `@property` on `.landing-body` (0 with no offer, 40px with one) that the strip, the topbar's `top` and the hero's `min-height` all read, so the offer easing in after first paint moves the page as one. While the offer is live the price card's line, the group tiers/badge and the comparison table's cost row read the server's numbers instead of the static copy. All figures come from `paymentService.js` `NATIONAL_DAY_OFFER` via `utils/nationalDay.js`; nothing is typed into markup. **To remove after the campaign:** see the note at the top of `i18n/copy/nationalDay.js`. Palette is scoped (`--nd-green #006c35`, `--nd-green-deep #04432a`, `--nd-gold #e7c15a`); every class is `nd-` prefixed; panels are opaque.
+- **Sections** hero (+ `HeroArt` SVG, `ExamCountdown`) → (National Day section, when live) → tracks → explain sample → compare table → value (why-subscribe points, then a `.pricing-cards` row of two equal-weight peer cards — individual `.price-card` and `.price-card-group` — replacing the old subdued group-plan band) → flow → news → `InstallShowcase` → CTA band. The product-tour (`ProductShowcase`) and the standalone "cost of waiting" section were removed 2026-09 — a free account already lets visitors try the real product, and cost-of-waiting duplicated the pricing section's first point verbatim.
 - **Responsive** 1024 / 860 / 768 / 600 / 560. The compare table scrolls inside `.compare-scroll` (`min-width:680px`, 560 on mobile) — correctly contained.
 - **Verified** no horizontal overflow at 375 / 768 / 1280.
 - **Defects** `B2` (pale text on the `ps-*` showcase) — resolved by removing `ProductShowcase` entirely. `D5` (no reduced-motion guard on the section stagger), `A4` (latent — `.pill` is also defined in `Login.css`)
@@ -170,6 +171,7 @@ CSS is listed in load order. `+shell` = `index.css` + `Navbar.css` + `Footer.css
 - **CSS** `Login.css` → `Subscribe.css` (427) +shell
 - **Root** `.login-body` → `.login-card.subscribe-card`, `max-width: var(--container-card)`
 - **Own breakpoints** 640 / 380
+- **National Day offer** — a compact green `.nd-banner` (countdown + end date) above the plan tiles while an offer is live; tiles show the offer price with the base price struck; the save note reads "National Day offer". The charged amount is `plan.priceHalalas` from `/config`, which already is the offer price.
 - **Defects** `A2`, `B1`
 
 #### `/groups`
@@ -178,6 +180,7 @@ CSS is listed in load order. `+shell` = `index.css` + `Navbar.css` + `Footer.css
 - **CSS** `Login.css` → `GroupsPage.css` (325) +shell
 - **Root** `.groups-page` — **imports `Login.css` but does not use `.login-body`**, so every `Login.css` rule reading `--card` / `--text` / `--border` / `--shadow` is unresolvable here (see **A4**; currently latent, because this page uses its own `groups-*` classes)
 - **Container** `var(--container-page, 860px)` · breakpoint 520
+- **National Day offer** — the same `.nd-banner` above the plan grid; a plan with a real cut shows its base price struck (`.groups-plan-was`, isolated so RTL digits cannot reorder). A group plan whose cut is under 10% (group_5, 299 → 296) takes the new price with no strike-through, decided server-side. The per-seat comparison is measured against the individual price *today*.
 - **Defects** `A4` (latent), `C1` (`.groups-norenew` green at **2.94:1** — the worst contrast measured in the app)
 
 #### `/account`

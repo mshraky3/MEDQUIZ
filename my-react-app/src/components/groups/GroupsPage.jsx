@@ -9,6 +9,7 @@ import SEO from '../common/SEO.jsx';
 import { useCopy, useLang } from '../../i18n';
 import { formatDate } from '../../i18n/format.js';
 import groupsCopy from '../../i18n/copy/groups.js';
+import { NationalDayBanner } from '../common/NationalDayOffer.jsx';
 // The buy-a-seat CTA matches the button style used on /subscribe (which this
 // page also funnels a buyer to for the individual plans) — was previously
 // the plainer global default, a jarring style change across a single click.
@@ -66,6 +67,9 @@ const GroupsPage = () => {
     const [state, setState] = useState('loading'); // loading | ready | error
     const [plans, setPlans] = useState([]);
     const [groups, setGroups] = useState([]);
+    // The National Day offer while one is on sale (null otherwise). The plans
+    // already carry offer prices; this is only for the banner and countdown.
+    const [ndOffer, setNdOffer] = useState(null);
     const [copiedToken, setCopiedToken] = useState(null);
 
     const isAuthenticated = Boolean(user?.username && sessionToken);
@@ -86,6 +90,7 @@ const GroupsPage = () => {
             if (cancelled) return;
             setPlans(data.plans || []);
             setGroups(data.groups || []);
+            setNdOffer(data.offer?.active ? data.offer : null);
             setState('ready');
         }).catch(() => {
             if (!cancelled) setState('error');
@@ -154,6 +159,7 @@ const GroupsPage = () => {
                 {state === 'ready' && groups.length === 0 && (
                     <section className="groups-buy">
                         <h2 className="groups-section-title">{t.chooseTitle}</h2>
+                        {ndOffer && plans.some((p) => p.offerId) && <NationalDayBanner offer={ndOffer} />}
                         <div className="groups-plan-grid">
                             {plans.map((plan) => {
                               const saving = savingsFor(plan);
@@ -162,6 +168,9 @@ const GroupsPage = () => {
                                     <div className="groups-plan-head">
                                         <span className="groups-plan-seats">{t.seatsLabel(plan.seats)}</span>
                                         <span className="groups-plan-price">
+                                            {plan.compareAtHalalas > plan.priceHalalas && (
+                                                <s className="groups-plan-was">{plan.compareAtHalalas / 100}</s>
+                                            )}
                                             {t.priceWithCurrency(plan.priceHalalas / 100)}
                                         </span>
                                         <span className="groups-plan-months">{t.monthsLabel(plan.months)}</span>
