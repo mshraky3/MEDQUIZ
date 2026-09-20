@@ -188,6 +188,9 @@ export function listPlans(kind = 'all') {
  * archaeology. PLANS above is untouched by the offer and stays exactly this:
  *   monthly 50 · four_month 129 (compare-at 200) · annual 300
  *   group_3 250 · group_5 299        (SAR; halalas x100 in PLANS)
+ * These are the code defaults. PRODUCTION differs: on 2026-09-20 the live
+ * annual price was 299 (a PLAN_ANNUAL_PRICE_HALALAS override), and the offer
+ * strikes through whatever the real base is.
  * Full record and revert steps: docs/NATIONAL_DAY_OFFER_2026-09.md.
  *
  *   individual   4 months  129 → 96     annual  300 → 196

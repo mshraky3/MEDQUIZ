@@ -6,6 +6,16 @@ it without archaeology. Read this first if you are asked to "put it back".
 
 ## 1. The original prices — the base ladder
 
+> **Production is not the same as the code defaults, and production is what to
+> restore.** Read from the live `GET /api/payment/config` on 2026-09-20 (via each
+> plan's `regularPriceHalalas`), the ladder production actually charged was:
+> monthly **50**, four_month **129**, annual **299**, group_3 **250**, group_5 **299**.
+> The annual price is 299 in production but 300 in the code default below — a
+> Vercel env override (`PLAN_ANNUAL_PRICE_HALALAS`, presumably 29900) is in force.
+> The site's static copy (landing, FAQ, Terms) still says 300. That mismatch
+> predates the offer. To re-read the true base ladder at any time, call the
+> config endpoint while the offer is off, or read `regularPriceHalalas` while it is on.
+
 These are the normal prices. **The offer never edits them**: they are `PLANS` in
 [`backend/services/paymentService.js`](../backend/services/paymentService.js),
 untouched, and they come back on their own the moment the offer ends.
@@ -14,7 +24,7 @@ untouched, and they come back on their own the moment the offer ends.
 |---|---|---|---|---|
 | `monthly` | 1 month | **50** | 5000 | never part of the offer |
 | `four_month` | 4 months | **129** | 12900 | has its own compare-at of 200 (`PLAN_4MONTH_COMPARE_HALALAS`), shown as a struck-through old price outside the offer |
-| `annual` | 12 months | **300** | 30000 | |
+| `annual` | 12 months | **300** in code · **299 in production** | 30000 in code · 29900 in production | production value comes from the Vercel env override; the offer strikes through the real (299) price |
 | `group_3` | 3 accounts, 4 months | **250** | 25000 | 83 SAR per account |
 | `group_5` | 5 accounts, 4 months | **299** | 29900 | 60 SAR per account |
 
@@ -33,7 +43,7 @@ tiers, compare table, "من 50 ريالاً شهرياً"), `i18n/copy/faq.js`, 
 | Plan | Base | Offer |
 |---|---|---|
 | `four_month` | 129 | **96** |
-| `annual` | 300 | **196** |
+| `annual` | 300 in code · 299 live | **196** |
 | `group_3` | 250 | **196** (65 per account) |
 | `group_5` | 299 | **296** (59 per account) |
 | `monthly` | 50 | 50 — no offer |
