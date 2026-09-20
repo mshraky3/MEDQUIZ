@@ -1,3 +1,9 @@
+STATUS 2026-09-20 - PARTLY OUT OF DATE (July session handoff).
+Wrong today: 'DB: Koyeb' (moving to Supabase Free, see docs/DATABASE_MOVE_2026-09.md); the header says the mobile app was not touched but Part C item 7 says it was fixed;
+the brand rule is about USER-FACING text (the repo/Vercel names still say MEDQUIZ/medquiz). Still valuable: Parts A/E (data rules) and H (image licence rules).
+Deploys are git-based: a push to origin/main deploys both Vercel projects (not 'vercel --prod'). Cross-session rules are collected in the working-projects
+project-rules/SQB.md.
+
 ================================================================================
 SQB — WORK PLAN & HANDOFF
 Written: 2026-07-25 · Updated: 2026-07-25 (second session)

@@ -1,3 +1,5 @@
+> **SUPERSEDED - archived 2026-09-20.** Describes a Gmail app-password (`ERROR_EMAIL_USER/PASS`) sender and a 20/hour limit. Error mail now goes through the shared mailer and the central email gateway with a DB-backed ceiling and `alertOn5xx`; see `docs/EMAIL_SYSTEM_DOCS.txt` and `docs/DESIGN_AUDIT_2026-08-25.md` (alerting section).
+
 # Error Email Notification System
 
 A comprehensive error notification system that automatically sends beautifully formatted HTML emails to developers when critical errors occur in the application.

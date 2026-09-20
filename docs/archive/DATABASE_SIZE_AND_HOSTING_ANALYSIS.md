@@ -1,3 +1,5 @@
+> **SUPERSEDED - archived 2026-09-20.** A January-2024 hosting comparison. The real database is **26 MB** (not the 200-250 MB estimated below) and it is moving from Koyeb to Supabase Free; see `docs/DATABASE_MOVE_2026-09.md` and the working-projects `INFRASTRUCTURE.md`. The Railway/Render recommendations here were never adopted.
+
 # Database Size Estimation & Hosting Plan Analysis
 
 ## 📋 Executive Summary

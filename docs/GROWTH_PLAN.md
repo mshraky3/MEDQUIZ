@@ -10,6 +10,8 @@ Baseline when this was written (2026-08-30): 5 pages indexed, 271 URLs in the
 sitemap, 7 URLs had ever earned an impression. 116 accounts, 6 paying. 17
 accounts had spent all 40 free questions and 1 of them subscribed.
 
+> **Correction 2026-09-20:** `origin/seo/public-content` is an ancestor of `origin/main`, so the backlog below **is deployed** (verified with `git merge-base --is-ancestor`). The paragraph that follows is the 2026-09-03 situation, kept for the record; treat each row's own `Done when` as the test. Sprint 5's price-test reading is contaminated by the National Day offer (see `docs/NATIONAL_DAY_OFFER_2026-09.md`).
+
 **Deployment status (2026-09-03): none of this is live.** Every commit in this
 backlog sits on the local branch `seo/public-content` — 35 commits, 106 files,
 never pushed. `main` is still at `a03f781` from 2026-08-29, and that is what

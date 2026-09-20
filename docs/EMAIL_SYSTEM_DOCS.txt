@@ -1,3 +1,10 @@
+STATUS 2026-09-20 - PARTLY OUT OF DATE.
+Mail no longer goes straight to SMTP: backend/services/mailer.js routes through the CENTRAL EMAIL GATEWAY (project email-system/, Vercel email-services)
+controlled by EMAIL_GATEWAY_MODE = off | shadow | on (currently shadow: the legacy sender still sends, the gateway records). The Resend
+daily budget is rationed by the gateway, not by BROADCAST_DAILY_CAP alone. The broadcast/unsubscribe sections below are still accurate;
+the sender/SMTP sections describe the legacy path. Rule: never add a second way to send mail. See the working-projects INFRASTRUCTURE.md (section 4)
+and email-system/README.md. Recipient addresses in this file are inconsistent (muhmodalshraky3@ vs alshraky3@) - the alert inbox is alshraky3@.
+
 ================================================================================
   SQB — EMAIL SYSTEM FULL DOCUMENTATION
 ================================================================================

@@ -1,3 +1,5 @@
+> **SUPERSEDED - archived 2026-09-20.** An early SEO guide built on since-deleted collections and question counts. Current sources: `docs/GROWTH_PLAN.md` (Sprint 1), `docs/SEO_WEEKLY_CHECK.md`, and `my-react-app/src/seo`.
+
 # SQB SEO Optimization Guide
 
 ## Overview

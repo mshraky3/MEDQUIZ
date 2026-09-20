@@ -13,6 +13,8 @@ content* — questions, summaries, and every analytics number derived from them 
 is strictly segregated by track. An account carries exactly one track, chosen at
 signup and changeable only by an admin.
 
+> **Read first (added 2026-09-20).** Where each part runs and how it deploys is in the working-projects `INFRASTRUCTURE.md` (on this machine: `C:\Users\muhmo\Desktop\CODE\Projects\working projects`), and the rules every session must follow are in its `CLAUDE.md` and `project-rules/SQB.md`. In short: the SPA is Vercel `medquiz-react`, the API is Vercel `medquiz` (`medquiz.vercel.app` - never change that URL), both deploy from a push to `origin/main`; the database is moving from Koyeb to Supabase Free (`docs/DATABASE_MOVE_2026-09.md`). `docs/README.md` indexes every doc in this repo.
+
 ## Layout
 
 ```

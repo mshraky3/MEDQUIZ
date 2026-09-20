@@ -1,3 +1,5 @@
+> **HISTORIC - archived 2026-09-20.** Describes the October-December 2025 collections, the beta popup and "5,000+ questions" copy, none of which exist any more, and marketing copy no longer carries question counts. The live landing page is documented in `docs/DESIGN_MAP.md`.
+
 # SQB Landing Page
 
 ## Overview

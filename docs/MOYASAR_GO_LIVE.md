@@ -6,6 +6,8 @@
 > **For anything you need to do on Moyasar today, read `MOYASAR_CHECKLIST.txt`
 > in the repo root.** This file is kept for the compliance-review and
 > domain/webhook setup steps, which have not changed.
+>
+> **Also out of date (2026-09-20):** step 2 says to deploy with `vercel --prod` - deploys are now a push to `origin/main` (both Vercel projects build from it). The webhook needs three events (`payment_paid`, `payment_refunded`, `payment_voided`), not just paid. The publishable key is `MOYASAR_PUBLISHABLE_KEY` on the backend. Prices live in `docs/NATIONAL_DAY_OFFER_2026-09.md` section 1; **do not set `PLAN_*` env vars** - production annual is 299 through an existing override.
 
 How to take the implemented Moyasar integration from local code to a **publicly
 reachable, fully testable** site that passes Moyasar's compliance review, then

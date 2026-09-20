@@ -1,3 +1,5 @@
+> **CLOSED - all 22 items fixed (status 2026-09-20).** Kept as the record of what was wrong and how each fix was verified. The live UI reference is `docs/DESIGN_MAP.md`; this file is referenced from CSS comments, so it stays at this path.
+
 # SQB Design Audit — 2026-08-25
 
 Full-app review for design bugs, CSS conflicts, responsiveness problems, visual

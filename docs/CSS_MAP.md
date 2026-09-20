@@ -1,3 +1,5 @@
+> **HISTORIC (status 2026-09-20).** The CSS-collision history behind the design audit; the collisions it lists are resolved. Live rules and invariants: `docs/DESIGN_MAP.md` sections 1 and 3. Kept at this path because CSS files reference it.
+
 # CSS Map
 
 ## Architecture

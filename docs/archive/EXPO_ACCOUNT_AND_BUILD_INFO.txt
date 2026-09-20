@@ -1,3 +1,5 @@
+MERGED into mobile/README.md on 2026-09-20 (section "Expo account and build info"). Kept here only as the original.
+
 ================================================================================
   EXPO ACCOUNT & EAS BUILD REFERENCE — SQB APP
 ================================================================================

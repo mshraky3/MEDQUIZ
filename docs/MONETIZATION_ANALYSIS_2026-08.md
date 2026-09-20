@@ -1,3 +1,5 @@
+> **HISTORIC (status 2026-09-20).** A revenue diagnosis from August. What actually shipped differs from its proposals: the ladder is 50 / 129 (4 months) / annual (299 live, 300 in code) plus group plans, the 1-hour trial became a 40-question free quota, and the amount-check and refund items are done. Current prices and the National Day offer: `docs/NATIONAL_DAY_OFFER_2026-09.md`. Referenced from code comments, so it stays at this path.
+
 # SQB — Why We Aren't Getting Paid, and What To Do About It
 
 **Date:** 2026-08-07
