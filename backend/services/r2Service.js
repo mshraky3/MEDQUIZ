@@ -12,7 +12,10 @@
  * degrades gracefully (page endpoints return 503) so the rest of the API keeps
  * working, mirroring how the payment module is gated behind a flag.
  */
-import { S3Client, GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
+// The AWS SDK costs ~170 ms of CPU to load. It is imported on first use rather
+// than at the top so requests that never touch R2 don't pay it on a cold start.
+let _sdk = null;
+const loadSdk = async () => (_sdk ??= await import('@aws-sdk/client-s3'));
 
 export const R2_BUCKET = process.env.R2_BUCKET || 'sqb';
 
@@ -35,13 +38,14 @@ export const isR2Configured = () =>
     Boolean(R2_ENDPOINT && R2_ACCESS_KEY_ID && R2_SECRET_ACCESS_KEY);
 
 let _client = null;
-function getClient() {
+async function getClient() {
     if (!isR2Configured()) {
         throw new Error(
             'R2 not configured — set R2_ENDPOINT, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY'
         );
     }
     if (!_client) {
+        const { S3Client } = await loadSdk();
         _client = new S3Client({
             region: 'auto',
             endpoint: R2_ENDPOINT,
@@ -60,14 +64,16 @@ function getClient() {
  * stream that can be piped straight to an Express response.
  */
 export async function getObject(key) {
-    return getClient().send(
+    const { GetObjectCommand } = await loadSdk();
+    return (await getClient()).send(
         new GetObjectCommand({ Bucket: R2_BUCKET, Key: key })
     );
 }
 
 /** Upload an object (used by the one-time upload script). */
 export async function putObject(key, body, contentType) {
-    await getClient().send(
+    const { PutObjectCommand } = await loadSdk();
+    await (await getClient()).send(
         new PutObjectCommand({
             Bucket: R2_BUCKET,
             Key: key,

@@ -277,8 +277,10 @@ router.get('/:slug/page/:n', requireSubscriber, async (req, res) => {
         const obj = await getObject(key);
 
         res.setHeader('Content-Type', obj.ContentType || 'image/webp');
-        // Private, do not let intermediaries cache the gated content.
-        res.setHeader('Cache-Control', 'private, no-store');
+        // `private` keeps CDNs/proxies from storing the gated content, but the
+        // student's own browser may reuse a page they already loaded — with
+        // no-store every revisit streamed the image through the function again.
+        res.setHeader('Cache-Control', 'private, max-age=86400');
         res.setHeader('Content-Disposition', 'inline');
         res.setHeader('X-Content-Type-Options', 'nosniff');
 

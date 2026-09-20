@@ -22,7 +22,10 @@ import Globals from '../global.js';
 import { safeGetItem } from './safeStorage.js';
 
 const MIN_REPORTABLE_SECONDS = 3;
-const FLUSH_INTERVAL_MS = 2 * 60 * 1000;
+// Every flush is a serverless invocation, so every open tab pays for it. Section
+// changes and tab-hide still flush immediately; this only bounds how long a
+// tab left open on one page can go without reporting.
+const FLUSH_INTERVAL_MS = 5 * 60 * 1000;
 
 /** Map a pathname to one of the product areas worth telling apart. */
 export function sectionForPath(pathname) {

@@ -5,7 +5,6 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import { Pool } from 'pg';
 import crypto from 'crypto';
-import { OAuth2Client } from 'google-auth-library';
 import { rateLimit } from './middleware/rateLimit.js';
 import { sendMail } from './services/mailer.js';
 import errorReportRoutes from './routes/error-report.js';
@@ -1389,7 +1388,18 @@ const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
 // Identity Services. No client secret involved — verifyIdToken only needs
 // the client ID as the expected audience.
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-const googleOAuthClient = new OAuth2Client(GOOGLE_CLIENT_ID);
+//
+// google-auth-library costs ~220 ms of CPU to load, and only the Google
+// sign-in route needs it — loading it on first use keeps it off every cold
+// start (Vercel bills that CPU).
+let _googleOAuthClient = null;
+async function getGoogleOAuthClient() {
+    if (!_googleOAuthClient) {
+        const { OAuth2Client } = await import('google-auth-library');
+        _googleOAuthClient = new OAuth2Client(GOOGLE_CLIENT_ID);
+    }
+    return _googleOAuthClient;
+}
 
 // ============================================
 // LOGIN HISTORY & ACCOUNT SHARING DETECTION
@@ -2480,7 +2490,7 @@ app.post('/api/auth/google', rateLimit(db, 'oauth_google', { windowMs: 5 * 60_00
 
     let payload;
     try {
-        const ticket = await googleOAuthClient.verifyIdToken({ idToken: credential, audience: GOOGLE_CLIENT_ID });
+        const ticket = await (await getGoogleOAuthClient()).verifyIdToken({ idToken: credential, audience: GOOGLE_CLIENT_ID });
         payload = ticket.getPayload();
     } catch (err) {
         logger.warn('Google ID token verification failed', err);
@@ -8028,6 +8038,15 @@ app.put('/api/preferences/language', requireSession, async (req, res) => {
 const PUBLIC_STATS_CACHE_MS = 15 * 60 * 1000;
 let _publicStatsCache = null; // { data, at }
 app.get('/api/public/stats', async (req, res) => {
+    // Every landing-page visitor calls this, and the numbers are identical for
+    // everyone — so let Vercel's CDN answer instead of running the function
+    // (the in-memory cache above only helps a warm instance). The body is
+    // public, so allow any origin: a shared cached copy must not carry one
+    // origin's CORS header to the other (www vs bare domain). No credentials
+    // are involved in this fetch.
+    res.set('Cache-Control', 'public, s-maxage=900, stale-while-revalidate=3600');
+    res.set('Access-Control-Allow-Origin', '*');
+    res.removeHeader('Access-Control-Allow-Credentials');
     const now = Date.now();
     if (_publicStatsCache && now - _publicStatsCache.at < PUBLIC_STATS_CACHE_MS) {
         return res.json({ success: true, ...(_publicStatsCache.data), cached: true });
@@ -8061,6 +8080,7 @@ app.get('/api/public/stats', async (req, res) => {
     } catch (err) {
         logger.error('Failed to compute public stats', err);
         if (_publicStatsCache) return res.json({ success: true, ...(_publicStatsCache.data), cached: true, stale: true });
+        res.set('Cache-Control', 'no-store'); // never let the CDN keep a failure
         res.status(503).json({ success: false });
     }
 });

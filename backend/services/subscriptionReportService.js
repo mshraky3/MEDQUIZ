@@ -17,7 +17,6 @@
  * Estimated rows (Moyasar hadn't reported a fee yet) are marked * in the PDF.
  */
 
-import PDFDocument from 'pdfkit';
 import { sendMail } from './mailer.js';
 import { TRACK_KEYS, trackLabelAr } from '../config/tracks.js';
 import { OWNER_EMAIL } from '../config/recipients.js';
@@ -54,7 +53,9 @@ function fmtDate(d) {
 }
 
 /** Render the report rows into a PDF, resolved as a Buffer. */
-function buildReportPdf(rows, totals, periodStart, periodEnd) {
+async function buildReportPdf(rows, totals, periodStart, periodEnd) {
+    // Loaded on demand — see buildInvoicePdf for why.
+    const { default: PDFDocument } = await import('pdfkit');
     return new Promise((resolve, reject) => {
         const doc = new PDFDocument({ size: 'A4', margin: 40, bufferPages: true });
         const chunks = [];

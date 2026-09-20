@@ -38,17 +38,19 @@
  * the gateway has run in `on` mode for 30 days — it is the escape hatch.
  */
 
-import nodemailer from 'nodemailer';
 import { createEmailClient } from './email-client.js';
 
 // ── legacy SMTP (unchanged) ─────────────────────────────────────────────────
 
 let _transporter = null;
-function getTransporter() {
+// nodemailer is imported on first send, not at the top: it is CPU Vercel bills
+// on every cold start, and most requests never send mail.
+async function getTransporter() {
     if (!_transporter) {
         if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
             throw new Error('Mailer is not configured — set SMTP_HOST, SMTP_USER and SMTP_PASS.');
         }
+        const { default: nodemailer } = await import('nodemailer');
         const port = Number(process.env.SMTP_PORT || 587);
         _transporter = nodemailer.createTransport({
             host: process.env.SMTP_HOST,
@@ -97,7 +99,7 @@ function toNodemailerAttachments(attachments) {
 }
 
 async function legacySend({ name, to, subject, text, html, attachments }) {
-    return getTransporter().sendMail({
+    return (await getTransporter()).sendMail({
         from: fromWithName(name),
         to,
         subject,

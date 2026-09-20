@@ -16,7 +16,6 @@
  * and the owner's report can never disagree about a payment.
  */
 
-import PDFDocument from 'pdfkit';
 import { sendMail } from './mailer.js';
 import { sar, splitVat, vatConfig } from './accountingService.js';
 
@@ -123,7 +122,10 @@ const methodLabel = (payment) => {
  * Render the invoice. Resolves to a PDF Buffer.
  * @param {object} payment - a settled event from accountingService
  */
-export function buildInvoicePdf(payment) {
+export async function buildInvoicePdf(payment) {
+    // pdfkit is imported here, not at the top, so its load CPU is only paid on
+    // the rare request that renders a PDF.
+    const { default: PDFDocument } = await import('pdfkit');
     return new Promise((resolve, reject) => {
         const doc = new PDFDocument({ size: 'A4', margin: 50 });
         const chunks = [];

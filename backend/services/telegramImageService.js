@@ -8,7 +8,6 @@
  * actually looks like SQB rather than an invented palette.
  */
 
-import sharp from 'sharp';
 
 const WIDTH = 1200;
 const HEIGHT = 630;
@@ -79,5 +78,8 @@ export async function renderTopicCard(titleEn, { eyebrow = 'THIS WEEK ON SQB' } 
               letter-spacing="2" fill="${COLORS.primary}">SQB</text>
     </svg>`;
 
+    // Loaded on demand: only the Telegram cron renders cards, and sharp's load
+    // CPU should not be paid on every cold start of the API.
+    const { default: sharp } = await import('sharp');
     return sharp(Buffer.from(svg)).png().toBuffer();
 }
