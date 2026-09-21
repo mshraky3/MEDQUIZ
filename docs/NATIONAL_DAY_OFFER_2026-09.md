@@ -61,13 +61,19 @@ pages show its new price with no struck-through "was".
 Offer ID `national_day_96`. Prices, window and overrides live in one block,
 `NATIONAL_DAY_OFFER`, in `paymentService.js`.
 
-## 3. Current state: NO END DATE
+## 3. Current state: END DATE SET (2026-09-21)
 
-The owner has not fixed an end date; they will provide it. Until then
-`endsAtMs` is `null` and the offer is **open-ended**: it stays on, the pages show
-"limited time" and no countdown or date, and nothing closes it. That is the
-requested behavior — and the risk. **A forgotten open-ended offer silently replaces
-the base price**, so the first thing to do when the owner names a date is set it.
+The owner named **1 October 2026** as the end. On 2026-09-21 the Vercel `medquiz` project got
+`NATIONAL_DAY_OFFER_ENDS_AT=2026-10-01T23:59:59+03:00` (type Config, Production) and was redeployed;
+the live `GET /api/payment/config` now reports `endsAt: 2026-10-01T20:59:59.000Z`, i.e. the offer
+runs **through the end of 1 October, Riyadh time**. After that the base prices return on their own
+(plus the 6-hour grace below for checkouts opened before the deadline).
+
+If the owner meant "ends at the start of 1 October", change the variable to
+`2026-10-01T00:00:00+03:00` and redeploy. To end it early, set a past instant. The variable is read
+once at boot, so every change needs a redeploy.
+
+_History: from 2026-09-20 to 2026-09-21 the offer was deliberately open-ended (`endsAtMs = null`)._
 
 ## 4. When the end date arrives
 
