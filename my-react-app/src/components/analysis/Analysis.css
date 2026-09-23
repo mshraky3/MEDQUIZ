@@ -1,243 +1,309 @@
-/* Analysis page shell — the "Do this next" card, the readiness/streak row,
-   and the collapsible drill-down sections. The card-grid styling reused by
-   the drill-down bodies (OverallStats, TopicAnalysisTable, QuestionAttemptsTable,
-   LastQuizSummary) plus the reset-modal/danger-zone/button-bar rules live in
-   analysisShared.css, pulled in transitively by those child components —
-   this file only carries what is new to this page. */
+/*
+ * /analysis — the performance report.
+ *
+ * The layout this replaces was organised by the endpoint each number came
+ * from, not by the question it answered: coverage per specialty lived in a
+ * "Progress" accordion, accuracy per specialty in a "By specialty" accordion,
+ * coverage per source in the first, accuracy per source in an "Overview" one.
+ * Four sections, two questions, and the student had to open all four and hold
+ * the numbers in their head to compare them.
+ *
+ * It is one report now. Each section answers one question and carries both
+ * numbers side by side, and nothing is behind a click: a performance report
+ * you have to expand six times is not a report, it is a filing cabinet.
+ *
+ * Structure
+ *   .an-wrapper > .an-head
+ *               > .an-layout > .an-nav (desktop only, sticky)
+ *                            > .an-main > .an-score
+ *                                       > .an-sec x5
+ *
+ * The desktop rail is deliberately not mirrored on phones. A horizontal chip
+ * strip there would look exactly like the tab scroller this page already got
+ * rid of, and with five headed sections the scroll is short enough not to
+ * need one.
+ */
 
 .an-wrapper {
   width: 100%;
   max-width: 900px;
   margin: 0 auto;
-  padding: 24px 16px 48px;
+  padding: 20px 14px 48px;
   box-sizing: border-box;
 }
 
-@media (min-width: 1024px) {
-  .an-wrapper {
-    /* A fixed 1180px cap left wide gutters on either side on any screen
-       bigger than a small laptop — a 90%-of-viewport width (capped so an
-       ultrawide monitor doesn't stretch text into an unreadable line)
-       actually uses the space a desktop viewport has. */
-    width: 90%;
-    max-width: 1600px;
-    padding: 32px 24px 56px;
-  }
+/* ── Page head ───────────────────────────────────────────────────────── */
+
+.an-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
 .an-page-title {
-  margin: 0 0 16px;
+  margin: 0;
   font-size: var(--text-2xl);
   font-weight: 800;
   color: var(--text-dark);
 }
 
-/* .fade-in is defined once, in analysisShared.css (loaded transitively via
-   the drill-down child components below) — not redefined here, so this page
-   and /wrong-questions can never disagree about what it means. */
-
-/* ── "Do this next" — the only thing meant to be above the fold ───────── */
-.an-next-card {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 22px;
-  border-radius: var(--radius-xl);
-  background: linear-gradient(160deg, var(--surface) 0%, var(--surface-tint) 100%);
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-md);
-}
-
-.an-next-eyebrow {
-  font-size: var(--text-xs);
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--primary-color);
-}
-
-.an-next-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.an-next-label {
-  font-size: var(--text-sm);
-  color: var(--text-light);
-  font-weight: 600;
-}
-
-.an-next-pct {
-  font-size: var(--text-3xl);
-  font-weight: 800;
-  line-height: 1;
-}
-
-.an-next-topic {
-  margin: 0;
-  font-size: var(--text-xl);
-  font-weight: 800;
-  color: var(--text-dark);
-}
-
-.an-next-facts {
-  list-style: none;
-  margin: 4px 0 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.an-next-facts li {
-  display: flex;
+.an-refresh {
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 7px;
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1.5px solid var(--border-color);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-medium);
+  font-family: inherit;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.an-refresh:hover:not(:disabled) { border-color: var(--primary-color); color: var(--primary-dark); }
+.an-refresh:disabled { opacity: 0.55; cursor: not-allowed; }
+.an-refresh:focus-visible { outline: 3px solid var(--primary-light); outline-offset: 2px; }
+
+/* ── Scorecard ───────────────────────────────────────────────────────────
+   The hero. One dominant figure (accuracy) sitting directly above the
+   coverage meter, because the relationship between those two numbers is the
+   whole point: the old ring showed 100% on an eight-question specialty with
+   no denominator anywhere near it. Here the denominator is the line under
+   the number it qualifies. */
+
+.an-score {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.an-score-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 20px 28px;
+  padding: 20px 20px 16px;
+}
+
+.an-score-main { display: flex; flex-direction: column; gap: 2px; }
+
+.an-score-pct {
+  font-size: clamp(2.75rem, 2rem + 4vw, 3.75rem);
+  font-weight: 800;
+  line-height: 0.95;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.an-score-main .an-score-cap {
   font-size: var(--text-sm);
+  font-weight: 700;
   color: var(--text-medium);
 }
 
-.an-next-cta {
-  margin-top: 8px;
-  align-self: stretch;
-  min-height: 48px;
-  padding: 0 20px;
-  border: none;
-  border-radius: var(--radius-md);
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-  color: #fff;
-  font-size: var(--text-base);
-  font-weight: 700;
-  font-family: inherit;
-  cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.an-next-cta:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.28);
-}
-
-/* ── Readiness + streak row ─────────────────────────────────────────── */
-.an-stat-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin: 14px 0 20px;
-}
-
-.an-stat-pill {
+/* The supporting pair — exam countdown and streak. Small on purpose: they
+   are context for the score, not scores of their own. */
+.an-score-side {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 14px 10px;
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  border: 1px solid var(--border-color);
-  text-align: center;
+  gap: 24px;
+  margin-inline-start: auto;
 }
 
-.an-stat-label {
+.an-score-fig { display: flex; flex-direction: column; gap: 2px; text-align: start; }
+
+.an-score-val {
+  font-size: var(--text-xl);
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--text-dark);
+  font-variant-numeric: tabular-nums;
+}
+
+.an-score-cap {
   font-size: var(--text-xs);
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-light);
 }
 
-.an-stat-value {
+/* Coverage meter — the page's single piece of non-user-triggered motion.
+   It fills once, on load, and only because the number it draws is the one
+   students misread. */
+.an-score-meter {
+  position: relative;
+  height: 10px;
+  margin: 0 20px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.an-score-meter-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--primary-light), var(--primary-dark));
+  transition: width 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.an-score-cover {
+  margin: 8px 20px 18px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-light);
+}
+
+/* Focus strip — what to actually do, on a tinted foot so it reads as the
+   action end of the card rather than another statistic. */
+.an-score-acts {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 20px;
+  background: var(--surface-tint);
+  box-shadow: inset 0 1px 0 var(--border-light);
+}
+
+.an-score-act {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.an-score-act p {
+  flex: 1;
+  min-width: 180px;
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.an-score-act p b { font-weight: 800; }
+
+.an-score-cta,
+.an-score-alt {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.an-score-cta {
+  border: 0;
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.26);
+}
+
+.an-score-cta:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(37, 99, 235, 0.32); }
+
+.an-score-alt {
+  border: 1.5px solid var(--border-color);
+  background: var(--surface);
+  color: var(--primary-dark);
+}
+
+.an-score-alt:hover { border-color: var(--primary-color); background: var(--surface-2); }
+
+.an-score-cta:focus-visible,
+.an-score-alt:focus-visible { outline: 3px solid var(--primary-dark); outline-offset: 2px; }
+
+/* Nothing answered yet. */
+.an-score-empty { padding: 32px 22px; text-align: center; }
+.an-score-empty h2 { margin: 0 0 8px; font-size: var(--text-xl); font-weight: 800; color: var(--text-dark); }
+.an-score-empty p { margin: 0 0 18px; font-size: var(--text-sm); line-height: 1.8; color: var(--text-light); }
+
+/* ── Sections ────────────────────────────────────────────────────────── */
+
+.an-main { min-width: 0; }
+
+.an-sec { margin-top: 30px; scroll-margin-top: calc(var(--navbar-h) + 16px); }
+
+.an-sec-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 14px;
+  margin-bottom: 10px;
+}
+
+.an-sec-title {
+  margin: 0;
   font-size: var(--text-lg);
   font-weight: 800;
   color: var(--text-dark);
 }
 
-/* Accuracy tones — one shared palette, replacing the five different
-   hardcoded green/amber/red sets this page used to carry (three different
-   greens, three different reds across TopicAnalysisTable, QuizHistory and
-   FinalExams inline styles, plus this page's own dark-theme leftovers). */
+.an-sec-count {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--text-light);
+  font-variant-numeric: tabular-nums;
+}
+
+.an-sec-hint {
+  width: 100%;
+  margin: 0;
+  font-size: var(--text-xs);
+  line-height: 1.7;
+  color: var(--text-light);
+}
+
+/* Sort control — chips rather than a <select>, so the current order is
+   visible without opening anything and switching it costs one tap. */
+.an-sort {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0;
+}
+
+.an-sort-btn {
+  min-height: 34px;
+  padding: 6px 13px;
+  border: 1.5px solid var(--border-color);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-medium);
+  font-family: inherit;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.an-sort-btn:hover { border-color: var(--primary-light); }
+
+.an-sort-btn.is-on {
+  border-color: var(--primary-dark);
+  background: var(--primary-dark);
+  color: #fff;
+}
+
+.an-sort-btn:focus-visible { outline: 3px solid var(--primary-light); outline-offset: 2px; }
+
+/* ── Accuracy tones — one palette for every percentage on the page ───── */
 .tone-high { color: var(--accuracy-high); }
 .tone-mid { color: var(--accuracy-mid); }
 .tone-low { color: var(--accuracy-low); }
 .tone-neutral { color: var(--text-light); }
-
-.type-badge.tone-high { background: var(--accuracy-high-bg); color: var(--accuracy-high); }
-.type-badge.tone-mid { background: var(--accuracy-mid-bg); color: var(--accuracy-mid); }
-.type-badge.tone-low { background: var(--accuracy-low-bg); color: var(--accuracy-low); }
-
-.an-bestworst-grid {
-  margin-top: 12px;
-}
-
-/* ── Drill-downs — replace the six-tab strip (previously a hidden
-   horizontal scroller on any phone under ~720px of tab content) ───────── */
-.an-drills {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.an-drill {
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border-color);
-  background: var(--surface);
-  overflow: hidden;
-}
-
-.an-drill-head {
-  width: 100%;
-  min-height: 56px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 14px 16px;
-  background: none;
-  border: none;
-  font-family: inherit;
-  font-size: var(--text-base);
-  font-weight: 700;
-  color: var(--text-dark);
-  cursor: pointer;
-  text-align: start;
-}
-
-.an-drill-icon {
-  display: flex;
-  color: var(--primary-color);
-  flex-shrink: 0;
-}
-
-.an-drill-title {
-  flex: 1;
-}
-
-.an-drill-badge {
-  min-width: 22px;
-  padding: 2px 7px;
-  border-radius: 999px;
-  background: var(--surface-tint);
-  color: var(--primary-color);
-  font-size: var(--text-xs);
-  font-weight: 800;
-  text-align: center;
-}
-
-.an-drill-chev {
-  display: flex;
-  flex-shrink: 0;
-  color: var(--text-light);
-  transition: transform 0.2s ease;
-}
-
-.an-drill.is-open .an-drill-chev {
-  transform: rotate(180deg);
-}
-
-.an-drill-body {
-  padding: 0 16px 16px;
-  border-top: 1px solid var(--border-light);
-}
 
 /* ── Loading / error states ─────────────────────────────────────────── */
 .an-loader {
@@ -256,16 +322,14 @@
   justify-content: space-between;
   gap: 10px;
   padding: 12px 14px;
-  margin-bottom: 16px;
+  margin-top: 16px;
   border-radius: var(--radius-md);
   background: rgba(220, 38, 38, 0.08);
   color: var(--error-color);
   font-size: var(--text-sm);
 }
 
-.an-error-inline p {
-  margin: 0;
-}
+.an-error-inline p { margin: 0; }
 
 .an-retry-btn {
   display: inline-flex;
@@ -290,73 +354,78 @@
   color: var(--text-medium);
 }
 
-@media (min-width: 640px) {
-  .an-stat-row {
-    grid-template-columns: repeat(2, minmax(0, 220px));
-    justify-content: center;
-  }
-}
+/* ── Desktop: sticky section rail beside the report ──────────────────── */
+
+.an-nav { display: none; }
 
 @media (min-width: 1024px) {
-  /* Hero row: the next-step card and the readiness/streak pills stacked one
-     under the other made sense at phone width, but on a wide screen it was
-     two full-width bars with nothing beside them. Side by side instead —
-     .an-hero wraps both from Analysis.jsx below. */
-  .an-hero {
-    display: flex;
-    align-items: stretch;
-    gap: 16px;
+  .an-wrapper {
+    width: 92%;
+    max-width: 1280px;
+    padding: 28px 24px 56px;
   }
 
-  .an-hero .an-next-card {
-    flex: 1 1 auto;
-    min-width: 0;
-  }
-
-  .an-hero .an-stat-row {
-    flex: 0 0 220px;
-    grid-template-columns: 1fr;
-    margin: 0;
-    justify-content: initial;
-  }
-
-  .an-hero .an-stat-pill {
-    flex: 1;
-    justify-content: center;
-  }
-
-  /* Six single-column accordion rows on a wide screen read as a sparse,
-     stretched-out list with a lot of scrolling to reach the last one.
-     Overview (open by default, and the section with the most content —
-     the headline numbers plus the best/worst cards) keeps the full width;
-     the five behind it share a two-column grid instead of stacking. */
-  .an-drills {
+  .an-layout {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
+    grid-template-columns: 208px minmax(0, 1fr);
+    gap: 32px;
     align-items: start;
   }
 
-  .an-drills > .an-drill:first-child {
-    grid-column: 1 / -1;
+  .an-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    position: sticky;
+    /* --navbar-h is the single source for the app bar's height; see §3 of
+       docs/DESIGN_MAP.md. */
+    top: calc(var(--navbar-h) + 20px);
+    z-index: var(--z-sticky);
   }
+
+  .an-nav-label {
+    margin: 0 0 8px;
+    padding-inline-start: 12px;
+    font-size: var(--text-xs);
+    font-weight: 700;
+    color: var(--text-light);
+  }
+
+  .an-nav-link {
+    display: block;
+    padding: 9px 12px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: none;
+    color: var(--text-medium);
+    font-family: inherit;
+    font-size: var(--text-sm);
+    font-weight: 700;
+    text-align: start;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  .an-nav-link:hover { background: var(--surface-2); color: var(--text-dark); }
+
+  .an-nav-link.is-on {
+    background: var(--surface-tint);
+    color: var(--primary-dark);
+  }
+
+  .an-nav-link:focus-visible { outline: 3px solid var(--primary-light); outline-offset: 2px; }
+
+  .an-score-top { padding: 26px 26px 18px; }
+  .an-score-meter { margin-inline: 26px; }
+  .an-score-cover { margin-inline: 26px; }
+  .an-score-acts { padding: 16px 26px; }
 }
 
-/* ── Page furniture ───────────────────────────────────────────────────────
-   The action bar, the danger zone and the reset modal used to be styled by
-   analysisShared.css, which this page only ever loaded by accident — through
-   whichever drill sub-component happened to import it first. Those
-   sub-components now have their own stylesheet (analysisPanels.css), so these
-   rules live here, on the page that actually renders them.
-
-   Scoped under .an-wrapper deliberately: analysisShared.css still defines a
-   .primary-button for /wrong-questions, and Vite never unloads a stylesheet
-   within an SPA session — so an unscoped copy here would fight it for any
-   student who visited that page first. See §1 of docs/DESIGN_MAP.md.
-
-   The bar and its buttons were also on the old translucent treatment
-   (rgba(15,23,42,.04) over a 20px backdrop blur, under a 32px dark shadow);
-   they are opaque and on the token ramp now, like the rest of the page. */
+/* ── Page furniture — action bar, danger zone, reset modal ───────────────
+   Scoped under .an-wrapper deliberately: /wrong-questions carries its own
+   .primary-button, and a stylesheet never unloads within an SPA session, so
+   an unscoped copy here would fight it for anyone who visited that page
+   first. See §1 of docs/DESIGN_MAP.md. */
 
 .an-wrapper .button-bar {
     display: flex;
@@ -534,13 +603,24 @@
 .reset-modal-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; margin-top: 18px; }
 
 @media (max-width: 600px) {
+    .an-score-side { margin-inline-start: 0; gap: 20px; }
     .an-wrapper .button-bar { flex-direction: column; align-items: stretch; }
     .an-wrapper .primary-button,
     .an-wrapper .secondary-button { width: 100%; }
+    .an-score-cta,
+    .an-score-alt { width: 100%; }
 }
 
 @media (prefers-reduced-motion: reduce) {
+    .an-score-meter-fill,
+    .an-score-cta,
+    .an-score-alt,
+    .an-sort-btn,
     .an-wrapper .primary-button,
     .an-wrapper .secondary-button,
     .an-wrapper .danger-button { transition: none; }
 }
+
+/* ── Section furniture ───────────────────────────────────────────────── */
+.an-activity-figs { margin-bottom: 14px; }
+.an-last-reviews { margin-top: 16px; }

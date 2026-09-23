@@ -58,8 +58,8 @@ const analysisCopy = {
             examToday: 'الاختبار اليوم',
             examPassed: 'موعد الاختبار مضى',
             noExam: 'لم تحدد موعد اختبار بعد',
-            cta: (topic) => `تدرّب على ${topic} ←`,
-            ctaGeneric: 'ابدأ اختبار جديد ←',
+            cta: (topic) => `تدرّب على ${topic}`,
+            ctaGeneric: 'ابدأ اختبار جديد',
             noDataYet: 'أجب على بضعة أسئلة لنعرف من أين نبدأ.',
             readiness: 'مستوى الجاهزية',
             streakDays: (n) => `${n} يوم متتالي`,
@@ -75,6 +75,56 @@ const analysisCopy = {
             lastQuizReview: 'مراجعة آخر اختبار',
             expand: 'عرض',
             collapse: 'إخفاء',
+        },
+
+        /* The report's own vocabulary. One row shape serves both the
+           specialty table and the source table, so their labels are shared. */
+        report: {
+            accuracy: 'الدقة',
+            coverage: 'التغطية',
+            covered: (answered, total) => `${answered} من ${total}`,
+            practise: 'تدرّب',
+            practiseOn: (name) => `تدرّب على ${name}`,
+            sortLabel: 'الترتيب',
+            sortWeakest: 'الأضعف أولاً',
+            sortLeastCovered: 'الأقل تغطية',
+            sortName: 'أبجدياً',
+            untouched: 'لم تبدأ',
+            colName: 'الاسم',
+        },
+
+        sections: {
+            specialties: 'أداؤك حسب التخصص',
+            specialtiesHint: 'الدقة تقيس صحة إجاباتك. التغطية تقيس كم سؤالاً حللت من البنك.',
+            sources: 'أداؤك حسب المصدر',
+            activity: 'نشاطك',
+            mockExams: 'الاختبارات النهائية',
+            lastQuiz: 'مراجعة آخر اختبار',
+            jump: 'أقسام التقرير',
+        },
+
+        scorecard: {
+            accuracy: 'الدقة العامة',
+            coverage: 'من بنك الأسئلة',
+            streak: 'أيام متتالية',
+            exam: 'حتى الاختبار',
+            examNone: 'لم يُحدد',
+            examToday: 'اليوم',
+            examPassed: 'مضى',
+            day: 'يوم',
+            emptyTitle: 'تقريرك يبدأ من أول اختبار',
+            emptyBody: 'حل بضعة أسئلة وسيظهر هنا أداؤك في كل تخصص ومصدر.',
+            emptyCta: 'ابدأ اختبار',
+        },
+
+        activity: {
+            sessions: 'اختبار',
+            answered: 'سؤال',
+            totalTime: 'إجمالي الوقت',
+            avgSession: 'متوسط الجلسة',
+            minutes: 'دقيقة',
+            longestStreak: 'أطول سلسلة',
+            days: 'يوم',
         },
 
         streak: {
@@ -364,8 +414,8 @@ const analysisCopy = {
             examToday: 'Exam is today',
             examPassed: 'Exam date has passed',
             noExam: 'No exam date set yet',
-            cta: (topic) => `Practise ${topic} →`,
-            ctaGeneric: 'Start a new quiz →',
+            cta: (topic) => `Practise ${topic}`,
+            ctaGeneric: 'Start a new quiz',
             noDataYet: 'Answer a few questions and we’ll tell you where to start.',
             readiness: 'Readiness',
             streakDays: (n) => `${n}-day streak`,
@@ -381,6 +431,56 @@ const analysisCopy = {
             lastQuizReview: 'Last quiz review',
             expand: 'Expand',
             collapse: 'Collapse',
+        },
+
+        /* The report's own vocabulary. One row shape serves both the
+           specialty table and the source table, so their labels are shared. */
+        report: {
+            accuracy: 'Accuracy',
+            coverage: 'Coverage',
+            covered: (answered, total) => `${answered} of ${total}`,
+            practise: 'Practise',
+            practiseOn: (name) => `Practise ${name}`,
+            sortLabel: 'Sort by',
+            sortWeakest: 'Weakest first',
+            sortLeastCovered: 'Least covered',
+            sortName: 'Name',
+            untouched: 'Not started',
+            colName: 'Name',
+        },
+
+        sections: {
+            specialties: 'How you do by specialty',
+            specialtiesHint: 'Accuracy is how many you got right. Coverage is how much of the bank you have seen.',
+            sources: 'How you do by source',
+            activity: 'Your activity',
+            mockExams: 'Mock exams',
+            lastQuiz: 'Last quiz review',
+            jump: 'Report sections',
+        },
+
+        scorecard: {
+            accuracy: 'Overall accuracy',
+            coverage: 'of the question bank',
+            streak: 'Day streak',
+            exam: 'Until the exam',
+            examNone: 'Not set',
+            examToday: 'Today',
+            examPassed: 'Passed',
+            day: 'days',
+            emptyTitle: 'Your report starts with your first quiz',
+            emptyBody: 'Answer a few questions and your accuracy by specialty and source shows up here.',
+            emptyCta: 'Start a quiz',
+        },
+
+        activity: {
+            sessions: 'quizzes',
+            answered: 'questions',
+            totalTime: 'Total time',
+            avgSession: 'Average session',
+            minutes: 'min',
+            longestStreak: 'Longest streak',
+            days: 'days',
         },
 
         streak: {

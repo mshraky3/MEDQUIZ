@@ -1,20 +1,22 @@
 /*
- * The contents of /analysis's collapsible drills — OverallStats,
- * TopicAnalysisTable, LastQuizSummary and QuestionAttemptsTable.
+ * The report panels shared by /analysis — the specialty and source tables,
+ * the quiz-history and mock-exam session lists, the last-quiz strip and the
+ * question reviews.
  *
- * These four used to render out of analysisShared.css, which is the page's
+ * These used to render out of analysisShared.css (since deleted) plus two
+ * ~800-line per-component stylesheets, all of them from this page's
  * dark-glassmorphism era: near-black fills at 4-15% opacity plus backdrop
  * blur, shadows up to `0 25px 80px rgba(15,23,42,.35)`, and label/value pairs
- * drawn as full-width pastel bars. On this page's opaque white shell that
- * stacked four nested grey panels around a single number, and two of the
- * pastel colours (#fbbf24 labels, #c4b5fd values) were barely legible on a
- * light background at all.
+ * drawn as full-width pastel bars. On an opaque white shell that stacked four
+ * nested grey panels around a single number.
  *
- * analysisShared.css is deliberately NOT edited: WrongQuestions and the other
- * drills still render its `.question-card` / `.answer-text.correct|wrong`
- * family for real right/wrong indication, and this page has already been burnt
- * once by shared-class collisions (DESIGN_AUDIT_2026-08-25.md, A1). These are
- * their own `.ap-*` classes on their own file instead.
+ * QuizHistory and FinalExams render the same three things — a session list, an
+ * expandable body of question reviews, and pagination — so they share one set
+ * of classes here instead of carrying a near-identical stylesheet each.
+ *
+ * Everything is `.ap-*` prefixed. Generic names like `.question-card` and
+ * `.answer-text` are what burnt this page before (DESIGN_AUDIT_2026-08-25, A1)
+ * and a stylesheet never unloads within an SPA session.
  *
  * Tokens and logical properties throughout; RTL is the default direction.
  */
@@ -81,147 +83,6 @@
 .ap-acc.tone-mid { background: var(--accuracy-mid-bg); color: var(--accuracy-mid); }
 .ap-acc.tone-low { background: var(--accuracy-low-bg); color: var(--accuracy-low); }
 .ap-acc.tone-neutral { background: var(--surface-2, #f5f8fd); color: var(--text-light, #5b6779); }
-
-/* -------------------------------------------------------------- cards --- */
-/* Used by OverallStats, where each card really is a separate entity (the
-   headline figures, then one card per source). */
-
-.ap-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
-    align-items: start;
-    gap: 14px;
-}
-
-.ap-card {
-    background: var(--surface, #fff);
-    border: 1px solid var(--border-color, #d4deee);
-    border-radius: var(--radius-lg, 16px);
-    box-shadow: var(--shadow-sm);
-    overflow: hidden;
-}
-
-.ap-card-head {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-2, 8px);
-    padding: 12px 14px;
-    background: var(--surface-tint, #e1eafb);
-    border-bottom: 1px solid var(--border-color, #d4deee);
-}
-
-.ap-card-body { padding: 8px 14px 14px; }
-
-/* A card whose whole body is one named thing — the best/needs-work pair. */
-.ap-highlight {
-    margin: 6px 0;
-    font-size: var(--text-base, 1rem);
-    font-weight: 800;
-    color: var(--text-dark, #0f1e3d);
-}
-
-/* Label/value pairs as plain rows on a hairline, not as stacked pastel bars
-   inside a tinted panel inside a tinted card. */
-.ap-stats { display: flex; flex-direction: column; }
-
-.ap-stat {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 9px 0;
-}
-
-.ap-stat + .ap-stat { box-shadow: inset 0 1px 0 var(--border-light, #e6ecf7); }
-
-.ap-stat-label {
-    font-size: 12.5px;
-    font-weight: 600;
-    color: var(--text-light, #5b6779);
-}
-
-.ap-stat-value {
-    font-size: 13.5px;
-    font-weight: 800;
-    color: var(--text-dark, #0f1e3d);
-    font-variant-numeric: tabular-nums;
-    text-align: end;
-}
-
-/* ------------------------------------------------------------- ledger --- */
-/* Per-specialty performance. Was a grid of cards, each repeating the same
-   blurb ("Overview / how you do on X questions") above four pastel bars — for
-   data whose entire point is comparing specialties against each other, which
-   is what rows on a shared baseline do and cards do not. Matches the hub's
-   specialty ledger, so the two pages read as one product. */
-
-.ap-rows { list-style: none; margin: 0; padding: 0; }
-
-.ap-row {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    align-items: center;
-    gap: 8px 14px;
-    padding: 13px 12px;
-    border-radius: var(--radius-md, 12px);
-    transition: background var(--transition-fast);
-}
-
-.ap-row + .ap-row { box-shadow: inset 0 1px 0 var(--border-light, #e6ecf7); }
-.ap-row:hover { background: var(--surface-2, #f5f8fd); }
-
-.ap-row-name {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    min-width: 0;
-    font-size: var(--text-sm, 0.875rem);
-    font-weight: 800;
-    color: var(--text-dark, #0f1e3d);
-}
-
-.ap-row-icon {
-    display: grid;
-    place-items: center;
-    width: 30px;
-    height: 30px;
-    border-radius: 9px;
-    background: var(--surface-tint, #e1eafb);
-    color: var(--primary-dark, #1d4ed8);
-    flex-shrink: 0;
-}
-
-.ap-row-facts {
-    grid-column: 1 / -1;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px 14px;
-    font-size: var(--text-xs, 0.75rem);
-    font-weight: 700;
-    color: var(--text-light, #5b6779);
-    font-variant-numeric: tabular-nums;
-}
-
-.ap-row-facts b { color: var(--text-dark, #0f1e3d); font-weight: 800; }
-
-/* Phone: name and accuracy share the top line, the facts wrap underneath.
-   Placed explicitly because the DOM order (name, facts, accuracy) is the
-   desktop reading order, not this one. */
-.ap-row .ap-row-name { grid-row: 1; grid-column: 1; }
-.ap-row .ap-acc { grid-row: 1; grid-column: 2; justify-self: end; }
-
-@media (min-width: 640px) {
-    .ap-row { grid-template-columns: minmax(150px, auto) 1fr auto; }
-    .ap-row-facts { grid-column: auto; justify-content: flex-start; }
-
-    .ap-row .ap-row-name,
-    .ap-row .ap-acc {
-        grid-row: auto;
-        grid-column: auto;
-    }
-}
 
 /* --------------------------------------------------------- stat strip --- */
 /* One quiz's numbers. Was a single card carrying a centred blurb and six
@@ -408,6 +269,297 @@
 .ap-more-wrap { display: flex; justify-content: center; margin-top: 14px; }
 
 @media (prefers-reduced-motion: reduce) {
-    .ap-row,
     .ap-more { transition: none; }
+}
+
+/* ═══ Report table ═══════════════════════════════════════════════════════
+   One row shape for both the specialty table and the source table.
+
+   Each row carries the two numbers that used to sit in different accordions:
+   accuracy (how many you got right) and coverage (how much of the bank you
+   have seen). Keeping them on one baseline is the entire point — 100%
+   accuracy on eight questions is only legible next to the 800 questions still
+   unanswered.
+
+   The two metrics get deliberately different colour languages so they can
+   never be read as the same thing: accuracy uses the green/amber/red ramp,
+   coverage is always plain blue. "How good" is coloured; "how much" is not. */
+
+.ap-tbl {
+    border: 1px solid var(--border-color, #d4deee);
+    border-radius: var(--radius-lg, 16px);
+    background: var(--surface, #fff);
+    overflow: hidden;
+}
+
+.ap-tbl-head {
+    display: none;
+    padding: 9px 14px;
+    background: var(--surface-2, #f5f8fd);
+    box-shadow: inset 0 -1px 0 var(--border-light, #e6ecf7);
+    font-size: var(--text-xs, 0.75rem);
+    font-weight: 800;
+    color: var(--text-light, #5b6779);
+}
+
+.ap-tbl-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+        "name acc"
+        "cov  go";
+    align-items: center;
+    gap: 8px 12px;
+    padding: 12px 14px;
+}
+
+.ap-tbl-row + .ap-tbl-row { box-shadow: inset 0 1px 0 var(--border-light, #e6ecf7); }
+.ap-tbl-row:hover { background: var(--surface-2, #f5f8fd); }
+
+.ap-tbl-name {
+    grid-area: name;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+    font-size: var(--text-sm, 0.875rem);
+    font-weight: 800;
+    color: var(--text-dark, #0f1e3d);
+}
+
+.ap-tbl-icon {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+    border-radius: 9px;
+    background: var(--surface-tint, #e1eafb);
+    color: var(--primary-dark, #1d4ed8);
+}
+
+.ap-tbl-acc { grid-area: acc; justify-self: end; }
+
+/* An untouched specialty gets a muted marker, not a 0% in the ramp's red.
+   Never having started something is not the same as failing it. */
+.ap-tbl-none {
+    grid-area: acc;
+    justify-self: end;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: var(--surface-2, #f5f8fd);
+    color: var(--text-light, #5b6779);
+    font-size: var(--text-xs, 0.75rem);
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.ap-tbl-cov { grid-area: cov; display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+
+.ap-tbl-bar {
+    height: 7px;
+    border-radius: 999px;
+    background: #dde5f3;
+    overflow: hidden;
+}
+
+.ap-tbl-bar i {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: var(--primary-color, #2563eb);
+}
+
+.ap-tbl-cov small {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text-light, #5b6779);
+    font-variant-numeric: tabular-nums;
+}
+
+.ap-tbl-go {
+    grid-area: go;
+    justify-self: end;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 36px;
+    padding: 7px 14px;
+    border: 1.5px solid var(--border-color, #d4deee);
+    border-radius: 999px;
+    background: var(--surface, #fff);
+    color: var(--primary-dark, #1d4ed8);
+    font-family: inherit;
+    font-size: var(--text-xs, 0.75rem);
+    font-weight: 800;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.ap-tbl-go:hover { border-color: var(--primary-color, #2563eb); background: var(--surface-tint, #e1eafb); }
+.ap-tbl-go:focus-visible { outline: 3px solid var(--primary-light, #3b82f6); outline-offset: 2px; }
+
+@media (min-width: 640px) {
+    .ap-tbl-head,
+    .ap-tbl-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 76px minmax(120px, 210px) auto;
+        grid-template-areas: "name acc cov go";
+        gap: 14px;
+    }
+
+    .ap-tbl-head span:nth-child(2) { text-align: center; }
+    .ap-tbl-acc,
+    .ap-tbl-none { justify-self: center; }
+}
+
+/* ═══ Session lists — quiz history and mock exams ════════════════════════
+   Both render the same object: a finished sitting, its headline numbers, and
+   an expandable body of question reviews. They were two different card
+   designs across two ~800-line stylesheets; they are one shape now. */
+
+.ap-sess-list { display: flex; flex-direction: column; gap: 10px; }
+
+.ap-sess {
+    border: 1px solid var(--border-color, #d4deee);
+    border-radius: var(--radius-lg, 16px);
+    background: var(--surface, #fff);
+    overflow: hidden;
+}
+
+.ap-sess-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 14px 9px;
+}
+
+.ap-sess-when { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+
+.ap-sess-title {
+    font-size: var(--text-sm, 0.875rem);
+    font-weight: 800;
+    color: var(--text-dark, #0f1e3d);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ap-sess-date { font-size: var(--text-xs, 0.75rem); color: var(--text-light, #5b6779); }
+
+.ap-sess-facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px 16px;
+    padding: 0 14px 11px;
+}
+
+.ap-sess-fact {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 5px;
+    font-size: var(--text-xs, 0.75rem);
+    color: var(--text-light, #5b6779);
+}
+
+.ap-sess-fact b {
+    color: var(--text-dark, #0f1e3d);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+.ap-sess-foot { padding: 0 14px 12px; }
+
+.ap-sess-body {
+    padding: 14px;
+    background: var(--surface-2, #f5f8fd);
+    box-shadow: inset 0 1px 0 var(--border-light, #e6ecf7);
+}
+
+.ap-sess-body > .ap-title { margin-top: 16px; }
+.ap-sess-body > .ap-title:first-child { margin-top: 0; }
+
+/* An explanatory aside — a pre-2025 session with no stored attempts, or a
+   sitting whose questions were never recorded. Neither is an error. */
+.ap-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    padding: 13px 14px;
+    border: 1px solid var(--border-light, #e6ecf7);
+    border-radius: var(--radius-md, 12px);
+    background: var(--surface, #fff);
+}
+
+.ap-note svg { color: var(--primary-color, #2563eb); flex-shrink: 0; margin-top: 2px; }
+.ap-note div { min-width: 0; }
+.ap-note strong { display: block; margin-bottom: 3px; font-size: var(--text-sm, 0.875rem); font-weight: 800; color: var(--text-dark, #0f1e3d); }
+.ap-note p { margin: 0; font-size: var(--text-xs, 0.75rem); line-height: 1.75; color: var(--text-light, #5b6779); }
+
+/* ═══ Pagination ═════════════════════════════════════════════════════════ */
+
+.ap-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 14px;
+}
+
+.ap-page-btn {
+    min-height: 40px;
+    padding: 8px 16px;
+    border: 1.5px solid var(--border-color, #d4deee);
+    border-radius: 999px;
+    background: var(--surface, #fff);
+    color: var(--primary-dark, #1d4ed8);
+    font-family: inherit;
+    font-size: var(--text-xs, 0.75rem);
+    font-weight: 800;
+    cursor: pointer;
+    transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.ap-page-btn:hover:not(:disabled) { border-color: var(--primary-color, #2563eb); background: var(--surface-2, #f5f8fd); }
+.ap-page-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.ap-page-btn:focus-visible { outline: 3px solid var(--primary-light, #3b82f6); outline-offset: 2px; }
+
+.ap-page-info {
+    font-size: var(--text-xs, 0.75rem);
+    font-weight: 700;
+    color: var(--text-light, #5b6779);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ═══ Inline load + error, for panels that fetch their own data ══════════ */
+
+.ap-inline-load {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 28px 0;
+    font-size: var(--text-sm, 0.875rem);
+    color: var(--text-light, #5b6779);
+}
+
+.ap-inline-error {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 13px 14px;
+    border-radius: var(--radius-md, 12px);
+    background: rgba(220, 38, 38, 0.08);
+    color: var(--error-color, #dc2626);
+    font-size: var(--text-sm, 0.875rem);
+}
+
+.ap-inline-error p { margin: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+    .ap-tbl-go,
+    .ap-page-btn { transition: none; }
 }

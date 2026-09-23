@@ -1,6 +1,7 @@
 import React from 'react';
 import Icon from '../common/Icon.jsx';
 import { getSourceLabel } from '../../utils/sourceLabels';
+import { getTypeLabel } from '../../utils/typeLabels';
 import { useCopy, useLang } from '../../i18n';
 import analysisCopy from '../../i18n/copy/analysis.js';
 import { formatDuration } from '../../utils/formatDuration';
@@ -25,7 +26,7 @@ const LastQuizSummary = ({ latest_quiz, onRefresh }) => {
     const correct = latest_quiz.correct_answers ?? 0;
     const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
     const topicsCovered = latest_quiz.topics_covered?.length > 0
-        ? latest_quiz.topics_covered.join('، ')
+        ? latest_quiz.topics_covered.map((k) => getTypeLabel(k, lang)).join(lang === 'ar' ? '، ' : ', ')
         : null;
 
     const figures = [

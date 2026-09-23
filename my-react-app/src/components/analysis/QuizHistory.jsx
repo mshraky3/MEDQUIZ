@@ -1,324 +1,205 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import Icon from '../common/Icon.jsx';
-import axios from 'axios';
-import Globals from '../../global.js';
 import Spinner from '../common/Spinner.jsx';
+import apiClient from '../../utils/apiClient.js';
 import { getSourceLabel } from '../../utils/sourceLabels';
 import { getTypeLabel } from '../../utils/typeLabels';
 import { useCopy, useLang, formatDateTime } from '../../i18n';
 import analysisCopy from '../../i18n/copy/analysis.js';
 import { formatDuration } from '../../utils/formatDuration';
-import './QuizHistory.css';
+import './analysisPanels.css';
 
-const QuizHistory = ({ userId, username, sessionToken }) => {
+const PAGE_SIZE = 10;
+const tone = (pct) => (pct >= 75 ? 'high' : pct >= 50 ? 'mid' : 'low');
+
+/** The question reviews inside an expanded session — shared shape with FinalExams. */
+export const SessionReviews = ({ items, t, lang }) => (
+  <div className="ap-reviews">
+    {items.map((q, index) => (
+      <article key={q.id || index} className="ap-review">
+        <div className="ap-review-head">
+          {q.question_type && (
+            <span className="ap-badge"><Icon name="book" size={14} /> {getTypeLabel(q.question_type, lang)}</span>
+          )}
+          {q.source && (
+            <span className="ap-badge"><Icon name="book-open" size={14} /> {getSourceLabel(q.source, lang)}</span>
+          )}
+          <span className={`ap-result ${q.is_correct ? 'is-correct' : 'is-wrong'}`}>
+            <Icon name={q.is_correct ? 'check-circle' : 'x-circle'} size={13} />
+            {q.is_correct ? t.correctBadge : t.wrongBadge}
+          </span>
+        </div>
+        <div className="ap-review-body">
+          <p className="ap-question">{q.question_text}</p>
+          <div className="ap-answers">
+            <div className={`ap-answer ${q.is_correct ? 'is-correct' : 'is-wrong'}`}>
+              <span className="ap-answer-label">{t.yourAnswer}</span>
+              <span className="ap-answer-value">{q.answer || t.noAnswer || '—'}</span>
+            </div>
+            {!q.is_correct && (
+              <div className="ap-answer is-correct">
+                <span className="ap-answer-label">{t.correctAnswer}</span>
+                <span className="ap-answer-value">{q.correct_option || '—'}</span>
+              </div>
+            )}
+          </div>
+          {q.extra}
+        </div>
+      </article>
+    ))}
+  </div>
+);
+
+export const Pager = ({ page, totalPages, onPage, t }) => (
+  totalPages > 1 ? (
+    <div className="ap-page">
+      <button type="button" className="ap-page-btn" onClick={() => onPage(page - 1)} disabled={page <= 1}>
+        {t.previous}
+      </button>
+      <span className="ap-page-info">{t.pageOf(page, totalPages)}</span>
+      <button type="button" className="ap-page-btn" onClick={() => onPage(page + 1)} disabled={page >= totalPages}>
+        {t.next}
+      </button>
+    </div>
+  ) : null
+);
+
+const QuizHistory = ({ userId }) => {
   const t = useCopy(analysisCopy).history;
-  const { lang, dir } = useLang();
+  const { lang } = useLang();
   const [sessions, setSessions] = useState([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [pagination, setPagination] = useState({
-    page: 1,
-    limit: 10
-  });
-  const [expandedSessionId, setExpandedSessionId] = useState(null);
-  const [sessionDetails, setSessionDetails] = useState({});
+  const [openId, setOpenId] = useState(null);
+  const [details, setDetails] = useState({});
 
-  // Fetch quiz sessions
-  const fetchSessions = async () => {
+  const fetchSessions = useCallback(async (signal) => {
     setLoading(true);
     setError(null);
-
     try {
-      const queryParams = new URLSearchParams();
-
-      // Ensure pagination parameters are valid numbers
-      const page = pagination.page || 1;
-      const limit = pagination.limit || 10;
-
-      queryParams.append('page', page.toString());
-      queryParams.append('limit', limit.toString());
-
-      // Add authentication parameters to the URL
-      queryParams.append('username', username);
-      queryParams.append('sessionToken', sessionToken);
-
-      const url = `${Globals.URL}/quiz-sessions/history/${userId}?${queryParams.toString()}`;
-      const response = await axios.get(url);
-
-      setSessions(response.data.sessions || []);
-
-      // Only update metadata from response, preserve user-controlled page/limit
-      if (response.data.pagination) {
-        setPagination(prev => ({
-          ...prev,
-          totalPages: response.data.pagination.totalPages,
-          totalSessions: response.data.pagination.totalSessions
-        }));
-      }
+      const res = await apiClient.get(`/quiz-sessions/history/${userId}`, { params: { page, limit: PAGE_SIZE }, signal });
+      setSessions(res.data.sessions || []);
+      setTotalPages(res.data.pagination?.totalPages || 1);
     } catch (err) {
-      console.error('Error fetching quiz sessions:', err);
+      if (err.code === 'ERR_CANCELED' || err.name === 'CanceledError') return;
       setError(t.error);
       setSessions([]);
     } finally {
       setLoading(false);
     }
-  };
-
-  // Fetch session details when expanded
-  const fetchSessionDetails = async (sessionId) => {
-    try {
-      const queryParams = new URLSearchParams();
-      queryParams.append('username', username);
-      queryParams.append('sessionToken', sessionToken);
-
-      const url = `${Globals.URL}/quiz-sessions/${sessionId}/details?${queryParams.toString()}`;
-      const response = await axios.get(url);
-
-      setSessionDetails(prev => ({
-        ...prev,
-        [sessionId]: response.data
-      }));
-    } catch (err) {
-      console.error('Error fetching session details:', err);
-    }
-  };
-
-  // Toggle session expansion
-  const toggleSession = async (sessionId) => {
-    if (expandedSessionId === sessionId) {
-      setExpandedSessionId(null);
-    } else {
-      setExpandedSessionId(sessionId);
-      // Fetch details if not already loaded
-      if (!sessionDetails[sessionId]) {
-        await fetchSessionDetails(sessionId);
-      }
-    }
-  };
+  }, [userId, page, t.error]);
 
   useEffect(() => {
-    if (userId) {
-      fetchSessions();
+    if (!userId) return undefined;
+    const controller = new AbortController();
+    fetchSessions(controller.signal);
+    return () => controller.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, page]);
+
+  const toggle = async (sessionId) => {
+    if (openId === sessionId) {
+      setOpenId(null);
+      return;
     }
-  }, [userId, pagination.page, pagination.limit]);
-
-  const handlePageChange = (newPage) => {
-    setPagination(prev => ({
-      ...prev,
-      page: newPage
-    }));
-  };
-
-  const formatDate = (dateString) => formatDateTime(dateString, lang, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-
-  const getAccuracyColor = (accuracy) => {
-    const numAccuracy = parseFloat(accuracy || 0);
-    if (numAccuracy >= 80) return '#10b981';
-    if (numAccuracy >= 60) return '#f59e0b';
-    return '#ef4444';
-  };
-
-  const getSourceIcon = (source) => {
-    switch (source) {
-      case 'MidgardGameBoy': return 'gamepad';
-      case 'Midgard': return 'gamepad';
-      case 'GameBoy': return 'gamepad';
-      case 'October25': return 'calendar';
-      case 'May26': return 'calendar';
-      case 'June26': return 'calendar';
-      case 'NursingMostRepeated': return 'refresh';
-      case 'NursingConfirmed': return 'check-circle';
-      default: return 'book-open';
+    setOpenId(sessionId);
+    if (details[sessionId]) return;
+    try {
+      // The route is /quiz-sessions/:id — there has never been a /details
+      // suffix on the server, which is why this panel used to open empty.
+      const res = await apiClient.get(`/quiz-sessions/${sessionId}`);
+      setDetails((prev) => ({ ...prev, [sessionId]: res.data }));
+    } catch {
+      setDetails((prev) => ({ ...prev, [sessionId]: { failed: true } }));
     }
   };
+
+  const formatDate = (d) => formatDateTime(d, lang, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
   if (loading && sessions.length === 0) {
-    return (
-      <div className="quiz-history-loading">
-        <Spinner size="lg" />
-        <p>{t.loading}</p>
-      </div>
-    );
+    return <div className="ap-inline-load"><Spinner size="sm" /><span>{t.loading}</span></div>;
   }
 
   if (error) {
     return (
-      <div className="quiz-history-error">
+      <div className="ap-inline-error">
         <p>{error}</p>
-        <button onClick={fetchSessions} className="retry-button">
-          {t.retry}
-        </button>
+        <button type="button" className="ap-page-btn" onClick={() => fetchSessions()}>{t.retry}</button>
       </div>
     );
   }
 
+  if (sessions.length === 0) {
+    return <p className="ap-empty">{t.empty}</p>;
+  }
+
   return (
-    <div className="quiz-history-container" dir={dir}>
-      <div className="quiz-history-header">
-        <h3>{t.title}</h3>
-        <p>{t.subtitle}</p>
-      </div>
-
-
-      {/* Sessions List */}
-      <div className="quiz-sessions-list">
-        {sessions.length === 0 ? (
-          <div className="no-sessions">
-            <p>{t.empty}</p>
-          </div>
-        ) : (
-          sessions.map((session) => (
-            <div key={session.id} className="quiz-session-card">
-              <div className="session-header">
-                <div className="session-info">
-                  <span className="session-date">{formatDate(session.start_time)}</span>
-                  <span className="session-source">
-                    <Icon name={getSourceIcon(session.source)} size={15} /> {getSourceLabel(session.source, lang)}
-                  </span>
-                </div>
-                <div className="session-accuracy" style={{ color: getAccuracyColor(session.quiz_accuracy) }}>
-                  {parseFloat(session.quiz_accuracy || 0).toFixed(1)}%
-                </div>
+    <>
+      <div className="ap-sess-list">
+        {sessions.map((s) => {
+          const acc = parseFloat(s.quiz_accuracy || 0);
+          const open = openId === s.id;
+          const d = details[s.id];
+          return (
+            <div className="ap-sess" key={s.id}>
+              <div className="ap-sess-head">
+                <span className="ap-sess-when">
+                  <span className="ap-sess-title">{getSourceLabel(s.source, lang)}</span>
+                  <span className="ap-sess-date">{formatDate(s.start_time)}</span>
+                </span>
+                <span className={`ap-acc tone-${tone(acc)}`}><bdi>{acc.toFixed(0)}%</bdi></span>
               </div>
 
-              <div className="session-details">
-                <div className="detail-item">
-                  <span className="detail-label">{t.questions}</span>
-                  <span className="detail-value">{session.total_questions}</span>
-                </div>
-                <div className="detail-item">
-                  <span className="detail-label">{t.correct}</span>
-                  <span className="detail-value">{session.correct_answers}</span>
-                </div>
-                <div className="detail-item">
-                  <span className="detail-label">{t.duration}</span>
-                  <span className="detail-value">{formatDuration(session.duration)}</span>
-                </div>
-                <div className="detail-item">
-                  <span className="detail-label">{t.avgTime}</span>
-                  <span className="detail-value">{parseFloat(session.avg_time_per_question || 0).toFixed(1)}s</span>
-                </div>
+              <div className="ap-sess-facts">
+                <span className="ap-sess-fact">{t.questions} <b><bdi>{s.total_questions}</bdi></b></span>
+                <span className="ap-sess-fact">{t.correct} <b><bdi>{s.correct_answers}</bdi></b></span>
+                <span className="ap-sess-fact">{t.duration} <b><bdi>{formatDuration(s.duration)}</bdi></b></span>
+                <span className="ap-sess-fact">{t.avgTime} <b><bdi>{parseFloat(s.avg_time_per_question || 0).toFixed(1)}s</bdi></b></span>
               </div>
 
-              <div className="session-actions">
-                <button
-                  onClick={() => toggleSession(session.id)}
-                  className="view-details-btn"
-                >
-                  {expandedSessionId === session.id ? t.hideDetails : t.showDetails}
+              <div className="ap-sess-foot">
+                <button type="button" className="ap-more" aria-expanded={open} onClick={() => toggle(s.id)}>
+                  {open ? t.hideDetails : t.showDetails}
                 </button>
               </div>
 
-              {/* Inline expanded content */}
-              {expandedSessionId === session.id && sessionDetails[session.id] && (
-                <div className="session-expanded-content">
-
-                  <div className="question-attempts">
-                    <h4>{t.attemptsTitle}</h4>
-                    {sessionDetails[session.id].is_old_session ? (
-                      <div className="old-session-notice">
-                        <div className="notice-icon"><Icon name="info" size={30} /></div>
-                        <div className="notice-content">
-                          <h5>{t.oldSession}</h5>
-                          <p>{sessionDetails[session.id].message}</p>
-                          <p>{t.oldSessionHint}</p>
-                        </div>
-                      </div>
-                    ) : sessionDetails[session.id].question_attempts.length === 0 ? (
-                      <div className="no-attempts-notice">
-                        <div className="notice-icon"><Icon name="clipboard" size={30} /></div>
-                        <div className="notice-content">
-                          <h5>{t.noDetails}</h5>
-                          <p>{t.noDetailsHint}</p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="questions-grid">
-                        {sessionDetails[session.id].question_attempts.map((attempt, index) => (
-                          <div key={attempt.id} className="question-card">
-                            <div className="question-card-inner">
-                              <div className="question-header">
-                                <div className="question-meta">
-                                  <span className="type-badge">
-                                    <Icon name="book" size={15} /> {getTypeLabel(attempt.question_type, lang)}
-                                  </span>
-                                  <span className="source-badge">
-                                    <Icon name="book-open" size={15} /> {getSourceLabel(attempt.source, lang)}
-                                  </span>
-                                  <span className={`result-badge ${attempt.is_correct ? 'correct' : 'wrong'}`}>
-                                    {attempt.is_correct ? <><Icon name="check-circle" size={13} /> {t.correctBadge}</> : <><Icon name="x-circle" size={13} /> {t.wrongBadge}</>}
-                                  </span>
-                                </div>
-                              </div>
-
-                              <div className="question-content">
-                                <div className="question-text">
-                                  {attempt.question_text}
-                                </div>
-
-                                <div className="answers-section">
-                                  <div className="answer-row">
-                                    <span className="answer-label wrong">{t.yourAnswer}</span>
-                                    <span className={`answer-text ${attempt.is_correct ? 'correct' : 'wrong'}`}>
-                                      {attempt.selected_option}
-                                    </span>
-                                  </div>
-                                  <div className="answer-row">
-                                    <span className="answer-label correct">{t.correctAnswer}</span>
-                                    <span className="answer-text correct">{attempt.correct_option}</span>
-                                  </div>
-                                </div>
-
-                                <div className="question-meta">
-                                  <span className="time-taken"><Icon name="clock" size={15} /> {attempt.time_taken}s</span>
-                                  <span className="question-number">{t.questionNo(index + 1)}</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+              {open && (
+                <div className="ap-sess-body">
+                  {!d ? (
+                    <div className="ap-inline-load"><Spinner size="sm" /></div>
+                  ) : d.failed ? (
+                    <p className="ap-empty">{t.error}</p>
+                  ) : d.is_old_session ? (
+                    <div className="ap-note">
+                      <Icon name="info" size={18} />
+                      <div><strong>{t.oldSession}</strong><p>{t.oldSessionHint}</p></div>
+                    </div>
+                  ) : !d.question_attempts?.length ? (
+                    <div className="ap-note">
+                      <Icon name="clipboard" size={18} />
+                      <div><strong>{t.noDetails}</strong><p>{t.noDetailsHint}</p></div>
+                    </div>
+                  ) : (
+                    <>
+                      <h4 className="ap-title">{t.attemptsTitle}</h4>
+                      <SessionReviews
+                        t={t}
+                        lang={lang}
+                        items={d.question_attempts.map((a) => ({ ...a, answer: a.selected_option }))}
+                      />
+                    </>
+                  )}
                 </div>
               )}
             </div>
-          ))
-        )}
+          );
+        })}
       </div>
 
-      {/* Pagination */}
-      {pagination.totalPages > 1 && (
-        <div className="quiz-history-pagination">
-          <button
-            onClick={() => handlePageChange(pagination.page - 1)}
-            disabled={pagination.page === 1}
-            className="pagination-btn"
-          >
-            {t.previous}
-          </button>
-
-          <span className="pagination-info">
-            {t.pageOf(pagination.page, pagination.totalPages)}
-          </span>
-
-          <button
-            onClick={() => handlePageChange(pagination.page + 1)}
-            disabled={pagination.page === pagination.totalPages}
-            className="pagination-btn"
-          >
-            {t.next}
-          </button>
-        </div>
-      )}
-
-    </div>
+      <Pager page={page} totalPages={totalPages} onPage={setPage} t={t} />
+    </>
   );
 };
 

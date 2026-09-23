@@ -1,383 +1,169 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import Icon from '../common/Icon.jsx';
-import axios from 'axios';
-import Globals from '../../global.js';
 import Spinner from '../common/Spinner.jsx';
 import ExplanationPanel from '../common/ExplanationPanel.jsx';
+import apiClient from '../../utils/apiClient.js';
 import { getSourceLabel } from '../../utils/sourceLabels';
 import { getTypeLabel } from '../../utils/typeLabels';
 import { useCopy, useLang, formatDateTime } from '../../i18n';
 import analysisCopy from '../../i18n/copy/analysis.js';
 import { formatDuration } from '../../utils/formatDuration';
-import './FinalExams.css';
+import { SessionReviews, Pager } from './QuizHistory.jsx';
+import './analysisPanels.css';
 
-const FinalExams = ({ userId, username, sessionToken }) => {
-    const t = useCopy(analysisCopy).finals;
-    const { lang, dir } = useLang();
-    const [sessions, setSessions] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [pagination, setPagination] = useState({
-        current_page: 1,
-        total_pages: 1,
-        total_sessions: 0,
-        limit: 10
-    });
-    const [expandedSessionId, setExpandedSessionId] = useState(null);
-    const [sessionDetails, setSessionDetails] = useState({});
-    const [sessionQuestions, setSessionQuestions] = useState({});
+const PAGE_SIZE = 10;
+const tone = (pct) => (pct >= 75 ? 'high' : pct >= 50 ? 'mid' : 'low');
 
-    // Fetch final quiz sessions
-    const fetchSessions = async (page = 1, limit = 10) => {
-        if (!userId || !username || !sessionToken) {
-            console.error('Missing required props:', { userId, username, sessionToken });
-            setError(t.missingAuth);
-            setLoading(false);
-            return;
-        }
+/**
+ * Mock exams (final review sessions). Same shape as QuizHistory: a session
+ * list whose rows expand into question reviews — here with explanations,
+ * since a mock exam is where a student reviews the reasoning.
+ */
+const FinalExams = ({ userId }) => {
+  const t = useCopy(analysisCopy).finals;
+  const { lang } = useLang();
+  const [sessions, setSessions] = useState([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [openId, setOpenId] = useState(null);
+  const [questions, setQuestions] = useState({});
 
-        try {
-            setLoading(true);
-            const response = await axios.get(
-                `${Globals.URL}/final-quiz/sessions/${userId}?page=${page}&limit=${limit}&username=${encodeURIComponent(username)}`,
-                { headers: { Authorization: `Bearer ${sessionToken}` } }
-            );
-
-            setSessions(response.data.sessions);
-            setPagination(response.data.pagination);
-        } catch (err) {
-            console.error('Error fetching final quiz sessions:', err);
-            setError(t.error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // Fetch detailed session information
-    const fetchSessionDetails = async (sessionId) => {
-        if (!username || !sessionToken) {
-            console.error('Missing authentication credentials for session details');
-            return;
-        }
-
-        try {
-            const response = await axios.get(
-                `${Globals.URL}/final-quiz/session/${sessionId}?username=${encodeURIComponent(username)}`,
-                { headers: { Authorization: `Bearer ${sessionToken}` } }
-            );
-
-            setSessionDetails(prev => ({
-                ...prev,
-                [sessionId]: response.data
-            }));
-        } catch (err) {
-            console.error('Error fetching session details:', err);
-        }
-    };
-
-    // Fetch questions for a specific session
-    const fetchSessionQuestions = async (sessionId) => {
-        if (!username || !sessionToken) {
-            console.error('Missing authentication credentials for session questions');
-            return;
-        }
-
-        try {
-            const response = await axios.get(
-                `${Globals.URL}/final-quiz/session/${sessionId}/questions?username=${encodeURIComponent(username)}`,
-                { headers: { Authorization: `Bearer ${sessionToken}` } }
-            );
-
-            setSessionQuestions(prev => ({
-                ...prev,
-                [sessionId]: response.data.questions || []
-            }));
-        } catch (error) {
-            console.error('Error fetching session questions:', error);
-        }
-    };
-
-    // Toggle session expansion
-    const toggleSessionExpansion = (sessionId) => {
-        if (expandedSessionId === sessionId) {
-            setExpandedSessionId(null);
-        } else {
-            setExpandedSessionId(sessionId);
-            if (!sessionDetails[sessionId]) {
-                fetchSessionDetails(sessionId);
-            }
-            if (!sessionQuestions[sessionId]) {
-                fetchSessionQuestions(sessionId);
-            }
-        }
-    };
-
-    // Format date
-    const formatDate = (dateString) => formatDateTime(dateString, lang, {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-
-    // Get score color
-    const getScoreColor = (score) => {
-        if (score >= 80) return '#28a745';
-        if (score >= 60) return '#ffc107';
-        return '#dc3545';
-    };
-
-    // Handle pagination
-    const handlePageChange = (newPage) => {
-        fetchSessions(newPage, pagination.limit);
-    };
-
-    useEffect(() => {
-        if (userId && username && sessionToken) {
-            fetchSessions();
-        }
-    }, [userId, username, sessionToken]);
-
-    // Don't render if required props are missing
-    if (!userId || !username || !sessionToken) {
-        return (
-            <div className="final-exams-container">
-                <div className="error-message">
-                    <p>{t.missingAuthBody}</p>
-                </div>
-            </div>
-        );
+  const fetchSessions = useCallback(async (signal) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await apiClient.get(`/final-quiz/sessions/${userId}`, { params: { page, limit: PAGE_SIZE }, signal });
+      setSessions(res.data.sessions || []);
+      setTotalPages(res.data.pagination?.total_pages || 1);
+    } catch (err) {
+      if (err.code === 'ERR_CANCELED' || err.name === 'CanceledError') return;
+      setError(t.error);
+    } finally {
+      setLoading(false);
     }
+  }, [userId, page, t.error]);
 
-    if (loading) {
-        return (
-            <div className="final-exams-container">
-                <Spinner fullScreen label={t.loading} />
-            </div>
-        );
+  useEffect(() => {
+    if (!userId) return undefined;
+    const controller = new AbortController();
+    fetchSessions(controller.signal);
+    return () => controller.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, page]);
+
+  const toggle = async (sessionId) => {
+    if (openId === sessionId) {
+      setOpenId(null);
+      return;
     }
-
-    if (error) {
-        return (
-            <div className="final-exams-container">
-                <div className="error-message">
-                    <p>{error}</p>
-                    <button onClick={() => fetchSessions()} className="retry-button">
-                        {t.retry}
-                    </button>
-                </div>
-            </div>
-        );
+    setOpenId(sessionId);
+    if (questions[sessionId]) return;
+    try {
+      const res = await apiClient.get(`/final-quiz/session/${sessionId}/questions`);
+      setQuestions((prev) => ({ ...prev, [sessionId]: res.data.questions || [] }));
+    } catch {
+      setQuestions((prev) => ({ ...prev, [sessionId]: { failed: true } }));
     }
+  };
 
-    if (sessions.length === 0) {
-        return (
-            <div className="final-exams-container">
-                <div className="no-data">
-                    <div className="no-data-icon"><Icon name="target" size={40} /></div>
-                    <h3>{t.emptyTitle}</h3>
-                    <p>{t.emptyBody}</p>
-                    <p>{t.emptyHint}</p>
-                </div>
-            </div>
-        );
-    }
+  const formatDate = (d) => formatDateTime(d, lang, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
+  if (loading && sessions.length === 0) {
+    return <div className="ap-inline-load"><Spinner size="sm" /><span>{t.loading}</span></div>;
+  }
+
+  if (error) {
     return (
-        <div className="final-exams-container" dir={dir}>
-            <div className="final-exams-header">
-                <h2><Icon name="target" size={15} /> {t.title}</h2>
-                <p className="final-exams-description">
-                    {t.description}
-                </p>
-            </div>
-
-            <div className="sessions-list">
-                {sessions.map((session) => (
-                    <div key={session.id} className="session-card">
-                        <div className="session-header">
-                            <div className="session-info">
-                                <h3 className="session-title">
-                                    {getTypeLabel(session.question_type, lang)} — {getSourceLabel(session.source, lang)}
-                                </h3>
-                                <p className="session-date">
-                                    {formatDate(session.start_time)}
-                                </p>
-                            </div>
-                            <div className="session-stats">
-                                <div className="stat-item">
-                                    <span className="stat-label">{t.score}</span>
-                                    <span
-                                        className="stat-value score"
-                                        style={{ color: getScoreColor(session.score) }}
-                                    >
-                                        {session.score.toFixed(1)}%
-                                    </span>
-                                </div>
-                                <div className="stat-item">
-                                    <span className="stat-label">{t.questions}</span>
-                                    <span className="stat-value">
-                                        {session.correct_answers}/{session.total_questions}
-                                    </span>
-                                </div>
-                                <div className="stat-item">
-                                    <span className="stat-label">{t.time}</span>
-                                    <span className="stat-value">
-                                        {formatDuration(session.time_taken)}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="session-actions">
-                            <button
-                                onClick={() => toggleSessionExpansion(session.id)}
-                                className="view-details-btn"
-                            >
-                                {expandedSessionId === session.id ? t.hideDetails : t.showDetails}
-                            </button>
-                        </div>
-
-                        {/* Expanded Session Details */}
-                        {expandedSessionId === session.id && (
-                            <div className="session-expanded-content">
-                                {sessionDetails[session.id] ? (
-                                    <div className="session-details">
-                                        <div className="session-details-grid">
-                                            {/* Performance Summary Container */}
-                                            <div className="performance-summary-container">
-                                                <h4>{t.performanceSummary}</h4>
-                                                <div className="performance-stats">
-                                                    <div className="performance-item">
-                                                        <span className="performance-label">{t.correctAnswers}</span>
-                                                        <span className="performance-value correct">
-                                                            {session.correct_answers}
-                                                        </span>
-                                                    </div>
-                                                    <div className="performance-item">
-                                                        <span className="performance-label">{t.wrongAnswers}</span>
-                                                        <span className="performance-value incorrect">
-                                                            {session.total_questions - session.correct_answers}
-                                                        </span>
-                                                    </div>
-                                                    <div className="performance-item">
-                                                        <span className="performance-label">{t.timeEfficiency}</span>
-                                                        <span className="performance-value">
-                                                            {session.time_taken > 0 ?
-                                                                (session.total_questions / (session.time_taken / 60)).toFixed(1) + ' ' + t.perMinute :
-                                                                '\u2014'
-                                                            }
-                                                        </span>
-                                                    </div>
-                                                    <div className="performance-item">
-                                                        <span className="performance-label">{t.timeLimit}</span>
-                                                        <span className="performance-value">
-                                                            {formatDuration(session.time_limit)}
-                                                        </span>
-                                                    </div>
-                                                    <div className="performance-item">
-                                                        <span className="performance-label">{t.completedAt}</span>
-                                                        <span className="performance-value">
-                                                            {formatDate(session.end_time)}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Quiz Questions Container */}
-                                            <div className="quiz-questions-container">
-                                                <h4>{t.quizQuestions(sessionQuestions[session.id]?.length || 0)}</h4>
-                                                {sessionQuestions[session.id] && sessionQuestions[session.id].length > 0 ? (
-                                                    <div className="questions-grid">
-                                                        {sessionQuestions[session.id].map((question, index) => (
-                                                            <div key={question.id} className="question-card">
-                                                                <div className="question-card-inner">
-                                                                    <div className="question-header">
-                                                                        <div className="question-meta">
-                                                                            <span className="type-badge">
-                                                                                <Icon name="book" size={15} /> {getTypeLabel(question.question_type, lang)}
-                                                                            </span>
-                                                                            <span className={`result-badge ${question.is_correct ? 'correct' : 'wrong'}`}>
-                                                                                {question.is_correct ? <><Icon name="check-circle" size={13} /> {t.correctBadge}</> : <><Icon name="x-circle" size={13} /> {t.wrongBadge}</>}
-                                                                            </span>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <div className="question-content">
-                                                                        <div className="question-text">
-                                                                            {question.question_text}
-                                                                        </div>
-
-                                                                        <div className="answers-section">
-                                                                            <div className="answer-row">
-                                                                                <span className="answer-label wrong">{t.yourAnswer}</span>
-                                                                                <span className={`answer-text ${question.is_correct ? 'correct' : 'wrong'}`}>
-                                                                                    {question.user_answer || t.noAnswer}
-                                                                                </span>
-                                                                            </div>
-                                                                            <div className="answer-row">
-                                                                                <span className="answer-label correct">{t.correctAnswer}</span>
-                                                                                <span className="answer-text correct">{question.correct_option}</span>
-                                                                            </div>
-                                                                        </div>
-
-                                                                        <ExplanationPanel explanation={question.explanation} />
-
-                                                                        <div className="question-meta">
-                                                                            <span className="question-number">{t.questionNo(index + 1)}</span>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                ) : (
-                                                    <div className="no-questions">
-                                                        <p>{t.noQuestions}</p>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="loading-details">
-                                        <Spinner size="sm" />
-                                        <span>{t.loadingDetails}</span>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                ))}
-            </div>
-
-            {/* Pagination */}
-            {pagination.total_pages > 1 && (
-                <div className="pagination">
-                    <button
-                        onClick={() => handlePageChange(pagination.current_page - 1)}
-                        disabled={pagination.current_page === 1}
-                        className="pagination-btn"
-                    >
-                        {t.previous}
-                    </button>
-
-                    <span className="pagination-info">
-                        {t.pageOf(pagination.current_page, pagination.total_pages)}
-                    </span>
-
-                    <button
-                        onClick={() => handlePageChange(pagination.current_page + 1)}
-                        disabled={pagination.current_page === pagination.total_pages}
-                        className="pagination-btn"
-                    >
-                        {t.next}
-                    </button>
-                </div>
-            )}
-        </div>
+      <div className="ap-inline-error">
+        <p>{error}</p>
+        <button type="button" className="ap-page-btn" onClick={() => fetchSessions()}>{t.retry}</button>
+      </div>
     );
+  }
+
+  if (sessions.length === 0) {
+    return (
+      <div className="ap-note">
+        <Icon name="target" size={18} />
+        <div><strong>{t.emptyTitle}</strong><p>{t.emptyBody} {t.emptyHint}</p></div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="ap-sess-list">
+        {sessions.map((s) => {
+          const score = Number(s.score) || 0;
+          const open = openId === s.id;
+          const qs = questions[s.id];
+          const perMinute = s.time_taken > 0 ? (s.total_questions / (s.time_taken / 60)).toFixed(1) : null;
+          return (
+            <div className="ap-sess" key={s.id}>
+              <div className="ap-sess-head">
+                <span className="ap-sess-when">
+                  <span className="ap-sess-title">
+                    {getTypeLabel(s.question_type, lang)} — {getSourceLabel(s.source, lang)}
+                  </span>
+                  <span className="ap-sess-date">{formatDate(s.start_time)}</span>
+                </span>
+                <span className={`ap-acc tone-${tone(score)}`}><bdi>{score.toFixed(0)}%</bdi></span>
+              </div>
+
+              <div className="ap-sess-facts">
+                <span className="ap-sess-fact">{t.questions} <b><bdi>{s.correct_answers}/{s.total_questions}</bdi></b></span>
+                <span className="ap-sess-fact">{t.time} <b><bdi>{formatDuration(s.time_taken)}</bdi></b></span>
+                {s.time_limit > 0 && (
+                  <span className="ap-sess-fact">{t.timeLimit} <b><bdi>{formatDuration(s.time_limit)}</bdi></b></span>
+                )}
+                {perMinute && (
+                  <span className="ap-sess-fact">{t.timeEfficiency} <b><bdi>{perMinute}</bdi></b> {t.perMinute}</span>
+                )}
+              </div>
+
+              <div className="ap-sess-foot">
+                <button type="button" className="ap-more" aria-expanded={open} onClick={() => toggle(s.id)}>
+                  {open ? t.hideDetails : t.showDetails}
+                </button>
+              </div>
+
+              {open && (
+                <div className="ap-sess-body">
+                  {!qs ? (
+                    <div className="ap-inline-load"><Spinner size="sm" /><span>{t.loadingDetails}</span></div>
+                  ) : qs.failed ? (
+                    <p className="ap-empty">{t.error}</p>
+                  ) : qs.length === 0 ? (
+                    <div className="ap-note">
+                      <Icon name="clipboard" size={18} />
+                      <div><strong>{t.noQuestions}</strong></div>
+                    </div>
+                  ) : (
+                    <>
+                      <h4 className="ap-title">{t.quizQuestions(qs.length)}</h4>
+                      <SessionReviews
+                        t={t}
+                        lang={lang}
+                        items={qs.map((q) => ({
+                          ...q,
+                          answer: q.user_answer,
+                          extra: <ExplanationPanel explanation={q.explanation} />,
+                        }))}
+                      />
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <Pager page={page} totalPages={totalPages} onPage={setPage} t={t} />
+    </>
+  );
 };
 
 export default FinalExams;
