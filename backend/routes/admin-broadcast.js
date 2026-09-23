@@ -88,6 +88,9 @@ function ensureBroadcastSchema(db) {
         // instead, falling back to Arabic when a campaign never set them.
         await db.query(`ALTER TABLE broadcast_campaigns ADD COLUMN IF NOT EXISTS subject_en TEXT`);
         await db.query(`ALTER TABLE broadcast_campaigns ADD COLUMN IF NOT EXISTS body_html_en TEXT`);
+        // Optional visual theme for the email shell (see EMAIL_THEMES). NULL =
+        // the everyday SQB look.
+        await db.query(`ALTER TABLE broadcast_campaigns ADD COLUMN IF NOT EXISTS theme VARCHAR(30)`);
         await db.query(`
             CREATE TABLE IF NOT EXISTS broadcast_recipients (
                 id SERIAL PRIMARY KEY,
@@ -215,7 +218,32 @@ function normalizeLang(lang) {
  * `lang`; the admin's own bodyHtml is used as-is for whichever language it
  * was written in.
  */
-export function renderEmail({ bodyHtml, accountId, username, lang }) {
+// Occasion themes for the email shell. Art is hosted with the SPA
+// (my-react-app/public/email/...), so it ships with a normal deploy and never
+// depends on this API host. Keys are what a campaign's `theme` column holds.
+const EMAIL_ASSET_BASE = 'https://www.smle-question-bank.com/email';
+export const EMAIL_THEMES = {
+    'national-day-96': {
+        page: '#efe6d2',
+        bar: '#003f1f',
+        barText: '#e2b84c',
+        barBorder: '3px solid #c9a227',
+        footBg: '#f7f1e3',
+        footText: '#7c6a45',
+        link: '#7c6a45',
+        hero: { src: `${EMAIL_ASSET_BASE}/national-day-96/header.jpg`, alt: 'اليوم الوطني السعودي ٩٦ — دام عزّك يا وطن' },
+        closing: { src: `${EMAIL_ASSET_BASE}/national-day-96/footer.jpg`, alt: 'كل عام والوطن بخير' },
+    },
+};
+const DEFAULT_THEME = {
+    page: '#eef2fb', bar: '#1d4ed8', barText: '#fff', barBorder: '0', footBg: '#f8fafc', footText: '#94a3b8', link: '#64748b',
+};
+
+export function renderEmail({ bodyHtml, accountId, username, lang, theme }) {
+    const th = EMAIL_THEMES[theme] || DEFAULT_THEME;
+    const art = (img) => (img
+        ? `<tr><td style="padding:0;line-height:0;font-size:0"><img src="${img.src}" alt="${img.alt}" width="560" style="display:block;width:100%;max-width:560px;height:auto;border:0"></td></tr>`
+        : '');
     const isEn = normalizeLang(lang) === 'en';
     const name = username ? escapeHtml(String(username).split('@')[0]) : '';
     const greeting = name
@@ -223,20 +251,22 @@ export function renderEmail({ bodyHtml, accountId, username, lang }) {
         : '';
     const unsub = accountId ? unsubUrl(accountId) : '';
     const unsubLink = unsub
-        ? `<br><a href="${unsub}" style="color:#64748b">${isEn ? 'Unsubscribe from SQB emails' : 'إلغاء الاشتراك من رسائل SQB'}</a>`
+        ? `<br><a href="${unsub}" style="color:${th.link}">${isEn ? 'Unsubscribe from SQB emails' : 'إلغاء الاشتراك من رسائل SQB'}</a>`
         : '';
     const footerLabel = isEn ? 'SQB — SMLE Question Bank' : 'SQB — بنك أسئلة SMLE';
     return `<!doctype html><html lang="${isEn ? 'en' : 'ar'}" dir="${isEn ? 'ltr' : 'rtl'}"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#eef2fb">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef2fb;padding:24px 12px">
+<body style="margin:0;padding:0;background:${th.page}">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${th.page};padding:24px 12px">
 <tr><td align="center">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border-radius:14px;overflow:hidden;font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif">
-<tr><td style="background:#1d4ed8;padding:18px 22px"><span style="color:#fff;font-size:20px;font-weight:800;letter-spacing:.5px">SQB</span></td></tr>
+<tr><td style="background:${th.bar};border-bottom:${th.barBorder};padding:14px 22px"><span style="color:${th.barText};font-size:20px;font-weight:800;letter-spacing:.5px">SQB</span></td></tr>
+${art(th.hero)}
 <tr><td style="padding:24px 22px;color:#0f1e3d;font-size:15px;line-height:1.8;text-align:${isEn ? 'left' : 'right'}">
 ${greeting}${bodyHtml}
 </td></tr>
-<tr><td style="padding:16px 22px;background:#f8fafc;color:#94a3b8;font-size:11.5px;line-height:1.7;text-align:${isEn ? 'left' : 'right'}">
+${art(th.closing)}
+<tr><td style="padding:16px 22px;background:${th.footBg};color:${th.footText};font-size:11.5px;line-height:1.7;text-align:${isEn ? 'left' : 'right'}">
 ${footerLabel}${unsubLink}
 </td></tr>
 </table></td></tr></table></body></html>`;
@@ -343,6 +373,8 @@ router.get('/recipients/search', adminAuth, async (req, res) => {
 router.post('/campaigns', adminAuth, async (req, res) => {
     const db = req.db;
     const { subject, bodyHtml, subjectEn, bodyHtmlEn, audience = 'all' } = req.body || {};
+    const theme = req.body?.theme ? String(req.body.theme) : null;
+    if (theme && !EMAIL_THEMES[theme]) return res.status(400).json({ success: false, message: 'Unknown theme.' });
     // Up to 2 days, as requested — long enough to trickle a big list past a
     // small daily allowance without ever bursting.
     const spreadHours = Math.max(0, Math.min(48, Number(req.body?.spreadHours) || 0));
@@ -360,11 +392,11 @@ router.post('/campaigns', adminAuth, async (req, res) => {
         await ensureBroadcastSchema(db);
         const label = selectedIds.length ? `selected:${selectedIds.length}` : audience;
         const { rows: [campaign] } = await db.query(
-            `INSERT INTO broadcast_campaigns (subject, body_html, subject_en, body_html_en, audience, spread_hours)
-             VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+            `INSERT INTO broadcast_campaigns (subject, body_html, subject_en, body_html_en, audience, spread_hours, theme)
+             VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
             [String(subject).trim(), String(bodyHtml),
              subjectEn ? String(subjectEn).trim() : null, bodyHtmlEn ? String(bodyHtmlEn) : null,
-             label, spreadHours]
+             label, spreadHours, theme]
         );
 
         // DISTINCT ON collapses duplicate addresses so nobody is mailed twice.
@@ -455,7 +487,7 @@ router.post('/campaigns/:id/test', adminAuth, async (req, res) => {
         const lang = normalizeLang(req.body?.lang || req.query?.lang);
         const subject = (lang === 'en' && c.subject_en) ? c.subject_en : c.subject;
         const bodyHtml = (lang === 'en' && c.body_html_en) ? c.body_html_en : c.body_html;
-        const html = renderEmail({ bodyHtml, accountId: null, username: null, lang });
+        const html = renderEmail({ bodyHtml, accountId: null, username: null, lang, theme: c.theme });
         await sendMail({ event: 'medqize.broadcast.test', name: 'SQB', to, subject: `[TEST] ${subject}`, html, text: htmlToText(bodyHtml) });
         res.json({ success: true, message: `Test sent to ${to} (lang=${lang})` });
     } catch (err) {
@@ -600,7 +632,7 @@ async function sendOneBatch(db, c, take) {
                 name: 'SQB',
                 to: r.email,
                 subject,
-                html: renderEmail({ bodyHtml, accountId: r.account_id, username: r.username, lang }),
+                html: renderEmail({ bodyHtml, accountId: r.account_id, username: r.username, lang, theme: c.theme }),
                 text: htmlToText(bodyHtml),
             });
             await db.query(`UPDATE broadcast_recipients SET status = 'sent', sent_at = NOW(), error = NULL WHERE id = $1`, [r.id]);
