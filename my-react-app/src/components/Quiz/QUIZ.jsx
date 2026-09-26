@@ -695,6 +695,13 @@ const QUIZ = () => {
         userId={id}
         completedTopics={completedTopics}
         onRetry={() => {
+          // "Another quiz" means a NEW set. This used to reset the answers and
+          // replay the same `questions`, so students got the identical ten
+          // again. Clearing them and bumping retryCount reruns the fetch
+          // effect, which serves questions the student hasn't answered yet.
+          setQuestions([]);
+          setLoading(true);
+          setRetryCount(prev => prev + 1);
           setCurrentQuestionIndex(0);
           setSelectedAnswer(null);
           setQuestionAnswers({});
