@@ -201,7 +201,7 @@
 
 <script>
 const VARIANT = new URLSearchParams(location.search).get('v') || 'offer';
-const DUR = 21;
+const DUR = window.DUR = 21;
 const $ = id => document.getElementById(id);
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
 const prog = (t, a, b) => clamp((t - a) / (b - a));

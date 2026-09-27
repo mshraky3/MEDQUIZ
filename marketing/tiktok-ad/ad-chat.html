@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="ar">
+<head>
+<meta charset="utf-8">
+<title>SQB Group Chat Ad</title>
+<link href="fonts/fonts.css" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: #dfe9e2; }
+  #stage { position: relative; width: 1080px; height: 1920px; overflow: hidden; font-family: 'Cairo', sans-serif; color: #0f1e3d;
+           background: radial-gradient(circle at 20% 10%, #eef5ef, #dfe9e2 60%, #d3e1d7); }
+  .abs { position: absolute; will-change: transform, opacity; }
+  .ar { direction: rtl; }
+  .en { font-family: 'Inter', sans-serif; }
+  .center { left: 0; right: 0; text-align: center; }
+
+  #chat { inset: 0; transform-origin: 50% 45%; }
+  #pattern { inset: 0; opacity: .5;
+    background-image: radial-gradient(rgba(0,108,53,.09) 3px, transparent 3.5px); background-size: 46px 46px; }
+
+  #header { left: 0; right: 0; top: 0; height: 290px; padding: 120px 44px 0; background: #006c35; color: #fff;
+            display: flex; align-items: center; gap: 26px; direction: rtl; box-shadow: 0 6px 20px rgba(0,0,0,.15); }
+  #header .av { width: 116px; height: 116px; border-radius: 50%; background: linear-gradient(135deg, #f5d77a, #d4a531);
+                display: grid; place-items: center; font-family: 'Inter'; font-weight: 800; font-size: 44px; color: #00341a; flex: none; }
+  #header .name { font-size: 50px; font-weight: 900; line-height: 1.2; }
+  #status { font-size: 32px; font-weight: 500; color: #c9f0d6; }
+
+  #viewport { left: 0; right: 0; top: 290px; height: 1110px; overflow: hidden; }
+  #msgs { position: absolute; left: 0; right: 0; top: 0; padding: 0 40px; direction: rtl; }
+  .m { display: flex; padding-top: 22px; }
+  .m.me { justify-content: flex-end; }  /* own messages sit on the left in an RTL chat */
+  .b { max-width: 800px; padding: 18px 30px 14px; border-radius: 34px; background: #fff; font-size: 42px; font-weight: 700; line-height: 1.5;
+       box-shadow: 0 3px 8px rgba(0,0,0,.08); transform-origin: right bottom; }
+  .m:not(.me) .b { border-top-right-radius: 8px; }
+  .m.me .b { background: #d6f5c6; border-top-left-radius: 8px; transform-origin: left bottom; }
+  .b .who { font-size: 30px; font-weight: 900; margin-bottom: 2px; }
+  .b .time { font-family: 'Inter'; font-size: 24px; font-weight: 500; color: #64748b; text-align: left; margin-top: 2px; direction: ltr; }
+  .b .time .rd { color: #2563eb; font-weight: 800; }
+  .hl { color: #006c35; font-weight: 900; }
+
+  .card { width: 740px; border-radius: 26px; overflow: hidden; background: linear-gradient(160deg, #00341a, #006c35 60%, #0b8a47); color: #fff; padding: 34px 38px; }
+  .card .tag { display: inline-block; padding: 6px 22px; border-radius: 999px; background: rgba(245,215,122,.2); color: #f5d77a; font-size: 30px; font-weight: 900; }
+  .card .ttl { font-size: 46px; font-weight: 900; margin: 12px 0 18px; }
+  .card .row { display: flex; justify-content: space-between; align-items: baseline; padding: 10px 0; border-top: 2px solid rgba(255,255,255,.15); font-size: 36px; font-weight: 700; }
+  .card .row b { font-family: 'Inter'; font-weight: 800; color: #f5d77a; font-size: 46px; }
+  .card .row s { font-family: 'Inter'; color: rgba(255,255,255,.55); font-size: 30px; margin-left: 12px; text-decoration-color: #ef4444; text-decoration-thickness: 3px; }
+
+  #input { left: 30px; right: 30px; top: 1420px; height: 110px; display: flex; gap: 20px; align-items: center; direction: rtl; }
+  #field { flex: 1; height: 100%; border-radius: 55px; background: #fff; padding: 0 40px; display: flex; align-items: center;
+           font-size: 40px; font-weight: 700; color: #0f1e3d; box-shadow: 0 3px 8px rgba(0,0,0,.08); white-space: nowrap; overflow: hidden; }
+  #field.ph { color: #94a3b8; font-weight: 500; }
+  #send { width: 110px; height: 110px; border-radius: 50%; background: #006c35; display: grid; place-items: center; flex: none; }
+  #caret { display: inline-block; width: 4px; height: 46px; background: #006c35; margin-right: 4px; vertical-align: middle; }
+
+  /* end card */
+  #end { inset: 0; opacity: 0; background: radial-gradient(ellipse at 50% 35%, #0b8a47 0%, #006c35 45%, #00341a 100%); color: #fff; }
+  .pill { display: inline-block; padding: 14px 36px; border-radius: 999px; font-weight: 700; font-size: 40px; background: rgba(255,255,255,.12); border: 2px solid rgba(255,255,255,.35); }
+  .gcard { left: 90px; width: 900px; padding: 30px 44px; border-radius: 32px; background: #fff; color: #0f1e3d; direction: rtl;
+           display: flex; justify-content: space-between; align-items: center; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+  .gcard .l { font-size: 46px; font-weight: 900; }
+  .gcard .l small { display: block; font-size: 30px; font-weight: 700; color: #475569; }
+  .gcard .r { text-align: left; }
+  .gcard .r b { font-family: 'Inter'; font-weight: 800; font-size: 72px; color: #006c35; }
+  .gcard .r span { font-size: 34px; font-weight: 900; color: #006c35; }
+  #cta { left: 100px; width: 880px; padding: 36px 0; border-radius: 999px; text-align: center; direction: rtl;
+         background: linear-gradient(180deg, #fff4c2, #f5d77a 45%, #d4a531); color: #00341a; font-size: 56px; font-weight: 900; }
+  #url span { padding: 14px 36px; border-radius: 22px; background: rgba(255,255,255,.12); border: 2px solid rgba(255,255,255,.3); font-family: 'Inter'; font-weight: 800; font-size: 44px; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="abs" id="chat">
+    <div class="abs" id="pattern"></div>
+    <div class="abs" id="viewport"><div id="msgs"></div></div>
+    <div class="abs" id="header">
+      <div class="av">SQB</div>
+      <div><div class="name">دفعة SMLE 2026</div><div id="status"></div></div>
+    </div>
+    <div class="abs" id="input">
+      <div id="field"></div>
+      <div id="send"><svg width="52" height="52" viewBox="0 0 24 24" fill="#fff" style="transform:scaleX(-1)"><path d="M3 20.5v-6l8-2.5-8-2.5v-6L22 12z"/></svg></div>
+    </div>
+  </div>
+
+  <div class="abs" id="end">
+    <div class="abs center" id="e0" style="top:150px;font-family:'Inter';font-weight:800;font-size:52px;letter-spacing:2px">SQB</div>
+    <div class="abs center ar" id="e1" style="top:280px"><span class="pill" style="color:#f5d77a;border-color:rgba(245,215,122,.5)">عرض اليوم الوطني الـ96</span></div>
+    <div class="abs center ar" id="e2" style="top:400px;font-size:84px;font-weight:900;line-height:1.3">ذاكروا سوا<br><span style="color:#f5d77a">ووفّروا سوا</span></div>
+    <div class="abs gcard" id="e3" style="top:680px"><div class="l">3 حسابات<small>65 ريال للواحد</small></div><div class="r"><b>196</b> <span>ريال</span></div></div>
+    <div class="abs gcard" id="e4" style="top:880px"><div class="l">5 حسابات<small>59 ريال للواحد</small></div><div class="r"><b>296</b> <span>ريال</span></div></div>
+    <div class="abs center ar" id="e5" style="top:1085px;font-size:38px;font-weight:700;color:#d1fae5">أو لحالك: 4 أشهر بـ96 · سنة بـ196</div>
+    <div class="abs ar" id="cta" style="top:1170px">العرض ينتهي 1 أكتوبر</div>
+    <div class="abs center" id="url" style="top:1340px"><span>smle-question-bank.com</span></div>
+    <div class="abs center ar" id="e6" style="top:1450px;font-size:38px;font-weight:900;color:#f5d77a">الرابط في البايو</div>
+  </div>
+</div>
+<script src="anim.js"></script>
+<script>
+const DUR = window.DUR = 22;
+const MEMBERS = 'فهد، ريم، عبدالله، أنت';
+const COLORS = { 'فهد': '#2563eb', 'ريم': '#c026d3', 'عبدالله': '#d97706' };
+// at = send time. `me` messages are typed into the input bar first.
+const script = [
+  { at: 1.2, who: 'فهد', text: 'يا جماعة متى بتبدون مذاكرة SMLE؟' },
+  { at: 2.9, who: 'ريم', text: 'أنا ضايعة بين الملفات والتجميعات' },
+  { at: 4.9, me: true, text: 'جربوا SQB، كل سؤال معه تفسير كامل' },
+  { at: 6.5, who: 'عبدالله', text: 'حلو، بس كم سعره؟' },
+  { at: 8.4, me: true, html: 'عرض اليوم الوطني: <span class="hl">4 أشهر بـ96 ريال</span> بس', typed: 'عرض اليوم الوطني: 4 أشهر بـ96 ريال بس' },
+  { at: 9.3, me: true, card: true },
+  { at: 11.1, who: 'ريم', text: 'طيب ليش ما نشترك جماعي؟' },
+  { at: 12.9, me: true, html: '3 حسابات بـ196 = <span class="hl">65 للواحد</span><br>5 حسابات بـ296 = <span class="hl">59 للواحد</span>', typed: '3 حسابات بـ196 = 65 للواحد…' },
+  { at: 14.3, who: 'فهد', text: 'أنا معكم' },
+  { at: 15.3, who: 'عبدالله', text: 'وأنا! العرض لين متى؟' },
+  { at: 16.9, me: true, html: 'لين <span class="hl">1 أكتوبر</span> بس، لا يفوتكم', typed: 'لين 1 أكتوبر بس، لا يفوتكم' },
+];
+const cardHtml = `<div class="card"><span class="tag">عرض اليوم الوطني الـ96</span><div class="ttl">اشتراك SQB</div>
+  <div class="row"><span>4 أشهر</span><span><s>129</s> <b>96</b> ريال</span></div>
+  <div class="row"><span>سنة كاملة</span><span><s>299</s> <b>196</b> ريال</span></div>
+  <div class="row"><span>3 حسابات</span><span><s>250</s> <b>196</b> ريال</span></div>
+  <div class="row"><span>5 حسابات</span><span><b>296</b> ريال</span></div></div>`;
+
+const box = $('msgs');
+script.forEach((m, i) => {
+  const row = document.createElement('div');
+  row.className = 'm' + (m.me ? ' me' : '');
+  const time = `<div class="time">9:4${1 + Math.floor(i / 3)} PM${m.me ? ' <span class="rd">✓✓</span>' : ''}</div>`;
+  const who = m.me ? '' : `<div class="who" style="color:${COLORS[m.who]}">${m.who}</div>`;
+  const body = m.card ? cardHtml : (m.html || m.text);
+  row.innerHTML = `<div class="b" ${m.card ? 'style="padding:10px"' : ''}>${who}${body}${time}</div>`;
+  box.appendChild(row);
+  m.row = row; m.bubble = row.querySelector('.b');
+});
+
+window.render = function (t) {
+  // stack height: each message grows in over 0.28 s after it is sent
+  let H = 0;
+  script.forEach(m => {
+    const p = easeOut(prog(t, m.at, m.at + .28));
+    H += m.row.offsetHeight * p;
+    const pop = back(prog(t, m.at, m.at + .35));
+    m.row.style.opacity = t >= m.at ? 1 : 0;
+    m.bubble.style.transform = `scale(${(.6 + .4 * pop).toFixed(3)})`;
+    m.bubble.style.opacity = clamp(prog(t, m.at, m.at + .15)).toFixed(3);
+  });
+  const VH = 1110 - 30;
+  box.style.transform = `translateY(${(VH - H).toFixed(1)}px)`;
+
+  // header status: "X يكتب…" for the second before another member's message
+  const typing = script.find(m => !m.me && t >= m.at - 1.0 && t < m.at);
+  $('status').textContent = typing ? `${typing.who} يكتب…` : MEMBERS;
+
+  // input bar: typewriter for my messages
+  const mine = script.find(m => m.me && !m.card && t >= m.at - 1.2 && t < m.at);
+  const field = $('field');
+  if (mine) {
+    const txt = mine.typed || mine.text;
+    const n = Math.ceil(txt.length * prog(t, mine.at - 1.2, mine.at - .15));
+    field.className = '';
+    field.innerHTML = txt.slice(0, n) + (Math.floor(t * 4) % 2 ? '<span id="caret"></span>' : '');
+  } else {
+    field.className = 'ph';
+    field.textContent = 'اكتب رسالة';
+  }
+  const sendPulse = script.some(m => m.me && t >= m.at && t < m.at + .2);
+  $('send').style.transform = `scale(${sendPulse ? .88 : 1})`;
+
+  // transition to end card
+  const z = easeInOut(prog(t, 18.0, 18.7));
+  $('chat').style.transform = `scale(${1 - .15 * z})`;
+  $('chat').style.filter = `blur(${(z * 12).toFixed(1)}px)`;
+  $('end').style.opacity = z.toFixed(3);
+  show('e0', t, 18.4, null, { dy: -30 });
+  show('e1', t, 18.5, null, { s0: .7, dy: 0, ease: back });
+  show('e2', t, 18.7, null, { dy: 50 });
+  show('e3', t, 19.1, null, { dx: 700, dy: 0, ease: back, d: .5 });
+  show('e4', t, 19.4, null, { dx: -700, dy: 0, ease: back, d: .5 });
+  show('e5', t, 19.8, null, { dy: 30 });
+  show('cta', t, 20.1, null, { s0: .6, dy: 0, ease: back });
+  if (t > 20.6) $('cta').style.transform = `scale(${1 + .035 * Math.sin((t - 20.6) * 7)})`;
+  show('url', t, 20.4, null, { dy: 40 });
+  show('e6', t, 20.7, null, { dy: 20 });
+};
+window.render(0);
+</script>
+</body>
+</html>

@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="ar">
+<head>
+<meta charset="utf-8">
+<title>SQB National Day 96</title>
+<link href="fonts/fonts.css" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: #00341a; }
+  #stage {
+    position: relative; width: 1080px; height: 1920px; overflow: hidden; color: #fff;
+    font-family: 'Cairo', sans-serif;
+    background:
+      repeating-linear-gradient(45deg, rgba(255,255,255,.025) 0 2px, transparent 2px 46px),
+      repeating-linear-gradient(-45deg, rgba(255,255,255,.025) 0 2px, transparent 2px 46px),
+      radial-gradient(ellipse at 50% 35%, #0b8a47 0%, #006c35 45%, #00341a 100%);
+  }
+  .abs { position: absolute; will-change: transform, opacity; }
+  .ar { direction: rtl; }
+  .en { font-family: 'Inter', sans-serif; direction: ltr; }
+  .center { left: 0; right: 0; text-align: center; }
+  .gold {
+    background: linear-gradient(180deg, #fff4c2 0%, #f5d77a 40%, #d4a531 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .pill {
+    display: inline-block; padding: 14px 36px; border-radius: 999px; font-weight: 700; font-size: 40px;
+    background: rgba(255,255,255,.12); border: 2px solid rgba(255,255,255,.35);
+  }
+  .brand { font-family: 'Inter', sans-serif; font-weight: 800; letter-spacing: 2px; color: #fff; }
+  #glow { left: 140px; top: 520px; width: 800px; height: 800px; border-radius: 50%;
+          background: radial-gradient(circle, rgba(245,215,122,.45) 0%, rgba(245,215,122,0) 65%); }
+  #ring { left: 240px; top: 620px; width: 600px; height: 600px; border-radius: 50%; border: 6px solid rgba(245,215,122,.55); }
+
+  #big96 { top: 640px; font-family: 'Inter'; font-weight: 800; font-size: 420px; line-height: 1; }
+  #old129 { top: 700px; font-family: 'Inter'; font-weight: 800; font-size: 300px; line-height: 1; color: rgba(255,255,255,.85); }
+  #strike { left: 250px; top: 850px; height: 22px; width: 0; background: #ef4444; border-radius: 12px; transform-origin: left center; }
+  #new96 { top: 640px; font-family: 'Inter'; font-weight: 800; font-size: 380px; line-height: 1; }
+
+  .slot { display: inline-block; height: 330px; overflow: hidden; vertical-align: top; }
+  .slot .col { display: flex; flex-direction: column; }
+  .slot .col span { height: 330px; line-height: 330px; font-family: 'Inter'; font-weight: 800; font-size: 320px; color: #f5d77a; text-shadow: 0 6px 0 #b8861f, 0 20px 50px rgba(0,0,0,.25); }
+  #slots { top: 640px; direction: ltr; }
+
+  .grp {
+    left: 80px; width: 920px; padding: 36px 44px; border-radius: 36px; direction: rtl;
+    background: #fff; color: #0f1e3d; box-shadow: 0 24px 70px rgba(0,0,0,.35);
+  }
+  .grp .row { display: flex; align-items: center; justify-content: space-between; }
+  .grp .people { display: flex; gap: 0; direction: ltr; }
+  .grp .people i { width: 74px; height: 74px; border-radius: 50%; border: 5px solid #fff; margin-left: -18px;
+                   background: linear-gradient(135deg, #0b8a47, #006c35); display: grid; place-items: center; }
+  .grp .people i:first-child { margin-left: 0; }
+  .grp .title { font-size: 48px; font-weight: 900; }
+  .grp .price { font-size: 44px; font-weight: 700; color: #475569; }
+  .grp .price b { font-family: 'Inter'; font-weight: 800; color: #006c35; font-size: 64px; }
+  .grp .each { margin-top: 18px; display: inline-block; padding: 10px 28px; border-radius: 999px;
+               background: #fef3c7; color: #92400e; font-weight: 900; font-size: 40px; }
+
+  #cal { left: 340px; top: 470px; width: 400px; border-radius: 40px; overflow: hidden; background: #fff; color: #0f1e3d;
+         box-shadow: 0 30px 80px rgba(0,0,0,.4); text-align: center; transform-origin: 50% 0; }
+  #cal .top { background: #dc2626; color: #fff; font-size: 50px; font-weight: 900; padding: 16px 0; }
+  #cal .day { font-family: 'Inter'; font-weight: 800; font-size: 210px; line-height: 1.05; padding-top: 6px; }
+  #cal .lbl { font-size: 40px; font-weight: 700; color: #475569; padding-bottom: 24px; }
+
+  #cta { left: 100px; width: 880px; padding: 38px 0; border-radius: 999px; text-align: center; direction: rtl;
+         background: linear-gradient(180deg, #fff4c2, #f5d77a 45%, #d4a531); color: #00341a; font-size: 58px; font-weight: 900;
+         box-shadow: 0 20px 60px rgba(245,215,122,.4); }
+  #url span { padding: 16px 38px; border-radius: 22px; background: rgba(255,255,255,.12); border: 2px solid rgba(255,255,255,.3);
+              font-family: 'Inter'; font-weight: 800; font-size: 46px; }
+  #flash { inset: 0; background: #fff; opacity: 0; }
+  #conf { inset: 0; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="abs" id="glow"></div>
+  <div class="abs" id="ring"></div>
+  <div class="abs center" id="logo" style="top:120px"><span class="brand" style="font-size:52px">SQB</span></div>
+
+  <!-- S1: 96 -->
+  <div class="abs center ar" id="a1" style="top:420px"><span class="pill">اليوم الوطني السعودي</span></div>
+  <div class="abs center gold" id="big96">96</div>
+  <div class="abs center ar" id="a2" style="top:1130px;font-size:64px;font-weight:900">كل عام والوطن بخير</div>
+
+  <!-- S2: 129 -> 96 -->
+  <div class="abs center ar" id="b1" style="top:400px;font-size:74px;font-weight:900;line-height:1.3">وبهالمناسبة…<br><span style="color:#f5d77a">اشتراك 4 أشهر صار</span></div>
+  <div class="abs center" id="old129">129</div>
+  <div class="abs" id="strike"></div>
+  <div class="abs center gold" id="new96">96</div>
+  <div class="abs center ar" id="b2" style="top:1060px;font-size:66px;font-weight:900">ريال فقط</div>
+  <div class="abs center ar" id="b3" style="top:1170px"><span class="pill" style="font-size:40px">أقل من سعر شهرين</span></div>
+
+  <!-- S3: slot 299 -> 196 -->
+  <div class="abs center ar" id="c1" style="top:400px;font-size:74px;font-weight:900;line-height:1.3">والسنة الكاملة؟</div>
+  <div class="abs center" id="slots">
+    <div class="slot"><div class="col" id="s0"></div></div><div class="slot"><div class="col" id="s1"></div></div><div class="slot"><div class="col" id="s2"></div></div>
+  </div>
+  <div class="abs center ar" id="c2" style="top:1010px;font-size:66px;font-weight:900">ريال بدل <span style="text-decoration:line-through;text-decoration-color:#ef4444;text-decoration-thickness:6px;color:rgba(255,255,255,.7)">299</span></div>
+  <div class="abs center ar" id="c3" style="top:1130px"><span class="pill" style="font-size:40px">سنة كاملة حتى يوم اختبارك</span></div>
+
+  <!-- S4: groups -->
+  <div class="abs center ar" id="d1" style="top:330px;font-size:74px;font-weight:900;line-height:1.3">ذاكروا جماعة<br><span style="color:#f5d77a">ووفّروا أكثر</span></div>
+  <div class="abs grp" id="g3" style="top:640px">
+    <div class="row">
+      <div><div class="title">3 حسابات</div><div class="price"><b>196</b> ريال</div></div>
+      <div class="people"><i></i><i></i><i></i></div>
+    </div>
+    <div class="each">65 ريال للواحد</div>
+  </div>
+  <div class="abs grp" id="g5" style="top:1010px">
+    <div class="row">
+      <div><div class="title">5 حسابات</div><div class="price"><b>296</b> ريال</div></div>
+      <div class="people"><i></i><i></i><i></i><i></i><i></i></div>
+    </div>
+    <div class="each">59 ريال للواحد</div>
+  </div>
+  <div class="abs center ar" id="d2" style="top:1380px;font-size:40px;font-weight:700;color:#d1fae5">4 أشهر لكل حساب · دفعة واحدة</div>
+
+  <!-- S5: deadline + CTA -->
+  <div class="abs" id="cal"><div class="top ar">أكتوبر</div><div class="day">1</div><div class="lbl ar">آخر يوم للعرض</div></div>
+  <div class="abs ar" id="cta" style="top:1000px">اشترك قبل نهاية العرض</div>
+  <div class="abs center" id="url" style="top:1170px"><span>smle-question-bank.com</span></div>
+  <div class="abs center ar" id="e1" style="top:1290px;font-size:38px;font-weight:700;color:#d1fae5">مدى · Apple Pay · بدون تجديد تلقائي</div>
+  <div class="abs center ar" id="e2" style="top:1370px;font-size:40px;font-weight:900;color:#f5d77a">الرابط في البايو</div>
+
+  <div class="abs" id="conf"></div>
+  <div class="abs" id="flash"></div>
+</div>
+<script src="anim.js"></script>
+<script>
+const DUR = window.DUR = 18;
+const person = '<svg width="38" height="38" viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="8" r="4.2"/><path d="M3.5 21c.8-4.6 4.2-7 8.5-7s7.7 2.4 8.5 7z"/></svg>';
+document.querySelectorAll('.people i').forEach(i => i.innerHTML = person);
+['s0', 's1', 's2'].forEach(id => $(id).innerHTML = '0123456789'.split('').concat(['0']).map(d => `<span>${d}</span>`).join(''));
+const parts = makeConfetti($('conf'), 110, ['#ffffff', '#f5d77a', '#22c55e', '#d4a531', '#bbf7d0']);
+
+function slot(t) {
+  // Each column spins from the old digit (299) to the new one (196), right column last.
+  const from = [2, 9, 9], to = [1, 9, 6], spins = [2, 3, 4];
+  from.forEach((f, i) => {
+    const a = 7.5 + i * 0.12, b = 8.5 + i * 0.3;
+    const p = easeOut(prog(t, a, b));
+    const target = to[i] + 10 * spins[i];
+    const v = f + (target - f) * p;
+    $('s' + i).style.transform = `translateY(${(-(v % 10) * 330).toFixed(1)}px)`;
+  });
+}
+
+window.render = function (t) {
+  const g = 1 + .06 * Math.sin(t * 3);
+  $('glow').style.transform = `scale(${g})`;
+  $('ring').style.opacity = (.35 + .25 * Math.sin(t * 2)).toFixed(3);
+  $('ring').style.transform = `scale(${1 + .05 * Math.sin(t * 1.3)}) rotate(${t * 10}deg)`;
+  show('logo', t, 0, null, { dy: -30 });
+
+  // S1 (0 – 3.2)
+  show('a1', t, 0.2, 2.9, { s0: .7, dy: 0, ease: back });
+  show('big96', t, 0.3, 2.9, { s0: 2.6, dy: 0, d: .55, outS: .6 });
+  show('a2', t, 1.1, 2.95, { dy: 50 });
+
+  // S2 (3.2 – 7.2)
+  show('b1', t, 3.2, 6.9, { dy: 50 });
+  const o129 = show('old129', t, 3.55, null, { s0: .7, dy: 0, ease: back });
+  const sp = easeOut(prog(t, 4.2, 4.5));
+  $('strike').style.width = (580 * sp) + 'px';
+  $('strike').style.opacity = t < 4.6 ? (t >= 4.2 ? 1 : 0) : 0;
+  const fall = prog(t, 4.6, 5.3);
+  if (t >= 4.6) {
+    $('old129').style.transform = `translate(${-120 * fall}px, ${1400 * fall * fall}px) rotate(${-35 * fall}deg)`;
+    $('old129').style.opacity = 1 - fall;
+  }
+  show('new96', t, 4.85, 6.95, { s0: 0.2, dy: -300, ease: back, d: .5, outS: .7 });
+  show('b2', t, 5.3, 6.95, { dy: 40 });
+  show('b3', t, 5.75, 7.0, { s0: .7, dy: 0, ease: back });
+
+  // S3 (7.2 – 10.8)
+  show('c1', t, 7.2, 10.5, { dy: 50 });
+  show('slots', t, 7.35, 10.55, { s0: .8, dy: 0 });
+  slot(t);
+  show('c2', t, 9.2, 10.6, { dy: 40 });
+  show('c3', t, 9.55, 10.6, { s0: .7, dy: 0, ease: back });
+
+  // S4 (10.8 – 14.6)
+  show('d1', t, 10.8, 14.3, { dy: 50 });
+  show('g3', t, 11.2, 14.35, { dx: 700, dy: 0, ease: back, d: .55 });
+  show('g5', t, 11.8, 14.4, { dx: -700, dy: 0, ease: back, d: .55 });
+  show('d2', t, 12.6, 14.45, { dy: 30 });
+
+  // S5 (14.6 – 18)
+  show('cal', t, 14.6, null, { dy: -500, r0: -12, ease: back, d: .6 });
+  if (t > 15.3) $('cal').style.transform = `rotate(${(2.5 * Math.sin((t - 15.3) * 5) * Math.exp(-(t - 15.3) * .8)).toFixed(2)}deg)`;
+  show('cta', t, 15.3, null, { s0: .6, dy: 0, ease: back });
+  if (t > 15.8) $('cta').style.transform = `scale(${1 + .035 * Math.sin((t - 15.8) * 7)})`;
+  show('url', t, 15.65, null, { dy: 40 });
+  show('e1', t, 16.0, null, { dy: 30 });
+  show('e2', t, 16.35, null, { dy: 20 });
+
+  confetti(parts, t, [{ t: 0.3, x: 540, y: 820 }, { t: 4.9, x: 540, y: 820 }, { t: 14.9, x: 540, y: 700 }]);
+  flash($('flash'), t, [3.2, 7.2, 10.8, 14.6], .3);
+};
+window.render(0);
+</script>
+</body>
+</html>
