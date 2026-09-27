@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="ar">
+<head>
+<meta charset="utf-8">
+<title>SQB TikTok Ad</title>
+<link href="fonts/fonts.css" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: #081121; }
+  #stage {
+    position: relative; width: 1080px; height: 1920px; overflow: hidden;
+    font-family: 'Cairo', sans-serif; color: #fff;
+    background: linear-gradient(160deg, #081121 0%, #0f1f3a 55%, #0b766e 100%);
+  }
+  .abs { position: absolute; will-change: transform, opacity; }
+  .ar { direction: rtl; font-family: 'Cairo', sans-serif; }
+  .en { direction: ltr; font-family: 'Inter', sans-serif; }
+  .center { left: 0; right: 0; text-align: center; }
+  .blob { border-radius: 50%; filter: blur(10px); }
+
+  .pill {
+    display: inline-block; padding: 14px 34px; border-radius: 999px;
+    background: rgba(103,232,249,.14); border: 2px solid rgba(103,232,249,.45);
+    color: #67e8f9; font-weight: 700; font-size: 38px;
+  }
+  .brand { font-family: 'Inter', sans-serif; font-weight: 800; color: #67e8f9; letter-spacing: 2px; }
+
+  /* Question card */
+  #qcard {
+    left: 70px; width: 940px; top: 330px; padding: 44px 48px 40px;
+    background: #ffffff; color: #0f1e3d; border-radius: 36px;
+    box-shadow: 0 30px 80px rgba(0,0,0,.45);
+  }
+  #qmeta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 26px; }
+  .chip { padding: 8px 22px; border-radius: 999px; font-size: 28px; font-weight: 700; }
+  .chip.blue { background: #e1eafb; color: #1d4ed8; }
+  #qstem { font-size: 37px; line-height: 1.45; font-weight: 500; color: #0f1e3d; }
+  #qstem b { font-weight: 800; }
+  .opt {
+    position: relative; display: flex; align-items: center; gap: 22px;
+    margin-top: 20px; padding: 22px 26px; border-radius: 22px;
+    border: 3px solid #d4deee; background: #f5f8fd;
+    font-size: 36px; font-weight: 700; color: #0f1e3d;
+  }
+  .opt .k {
+    flex: none; width: 58px; height: 58px; border-radius: 16px; display: grid; place-items: center;
+    background: #e1eafb; color: #1d4ed8; font-weight: 800; font-size: 30px;
+  }
+  .opt .tick {
+    position: absolute; right: 26px; top: 50%; width: 58px; height: 58px; margin-top: -29px;
+    border-radius: 50%; background: #16a34a; display: grid; place-items: center; opacity: 0;
+  }
+
+  #timer { width: 150px; height: 150px; }
+  #timerNum { font-family: 'Inter', sans-serif; font-weight: 800; font-size: 64px; fill: #fff; }
+
+  #explain {
+    left: 70px; width: 940px; top: 1300px; padding: 34px 44px;
+    border-radius: 32px; background: rgba(22,163,74,.16); border: 3px solid rgba(74,222,128,.6);
+  }
+  #explain h3 { font-size: 40px; font-weight: 900; color: #4ade80; margin-bottom: 8px; }
+  #explain p { font-size: 36px; line-height: 1.6; color: #e8fff0; font-weight: 700; }
+
+  .feat {
+    left: 90px; width: 900px; display: flex; align-items: center; gap: 34px;
+    padding: 30px 38px; border-radius: 30px; direction: rtl;
+    background: rgba(255,255,255,.08); border: 2px solid rgba(255,255,255,.16);
+  }
+  .feat .ic {
+    flex: none; width: 110px; height: 110px; border-radius: 28px; display: grid; place-items: center;
+    background: linear-gradient(135deg, #22d3ee, #2563eb);
+  }
+  .feat .t { font-size: 50px; font-weight: 900; line-height: 1.2; }
+  .feat .s { font-size: 32px; font-weight: 500; color: #bcd3f5; }
+
+  .price {
+    left: 90px; width: 900px; direction: rtl; display: flex; align-items: center; justify-content: space-between;
+    padding: 40px 50px; border-radius: 34px; background: #fff; color: #0f1e3d;
+    box-shadow: 0 24px 70px rgba(0,0,0,.4);
+  }
+  .price .term { font-size: 54px; font-weight: 900; }
+  .price .sub { font-size: 30px; font-weight: 700; color: #475569; }
+  .price .amt { text-align: left; direction: rtl; }
+  .price .now { font-size: 104px; font-weight: 900; color: #0b7a3e; line-height: 1; }
+  .price .cur { font-size: 38px; font-weight: 900; color: #0b7a3e; }
+  .price .was { font-size: 40px; font-weight: 700; color: #94a3b8; text-decoration: line-through; text-decoration-thickness: 4px; text-decoration-color: #dc2626; }
+
+  #cta {
+    left: 110px; width: 860px; padding: 40px 0; border-radius: 999px; text-align: center;
+    background: linear-gradient(135deg, #22d3ee, #2563eb); color: #fff;
+    font-size: 60px; font-weight: 900; box-shadow: 0 20px 60px rgba(34,211,238,.45);
+  }
+  #url {
+    left: 0; right: 0; text-align: center; font-family: 'Inter'; font-weight: 800; font-size: 46px; color: #fff;
+  }
+  #url span { padding: 16px 38px; border-radius: 22px; background: rgba(255,255,255,.1); border: 2px solid rgba(255,255,255,.25); }
+  #flash { inset: 0; background: #fff; opacity: 0; }
+  #progress { left: 0; top: 0; height: 10px; background: linear-gradient(90deg, #22d3ee, #4ade80); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <!-- ambient background -->
+  <div class="abs blob" id="b1" style="width:720px;height:720px;background:rgba(34,211,238,.18);left:-220px;top:-160px"></div>
+  <div class="abs blob" id="b2" style="width:820px;height:820px;background:rgba(37,99,235,.22);left:520px;top:1150px"></div>
+  <div class="abs blob" id="b3" style="width:460px;height:460px;background:rgba(74,222,128,.12);left:680px;top:260px"></div>
+  <div class="abs" id="progress"></div>
+
+  <!-- persistent logo -->
+  <div class="abs center" id="logo" style="top:120px"><span class="brand" style="font-size:52px">SQB</span></div>
+
+  <!-- S1 hook -->
+  <div class="abs center ar" id="h1" style="top:600px"><span class="pill">اختبار سريع · SMLE</span></div>
+  <div class="abs center ar" id="h2" style="top:720px;font-size:120px;font-weight:900;line-height:1.25">عندك <span style="color:#67e8f9">5 ثوانٍ</span></div>
+  <div class="abs center ar" id="h3" style="top:900px;font-size:96px;font-weight:900;line-height:1.25">هل تعرف الإجابة؟</div>
+  <div class="abs center ar" id="h4" style="top:1090px;font-size:42px;font-weight:700;color:#bcd3f5">سؤال حقيقي من بنك أسئلة SQB</div>
+
+  <!-- S2 question -->
+  <div class="abs" id="qcard">
+    <div id="qmeta">
+      <span class="chip blue en">SMLE · Medicine</span>
+      <span class="chip blue ar">الباطنة</span>
+    </div>
+    <div id="qstem" class="en">
+      A 52-year-old man develops <b>sudden severe retrosternal chest pain</b> radiating to his <b>back</b>, then becomes unconscious. Heavy smoker, hypertensive. <b>BP 85/56</b>.
+      <br><b>Most likely diagnosis?</b>
+    </div>
+    <div class="opt en" id="o0"><span class="k">A</span>Vasovagal attack</div>
+    <div class="opt en" id="o1"><span class="k">B</span>Pulmonary embolism</div>
+    <div class="opt en" id="o2"><span class="k">C</span>Tear in the aortic intima<span class="tick"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span></div>
+    <div class="opt en" id="o3"><span class="k">D</span>Acute myocardial infarction</div>
+  </div>
+  <svg class="abs" id="timer" viewBox="0 0 150 150" style="left:465px;top:1330px">
+    <circle cx="75" cy="75" r="64" stroke="rgba(255,255,255,.18)" stroke-width="12" fill="rgba(8,17,33,.6)"/>
+    <circle id="timerArc" cx="75" cy="75" r="64" stroke="#67e8f9" stroke-width="12" fill="none"
+            stroke-linecap="round" stroke-dasharray="402.1" stroke-dashoffset="0" transform="rotate(-90 75 75)"/>
+    <text id="timerNum" x="75" y="98" text-anchor="middle">5</text>
+  </svg>
+  <div class="abs ar" id="explain">
+    <h3>✓ الإجابة: تسلّخ الأبهر (Aortic dissection)</h3>
+    <p>ألم صدري مفاجئ شديد يمتد إلى الظهر + هبوط الضغط عند مدخّن مصاب بالضغط = تمزّق في بطانة الأبهر.</p>
+  </div>
+
+  <!-- S3 features -->
+  <div class="abs center ar" id="f0" style="top:300px;font-size:84px;font-weight:900;line-height:1.3">لا تحفظ الإجابة<br><span style="color:#67e8f9">افهم لماذا هي الصحيحة</span></div>
+  <div class="abs feat" id="f1" style="top:640px">
+    <div class="ic"><svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5v14zM20 17v4H6.5A2.5 2.5 0 0 1 4 19.5"/></svg></div>
+    <div><div class="t"><span id="count" class="en" style="font-weight:800">5,033</span> سؤالاً</div><div class="s">على نمط البرومترك · تُحدَّث شهرياً</div></div>
+  </div>
+  <div class="abs feat" id="f2" style="top:880px">
+    <div class="ic"><svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V16h8v-1.3A7 7 0 0 0 12 2z"/></svg></div>
+    <div><div class="t">تفسير لكل إجابة</div><div class="s">الفكرة · العرض السريري · التشخيص · العلاج</div></div>
+  </div>
+  <div class="abs feat" id="f3" style="top:1120px">
+    <div class="ic"><svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M7 15l4-4 3 3 6-6"/></svg></div>
+    <div><div class="t">تحليل يكشف نقاط ضعفك</div><div class="s">وراجع أخطاءك حتى تتقنها</div></div>
+  </div>
+  <div class="abs center ar" id="f4" style="top:1380px;font-size:40px;font-weight:700">
+    <span class="pill" style="font-size:38px">طب بشري · SMLE</span>&nbsp;&nbsp;<span class="pill" style="font-size:38px;color:#4ade80;border-color:rgba(74,222,128,.5);background:rgba(74,222,128,.12)">تمريض · SNLE</span>
+  </div>
+
+  <!-- S4 offer (variant: offer) -->
+  <div class="abs center ar" id="p0" style="top:260px">
+    <span class="pill" style="font-size:40px;color:#4ade80;border-color:rgba(74,222,128,.55);background:rgba(11,122,62,.35)">عرض اليوم الوطني الـ96</span>
+  </div>
+  <div class="abs center ar" id="p1" style="top:380px;font-size:88px;font-weight:900;line-height:1.25">أسعار ما تتكرر</div>
+  <div class="abs price" id="p2" style="top:600px">
+    <div><div class="term">4 أشهر</div><div class="sub">أقل من سعر شهرين</div></div>
+    <div class="amt"><div class="was">129 ريال</div><span class="now en">96</span> <span class="cur">ريال</span></div>
+  </div>
+  <div class="abs price" id="p3" style="top:880px">
+    <div><div class="term">سنة كاملة</div><div class="sub">حتى يوم اختبارك</div></div>
+    <div class="amt"><div class="was">299 ريال</div><span class="now en">196</span> <span class="cur">ريال</span></div>
+  </div>
+  <div class="abs center ar" id="p4" style="top:1190px;font-size:50px;font-weight:900;color:#fde68a">العرض ينتهي 1 أكتوبر</div>
+  <div class="abs center ar" id="p5" style="top:1280px;font-size:36px;font-weight:700;color:#bcd3f5">دفعة واحدة · بدون تجديد تلقائي · مدى / Apple Pay</div>
+
+  <!-- S4 evergreen variant -->
+  <div class="abs center ar" id="e0" style="top:300px;font-size:80px;font-weight:900;line-height:1.3">كم يكلفك <span style="color:#fca5a5">الرسوب</span>؟</div>
+  <div class="abs center ar" id="e1" style="top:470px;font-size:44px;font-weight:700;color:#bcd3f5">اشتراكك أقل بكثير من المحاولة الثانية</div>
+  <div class="abs price" id="e2" style="top:640px">
+    <div><div class="term">شهر</div><div class="sub">جرّب بلا التزام</div></div>
+    <div class="amt"><span class="now en" style="color:#1d4ed8">50</span> <span class="cur" style="color:#1d4ed8">ريال</span></div>
+  </div>
+  <div class="abs price" id="e3" style="top:900px">
+    <div><div class="term">4 أشهر</div><div class="sub">الأكثر اختياراً</div></div>
+    <div class="amt"><div class="was">200 ريال</div><span class="now en" style="color:#1d4ed8">129</span> <span class="cur" style="color:#1d4ed8">ريال</span></div>
+  </div>
+  <div class="abs center ar" id="e4" style="top:1200px;font-size:38px;font-weight:700;color:#bcd3f5">دفعة واحدة · بدون تجديد تلقائي · مدى / Apple Pay</div>
+
+  <!-- S5 CTA -->
+  <div class="abs center" id="c0" style="top:470px"><span class="brand" style="font-size:190px">SQB</span></div>
+  <div class="abs center ar" id="c1" style="top:720px;font-size:48px;font-weight:700;color:#bcd3f5">بنك أسئلة SMLE و SNLE بالعربي</div>
+  <div class="abs ar" id="cta" style="top:880px">ابدأ بـ 40 سؤالاً مجاناً</div>
+  <div class="abs center ar" id="c2" style="top:1060px;font-size:40px;font-weight:700;color:#bcd3f5">بدون بطاقة دفع · التسجيل أقل من دقيقة</div>
+  <div class="abs" id="url" style="top:1190px"><span>smle-question-bank.com</span></div>
+  <div class="abs center ar" id="c3" style="top:1330px;font-size:38px;font-weight:700;color:#67e8f9">الرابط في البايو</div>
+
+  <div class="abs" id="flash"></div>
+</div>
+
+<script>
+const VARIANT = new URLSearchParams(location.search).get('v') || 'offer';
+const DUR = 21;
+const $ = id => document.getElementById(id);
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const easeOut = x => 1 - Math.pow(1 - x, 3);
+const easeIn = x => x * x * x;
+const back = x => { const c = 1.70158, c3 = c + 1; return 1 + c3 * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+
+// Fade/slide element in over [a, a+d] and out over [b, b+d2].
+function show(el, t, a, b, { dy = 60, dx = 0, s0 = 1, d = 0.45, d2 = 0.3, ease = easeOut, outDy = -40 } = {}) {
+  el = typeof el === 'string' ? $(el) : el;
+  const pin = ease(prog(t, a, a + d));
+  const pout = b == null ? 0 : easeIn(prog(t, b, b + d2));
+  const o = pin * (1 - pout);
+  const y = (1 - pin) * dy + pout * outDy;
+  const x = (1 - pin) * dx;
+  const s = s0 + (1 - s0) * pin;
+  el.style.opacity = o.toFixed(3);
+  el.style.transform = `translate(${x}px, ${y}px) scale(${s})`;
+  el.style.visibility = o < 0.002 ? 'hidden' : 'visible';
+}
+
+function hideAll(ids) { ids.forEach(id => { $(id).style.visibility = 'hidden'; $(id).style.opacity = 0; }); }
+
+window.render = function (t) {
+  // ambient drift
+  $('b1').style.transform = `translate(${Math.sin(t * .6) * 60}px, ${Math.cos(t * .5) * 50}px)`;
+  $('b2').style.transform = `translate(${Math.cos(t * .4) * 70}px, ${Math.sin(t * .55) * 60}px)`;
+  $('b3').style.transform = `translate(${Math.sin(t * .8) * 40}px, ${Math.cos(t * .7) * 70}px)`;
+  $('progress').style.width = (t / DUR * 1080).toFixed(1) + 'px';
+
+  show('logo', t, 0, 17.6, { dy: -30 });
+
+  // S1 — hook (0 – 3)
+  show('h1', t, 0.1, 2.7, { s0: .8, ease: back });
+  show('h2', t, 0.35, 2.75, { s0: 1.25, dy: 0, ease: back, d: .4 });
+  show('h3', t, 0.8, 2.8, { dy: 80 });
+  show('h4', t, 1.3, 2.85, { dy: 40 });
+
+  // S2 — question (3 – 10.6)
+  show('qcard', t, 3.0, 10.2, { dy: 900, d: .6, outDy: -300, d2: .45 });
+  ['o0', 'o1', 'o2', 'o3'].forEach((id, i) => show(id, t, 3.5 + i * .15, null, { dy: 0, dx: -120, d: .35 }));
+  show('timer', t, 3.9, 8.3, { s0: .3, dy: 0, ease: back });
+  const remain = clamp(8.3 - t, 0, 5) ;
+  const frac = clamp((t - 3.9) / 4.4);
+  $('timerArc').setAttribute('stroke-dashoffset', (402.1 * frac).toFixed(1));
+  $('timerNum').textContent = Math.max(0, Math.ceil(5 * (1 - frac)));
+  $('timerArc').setAttribute('stroke', remain < 1.5 ? '#f87171' : '#67e8f9');
+
+  const rev = easeOut(prog(t, 8.35, 8.7));
+  ['o0', 'o1', 'o3'].forEach(id => { if (t >= 3.5) $(id).style.opacity = (1 - .6 * rev).toFixed(3); });
+  const c = $('o2');
+  c.style.borderColor = rev > 0 ? `rgba(22,163,74,${rev})` : '#d4deee';
+  c.style.background = rev > 0 ? `rgba(220,252,231,${rev})` : '#f5f8fd';
+  c.querySelector('.k').style.background = rev > .5 ? '#16a34a' : '#e1eafb';
+  c.querySelector('.k').style.color = rev > .5 ? '#fff' : '#1d4ed8';
+  const tick = c.querySelector('.tick');
+  const tp = back(prog(t, 8.45, 8.85));
+  tick.style.opacity = prog(t, 8.45, 8.6);
+  tick.style.transform = `scale(${tp})`;
+  if (t > 8.35 && t < 9.4) c.style.transform = `scale(${1 + .04 * Math.sin(prog(t, 8.35, 9.0) * Math.PI)})`;
+  show('explain', t, 8.8, 10.2, { dy: 120, d: .5 });
+
+  // S3 — features (10.6 – 14.7)
+  show('f0', t, 10.6, 14.4, { dy: 60 });
+  show('f1', t, 11.0, 14.45, { dy: 0, dx: 200 });
+  show('f2', t, 11.4, 14.5, { dy: 0, dx: 200 });
+  show('f3', t, 11.8, 14.55, { dy: 0, dx: 200 });
+  show('f4', t, 12.4, 14.6, { s0: .7, dy: 0, ease: back });
+  const n = Math.round(5033 * easeOut(prog(t, 11.0, 12.4)));
+  $('count').textContent = n.toLocaleString('en-US');
+
+  // S4 — price (14.8 – 18.2)
+  if (VARIANT === 'offer') {
+    hideAll(['e0', 'e1', 'e2', 'e3', 'e4']);
+    show('p0', t, 14.8, 18.1, { s0: .6, dy: 0, ease: back });
+    show('p1', t, 15.0, 18.1, { dy: 60 });
+    show('p2', t, 15.35, 18.15, { dy: 0, dx: -260, ease: back, d: .5 });
+    show('p3', t, 15.7, 18.2, { dy: 0, dx: 260, ease: back, d: .5 });
+    show('p4', t, 16.3, 18.2, { s0: 1.3, dy: 0 });
+    show('p5', t, 16.6, 18.2, { dy: 30 });
+    const pulse = t > 16.8 ? 1 + .05 * Math.sin((t - 16.8) * 9) : 1;
+    if (t > 16.8 && t < 18.2) $('p4').style.transform = `scale(${pulse})`;
+  } else {
+    hideAll(['p0', 'p1', 'p2', 'p3', 'p4', 'p5']);
+    show('e0', t, 14.8, 18.1, { s0: 1.2, dy: 0, ease: back });
+    show('e1', t, 15.2, 18.1, { dy: 40 });
+    show('e2', t, 15.5, 18.15, { dy: 0, dx: -260, ease: back, d: .5 });
+    show('e3', t, 15.85, 18.2, { dy: 0, dx: 260, ease: back, d: .5 });
+    show('e4', t, 16.5, 18.2, { dy: 30 });
+  }
+
+  // S5 — CTA (18.3 – 21)
+  show('c0', t, 18.3, null, { s0: .4, dy: 0, ease: back, d: .55 });
+  show('c1', t, 18.6, null, { dy: 40 });
+  show('cta', t, 18.9, null, { s0: .6, dy: 0, ease: back, d: .45 });
+  if (t > 19.4) $('cta').style.transform = `scale(${1 + .035 * Math.sin((t - 19.4) * 7)})`;
+  show('c2', t, 19.2, null, { dy: 30 });
+  show('url', t, 19.5, null, { dy: 40 });
+  show('c3', t, 19.9, null, { dy: 20 });
+
+  // white flash on scene cuts
+  const cuts = [3.0, 10.6, 14.8, 18.3];
+  let f = 0;
+  cuts.forEach(cu => { const d = t - cu; if (d >= 0 && d < .18) f = Math.max(f, .35 * (1 - d / .18)); });
+  $('flash').style.opacity = f.toFixed(3);
+};
+
+window.render(0);
+</script>
+</body>
+</html>
