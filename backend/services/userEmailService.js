@@ -462,8 +462,8 @@ export const sendTrialEndedEmail = async (to, username, track, stats = {}, opts 
             </table>
             <div style="background:#0b1021;border-radius:12px;padding:18px 22px;margin-bottom:26px;border:1px solid #1e293b;">
               <p style="margin:0 0 4px;font-size:12.5px;color:#94a3b8;">
-                ${T(lang, '50 ريالاً شهرياً · 129 لأربعة أشهر · 300 للسنة',
-                          'SAR 50 a month · 129 for four months · 300 for a year')}
+                ${T(lang, '50 ريالاً شهرياً · 129 لأربعة أشهر · 299 للسنة',
+                          'SAR 50 a month · 129 for four months · 299 for a year')}
               </p>
               <p style="margin:8px 0 0;font-size:12px;color:#64748b;">
                 ${T(lang, 'دفعة واحدة، بدون تجديد تلقائي. وهناك اشتراكات جماعية إن كنتم مجموعة تذاكر معاً.',

@@ -138,7 +138,7 @@ export const PLANS = {
         kind: 'individual',
         months: 12,
         seats: 1,
-        priceHalalas: Number(process.env.PLAN_ANNUAL_PRICE_HALALAS || 30000),
+        priceHalalas: Number(process.env.PLAN_ANNUAL_PRICE_HALALAS || 29900),
     },
     group_3: {
         id: 'group_3',
@@ -186,14 +186,15 @@ export function listPlans(kind = 'all') {
  *
  * THE BASE LADDER THIS OFFER SITS ON — kept here so a revert never needs
  * archaeology. PLANS above is untouched by the offer and stays exactly this:
- *   monthly 50 · four_month 129 (compare-at 200) · annual 300
+ *   monthly 50 · four_month 129 (compare-at 200) · annual 299
  *   group_3 250 · group_5 299        (SAR; halalas x100 in PLANS)
- * These are the code defaults. PRODUCTION differs: on 2026-09-20 the live
- * annual price was 299 (a PLAN_ANNUAL_PRICE_HALALAS override), and the offer
- * strikes through whatever the real base is.
+ * These are the code defaults. The annual default was 300 until 2026-10-01;
+ * production had charged 299 (a PLAN_ANNUAL_PRICE_HALALAS override) since
+ * before the offer, so the default now matches it. The offer strikes through
+ * whatever the real base is.
  * Full record and revert steps: docs/NATIONAL_DAY_OFFER_2026-09.md.
  *
- *   individual   4 months  129 → 96     annual  300 → 196
+ *   individual   4 months  129 → 96     annual  299 → 196
  *   group        3 accounts 250 → 196   5 accounts 299 → 296
  *
  * The group prices continue the individual ones as 96 / 196 / 296 — one, three

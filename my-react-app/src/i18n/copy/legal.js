@@ -18,7 +18,7 @@ const legalCopy = {
     ar: {
         terms: {
             title: 'شروط الاستخدام',
-            updated: 'آخر تحديث: يناير 2026',
+            updated: 'آخر تحديث: أكتوبر 2026',
             sections: [
                 {
                     heading: '1. قبول الشروط',
@@ -105,7 +105,7 @@ const legalCopy = {
                             ul: [
                                 'يحصل كل حساب جديد على **40 سؤالاً مجانياً** مدى الحياة، بالإضافة إلى **أول درس من كل تخصص** في الملخصات، ويبقى ذلك متاحاً دون حد زمني.',
                                 'استنفاد الأسئلة المجانية **لا يُغلق الحساب**: يظل بإمكانك تسجيل الدخول والاطلاع على تحليلاتك وتقدّمك ودروسك المجانية، ويقتصر الأثر على عدم إمكانية بدء اختبارات جديدة.',
-                                'الاشتراكات الفردية: **50 ريالاً سعودياً للشهر**، أو **129 ريالاً لأربعة أشهر**، أو **300 ريال للسنة**.',
+                                'الاشتراكات الفردية: **50 ريالاً سعودياً للشهر**، أو **129 ريالاً لأربعة أشهر**، أو **299 ريالاً للسنة**.',
                                 'الاشتراكات الجماعية: **250 ريالاً لثلاثة حسابات** أو **299 ريالاً لخمسة حسابات**، ومدتها أربعة أشهر. يُفعَّل حساب المشتري مباشرة، ويحصل على روابط دعوة أحادية الاستخدام لبقية المقاعد. وتنتهي جميع مقاعد المجموعة في تاريخ واحد يُحدَّد وقت الشراء، ولا يمدّد استخدام أي رابط هذا التاريخ.',
                                 'قد نطرح أسعاراً ترويجية لفترات محدودة (مثل المناسبات الوطنية). الأسعار المذكورة أعلاه هي الأسعار المعتادة، والسعر الذي يظهر لك في صفحة الدفع قبل إتمام الشراء هو السعر الذي تدفعه.',
                                 'جميع الخطط **دفعة واحدة ولا تتجدّد تلقائياً**. لا نحفظ بيانات بطاقتك لخصم لاحق، ولن يُخصم منك أي مبلغ ما لم تقم بعملية شراء جديدة بنفسك.',
@@ -456,7 +456,7 @@ const legalCopy = {
     en: {
         terms: {
             title: 'Terms of Service',
-            updated: 'Last updated: January 2026',
+            updated: 'Last updated: October 2026',
             sections: [
                 {
                     heading: '1. Acceptance of terms',
@@ -543,7 +543,7 @@ const legalCopy = {
                             ul: [
                                 'Every new account receives **40 free questions** for the lifetime of the account, plus **the first lesson of every specialty** in the summaries, with no time limit on either.',
                                 'Using up the free questions **does not close the account**: you can still sign in and access your analytics, your progress and your free lessons. The only effect is that new quizzes cannot be started.',
-                                'Individual subscriptions: **50 SAR for one month**, **129 SAR for four months**, or **300 SAR for one year**.',
+                                'Individual subscriptions: **50 SAR for one month**, **129 SAR for four months**, or **299 SAR for one year**.',
                                 'Group subscriptions: **250 SAR for three accounts** or **299 SAR for five accounts**, each for four months. The purchaser’s own account is activated immediately and they receive single-use invite links for the remaining seats. All seats in a group expire on one shared date fixed at the time of purchase; claiming a link later does not extend that date.',
                                 'We may run promotional prices for limited periods (for example around national occasions). The prices above are our standard prices; the price shown at checkout, before you complete your purchase, is the price you pay.',
                                 'All plans are **a single payment and do not renew automatically**. We do not retain your card details for future charges, and you will never be charged again unless you make a new purchase yourself.',

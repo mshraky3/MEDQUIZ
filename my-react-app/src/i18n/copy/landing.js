@@ -134,7 +134,7 @@ const landingCopy = {
             plan: 'شهر · 4 أشهر · سنة — دفعة واحدة في كل الحالات',
             amount: '50',
             currency: 'ريال / شهر',
-            perMonth: 'أربعة أشهر بـ 129 ريالاً بدلاً من 200 · 300 ريال للسنة · واشتراكات جماعية للأصدقاء',
+            perMonth: 'أربعة أشهر بـ 129 ريالاً بدلاً من 200 · 299 ريالاً للسنة · واشتراكات جماعية للأصدقاء',
             included: [
                 'بنك أسئلة شامل لاختبارك — SMLE أو SNLE — يُحدَّث باستمرار',
                 'تفسير واضح لكل إجابة',
@@ -292,7 +292,7 @@ const landingCopy = {
             colFiles: 'Scattered files and collections',
             colCourses: 'Prep courses',
             rows: [
-                { label: 'Cost', sqb: 'From SAR 50 a month — SAR 300 for a whole year', files: 'Free, but scattered and unreliable', courses: 'Thousands of riyals' },
+                { label: 'Cost', sqb: 'From SAR 50 a month — SAR 299 for a whole year', files: 'Free, but scattered and unreliable', courses: 'Thousands of riyals' },
                 { label: 'Content updates', sqb: 'Verified monthly collections', files: 'Irregular, and unverified', courses: 'Ends when the course ends' },
                 { label: 'Answer explanations', sqb: 'A full explanation for every question: concept, diagnosis, management', files: 'Usually answers with no reasoning', courses: 'Depends on the lecturer' },
                 { label: 'Performance and error analysis', sqb: 'Automatic analytics after every session', files: 'Manual — if at all', courses: 'Usually not offered' },
@@ -321,7 +321,7 @@ const landingCopy = {
             plan: 'A month, four months or a year — one payment either way',
             amount: '50',
             currency: 'SAR / month',
-            perMonth: 'Four months for SAR 129, down from 200 · SAR 300 for a year · group plans for study partners',
+            perMonth: 'Four months for SAR 129, down from 200 · SAR 299 for a year · group plans for study partners',
             included: [
                 'A full question bank for your exam — SMLE or SNLE — updated continually',
                 'A clear explanation for every answer',

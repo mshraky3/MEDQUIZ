@@ -51,7 +51,7 @@ export default function TermsScreen() {
                     Every new account receives 40 free questions for the lifetime of the account, plus the first
                     lesson of every specialty, with no time limit. Using them up does not close the account — only
                     starting new quizzes requires a subscription. Individual subscriptions are 50 SAR for one month,
-                    129 SAR for four months, or 300 SAR for one year. Group subscriptions are 250 SAR for three
+                    129 SAR for four months, or 299 SAR for one year. Group subscriptions are 250 SAR for three
                     accounts or 299 SAR for five accounts, each for four months, with all seats sharing one end date.
                     All plans are a single payment and do not renew automatically. Users who registered before the
                     paid rollout are grandfathered and retain free access, and accounts created by administrators are
