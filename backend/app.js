@@ -1950,7 +1950,10 @@ const ensureOAuthColumns = async () => {
 //    loading. Exactly the failure mode version 7 -> 8 above was written to
 //    prevent — bump this every time a statement is added to ensureSchema()
 //    or to any ensureXxx() called from bootstrapAll(), no exceptions.
-const SCHEMA_BOOTSTRAP_VERSION = 9;
+// 10: accounts.free_allowance (new accounts get 10 free questions, existing keep
+//     40). Added in ensurePaymentSchema() in 8df50cb WITHOUT bumping this, so the
+//     column was never created and every query selecting it failed.
+const SCHEMA_BOOTSTRAP_VERSION = 10;
 async function bootstrapAll() {
     try {
         await db.query(`
