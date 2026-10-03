@@ -9,7 +9,7 @@ const faqCopy = {
         ctaTitle: 'لم تجد إجابة لسؤالك؟',
         ctaBody: 'تواصل معنا وسنكون سعداء بمساعدتك',
         ctaContact: 'اتصل بنا',
-        ctaWhatsapp: 'واتساب',
+        ctaEmail: 'البريد الإلكتروني',
         items: [
             {
                 question: 'ما هي منصة SQB؟',
@@ -61,7 +61,7 @@ const faqCopy = {
             },
             {
                 question: 'كيف أتواصل مع الدعم؟',
-                answer: 'يمكنك التواصل معنا عبر:\n• واتساب: 0582619119\n• البريد الإلكتروني: alshraky3@gmail.com\n• صفحة الاتصال على الموقع',
+                answer: 'يمكنك التواصل معنا عبر:\n• البريد الإلكتروني: alshraky3@gmail.com (أضف رقم واتساب في رسالتك إن أردت أن نتابع معك عليه)\n• صفحة الاتصال على الموقع',
             },
             {
                 question: 'هل يمكنني استخدام المنصة على الجوال؟',
@@ -81,7 +81,7 @@ const faqCopy = {
         ctaTitle: 'Did not find your answer?',
         ctaBody: 'Get in touch — we are happy to help',
         ctaContact: 'Contact us',
-        ctaWhatsapp: 'WhatsApp',
+        ctaEmail: 'Email',
         items: [
             {
                 question: 'What is SQB?',
@@ -133,7 +133,7 @@ const faqCopy = {
             },
             {
                 question: 'How do I contact support?',
-                answer: 'You can reach us at:\n• WhatsApp: 0582619119\n• Email: alshraky3@gmail.com\n• The contact page on this site',
+                answer: 'You can reach us at:\n• Email: alshraky3@gmail.com (add a WhatsApp number to your message if you would like us to continue there)\n• The contact page on this site',
             },
             {
                 question: 'Can I use the platform on my phone?',

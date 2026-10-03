@@ -43,7 +43,7 @@ export const FAQ_ITEMS_EN = [
     },
     {
         question: 'How do I contact the SQB team?',
-        answer: 'Through the contact page, by email, or on WhatsApp. Suggestions and question reports reach the same team.',
+        answer: 'Through the contact page or by email. Suggestions and question reports reach the same team.',
     },
 ];
 
@@ -139,7 +139,7 @@ export const EN_PRERENDER = {
     '/contact': `
       <main class="seo-shell" dir="ltr">
         <h1>Contact SQB</h1>
-        <p>Questions about a subscription, a problem with your account, or a mistake you have spotted in a question — the contact page reaches the team directly by email or WhatsApp.</p>
+        <p>Questions about a subscription, a problem with your account, or a mistake you have spotted in a question — the contact page reaches the team directly by email.</p>
         <p>Reporting a question you believe is wrong is genuinely useful: reports are reviewed against the source and the bank is corrected.</p>
         <nav aria-label="Key links">
           <a href="/en/faq">Frequently asked questions</a>

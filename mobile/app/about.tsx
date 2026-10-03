@@ -42,9 +42,6 @@ export default function AboutScreen() {
                     <TouchableOpacity onPress={() => Linking.openURL('mailto:alshraky3@gmail.com')}>
                         <Text style={styles.link}>alshraky3@gmail.com</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => Linking.openURL('https://wa.link/gqafib')}>
-                        <Text style={styles.link}>WhatsApp: 0582619119</Text>
-                    </TouchableOpacity>
                 </Card>
 
                 <Card style={styles.card}>

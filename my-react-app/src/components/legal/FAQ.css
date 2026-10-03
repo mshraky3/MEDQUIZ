@@ -208,13 +208,13 @@
     box-shadow: 0 8px 24px rgba(35, 109, 237, 0.3);
 }
 
-.faq-cta-whatsapp {
-    background: linear-gradient(135deg, #25d366, #123f8c);
+.faq-cta-email {
+    background: linear-gradient(135deg, #2563eb, #123f8c);
     color: white;
 }
 
-.faq-cta-whatsapp:hover {
-    box-shadow: 0 8px 24px rgba(37, 211, 102, 0.3);
+.faq-cta-email:hover {
+    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.3);
 }
 
 /* Responsive */

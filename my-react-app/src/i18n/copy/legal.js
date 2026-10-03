@@ -12,7 +12,6 @@
  */
 
 const CONTACT_EMAIL = 'alshraky3@gmail.com';
-const CONTACT_WHATSAPP = '+966 58 261 9119';
 
 const legalCopy = {
     ar: {
@@ -138,7 +137,6 @@ const legalCopy = {
                     blocks: [
                         { p: 'إذا كان لديك أي سؤال حول هذه الشروط، تواصل معنا:' },
                         { p: `**البريد الإلكتروني:** ${CONTACT_EMAIL}` },
-                        { p: `**واتساب:** ${CONTACT_WHATSAPP}` },
                         { p: '**الكيان القانوني:** شركة دار الخبرة التجارية' },
                         { p: '**السجل التجاري:** 7040567922' },
                     ],
@@ -171,7 +169,7 @@ const legalCopy = {
                 },
                 {
                     heading: '3. كيف تطلب الاسترجاع',
-                    blocks: [{ p: 'يمكن إرسال طلبات الاسترجاع عبر البريد الإلكتروني أو واتساب باستخدام بيانات التواصل أدناه. يرجى ذكر بريد حسابك وتاريخ الشراء التقريبي. نسعى للرد خلال 5 أيام عمل.' }],
+                    blocks: [{ p: 'يمكن إرسال طلبات الاسترجاع عبر البريد الإلكتروني باستخدام بيانات التواصل أدناه. يرجى ذكر بريد حسابك وتاريخ الشراء التقريبي، ويمكنك إضافة رقم واتساب إن رغبت بمتابعة الطلب هناك. نسعى للرد خلال 5 أيام عمل.' }],
                 },
                 {
                     heading: '4. معالجة المدفوعات',
@@ -186,7 +184,6 @@ const legalCopy = {
                     blocks: [
                         { p: 'لطلبات الاسترجاع أو الاستفسار عن هذه السياسة، تواصل معنا:' },
                         { p: `**البريد الإلكتروني:** ${CONTACT_EMAIL}` },
-                        { p: `**واتساب:** ${CONTACT_WHATSAPP}` },
                         { p: '**الكيان القانوني:** شركة دار الخبرة التجارية' },
                         { p: '**السجل التجاري:** 7040567922' },
                         { p: 'اطّلع أيضاً على [[/terms|شروط الاستخدام]] و[[/privacy|سياسة الخصوصية]].' },
@@ -363,7 +360,6 @@ const legalCopy = {
                         {
                             ul: [
                                 `**البريد الإلكتروني:** ${CONTACT_EMAIL}`,
-                                '**واتساب:** 0582619119',
                                 '**الموقع:** المملكة العربية السعودية',
                                 '**الكيان القانوني:** شركة دار الخبرة التجارية — السجل التجاري: 7040567922',
                             ],
@@ -441,7 +437,6 @@ const legalCopy = {
                         {
                             ul: [
                                 `**البريد الإلكتروني:** ${CONTACT_EMAIL}`,
-                                '**واتساب:** 0582619119',
                                 '**صفحة الاتصال:** [[/contact|اتصل بنا]]',
                             ],
                         },
@@ -576,7 +571,6 @@ const legalCopy = {
                     blocks: [
                         { p: 'If you have any questions about these Terms, please contact us at:' },
                         { p: `**Email:** ${CONTACT_EMAIL}` },
-                        { p: `**WhatsApp:** ${CONTACT_WHATSAPP}` },
                         { p: '**Legal entity:** Dar Al Khibra Trading Co.' },
                         { p: '**Commercial registration:** 7040567922' },
                     ],
@@ -609,7 +603,7 @@ const legalCopy = {
                 },
                 {
                     heading: '3. How to request a refund',
-                    blocks: [{ p: 'Refund requests can be submitted by email or WhatsApp using the contact details below. Please include your account email and the approximate date of purchase. We aim to respond within 5 business days.' }],
+                    blocks: [{ p: 'Refund requests can be submitted by email using the contact details below. Please include your account email and the approximate date of purchase; you may add a WhatsApp number if you would like us to follow up there. We aim to respond within 5 business days.' }],
                 },
                 {
                     heading: '4. Payment processing',
@@ -624,7 +618,6 @@ const legalCopy = {
                     blocks: [
                         { p: 'For refund requests or questions about this policy, contact us at:' },
                         { p: `**Email:** ${CONTACT_EMAIL}` },
-                        { p: `**WhatsApp:** ${CONTACT_WHATSAPP}` },
                         { p: '**Legal entity:** Dar Al Khibra Trading Co.' },
                         { p: '**Commercial registration:** 7040567922' },
                         { p: 'See also our [[/terms|Terms of Service]] and [[/privacy|Privacy Policy]].' },
@@ -799,7 +792,6 @@ const legalCopy = {
                         {
                             ul: [
                                 `**Email:** ${CONTACT_EMAIL}`,
-                                '**WhatsApp:** 0582619119',
                                 '**Location:** Saudi Arabia',
                                 '**Legal entity:** Dar Al Khibra Trading Co. — Commercial registration: 7040567922',
                             ],
@@ -877,7 +869,6 @@ const legalCopy = {
                         {
                             ul: [
                                 `**Email:** ${CONTACT_EMAIL}`,
-                                '**WhatsApp:** 0582619119',
                                 '**Contact page:** [[/contact|Contact us]]',
                             ],
                         },

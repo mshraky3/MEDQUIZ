@@ -9,9 +9,9 @@ import { useCopy, useLang } from '../../i18n';
 import supportCopy from '../../i18n/copy/support.js';
 import './Contact.css';
 
-// Direct WhatsApp line — the fastest way to reach us, so it gets a CTA of its
-// own above the form rather than only a row in the contact list.
-const WHATSAPP_LINK = 'https://wa.link/bjflcg';
+// Support is by email only. Someone who prefers WhatsApp adds their number to
+// the email and we follow up there, so no phone number is published.
+const SUPPORT_EMAIL = 'alshraky3@gmail.com';
 
 const Contact = () => {
     // The form is reachable while signed out, so this is best-effort: when we
@@ -95,12 +95,6 @@ ${t.mailFooter}
 
     const contactInfo = [
         {
-            icon: 'phone',
-            title: t.whatsappSupport,
-            value: '0582619119',
-            link: WHATSAPP_LINK
-        },
-        {
             icon: 'mail',
             title: t.email,
             value: 'alshraky3@gmail.com',
@@ -123,9 +117,9 @@ ${t.mailFooter}
                     <p>{t.successBody}</p>
                     <div className="contact-fallback">
                         <p>{t.successAlso}</p>
-                        <div className="whatsapp-links">
-                            <a href={WHATSAPP_LINK} className="whatsapp-link" target="_blank" rel="noopener noreferrer">
-                                <Icon name="phone" size={15} /> WhatsApp: 0582619119
+                        <div className="contact-fallback-links">
+                            <a href={`mailto:${SUPPORT_EMAIL}`} className="contact-fallback-link">
+                                <Icon name="mail" size={15} /> {SUPPORT_EMAIL}
                             </a>
                         </div>
                     </div>
@@ -142,18 +136,13 @@ ${t.mailFooter}
                     <p>{t.subtitle}</p>
                 </div>
 
-                <a
-                    href={WHATSAPP_LINK}
-                    className="whatsapp-cta"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    <span className="whatsapp-cta-icon"><Icon name="phone" size={20} /></span>
-                    <span className="whatsapp-cta-text">
-                        <strong>{t.whatsappCta}</strong>
-                        <small>{t.whatsappHint}</small>
+                <a href={`mailto:${SUPPORT_EMAIL}`} className="contact-cta">
+                    <span className="contact-cta-icon"><Icon name="mail" size={20} /></span>
+                    <span className="contact-cta-text">
+                        <strong>{t.emailCta}</strong>
+                        <small>{t.emailHint}</small>
                     </span>
-                    <span className="whatsapp-cta-arrow" aria-hidden="true">{arrow}</span>
+                    <span className="contact-cta-arrow" aria-hidden="true">{arrow}</span>
                 </a>
 
                 <div className="contact-content">

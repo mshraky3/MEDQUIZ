@@ -30,7 +30,7 @@ const FAQS = [
     },
     {
         q: 'How do I contact support?',
-        a: 'Use the Contact tab in the app, or reach us directly on WhatsApp (0582619119) or email (alshraky3@gmail.com).',
+        a: 'Use the Contact tab in the app, or email us at alshraky3@gmail.com (add a WhatsApp number to your message if you would like us to continue there).',
     },
     {
         q: 'Is my data secure?',

@@ -72,8 +72,8 @@ const FAQ = () => {
                         <Link to="/contact" className="faq-cta-btn">
                             {t.ctaContact}
                         </Link>
-                        <a href="https://wa.link/gqafib" className="faq-cta-btn faq-cta-whatsapp" target="_blank" rel="noopener noreferrer">
-                            {t.ctaWhatsapp}
+                        <a href="mailto:alshraky3@gmail.com" className="faq-cta-btn faq-cta-email">
+                            {t.ctaEmail}
                         </a>
                     </div>
                 </div>

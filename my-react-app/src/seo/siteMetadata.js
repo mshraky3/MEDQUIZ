@@ -41,7 +41,7 @@ const faqItems = [
     },
     {
         question: 'كيف أتواصل مع فريق SQB؟',
-        answer: 'يمكنك التواصل عبر صفحة اتصل بنا أو البريد الإلكتروني أو واتساب للحصول على المساعدة أو إرسال الاقتراحات.'
+        answer: 'يمكنك التواصل عبر صفحة اتصل بنا أو البريد الإلكتروني للحصول على المساعدة أو إرسال الاقتراحات.'
     }
 ];
 
@@ -126,7 +126,6 @@ const organizationSchema = {
     logo: `${SITE_ORIGIN}/icons/icon-512.png`,
     image: DEFAULT_IMAGE,
     email: 'alshraky3@gmail.com',
-    telephone: '+966582619119',
     areaServed: 'Saudi Arabia',
     sameAs: [SITE_ORIGIN],
     address: {
@@ -303,8 +302,7 @@ ${guidesTeaserHtml(guidesCopy.ar.hub, {
                 mainEntity: {
                     '@type': 'Organization',
                     name: 'SQB',
-                    email: 'alshraky3@gmail.com',
-                    telephone: '+966582619119'
+                    email: 'alshraky3@gmail.com'
                 }
             },
             breadcrumbs([
@@ -318,7 +316,6 @@ ${guidesTeaserHtml(guidesCopy.ar.hub, {
         <p>إذا كنت تحتاج مساعدة في استخدام المنصة أو تريد الاستفسار عن الاشتراك أو لديك ملاحظة، يمكنك التواصل مع فريق SQB مباشرة.</p>
         <ul>
           <li>البريد الإلكتروني: <a href="mailto:alshraky3@gmail.com">alshraky3@gmail.com</a></li>
-          <li>واتساب: <a href="https://wa.link/gqafib">0582619119</a></li>
         </ul>
       </main>
     `
@@ -411,7 +408,7 @@ ${guidesTeaserHtml(guidesCopy.ar.hub, {
           <li>الخطة الشهرية: استرجاع كامل خلال 3 أيام من تاريخ الشراء.</li>
           <li>خطة 4 أشهر والخطة السنوية: استرجاع كامل خلال 14 يوماً من تاريخ الشراء.</li>
         </ul>
-        <p>تُرسل طلبات الاسترجاع عبر البريد الإلكتروني أو واتساب من <a href="/contact">صفحة التواصل</a>. وتُعالَج المدفوعات عبر بوابة ميسر، ولا نخزّن بيانات البطاقة كاملةً على خوادمنا.</p>
+        <p>تُرسل طلبات الاسترجاع عبر البريد الإلكتروني من <a href="/contact">صفحة التواصل</a>. وتُعالَج المدفوعات عبر بوابة ميسر، ولا نخزّن بيانات البطاقة كاملةً على خوادمنا.</p>
       </main>
     `
     },
@@ -681,7 +678,7 @@ const enOverlay = {
     },
     '/about': { title: 'About us | SQB', description: 'Who is behind SQB, what the platform offers, and how it helps you prepare for the SMLE, SNLE and Prometric exams.' },
     '/faq': { title: 'Frequently asked questions | SQB', description: 'Answers to the most common questions about SQB: subscriptions, the question bank, the nursing track, refunds and support.' },
-    '/contact': { title: 'Contact us | SQB', description: 'Get in touch with the SQB team by email or WhatsApp for help, feedback or billing questions.' },
+    '/contact': { title: 'Contact us | SQB', description: 'Get in touch with the SQB team by email for help, feedback or billing questions.' },
     '/privacy': { title: 'Privacy Policy | SQB', description: 'How SQB collects, uses and protects your personal data.' },
     '/terms': { title: 'Terms of Service | SQB', description: 'The terms that govern your use of the SQB platform.' },
     '/refund-policy': { title: 'Refund Policy | SQB', description: 'When and how you can request a refund for an SQB subscription.' },

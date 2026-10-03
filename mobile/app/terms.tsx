@@ -69,8 +69,7 @@ export default function TermsScreen() {
                 <Text style={styles.body}>
                     شركة دار الخبرة التجارية{'\n'}
                     السجل التجاري: 7040567922{'\n'}
-                    Email: alshraky3@gmail.com{'\n'}
-                    WhatsApp: +966 58 261 9119
+                    Email: alshraky3@gmail.com
                 </Text>
             </ScrollView>
         </SafeAreaView>

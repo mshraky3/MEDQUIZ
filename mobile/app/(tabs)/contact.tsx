@@ -1,6 +1,6 @@
 /**
  * Contact screen — mirrors Contact.jsx
- * Contact form + WhatsApp/email info + suggestions link
+ * Contact form + email info + suggestions link
  */
 
 import React, { useState } from 'react';
@@ -71,10 +71,10 @@ export default function ContactScreen() {
                     <Text style={styles.successTitle}>Message Sent!</Text>
                     <Text style={styles.successText}>Thank you for reaching out. We'll get back to you soon.</Text>
                     <TouchableOpacity
-                        style={styles.whatsappButton}
-                        onPress={() => Linking.openURL('https://wa.link/gqafib')}
+                        style={styles.emailButton}
+                        onPress={() => Linking.openURL('mailto:alshraky3@gmail.com')}
                     >
-                        <Text style={styles.whatsappText}>📱 WhatsApp: 0582619119</Text>
+                        <Text style={styles.emailText}>✉️ alshraky3@gmail.com</Text>
                     </TouchableOpacity>
                     <Button
                         title="Send Another Message"
@@ -98,14 +98,6 @@ export default function ContactScreen() {
 
                 {/* Quick contact */}
                 <View style={styles.quickRow}>
-                    <TouchableOpacity
-                        style={styles.quickCard}
-                        onPress={() => Linking.openURL('https://wa.link/gqafib')}
-                    >
-                        <Text style={styles.quickIcon}>💬</Text>
-                        <Text style={styles.quickLabel}>WhatsApp</Text>
-                        <Text style={styles.quickValue}>0582619119</Text>
-                    </TouchableOpacity>
                     <TouchableOpacity
                         style={styles.quickCard}
                         onPress={() => Linking.openURL('mailto:alshraky3@gmail.com')}
@@ -189,11 +181,11 @@ const styles = StyleSheet.create({
     successIcon: { fontSize: 64 },
     successTitle: { fontSize: FontSize['2xl'], fontWeight: FontWeight.bold, color: Colors.textPrimary, marginTop: Spacing.lg },
     successText: { color: Colors.textSecondary, textAlign: 'center', marginTop: Spacing.sm },
-    whatsappButton: {
+    emailButton: {
         marginTop: Spacing.xl, paddingVertical: Spacing.md, paddingHorizontal: Spacing.xl,
         backgroundColor: '#25D366', borderRadius: BorderRadius.md,
     },
-    whatsappText: { color: '#fff', fontWeight: FontWeight.semibold, fontSize: FontSize.base },
+    emailText: { color: '#fff', fontWeight: FontWeight.semibold, fontSize: FontSize.base },
 
     quickRow: { flexDirection: 'row', gap: Spacing.sm, marginBottom: Spacing.xl },
     quickCard: {

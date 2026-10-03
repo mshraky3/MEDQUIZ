@@ -74,16 +74,6 @@ const Footer = () => {
             </a>
             <a
               className="footer-icon-btn"
-              href="https://wa.me/966582619119"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={`${t.footer.whatsapp}: 0582619119`}
-              title="0582619119"
-            >
-              <Icon name="phone" size={17} />
-            </a>
-            <a
-              className="footer-icon-btn"
               href="https://t.me/sqb_exam"
               target="_blank"
               rel="noopener noreferrer"

@@ -350,15 +350,6 @@
     gap: 10px;
 }
 
-/* WhatsApp specific styling */
-.info-link[href*="wa.me"] {
-    color: #25D366;
-}
-
-.info-link[href*="wa.me"]:hover {
-    color: #123f8c;
-}
-
 .contact-fallback {
     background: rgba(15, 23, 42, 0.04);
     padding: 16px;
@@ -373,15 +364,15 @@
     margin-bottom: 10px;
 }
 
-.whatsapp-links {
+.contact-fallback-links {
     display: flex;
     flex-direction: column;
     gap: 10px;
     margin-top: 10px;
 }
 
-.whatsapp-link {
-    color: #25D366;
+.contact-fallback-link {
+    color: #1d4ed8;
     text-decoration: none;
     font-weight: 600;
     font-size: 0.9rem;
@@ -393,18 +384,18 @@
     transition-duration: 0.3s;
     transition-timing-function: ease;
     padding: 10px 14px;
-    border: 2px solid rgba(37, 211, 102, 0.5);
+    border: 2px solid rgba(37, 99, 235, 0.35);
     border-radius: 10px;
-    background: rgba(37, 211, 102, 0.1);
+    background: rgba(37, 99, 235, 0.08);
 }
 
-.whatsapp-link:hover {
+.contact-fallback-link:hover {
     color: var(--secondary-dark);
-    background: rgba(37, 211, 102, 0.2);
-    border-color: #25D366;
+    background: rgba(37, 99, 235, 0.16);
+    border-color: #2563eb;
     text-decoration: none;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(37, 211, 102, 0.25);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.22);
 }
 
 /* Responsive Design */
@@ -528,29 +519,28 @@
 }
 
 /* Suggestions Button */
-/* Quick WhatsApp line — sits above the form because most people want an
-   answer now, not an email thread. WhatsApp green, so it reads as the
-   channel it is. */
-.whatsapp-cta {
+/* Email line above the form: the one support channel. Primary blue like every
+   other action on this page. */
+.contact-cta {
     display: flex;
     align-items: center;
     gap: 14px;
     padding: 16px 20px;
     margin: 0 0 22px;
-    background: linear-gradient(135deg, #25d366, #128c7e);
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
     border-radius: 16px;
     color: #fff;
     text-decoration: none;
-    box-shadow: 0 6px 20px rgba(18, 140, 126, 0.28);
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.28);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.whatsapp-cta:hover {
+.contact-cta:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 28px rgba(18, 140, 126, 0.38);
+    box-shadow: 0 10px 28px rgba(37, 99, 235, 0.38);
 }
 
-.whatsapp-cta-icon {
+.contact-cta-icon {
     display: grid;
     place-items: center;
     width: 40px;
@@ -560,35 +550,35 @@
     background: rgba(255, 255, 255, 0.2);
 }
 
-.whatsapp-cta-text {
+.contact-cta-text {
     display: flex;
     flex-direction: column;
     gap: 2px;
     flex: 1;
 }
 
-.whatsapp-cta-text strong {
+.contact-cta-text strong {
     font-size: 16px;
     font-weight: 800;
 }
 
-.whatsapp-cta-text small {
+.contact-cta-text small {
     font-size: 12.5px;
     opacity: 0.9;
 }
 
-.whatsapp-cta-arrow {
+.contact-cta-arrow {
     font-size: 20px;
     opacity: 0.9;
 }
 
 @media (max-width: 480px) {
-    .whatsapp-cta {
+    .contact-cta {
         padding: 14px 16px;
         gap: 10px;
     }
 
-    .whatsapp-cta-text strong {
+    .contact-cta-text strong {
         font-size: 15px;
     }
 }
