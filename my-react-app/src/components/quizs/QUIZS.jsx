@@ -10,6 +10,7 @@ import Icon from '../common/Icon.jsx';
 import QuizLauncher from './QuizLauncher.jsx';
 import { UserContext } from '../../UserContext';
 import { getTypeLabel } from '../../utils/typeLabels';
+import { getSourceLabel } from '../../utils/sourceLabels';
 import { specialtiesOf, userTrack, examLabel, bankLabel, trackLabel, normalizeTrack } from '../../utils/tracks.js';
 import { readQuizMode } from '../../utils/quizMode.js';
 import { useCopy, useLang, formatNumber } from '../../i18n';
@@ -17,6 +18,9 @@ import quizCopy from '../../i18n/copy/quiz.js';
 
 // Single unified bank — see QuizLauncher.jsx.
 const SOURCE = 'MidgardGameBoy';
+
+// The collection promoted on the Questions panel while it is the freshest.
+const FEATURED_SOURCE = 'MedicalSeptemberRecall';
 
 // Blocks in a specialty's coverage meter. A continuous bar is the obvious
 // choice and the wrong one here: a student who has answered 18 of 1,308
@@ -165,6 +169,13 @@ const QUIZS = () => {
         navigate('/quiz/10', { state: { id, types, source: SOURCE, timer: null, mode: readQuizMode() } });
     };
 
+    // One tap from a collection tile to a 10-question quiz drawn from just that
+    // collection (same defaults as the quick start, different source).
+    const startQuizFrom = (source) => {
+        try { track('hub_start_source', { source }); } catch (e) { /* analytics is best-effort */ }
+        navigate('/quiz/10', { state: { id, types: 'mix', source, timer: null, mode: readQuizMode() } });
+    };
+
     // Deliberately NOT wrapped in .quiz-selection. That class restyles bare
     // h1/p (18px body, 2.5rem bottom margins, a centred entrance animation)
     // for the hub's benefit, and those element selectors outrank the
@@ -305,6 +316,14 @@ const QUIZS = () => {
         { k: 'left', value: bankTotal > 0 ? fmt(bankRemaining) : '—', label: t.kpiRemaining },
     ];
 
+    // The collections this track can practise from, straight from the server.
+    const sources = Array.isArray(content?.selectableSources) ? content.selectableSources : [];
+    const featuredSource = sources.find((x) => x.key === FEATURED_SOURCE) || null;
+    const otherSources = sources.filter((x) => x !== featuredSource);
+    const quizStep = steps.find((x) => x.key === 'quiz');
+    const sideSteps = steps.filter((x) => x.key !== 'quiz');
+    const pctOf = (x) => Math.min(100, Math.max(0, x.completedPct || 0));
+
     return (
         <div className="quiz-selection hubx" dir={dir}>
             <header className="hubx-top">
@@ -314,27 +333,6 @@ const QUIZS = () => {
                             ? <>{t.greetingNamePrefix}<bdi>{firstName}</bdi>{t.greetingNameSuffix}</>
                             : t.greeting}</h1>
                         <p>{t.subtitle}</p>
-                    </div>
-                    <div className="hubx-actions">
-                        <button
-                            type="button"
-                            className="hubx-btn hubx-btn--primary"
-                            onClick={() => startQuiz('mix')}
-                            disabled={bankEmpty}
-                        >
-                            <Icon name="rocket" size={19} />
-                            <span>{t.quickStart}</span>
-                            <small>{bankEmpty ? t.unavailable : t.quickStartHint}</small>
-                        </button>
-                        <button
-                            type="button"
-                            className="hubx-btn hubx-btn--ghost"
-                            onClick={openLauncher}
-                            disabled={bankEmpty}
-                        >
-                            <Icon name="settings" size={17} />
-                            <span>{t.customize}</span>
-                        </button>
                     </div>
                 </div>
 
@@ -372,35 +370,68 @@ const QUIZS = () => {
                 </section>
             )}
 
-            <nav className="hubx-journey" aria-labelledby="hubx-journey-h">
-                <div className="hubx-sec-head">
-                    <h2 id="hubx-journey-h">{t.journeyTitle}</h2>
-                    <span className="hubx-sec-note">{t.journeyNote}</span>
-                </div>
-                <ol className="hubx-steps">
-                    {steps.map((s, i) => (
-                        <React.Fragment key={s.key}>
-                            <li className={`hubx-step hubx-step--${s.tone}${s.key === nextStep ? ' is-next' : ''}`}>
-                                <button type="button" className="hubx-step-btn" onClick={s.onClick}>
-                                    <span className="hubx-step-top">
-                                        <span className="hubx-step-n">{i + 1}</span>
-                                        <span className="hubx-step-kicker">{s.kicker}</span>
-                                        {s.key === nextStep && <span className="hubx-step-flag">{t.startHere}</span>}
-                                    </span>
-                                    <span className="hubx-step-icon"><Icon name={s.icon} size={24} /></span>
-                                    <strong className="hubx-step-title">{s.title}</strong>
-                                    <span className="hubx-step-desc">{s.desc}</span>
-                                    <span className="hubx-step-stat">{s.stat}</span>
-                                    <span className="hubx-step-cta">{s.cta} <Icon name={arrow} size={15} /></span>
+            <div className="hubx-grid">
+                <div className="hubx-col-main">
+                    {/* Questions come first and biggest: it is where students spend
+                        most of their time (about four times the minutes of the
+                        study material). The primary action, the collections and
+                        the specialties all live in this column. */}
+                    <section className={`hubx-qpanel${nextStep === 'quiz' ? ' is-next' : ''}`} aria-labelledby="hubx-q-h">
+                        <div className="hubx-qpanel-head">
+                            <div className="hubx-qpanel-title">
+                                <span className="hubx-qpanel-icon" aria-hidden="true"><Icon name="clipboard" size={26} /></span>
+                                <div>
+                                    <h2 id="hubx-q-h">
+                                        {quizStep.title}
+                                        {nextStep === 'quiz' && <span className="hubx-step-flag">{t.startHere}</span>}
+                                    </h2>
+                                    <p>{quizStep.desc}</p>
+                                    <span className="hubx-qpanel-stat">{quizStep.stat}</span>
+                                </div>
+                            </div>
+                            <div className="hubx-qpanel-actions">
+                                <button type="button" className="hubx-qbtn hubx-qbtn--primary" onClick={() => startQuiz('mix')} disabled={bankEmpty}>
+                                    <Icon name="rocket" size={19} />
+                                    <span>{t.quickStart}</span>
+                                    <small>{bankEmpty ? t.unavailable : t.quickStartHint}</small>
                                 </button>
-                            </li>
-                            {i < steps.length - 1 && (
-                                <li className="hubx-step-arrow" aria-hidden="true"><Icon name={arrow} size={20} /></li>
-                            )}
-                        </React.Fragment>
-                    ))}
-                </ol>
-            </nav>
+                                <button type="button" className="hubx-qbtn hubx-qbtn--ghost" onClick={openLauncher} disabled={bankEmpty}>
+                                    <Icon name="settings" size={17} />
+                                    <span>{t.customize}</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        {sources.length > 1 && !bankEmpty && (
+                            <div className="hubx-qsources">
+                                <h3>{t.pickCollection}</h3>
+                                {featuredSource && (
+                                    <button type="button" className="hubx-qfeature" onClick={() => startQuizFrom(featuredSource.key)}>
+                                        <span className="hubx-qfeature-head">
+                                            <strong><bdi>{getSourceLabel(featuredSource.key, lang)}</bdi></strong>
+                                            <span className="hubx-qnew">{t.newTag}</span>
+                                        </span>
+                                        <span className="hubx-qfeature-desc">{t.featuredDesc}</span>
+                                        <span className="hubx-qfeature-meta">
+                                            <span><bdi>{fmt(featuredSource.total)}</bdi> {t.questionsUnit} · {t.doneShort(pctOf(featuredSource))}</span>
+                                            <b>{t.startShort} <Icon name={arrow} size={15} /></b>
+                                        </span>
+                                    </button>
+                                )}
+                                <div className="hubx-qgrid">
+                                    {otherSources.map((x) => (
+                                        <button type="button" className="hubx-qtile" key={x.key} onClick={() => startQuizFrom(x.key)}>
+                                            <span className="hubx-qtile-body">
+                                                <strong><bdi>{getSourceLabel(x.key, lang)}</bdi></strong>
+                                                <span><bdi>{fmt(x.total)}</bdi> {t.questionsUnit} · {t.doneShort(pctOf(x))}</span>
+                                            </span>
+                                            <span className="hubx-qtile-go" aria-hidden="true"><Icon name={arrow} size={16} /></span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </section>
 
             {/* The exam-date/streak/goal cards that used to live here moved to
                 /account — they're personal study-plan settings, not part of
@@ -496,6 +527,27 @@ const QUIZS = () => {
                     <p className="hubx-empty">{t.noHistory}</p>
                 )}
             </section>
+                </div>
+
+                <aside className="hubx-col-side">
+                    {sideSteps.map((x) => (
+                        <button
+                            type="button"
+                            key={x.key}
+                            className={`hubx-side-card${x.key === nextStep ? ' is-next' : ''}`}
+                            onClick={x.onClick}
+                        >
+                            <span className="hubx-step-icon"><Icon name={x.icon} size={22} /></span>
+                            <span className="hubx-side-body">
+                                <strong>
+                                    {x.title}
+                                    {x.key === nextStep && <span className="hubx-step-flag">{t.startHere}</span>}
+                                </strong>
+                                <span>{x.stat}</span>
+                            </span>
+                            <span className="hubx-side-go" aria-hidden="true"><Icon name={arrow} size={18} /></span>
+                        </button>
+                    ))}
 
             {/* The wrong-answer review list. It used to be a permanent navbar
                 link with no context; it lives here instead, where it can say
@@ -530,6 +582,8 @@ const QUIZS = () => {
                 </span>
                 <span className="hubx-tg-go">{t.telegramCtaButton}</span>
             </a>
+                </aside>
+            </div>
 
             {id && <AchievementBadges userId={id} />}
         </div>
