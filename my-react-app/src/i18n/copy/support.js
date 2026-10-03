@@ -129,6 +129,9 @@ const supportCopy = {
             // are what someone opens this page for; the perks are the
             // supporting detail, one tap away instead of a third of the page.
             perksToggle: 'ما الذي يشمله الاشتراك؟',
+            newSetTag: 'جديد',
+            newSetTitle: 'تجميعة سبتمبر 2026',
+            newSetBody: 'أسئلة تذكّرها المختبرون في جلسات SMLE من ١ إلى ٢٤ سبتمبر، مع شرح لكل سؤال. مشمولة في كل الخطط.',
             secureNoteAfter: '. لا نقوم بتخزين بيانات بطاقتك على خوادمنا.',
             policyBefore: 'الاشتراك لا يُجدَّد تلقائياً — التجديد يدوي. بالمتابعة فإنك توافق على',
             terms: 'شروط الاستخدام',
@@ -281,6 +284,9 @@ const supportCopy = {
             // are what someone opens this page for; the perks are the
             // supporting detail, one tap away instead of a third of the page.
             perksToggle: "What's included?",
+            newSetTag: 'New',
+            newSetTitle: 'September 2026 recalls',
+            newSetBody: 'Questions examinees recalled from the SMLE sittings of 1–24 September, each with an explanation. Included in every plan.',
             policyBefore: 'The subscription does not auto-renew — renewal is manual. By continuing you agree to the',
             terms: 'Terms of Use',
             and: 'and the',

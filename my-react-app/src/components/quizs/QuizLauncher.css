@@ -202,6 +202,20 @@
 
 .ql-chip.is-active .ql-chip-badge { background: rgba(255, 255, 255, 0.25); color: #fff; }
 
+/* "New" marker on the freshest collection. */
+.ql-chip-new {
+    margin-inline-start: 6px;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: var(--primary-color, #2563eb);
+    color: #fff;
+    font-size: 0.62rem;
+    font-weight: 800;
+    vertical-align: middle;
+}
+
+.ql-chip.is-active .ql-chip-new { background: #fff; color: var(--primary-dark, #1d4ed8); }
+
 /* Deliberately no progress bar on these chips. A bar here would be drawing the
    same number the "x% done" line already states, and at realistic early
    coverage (~1%) it draws nothing at all — the chip is far too narrow for the

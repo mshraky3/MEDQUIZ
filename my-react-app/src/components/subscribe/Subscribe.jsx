@@ -339,28 +339,19 @@ const Subscribe = () => {
 
     const riyals = selectedPlan ? selectedPlan.priceHalalas / 100 : null;
 
-    // Which refund window this plan actually has, straight from the policy in
-    // i18n/copy/legal.js: 3 days monthly, 14 days for the 4-month and annual
-    // terms. Null for anything the policy does not name — today that is the
-    // group plans, which the guarantee therefore links to without claiming a
-    // number. Keyed off `months` rather than the plan id so a new individual
-    // term inherits the right window instead of silently getting none.
-    const refundDays = (() => {
-        if (!selectedPlan || isGroup) return null;
-        if (selectedPlan.months === 1) return t.guaranteeDays3;
-        if (selectedPlan.months >= 4) return t.guaranteeDays14;
-        return null;
-    })();
     // The student has spent their 40 free questions. Not an expiry and not a
     // lockout — their account still works — so the page only changes its
     // heading to acknowledge where they are.
+    const showSeptember = (user?.track || 'medical') !== 'nursing';
     const allowanceSpent = params.get('reason') === 'free_allowance_exhausted'
         || user?.free_questions_remaining === 0;
 
     return (
         <div className="login-body" dir={dir}>
-            <div className="login-wrapper">
+            <div className="login-wrapper subscribe-wrapper">
                 <div className="login-card subscribe-card">
+                  <div className="subscribe-layout">
+                    <div className="subscribe-col subscribe-col-plan">
                     <div className="login-header">
                         <span className="login-pill">{isGroup ? t.groupPill : t.pill}</span>
                         {isGroup ? (
@@ -382,6 +373,18 @@ const Subscribe = () => {
                     </div>
 
                     {ndOffer && plans.some((p) => p.offerId) && <NationalDayBanner offer={ndOffer} />}
+
+                    {/* The September 2026 recall set is SMLE (medicine) only, so a
+                        nursing student is not told about it. */}
+                    {showSeptember && (
+                        <div className="subscribe-newset">
+                            <span className="subscribe-newset-tag">{t.newSetTag}</span>
+                            <div className="subscribe-newset-body">
+                                <strong>{t.newSetTitle}</strong>
+                                <span>{t.newSetBody}</span>
+                            </div>
+                        </div>
+                    )}
 
                     {plans.length > 0 && (
                         <div className="subscribe-plans">
@@ -440,6 +443,15 @@ const Subscribe = () => {
                         </p>
                     )}
 
+                    {/* What the plan includes, shown in full beside the card form on
+                        wide screens; on a phone the same list stays behind the
+                        disclosure under the form (see .subscribe-perks-mobile). */}
+                    <ul className="subscribe-perks subscribe-perks-desktop">
+                        {(isGroup ? t.groupPerks : t.perks).map((perk) => <li key={perk}>{perk}</li>)}
+                    </ul>
+                    </div>
+
+                    <div className="subscribe-col subscribe-col-pay">
                     {isTestMode && (
                         <div className="subscribe-test-banner">
                             {t.testBannerBefore} <strong dir="ltr">4111 1111 1111 1111</strong> {t.testBannerAfter}
@@ -481,35 +493,6 @@ const Subscribe = () => {
                         charges them. Everything that is not the act of paying
                         sits below it, so the form is the first thing under the
                         price. */}
-                    {/* The refund guarantee, ABOVE the card fields.
-                        It was already offered and already written down, three
-                        clicks away in /refund-policy — which meant it did no
-                        work at the only moment it matters. Read before the card
-                        number, it turns the purchase into a trial with the
-                        money captured; read afterwards, it is small print.
-
-                        The window is per-plan and must never be generalised:
-                        the policy gives 3 days for monthly and 14 for the
-                        longer terms, so a flat "14-day guarantee" would be a
-                        false promise to every monthly buyer — and monthly is
-                        the cheapest, most-bought plan. Group plans are not
-                        named in the refund policy at all, so they get the link
-                        without a number rather than an invented one. */}
-                    {status === 'ready' && (
-                        <div className="subscribe-guarantee">
-                            <span className="subscribe-guarantee-icon" aria-hidden="true">
-                                <Icon name="shield-check" size={20} />
-                            </span>
-                            <div className="subscribe-guarantee-body">
-                                {refundDays && <strong>{t.guaranteeTitle(refundDays)}</strong>}
-                                <span>{t.guaranteeBody}</span>
-                                <Link to="/refund-policy" target="_blank" rel="noopener">
-                                    {t.guaranteeLink}
-                                </Link>
-                            </div>
-                        </div>
-                    )}
-
                     <div
                         className="mysr-host"
                         ref={hostRef}
@@ -527,7 +510,7 @@ const Subscribe = () => {
                         promise in particular is a commitment in the Terms, so
                         the page that takes the money still states it. */}
                     <div className="subscribe-assurance">
-                        <details className="subscribe-perks-toggle">
+                        <details className="subscribe-perks-toggle subscribe-perks-mobile">
                             <summary>
                                 <Icon name="check-circle" size={15} />
                                 {t.perksToggle}
@@ -562,10 +545,19 @@ const Subscribe = () => {
 
                         <p className="subscribe-policy">
                             {t.policyBefore}{' '}
-                            <Link to="/terms" target="_blank" rel="noopener">{t.terms}</Link>{' '}{t.and}{' '}
-                            <Link to="/refund-policy" target="_blank" rel="noopener">{t.refund}</Link>.
+                            <Link to="/terms" target="_blank" rel="noopener">{t.terms}</Link>.
                         </p>
+
+                        {/* The refund promise lives here, last, as a plain link: the
+                            per-plan windows (3 days monthly, 14 days longer terms)
+                            are stated in the policy itself. */}
+                        <Link to="/refund-policy" target="_blank" rel="noopener" className="subscribe-refund-link">
+                            <Icon name="shield-check" size={14} />
+                            {t.guaranteeLink}
+                        </Link>
                     </div>
+                    </div>
+                  </div>
                 </div>
             </div>
         </div>

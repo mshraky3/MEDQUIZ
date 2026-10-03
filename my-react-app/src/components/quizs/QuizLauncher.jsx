@@ -386,6 +386,9 @@ const QuizLauncher = ({ id, contentStatus }) => {
                                         >
                                             <span className="ql-chip-name">
                                                 <bdi>{getSourceLabel(s.key, lang)}</bdi>
+                                                {s.key === 'MedicalSeptemberRecall' && (
+                                                    <span className="ql-chip-new">{t.newTag}</span>
+                                                )}
                                             </span>
                                             <span className="ql-chip-sub">
                                                 <bdi>{fmt(s.total)}</bdi> {t.questionsUnit}

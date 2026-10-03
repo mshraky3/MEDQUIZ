@@ -235,6 +235,10 @@ const Landing = () => {
           <HeroArt />
           {isAuthenticated ? (
             <>
+              <Link to="/quizs" className="hero-new">
+                <span className="hero-new-tag">{t.hero.newTag}</span>
+                {t.hero.newSet}
+              </Link>
               <span className="pill">{t.heroReturning.pill}</span>
               <h1>
                 {displayName
@@ -253,6 +257,10 @@ const Landing = () => {
             </>
           ) : (
             <>
+              <Link to="/signup" className="hero-new" onClick={() => trackSignupClick('hero_new_set')}>
+                <span className="hero-new-tag">{t.hero.newTag}</span>
+                {t.hero.newSet}
+              </Link>
               <span className="pill">{t.hero.pill}</span>
               <h1>{t.hero.title}</h1>
               <p>{t.hero.body}</p>

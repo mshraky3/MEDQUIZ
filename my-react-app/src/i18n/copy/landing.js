@@ -25,6 +25,9 @@ const landingCopy = {
             secondary: 'تسجيل الخروج',
         },
         hero: {
+            // New-collection notice above the pill, shown while the September set is the freshest addition.
+            newTag: 'جديد',
+            newSet: 'تجميعة سبتمبر 2026 لاختبار SMLE، مع الشرح',
             pill: 'مساران: طب بشري وتمريض · ابدأ بـ 10 أسئلة مجانية',
             title: 'تدرّب بذكاء، واجتَز اختبار الترخيص بثقة',
             body: 'بنك أسئلة محدّث على نمط البرومترك، مع تفسير واضح لكل إجابة وتحليل فوري يكشف نقاط ضعفك ويرتّب أولويات مراجعتك — كل ما تحتاجه للوصول إلى درجتك المستهدفة في مكان واحد.',
@@ -210,6 +213,8 @@ const landingCopy = {
             secondary: 'Log out',
         },
         hero: {
+            newTag: 'New',
+            newSet: 'September 2026 recall set for the SMLE, with explanations',
             pill: 'Two tracks: medicine and nursing · Start with 10 free questions',
             title: 'Practise smarter, and walk into your licensing exam confident',
             body: 'A question bank updated to the Prometric style, a clear explanation for every answer, and instant analytics that expose your weak spots and tell you what to revise next — everything you need to hit your target score, in one place.',

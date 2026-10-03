@@ -426,49 +426,114 @@
     }
 }
 
-/* Refund guarantee, above the card fields. Sized to be read rather than
-   skimmed past — it is the strongest de-risking tool on this page and it was
-   previously a link in the footnotes. Not styled as a warning or an alert:
-   it is good news, so it borrows the success palette. */
-.subscribe-guarantee {
+/* ── Checkout layout ──────────────────────────────────────────────────────
+   One card, two columns on wide screens: the plan (what you are buying, its
+   price, what it includes) beside the card form. Under 900px it is the same
+   single column as before, in the same order: plan, price, form. */
+.subscribe-wrapper {
+    max-width: 980px;
+}
+
+.subscribe-card {
+    max-width: none;
+}
+
+.subscribe-layout {
+    display: block;
+    max-width: 520px;
+    margin-inline: auto;
+}
+
+/* The full perks list only exists beside the form on wide screens; on a phone
+   the disclosure under the form carries it so the form stays near the price. */
+.subscribe-perks-desktop {
+    display: none;
+}
+
+/* New-collection notice: informative, not an alert, so a light primary tint. */
+.subscribe-newset {
     display: flex;
     align-items: flex-start;
-    gap: 11px;
+    gap: 10px;
     margin: 0 0 16px;
-    padding: 14px 16px;
-    border: 1px solid rgba(22, 163, 74, 0.32);
+    padding: 12px 14px;
+    border: 1px solid rgba(37, 99, 235, 0.28);
     border-radius: 12px;
-    background: rgba(22, 163, 74, 0.07);
+    background: rgba(37, 99, 235, 0.06);
     text-align: start;
 }
 
-.subscribe-guarantee-icon {
+.subscribe-newset-tag {
     flex: none;
-    display: inline-flex;
     margin-top: 1px;
-    color: #16a34a;
+    padding: 2px 9px;
+    border-radius: 999px;
+    background: var(--primary-color, #2563eb);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
 }
 
-.subscribe-guarantee-body {
+.subscribe-newset-body {
     display: flex;
     flex-direction: column;
-    gap: 3px;
-    font-size: 13px;
+    gap: 2px;
+    font-size: 12.5px;
     line-height: 1.6;
+    color: var(--text-dark, #0f1e3d);
 }
 
-.subscribe-guarantee-body strong {
-    font-size: 14px;
+.subscribe-newset-body strong {
+    font-size: 13.5px;
     font-weight: 800;
-    color: #14532d;
 }
 
-.subscribe-guarantee-body span { color: var(--text-dark, #0f1e3d); }
-
-.subscribe-guarantee-body a {
-    align-self: flex-start;
-    font-size: 12px;
-    font-weight: 700;
-    color: #15803d;
+/* Refund policy: a quiet link at the very bottom of the card. */
+.subscribe-refund-link {
+    justify-self: center;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--muted, #64748b);
     text-decoration: underline;
+}
+
+.subscribe-refund-link:hover {
+    color: var(--primary-color, #2563eb);
+}
+
+@media (min-width: 900px) {
+    .subscribe-card {
+        padding: 40px 44px;
+    }
+
+    .subscribe-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 0 44px;
+        align-items: start;
+        max-width: none;
+    }
+
+    .subscribe-col-pay {
+        padding-inline-start: 44px;
+        border-inline-start: 1px solid var(--border, #e6ecf6);
+    }
+
+    .subscribe-col-plan .login-header {
+        text-align: start;
+    }
+
+    .subscribe-perks-desktop {
+        display: grid;
+        margin-top: 18px;
+        padding-top: 16px;
+        border-top: 1px solid var(--border, #e6ecf6);
+    }
+
+    .subscribe-perks-mobile {
+        display: none;
+    }
 }
