@@ -1,28 +1,22 @@
 /*
  * /quizs?view=custom — "choose your quiz".
  *
- * Replaces a flow that spread one decision over five surfaces: a mode panel, a
- * source panel, a quick-start button, a row of size buttons, and then three
- * stacked full-screen modals (specialties -> count -> timer) before the quiz
- * actually started. Nothing on screen ever said what you were about to begin,
- * and changing an earlier answer meant backing out of the stack.
+ * One screen, one decision: every choice is visible at once, and a summary
+ * card states the quiz that pressing start will begin.
  *
- * It is one form now. Every choice is a row of chips, all of them visible and
- * changeable at once, and the footer states the quiz it will start. The only
- * modal left is the mock exam, which is a genuinely different thing with its
- * own question-count lookup.
+ * Layout (redesigned 2026-10): the settings are separate cards in a main column
+ * and the summary + start button live in a sticky aside beside them, so a wide
+ * screen is used instead of one narrow strip. Under 960px it is one column and
+ * the summary card becomes a bar pinned to the bottom of the screen.
  *
  * Tokens and logical properties throughout, so RTL (the default) needs no
- * per-element overrides. Chips share the visual language of the hub's ledger
- * so the two screens read as one product.
+ * per-element overrides. Panels are opaque (no glass).
  */
 
 /* The launcher's own page root. It used to render inside .quiz-selection,
    borrowing that class's background — and, unintentionally, its bare h1/p
    rules, which set 18px body text and a 2.5rem bottom margin on every
-   paragraph. Element selectors beat this file's class selectors, so the hint
-   line rendered oversized under 40px of dead space and there was nothing
-   .ql-hint could do about it. Owning the root fixes that at the source. */
+   paragraph. Owning the root fixes that at the source. */
 .ql-page {
     min-height: 100%;
     flex: 1 0 auto;
@@ -33,9 +27,9 @@
 
 .ql {
     width: 100%;
-    max-width: 860px;
+    max-width: 1120px;
     margin-inline: auto;
-    padding: 20px 14px 40px;
+    padding: 20px 16px 24px;
     text-align: start;
 }
 
@@ -65,8 +59,7 @@
 
 .ql-blank .ql-start { width: auto; min-width: 200px; }
 
-/* Pushed back while the mock-exam modal is open, matching what .quiz-main
-   already did for the modals this screen used to stack. */
+/* Pushed back while the mock-exam modal is open. */
 .ql.is-dimmed {
     opacity: 0.35;
     transform: scale(0.97);
@@ -76,11 +69,11 @@
 
 /* ------------------------------------------------------------- header --- */
 
-.ql-head { margin-bottom: 16px; }
+.ql-head { margin-bottom: 18px; }
 
 .ql-head h1 {
     margin: 0 0 6px;
-    font-size: clamp(1.3rem, 1.1rem + 1vw, 1.75rem);
+    font-size: clamp(1.4rem, 1.15rem + 1.2vw, 2rem);
     font-weight: 800;
     line-height: 1.3;
     color: var(--text-dark, #0f1e3d);
@@ -89,76 +82,256 @@
 
 .ql-head p {
     margin: 0;
-    font-size: var(--text-sm, 0.875rem);
+    font-size: var(--text-sm, 0.9rem);
     line-height: 1.7;
     color: var(--text-light, #5b6779);
     animation: none;
 }
 
-/* -------------------------------------------------------------- panel --- */
+/* ------------------------------------------------------------- layout --- */
 
-.ql-panel {
+.ql-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    align-items: start;
+}
+
+.ql-main {
+    display: grid;
+    gap: 16px;
+    min-width: 0;
+}
+
+.ql-card {
+    padding: 18px 20px;
     background: var(--surface, #fff);
     border: 1px solid var(--border-light, #e6ecf7);
     border-radius: var(--radius-lg, 16px);
     box-shadow: var(--shadow-sm);
-    /* NOT overflow:hidden — that would kill the sticky launch bar below.
-       The bar rounds its own bottom corners instead. */
 }
 
-.ql-field { padding: 14px 18px; }
-.ql-field:first-child { border-start-start-radius: var(--radius-lg, 16px); border-start-end-radius: var(--radius-lg, 16px); }
-.ql-field + .ql-field { box-shadow: inset 0 1px 0 var(--border-light, #e6ecf7); }
-
-.ql-field-label {
+.ql-card-title {
     display: flex;
     align-items: center;
-    gap: 7px;
-    margin-bottom: 10px;
-    font-size: var(--text-xs, 0.75rem);
+    gap: 8px;
+    margin: 0 0 12px;
+    font-size: var(--text-xs, 0.78rem);
     font-weight: 800;
+    letter-spacing: 0;
     color: var(--text-light, #5b6779);
 }
 
-.ql-field-label svg { color: var(--primary-color, #2563eb); flex-shrink: 0; }
+.ql-card-title svg { color: var(--primary-color, #2563eb); flex-shrink: 0; }
 
-.ql-chips {
+.ql-hint {
+    margin: 10px 0 0;
+    font-size: var(--text-xs, 0.75rem);
+    line-height: 1.7;
+    color: var(--text-light, #5b6779);
+}
+
+/* ------------------------------------------------- featured collection --- */
+
+.ql-feature {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+    gap: 8px;
+    width: 100%;
+    margin-bottom: 12px;
+    padding: 16px 18px;
+    border: 1.5px solid rgba(37, 99, 235, 0.35);
+    border-radius: var(--radius-md, 12px);
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.10), rgba(37, 99, 235, 0.03));
+    color: var(--text-dark, #0f1e3d);
+    font-family: inherit;
+    text-align: start;
+    cursor: pointer;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
+}
+
+.ql-feature:hover { border-color: var(--primary-color, #2563eb); }
+
+.ql-feature.is-active {
+    border-color: var(--primary-dark, #1d4ed8);
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.18), rgba(37, 99, 235, 0.07));
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16);
+}
+
+.ql-feature-head {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.ql-feature-name {
+    font-size: clamp(1.05rem, 1rem + 0.4vw, 1.25rem);
+    font-weight: 800;
+    line-height: 1.35;
+}
+
+.ql-feature-desc {
+    font-size: var(--text-sm, 0.85rem);
+    line-height: 1.7;
+    color: var(--text-light, #5b6779);
+}
+
+.ql-feature-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    font-size: var(--text-xs, 0.78rem);
+    font-weight: 700;
+    color: var(--primary-dark, #1d4ed8);
+}
+
+/* "New" marker on the freshest collection. */
+.ql-chip-new {
+    padding: 2px 9px;
+    border-radius: 999px;
+    background: var(--primary-color, #2563eb);
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 800;
+    line-height: 1.4;
+}
+
+.ql-meter {
+    display: block;
+    height: 5px;
+    border-radius: 999px;
+    background: var(--border-light, #e6ecf7);
+    overflow: hidden;
+}
+
+.ql-meter > span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--primary-color, #2563eb);
+}
+
+/* ------------------------------------------------------- source rows ---- */
+
+.ql-sources {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
     gap: 8px;
 }
 
-/* --------------------------------------------------------------- chip --- */
-
-.ql-chip {
-    position: relative;
+.ql-src {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 3px;
-    min-height: 52px;
-    padding: 10px 12px;
+    gap: 12px;
+    min-height: 60px;
+    padding: 12px 14px;
     border: 1.5px solid var(--border-color, #d4deee);
     border-radius: var(--radius-md, 12px);
     background: var(--surface-2, #f5f8fd);
     color: var(--text-dark, #0f1e3d);
     font-family: inherit;
-    text-align: center;
+    text-align: start;
+    cursor: pointer;
+    transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.ql-src:hover { border-color: rgba(37, 99, 235, 0.5); }
+
+.ql-src.is-active {
+    border-color: var(--primary-dark, #1d4ed8);
+    background: var(--surface-tint, #e1eafb);
+}
+
+.ql-src-radio {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--border-color, #c3cfe3);
+    border-radius: 50%;
+    background: var(--surface, #fff);
+}
+
+.ql-src.is-active .ql-src-radio {
+    border-color: var(--primary-dark, #1d4ed8);
+    background: radial-gradient(circle, var(--primary-dark, #1d4ed8) 42%, var(--surface, #fff) 46%);
+}
+
+.ql-src-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.ql-src-name {
+    font-size: var(--text-sm, 0.875rem);
+    font-weight: 800;
+    line-height: 1.35;
+}
+
+.ql-src-meta {
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.5;
+    color: var(--text-light, #5b6779);
+}
+
+.ql-src-done {
+    margin-inline-start: auto;
+    padding-inline-start: 6px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--primary-dark, #1d4ed8);
+    white-space: nowrap;
+}
+
+/* ------------------------------------------------------------- pills ---- */
+
+.ql-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.ql-pill {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 8px 16px;
+    border: 1.5px solid var(--border-color, #d4deee);
+    border-radius: 999px;
+    background: var(--surface-2, #f5f8fd);
+    color: var(--text-dark, #0f1e3d);
+    font-family: inherit;
     cursor: pointer;
     transition: border-color var(--transition-fast), background var(--transition-fast), color var(--transition-fast);
 }
 
-.ql-chip:hover { border-color: rgba(37, 99, 235, 0.45); }
+.ql-pill:hover { border-color: rgba(37, 99, 235, 0.5); }
 
-.ql-chip.is-active {
+.ql-pill.is-active {
     border-color: var(--primary-dark, #1d4ed8);
-    background: linear-gradient(135deg, var(--primary-light, #3b82f6), var(--primary-dark, #1d4ed8));
+    background: var(--primary-dark, #1d4ed8);
     color: #fff;
 }
 
-/* The specialty chips carry a real checkbox so the group stays a checkbox
-   group for keyboards and screen readers; the input itself is hidden and the
-   chip's own .is-active class (driven by React state) does the drawing. */
+.ql-pill-name {
+    font-size: var(--text-sm, 0.875rem);
+    font-weight: 800;
+    line-height: 1.3;
+}
+
+.ql-pill-sub {
+    font-size: 0.7rem;
+    font-weight: 600;
+    opacity: 0.75;
+}
+
+/* The specialty pills carry a real checkbox so the group stays a checkbox group
+   for keyboards and screen readers; the input is hidden and the pill's own
+   .is-active class (driven by React state) does the drawing. */
 .ql-chip-input {
     position: absolute;
     width: 1px;
@@ -171,65 +344,34 @@
     border: 0;
 }
 
-.ql-chip:focus-visible,
-.ql-chip:has(.ql-chip-input:focus-visible) {
+.ql-pill:focus-visible,
+.ql-pill:has(.ql-chip-input:focus-visible),
+.ql-src:focus-visible,
+.ql-feature:focus-visible {
     outline: 3px solid var(--primary-light, #3b82f6);
     outline-offset: 2px;
 }
 
-.ql-chip-name {
-    font-size: var(--text-sm, 0.875rem);
-    font-weight: 800;
-    line-height: 1.3;
+/* ---------------------------------------------------- settings card ----- */
+
+.ql-settings {
+    display: grid;
+    gap: 22px;
 }
 
-.ql-chip-sub {
-    font-size: 0.7rem;
-    font-weight: 600;
-    line-height: 1.4;
-    opacity: 0.78;
+/* Mode, count and time sit side by side once there is room, so the whole form
+   fits one screen instead of three stacked sections. */
+@media (min-width: 720px) {
+    .ql-settings {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 24px;
+        align-items: start;
+    }
 }
 
-.ql-chip-badge {
-    margin-top: 1px;
-    padding: 1px 8px;
-    border-radius: 999px;
-    background: rgba(37, 99, 235, 0.12);
-    color: var(--primary-dark, #1d4ed8);
-    font-size: 0.64rem;
-    font-weight: 800;
-}
-
-.ql-chip.is-active .ql-chip-badge { background: rgba(255, 255, 255, 0.25); color: #fff; }
-
-/* "New" marker on the freshest collection. */
-.ql-chip-new {
-    margin-inline-start: 6px;
-    padding: 1px 7px;
-    border-radius: 999px;
-    background: var(--primary-color, #2563eb);
-    color: #fff;
-    font-size: 0.62rem;
-    font-weight: 800;
-    vertical-align: middle;
-}
-
-.ql-chip.is-active .ql-chip-new { background: #fff; color: var(--primary-dark, #1d4ed8); }
-
-/* Deliberately no progress bar on these chips. A bar here would be drawing the
-   same number the "x% done" line already states, and at realistic early
-   coverage (~1%) it draws nothing at all — the chip is far too narrow for the
-   hub's segmented meter to be legible. The sentence does the job. */
-
-.ql-hint {
-    margin: 10px 0 0;
-    font-size: var(--text-xs, 0.75rem);
-    line-height: 1.7;
-    color: var(--text-light, #5b6779);
-}
+.ql-setting .ql-card-title { margin-bottom: 10px; }
 
 /* ------------------------------------------------- inline number input --- */
-/* Replaces a whole modal that existed to ask for one number. */
 
 .ql-number {
     display: flex;
@@ -264,34 +406,34 @@
     outline-offset: 1px;
 }
 
-/* ------------------------------------------------------------- launch --- */
-/* Inside the panel, as its footer: the form and the thing it will do are one
-   object, and the summary is the sentence the old flow never said out loud. */
+/* ------------------------------------------------- summary + start ------ */
 
-/* Sticky, because the form is taller than a laptop viewport and the whole
-   point of it is the thing it starts. Unstuck it sat below the fold at
-   1440x900 — a setup screen with no visible way to begin. It settles into
-   place at the foot of the panel once the end of the form is reached. */
-.ql-launch {
+.ql-aside {
+    display: contents; /* phone: the summary card pins itself to the bottom */
+}
+
+.ql-summary-card {
     position: sticky;
     bottom: 0;
-    z-index: 1;
-    display: flex;
-    flex-direction: column;
+    z-index: var(--z-sticky, 1020);
+    display: grid;
     gap: 10px;
-    padding: 14px 18px;
-    background: var(--surface-tint, #e1eafb);
-    border-end-start-radius: var(--radius-lg, 16px);
-    border-end-end-radius: var(--radius-lg, 16px);
-    box-shadow: inset 0 1px 0 var(--border-light, #e6ecf7),
-        0 -6px 18px rgba(15, 23, 42, 0.07);
+    margin-inline: -16px;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+    background: var(--surface, #fff);
+    border-top: 1px solid var(--border-light, #e6ecf7);
+    box-shadow: 0 -8px 20px rgba(15, 23, 42, 0.08);
 }
+
+/* Phone: one line of summary + the button; the full list is desktop only. */
+.ql-summary-card .ql-card-title,
+.ql-summary-list { display: none; }
 
 .ql-summary {
     margin: 0;
     font-size: var(--text-xs, 0.75rem);
     font-weight: 700;
-    line-height: 1.7;
+    line-height: 1.6;
     color: var(--primary-dark, #1d4ed8);
     text-align: center;
 }
@@ -321,15 +463,13 @@
 .ql-start:focus-visible { outline: 3px solid var(--primary-dark, #1d4ed8); outline-offset: 3px; }
 
 /* --------------------------------------------------------- mock exam ---- */
-/* Deliberately outside the panel and quieter: it is a different activity, not
-   another setting on this one. */
+/* Outside the settings and quieter: a different activity, not another setting. */
 
 .ql-final {
     display: flex;
     align-items: center;
     gap: 12px;
     width: 100%;
-    margin-top: 14px;
     padding: 14px 18px;
     border: 1.5px solid var(--border-color, #d4deee);
     border-radius: var(--radius-md, 12px);
@@ -362,15 +502,63 @@
 /* ---------------------------------------------------------- responsive -- */
 
 @media (min-width: 720px) {
-    .ql { padding: 24px 20px 40px; }
-    .ql-field { padding: 16px 22px; }
-    .ql-launch { flex-direction: row-reverse; align-items: center; padding: 14px 22px; }
-    .ql-summary { flex: 1; text-align: start; }
-    .ql-start { width: auto; min-width: 220px; }
+    .ql { padding: 28px 24px 40px; }
+    .ql-card { padding: 20px 24px; }
+    .ql-summary-card { margin-inline: -24px; padding-inline: 24px; }
+}
+
+/* Wide screens: settings on one side, the sticky summary on the other. */
+@media (min-width: 960px) {
+    .ql-layout {
+        grid-template-columns: minmax(0, 1fr) 340px;
+        gap: 24px;
+    }
+
+    .ql-aside {
+        display: grid;
+        gap: 14px;
+        position: sticky;
+        top: calc(var(--navbar-h, 72px) + 20px);
+    }
+
+    .ql-summary-card {
+        position: static;
+        margin-inline: 0;
+        padding: 20px 22px;
+        gap: 14px;
+        border: 1px solid var(--border-light, #e6ecf7);
+        border-radius: var(--radius-lg, 16px);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .ql-summary-card .ql-card-title { display: flex; margin: 0; }
+    .ql-summary { display: none; }
+
+    .ql-summary-list {
+        display: grid;
+        gap: 10px;
+        margin: 0;
+    }
+
+    .ql-summary-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 14px;
+        padding-bottom: 10px;
+        border-bottom: 1px dashed var(--border-light, #e6ecf7);
+        font-size: var(--text-sm, 0.85rem);
+    }
+
+    .ql-summary-row:last-child { border-bottom: 0; padding-bottom: 0; }
+    .ql-summary-row dt { margin: 0; color: var(--text-light, #5b6779); font-weight: 600; }
+    .ql-summary-row dd { margin: 0; color: var(--text-dark, #0f1e3d); font-weight: 800; text-align: end; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .ql-chip,
+    .ql-pill,
+    .ql-src,
+    .ql-feature,
     .ql-start,
     .ql-final { transition: none; }
 }

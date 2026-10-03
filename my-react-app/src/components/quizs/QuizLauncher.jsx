@@ -10,7 +10,7 @@ import Icon from '../common/Icon.jsx';
 import { UserContext } from '../../UserContext';
 import { getTypeLabel } from '../../utils/typeLabels';
 import { getSourceLabel } from '../../utils/sourceLabels';
-import { specialtyKeys, bankLabel, userTrack, trackLabel, examLabel } from '../../utils/tracks.js';
+import { specialtyKeys, userTrack, trackLabel, examLabel } from '../../utils/tracks.js';
 import { readQuizMode, writeQuizMode, STUDY, EXAM } from '../../utils/quizMode.js';
 import { useCopy, useLang, formatNumber } from '../../i18n';
 import quizCopy from '../../i18n/copy/quiz.js';
@@ -21,6 +21,9 @@ import quizCopy from '../../i18n/copy/quiz.js';
 const WHOLE_BANK = 'MidgardGameBoy';
 
 const COUNT_PRESETS = [10, 25, 50];
+
+// The collection promoted at the top of the source list while it is the freshest.
+const FEATURED_SOURCE = 'MedicalSeptemberRecall';
 const MAX_QUESTIONS = 500;
 
 /**
@@ -238,6 +241,28 @@ const QuizLauncher = ({ id, contentStatus }) => {
         summaryParts.splice(2, 0, selectedSource ? getSourceLabel(selectedSource, lang) : t.sourceAll);
     }
 
+    // The freshest collection (when this bank has it) is shown large on top; every
+    // other collection is a compact row in the server's recommended study order.
+    const featuredSource = sources.find((s) => s.key === FEATURED_SOURCE) || null;
+    const restSources = sources.filter((s) => s !== featuredSource);
+    const pctOf = (s) => Math.min(100, Math.max(0, s.completedPct || 0));
+
+    // The same values as summaryParts, labelled, for the summary card.
+    const summaryRows = [
+        { label: t.modeLegend, value: quizMode === STUDY ? t.modeStudy : t.modeExam },
+        ...(sources.length > 1
+            ? [{ label: t.sourceLegend, value: selectedSource ? getSourceLabel(selectedSource, lang) : t.sourceAll }]
+            : []),
+        {
+            label: t.typesLegend,
+            value: selectedTypes.length > 0
+                ? selectedTypes.map((type) => getTypeLabel(type, lang)).join('، ')
+                : t.typesAll,
+        },
+        { label: t.countLegend, value: fmt(resolvedCount) },
+        { label: t.timerLegend, value: timerMinutes ? `${fmt(timerMinutes)} ${t.minutes}` : t.noTimer },
+    ];
+
     const handleStart = () => {
         const typesStr = selectedTypes.length > 0 ? selectedTypes.join(',') : 'mix';
         try {
@@ -327,231 +352,263 @@ const QuizLauncher = ({ id, contentStatus }) => {
             <div className={`ql${anyModalOpen ? ' is-dimmed' : ''}`}>
                 <header className="ql-head">
                     <h1>{t.title}</h1>
-                    <p>{t.subtitlePrefix}<bdi>{bankLabel(myTrack, lang)}</bdi>.</p>
+                    <p>{t.subtitleShort}</p>
                 </header>
 
-                <div className="ql-panel">
-                    {/* Mode. Applies to this quiz and is remembered for the
-                        hub's quick start; the mock exam is always exam mode. */}
-                    <div className="ql-field" role="group" aria-label={t.modeGroupLabel}>
-                        <span className="ql-field-label">
-                            <Icon name="lightbulb" size={15} /> {t.modeLegend}
-                        </span>
-                        <div className="ql-chips">
-                            {[
-                                { key: STUDY, name: t.modeStudy, hint: t.modeStudyHint },
-                                { key: EXAM, name: t.modeExam, hint: t.modeExamHint },
-                            ].map((mode) => (
-                                <button
-                                    type="button"
-                                    key={mode.key}
-                                    className={`ql-chip${quizMode === mode.key ? ' is-active' : ''}`}
-                                    aria-pressed={quizMode === mode.key}
-                                    onClick={() => chooseMode(mode.key)}
-                                >
-                                    <span className="ql-chip-name">{mode.name}</span>
-                                    <span className="ql-chip-sub">{mode.hint}</span>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
+                <div className="ql-layout">
+                    <div className="ql-main">
+                        {/* Collections, when the track has more than one. The freshest
+                            one (when the bank has it) is shown large on top; the rest
+                            are compact rows in the recommended study order. */}
+                        {sources.length > 1 && (
+                            <section className="ql-card" role="group" aria-label={t.sourceGroupLabel}>
+                                <h2 className="ql-card-title">
+                                    <Icon name="book-open" size={15} /> {t.sourceLegend}
+                                </h2>
 
-                    {/* Collections, when the track has more than one. */}
-                    {sources.length > 1 && (
-                        <div className="ql-field" role="group" aria-label={t.sourceGroupLabel}>
-                            <span className="ql-field-label">
-                                <Icon name="book-open" size={15} /> {t.sourceLegend}
-                            </span>
-                            <div className="ql-chips">
-                                <button
-                                    type="button"
-                                    className={`ql-chip${selectedSource === null ? ' is-active' : ''}`}
-                                    aria-pressed={selectedSource === null}
-                                    onClick={() => setSelectedSource(null)}
-                                >
-                                    <span className="ql-chip-name">{t.sourceAll}</span>
-                                    <span className="ql-chip-sub">
-                                        <bdi>{fmt(totalSourceQuestions)}</bdi> {t.questionsUnit}
-                                    </span>
-                                </button>
-                                {sources.map((s) => {
-                                    const donePct = Math.min(100, Math.max(0, s.completedPct || 0));
-                                    return (
+                                {featuredSource && (
+                                    <button
+                                        type="button"
+                                        className={`ql-feature${selectedSource === featuredSource.key ? ' is-active' : ''}`}
+                                        aria-pressed={selectedSource === featuredSource.key}
+                                        onClick={() => setSelectedSource(featuredSource.key)}
+                                    >
+                                        <span className="ql-feature-head">
+                                            <span className="ql-feature-name"><bdi>{getSourceLabel(featuredSource.key, lang)}</bdi></span>
+                                            <span className="ql-chip-new">{t.newTag}</span>
+                                        </span>
+                                        <span className="ql-feature-desc">{t.featuredDesc}</span>
+                                        <span className="ql-feature-meta">
+                                            <span><bdi>{fmt(featuredSource.total)}</bdi> {t.questionsUnit}</span>
+                                            <span aria-label={t.sourceDoneLabel(pctOf(featuredSource))}>{t.sourceDone(pctOf(featuredSource))}</span>
+                                        </span>
+                                        <span className="ql-meter" aria-hidden="true"><span style={{ width: `${pctOf(featuredSource)}%` }} /></span>
+                                    </button>
+                                )}
+
+                                <div className="ql-sources">
+                                    <button
+                                        type="button"
+                                        className={`ql-src${selectedSource === null ? ' is-active' : ''}`}
+                                        aria-pressed={selectedSource === null}
+                                        onClick={() => setSelectedSource(null)}
+                                    >
+                                        <span className="ql-src-radio" aria-hidden="true" />
+                                        <span className="ql-src-body">
+                                            <span className="ql-src-name">{t.sourceAll}</span>
+                                            <span className="ql-src-meta"><bdi>{fmt(totalSourceQuestions)}</bdi> {t.questionsUnit}</span>
+                                        </span>
+                                    </button>
+                                    {restSources.map((s) => (
                                         <button
                                             type="button"
                                             key={s.key}
-                                            className={`ql-chip${selectedSource === s.key ? ' is-active' : ''}`}
+                                            className={`ql-src${selectedSource === s.key ? ' is-active' : ''}`}
                                             aria-pressed={selectedSource === s.key}
                                             onClick={() => setSelectedSource(s.key)}
                                         >
-                                            <span className="ql-chip-name">
-                                                <bdi>{getSourceLabel(s.key, lang)}</bdi>
-                                                {s.key === 'MedicalSeptemberRecall' && (
-                                                    <span className="ql-chip-new">{t.newTag}</span>
-                                                )}
-                                            </span>
-                                            <span className="ql-chip-sub">
-                                                <bdi>{fmt(s.total)}</bdi> {t.questionsUnit}
-                                            </span>
-                                            {s.priority && (
-                                                <span className="ql-chip-badge" aria-label={t.sourcePriorityLabel(s.priority)}>
-                                                    {t.sourcePriorityBadge(s.priority)}
+                                            <span className="ql-src-radio" aria-hidden="true" />
+                                            <span className="ql-src-body">
+                                                <span className="ql-src-name"><bdi>{getSourceLabel(s.key, lang)}</bdi></span>
+                                                <span className="ql-src-meta">
+                                                    <bdi>{fmt(s.total)}</bdi> {t.questionsUnit}
+                                                    {s.priority ? <> · <span aria-label={t.sourcePriorityLabel(s.priority)}>{t.sourcePriorityBadge(s.priority)}</span></> : null}
                                                 </span>
-                                            )}
-                                            {/* How much of THIS collection is already
-                                                used up — the concrete answer to "will
-                                                questions repeat", at the moment it
-                                                actually changes the choice. */}
-                                            <span className="ql-chip-sub" aria-label={t.sourceDoneLabel(donePct)}>
-                                                {t.sourceDone(donePct)}
                                             </span>
+                                            {/* How much of THIS collection is already used up —
+                                                the concrete answer to "will questions repeat". */}
+                                            <span className="ql-src-done" aria-label={t.sourceDoneLabel(pctOf(s))}>{t.sourceDone(pctOf(s))}</span>
                                         </button>
+                                    ))}
+                                </div>
+                                <p className="ql-hint">{t.sourceRepeatHint}</p>
+                            </section>
+                        )}
+
+                        {/* Specialties. "All" is the default rather than a second
+                            button called "mix all". */}
+                        <section className="ql-card" role="group" aria-label={t.typesLegend}>
+                            <h2 className="ql-card-title">
+                                <Icon name="clipboard" size={15} /> {t.typesLegend}
+                            </h2>
+                            <div className="ql-pills">
+                                <button
+                                    type="button"
+                                    className={`ql-pill${selectedTypes.length === 0 ? ' is-active' : ''}`}
+                                    aria-pressed={selectedTypes.length === 0}
+                                    onClick={() => setSelectedTypes([])}
+                                >
+                                    <span className="ql-pill-name">{t.typesAll}</span>
+                                </button>
+                                {availableTypes.map((type) => {
+                                    const checked = selectedTypes.includes(type);
+                                    return (
+                                        <label key={type} className={`ql-pill${checked ? ' is-active' : ''}`}>
+                                            <input
+                                                type="checkbox"
+                                                className="ql-chip-input"
+                                                checked={checked}
+                                                onChange={() => toggleType(type)}
+                                            />
+                                            <span className="ql-pill-name">{getTypeLabel(type, lang)}</span>
+                                            <span className="ql-pill-sub">{t.sourceDone(progressByType[type] || 0)}</span>
+                                        </label>
                                     );
                                 })}
                             </div>
-                            <p className="ql-hint">{t.sourceRepeatHint}</p>
-                        </div>
-                    )}
+                        </section>
 
-                    {/* Specialties. Was a modal of checkboxes; "all" is the
-                        default rather than a second button called "mix all". */}
-                    <div className="ql-field" role="group" aria-label={t.typesLegend}>
-                        <span className="ql-field-label">
-                            <Icon name="clipboard" size={15} /> {t.typesLegend}
-                        </span>
-                        <div className="ql-chips">
-                            <button
-                                type="button"
-                                className={`ql-chip${selectedTypes.length === 0 ? ' is-active' : ''}`}
-                                aria-pressed={selectedTypes.length === 0}
-                                onClick={() => setSelectedTypes([])}
-                            >
-                                <span className="ql-chip-name">{t.typesAll}</span>
-                            </button>
-                            {availableTypes.map((type) => {
-                                const checked = selectedTypes.includes(type);
-                                return (
-                                    <label key={type} className={`ql-chip${checked ? ' is-active' : ''}`}>
+                        {/* The three settings of this quiz, one card: how it behaves
+                            (mode), how long it is (count) and whether it is timed. */}
+                        <section className="ql-card ql-settings">
+                            {/* Mode. Applies to this quiz and is remembered for the
+                                hub's quick start; the mock exam is always exam mode. */}
+                            <div className="ql-setting" role="group" aria-label={t.modeGroupLabel}>
+                                <h2 className="ql-card-title">
+                                    <Icon name="lightbulb" size={15} /> {t.modeLegend}
+                                </h2>
+                                <div className="ql-pills">
+                                    {[
+                                        { key: STUDY, name: t.modeStudy },
+                                        { key: EXAM, name: t.modeExam },
+                                    ].map((mode) => (
+                                        <button
+                                            type="button"
+                                            key={mode.key}
+                                            className={`ql-pill${quizMode === mode.key ? ' is-active' : ''}`}
+                                            aria-pressed={quizMode === mode.key}
+                                            onClick={() => chooseMode(mode.key)}
+                                        >
+                                            <span className="ql-pill-name">{mode.name}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                                <p className="ql-hint">{quizMode === STUDY ? t.modeStudyHint : t.modeExamHint}</p>
+                            </div>
+
+                            {/* Question count. Was its own modal with a slider. */}
+                            <div className="ql-setting" role="group" aria-label={t.countLegend}>
+                                <h2 className="ql-card-title">
+                                    <Icon name="pen" size={15} /> {t.countLegend}
+                                </h2>
+                                <div className="ql-pills">
+                                    {COUNT_PRESETS.map((n) => (
+                                        <button
+                                            type="button"
+                                            key={n}
+                                            className={`ql-pill${!customCount && numQuestions === n ? ' is-active' : ''}`}
+                                            aria-pressed={!customCount && numQuestions === n}
+                                            onClick={() => { setCustomCount(false); setNumQuestions(n); }}
+                                        >
+                                            <span className="ql-pill-name"><bdi>{fmt(n)}</bdi></span>
+                                        </button>
+                                    ))}
+                                    <button
+                                        type="button"
+                                        className={`ql-pill${customCount ? ' is-active' : ''}`}
+                                        aria-pressed={customCount}
+                                        onClick={() => setCustomCount(true)}
+                                    >
+                                        <span className="ql-pill-name">{t.customCount}</span>
+                                    </button>
+                                </div>
+                                {customCount && (
+                                    <div className="ql-number">
+                                        <label htmlFor="ql-count">{t.customQuestionsLabel}</label>
                                         <input
-                                            type="checkbox"
-                                            className="ql-chip-input"
-                                            checked={checked}
-                                            onChange={() => toggleType(type)}
+                                            id="ql-count"
+                                            type="number"
+                                            min="1"
+                                            max={MAX_QUESTIONS}
+                                            inputMode="numeric"
+                                            value={numQuestions}
+                                            onChange={(e) => setNumQuestions(e.target.value)}
                                         />
-                                        <span className="ql-chip-name">{getTypeLabel(type, lang)}</span>
-                                        <span className="ql-chip-sub">{t.sourceDone(progressByType[type] || 0)}</span>
-                                    </label>
-                                );
-                            })}
-                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Timer. Was the third modal in the stack. */}
+                            <div className="ql-setting" role="group" aria-label={t.timerLegend}>
+                                <h2 className="ql-card-title">
+                                    <Icon name="clock" size={15} /> {t.timerLegend}
+                                </h2>
+                                <div className="ql-pills">
+                                    <button
+                                        type="button"
+                                        className={`ql-pill${selectedTimer === null ? ' is-active' : ''}`}
+                                        aria-pressed={selectedTimer === null}
+                                        onClick={() => setSelectedTimer(null)}
+                                    >
+                                        <span className="ql-pill-name">{t.noTimer}</span>
+                                    </button>
+                                    {timerOptions.map((timer) => (
+                                        <button
+                                            type="button"
+                                            key={timer.value}
+                                            className={`ql-pill${selectedTimer === timer.value ? ' is-active' : ''}`}
+                                            aria-pressed={selectedTimer === timer.value}
+                                            onClick={() => setSelectedTimer(timer.value)}
+                                        >
+                                            <span className="ql-pill-name">{timer.label}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                                {selectedTimer === 'custom' && (
+                                    <div className="ql-number">
+                                        <label htmlFor="ql-minutes">{t.customMinutesLabel}</label>
+                                        <input
+                                            id="ql-minutes"
+                                            type="number"
+                                            min="1"
+                                            max="180"
+                                            inputMode="numeric"
+                                            value={customTimerMinutes}
+                                            onChange={(e) => setCustomTimerMinutes(e.target.value)}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        </section>
                     </div>
 
-                    {/* Question count. Was its own modal with a slider. */}
-                    <div className="ql-field" role="group" aria-label={t.countLegend}>
-                        <span className="ql-field-label">
-                            <Icon name="pen" size={15} /> {t.countLegend}
-                        </span>
-                        <div className="ql-chips">
-                            {COUNT_PRESETS.map((n) => (
-                                <button
-                                    type="button"
-                                    key={n}
-                                    className={`ql-chip${!customCount && numQuestions === n ? ' is-active' : ''}`}
-                                    aria-pressed={!customCount && numQuestions === n}
-                                    onClick={() => { setCustomCount(false); setNumQuestions(n); }}
-                                >
-                                    <span className="ql-chip-name"><bdi>{fmt(n)}</bdi></span>
-                                    <span className="ql-chip-sub">{t.questionsUnit}</span>
-                                </button>
-                            ))}
-                            <button
-                                type="button"
-                                className={`ql-chip${customCount ? ' is-active' : ''}`}
-                                aria-pressed={customCount}
-                                onClick={() => setCustomCount(true)}
-                            >
-                                <span className="ql-chip-name">{t.customCount}</span>
+                    {/* The quiz this form will start, and the button that starts it.
+                        Beside the form on a wide screen (sticky), a bar pinned to the
+                        bottom on a phone. */}
+                    <aside className="ql-aside">
+                        <div className="ql-summary-card">
+                            <h2 className="ql-card-title">
+                                <Icon name="rocket" size={15} /> {t.yourQuiz}
+                            </h2>
+                            <dl className="ql-summary-list">
+                                {summaryRows.map((row) => (
+                                    <div className="ql-summary-row" key={row.label}>
+                                        <dt>{row.label}</dt>
+                                        <dd><bdi>{row.value}</bdi></dd>
+                                    </div>
+                                ))}
+                            </dl>
+                            <p className="ql-summary">{summaryParts.join(' · ')}</p>
+                            <button type="button" className="ql-start" onClick={handleStart}>
+                                <Icon name="rocket" size={18} />
+                                {t.startQuiz}
                             </button>
                         </div>
-                        {customCount && (
-                            <div className="ql-number">
-                                <label htmlFor="ql-count">{t.customQuestionsLabel}</label>
-                                <input
-                                    id="ql-count"
-                                    type="number"
-                                    min="1"
-                                    max={MAX_QUESTIONS}
-                                    inputMode="numeric"
-                                    value={numQuestions}
-                                    onChange={(e) => setNumQuestions(e.target.value)}
-                                />
-                            </div>
-                        )}
-                    </div>
 
-                    {/* Timer. Was the third modal in the stack. */}
-                    <div className="ql-field" role="group" aria-label={t.timerLegend}>
-                        <span className="ql-field-label">
-                            <Icon name="clock" size={15} /> {t.timerLegend}
-                        </span>
-                        <div className="ql-chips">
-                            <button
-                                type="button"
-                                className={`ql-chip${selectedTimer === null ? ' is-active' : ''}`}
-                                aria-pressed={selectedTimer === null}
-                                onClick={() => setSelectedTimer(null)}
-                            >
-                                <span className="ql-chip-name">{t.noTimer}</span>
+                        {user && sessionToken && (
+                            <button type="button" className="ql-final" onClick={() => setShowFinalQuizType(true)}>
+                                <span className="ql-final-icon" aria-hidden="true"><Icon name="target" size={19} /></span>
+                                <span className="ql-final-text">
+                                    <strong>{t.finalQuiz}</strong>
+                                    <span>{t.finalTypeDesc}</span>
+                                </span>
+                                <span className="ql-final-go" aria-hidden="true">
+                                    <Icon name={dir === 'rtl' ? 'chevron-left' : 'chevron-right'} size={18} />
+                                </span>
                             </button>
-                            {timerOptions.map((timer) => (
-                                <button
-                                    type="button"
-                                    key={timer.value}
-                                    className={`ql-chip${selectedTimer === timer.value ? ' is-active' : ''}`}
-                                    aria-pressed={selectedTimer === timer.value}
-                                    onClick={() => setSelectedTimer(timer.value)}
-                                >
-                                    <span className="ql-chip-name">{timer.label}</span>
-                                </button>
-                            ))}
-                        </div>
-                        {selectedTimer === 'custom' && (
-                            <div className="ql-number">
-                                <label htmlFor="ql-minutes">{t.customMinutesLabel}</label>
-                                <input
-                                    id="ql-minutes"
-                                    type="number"
-                                    min="1"
-                                    max="180"
-                                    inputMode="numeric"
-                                    value={customTimerMinutes}
-                                    onChange={(e) => setCustomTimerMinutes(e.target.value)}
-                                />
-                            </div>
                         )}
-                    </div>
-
-                    <div className="ql-launch">
-                        <button type="button" className="ql-start" onClick={handleStart}>
-                            <Icon name="rocket" size={18} />
-                            {t.startQuiz}
-                        </button>
-                        <p className="ql-summary">{summaryParts.join(' · ')}</p>
-                    </div>
+                    </aside>
                 </div>
-
-                {user && sessionToken && (
-                    <button type="button" className="ql-final" onClick={() => setShowFinalQuizType(true)}>
-                        <span className="ql-final-icon" aria-hidden="true"><Icon name="target" size={19} /></span>
-                        <span className="ql-final-text">
-                            <strong>{t.finalQuiz}</strong>
-                            <span>{t.finalTypeDesc}</span>
-                        </span>
-                        <span className="ql-final-go" aria-hidden="true">
-                            <Icon name={dir === 'rtl' ? 'chevron-left' : 'chevron-right'} size={18} />
-                        </span>
-                    </button>
-                )}
             </div>
 
             {/* Final Quiz Type Selection Modal */}
