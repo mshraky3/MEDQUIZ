@@ -68,7 +68,7 @@ router.use(async (req, res, next) => {
     try {
         const r = await req.db.query(
             `SELECT id, subscription_status, subscription_expiry_date,
-                    is_admin_created, grandfathered_at, free_questions_used
+                    is_admin_created, grandfathered_at, free_questions_used, free_allowance
              FROM accounts WHERE id = $1`,
             [req.userId]
         );

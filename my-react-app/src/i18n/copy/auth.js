@@ -70,7 +70,7 @@ const authCopy = {
 
         signup: {
             pillInvite: 'إنشاء حساب',
-            pillFree: '🎁 40 سؤالاً مجاناً',
+            pillFree: '🎁 10 أسئلة مجانية',
             pillSeat: '👥 مقعد في مجموعة',
             titleInvite: 'أنشئ حسابك',
             titleFree: 'أنشئ حسابك',
@@ -81,7 +81,7 @@ const authCopy = {
             subtitleOtpInvite: (email) => `أدخل رمز التحقق المرسل إلى ${email}`,
             subtitleOtpFree: (email) => `أدخل الرمز المرسل إلى ${email} لتفعيل حسابك`,
 
-            freeCalloutTitle: '40 سؤالاً مجاناً + أول درس من كل تخصص',
+            freeCalloutTitle: '10 أسئلة مجانية + أول درس من كل تخصص',
             freeCalloutBody: 'بدون بطاقة دفع وبدون التزام — وحسابك يبقى مفتوحاً لك دائماً حتى بعد انتهاء الأسئلة المجانية.',
 
             seatCalloutTitle: 'اشتراكك مدفوع مسبقاً',
@@ -135,7 +135,7 @@ const authCopy = {
             resendCooldown: (s) => `إعادة الإرسال بعد ${s} ثانية`,
 
             successTitle: 'تم إنشاء الحساب بنجاح!',
-            successFree: 'لديك الآن 40 سؤالاً مجانياً، وأول درس من كل تخصص مفتوح لك دائماً 🎉',
+            successFree: 'لديك الآن 10 أسئلة مجانية، وأول درس من كل تخصص مفتوح لك دائماً 🎉',
             successInvite: 'حسابك جاهز — ابدأ من أول اختبار 🎉',
             successSeat: 'تم تفعيل مقعدك — لديك وصول كامل لبنك الأسئلة والملخصات 🎉',
             successRedirect: 'جاري تسجيل دخولك وتحويلك للمنصة...',
@@ -143,7 +143,7 @@ const authCopy = {
 
             validatingLink: 'جاري التحقق من الرابط...',
             invalidLinkTitle: 'رابط الدعوة غير صالح',
-            invalidLinkBody: 'انتهت صلاحية هذا الرابط أو تم استخدامه من قبل. يمكنك إنشاء حساب عادي الآن والبدء بـ 40 سؤالاً مجانياً.',
+            invalidLinkBody: 'انتهت صلاحية هذا الرابط أو تم استخدامه من قبل. يمكنك إنشاء حساب عادي الآن والبدء بـ 10 أسئلة مجانية.',
             invalidLinkCta: 'إنشاء حساب والبدء مجاناً',
             // Reasons specific to a PAID group seat — "used" and "expired" need
             // different answers from whoever sent the link.
@@ -283,7 +283,7 @@ const authCopy = {
 
         signup: {
             pillInvite: 'Create an account',
-            pillFree: '🎁 40 free questions',
+            pillFree: '🎁 10 free questions',
             pillSeat: '👥 A seat in a group',
             titleInvite: 'Create your account',
             titleFree: 'Create your account',
@@ -294,7 +294,7 @@ const authCopy = {
             subtitleOtpInvite: (email) => `Enter the verification code sent to ${email}`,
             subtitleOtpFree: (email) => `Enter the code sent to ${email} to activate your account`,
 
-            freeCalloutTitle: '40 free questions + the first lesson of every specialty',
+            freeCalloutTitle: '10 free questions + the first lesson of every specialty',
             freeCalloutBody: 'No payment card, no commitment — and your account stays yours for good, even once the free questions are gone.',
 
             seatCalloutTitle: 'Your subscription is already paid for',
@@ -349,7 +349,7 @@ const authCopy = {
             resendCooldown: (s) => `Resend available in ${s}s`,
 
             successTitle: 'Your account is ready!',
-            successFree: 'You have 40 free questions, and the first lesson of every specialty is yours to read any time 🎉',
+            successFree: 'You have 10 free questions, and the first lesson of every specialty is yours to read any time 🎉',
             successInvite: 'Your account is ready — start with your first quiz 🎉',
             successSeat: 'Your seat is active — you have full access to the question bank and the summaries 🎉',
             successRedirect: 'Logging you in and taking you to the platform…',
@@ -357,7 +357,7 @@ const authCopy = {
 
             validatingLink: 'Checking your link…',
             invalidLinkTitle: 'This invite link is not valid',
-            invalidLinkBody: 'This link has expired or has already been used. You can create a normal account now and start with 40 free questions.',
+            invalidLinkBody: 'This link has expired or has already been used. You can create a normal account now and start with 10 free questions.',
             invalidLinkCta: 'Create an account and start free',
             // Reasons specific to a PAID group seat — "used" and "expired" need
             // different answers from whoever sent the link.

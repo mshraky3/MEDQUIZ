@@ -51,7 +51,7 @@ const pastPapersCopy = {
             },
             {
                 q: 'هل يمكنني الاطلاع على تجميعة كاملة مجاناً؟',
-                a: 'لا. المنشور من كل تجميعة عيّنة مفتوحة للاطلاع بدون حساب. للوصول إلى التجميعات كاملة أنشئ حساباً مجانياً — يمنحك 40 سؤالاً من البنك كله بدون بطاقة دفع.',
+                a: 'لا. المنشور من كل تجميعة عيّنة مفتوحة للاطلاع بدون حساب. للوصول إلى التجميعات كاملة أنشئ حساباً مجانياً — يمنحك 10 أسئلة من البنك كله بدون بطاقة دفع.',
             },
             {
                 q: 'هل تُحدَّث التجميعات؟',
@@ -60,7 +60,7 @@ const pastPapersCopy = {
         ],
 
         cta: {
-            title: '40 سؤالاً مجاناً من البنك الكامل',
+            title: '10 أسئلة مجانية من البنك الكامل',
             body: 'الأسئلة المعروضة هنا عيّنة. أنشئ حساباً مجانياً للتدرب على البنك الكامل مع تحليل أدائك حسب التخصص ومراجعة أخطائك.',
             button: 'إنشاء حساب مجاني',
             note: 'بدون بطاقة دفع',
@@ -120,7 +120,7 @@ const pastPapersCopy = {
             },
             {
                 q: 'Can I read a whole collection for free?',
-                a: 'No. What is published from each collection is an open sample you can read without an account. For the collections in full, create a free account — it gives you 40 questions from the whole bank, with no payment card.',
+                a: 'No. What is published from each collection is an open sample you can read without an account. For the collections in full, create a free account — it gives you 10 questions from the whole bank, with no payment card.',
             },
             {
                 q: 'Are the collections updated?',
@@ -129,7 +129,7 @@ const pastPapersCopy = {
         ],
 
         cta: {
-            title: '40 free questions from the full bank',
+            title: '10 free questions from the full bank',
             body: 'The questions shown here are a sample. Create a free account to practise on the full bank, with performance analytics by specialty and a page for reviewing your mistakes.',
             button: 'Create a free account',
             note: 'No payment card',

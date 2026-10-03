@@ -48,7 +48,7 @@ export default function TermsScreen() {
 
                 <Text style={styles.heading}>7. Subscription & Payment</Text>
                 <Text style={styles.body}>
-                    Every new account receives 40 free questions for the lifetime of the account, plus the first
+                    Every new account receives 10 free questions for the lifetime of the account, plus the first
                     lesson of every specialty, with no time limit. Using them up does not close the account — only
                     starting new quizzes requires a subscription. Individual subscriptions are 50 SAR for one month,
                     129 SAR for four months, or 299 SAR for one year. Group subscriptions are 250 SAR for three

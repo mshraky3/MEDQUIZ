@@ -15,7 +15,7 @@
  */
 
 import { fetchPaidEvents, summarize } from './accountingService.js';
-import { FREE_QUESTION_ALLOWANCE } from './paymentService.js';
+import { LEGACY_FREE_QUESTION_ALLOWANCE } from './paymentService.js';
 
 /** Month key (YYYY-MM) in Riyadh time — KSA is a fixed UTC+3, no DST. */
 export function riyadhMonthKey(date) {
@@ -63,8 +63,8 @@ export const SQL_HAS_ACCESS = `((${SQL_ACTIVE_SUBSCRIBER})
 // non-paying account with allowance left; "used up" is the conversion moment
 // the old SQL_ACTIVE_TRIAL / trial_expired pair used to mark.
 export const SQL_FREE_TIER = `NOT ${SQL_HAS_ACCESS}`;
-export const SQL_FREE_TRYING = `${SQL_FREE_TIER} AND free_questions_used < ${FREE_QUESTION_ALLOWANCE}`;
-export const SQL_FREE_EXHAUSTED = `${SQL_FREE_TIER} AND free_questions_used >= ${FREE_QUESTION_ALLOWANCE}`;
+export const SQL_FREE_TRYING = `${SQL_FREE_TIER} AND free_questions_used < COALESCE(free_allowance, ${LEGACY_FREE_QUESTION_ALLOWANCE})`;
+export const SQL_FREE_EXHAUSTED = `${SQL_FREE_TIER} AND free_questions_used >= COALESCE(free_allowance, ${LEGACY_FREE_QUESTION_ALLOWANCE})`;
 
 /**
  * Revenue snapshot — wraps the canonical ledger. Every money figure the admin

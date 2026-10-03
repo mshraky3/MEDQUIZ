@@ -69,7 +69,7 @@ const publicQuestionsCopy = {
             },
             {
                 q: 'ما الفرق بين هذه الأسئلة والبنك الكامل؟',
-                a: `هذه عيّنة ثابتة من ${total} سؤالاً منشورة للاطلاع. البنك الكامل يضم ${bankTotal} سؤالاً، ويأتي معه تحليل أدائك حسب التخصص، وصفحة تجمع أسئلتك الخاطئة، واختبارات محاكية بوقت. تحصل على 40 سؤالاً منه مجاناً عند إنشاء حساب.`,
+                a: `هذه عيّنة ثابتة من ${total} سؤالاً منشورة للاطلاع. البنك الكامل يضم ${bankTotal} سؤالاً، ويأتي معه تحليل أدائك حسب التخصص، وصفحة تجمع أسئلتك الخاطئة، واختبارات محاكية بوقت. تحصل على 10 أسئلة منه مجاناً عند إنشاء حساب.`,
             },
             {
                 q: 'هل الأسئلة محدَّثة على نمط الاختبار الحالي؟',
@@ -78,7 +78,7 @@ const publicQuestionsCopy = {
         ],
 
         cta: {
-            title: '40 سؤالاً مجاناً مع حساب',
+            title: '10 أسئلة مجانية مع حساب',
             body: 'الأسئلة المنشورة هنا عيّنة ثابتة. أنشئ حساباً مجانياً لتتدرب على بنك الأسئلة الكامل، مع تحليل أدائك حسب التخصص وصفحة لمراجعة أخطائك.',
             button: 'إنشاء حساب مجاني',
             note: 'بدون بطاقة دفع',
@@ -150,7 +150,7 @@ const publicQuestionsCopy = {
             },
             {
                 q: 'How is this different from the full bank?',
-                a: `This is a fixed sample of ${total} questions. The full bank holds ${bankTotal}, and comes with performance analytics by specialty, a page collecting every question you got wrong, and timed mock exams. Creating a free account gives you 40 questions from it.`,
+                a: `This is a fixed sample of ${total} questions. The full bank holds ${bankTotal}, and comes with performance analytics by specialty, a page collecting every question you got wrong, and timed mock exams. Creating a free account gives you 10 questions from it.`,
             },
             {
                 q: 'Are the questions current?',
@@ -159,7 +159,7 @@ const publicQuestionsCopy = {
         ],
 
         cta: {
-            title: '40 free questions with an account',
+            title: '10 free questions with an account',
             body: 'The questions published here are a fixed sample. Create a free account to practise on the full bank, with performance analytics by specialty and a page for reviewing your mistakes.',
             button: 'Create a free account',
             note: 'No payment card',

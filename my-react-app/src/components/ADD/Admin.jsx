@@ -154,7 +154,7 @@ const Admin = () => {
                         icon="hourglass"
                         label="Free, still trying"
                         value={num(sub.freeTrying)}
-                        sub={`${num(sub.freeExhaustedUnconverted)} used up their 40`}
+                        sub={`${num(sub.freeExhaustedUnconverted)} used up their free questions`}
                     />
                     <Kpi
                         icon="target"

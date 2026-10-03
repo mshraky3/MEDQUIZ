@@ -25,10 +25,10 @@ const landingCopy = {
             secondary: 'تسجيل الخروج',
         },
         hero: {
-            pill: 'مساران: طب بشري وتمريض · ابدأ بـ 40 سؤالاً مجاناً',
+            pill: 'مساران: طب بشري وتمريض · ابدأ بـ 10 أسئلة مجانية',
             title: 'تدرّب بذكاء، واجتَز اختبار الترخيص بثقة',
             body: 'بنك أسئلة محدّث على نمط البرومترك، مع تفسير واضح لكل إجابة وتحليل فوري يكشف نقاط ضعفك ويرتّب أولويات مراجعتك — كل ما تحتاجه للوصول إلى درجتك المستهدفة في مكان واحد.',
-            primary: 'ابدأ بـ 40 سؤالاً مجاناً',
+            primary: 'ابدأ بـ 10 أسئلة مجانية',
             // سطر صغير تحت الأزرار لمن لم يقرّر بعد: 78 من 120 اختاروا مساراً
             // هذا الشهر ثم تركوا نموذج التسجيل — أرادوا رؤية الأسئلة أولاً.
             // شريط أرقام حيّة من قاعدة البيانات (/api/public/stats). الاعتراض
@@ -40,7 +40,7 @@ const landingCopy = {
             secondary: 'تسجيل الدخول',
             trust: [
                 'تفسير كامل لكل سؤال',
-                '40 سؤالاً مجاناً بلا حد زمني',
+                '10 أسئلة مجانية بلا حد زمني',
                 'أول درس من كل تخصص مجاني للأبد',
                 'من 50 ريالاً شهرياً',
                 'بدون تجديد تلقائي',
@@ -79,7 +79,7 @@ const landingCopy = {
             ],
             sampleTitle: 'شرح الإجابة',
             cta: 'اقرأ تفسيراتك الأولى مجاناً',
-            ctaNote: '40 سؤالاً مجاناً · كل واحد منها بتفسيره',
+            ctaNote: '10 أسئلة مجانية · كل واحد منها بتفسيره',
         },
 
         tracks: {
@@ -92,7 +92,7 @@ const landingCopy = {
             medicalDesc: 'بنك أسئلة وملخصات كاملة للباطنة والجراحة والأطفال والنساء والولادة.',
             nursingDesc: 'مسار مستقل بأسئلته وملخصاته وتحليلات أدائه الخاصة — منفصل تماماً عن مسار الطب.',
             cardCta: (title) => `ابدأ مسار ${title}`,
-            ctaNote: '40 سؤالاً مجاناً · بدون بطاقة دفع',
+            ctaNote: '10 أسئلة مجانية · بدون بطاقة دفع',
         },
 
         compare: {
@@ -111,7 +111,7 @@ const landingCopy = {
                 { label: 'تحليل الأداء والأخطاء', sqb: 'تحليلات تلقائية بعد كل جلسة', files: 'يدوي — إن وُجد', courses: 'غير متوفر غالباً' },
                 { label: 'مدة الوصول', sqb: 'شهر أو 4 أشهر أو سنة — تختار أنت', files: 'روابط تنتهي وملفات تضيع', courses: 'فترة محدودة' },
             ],
-            cta: 'جرّب SQB بـ 40 سؤالاً مجاناً',
+            cta: 'جرّب SQB بـ 10 أسئلة مجانية',
             ctaNote: 'قارن بنفسك قبل أن تدفع ريالاً واحداً',
         },
 
@@ -142,8 +142,8 @@ const landingCopy = {
                 'اختبارات محاكية بتوقيت حقيقي',
                 'تحليلات تكشف نقاط ضعفك وتتيح لك مراجعة أخطائك حتى تتقنها',
             ],
-            cta: 'ابدأ بـ 40 سؤالاً مجاناً',
-            note: '40 سؤالاً مجاناً أولاً · دفع آمن عبر ميسر · مدى / Visa / Mastercard / Apple Pay · بدون تجديد تلقائي',
+            cta: 'ابدأ بـ 10 أسئلة مجانية',
+            note: '10 أسئلة مجانية أولاً · دفع آمن عبر ميسر · مدى / Visa / Mastercard / Apple Pay · بدون تجديد تلقائي',
             // The public shop window for the group plans. Prices here must stay
             // in step with PLANS.group_3 / group_5 in backend/services/paymentService.js.
             group: {
@@ -164,7 +164,7 @@ const landingCopy = {
             title: 'ابدأ وتدرّب وراجع خلال دقائق',
             body: 'مسار بسيط يقودك من إنشاء الحساب إلى جلسات المراجعة الذكية دون تشتيت.',
             steps: [
-                { label: 'أنشئ حسابك وأكّد بريدك', hint: 'تحصل فوراً على 40 سؤالاً مجانياً، وأول درس من كل تخصص.' },
+                { label: 'أنشئ حسابك وأكّد بريدك', hint: 'تحصل فوراً على 10 أسئلة مجانية، وأول درس من كل تخصص.' },
                 { label: 'تمرن بدقة', hint: 'اختر المواضيع، اضبط الوقت، وركّز على المهارات المطلوبة.' },
                 { label: 'راجع وتحسّن', hint: 'تحليلات فورية، سلاسل إنجاز، وتوصيات مخصصة.' },
             ],
@@ -183,17 +183,17 @@ const landingCopy = {
             visitor: {
                 pill: 'جاهز للبدء؟',
                 title: 'كل يوم تأجيل هو يوم تدريب يكسبه غيرك عليك',
-                body: 'أنشئ حسابك، أكّد بريدك، وابدأ فوراً بـ 40 سؤالاً مجانياً — من بنك يضم 5,033 سؤالاً، لكل واحد منها شرح مكتوب، ويُحدَّث بتجميعات شهرية.',
+                body: 'أنشئ حسابك، أكّد بريدك، وابدأ فوراً بـ 10 أسئلة مجانية — من بنك يضم 5,033 سؤالاً، لكل واحد منها شرح مكتوب، ويُحدَّث بتجميعات شهرية.',
                 primary: 'إنشاء حساب',
                 secondary: 'تسجيل الدخول',
-                note: '40 سؤالاً مجاناً · ثم من 50 ريالاً شهرياً · دفع آمن عبر ميسر · بدون تجديد تلقائي',
+                note: '10 أسئلة مجانية · ثم من 50 ريالاً شهرياً · دفع آمن عبر ميسر · بدون تجديد تلقائي',
             },
         },
 
         mobileCta: {
             continue: 'متابعة',
             logout: 'خروج',
-            tryFree: 'ابدأ بـ 40 سؤالاً مجاناً',
+            tryFree: 'ابدأ بـ 10 أسئلة مجانية',
             login: 'دخول',
         },
     },
@@ -210,10 +210,10 @@ const landingCopy = {
             secondary: 'Log out',
         },
         hero: {
-            pill: 'Two tracks: medicine and nursing · Start with 40 free questions',
+            pill: 'Two tracks: medicine and nursing · Start with 10 free questions',
             title: 'Practise smarter, and walk into your licensing exam confident',
             body: 'A question bank updated to the Prometric style, a clear explanation for every answer, and instant analytics that expose your weak spots and tell you what to revise next — everything you need to hit your target score, in one place.',
-            primary: 'Start with 40 free questions',
+            primary: 'Start with 10 free questions',
             // A quiet line under the buttons for anyone not ready: 78 of the
             // 120 who picked a track this month left at the signup form.
             // A strip of live numbers counted from the database
@@ -227,7 +227,7 @@ const landingCopy = {
             secondary: 'Log in',
             trust: [
                 'A full explanation for every question',
-                '40 free questions, with no time limit',
+                '10 free questions, with no time limit',
                 'The first lesson of every specialty, free for good',
                 'From SAR 50 a month',
                 'No auto-renewal',
@@ -266,7 +266,7 @@ const landingCopy = {
             ],
             sampleTitle: 'Why this answer',
             cta: 'Read your first explanations free',
-            ctaNote: '40 free questions · every one of them explained',
+            ctaNote: '10 free questions · every one of them explained',
         },
 
         tracks: {
@@ -279,7 +279,7 @@ const landingCopy = {
             medicalDesc: 'A full question bank and summaries for internal medicine, surgery, paediatrics, and obstetrics & gynaecology.',
             nursingDesc: 'A standalone track with its own questions, summaries and performance analytics — completely separate from the medical track.',
             cardCta: (title) => `Start the ${title} track`,
-            ctaNote: '40 free questions · No payment card',
+            ctaNote: '10 free questions · No payment card',
         },
 
         compare: {
@@ -298,7 +298,7 @@ const landingCopy = {
                 { label: 'Performance and error analysis', sqb: 'Automatic analytics after every session', files: 'Manual — if at all', courses: 'Usually not offered' },
                 { label: 'How long you keep access', sqb: 'A month, four months or a year — your choice', files: 'Links expire and files get lost', courses: 'A limited window' },
             ],
-            cta: 'Try SQB with 40 free questions',
+            cta: 'Try SQB with 10 free questions',
             ctaNote: 'See it for yourself before you pay a riyal',
         },
 
@@ -329,8 +329,8 @@ const landingCopy = {
                 'Timed mock exams under real exam conditions',
                 "Analytics that find your weak spots and let you drill your wrong questions until they're gone",
             ],
-            cta: 'Start with 40 free questions',
-            note: '40 free questions first · Secure payment via Moyasar · mada / Visa / Mastercard / Apple Pay · No auto-renewal',
+            cta: 'Start with 10 free questions',
+            note: '10 free questions first · Secure payment via Moyasar · mada / Visa / Mastercard / Apple Pay · No auto-renewal',
             // The public shop window for the group plans. Prices here must stay
             // in step with PLANS.group_3 / group_5 in backend/services/paymentService.js.
             group: {
@@ -351,7 +351,7 @@ const landingCopy = {
             title: 'Start, practise and review within minutes',
             body: 'A simple route that takes you from creating an account to smart review sessions, with nothing in the way.',
             steps: [
-                { label: 'Create your account and confirm your email', hint: 'You immediately get 40 free questions, plus the first lesson of every specialty.' },
+                { label: 'Create your account and confirm your email', hint: 'You immediately get 10 free questions, plus the first lesson of every specialty.' },
                 { label: 'Practise precisely', hint: 'Pick your topics, set the timer, and drill the skills you need.' },
                 { label: 'Review and improve', hint: 'Instant analytics, streaks, and recommendations made for you.' },
             ],
@@ -370,17 +370,17 @@ const landingCopy = {
             visitor: {
                 pill: 'Ready to start?',
                 title: 'Every day you put it off is a day of practice someone else gains on you',
-                body: 'Create your account, confirm your email, and start with 40 free questions — from a bank of 5,033, every one of them explained, updated with monthly collections.',
+                body: 'Create your account, confirm your email, and start with 10 free questions — from a bank of 5,033, every one of them explained, updated with monthly collections.',
                 primary: 'Create an account',
                 secondary: 'Log in',
-                note: '40 free questions · then from SAR 50 a month · Secure payment via Moyasar · No auto-renewal',
+                note: '10 free questions · then from SAR 50 a month · Secure payment via Moyasar · No auto-renewal',
             },
         },
 
         mobileCta: {
             continue: 'Continue',
             logout: 'Log out',
-            tryFree: 'Start with 40 free questions',
+            tryFree: 'Start with 10 free questions',
             login: 'Log in',
         },
     },

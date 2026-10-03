@@ -12,16 +12,18 @@ import { TRACKS, TRACK_KEYS, MEDICAL, normalizeTrack } from '../../utils/tracks.
  * that still valid today? `subscription_status` alone is not enough, since an
  * 'active' row whose expiry has passed is no longer paid.
  */
-// Mirrors paymentService.FREE_QUESTION_ALLOWANCE. Kept in sync manually since
-// this is a read-only admin display, not a gate.
-const FREE_QUESTION_ALLOWANCE = 40;
+// Mirrors paymentService.allowanceFor: the allowance is stored per account
+// (accounts.free_allowance), and a row without it is a pre-2026-10-03 account
+// that was promised 40. Read-only admin display, not a gate.
+const LEGACY_FREE_QUESTION_ALLOWANCE = 40;
 
 const subscriptionInfo = (user) => {
     const expiry = user.subscription_expiry_date ? new Date(user.subscription_expiry_date) : null;
     const expired = expiry ? expiry.getTime() <= Date.now() : false;
     const status = user.subscription_status || 'free';
     const used = Number(user.free_questions_used) || 0;
-    const left = Math.max(0, FREE_QUESTION_ALLOWANCE - used);
+    const allowance = Number(user.free_allowance) > 0 ? Number(user.free_allowance) : LEGACY_FREE_QUESTION_ALLOWANCE;
+    const left = Math.max(0, allowance - used);
 
     // Checked first, mirroring checkSubscriptionAccess: this flag short-circuits
     // the paywall, so subscription_status is meaningless on these rows. Calling
@@ -51,13 +53,13 @@ const subscriptionInfo = (user) => {
     // is the one worth a nudge, and an account that never answered a question is
     // a different problem entirely.
     if (left <= 0) {
-        return { key: 'spent', label: 'Free — used up', cls: 'expired', detail: `Spent all ${FREE_QUESTION_ALLOWANCE} free questions` };
+        return { key: 'spent', label: 'Free — used up', cls: 'expired', detail: `Spent all ${allowance} free questions` };
     }
     return {
         key: 'free',
         label: 'Free',
         cls: used > 0 ? 'trial' : 'free',
-        detail: used > 0 ? `${left} of ${FREE_QUESTION_ALLOWANCE} free questions left` : 'Has not started yet',
+        detail: used > 0 ? `${left} of ${allowance} free questions left` : 'Has not started yet',
     };
 };
 

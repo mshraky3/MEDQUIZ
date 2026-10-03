@@ -407,8 +407,8 @@ export const sendTrialEndedEmail = async (to, username, track, stats = {}, opts 
                   </table>
                   <p style="margin:14px 0 0;font-size:12.5px;color:#64748b;line-height:1.7;">
                     ${T(lang,
-                      'هذا من ٤٠ سؤالاً فقط. البنك كامل بانتظارك — وتقدّمك محفوظ كما هو.',
-                      'And that was from 40 questions. The full bank is waiting, and your progress stays exactly where it is.')}
+                      'هذا من أسئلتك المجانية فقط. البنك كامل بانتظارك — وتقدّمك محفوظ كما هو.',
+                      'And that was only from your free questions. The full bank is waiting, and your progress stays exactly where it is.')}
                   </p>
                 </td>
               </tr>
@@ -430,7 +430,7 @@ export const sendTrialEndedEmail = async (to, username, track, stats = {}, opts 
           <td align="center" style="padding:36px 40px 32px;">
             <div style="font-size:48px;margin-bottom:16px;">🎯</div>
             <h1 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#f8fafc;">
-              ${T(lang, `أنهيت أسئلتك الأربعين يا ${username}`, `That's your 40 free questions, ${username}`)}
+              ${T(lang, `أنهيت أسئلتك المجانية يا ${username}`, `That's your free questions, ${username}`)}
             </h1>
             <p style="margin:0 0 24px;font-size:14px;color:#94a3b8;line-height:1.7;">
               ${T(lang,
@@ -478,10 +478,10 @@ export const sendTrialEndedEmail = async (to, username, track, stats = {}, opts 
   await sendEmail(
     to,
     T(lang, `أنهيت أسئلتك المجانية — تقدّمك محفوظ يا ${username}`,
-             `You've used your 40 free questions — your progress is saved, ${username}`),
+             `You've used your free questions — your progress is saved, ${username}`),
     html,
-    T(lang, `أنهيت أسئلتك الأربعين المجانية في SQB. حسابك مفتوح وتقدّمك محفوظ. اشترك الآن: ${SITE}/subscribe`,
-             `You've used your 40 free questions on SQB. Your account stays open and your progress is saved. Subscribe now: ${SITE}/subscribe`),
+    T(lang, `أنهيت أسئلتك المجانية في SQB. حسابك مفتوح وتقدّمك محفوظ. اشترك الآن: ${SITE}/subscribe`,
+             `You've used your free questions on SQB. Your account stays open and your progress is saved. Subscribe now: ${SITE}/subscribe`),
     { event: 'medqize.lifecycle.trial_ended' }
   );
 };

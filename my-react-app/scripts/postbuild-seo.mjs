@@ -273,7 +273,7 @@ browse them from the specialty hubs under ${SITE_ORIGIN}${QUESTIONS_ROOT}.
 
 Free without an account: every question page listed under practice questions,
 each with its written explanation. Practising against the bank itself requires
-an account, which is free and adds 40 questions and the first lesson of each
+an account, which is free and adds 10 questions and the first lesson of each
 specialty.
 
 ${sections.join('\n\n')}

@@ -25,7 +25,7 @@ const faqCopy = {
             },
             {
                 question: 'هل يمكنني تجربة المنصة مجاناً؟',
-                answer: 'نعم، وبدون بطاقة دفع وبدون حد زمني. كل حساب جديد يحصل على 40 سؤالاً مجانياً يستخدمها متى شاء، بالإضافة إلى أول درس من كل تخصص في الملخصات — وهذا الدرس يبقى مفتوحاً لك للأبد.\n\nوحتى بعد انتهاء الأسئلة الأربعين لا يُغلق حسابك: تبقى تحليلاتك وتقدّمك ودروسك المجانية متاحة، والاشتراك هو ما يفتح بقية بنك الأسئلة والملخصات كاملة.',
+                answer: 'نعم، وبدون بطاقة دفع وبدون حد زمني. كل حساب جديد يحصل على 10 أسئلة مجانية يستخدمها متى شاء، بالإضافة إلى أول درس من كل تخصص في الملخصات — وهذا الدرس يبقى مفتوحاً لك للأبد.\n\nوحتى بعد انتهاء الأسئلة الأربعين لا يُغلق حسابك: تبقى تحليلاتك وتقدّمك ودروسك المجانية متاحة، والاشتراك هو ما يفتح بقية بنك الأسئلة والملخصات كاملة.',
             },
             {
                 question: 'كم تكلفة الاشتراك؟',
@@ -53,7 +53,7 @@ const faqCopy = {
             },
             {
                 question: 'كيف أشترك في المنصة؟',
-                answer: 'يمكنك البدء فوراً بخطوات بسيطة:\n1. أنشئ حسابك وأكّد بريدك للحصول على 40 سؤالاً مجانياً\n2. ابدأ أول اختبار سريع\n3. عندما تنتهي أسئلتك المجانية، اختر الخطة التي تناسبك للمتابعة\n4. واصل يومياً لرفع مستواك قبل الاختبار',
+                answer: 'يمكنك البدء فوراً بخطوات بسيطة:\n1. أنشئ حسابك وأكّد بريدك للحصول على 10 أسئلة مجانية\n2. ابدأ أول اختبار سريع\n3. عندما تنتهي أسئلتك المجانية، اختر الخطة التي تناسبك للمتابعة\n4. واصل يومياً لرفع مستواك قبل الاختبار',
             },
             {
                 question: 'هل المنصة تابعة للهيئة السعودية للتخصصات الصحية؟',
@@ -97,7 +97,7 @@ const faqCopy = {
             },
             {
                 question: 'Can I try the platform for free?',
-                answer: 'Yes — no payment card, and no time limit. Every new account gets 40 free questions to use whenever it likes, plus the first lesson of every specialty in the summaries, which stays open to you for good.\n\nEven once the 40 are gone your account is not closed: your analytics, your progress and your free lessons stay available. A subscription is what opens the rest of the question bank and the full summaries.',
+                answer: 'Yes — no payment card, and no time limit. Every new account gets 10 free questions to use whenever it likes, plus the first lesson of every specialty in the summaries, which stays open to you for good.\n\nEven once your free questions are gone your account is not closed: your analytics, your progress and your free lessons stay available. A subscription is what opens the rest of the question bank and the full summaries.',
             },
             {
                 question: 'How much does the subscription cost?',
@@ -125,7 +125,7 @@ const faqCopy = {
             },
             {
                 question: 'How do I subscribe?',
-                answer: 'You can start right away:\n1. Create your account and confirm your email to get your 40 free questions\n2. Take your first quick quiz\n3. When your free questions run out, pick the plan that suits you\n4. Keep going daily to build your score before the exam',
+                answer: 'You can start right away:\n1. Create your account and confirm your email to get your 10 free questions\n2. Take your first quick quiz\n3. When your free questions run out, pick the plan that suits you\n4. Keep going daily to build your score before the exam',
             },
             {
                 question: 'Is the platform affiliated with SCFHS?',

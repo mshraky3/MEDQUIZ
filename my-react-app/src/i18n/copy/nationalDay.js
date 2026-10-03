@@ -100,7 +100,7 @@ const nationalDayCopy = {
                 // A round hundred takes the singular genitive (مئة ريال), everything else the accusative.
                 compare: (two, four) => `أربعة أشهر بـ${four} ريالاً أقل من سعر شهرين (${two} ${two % 100 === 0 ? 'ريال' : 'ريالاً'})`,
             },
-            guestNote: 'لا تدفع الآن: ابدأ بـ40 سؤالاً مجاناً، واشترك بسعر العرض قبل أن ينتهي.',
+            guestNote: 'لا تدفع الآن: ابدأ بـ10 أسئلة مجانية، واشترك بسعر العرض قبل أن ينتهي.',
             // `endDate` is '' while the offer has no end date — then there is no footnote.
             footnote: (endDate) => (endDate ? `العرض ساري حتى ${endDate}.` : ''),
         },
@@ -181,7 +181,7 @@ const nationalDayCopy = {
                 note: 'Not part of the offer, price unchanged',
                 compare: (two, four) => `Four months for SAR ${four} costs less than two months (SAR ${two})`,
             },
-            guestNote: 'Nothing to pay now: start with 40 free questions, then subscribe at the offer price before it ends.',
+            guestNote: 'Nothing to pay now: start with 10 free questions, then subscribe at the offer price before it ends.',
             footnote: (endDate) => (endDate ? `The offer runs until ${endDate}.` : ''),
         },
 

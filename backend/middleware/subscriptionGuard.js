@@ -31,14 +31,14 @@ import {
     isPaymentEnforcementEnabled,
     checkSubscriptionAccess,
     checkQuizAccess,
-    FREE_QUESTION_ALLOWANCE,
+    allowanceFor,
 } from '../services/paymentService.js';
 import { recordFunnelEvent } from '../routes/funnel.js';
 import { logger } from '../utils/observability.js';
 
 const ACCOUNT_FIELDS = `id, subscription_status, subscription_expiry_date,
                         is_admin_created, grandfathered_at, free_questions_used,
-                        free_questions_served`;
+                        free_questions_served, free_allowance`;
 
 /** Look up the session's account, or null. Shared by both guards. */
 async function loadAccount(db, username) {
@@ -90,9 +90,9 @@ export function quizAccessGuard(db) {
 
                 let message;
                 if (backlog) {
-                    message = `Finish the questions you already have open to keep going. You still have ${access.remaining} of your ${FREE_QUESTION_ALLOWANCE} free questions left — they are only spent on questions you actually answer.`;
+                    message = `Finish the questions you already have open to keep going. You still have ${access.remaining} of your ${allowanceFor(account)} free questions left — they are only spent on questions you actually answer.`;
                 } else if (access.reason === 'free_allowance_exhausted') {
-                    message = `You have used all ${FREE_QUESTION_ALLOWANCE} of your free questions. Subscribe to keep practising — your account, your progress and the free lessons stay open.`;
+                    message = `You have used all ${allowanceFor(account)} of your free questions. Subscribe to keep practising — your account, your progress and the free lessons stay open.`;
                 } else {
                     message = 'An active subscription is required to access this feature.';
                 }
@@ -104,7 +104,7 @@ export function quizAccessGuard(db) {
                     expired: !backlog,
                     reason: access.reason,
                     remaining: Number.isFinite(access.remaining) ? access.remaining : 0,
-                    allowance: FREE_QUESTION_ALLOWANCE,
+                    allowance: allowanceFor(account),
                     message,
                 });
             }

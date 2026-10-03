@@ -28,7 +28,7 @@ export default {
         // logging in, so the button has to be honest about the next step.
         buyCtaGuest: (amount) => `سجّل دخولك واشترك بـ ${amount}`,
         guestNote: 'ليس لديك حساب بعد؟',
-        guestSignup: 'أنشئ حسابك مجاناً وابدأ بـ 40 سؤالاً',
+        guestSignup: 'أنشئ حسابك مجاناً وابدأ بـ 10 أسئلة',
         backToIndividual: 'عرض الخطط الفردية',
         noAutoRenew: 'دفعة واحدة فقط — لا يوجد تجديد تلقائي ولا خصم متكرر.',
 
@@ -90,7 +90,7 @@ export default {
         // logging in, so the button has to be honest about the next step.
         buyCtaGuest: (amount) => `Log in and subscribe for ${amount}`,
         guestNote: 'No account yet?',
-        guestSignup: 'Create one free and start with 40 questions',
+        guestSignup: 'Create one free and start with 10 questions',
         backToIndividual: 'See the individual plans',
         noAutoRenew: 'One payment only — no automatic renewal, no recurring charge.',
 

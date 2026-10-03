@@ -35,7 +35,7 @@ export const FAQ_ITEMS_EN = [
     },
     {
         question: 'Can I create a free account?',
-        answer: 'Yes. A free account gives you 40 questions from the bank with no payment card, plus the first lesson of every specialty. There are also questions published openly on this site that need no account at all.',
+        answer: 'Yes. A free account gives you 10 questions from the bank with no payment card, plus the first lesson of every specialty. There are also questions published openly on this site that need no account at all.',
     },
     {
         question: 'Does SQB work on a phone?',
@@ -193,7 +193,7 @@ export const EN_PRERENDER = {
     '/signup': `
       <main class="seo-shell" dir="ltr">
         <h1>Create a free SQB account</h1>
-        <p>A free account gives you 40 questions from the bank with no payment card, plus the first lesson of every specialty. Choose your track — medicine for the SMLE or nursing for the SNLE — when you sign up.</p>
+        <p>A free account gives you 10 questions from the bank with no payment card, plus the first lesson of every specialty. Choose your track — medicine for the SMLE or nursing for the SNLE — when you sign up.</p>
       </main>
     `,
 };

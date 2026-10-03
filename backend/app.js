@@ -14,7 +14,7 @@ import successStoriesRouter from './routes/success-stories.js';
 import emailCampaignsRouter from './routes/email-campaigns.js';
 import adminBroadcastRouter, { unsubToken } from './routes/admin-broadcast.js';
 import paymentRoutes from './routes/payment.js';
-import { checkSubscriptionAccess, checkQuizAccess, isPaymentEnforcementEnabled, FREE_QUESTION_ALLOWANCE, getPlan,
+import { checkSubscriptionAccess, checkQuizAccess, isPaymentEnforcementEnabled, FREE_QUESTION_ALLOWANCE, LEGACY_FREE_QUESTION_ALLOWANCE, allowanceFor, getPlan,
          grantSubscriptionMonths, MIN_GRANT_MONTHS, MAX_GRANT_MONTHS } from './services/paymentService.js';
 import { adminAuth, isAdminRequest } from './middleware/adminAuth.js';
 import { subscriptionGuard, quizAccessGuard } from './middleware/subscriptionGuard.js';
@@ -807,6 +807,16 @@ function ensurePaymentSchema() {
                 ALTER TABLE accounts
                     ADD COLUMN IF NOT EXISTS free_questions_served INTEGER NOT NULL DEFAULT 0
             `);
+
+            // Per-account allowance (2026-10-03: new accounts get 10, not 40).
+            // ADD COLUMN with the LEGACY default stamps every existing row with
+            // the 40 it was promised; the default is then switched so only rows
+            // created from now on get the smaller number. Both are idempotent.
+            await db.query(`
+                ALTER TABLE accounts
+                    ADD COLUMN IF NOT EXISTS free_allowance INTEGER NOT NULL DEFAULT ${LEGACY_FREE_QUESTION_ALLOWANCE}
+            `);
+            await db.query(`ALTER TABLE accounts ALTER COLUMN free_allowance SET DEFAULT ${Number(FREE_QUESTION_ALLOWANCE)}`);
 
             // Grandfather pre-rollout accounts EXACTLY ONCE.
             await db.query(`CREATE TABLE IF NOT EXISTS schema_migrations (name TEXT PRIMARY KEY, applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
@@ -2278,7 +2288,7 @@ app.post('/login', rateLimit(db, 'login', { windowMs: 5 * 60_000, max: 15 }), as
             expiryDate: null,
             daysRemaining: null,
             freeQuestionsRemaining: null,
-            allowance: FREE_QUESTION_ALLOWANCE,
+            allowance: allowanceFor(userRow),
             reason: 'enforcement_disabled',
         };
         let freeQuestionsRemaining = null;
@@ -2304,7 +2314,7 @@ app.post('/login', rateLimit(db, 'login', { windowMs: 5 * 60_000, max: 15 }), as
                     expiryDate: userRow.subscription_expiry_date || null,
                     daysRemaining,
                     freeQuestionsRemaining,
-                    allowance: FREE_QUESTION_ALLOWANCE,
+                    allowance: allowanceFor(userRow),
                     reason,
                 };
             }
@@ -2328,7 +2338,7 @@ app.post('/login', rateLimit(db, 'login', { windowMs: 5 * 60_000, max: 15 }), as
             subscription_expiry_date: subscription.enforced ? userRow.subscription_expiry_date : null,
             // Drives the free-allowance pill. null = unlimited (paid/exempt).
             free_questions_remaining: subscription.enforced ? freeQuestionsRemaining : null,
-            free_question_allowance: FREE_QUESTION_ALLOWANCE,
+            free_question_allowance: allowanceFor(userRow),
         };
 
         return res.status(200).json({
@@ -2408,7 +2418,7 @@ async function issueSessionForAccount(userRow, req) {
         expiryDate: null,
         daysRemaining: null,
         freeQuestionsRemaining: null,
-        allowance: FREE_QUESTION_ALLOWANCE,
+        allowance: allowanceFor(userRow),
         reason: 'enforcement_disabled',
     };
     let freeQuestionsRemaining = null;
@@ -2431,7 +2441,7 @@ async function issueSessionForAccount(userRow, req) {
                 expiryDate: userRow.subscription_expiry_date || null,
                 daysRemaining,
                 freeQuestionsRemaining,
-                allowance: FREE_QUESTION_ALLOWANCE,
+                allowance: allowanceFor(userRow),
                 reason,
             };
         }
@@ -2449,7 +2459,7 @@ async function issueSessionForAccount(userRow, req) {
         subscription_status: subscription.enforced ? userRow.subscription_status : 'free',
         subscription_expiry_date: subscription.enforced ? userRow.subscription_expiry_date : null,
         free_questions_remaining: subscription.enforced ? freeQuestionsRemaining : null,
-        free_question_allowance: FREE_QUESTION_ALLOWANCE,
+        free_question_allowance: allowanceFor(userRow),
     };
 
     return {
@@ -3305,7 +3315,7 @@ app.get('/admin/users', adminAuth, async (req, res) => {
             SELECT
                 a.id, a.username, a.password, a.isactive, a.logged, a.logged_date,
                 a.terms_accepted, a.email, a.created_at, a.track,
-                a.subscription_status, a.subscription_expiry_date, a.free_questions_used,
+                a.subscription_status, a.subscription_expiry_date, a.free_questions_used, a.free_allowance,
                 a.account_type, a.is_admin_created, a.grandfathered_at, a.signup_method,
                 latest_plan.plan_id,
                 COUNT(DISTINCT q.id) as total_quizzes,
@@ -3327,7 +3337,7 @@ app.get('/admin/users', adminAuth, async (req, res) => {
             ${trackFilter}
             GROUP BY a.id, a.username, a.password, a.isactive, a.logged, a.logged_date,
                      a.terms_accepted, a.email, a.created_at, a.track,
-                     a.subscription_status, a.subscription_expiry_date, a.free_questions_used,
+                     a.subscription_status, a.subscription_expiry_date, a.free_questions_used, a.free_allowance,
                      a.account_type, a.is_admin_created, a.grandfathered_at, a.signup_method,
                      latest_plan.plan_id
             ORDER BY a.id DESC
@@ -4723,13 +4733,13 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
             try {
                 await db.query(
                     `UPDATE accounts
-                        SET free_questions_used = LEAST($1::int, free_questions_used + $2::int)
-                      WHERE id = $3
+                        SET free_questions_used = LEAST(COALESCE(free_allowance, ${LEGACY_FREE_QUESTION_ALLOWANCE}), free_questions_used + $1::int)
+                      WHERE id = $2
                         AND is_admin_created = FALSE
                         AND grandfathered_at IS NULL
                         AND NOT (subscription_status = 'active'
                                  AND subscription_expiry_date > NOW())`,
-                    [FREE_QUESTION_ALLOWANCE, billable, user_id]
+                    [billable, user_id]
                 );
             } catch (err) {
                 logger.error('Failed to spend free allowance on submit', err);
@@ -5744,7 +5754,7 @@ app.get('/api/user-subscription/:userId', requireSession, requireOwnUser('userId
         const selectCols = columnsReady
             ? `id, username, email, isactive,
                subscription_status, subscription_expiry_date, free_questions_used,
-               free_questions_served,
+               free_questions_served, free_allowance,
                grandfathered_at, account_type, is_admin_created`
             : `id, username, email, isactive`;
 
@@ -5814,7 +5824,7 @@ app.get('/api/user-subscription/:userId', requireSession, requireOwnUser('userId
 
         res.json({
             enforcement: enforcementEnabled,
-            allowance: FREE_QUESTION_ALLOWANCE,
+            allowance: allowanceFor(user),
             // Every plan is a single charge. Stated by the API too, so any
             // client showing subscription details says the same thing.
             autoRenew: false,

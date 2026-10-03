@@ -292,7 +292,7 @@ const quizCopy = {
                 pitchGeneric: 'الاشتراك يفتح بقية بنك الأسئلة مع شرح لكل إجابة. حسابك وتقدّمك وتحليلاتك تبقى مفتوحة لك في الحالتين.',
                 seeAnalysis: 'عرض تحليلاتي',
             },
-            paywallSpentTitle: 'أنهيت أسئلتك الأربعين المجانية',
+            paywallSpentTitle: 'أنهيت أسئلتك المجانية',
             paywallSpentBody: 'حسابك وتقدّمك وتحليلاتك تبقى مفتوحة لك، وكذلك أول درس من كل تخصص. الاشتراك يفتح بقية بنك الأسئلة.',
             // ليست حالة دفع: الرصيد باقٍ، لكن هناك أسئلة سُحبت ولم يُجب عنها.
             // يُحتسب الرصيد عند الإجابة لا عند السحب، والحل هو إنهاء اختبار.
@@ -640,7 +640,7 @@ const quizCopy = {
                 pitchGeneric: 'A subscription opens the rest of the question bank, with a written explanation on every answer. Your account, your progress and your analytics stay open either way.',
                 seeAnalysis: 'See my analytics',
             },
-            paywallSpentTitle: "That's your 40 free questions",
+            paywallSpentTitle: "That's your 10 free questions",
             paywallSpentBody: 'Your account, your progress and your analytics stay open, and so does the first lesson of every specialty. A subscription opens the rest of the question bank.',
             // Not a payment state: the budget is intact, but questions have
             // been fetched and never answered. The allowance is spent on

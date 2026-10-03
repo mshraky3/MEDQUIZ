@@ -13,7 +13,7 @@ const AUDIENCE_LABELS = {
     paid: 'Paid subscribers',
     legacy: 'Legacy accounts',
     free: 'Free — questions left',
-    exhausted: 'Free — used up their 40',
+    exhausted: 'Free — used up their free questions',
     // Track-targeted: most announcements only concern one student population.
     ...TRACK_KEYS.reduce((acc, t) => {
         acc[`track:${t}`] = `${TRACKS[t].label.en} track`;

@@ -401,7 +401,23 @@ export function getCurrency() {
  * How many questions a non-paying account may ever answer. A LIFETIME budget,
  * not a window — see checkQuizAccess.
  */
-export const FREE_QUESTION_ALLOWANCE = Number(process.env.FREE_QUESTION_ALLOWANCE || 40);
+export const FREE_QUESTION_ALLOWANCE = Number(process.env.FREE_QUESTION_ALLOWANCE || 10);
+
+/**
+ * What every account created before the 10-question rule (2026-10-03) was
+ * promised. The allowance is stored PER ACCOUNT in accounts.free_allowance:
+ * the column was added with this value as its default, so every existing row
+ * kept it, and its default was then switched to FREE_QUESTION_ALLOWANCE so only
+ * new signups get the smaller one. A missing value reads as this one, which can
+ * only be too generous, never lock a student out of what they were promised.
+ */
+export const LEGACY_FREE_QUESTION_ALLOWANCE = 40;
+
+/** Lifetime free-question budget of one account. */
+export function allowanceFor(account) {
+    const n = Number(account?.free_allowance);
+    return Number.isFinite(n) && n > 0 ? n : LEGACY_FREE_QUESTION_ALLOWANCE;
+}
 
 /**
  * How far `free_questions_served` may run ahead of `free_questions_used`.
@@ -418,8 +434,13 @@ export const FREE_QUESTION_ALLOWANCE = Number(process.env.FREE_QUESTION_ALLOWANC
  * is exactly what they were entitled to anyway.
  */
 export const FREE_UNANSWERED_CAP = Number(
-    process.env.FREE_UNANSWERED_CAP || FREE_QUESTION_ALLOWANCE
+    process.env.FREE_UNANSWERED_CAP || LEGACY_FREE_QUESTION_ALLOWANCE
 );
+
+/** The cap is never above the account's own allowance, or it would not bind. */
+function unansweredCapFor(account) {
+    return Math.min(FREE_UNANSWERED_CAP, allowanceFor(account));
+}
 
 /**
  * Is this a PAYING (or exempt) account? Nothing more.
@@ -532,9 +553,9 @@ export function checkQuizAccess(account) {
     // outstanding" is the safe direction — it can only ever be too generous to
     // the student, never lock one out of questions they are entitled to.
     const served = Number(account.free_questions_served) || 0;
-    const remaining = Math.max(0, FREE_QUESTION_ALLOWANCE - used);
+    const remaining = Math.max(0, allowanceFor(account) - used);
     const outstanding = Math.max(0, served - used);
-    const servable = Math.max(0, Math.min(remaining, FREE_UNANSWERED_CAP - outstanding));
+    const servable = Math.max(0, Math.min(remaining, unansweredCapFor(account) - outstanding));
 
     if (remaining <= 0) {
         return { allowed: false, remaining: 0, servable: 0, reason: 'free_allowance_exhausted' };

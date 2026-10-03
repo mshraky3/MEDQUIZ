@@ -73,7 +73,7 @@ const supportCopy = {
 
         subscribe: {
             pill: 'اشتراك المنصة',
-            allowanceSpentTitle: 'أنهيت أسئلتك الأربعين المجانية',
+            allowanceSpentTitle: 'أنهيت أسئلتك المجانية',
             allowanceSpentBody: 'حسابك وتقدّمك وأول درس من كل تخصص تبقى مفتوحة لك دائماً. الاشتراك يفتح بقية بنك الأسئلة والملخصات كاملة.',
             title: 'اختر خطة اشتراكك',
             body: 'وصول كامل لجميع الأسئلة والملخصات والتحليلات.',
@@ -224,7 +224,7 @@ const supportCopy = {
 
         subscribe: {
             pill: 'Platform subscription',
-            allowanceSpentTitle: "That's your 40 free questions",
+            allowanceSpentTitle: "That's your 10 free questions",
             allowanceSpentBody: 'Your account, your progress and the first lesson of every specialty stay open for good. A subscription opens the rest of the question bank and the full summaries.',
             title: 'Choose your plan',
             body: 'Full access to every question, summary and analytic.',

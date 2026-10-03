@@ -19,7 +19,7 @@ import {
     handleWebhookEvent,
     verifyAndActivate,
     checkQuizAccess,
-    FREE_QUESTION_ALLOWANCE,
+    allowanceFor,
 } from '../services/paymentService.js';
 
 const router = express.Router();
@@ -174,7 +174,7 @@ router.get('/status/:userId', requirePaymentEnabled, requireOwnSession, async (r
         const r = await req.db.query(
             `SELECT id, subscription_status, subscription_expiry_date,
                     is_admin_created, grandfathered_at, free_questions_used,
-                    free_questions_served
+                    free_questions_served, free_allowance
              FROM accounts WHERE id = $1`,
             [userId]
         );
@@ -195,7 +195,7 @@ router.get('/status/:userId', requirePaymentEnabled, requireOwnSession, async (r
             daysRemaining,
             // null = unlimited (paid, admin-created or grandfathered).
             freeQuestionsRemaining: Number.isFinite(quiz.remaining) ? quiz.remaining : null,
-            allowance: FREE_QUESTION_ALLOWANCE,
+            allowance: allowanceFor(a),
             // Nothing renews automatically — every plan is a single charge.
             autoRenew: false,
             isAdminCreated: a.is_admin_created,

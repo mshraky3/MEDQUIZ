@@ -24,7 +24,7 @@ process.env.PAYMENT_ENFORCEMENT_ENABLED = 'true';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-const { checkQuizAccess, FREE_QUESTION_ALLOWANCE, FREE_UNANSWERED_CAP } =
+const { checkQuizAccess, allowanceFor, FREE_QUESTION_ALLOWANCE, LEGACY_FREE_QUESTION_ALLOWANCE, FREE_UNANSWERED_CAP } =
     await import('./paymentService.js');
 
 /** A metered free-tier account that has answered `used` and been served `served`. */
@@ -76,7 +76,7 @@ test('answering some of the backlog lifts the pause', () => {
 });
 
 test('a genuinely spent allowance is still the paywall', () => {
-    assert.deepEqual(decide(free(FREE_QUESTION_ALLOWANCE, FREE_QUESTION_ALLOWANCE)), {
+    assert.deepEqual(decide(free(LEGACY_FREE_QUESTION_ALLOWANCE, LEGACY_FREE_QUESTION_ALLOWANCE)), {
         allowed: false, remaining: 0, servable: 0, reason: 'free_allowance_exhausted',
     });
 });
@@ -142,7 +142,7 @@ test('fetch-and-abandon farming terminates at the allowance', () => {
         harvested += batch;
     }
 
-    assert.equal(harvested, FREE_QUESTION_ALLOWANCE);
+    assert.equal(harvested, LEGACY_FREE_QUESTION_ALLOWANCE);
     assert.equal(checkQuizAccess(free(used, served)).allowed, false);
 });
 
@@ -456,4 +456,34 @@ test('webhook: a group payment at 196 for three accounts is accepted, 250 is not
         await handleWebhookEvent(tripwireDb, { type: 'payment_paid', data: cheap }),
         { handled: false, reason: 'amount_mismatch' },
     );
+});
+
+// ── Per-account allowance: new accounts get 10, existing ones keep 40 ──────
+const newAccount = (used, served) => ({ ...free(used, served), free_allowance: 10 });
+
+test('new signups default to 10 free questions', () => {
+    assert.equal(FREE_QUESTION_ALLOWANCE, 10);
+});
+
+test('an account stamped with 10 gets 10, not 40', () => {
+    assert.deepEqual(decide(newAccount(0, 0)), {
+        allowed: true, remaining: 10, servable: 10, reason: 'free_allowance',
+    });
+});
+
+test('an account stamped with 10 hits the paywall at 10 answered', () => {
+    assert.equal(decide(newAccount(10, 10)).reason, 'free_allowance_exhausted');
+});
+
+test('the unanswered cap binds to the account allowance, not to 40', () => {
+    // Fetch ten, close the tab, fetch ten more must not reach 40 on a 10 account.
+    assert.deepEqual(decide(newAccount(0, 10)), {
+        allowed: false, remaining: 10, servable: 0, reason: 'unanswered_backlog',
+    });
+});
+
+test('an existing account without the column, or stamped 40, keeps its 40', () => {
+    assert.equal(allowanceFor(free(0, 0)), 40);
+    assert.equal(allowanceFor({ free_allowance: 40 }), 40);
+    assert.equal(decide(free(25, 25)).remaining, 15);
 });

@@ -23,7 +23,7 @@ import {
 } from './userEmailService.js';
 import { notify } from './notificationService.js';
 import { specialtyLabel } from '../config/tracks.js';
-import { FREE_QUESTION_ALLOWANCE } from './paymentService.js';
+import { LEGACY_FREE_QUESTION_ALLOWANCE } from './paymentService.js';
 
 /**
  * Free allowance used up, never converted → the re-engagement email.
@@ -47,7 +47,7 @@ export async function runTrialEndedJob(db, { limit = 100 } = {}) {
     const { rows } = await db.query(`
         SELECT a.id, a.username, a.email, a.track, a.preferred_lang, a.created_at
           FROM accounts a
-         WHERE a.free_questions_used >= ${FREE_QUESTION_ALLOWANCE}
+         WHERE a.free_questions_used >= COALESCE(a.free_allowance, ${LEGACY_FREE_QUESTION_ALLOWANCE})
            AND a.trial_ended_email_sent_at IS NULL
            AND a.email IS NOT NULL
            AND a.email_verified = TRUE
