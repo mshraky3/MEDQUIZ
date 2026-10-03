@@ -9,6 +9,10 @@
  * Both tracks now work the same way: a real, student-facing choice between the
  * collections their source material was split into.
  *
+ *   A question may belong to SEVERAL collections: `questions.source` is its primary
+ *   one and `questions.sources` (text[], kept in sync by a trigger, always contains
+ *   `source`) is the full list. Every "which collection" filter uses `sources`.
+ *
  *   medical — the 2026H2 rebuild replaced the old unified "MidgardGameBoy"
  *     bank with three genuine collections: GameBoy, Confirmed and Midgard.
  *     MonthlyRecall was added after that as a fourth, drawn from raw
@@ -50,7 +54,20 @@ export const KEPT_SOURCES = ['MidgardGameBoy', 'January25', 'FebMarApr25', 'May2
  * priority (see SOURCE_PRIORITY) — MonthlyRecall first (freshest exam-recall
  * content), then GameBoy, Confirmed, Midgard last.
  */
-export const MEDICAL_SOURCES = ['MedicalMonthlyRecall', 'MedicalGameBoy', 'MedicalConfirmed', 'MedicalMidgard'];
+export const MEDICAL_SOURCES = ['MedicalSeptemberRecall', 'MedicalMonthlyRecall', 'MedicalGameBoy', 'MedicalConfirmed', 'MedicalMidgard'];
+
+/**
+ * Every value user_quiz_sessions.source may hold (the CHECK constraint
+ * check_valid_quiz_source). Legacy values stay so historical sessions are valid.
+ * ensureSchema() rebuilds the constraint from this list, so a new source only
+ * needs adding here.
+ */
+export const ALL_SESSION_SOURCES = [
+    'general', 'Midgard', 'GameBoy', 'October25', 'November25', 'December25', 'January25',
+    'FebMarApr25', 'MidgardGameBoy', 'May26', 'June26', 'NursingEMS', 'NursingMostRepeated',
+    'NursingConfirmed', 'MedicalGameBoy', 'MedicalConfirmed', 'MedicalMidgard',
+    'MedicalMonthlyRecall', 'MedicalSeptemberRecall',
+];
 
 /**
  * The nursing bank's two collections, ordered by recommended study priority

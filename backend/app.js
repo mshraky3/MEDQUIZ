@@ -51,7 +51,8 @@ import {
     DEFAULT_TRACK, TRACK_KEYS, TRACKS, isValidTrack, normalizeTrack,
     specialtyKeys, trackLabelAr, trackLabelEn, trackForSpecialty,
 } from './config/tracks.js';
-import { PICKABLE_SOURCES, SOURCE_PRIORITY, resolveSources } from './config/sources.js';
+import { PICKABLE_SOURCES, SOURCE_PRIORITY, SELECTABLE_SOURCES, resolveSources, ALL_SESSION_SOURCES } from './config/sources.js';
+import { runRecallImport } from './services/recallImportService.js';
 
 /**
  * How long an admin-granted account keeps access when no explicit term is
@@ -612,6 +613,45 @@ function ensureSchema() {
             // this index is the one that keeps /api/questions off a seq scan
             // once the nursing bank is loaded alongside the medical one.
             await db.query(`CREATE INDEX IF NOT EXISTS idx_questions_track_type_source ON questions(track, question_type, source)`);
+
+            // A question can belong to several collections (e.g. a question
+            // recalled in August AND September lives in both, as ONE row, so
+            // progress, attempts and the no-repeat rule are shared). `source`
+            // stays the primary collection; `sources` is the full list. The
+            // trigger keeps the invariant "sources contains source" for every
+            // writer (admin screens, scripts, imports), so no insert path can
+            // forget it. Every collection filter reads `sources`.
+            await db.query(`ALTER TABLE questions ADD COLUMN IF NOT EXISTS sources TEXT[]`);
+            await db.query(`UPDATE questions SET sources = ARRAY[COALESCE(source, 'general')] WHERE sources IS NULL`);
+            await db.query(`
+                CREATE OR REPLACE FUNCTION questions_sync_sources() RETURNS trigger AS $fn$
+                BEGIN
+                    IF NEW.sources IS NULL OR cardinality(NEW.sources) = 0 THEN
+                        NEW.sources := ARRAY[COALESCE(NEW.source, 'general')];
+                    ELSIF NOT (COALESCE(NEW.source, 'general') = ANY(NEW.sources)) THEN
+                        NEW.sources := array_prepend(COALESCE(NEW.source, 'general'), NEW.sources);
+                    END IF;
+                    RETURN NEW;
+                END
+                $fn$ LANGUAGE plpgsql
+            `);
+            await db.query(`DROP TRIGGER IF EXISTS trg_questions_sync_sources ON questions`);
+            await db.query(`
+                CREATE TRIGGER trg_questions_sync_sources
+                BEFORE INSERT OR UPDATE OF source, sources ON questions
+                FOR EACH ROW EXECUTE FUNCTION questions_sync_sources()
+            `);
+            await db.query(`CREATE INDEX IF NOT EXISTS idx_questions_sources_gin ON questions USING GIN (sources)`);
+            // Quiz sessions record the collection they were drawn from; widen the
+            // CHECK from the one list in config/sources.js. NOT VALID: new rows
+            // are checked, existing history is not rescanned. Never fails the boot.
+            try {
+                await db.query(`ALTER TABLE user_quiz_sessions DROP CONSTRAINT IF EXISTS check_valid_quiz_source`);
+                const sessionSources = ALL_SESSION_SOURCES.map((x) => `'${x}'`).join(', ');
+                await db.query(`ALTER TABLE user_quiz_sessions ADD CONSTRAINT check_valid_quiz_source CHECK (source IN (${sessionSources})) NOT VALID`);
+            } catch (err) {
+                logger.error('Could not rebuild check_valid_quiz_source', err);
+            }
 
             // Auth resolves accounts by email (/login, /session-validate), but
             // the only unique index was on `username` — so email lookups were
@@ -1953,7 +1993,10 @@ const ensureOAuthColumns = async () => {
 // 10: accounts.free_allowance (new accounts get 10 free questions, existing keep
 //     40). Added in ensurePaymentSchema() in 8df50cb WITHOUT bumping this, so the
 //     column was never created and every query selecting it failed.
-const SCHEMA_BOOTSTRAP_VERSION = 10;
+// 11: questions.sources (multi-collection membership) + its sync trigger + GIN
+//     index, and check_valid_quiz_source rebuilt from ALL_SESSION_SOURCES to
+//     accept MedicalSeptemberRecall.
+const SCHEMA_BOOTSTRAP_VERSION = 11;
 async function bootstrapAll() {
     try {
         await db.query(`
@@ -3877,8 +3920,9 @@ app.get('/api/track-content-status', requireSession, async (req, res) => {
                 [track]
             ),
             db.query(
-                `SELECT source, COUNT(*)::int AS total
-                 FROM questions WHERE track = $1 GROUP BY source`,
+                `SELECT s AS source, COUNT(*)::int AS total
+                 FROM questions, unnest(sources) AS s
+                 WHERE track = $1 GROUP BY s`,
                 [track]
             ),
             db.query(
@@ -3898,10 +3942,12 @@ app.get('/api/track-content-status', requireSession, async (req, res) => {
             // indicator, which previously had no way to tell a genuinely
             // exhausted source from one nobody has touched yet.
             db.query(
-                `SELECT source, COUNT(*)::int AS completed
-                 FROM user_question_progress
-                 WHERE user_id = $1 AND source = ANY($2::text[])
-                 GROUP BY source`,
+                `SELECT s AS source, COUNT(*)::int AS completed
+                 FROM user_question_progress p
+                 JOIN questions q ON q.id = p.question_id
+                 CROSS JOIN LATERAL unnest(q.sources) AS s
+                 WHERE p.user_id = $1 AND s = ANY($2::text[])
+                 GROUP BY s`,
                 [req.accountId, trackSources]
             ),
         ]);
@@ -4134,7 +4180,7 @@ app.get('/api/questions', requireQuizAccess, async (req, res) => {
     {
         const sources = resolveSources(sourceParam, track);
         if (sources) {
-            categoryConditions.push(`source = ANY($${categoryValues.length + 1}::text[])`);
+            categoryConditions.push(`sources && $${categoryValues.length + 1}::text[]`);
             categoryValues.push(sources);
         }
     }
@@ -4552,14 +4598,17 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
         // If we have question IDs, determine the source from the actual questions
         if (question_ids && question_ids.length > 0) {
             try {
+                // Count every collection a question belongs to; on a tie the
+                // collection the student asked for wins, so a quiz of shared
+                // questions is recorded under the one they picked.
                 const sourceQuery = await db.query(`
-                    SELECT source, COUNT(*) as count 
-                    FROM questions 
-                    WHERE id = ANY($1) 
-                    GROUP BY source 
-                    ORDER BY count DESC 
+                    SELECT s AS source, COUNT(*) as count
+                    FROM questions, unnest(sources) AS s
+                    WHERE id = ANY($1)
+                    GROUP BY s
+                    ORDER BY count DESC, (s = $2) DESC
                     LIMIT 1
-                `, [question_ids]);
+                `, [question_ids, source || '']);
 
                 if (sourceQuery.rows.length > 0) {
                     actualSource = sourceQuery.rows[0].source;
@@ -4770,7 +4819,7 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
             // Record question progress for each answered question (parallelized)
             if (question_ids && question_ids.length > 0) {
                 const questionDetails = await db.query(`
-                    SELECT id, question_type, source
+                    SELECT id, question_type, source, sources
                     FROM questions
                     WHERE id = ANY($1)
                 `, [question_ids]);
@@ -4791,9 +4840,11 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
                 const seen = new Map();
                 for (const q of questionDetails.rows) {
                     const type = q.question_type;
-                    const src = q.source || 'general';
-                    // Map key avoids any string delimiter: type/source contain spaces.
-                    seen.set(JSON.stringify([type, src]), { type, source: src });
+                    // A question counts toward EVERY collection it belongs to.
+                    for (const src of (q.sources && q.sources.length ? q.sources : [q.source || 'general'])) {
+                        // Map key avoids any string delimiter: type/source contain spaces.
+                        seen.set(JSON.stringify([type, src]), { type, source: src });
+                    }
                 }
                 touchedCardinalities = [...seen.values()];
             }
@@ -4858,12 +4909,13 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
                                 // Specialty names happen to be disjoint across tracks
                                 // today, but "topic complete" must not depend on that.
                                 `SELECT COUNT(*)::int AS c FROM questions
-                                  WHERE track = $1 AND question_type = $2 AND source = $3`,
+                                  WHERE track = $1 AND question_type = $2 AND $3 = ANY(sources)`,
                                 [resolveContentTrack(req), type, source]
                             ),
                             db.query(
-                                `SELECT COUNT(*)::int AS c FROM user_question_progress
-                                 WHERE user_id = $1 AND question_type = $2 AND source = $3`,
+                                `SELECT COUNT(*)::int AS c FROM user_question_progress p
+                                 JOIN questions q ON q.id = p.question_id
+                                 WHERE p.user_id = $1 AND q.question_type = $2 AND $3 = ANY(q.sources)`,
                                 [user_id, type, source]
                             )
                         ]);
@@ -5256,6 +5308,23 @@ app.get('/quiz-sessions/stats/:userId', requireSession, requireOwnUser('userId')
 
 
 
+// Additive recall import with multi-collection membership (see
+// services/recallImportService.js). Dry run unless the body says dryRun:false.
+app.post('/admin/import-recall', adminAuth, async (req, res) => {
+    try {
+        const out = await runRecallImport({
+            pool: db,
+            body: req.body,
+            allowedSourcesFor: (t) => SELECTABLE_SOURCES[normalizeTrack(t)] || [],
+            specialtyKeysFor: (t) => specialtyKeys(normalizeTrack(t)),
+        });
+        res.status(out.status).json(out.json);
+    } catch (err) {
+        logger.error('Recall import failed', err);
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
 app.post('/api/questions', adminAuth, async (req, res) => {
     const {
         question_text,
@@ -5329,14 +5398,15 @@ app.get('/api/check-completion/:userId', requireSession, requireOwnUser('userId'
         const totalQuery = await db.query(`
             SELECT COUNT(*) as total
             FROM questions
-            WHERE track = $1 AND question_type = $2 AND source = $3
+            WHERE track = $1 AND question_type = $2 AND $3 = ANY(sources)
         `, [track, type, source]);
 
         // Get completed questions for this cardinality
         const completedQuery = await db.query(`
             SELECT COUNT(*) as completed
-            FROM user_question_progress 
-            WHERE user_id = $1 AND question_type = $2 AND source = $3
+            FROM user_question_progress p
+            JOIN questions q ON q.id = p.question_id
+            WHERE p.user_id = $1 AND q.question_type = $2 AND $3 = ANY(q.sources)
         `, [userId, type, source]);
 
         const total = parseInt(totalQuery.rows[0].total);
@@ -5432,7 +5502,8 @@ app.post('/api/reset-progress', requireSession, subscriberOnly, async (req, res)
     const conditions = ['user_id = $1'];
     const values = [userId];
     if (!allSources) {
-        conditions.push(`source = $${values.length + 1}`);
+        // progress rows belong to a question, which may sit in several collections
+        conditions.push(`question_id IN (SELECT id FROM questions WHERE $${values.length + 1} = ANY(sources))`);
         values.push(source);
     }
     if (typeList.length > 0) {
@@ -5673,14 +5744,15 @@ app.get('/quiz-sessions/progress/:userId', requireSession, requireOwnUser('userI
 
         // Get source breakdown
         const sourceBreakdownResult = await db.query(`
-            SELECT 
-                COALESCE(q.source, 'general') as source,
+            SELECT
+                s as source,
                 COUNT(DISTINCT q.id) as total_questions,
                 COUNT(DISTINCT uqa.question_id) as answered_questions
             FROM questions q
+            CROSS JOIN LATERAL unnest(q.sources) AS s
             LEFT JOIN user_question_attempts uqa ON q.id = uqa.question_id AND uqa.user_id = $1
             WHERE q.track = $2
-            GROUP BY COALESCE(q.source, 'general')
+            GROUP BY s
         `, [userId, track]);
 
         const sourceBreakdown = {};
@@ -7445,7 +7517,7 @@ app.get('/final-quiz/questions-count', requireSession, async (req, res) => {
             SELECT COUNT(DISTINCT LOWER(TRIM(question_text)))::int AS total_questions
             FROM questions
             WHERE track = $1 AND question_type = $2
-              ${sources ? 'AND source = ANY($3::text[])' : ''}
+              ${sources ? 'AND sources && $3::text[]' : ''}
         `, sources ? [track, questionType, sources] : [track, questionType]);
 
         const totalQuestions = parseInt(result.rows[0].total_questions);
@@ -7499,7 +7571,7 @@ app.get('/final-quiz/questions', requireSession, subscriberOnly, async (req, res
                 source
             FROM questions
             WHERE track = $1 AND question_type = $2
-              ${sources ? 'AND source = ANY($3::text[])' : ''}
+              ${sources ? 'AND sources && $3::text[]' : ''}
         `, sources ? [track, questionType, sources] : [track, questionType]);
 
         // The union of kept sources can contain the same recall twice; collapse

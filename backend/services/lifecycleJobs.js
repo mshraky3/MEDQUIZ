@@ -558,7 +558,7 @@ function scopedFilter(userId, goal, weekly) {
     }
     if (goal.source) {
         params.push(goal.source);
-        where.push(`q.source = $${params.length}`);
+        where.push(`$${params.length} = ANY(q.sources)`);
     }
     return { sql: where.join(' AND '), params };
 }
