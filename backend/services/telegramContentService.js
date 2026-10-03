@@ -26,41 +26,74 @@ function toPollShape(q) {
 const QUESTION_COLUMNS = 'id, question_text, option1, option2, option3, option4, correct_option, explanation, question_type';
 
 /**
- * Pick a question for the daily channel post, avoiding anything posted to the
- * channel in the last 90 days. Falls back to the least-recently-posted
- * question once the whole bank has cycled through that window.
+ * A question recalled with missing options carries the bank's placeholder
+ * ("didn't recall") in the empty slots. On the website that is honest; as a
+ * public Telegram poll it just looks broken, so polls skip those questions.
  */
-export async function pickChannelQuestion(db) {
+export const PLACEHOLDER_OPTION = "didn't recall";
+export const NO_PLACEHOLDER_OPTIONS = ['option1', 'option2', 'option3', 'option4']
+    .map((c) => `LOWER(TRIM(q.${c})) <> '${PLACEHOLDER_OPTION.replace(/'/g, "''")}'`)
+    .join(' AND ');
+
+/**
+ * One pass of the channel picker: not posted in the last 90 days first, then the
+ * least-recently-posted. `featuredSource` (optional) restricts the pass to one
+ * collection a question belongs to (questions.sources).
+ */
+async function pickChannelQuestionFrom(db, featuredSource, { fallbackToOldest = true } = {}) {
+    const params = [MEDICAL];
+    let sourceCond = '';
+    if (featuredSource) {
+        params.push(featuredSource);
+        sourceCond = `AND $${params.length} = ANY(q.sources)`;
+    }
     const fresh = await db.query(`
         SELECT ${QUESTION_COLUMNS} FROM questions q
-        WHERE track = $1
+        WHERE track = $1 AND ${NO_PLACEHOLDER_OPTIONS} ${sourceCond}
           AND NOT EXISTS (
               SELECT 1 FROM telegram_sent_questions tsq
               WHERE tsq.question_id = q.id AND tsq.context = 'channel'
                 AND tsq.sent_at > NOW() - INTERVAL '90 days'
           )
         ORDER BY RANDOM() LIMIT 1
-    `, [MEDICAL]);
+    `, params);
     if (fresh.rows[0]) return { ...fresh.rows[0], ...toPollShape(fresh.rows[0]) };
+    if (!fallbackToOldest) return null;
 
     const oldest = await db.query(`
         SELECT ${QUESTION_COLUMNS} FROM questions q
-        WHERE track = $1
+        WHERE track = $1 AND ${NO_PLACEHOLDER_OPTIONS} ${sourceCond}
         ORDER BY (
             SELECT MAX(sent_at) FROM telegram_sent_questions tsq
             WHERE tsq.question_id = q.id AND tsq.context = 'channel'
         ) NULLS FIRST
         LIMIT 1
-    `, [MEDICAL]);
+    `, params);
     if (!oldest.rows[0]) return null;
     return { ...oldest.rows[0], ...toPollShape(oldest.rows[0]) };
+}
+
+/**
+ * Pick a question for the daily channel post. Questions with placeholder
+ * options are never picked. When `featuredSource` is given, a question from that
+ * collection is preferred and the general bank is only the fallback.
+ */
+export async function pickChannelQuestion(db, { featuredSource = null } = {}) {
+    if (featuredSource) {
+        // Fresh featured questions only: once those are used up the general bank
+        // (fresh first, then least-recently-posted) takes over, instead of the
+        // channel re-posting the featured set.
+        const featured = await pickChannelQuestionFrom(db, featuredSource, { fallbackToOldest: false });
+        if (featured) return featured;
+    }
+    return pickChannelQuestionFrom(db, null);
 }
 
 /** Random question for a /quiz DM — light dedupe against that user's last 20 answers. */
 export async function pickDmQuizQuestion(db, chatId) {
     const { rows } = await db.query(`
         SELECT ${QUESTION_COLUMNS} FROM questions q
-        WHERE track = $1
+        WHERE track = $1 AND ${NO_PLACEHOLDER_OPTIONS}
           AND q.id NOT IN (
               SELECT question_id FROM telegram_quiz_attempts
               WHERE chat_id = $2
@@ -72,7 +105,7 @@ export async function pickDmQuizQuestion(db, chatId) {
 
     // This user has seen everything recently — just give them a random one.
     const { rows: any } = await db.query(
-        `SELECT ${QUESTION_COLUMNS} FROM questions q WHERE track = $1 ORDER BY RANDOM() LIMIT 1`,
+        `SELECT ${QUESTION_COLUMNS} FROM questions q WHERE track = $1 AND ${NO_PLACEHOLDER_OPTIONS} ORDER BY RANDOM() LIMIT 1`,
         [MEDICAL]
     );
     return any[0] ? { ...any[0], ...toPollShape(any[0]) } : null;
