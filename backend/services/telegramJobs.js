@@ -47,11 +47,12 @@ export async function runDailyChannelPostJob(db) {
 }
 
 /** Weekly (dedupe-stamped, actually checked daily) weak-topics DM for eligible bot users. */
-export async function runWeeklyWeakTopicsJob(db) {
+export async function runWeeklyWeakTopicsJob(db, { outOfTime = () => false } = {}) {
     const chatIds = await findDueForWeeklyDigest(db);
     let sent = 0;
     const errors = [];
     for (const chatId of chatIds) {
+        if (outOfTime()) break; // see utils/cronBudget.js
         try {
             const { topics } = await computeWeakTopics(db, chatId);
             if (!topics) continue; // fell below the threshold again somehow — skip, don't stamp

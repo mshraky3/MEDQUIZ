@@ -9,6 +9,7 @@ import crypto from 'crypto';
 import { adminAuth } from '../middleware/adminAuth.js';
 import { sendQuizPoll, sendMessage, siteButton, setWebhook, getWebhookInfo } from '../services/telegramClient.js';
 import { logger } from '../utils/observability.js';
+import { cronDeadline } from '../utils/cronBudget.js';
 import {
     welcomeMessage, helpMessage, websiteMessage, noWeakspotsYetMessage,
     weakspotsMessage, noQuestionsAvailableMessage,
@@ -164,7 +165,7 @@ router.get('/api/cron/telegram-daily', cronAuth, async (req, res) => {
 
 router.get('/api/cron/telegram-weekly', cronAuth, async (req, res) => {
     try {
-        const result = await runWeeklyWeakTopicsJob(req.db);
+        const result = await runWeeklyWeakTopicsJob(req.db, { outOfTime: cronDeadline() });
         res.json({ success: true, ...result });
     } catch (err) {
         logger.error('cron/telegram-weekly error:', err);

@@ -37,7 +37,7 @@ import { LEGACY_FREE_QUESTION_ALLOWANCE } from './paymentService.js';
  * Skips anyone who already has access (paid, admin-created or grandfathered),
  * and anyone with a paid event in the ledger even if their term has lapsed.
  */
-export async function runTrialEndedJob(db, { limit = 100 } = {}) {
+export async function runTrialEndedJob(db, { limit = 100, outOfTime = () => false } = {}) {
     const result = { sent: 0, errors: [] };
     // No grace window is needed any more: the old one existed because the
     // heartbeat stamped subscription_expiry_date at the exact instant of
@@ -65,6 +65,7 @@ export async function runTrialEndedJob(db, { limit = 100 } = {}) {
     `, [limit]);
 
     for (const user of rows) {
+        if (outOfTime()) break; // see utils/cronBudget.js
         try {
             // What they actually did with their 40 — the most persuasive
             // content in the email, and entirely theirs. Their whole history
@@ -117,7 +118,7 @@ export const COMEBACK_STAGES = [1, 3];
 // better than listing them would.
 export const COMEBACK_QUESTION_SAMPLE = 4;
 
-export async function runComebackJob(db, { limit = 200 } = {}) {
+export async function runComebackJob(db, { limit = 200, outOfTime = () => false } = {}) {
     const result = { sent: 0, errors: [] };
     const { rows } = await db.query(`
         SELECT a.id, a.username, a.email, a.track, a.preferred_lang, a.comeback_email_stage,
@@ -143,6 +144,7 @@ export async function runComebackJob(db, { limit = 200 } = {}) {
     `, [limit]);
 
     for (const user of rows) {
+        if (outOfTime()) break; // see utils/cronBudget.js
         const daysSince = Number(user.days_since) || 0;
         const due = [...COMEBACK_STAGES].reverse().find((s) => daysSince >= s);
         if (due == null) continue;
@@ -233,7 +235,7 @@ export function dueRenewalStage(daysToExpiry) {
 /** How long after expiry rung 3 stops being offered, so a dormant account is not mailed months late. */
 const RENEWAL_TAIL_DAYS = 30;
 
-export async function runRenewalSequenceJob(db, { limit = 200 } = {}) {
+export async function runRenewalSequenceJob(db, { limit = 200, outOfTime = () => false } = {}) {
     const result = { sent: 0, errors: [] };
     // The window spans both sides of the date: seven days before through
     // RENEWAL_TAIL_DAYS after. `subscription_status` is deliberately NOT
@@ -266,6 +268,7 @@ export async function runRenewalSequenceJob(db, { limit = 200 } = {}) {
     `, [RENEWAL_TAIL_DAYS, limit]);
 
     for (const user of rows) {
+        if (outOfTime()) break; // see utils/cronBudget.js
         const days = Number(user.days_to_expiry);
         const due = dueRenewalStage(days);
         if (due == null) continue;
@@ -348,7 +351,7 @@ export async function runRenewalSequenceJob(db, { limit = 200 } = {}) {
  * product you are not using. Only users with access are included — telling a
  * locked-out user how well they are doing would be tone-deaf.
  */
-export async function runProgressDigestJob(db, { limit = 200 } = {}) {
+export async function runProgressDigestJob(db, { limit = 200, outOfTime = () => false } = {}) {
     const result = { sent: 0, errors: [] };
     const { rows } = await db.query(`
         SELECT a.id, a.username, a.email, a.track, a.preferred_lang,
@@ -372,6 +375,7 @@ export async function runProgressDigestJob(db, { limit = 200 } = {}) {
     `, [limit]);
 
     for (const user of rows) {
+        if (outOfTime()) break; // see utils/cronBudget.js
         try {
             const { rows: w } = await db.query(`
                 SELECT
@@ -449,7 +453,7 @@ function daysUntil(examDate) {
  * Runs off the same cadence as the other lifecycle jobs and is idempotent by
  * the same mechanism: select who is due, send, stamp immediately.
  */
-export async function runExamReminderJob(db, { limit = 200 } = {}) {
+export async function runExamReminderJob(db, { limit = 200, outOfTime = () => false } = {}) {
     const result = { sent: 0, errors: [] };
     const { rows } = await db.query(`
         SELECT id, username, email, track, preferred_lang, exam_date, exam_reminder_stage,
@@ -467,6 +471,7 @@ export async function runExamReminderJob(db, { limit = 200 } = {}) {
     `, [EXAM_REMINDER_STAGES[0], limit]);
 
     for (const user of rows) {
+        if (outOfTime()) break; // see utils/cronBudget.js
         // The rung this student is currently inside: the smallest threshold
         // that is still >= the days left. At 9 days out that is 14; at 2 it is
         // 3. Skipped entirely when that rung (or a closer one) already went.

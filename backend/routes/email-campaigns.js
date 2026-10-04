@@ -33,6 +33,7 @@ import { adminAuth } from '../middleware/adminAuth.js';
 import { normalizeTrack } from '../config/tracks.js';
 import { OWNER_EMAIL } from '../config/recipients.js';
 import { logger } from '../utils/observability.js';
+import { cronDeadline } from '../utils/cronBudget.js';
 
 const router = express.Router();
 
@@ -235,6 +236,7 @@ router.get('/api/email-test/all', adminAuth, async (req, res) => {
  */
 router.get('/api/cron/welcome-emails', cronAuth, async (req, res) => {
     const db = req.db;
+    const outOfTime = cronDeadline(); // see utils/cronBudget.js
     try {
         const { rows } = await db.query(`
             SELECT id, username, email, track, preferred_lang
@@ -251,6 +253,7 @@ router.get('/api/cron/welcome-emails', cronAuth, async (req, res) => {
         let sent = 0;
         const errors = [];
         for (const user of rows) {
+            if (outOfTime()) break;
             try {
                 await sendWelcomeEmail(user.email, String(user.username).split('@')[0], user.track,
                     { lang: user.preferred_lang, accountId: user.id });
@@ -282,6 +285,7 @@ router.get('/api/cron/welcome-emails', cronAuth, async (req, res) => {
 router.get('/api/cron/daily-emails', cronAuth, async (req, res) => {
     const db = req.db;
     const results = { inactivity: 0, streak: 0, feedback: 0, errors: [] };
+    const outOfTime = cronDeadline(); // see utils/cronBudget.js
 
     // ── 1. Inactivity ────────────────────────────────────────
     try {
@@ -299,6 +303,7 @@ router.get('/api/cron/daily-emails', cronAuth, async (req, res) => {
         `);
 
         for (const user of inactive) {
+            if (outOfTime()) break;
             try {
                 await sendInactivityEmail(user.email, String(user.username).split('@')[0], user.track,
                     { lang: user.preferred_lang, accountId: user.id });
@@ -331,6 +336,7 @@ router.get('/api/cron/daily-emails', cronAuth, async (req, res) => {
         `);
 
         for (const user of streakUsers) {
+            if (outOfTime()) break;
             try {
                 await sendStreakReminderEmail(user.email, String(user.username).split('@')[0], user.current_streak, user.track,
                     { lang: user.preferred_lang, accountId: user.id });
@@ -358,6 +364,7 @@ router.get('/api/cron/daily-emails', cronAuth, async (req, res) => {
         `);
 
         for (const user of feedbackUsers) {
+            if (outOfTime()) break;
             try {
                 await sendFeedbackEmail(user.email, String(user.username).split('@')[0], user.track,
                     { lang: user.preferred_lang, accountId: user.id });
@@ -388,7 +395,8 @@ router.get('/api/cron/daily-emails', cronAuth, async (req, res) => {
         ['comeback', runComebackJob],
     ]) {
         try {
-            const r = await job(db);
+            if (outOfTime()) break;
+            const r = await job(db, { outOfTime });
             results[name] = r.sent;
             if (r.errors.length) results.errors.push(...r.errors);
         } catch (err) {
@@ -402,7 +410,8 @@ router.get('/api/cron/daily-emails', cronAuth, async (req, res) => {
     // ≥ 47h old — i.e. a PDF of new subscriptions every 2 days. Kept inside
     // this cron so the project stays within Vercel's 2-cron (Hobby) limit.
     try {
-        results.subscriptionReport = await maybeSendSubscriptionReport(db);
+        // Skipped when out of time: it re-checks "last report >= 47h old" next run.
+        if (!outOfTime()) results.subscriptionReport = await maybeSendSubscriptionReport(db);
     } catch (err) {
         logger.error('cron/daily-emails subscription report error:', err);
         results.errors.push({ job: 'subscription_report', error: err.message });
@@ -413,7 +422,8 @@ router.get('/api/cron/daily-emails', cronAuth, async (req, res) => {
     // over hours or days outlives the admin's browser tab, so it needs a
     // scheduled nudge to finish on its own.
     try {
-        results.broadcasts = await drainSendingCampaigns(db);
+        // The hourly broadcast-drain cron picks it up if this is skipped.
+        if (!outOfTime()) results.broadcasts = await drainSendingCampaigns(db);
     } catch (err) {
         logger.error('cron/daily-emails broadcast drain error:', err);
         results.errors.push({ job: 'broadcast_drain', error: err.message });
@@ -435,6 +445,7 @@ router.get('/api/cron/daily-emails', cronAuth, async (req, res) => {
         ['telegramChannelPost', runDailyChannelPostJob],
         ['telegramCleanup', runMessageCleanupJob],
     ]) {
+        if (outOfTime()) break; // GitHub Actions also calls these three times a day
         try {
             results[name] = await job(db);
         } catch (err) {
@@ -445,6 +456,10 @@ router.get('/api/cron/daily-emails', cronAuth, async (req, res) => {
         }
     }
 
+    if (outOfTime()) {
+        results.stoppedEarly = true;
+        logger.warn('cron/daily-emails stopped at its time budget; the next run continues');
+    }
     res.json({ success: true, ...results });
 });
 
@@ -537,6 +552,7 @@ router.get('/api/cron/daily-signups-report', cronAuth, async (req, res) => {
  */
 router.get('/api/cron/lifecycle-emails', cronAuth, async (req, res) => {
     const out = { trialEnded: 0, renewalSequence: 0, progressDigest: 0, errors: [] };
+    const outOfTime = cronDeadline(); // see utils/cronBudget.js
     for (const [name, job] of [
         ['trialEnded', runTrialEndedJob],
         ['renewalSequence', runRenewalSequenceJob],
@@ -545,12 +561,17 @@ router.get('/api/cron/lifecycle-emails', cronAuth, async (req, res) => {
         ['comeback', runComebackJob],
     ]) {
         try {
-            const r = await job(req.db);
+            if (outOfTime()) break;
+            const r = await job(req.db, { outOfTime });
             out[name] = r.sent;
             if (r.errors.length) out.errors.push(...r.errors);
         } catch (err) {
             out.errors.push({ job: name, error: err.message });
         }
+    }
+    if (outOfTime()) {
+        out.stoppedEarly = true;
+        logger.warn('cron/lifecycle-emails stopped at its time budget; the next run continues');
     }
     res.json({ success: true, ...out });
 });
