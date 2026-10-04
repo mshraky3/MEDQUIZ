@@ -9,6 +9,42 @@
     "routes": [
         {
             "src": "/(.*)",
+            "methods": ["OPTIONS"],
+            "has": [
+                { "type": "header", "key": "origin", "value": "^https://www\\.smle-question-bank\\.com$" },
+                { "type": "header", "key": "access-control-request-headers", "value": "^\\s*(authorization|content-type|x-admin-key)(\\s*,\\s*(authorization|content-type|x-admin-key))*\\s*$" }
+            ],
+            "status": 204,
+            "headers": {
+                "Access-Control-Allow-Origin": "https://www.smle-question-bank.com",
+                "Access-Control-Allow-Credentials": "true",
+                "Access-Control-Allow-Methods": "GET,HEAD,PUT,PATCH,POST,DELETE",
+                "Access-Control-Allow-Headers": "authorization,content-type,x-admin-key",
+                "Access-Control-Max-Age": "7200",
+                "Vary": "Origin, Access-Control-Request-Headers"
+            },
+            "continue": false
+        },
+        {
+            "src": "/(.*)",
+            "methods": ["OPTIONS"],
+            "has": [
+                { "type": "header", "key": "origin", "value": "^https://smle-question-bank\\.com$" },
+                { "type": "header", "key": "access-control-request-headers", "value": "^\\s*(authorization|content-type|x-admin-key)(\\s*,\\s*(authorization|content-type|x-admin-key))*\\s*$" }
+            ],
+            "status": 204,
+            "headers": {
+                "Access-Control-Allow-Origin": "https://smle-question-bank.com",
+                "Access-Control-Allow-Credentials": "true",
+                "Access-Control-Allow-Methods": "GET,HEAD,PUT,PATCH,POST,DELETE",
+                "Access-Control-Allow-Headers": "authorization,content-type,x-admin-key",
+                "Access-Control-Max-Age": "7200",
+                "Vary": "Origin, Access-Control-Request-Headers"
+            },
+            "continue": false
+        },
+        {
+            "src": "/(.*)",
             "dest": "/app.js"
         }
     ],

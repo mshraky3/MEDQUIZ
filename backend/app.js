@@ -1035,7 +1035,9 @@ app.use(helmet({
 
 // Already a dependency, never wired in — every response (the 5,033-row
 // question payloads especially) went over the wire uncompressed.
-app.use(compression());
+// Level 1: several times cheaper to compute than the default 6 for a payload
+// only ~10-15% larger. Every millisecond here is billed function time.
+app.use(compression({ level: 1 }));
 
 // Performance monitoring middleware
 app.use((req, res, next) => {
@@ -1077,7 +1079,12 @@ app.use(cors({
         logger.warn('Blocked cross-origin request', { origin });
         return callback(null, false);
     },
-    credentials: true
+    credentials: true,
+    // Without this the browser re-asks before almost every API call (~40% of
+    // this function's invocations were OPTIONS). 7200 s is Chrome's ceiling.
+    // The common preflights never reach here: vercel.json answers them at
+    // the CDN. This covers the rest (other origins, unusual headers).
+    maxAge: 7200
 }));
 
 app.use(express.json());

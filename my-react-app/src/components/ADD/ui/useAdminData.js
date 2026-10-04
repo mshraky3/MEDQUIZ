@@ -41,8 +41,15 @@ export function useAdminData(url, { params, pollMs } = {}) {
 
     useEffect(() => {
         if (!pollMs || !url) return undefined;
-        const id = setInterval(load, pollMs);
-        return () => clearInterval(id);
+        // A forgotten background tab used to poll all day (each poll is a paid
+        // function call). Skip while hidden; catch up once when shown again.
+        const id = setInterval(() => { if (!document.hidden) load(); }, pollMs);
+        const onVisible = () => { if (!document.hidden) load(); };
+        document.addEventListener('visibilitychange', onVisible);
+        return () => {
+            clearInterval(id);
+            document.removeEventListener('visibilitychange', onVisible);
+        };
     }, [pollMs, url, load]);
 
     return { data, loading, error, reload: load };

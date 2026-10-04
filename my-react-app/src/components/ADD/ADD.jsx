@@ -232,10 +232,16 @@ const ADD = (props) => {
     useEffect(() => {
         fetchUsers();
 
-        // Refresh every 60 seconds
-        const interval = setInterval(fetchUsers, 60000);
+        // Refresh every 60 seconds while the tab is visible (a hidden tab used
+        // to poll all day); catch up once when it is shown again.
+        const interval = setInterval(() => { if (!document.hidden) fetchUsers(); }, 60000);
+        const onVisible = () => { if (!document.hidden) fetchUsers(); };
+        document.addEventListener('visibilitychange', onVisible);
 
-        return () => clearInterval(interval);
+        return () => {
+            clearInterval(interval);
+            document.removeEventListener('visibilitychange', onVisible);
+        };
     }, []);
 
     // Handle add account
