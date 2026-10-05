@@ -30,3 +30,52 @@ for that; the two changes share no files.
 
 ## To revert
 `git revert` the commit "Cut Vercel CPU: lazy-load heavy libraries…". No data or schema changed.
+
+---
+
+## October 2026: the cuts were outgrown — Fluid compute turned off
+
+**What happened.** By 2026-10-04 the team was at **3h23m of 4h** (rolling 30
+days; Hobby has no billing cycle). Per-request cost had not changed (~22 ms),
+but traffic doubled in a month (23k → 49k function calls a week: HR's new
+school year, the SQB campaign), so the September cuts were eaten by growth.
+The last 7 days ran at exactly the 8 min/day budget.
+
+**The fix (2026-10-04, owner approved).** Functions **without** Fluid compute are
+not counted in Active CPU; Hobby bills them against a separate **Function
+Duration** quota (100 GB-h). `portfolio-api` proved it (0 s Active CPU). So:
+
+| Change | Where | Commit / setting |
+|---|---|---|
+| Fluid compute **off**, Default Max Duration **60 s** (the non-Fluid Hobby default would be 10 s) | Vercel `medquiz` → Settings → Functions (also `hr-management`, `email-services`) | dashboard, redeployed 19:25 UTC |
+| CORS preflights from `www.` / bare `smle-question-bank.com` asking only for `authorization`, `content-type`, `x-admin-key` are answered by the CDN (204 + CORS headers), so no function runs. They were ~40% of invocations | `backend/vercel.json` (two `OPTIONS` routes before the catch-all) | `aef34b1` |
+| `cors({ maxAge: 7200 })` for every other preflight | `backend/app.js` | `aef34b1` |
+| `compression({ level: 1 })` (several times cheaper than 6, ~10-15% larger) | `backend/app.js` | `aef34b1` |
+| Admin users list (60 s) / stats (120 s) polling skips hidden tabs, refreshes once when shown | `my-react-app/src/components/ADD/ADD.jsx`, `ADD/ui/useAdminData.js` | `aef34b1` |
+| Cron routes stop starting new sends after 45 s (`CRON_BUDGET_MS`) instead of being killed at 60 s; the next run continues (every job stamps per recipient) | `backend/utils/cronBudget.js`, `routes/email-campaigns.js`, `routes/telegram.js`, `services/lifecycleJobs.js`, `services/telegramJobs.js` | `16ee91a` |
+
+**Not done on purpose:** CDN-caching `/api/payment/config` (deliberately
+`no-store`, next to pricing code).
+
+**What it costs users:** more cold starts (16% vs ~7% overnight; ~1 s each,
+mostly the first load after a quiet period). Warm requests are as fast as before.
+
+**Rules that follow from it**
+- Every request must finish within **60 s**. Long loops (crons, imports) must
+  check `cronDeadline()` before each unit of work.
+- If the SPA starts sending a new request header, add it to both `OPTIONS`
+  routes in `backend/vercel.json` (`has` regex and `Access-Control-Allow-Headers`);
+  otherwise its preflights just fall through to the app (still works, costs calls).
+
+**Verify / watch:** Vercel → Usage → **Duration** (estimate 15-40 GB-h per 30
+days; act above ~60); Fluid Active CPU should stay ~0 for `medquiz`. Preflight:
+`curl -si -X OPTIONS https://medquiz.vercel.app/api/notifications -H "Origin: https://www.smle-question-bank.com" -H "Access-Control-Request-Method: GET" -H "Access-Control-Request-Headers: authorization"`
+→ `204` with `Access-Control-Max-Age: 7200` and no `X-Vercel-Cache` header.
+
+**To revert:** Settings → Functions → Fluid Compute → Enabled → Redeploy (keep
+the 60 s max duration or set it back to 300). Code: `git revert 16ee91a aef34b1`.
+
+Full plan, options compared (Pro, second account, AWS Lambda, Cloud Run, Azure
+for Students, Heroku Student, Oracle, Cloudflare, Render, Koyeb) and Phase 2
+(an off-Vercel standby behind a `medquiz.vercel.app` external rewrite):
+`knowledge/Workspace/Vercel CPU plan 2026-10.md` in the working-projects folder.
