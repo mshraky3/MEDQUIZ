@@ -311,7 +311,7 @@ export function GoalCard({ specialties, sources }: { specialties: Specialty[]; s
 
       <Row gap={16}>
         <View style={{ width: 80, height: 80 }} accessibilityLabel={g.progressOf(fmt(goal.current), fmt(goal.target))}>
-          <Svg width={80} height={80} viewBox="0 0 80 80">
+          <Svg width={80} height={80} viewBox="0 0 80 80" style={{ transform: [{ rotate: '-90deg' }] }}>
             <Circle cx={40} cy={40} r={34} stroke={colors.surfaceTint} strokeWidth={8} fill="none" />
             <Circle
               cx={40}
@@ -323,8 +323,6 @@ export function GoalCard({ specialties, sources }: { specialties: Specialty[]; s
               strokeLinecap="round"
               strokeDasharray={RING_CIRCUMFERENCE}
               strokeDashoffset={RING_CIRCUMFERENCE * (1 - pctClamped / 100)}
-              rotation={-90}
-              origin="40, 40"
             />
           </Svg>
           <View style={{ position: 'absolute', inset: 0, alignItems: 'center', justifyContent: 'center' }}>

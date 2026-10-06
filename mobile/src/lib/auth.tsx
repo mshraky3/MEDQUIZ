@@ -175,7 +175,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         void clearLocal(true);
       },
       onPaymentRequired: (data) => {
-        const remaining = typeof data?.remaining === 'number' ? data.remaining : 0;
+        // Only a 402 that talks about the free allowance carries `remaining`
+        // (the quiz paywall). A subscriber-only feature or a failed payment
+        // verification is also a 402 and says nothing about the allowance, so
+        // it must not zero the counter.
+        if (typeof data?.remaining !== 'number') return;
+        const remaining = data.remaining;
         setUser((current) => {
           if (!current) return current;
           const next = { ...current, free_questions_remaining: remaining };

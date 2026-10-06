@@ -9,7 +9,11 @@
     "web": "expo start --web",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "sync:copy": "node scripts/sync-copy.mjs",
+    "sync:summaries": "node scripts/sync-summaries.mjs",
+    "sync:check": "node scripts/sync-copy.mjs --check && node scripts/sync-summaries.mjs --check",
+    "gen:icons": "node scripts/gen-icons.mjs"
   },
   "dependencies": {
     "@expo-google-fonts/cairo": "^0.4.2",

@@ -46,6 +46,11 @@ export function setApiSession(next: SessionCredentials | null): void {
   session = next;
 }
 
+/** The current credentials, for the few callers that must put them in a body themselves. */
+export function getApiSession(): SessionCredentials | null {
+  return session;
+}
+
 export function setApiHandlers(next: Handlers): void {
   handlers = next;
 }

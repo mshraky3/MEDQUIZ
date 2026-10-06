@@ -1,0 +1,1118 @@
+// AUTO-COPIED from my-react-app/src/components/summaries/content/medicine.js. Do not edit here:
+// change the website's file, then run `npm run sync:summaries` in mobile/.
+// Internal Medicine — section content for the continuous-scroll summaries page.
+// Structured as subtopics, each with a high-yield summary (HTML using the
+// .sum-doc conventions) followed by interactive questions. Sourced from the
+// recall-derived study decks in /content + UpToDate/Harrison-level knowledge,
+// with algorithms. Angle brackets are HTML-escaped (&lt; / &gt;). Questions are
+// authored (no duplicates) with answer index (0-based) + explanation.
+
+const medicine = {
+    id: 'medicine',
+    title: 'Internal Medicine',
+    title_en: 'High-Yield SMLE Review — 8 Core Systems',
+    icon: 'stethoscope',
+    accent: '#22d3ee',
+    intro: 'Internal Medicine high-yield SMLE review — 8 core systems with algorithms, comparison tables and interactive MCQs: Cardiology · Pulmonology · Gastroenterology & Hepatology · Endocrinology · Nephrology & Electrolytes · Haematology & Oncology · Infectious Disease & Sepsis · Rheumatology & Neurology.',
+    subtopics: [
+        {
+            id: 'med-cardiology',
+            title: '01 — Cardiology',
+            title_en: 'IHD & ACS · Heart Failure · Valves · Arrhythmias · Lipids',
+            summaryHtml: `
+<div class="sum-head"><h2>Cardiology — the SMLE core</h2><p class="sum-meta">Ischaemic heart disease &amp; ACS · Heart failure · Arrhythmias · Valves · Pericardium &amp; dissection · Lipids. High-yield prose, comparison tables, animated algorithms and native diagrams.</p></div>
+<section class="topic" id="card-ihd"><h3>Ischaemic Heart Disease &amp; ACS</h3>
+<ul>
+<li><b>Stable angina</b>, normal resting ECG/enzymes → <b>exercise stress ECG</b>; unable to exercise (OA knee, PAD) → <b>dobutamine stress echo</b> / vasodilator MPI; uninterpretable ECG (LBBB, paced) → imaging stress test.</li>
+<li><b>Anti-anginal</b>: beta-blocker (1st line) + GTN PRN; add CCB / long-acting nitrate; everyone gets aspirin + high-intensity statin.</li>
+<li><b>ACS initial therapy</b> = <b>MONA-BASH</b>: Morphine, O₂ (only if SpO₂ &lt;90%), Nitrates, Aspirin 300 mg + 2nd antiplatelet, Beta-blocker, ACEi, Statin, Heparin.</li>
+<li>Inferior MI (II, III, aVF) + hypotension → suspect <b>RV infarct</b> → IV fluids, <b>AVOID nitrates</b>.</li>
+<li><b>HIT</b>: platelets fall day 5–10 on heparin + new thrombosis → stop heparin, start <b>argatroban/fondaparinux</b> (never warfarin or platelets acutely).</li>
+</ul>
+<figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Coronary territories &amp; their ECG leads</div>
+<svg viewBox="0 0 680 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Coronary artery territories and corresponding ECG leads">
+<path d="M150,150 L79,79 A100,100 0 0,1 221,79 Z" fill="#ef4444"/><path d="M150,150 L221,79 A100,100 0 0,1 221,221 Z" fill="#fb7185"/>
+<path d="M150,150 L221,221 A100,100 0 0,1 79,221 Z" fill="#3b82f6"/><path d="M150,150 L79,221 A100,100 0 0,1 79,79 Z" fill="#22c55e"/>
+<circle cx="150" cy="150" r="27" fill="#ffffff"/><text x="150" y="155" text-anchor="middle" font-size="14" font-weight="700" fill="#0f1e3d">LV</text>
+<text x="150" y="106" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">Anterior</text><text x="196" y="155" text-anchor="middle" font-size="11" font-weight="700" fill="#ffffff">Septal</text>
+<text x="150" y="205" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">Inferior</text><text x="100" y="155" text-anchor="middle" font-size="11" font-weight="700" fill="#ffffff">Lateral</text>
+<g font-size="14.5" fill="#1e293b" font-family="system-ui,Arial">
+<rect x="320" y="58" width="17" height="17" rx="3" fill="#ef4444"/><text x="348" y="71"><tspan font-weight="700">LAD</tspan> — anterior + septal → V1–V4</text>
+<rect x="320" y="110" width="17" height="17" rx="3" fill="#3b82f6"/><text x="348" y="123"><tspan font-weight="700">RCA</tspan> — inferior → II, III, aVF</text>
+<rect x="320" y="162" width="17" height="17" rx="3" fill="#22c55e"/><text x="348" y="175"><tspan font-weight="700">LCx</tspan> — lateral → I, aVL, V5–V6</text>
+<rect x="320" y="214" width="17" height="17" rx="3" fill="#94a3b8"/><text x="348" y="227"><tspan font-weight="700">Posterior</tspan> — tall R + ST↓ in V1–V2 (RCA/LCx)</text></g></svg>
+<figcaption>Match the ST-elevation leads to the culprit artery. <b>Inferior MI</b> (II, III, aVF) is RCA — check a right-sided lead for <b>RV infarct</b> (avoid nitrates).</figcaption></figure>
+<div class="deck-block deck-tbl"><div class="deck-cap"><span class="deck-tag tag-tbl">Table</span> Stable angina · UA · NSTEMI · STEMI</div><table><thead><tr><th>Feature</th><th>Stable angina</th><th>Unstable angina</th><th>NSTEMI</th><th>STEMI</th></tr></thead><tbody><tr><td><b>Chest pain</b></td><td>Predictable; on exertion/stress; relieved by rest or GTN</td><td>New-onset, worsening, or at rest; unpredictable</td><td>Similar to UA but more severe</td><td>Sudden, severe, crushing; not relieved by GTN</td></tr><tr><td><b>Duration</b></td><td>&lt;10–15 min</td><td>≥10–20 min; occurs at rest</td><td>&gt;20 min</td><td>&gt;30 min</td></tr><tr><td><b>GTN response</b></td><td>Relieved</td><td>May improve, not fully relieved</td><td>Little or no relief</td><td>No relief</td></tr><tr><td><b>ECG</b></td><td>Normal at rest; ST depression on exertion</td><td>Transient ST depression / T-inversion; no ST elevation</td><td>Persistent ST depression or T-inversion</td><td>ST elevation in ≥2 contiguous leads; new LBBB</td></tr><tr><td><b>Troponin / CK-MB</b></td><td>Normal</td><td>Normal</td><td>Elevated</td><td>Elevated</td></tr></tbody></table></div><div class="deck-block deck-tbl"><div class="deck-cap"><span class="deck-tag tag-tbl">Table</span> Treatment differences between cardiac events</div><table><thead><tr><th></th><th>Stable angina</th><th>Unstable angina / NSTEMI</th><th>STEMI</th></tr></thead><tbody><tr><td><b>Aspirin</b></td><td>Yes</td><td>Yes</td><td>Yes</td></tr><tr><td><b>Beta-blockers</b></td><td>Yes</td><td>Yes</td><td>Yes</td></tr><tr><td><b>Nitrates</b></td><td>Yes</td><td>Yes</td><td>Yes</td></tr><tr><td><b>Heparin (enoxaparin)</b></td><td>No</td><td>Yes</td><td>Yes, but only after thrombolytics</td></tr><tr><td><b>GPIIb/IIIa inhibitors</b></td><td>No</td><td>Yes</td><td>No</td></tr><tr><td><b>Thrombolytics</b></td><td>No</td><td>No</td><td>Yes, but not as good as PCI</td></tr><tr><td><b>CCBs</b></td><td>No</td><td>No</td><td>No</td></tr><tr><td><b>Warfarin</b></td><td>No</td><td>No</td><td>No</td></tr><tr><td><b>Antiplatelet (clopidogrel)</b></td><td>No</td><td>Yes</td><td>Yes</td></tr></tbody></table></div><div class="deck-block deck-tbl"><div class="deck-cap"><span class="deck-tag tag-tbl">Table</span> Absolute contraindications to thrombolytics</div><table><thead><tr><th>Absolute contraindications</th></tr></thead><tbody><tr><td>Prior intracranial haemorrhage</td></tr><tr><td>Known cerebral arteriovenous malformation</td></tr><tr><td>Known cerebral neoplasm (primary or metastatic)</td></tr><tr><td>Ischaemic stroke within 3 months</td></tr><tr><td>Suspected aortic dissection</td></tr><tr><td>Active bleeding or bleeding diathesis (excludes menses)</td></tr><tr><td>Significant closed-head or facial trauma within 3 months</td></tr></tbody></table></div>
+<figure class="deck-block algo-flow"><figcaption><span class="deck-tag tag-algo">Algorithm</span> Chest pain (stable CAD) — diagnostic approach</figcaption><p class="deck-subcap">normal ECG → exercise ECG · abnormal ECG → echo · can't walk → pharmacologic stress · positive stress test → catheterisation</p><div class="algo-row"><div class="algo-node start" style="animation-delay:0.00s">Chest pain (high likelihood of CHD)</div></div><div class="algo-arrow" style="animation-delay:0.05s"></div><div class="algo-row"><div class="algo-node dec" style="animation-delay:0.12s">Resting EKG abnormalities?</div></div><div class="algo-arrow" style="animation-delay:0.17s"></div><div class="algo-fork"><div class="algo-branch"><span class="algo-label" style="animation-delay:0.24s">No / able to exercise</span><div class="algo-node end" style="animation-delay:0.24s">Exercise stress test</div></div><div class="algo-branch"><span class="algo-label" style="animation-delay:0.34s">Yes / cannot exercise</span><div class="algo-node end" style="animation-delay:0.34s">Pharmacologic / imaging stress: chemical (dipyridamole-thallium or dobutamine echo), nuclear or stress echo</div></div></div><div class="algo-row"><div class="algo-node proc" style="animation-delay:0.44s">Positive → coronary angiography</div></div><div class="algo-arrow" style="animation-delay:0.49s"></div><div class="algo-fork"><div class="algo-branch"><span class="algo-label" style="animation-delay:0.56s">1–2 vessel disease</span><div class="algo-node end" style="animation-delay:0.56s">Stent placement (PCI)</div></div><div class="algo-branch"><span class="algo-label" style="animation-delay:0.66s">3-vessel / left main (or 2-vessel in diabetics)</span><div class="algo-node end" style="animation-delay:0.66s">CABG</div></div></div></figure>
+<h4 class="deck-topic">Myocardial infarction</h4><div class="deck-cards"><div class="deck-card mgmt"><span class="deck-card-h">Management</span><ul><li>Revascularization: PCI or thrombolytics (aminocaproic acid antidote)</li><li>Dual antiplatelet for 1 year (aspirin &amp; clopidogrel), then lifelong aspirin</li><li>Low molecular weight heparin (LMWH)</li><li>O2</li><li>statins</li><li>Beta-blockers</li><li>Sublingual nitroglycerin (C/I in inferior MI &amp; hypotension)</li><li>ACE - I / ARBs</li><li>Life style modifications: 150 minutes/week of moderate-intensity exercise</li></ul></div></div></section>
+<section class="topic" id="card-hf"><h3>Heart Failure</h3>
+<ul>
+<li><b>HFrEF</b> (EF ≤40%) — four pillars with mortality benefit: <b>ARNI/ACEi/ARB + beta-blocker + MRA + SGLT2 inhibitor</b>; loop diuretic for congestion only.</li>
+<li><b>HFpEF</b> (EF ≥50%, diastolic dysfunction): treat HTN/volume + <b>SGLT2 inhibitor</b>.</li>
+<li><b>Acute pulmonary oedema</b>: sit up, O₂/CPAP, IV furosemide, nitrates (if not hypotensive); avoid fluids / IV beta-blocker.</li>
+<li>Persistent EF ≤35% + NYHA II–III on optimal therapy → <b>ICD</b>; QRS &gt;150 ms LBBB → <b>CRT</b>.</li>
+</ul>
+<div class="deck-block deck-tbl"><div class="deck-cap"><span class="deck-tag tag-tbl">Table</span> Left- vs right-sided heart failure — features</div><table><thead><tr><th>Left-sided failure</th><th>Right-sided failure (cor pulmonale)</th></tr></thead><tbody><tr><td>Paroxysmal nocturnal dyspnoea; orthopnoea; exertional dyspnoea</td><td>Fatigue</td></tr><tr><td>Pulmonary congestion: cough, crackles, wheeze, blood-tinged sputum</td><td>↑ peripheral venous pressure; distended jugular veins</td></tr><tr><td>Elevated pulmonary capillary wedge pressure</td><td>Ascites; enlarged tender liver &amp; spleen</td></tr><tr><td>Tachypnoea, tachycardia</td><td>Anorexia &amp; GI distress</td></tr><tr><td>Restlessness, confusion, cyanosis (if severe)</td><td>Weight gain; dependent (pitting) oedema</td></tr></tbody></table></div><div class="deck-block deck-tbl"><div class="deck-cap"><span class="deck-tag tag-tbl">Table</span> Heart failure — drugs that reduce mortality (stepwise)</div><p class="deck-subcap">up-titrate to target doses at each step; usually takes ≥6 months</p><table><thead><tr><th>Step</th><th>Drug class</th></tr></thead><tbody><tr><td><b>1</b></td><td>ACE inhibitor or angiotensin-receptor blocker (ARB)</td></tr><tr><td><b>2</b></td><td>Beta-blocker</td></tr><tr><td><b>3</b></td><td>Mineralocorticoid-receptor antagonist (MRA)</td></tr><tr><td><b>4</b></td><td>Angiotensin receptor–neprilysin inhibitor (ARNI)</td></tr><tr><td><b>5</b></td><td>SGLT2 inhibitor</td></tr></tbody></table></div><div class="deck-block deck-tbl"><div class="deck-cap"><span class="deck-tag tag-tbl">Table</span> NYHA heart-failure classification</div><table><thead><tr><th>Class</th><th>Limitation</th></tr></thead><tbody><tr><td><b>I</b></td><td>No limitation; ordinary activity does not cause symptoms</td></tr><tr><td><b>II</b></td><td>Slight limitation; comfortable at rest; ordinary activity causes symptoms</td></tr><tr><td><b>III</b></td><td>Marked limitation; comfortable at rest; less-than-ordinary activity causes symptoms</td></tr><tr><td><b>IV</b></td><td>Severe limitation; symptoms present even at rest</td></tr></tbody></table></div>
+<h4 class="deck-topic">Acute decompensated heart failure</h4><div class="deck-cards"><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>BNP, Pro-BNP: indicates ventricular dysfunction</li><li>Chest X-ray; to evaluate pulmonary edema, cardiomegaly</li><li>ECG</li><li>Transthoracic echo (TTE): to assess ejection fraction</li><li>CBC, Troponin, U&amp;E</li></ul></div><div class="deck-card mgmt"><span class="deck-card-h">Management</span><ul><li>Furosemide: relieves symptoms</li><li>Oxygenation</li><li>Nitrates: if presented with HTN emergency + ADHF</li></ul></div></div></section>
+<section class="topic" id="card-arr"><h3>Arrhythmias</h3>
+<ul>
+<li><b>Atrial fibrillation</b>: rate control (beta-blocker/CCB) + anticoagulate by <b>CHA₂DS₂-VASc</b> (≥2 men / ≥3 women → DOAC); unstable → synchronised DC cardioversion.</li>
+<li><b>SVT</b> (regular narrow-complex): vagal manoeuvres → IV adenosine; unstable → cardioversion.</li>
+<li><b>VT</b>: unstable → synchronised cardioversion; pulseless VT/VF → defibrillate; stable monomorphic → amiodarone.</li>
+<li><b>Bradycardia / complete heart block</b>: atropine → transcutaneous pacing → permanent pacemaker (Mobitz II / 3rd-degree).</li>
+<li><b>Torsades de pointes</b> (long QT): <b>IV magnesium</b>, stop QT-prolonging drugs.</li>
+</ul>
+<figure class="deck-block algo-flow"><figcaption><span class="deck-tag tag-algo">Algorithm</span> Atrial fibrillation — acute management</figcaption><div class="algo-row"><div class="algo-node start" style="animation-delay:0.00s">Atrial fibrillation</div></div><div class="algo-arrow" style="animation-delay:0.05s"></div><div class="algo-row"><div class="algo-node dec" style="animation-delay:0.12s">Haemodynamically stable?</div></div><div class="algo-arrow" style="animation-delay:0.17s"></div><div class="algo-fork"><div class="algo-branch"><span class="algo-label" style="animation-delay:0.24s">No (unstable)</span><div class="algo-node end" style="animation-delay:0.24s">Immediate electrical cardioversion</div></div><div class="algo-branch"><span class="algo-label" style="animation-delay:0.34s">Yes (stable)</span><div class="algo-node proc" style="animation-delay:0.34s">Rate control</div><div class="algo-arrow mini" style="animation-delay:0.48s"></div><div class="algo-node proc" style="animation-delay:0.44s">Duration &gt;48 h or unknown → anticoagulate 3 weeks (or TEE to exclude LA thrombus) → cardioversion</div><div class="algo-arrow mini" style="animation-delay:0.58s"></div><div class="algo-node end" style="animation-delay:0.54s">Duration &lt;48 h → cardioversion</div></div></div></figure><div class="deck-block deck-tbl"><div class="deck-cap"><span class="deck-tag tag-tbl">Table</span> CHA₂DS₂-VASc — stroke-risk score (AF)</div><table><thead><tr><th>Clinical feature</th><th>Points</th></tr></thead><tbody><tr><td><b>C — Congestive heart failure</b></td><td>1</td></tr><tr><td><b>H — Hypertension</b></td><td>1</td></tr><tr><td><b>A₂ — Age ≥75 years</b></td><td>2</td></tr><tr><td><b>D — Diabetes mellitus</b></td><td>1</td></tr><tr><td><b>S₂ — Previous stroke or TIA</b></td><td>2</td></tr><tr><td><b>V — Vascular disease</b></td><td>1</td></tr><tr><td><b>A — Age 65–74 years</b></td><td>1</td></tr><tr><td><b>Sc — Sex category (female)</b></td><td>1</td></tr><tr><td><b>Maximum score</b></td><td>9</td></tr></tbody></table></div>
+<figure class="deck-block algo-flow"><figcaption><span class="deck-tag tag-algo">Algorithm</span> PSVT — acute management</figcaption><div class="algo-row"><div class="algo-node start" style="animation-delay:0.00s">Paroxysmal SVT (PSVT)</div></div><div class="algo-arrow" style="animation-delay:0.05s"></div><div class="algo-row"><div class="algo-node dec" style="animation-delay:0.12s">Haemodynamically stable?</div></div><div class="algo-arrow" style="animation-delay:0.17s"></div><div class="algo-fork"><div class="algo-branch"><span class="algo-label" style="animation-delay:0.24s">No (unstable)</span><div class="algo-node end" style="animation-delay:0.24s">Synchronised cardioversion</div></div><div class="algo-branch"><span class="algo-label" style="animation-delay:0.34s">Yes (stable)</span><div class="algo-node proc" style="animation-delay:0.34s">Vagal manoeuvres / carotid sinus massage</div><div class="algo-arrow mini" style="animation-delay:0.48s"></div><div class="algo-node proc" style="animation-delay:0.44s">Still PSVT → adenosine (repeat at higher dose)</div><div class="algo-arrow mini" style="animation-delay:0.58s"></div><div class="algo-node proc" style="animation-delay:0.54s">Still PSVT → CCB (verapamil / diltiazem)</div><div class="algo-arrow mini" style="animation-delay:0.68s"></div><div class="algo-node end" style="animation-delay:0.64s">Still PSVT → cardioversion</div></div></div></figure><figure class="deck-block algo-flow"><figcaption><span class="deck-tag tag-algo">Algorithm</span> AVNRT — long-term management (ESC)</figcaption><div class="algo-row"><div class="algo-node start" style="animation-delay:0.00s">AVNRT</div></div><div class="algo-arrow" style="animation-delay:0.05s"></div><div class="algo-row"><div class="algo-node dec" style="animation-delay:0.12s">Symptomatic and recurrent?</div></div><div class="algo-arrow" style="animation-delay:0.17s"></div><div class="algo-fork"><div class="algo-branch"><span class="algo-label" style="animation-delay:0.24s">Yes</span><div class="algo-node end" style="animation-delay:0.24s">Catheter ablation (I B)</div></div><div class="algo-branch"><span class="algo-label" style="animation-delay:0.34s">No / patient preference</span><div class="algo-node proc" style="animation-delay:0.34s">Drug therapy: diltiazem or verapamil, or beta-blocker (IIa B)</div><div class="algo-arrow mini" style="animation-delay:0.48s"></div><div class="algo-node end" style="animation-delay:0.44s">If ineffective → catheter ablation</div></div></div></figure>
+<h4 class="deck-topic">Atrial fibrillation</h4><div class="deck-cards"><div class="deck-card mgmt"><span class="deck-card-h">Management</span><ul><li>Rate control:<ul class="sub"><li>Target HR &lt;100 BPM</li><li>Beta blockers - Calcium channel blocker - Digoxin (if A.fib coexist with HF)</li></ul></li><li>Rhythm control:<ul class="sub"><li>Amiodarone (in stable patients or unstable not responding to cardioversion)</li></ul></li><li>Anti-coagulation:<ul class="sub"><li>Indicated in 2≤ CHA2DS2-VA score (2 points regardless the sex)</li><li>First line DOACs (apixaban , rivaroxaban)</li><li>Second line Warfarin in selected cases: (Target INR 2-3)</li><li>Mechanical Heart valves</li><li>Mitral Stenosis</li><li>Renal impairment</li></ul></li></ul></div></div></section>
+<section class="topic" id="card-valve"><h3>Valvular Heart Disease</h3>
+<figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Timing the murmur — systolic vs diastolic</div>
+<svg viewBox="0 0 660 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Systolic and diastolic murmur timing relative to heart sounds">
+<rect x="90" y="40" width="250" height="180" fill="#ef4444" opacity="0.08"/><rect x="340" y="40" width="250" height="180" fill="#2563eb" opacity="0.08"/>
+<line x1="90" y1="45" x2="90" y2="225" stroke="#334155" stroke-width="2.5"/><line x1="340" y1="45" x2="340" y2="225" stroke="#334155" stroke-width="2.5"/><line x1="590" y1="45" x2="590" y2="225" stroke="#334155" stroke-width="2.5"/>
+<text x="90" y="32" text-anchor="middle" font-size="13" font-weight="700" fill="#0f1e3d">S1</text><text x="340" y="32" text-anchor="middle" font-size="13" font-weight="700" fill="#0f1e3d">S2</text><text x="590" y="32" text-anchor="middle" font-size="13" font-weight="700" fill="#0f1e3d">S1</text>
+<text x="215" y="243" text-anchor="middle" font-size="12.5" font-weight="700" fill="#b91c1c">SYSTOLE</text><text x="465" y="243" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">DIASTOLE</text>
+<polyline points="112,110 215,70 330,110" fill="none" stroke="#dc2626" stroke-width="2.6"/><text x="215" y="62" text-anchor="middle" font-size="12" font-weight="700" fill="#b91c1c">AS (crescendo-decrescendo)</text>
+<polyline points="112,175 112,158 330,158 330,175" fill="none" stroke="#dc2626" stroke-width="2.6"/><text x="221" y="192" text-anchor="middle" font-size="12" font-weight="700" fill="#b91c1c">MR / TR / VSD (holosystolic)</text>
+<polyline points="352,68 470,110" fill="none" stroke="#2563eb" stroke-width="2.6"/><text x="430" y="60" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">AR (early decrescendo)</text>
+<line x1="356" y1="150" x2="356" y2="176" stroke="#16a34a" stroke-width="2.6"/><text x="356" y="145" text-anchor="middle" font-size="11" font-weight="700" fill="#15803d">OS</text>
+<path d="M372,168 q10,-14 20,0 q10,14 20,0 q10,-14 20,0 q10,14 20,0 q10,-14 20,0 q10,14 20,0" fill="none" stroke="#2563eb" stroke-width="2.6"/><text x="470" y="192" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">MS / TS (mid-diastolic rumble)</text></svg>
+<figcaption><b>Systolic</b> (S1→S2): AS is ejection &amp; radiates to carotids; MR is holosystolic → axilla. <b>Diastolic</b> (S2→S1): AR is early-decrescendo (wide pulse pressure); MS is a mid-diastolic rumble after an opening snap.</figcaption></figure>
+<table><thead><tr><th>Lesion</th><th>Murmur</th><th>Key point / management</th></tr></thead><tbody>
+<tr><td>Aortic stenosis</td><td>Ejection systolic → carotids; soft S2</td><td>Syncope/Angina/Dyspnoea = poor prognosis; symptomatic or EF &lt;50% → <b>SAVR/TAVR</b>; asymptomatic → serial echo</td></tr>
+<tr><td>Aortic regurgitation</td><td>Early diastolic; wide pulse pressure</td><td>Vasodilators; surgery if symptomatic or LV dilation</td></tr>
+<tr><td>Mitral stenosis</td><td>Mid-diastolic rumble, opening snap</td><td>Rheumatic; AF common → rate control + anticoagulate; balloon valvotomy</td></tr>
+<tr><td>Mitral regurgitation</td><td>Pansystolic → axilla</td><td>Surgery if symptomatic or EF 30–60%</td></tr></tbody></table>
+<div class="deck-block deck-tbl"><div class="deck-cap"><span class="deck-tag tag-tbl">Table</span> Valvular heart disease — murmurs</div><p class="deck-subcap">first step: is the murmur systolic or diastolic?</p><table><thead><tr><th>Timing</th><th>Valves</th><th>Description</th></tr></thead><tbody><tr><td><b>Diastolic</b></td><td>AR, PR</td><td>Decrescendo early-diastolic murmur</td></tr><tr><td><b>Diastolic</b></td><td>MS, TS</td><td>Mid-diastolic rumbling murmur with opening snap</td></tr><tr><td><b>Systolic</b></td><td>AS, HOCM, PS</td><td>Harsh systolic ejection murmur; AS is crescendo-decrescendo, radiates to carotids</td></tr><tr><td><b>Systolic</b></td><td>MR, TR, VSD</td><td>Harsh holosystolic murmur; MR radiates to the axilla</td></tr></tbody></table></div><div class="deck-block deck-tbl"><div class="deck-cap"><span class="deck-tag tag-tbl">Table</span> Murmurs — dynamic auscultation manoeuvres</div><p class="deck-subcap">↑ louder · ↓ softer</p><table><thead><tr><th>Manoeuvre</th><th>Effect</th><th>HOCM</th><th>AS</th><th>MVP</th><th>MR</th></tr></thead><tbody><tr><td><b>Valsalva / standing</b></td><td>↓ venous return to LV</td><td>↑</td><td>↓</td><td>↑</td><td>↓</td></tr><tr><td><b>Squatting / leg raise / lying</b></td><td>↑ venous return to LV</td><td>↓</td><td>↑</td><td>↓</td><td>↑</td></tr><tr><td><b>Hand grip</b></td><td>↑ afterload</td><td>↓</td><td>↓</td><td>↓</td><td>↑</td></tr></tbody></table></div>
+<h4 class="deck-topic">Valvular heart diseases</h4><div class="deck-cards"><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Trans-thoracic echo (TTE) First step to evaluate new murmur</li><li>Trans-esophageal echo (TEE) The best modality to evaluate new murmur</li></ul></div><div class="deck-card mgmt"><span class="deck-card-h">Management</span><ul><li>Asymptomatic Follow-up, medical treatment</li><li>Symptomatic Valve replacement (except MVP, MS, HOCM valvuloplasty)</li><li>Indications of Aortic valve replacement:<ul class="sub"><li>Symptomatic aortic stenosis (angina, SOB, syncope)</li><li>Asymptomatic patient with Left ventricular ejection fraction &lt;50%</li><li>Patient with severe aortic stenosis going for other cardiac surgery</li><li>Patient with very severe aortic stenosis</li></ul></li></ul></div></div></section>
+<section class="topic" id="card-peri"><h3>Pericardial Disease, Tamponade &amp; Aortic Dissection</h3>
+<figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> JVP waveform &amp; what abnormal waves mean</div>
+<svg viewBox="0 0 728 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Jugular venous pressure waveform with clinical correlates">
+<line x1="30" y1="205" x2="430" y2="205" stroke="#cbd5e1" stroke-width="1.5"/>
+<polyline points="40,150 95,66 135,120 165,96 250,168 330,74 400,160 440,120" fill="none" stroke="#0b7285" stroke-width="3"/>
+<g font-size="14" font-weight="700" fill="#0f1e3d"><text x="95" y="54" text-anchor="middle">a</text><text x="171" y="88" text-anchor="middle">c</text><text x="330" y="62" text-anchor="middle">v</text></g>
+<g font-size="13" font-weight="700" fill="#64748b"><text x="250" y="186" text-anchor="middle">x</text><text x="400" y="180" text-anchor="middle">y</text></g>
+<g font-size="14" fill="#1e293b" font-family="system-ui,Arial">
+<text x="470" y="44"><tspan font-weight="700" fill="#b91c1c">Cannon a</tspan> → complete heart block</text>
+<text x="470" y="86"><tspan font-weight="700" fill="#b91c1c">Absent a</tspan> → atrial fibrillation</text>
+<text x="470" y="128"><tspan font-weight="700" fill="#b91c1c">Large v</tspan> → tricuspid regurgitation</text>
+<text x="470" y="170"><tspan font-weight="700" fill="#b91c1c">Steep x + y</tspan> → constrictive pericarditis</text>
+<text x="470" y="212"><tspan font-weight="700" fill="#b91c1c">Steep x, absent y</tspan> → cardiac tamponade</text></g></svg>
+<figcaption><b>a</b> = atrial contraction · <b>c</b> = tricuspid bulge · <b>v</b> = atrial filling · <b>x/y</b> = descents. Kussmaul sign (JVP rises on inspiration) → constriction / RV infarct.</figcaption></figure>
+<ul>
+<li><b>Pericarditis</b>: pleuritic pain relieved sitting forward, diffuse saddle ST elevation, PR depression → NSAID + colchicine.</li>
+<li><b>Cardiac tamponade</b>: Beck triad (hypotension, muffled sounds, ↑JVP) + pulsus paradoxus → urgent <b>pericardiocentesis</b>.</li>
+<li><b>Aortic dissection</b>: tearing chest→back pain, BP differential → CT angiography; type A → surgery, type B → control BP (labetalol).</li>
+</ul>
+<h4 class="deck-topic">Pericarditis</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Coxsackie B virus, Tuberculosis</li><li>Uremia</li><li>Myocardial infarction</li><li>Pleuritic chest pain, worsened by inspiration or cough, improved by leaning forward</li><li>Friction rub: scratching sound during systole, diastole, presystole</li><li>Constrictive pericarditis: signs of HF, progressive symptoms, pericardial knock &amp; kussmaul sign</li></ul></div><div class="deck-card mgmt"><span class="deck-card-h">Management</span><ul><li>First line NSAID<ul class="sub"><li>Second line steroids (in severe or uremic pericarditis)</li></ul></li></ul></div></div><h4 class="deck-topic">Cardiac tamponade</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Beck's triad:<ul class="sub"><li>Hypotension, muffled heart sound, distended JVP</li></ul></li><li>Pulsus paradoxus: drop BP during inspiration</li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Echocardiography</li><li>ECG: low voltage cardiac activity</li><li>Treatment: Stable treat underlying cause Unstable pericardiocentesis</li></ul></div></div><h4 class="deck-topic">Aortic dissection</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Tearing chest pain, radiated to the back</li><li>Asymmetric blood pressure</li><li>Hypertension or hypotension</li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>ECG: Left ventricular hypertrophy (secondary to HTN)</li><li>Chest - x-ray: Widened mediastinum, pleural effusion</li><li>Unstable patients Echocardiogram</li><li>Stable patients CT-Angiography (gold standard)</li></ul></div></div></section>
+<section class="topic" id="card-lipid"><h3>Lipids &amp; Prevention</h3>
+<ul>
+<li>On maximal statin, LDL above target → add <b>ezetimibe</b> → then <b>PCSK9 inhibitor</b> (evolocumab).</li>
+<li>Primary prevention: statin by ASCVD risk; smoking cessation, BP &amp; glycaemic control, 150 min/week moderate exercise.</li>
+</ul></section>
+            `,
+            questions: [
+                {
+                    q: 'A 58-year-old man with exertional chest pain, a normal resting ECG and negative troponins is unable to exercise because of severe knee osteoarthritis. What is the most appropriate next investigation?',
+                    options: ['Exercise treadmill ECG', 'Dobutamine stress echocardiography', 'Resting echocardiography', 'Coronary CT calcium score only'],
+                    answer: 1,
+                    explanation: 'When a patient cannot exercise, use a pharmacological stress test — dobutamine stress echo (or vasodilator MPI) — to provoke and image ischaemia.'
+                },
+                {
+                    q: 'A patient with an inferior STEMI (ST elevation in II, III, aVF) becomes hypotensive after sublingual nitroglycerin. What is the most likely explanation?',
+                    options: ['Anaphylaxis to nitrates', 'Right ventricular infarction', 'Acute mitral regurgitation', 'Pericardial tamponade'],
+                    answer: 1,
+                    explanation: 'Inferior MI often involves the RV, which is preload-dependent; nitrates drop preload and cause hypotension. Treat with IV fluids and avoid nitrates.'
+                },
+                {
+                    q: 'A patient on a maximally tolerated statin after MI still has an LDL above target. What is the next step?',
+                    options: ['Add ezetimibe', 'Add fenofibrate', 'Stop the statin and start a PCSK9 inhibitor', 'Add niacin'],
+                    answer: 0,
+                    explanation: 'After a maximal statin, add ezetimibe next; a PCSK9 inhibitor (e.g. evolocumab) is reserved for those still above target on statin + ezetimibe.'
+                },
+                {
+                    q: 'On day 6 of unfractionated heparin a patient develops a 50% fall in platelets and a new DVT. What is the best management?',
+                    options: ['Continue heparin and transfuse platelets', 'Stop heparin and start warfarin', 'Stop heparin and start argatroban', 'Stop heparin and observe'],
+                    answer: 2,
+                    explanation: 'This is heparin-induced thrombocytopenia (HIT) with thrombosis. Stop all heparin and start a non-heparin anticoagulant such as argatroban; never give warfarin or platelets acutely.'
+                },
+                {
+                    q: 'An elderly man has severe aortic stenosis on echo but is completely asymptomatic with a normal ejection fraction. What is the most appropriate management?',
+                    options: ['Immediate surgical valve replacement', 'TAVR within 2 weeks', 'Regular clinical and echo follow-up', 'Start a vasodilator to reduce afterload'],
+                    answer: 2,
+                    explanation: 'Asymptomatic severe AS with preserved EF is followed with serial echo; intervention (SAVR/TAVR) is indicated once symptomatic or EF declines.'
+                },
+                {
+                    q: 'A 70-year-old with non-valvular atrial fibrillation, hypertension and diabetes (CHA2DS2-VASc score 4) needs stroke prevention. What is most appropriate?',
+                    options: ['Aspirin alone', 'A direct oral anticoagulant (DOAC)', 'Rate control only', 'No antithrombotic therapy'],
+                    answer: 1,
+                    explanation: 'A CHA2DS2-VASc score of 2 or more (men) warrants oral anticoagulation; a DOAC is preferred over aspirin (ineffective for stroke prevention) and over warfarin in non-valvular AF.'
+                },
+                {
+                    q: 'A patient with acute decompensated heart failure has pulmonary oedema, SpO2 86% and BP 155/95. What is the best initial management?',
+                    options: ['Sit upright, oxygen/CPAP, IV furosemide and nitrates', 'Rapid large-volume IV fluid bolus', 'IV beta-blocker', 'Immediate intubation'],
+                    answer: 0,
+                    explanation: 'Acute cardiogenic pulmonary oedema is treated by sitting the patient up with oxygen/CPAP, IV loop diuretic and nitrates (if not hypotensive); fluids and IV beta-blockers worsen it.'
+                },
+                {
+                    q: 'A haemodynamically stable patient has a regular narrow-complex tachycardia at 180/min (SVT). What is the first step?',
+                    options: ['Vagal manoeuvres, then IV adenosine', 'Immediate synchronised cardioversion', 'IV amiodarone', 'Oral beta-blocker'],
+                    answer: 0,
+                    explanation: 'Stable SVT is treated first with vagal manoeuvres, then IV adenosine; synchronised cardioversion is reserved for haemodynamic instability.'
+                }
+            ]
+        },
+        {
+            id: 'med-pulmonology',
+            title: '02 — Pulmonology',
+            title_en: 'Asthma · COPD · Pneumonia · PE · Pleural Disease',
+            summaryHtml: `
+                <h3>Asthma</h3>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Acute asthma — severity ladder</div>
+                <svg viewBox="0 0 700 215" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Moderate asthma has PEF 50 to 75 percent with normal speech; severe has PEF 33 to 50 percent, respiratory rate 25 or more, heart rate 110 or more and inability to complete sentences; life-threatening has PEF under 33 percent with silent chest, cyanosis, exhaustion, a normal or rising carbon dioxide, bradycardia and hypotension.">
+                <g font-family="system-ui,Arial">
+                <rect x="16" y="26" width="216" height="164" rx="10" fill="#dcfce7" stroke="#22c55e"/><text x="124" y="52" text-anchor="middle" font-size="13.5" font-weight="800" fill="#15803d">Moderate</text><text x="124" y="82" text-anchor="middle" font-size="12.5" font-weight="700" fill="#334155">PEF 50–75%</text><text x="124" y="110" text-anchor="middle" font-size="11.5" fill="#475569">talking normally</text><text x="124" y="166" text-anchor="middle" font-size="11" font-weight="700" fill="#15803d">SABA + steroids</text>
+                <rect x="242" y="26" width="216" height="164" rx="10" fill="#fef3c7" stroke="#f59e0b"/><text x="350" y="52" text-anchor="middle" font-size="13.5" font-weight="800" fill="#b45309">Severe</text><text x="350" y="82" text-anchor="middle" font-size="12.5" font-weight="700" fill="#334155">PEF 33–50%</text><text x="350" y="108" text-anchor="middle" font-size="11.5" fill="#475569">RR ≥25 · HR ≥110</text><text x="350" y="130" text-anchor="middle" font-size="11.5" fill="#475569">cannot complete sentences</text><text x="350" y="166" text-anchor="middle" font-size="11" font-weight="700" fill="#b45309">add ipratropium</text>
+                <rect x="468" y="26" width="216" height="164" rx="10" fill="#fee2e2" stroke="#ef4444"/><text x="576" y="52" text-anchor="middle" font-size="13.5" font-weight="800" fill="#b91c1c">Life-threatening</text><text x="576" y="82" text-anchor="middle" font-size="12.5" font-weight="700" fill="#334155">PEF &lt;33%</text><text x="576" y="106" text-anchor="middle" font-size="11.5" fill="#475569">SILENT chest · cyanosis</text><text x="576" y="128" text-anchor="middle" font-size="11.5" fill="#b91c1c" font-weight="700">normal/rising CO₂</text><text x="576" y="150" text-anchor="middle" font-size="11.5" fill="#475569">bradycardia · hypotension</text><text x="576" y="176" text-anchor="middle" font-size="11" font-weight="700" fill="#b91c1c">ICU · senior help</text>
+                </g></svg>
+                <figcaption>A <b>silent chest</b> and a <b>normal or rising CO₂</b> are ominous — the patient is tiring, not improving. Escalate immediately rather than reassuring on a "better-sounding" chest.</figcaption></figure>
+                <ul>
+                    <li>Reversible airflow obstruction; diagnose with spirometry <b>FEV₁/FVC &lt;0.7</b> + bronchodilator reversibility (↑FEV₁ ≥12% &amp; 200 mL)</li>
+                    <li>Chronic step-up: <b>ICS-formoterol</b> (MART) — SABA-only no longer preferred → ICS+LABA → add LAMA/LTRA → biologic (anti-IgE omalizumab / anti-IL5) for severe eosinophilic</li>
+                    <li>Residual cough worse lying down + morning hoarseness on ICS → coexisting <b>GERD</b> → add PPI</li>
+                </ul>
+                <table>
+                    <thead><tr><th>Acute severity</th><th>Features</th></tr></thead>
+                    <tbody>
+                        <tr><td>Moderate</td><td>PEF 50–75%, talking normally</td></tr>
+                        <tr><td>Severe</td><td>PEF 33–50%, RR ≥25, HR ≥110, can't complete sentences</td></tr>
+                        <tr><td>Life-threatening</td><td>PEF &lt;33%, <b>silent chest</b>, cyanosis, exhaustion, <b>normal/rising CO₂</b>, bradycardia, hypotension</td></tr>
+                    </tbody>
+                </table>
+
+                
+                <div class="topic-deck">
+<h4 class="deck-topic">Bronchial Asthma</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Dry cough, SOB</li><li>History of atopy; allergic conjunctivitis, allergic rhinitis, eczema</li><li>Exacerbation of symptoms in seasons, perfume or dust exposure</li><li>SABA: palpitation, tremor, hypokalemia</li><li>ICS: Oropharyngeal candidiasis, dysphonia</li><li>LABA: Increased mortality if used alone</li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Spirometry: (most diagnostic test)<ul class="sub"><li>FEV1/FVC ratio: &lt;0.7 obstructive disease</li><li>Reversible bronchodilation indicated by increase FEV or FVC ≥12 Bronchial asthma</li></ul></li><li>Methacholine challenge test<ul class="sub"><li>Indicated in normal spirometry with high suspicion for bronchial asthma</li><li>FEV1 drop ≥20% diagnostic of asthma</li></ul></li></ul></div><div class="deck-card mgmt"><span class="deck-card-h">Management</span><ul><li>Step 1: SABA (PRN - Symptom reliever - before exercise)</li><li>Step 2: ICS or Symbicort</li><li>Step 3: Increase dose of ICS or add LABA (Symbicort)</li><li>Step 4: Montelukast (leukotriene antagonist)</li><li>Step 5: Oral steroids - Omalizumab</li><li>Monitoring and reassessment to respond of therapy PEFR</li><li>Oxygenation</li><li>SABA (The best bronchodilator for asthma)</li><li>SAMA (The best bronchodilator for COPD)</li><li>Systemic steroids then reassessment ICU (if not improving)</li><li>Magnesium sulphate (last step) intubation</li><li>Non-selective beta blocker: propranolol</li><li>Carboprost</li><li>Bupropion (C/I in epilepsy also, as it decrease threshold of seizure)</li><li>Adenosine</li><li>All of asthma medications safe during pregnancy</li><li>Step 1: SABA (PRN - Symptom reliever - before exercise)</li><li>Step 2: ICS or Symbicort</li><li>Step 3: Increase dose of ICS or add LABA (Symbicort)</li><li>Step 4: Montelukast (leukotriene antagonist)</li><li>Step 5: Oral steroids - Omalizumab</li><li>Oxygenation</li><li>SABA (The best bronchodilator for asthma)</li><li>SAMA (The best bronchodilator for COPD)</li><li>Systemic steroids then reassessment ICU (if not improving)</li><li>Magnesium sulphate (last step) intubation</li><li>Step 1: SABA (PRN - Symptom reliever - before exercise)</li><li>Step 2: ICS or Symbicort</li><li>Step 3: Increase dose of ICS or add LABA (Symbicort)</li><li>Step 4: Montelukast (leukotriene antagonist)</li><li>Step 5: Oral steroids - Omalizumab</li><li>Oxygenation</li><li>SABA (The best bronchodilator for asthma)</li><li>SAMA (The best bronchodilator for COPD)</li><li>Systemic steroids then reassessment ICU (if not improving)</li><li>Magnesium sulphate (last step) intubation</li></ul></div></div>
+                </div>
+<h3>COPD</h3>
+                <ul>
+                    <li>Diagnosis: post-bronchodilator <b>FEV₁/FVC &lt;0.7</b> (non-reversible); smoking cessation is the single most important intervention</li>
+                    <li>Inhaled step-up: LABA + LAMA; add <b>ICS</b> only if frequent exacerbations or blood eosinophilia</li>
+                    <li>Chronic hypoxaemia (PaO₂ ≤55 mmHg, or ≤59 with cor pulmonale/polycythaemia) → <b>long-term oxygen therapy</b> — with smoking cessation, the only measures that improve survival</li>
+                    <li><b>Exacerbation</b>: controlled O₂ (target SpO₂ 88–92%), nebulised bronchodilators, oral prednisolone, antibiotics if purulent sputum; persistent respiratory acidosis → <b>NIV (BiPAP)</b></li>
+                </ul>
+
+                
+                <div class="topic-deck">
+<h4 class="deck-topic">COPD</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Chronic productive cough</li><li>SOB</li><li>Smoker patient, 40-50 years old</li><li>Chest infections</li><li>Cor pulmonale (assessed be echocardiogram)</li><li>Arrythmia (multifocal atrial tachycardia)</li><li>Smoking cessation</li><li>Home oxygen therapy: requires 2 ABG readings shows:<ul class="sub"><li>PaO2 &lt;55 (7.3Kpa) or oxygen saturation &lt;88 on room air</li><li>PaO2 55-59 or oxygen saturation 88-92 + (dependent edema, pHTN, nocturnal hypoxia, HCT &gt;56%)</li></ul></li><li>Vaccination</li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Spirometry: (most diagnostic test)<ul class="sub"><li>FEV1/FVC ratio: &lt;0.7 obstructive disease</li><li>Minimal reversibility after bronchodilator by increase FEV or FVC &lt;12 COPD</li></ul></li><li>DLCO: Low in emphysema, normal in chronic bronchitis</li><li>Monitoring: FEV1</li></ul></div><div class="deck-card mgmt"><span class="deck-card-h">Management</span><ul><li>Step 1: LABA or LAMA</li><li>Step 2: LABA or LAMA (start different class than step-1)</li><li>Step 3: Inhaler corticosteroids</li><li>Step 4: Home oxygen therapy</li><li>Step 5: Oral steroids - Omalizumab</li><li>Oxygenation (Venturi mask) (target 88-92%)</li><li>Bronchodilators (SAMA)</li><li>Prednisone</li><li>Non-invasive ventilation: (if requirement achieved)<ul class="sub"><li>Alert and cooperative patient</li><li>Respiratory distress despite bronchodilators and steroids</li><li>Severe hypercapnia (≥ 8.8 Kpa)</li></ul></li><li>Intubation: unconscious patient or at risk of aspiration, Respiratory failure</li><li>Step 1: LABA or LAMA</li><li>Step 2: LABA or LAMA (start different class than step-1)</li><li>Step 3: Inhaler corticosteroids</li><li>Step 4: Home oxygen therapy</li><li>Step 5: Oral steroids - Omalizumab</li><li>Oxygenation (Venturi mask) (target 88-92%)</li><li>Bronchodilators (SAMA)</li><li>Prednisolone</li><li>Non-invasive ventilation: (if requirement achieved)<ul class="sub"><li>Alert and cooperative patient</li><li>Respiratory distress despite bronchodilators and steroids</li><li>Severe hypercapnia (≥ 8.8 Kpa)</li></ul></li><li>Intubation: unconscious patient or at risk of aspiration, Respiratory failure</li><li>Step 1: LABA or LAMA</li><li>Step 2: LABA or LAMA (start different class than step-1)</li><li>Step 3: Inhaler corticosteroids</li><li>Step 4: Home oxygen therapy</li><li>Step 5: Oral steroids - Omalizumab</li><li>Oxygenation (Venturi mask) (target 88-92%)</li><li>Bronchodilators (SAMA)</li><li>Prednisolone</li><li>Non-invasive ventilation: (if requirement achieved)<ul class="sub"><li>Alert and cooperative patient</li><li>Respiratory distress despite bronchodilators and steroids</li><li>Severe hypercapnia (≥ 8.8 Kpa)</li></ul></li><li>Intubation: unconscious patient or at risk of aspiration, Respiratory failure</li></ul></div></div>
+                </div>
+<h3>Pneumonia</h3>
+                <ul>
+                    <li><b>CURB-65</b> (Confusion, Urea &gt;7, RR ≥30, BP &lt;90/60, age ≥65): 0–1 home, 2 ward, ≥3 consider ICU</li>
+                    <li>CAP: outpatient amoxicillin; ward → <b>ceftriaxone + macrolide</b> (or respiratory fluoroquinolone)</li>
+                    <li>Atypicals: <i>Legionella</i> (hyponatraemia, diarrhoea, urinary antigen), <i>Mycoplasma</i> (young, cold agglutinins), <i>Pneumocystis</i> (HIV, exertional desaturation)</li>
+                </ul>
+
+                <h3>Pulmonary Embolism &amp; Pleural Disease</h3>
+                <ul>
+                    <li><b>PE</b>: pleuritic pain + dyspnoea + tachycardia; two-level <b>Wells</b> → likely: <b>CT pulmonary angiography</b>; unlikely: D-dimer to exclude</li>
+                    <li>Stable PE → anticoagulate (DOAC); massive/haemodynamically unstable → <b>thrombolysis</b>; anticoagulation contraindicated → IVC filter</li>
+                    <li><b>Pleural effusion — Light criteria</b> = exudate if pleural/serum protein &gt;0.5, pleural/serum LDH &gt;0.6, or pleural LDH &gt;⅔ upper serum limit</li>
+                    <li><b>Pneumothorax</b>: tension (deviated trachea, hypotension) → immediate needle decompression → chest drain</li>
+                </ul>
+                <div class="sum-callout">
+                    <b>Algorithm — acute severe asthma</b>
+                    <ol>
+                        <li>O₂ to SpO₂ 94–98% + continuous/nebulised <b>SABA + ipratropium</b></li>
+                        <li>Systemic corticosteroids early (oral = IV)</li>
+                        <li>Poor response → <b>IV magnesium sulfate</b></li>
+                        <li>Exhaustion, rising CO₂, silent chest → ICU / ventilation</li>
+                    </ol>
+                </div>
+            
+                
+                <div class="topic-deck">
+<div class="deck-block deck-tbl"><div class="deck-cap"><span class="deck-tag tag-tbl">Table</span> Light's criteria — exudate vs transudate</div><p class="deck-subcap">pleural effusion is exudative if ANY one criterion is met</p><table><thead><tr><th>Criterion</th><th>Threshold (exudate)</th></tr></thead><tbody><tr><td><b>Pleural fluid protein / serum protein ratio</b></td><td>&gt;0.5</td></tr><tr><td><b>Pleural fluid LDH / serum LDH ratio</b></td><td>&gt;0.6</td></tr><tr><td><b>Pleural fluid LDH</b></td><td>&gt;2/3 the upper limit of normal serum LDH</td></tr></tbody></table></div>
+<h4 class="deck-topic">Pleural effusion</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Stony dullness on percussion</li><li>Tracheal shift to the opposite side</li><li>Constitutional symptoms (raise suspicion of malignancy cause of pleural effusion</li><li>Tuberculosis: Adenosine deaminase (ADA, the most sensitive), Gamma interferon<ul class="sub"><li>Rheumatoid arthritis: Very high LDH, low glucose and PH</li><li>Empyema: Ph &lt;7.2, glucose &lt;60, WBC &gt;50,000, LDH &gt;1000, or positive culture and gram stain</li><li>Cytology: screening for malignancy (negative test doesn’t rule out malignancy)</li></ul></li><li>Empyema<ul class="sub"><li>Loculated pleural effusion</li></ul></li><li>Pleural effusion could be a sign of:<ul class="sub"><li>Complicated pneumonia</li><li>Pulmonary embolism</li><li>Malignancy ( associated with constitutional symptoms, positive cytology, HR-CT if suspected)</li></ul></li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>First step: Diagnostic thoracentesis: (8 th to 10 th intercostal space at midaxillary line) Second step: interpretation of thoracentesis:<ul class="sub"><li>Transudative Diuretics + fluid restriction</li><li>Exudative Treat the underlying cause</li><li>Malignant pleural effusion therapeutic thoracentesis chemical pleurodesis (if failed)</li></ul></li></ul></div></div>
+<h4 class="deck-topic">Pneumothorax</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Chest pain</li><li>Shortness of breath</li><li>Reduced breath sounds &amp; tactile fremitus</li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Chest x-ray:<ul class="sub"><li>Absent or decreased lung vascular markings</li></ul></li><li>Prevention:<ul class="sub"><li>Smoking cessation</li><li>Smoking leads to pleural plebs formation, which, if ruptured may result in spontaneous pneumothorax</li></ul></li></ul></div><div class="deck-card mgmt"><span class="deck-card-h">Management</span><ul><li>Tension pneumothorax:<ul class="sub"><li>Needle decompression followed by chest tube insertion</li></ul></li><li>Traumatic pneumothorax:<ul class="sub"><li>ABCDE, then chest tube insertion</li></ul></li><li>Secondary pneumothorax:<ul class="sub"><li>Stable patient, small pneumothorax (&lt;2cm) oxygenation and observation</li><li>Unstable patient, large pneumothorax (&gt;2cm) Aspiration</li></ul></li></ul></div></div>
+<h4 class="deck-topic">Pulmonary embolism</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Chest pain, SOB</li><li>Hemoptysis</li><li>Pleuritic chest pain</li><li>Split S2</li><li>Post-surgery</li><li>Immobilization</li><li>Drugs: Oral contraceptive pills</li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Ultrasound duplex LL: to rule out DVT</li><li>CT-Angiography chest Gold standard</li><li>V/Q scan: indicated in chronic PE, inconclusive CT-angio</li><li>ECG:<ul class="sub"><li>Sinus tachycardia (most common ECG finding on ECG)</li><li>S1Q3T3 pattern</li><li>RBBB</li></ul></li><li>Ultrasound duplex LL: to rule out DVT</li><li>CT-Angiography chest Gold standard</li><li>V/Q scan: indicated in chronic PE, inconclusive CT-angio</li><li>ECG:<ul class="sub"><li>Sinus tachycardia (most common ECG finding on ECG)</li><li>S1Q3T3 pattern</li><li>RBBB</li></ul></li><li>Ultrasound duplex LL: to rule out DVT</li><li>CT-Angiography chest Gold standard</li><li>V/Q scan: indicated in chronic PE, inconclusive CT-angio</li><li>ECG:<ul class="sub"><li>Sinus tachycardia (most common ECG finding on ECG)</li><li>S1Q3T3 pattern</li><li>RBBB</li></ul></li><li>Ultrasound duplex LL: to rule out DVT</li><li>CT-Angiography chest Gold standard</li><li>V/Q scan: indicated in chronic PE, inconclusive CT-angio</li><li>ECG:<ul class="sub"><li>Sinus tachycardia (most common ECG finding on ECG)</li><li>S1Q3T3 pattern</li><li>RBBB</li></ul></li></ul></div><div class="deck-card mgmt"><span class="deck-card-h">Management</span><ul><li>Warfarin: 3-6 months</li><li>Unprovoked DVT 6months</li><li>Provoked DVT 3 months</li><li>Recurrent DVT Lifelong or long term warfarin therapy</li><li>Long term warfarin therapy: 3-6 months</li><li>Unprovoked DVT 6months</li><li>Provoked DVT 3 months</li><li>Long term warfarin therapy: 3-6 months</li><li>Unprovoked DVT 6months</li><li>Provoked DVT 3 months</li><li>Long term warfarin therapy: 3-6 months</li><li>Unprovoked DVT 6months</li><li>Provoked DVT 3 months</li></ul></div></div>
+<h4 class="deck-topic">Pulmonary hypertension</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Chest pain, syncope, dyspnea</li><li>Loud and palpable P2</li><li>RSHF signs: Elevated JVP, Parasternal heave</li><li>Chest pain, syncope, dyspnea</li><li>Loud and palpable P2</li><li>RSHF signs: Elevated JVP, Parasternal heave</li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Echocardiography<ul class="sub"><li>V/Q scan: for group 4 pulmonary hypertension</li><li>Right sided catheterization (gold standard)</li></ul></li><li>Echocardiography<ul class="sub"><li>V/Q scan: for group 4 pulmonary hypertension</li><li>Right sided catheterization (gold standard)</li></ul></li></ul></div></div>
+                </div>
+<section class="topic deck-enrich">
+                    <h3>More from the study deck</h3>
+                    <p class="deck-intro">Extra material for this step that spans more than one topic above.</p>
+<h4 class="deck-topic">Obstructive sleep apnea</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Excessive day time sleepiness</li><li>Loud snoring</li><li>Observed episodes of stopped breathing during sleep</li><li>Waking during the night and gasping or choking</li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Diagnosis: Polysomnography (sleep study)</li><li>Treatment:<ul class="sub"><li>Initial treatment: Maintain healthy body weight</li><li>Best treatment: CPAP (continuous positive airway pressure)</li></ul></li></ul></div></div>
+<h4 class="deck-topic">Lung cancer</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Progressive SOB, dyspnea, hemoptysis, clubbing, pleural effusion</li><li>Constitutional symptoms: Fever, loss of weight &amp; appetite, night sweats</li><li>Paraneoplastic syndromes</li><li>Metastasis symptoms</li><li>Brain</li><li>Bone (Causes spinal cord compression)</li><li>Adjacent structures (pericardium)</li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Check previous chest x-ray (if available)<ul class="sub"><li>If the nodule hasn’t changed for 2-3 years no need to further follow up</li><li>More than 2cm Surgery (Baseline pre-op PFT to measure post-op improvement)</li><li>More than 8mm to 2cm PET/CT - Biopsy</li><li>More than 4mm to 8mm CT scan follow up</li><li>4mm and below no need to further follow up</li></ul></li></ul></div></div>
+<h4 class="deck-topic">Obstructive sleep apnea</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Excessive day time sleepiness</li><li>Loud snoring</li><li>Observed episodes of stopped breathing during sleep</li><li>Waking during the night and gasping or choking</li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Diagnosis: Polysomnography (sleep study)</li><li>Treatment:<ul class="sub"><li>Initial treatment: Maintain healthy body weight</li><li>Best treatment: CPAP (continuous positive airway pressure)</li></ul></li></ul></div></div>
+<h4 class="deck-topic">Interstitial lung diseases</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Progressive dyspnea</li><li>3Cs: (Cough, cyanosis, clubbing</li><li>Auscultation: Velcro type crackles</li><li>History of auto-immune diseases (RA-SLE)</li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Diagnosis:<ul class="sub"><li>Spirometry: Normal FEV1/FVC, Low FEV1, Low FVC</li><li>High resolution CT scan: Reticular or nodular infiltrate</li></ul></li><li>Treatment:<ul class="sub"><li>Prifenidone: (SE: photosensitivity, rash)</li><li>Nintedanib: (SE: Hepatotoxicity)</li></ul></li></ul></div></div>
+<h4 class="deck-topic">Sarcoidosis</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Progressive dyspnea</li><li>Dry cough</li><li>Auscultation: Bilateral diffuse crepitation</li><li>Nodular or round reddish skin rash</li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Diagnosis:<ul class="sub"><li>Chest x-ray: Bilateral interstitial infiltrate, bilateral hilar LN enlargement</li><li>Skin biopsy (most diagnostic, non-caseating granuloma )</li></ul></li><li>Treatment:<ul class="sub"><li>Observation: (mild disease, asymptomatic, isolated skin lesion)</li><li>Glucocorticoids: (Progressive or severe lung disease)</li></ul></li></ul></div></div>
+<h4 class="deck-topic">Bronchiectasis</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Chronic cough associated with large amount of sputum</li><li>Hemoptysis, shortness of breath, crackles</li><li>clubbing</li><li>Risk factors: TB (most common), Cystic fibrosis</li><li>Chronic cough associated with large amount of sputum</li><li>Hemoptysis, crackles</li><li>clubbing</li><li>Risk factors: TB (most common), Cystic fibrosis</li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Diagnosis:<ul class="sub"><li>High resolution CT-Scan: Tram track sign and signet ring sing</li><li>Spirometry: monitoring</li></ul></li><li>Treatment:<ul class="sub"><li>Chest physiotherapy</li><li>Sputum drainage</li></ul></li><li>Diagnosis:<ul class="sub"><li>High resolution CT-Scan: Tram track sign and signet ring sing</li><li>Spirometry: monitoring</li></ul></li><li>Treatment:<ul class="sub"><li>Chest physiotherapy</li><li>Sputum drainage</li></ul></li></ul></div></div>
+                </section>
+            `,
+            questions: [
+                {
+                    q: 'A patient in the ED with acute severe asthma remains tachypnoeic and wheezy despite continuous nebulised salbutamol, ipratropium and IV hydrocortisone. What is the next appropriate step?',
+                    options: ['IV magnesium sulfate', 'Oral montelukast', 'Empirical IV antibiotics', 'A long-acting beta-agonist inhaler'],
+                    answer: 0,
+                    explanation: 'When acute severe asthma fails to respond to bronchodilators and systemic steroids, IV magnesium sulfate is the next step.'
+                },
+                {
+                    q: 'A patient with emphysematous COPD on LABA/LAMA has progressive dyspnoea, no exacerbations, and resting PaO₂ 54 mmHg. Which intervention improves survival?',
+                    options: ['Add an inhaled corticosteroid', 'Long-term home oxygen therapy', 'Add a leukotriene receptor antagonist', 'Daily azithromycin'],
+                    answer: 1,
+                    explanation: 'In COPD with chronic hypoxaemia, long-term oxygen therapy (with smoking cessation) is the intervention shown to prolong survival.'
+                },
+                {
+                    q: 'A 30-year-old woman develops sudden pleuritic chest pain and dyspnoea 5 days after a long flight; she is haemodynamically stable. After a high Wells score, what is the best diagnostic test?',
+                    options: ['D-dimer', 'CT pulmonary angiography', 'Lower-limb venous ultrasound', 'Ventilation–perfusion scan'],
+                    answer: 1,
+                    explanation: 'With a high pre-test probability, go straight to CT pulmonary angiography; D-dimer is only useful to rule out PE when probability is low/intermediate.'
+                },
+                {
+                    q: 'A patient with well-controlled asthma on inhaled corticosteroid still has a dry cough that is worse when lying down, with morning hoarseness. What should be added?',
+                    options: ['A proton pump inhibitor', 'An additional short course of oral steroids', 'A long-acting muscarinic antagonist', 'An antihistamine'],
+                    answer: 0,
+                    explanation: 'Nocturnal cough with hoarseness suggests coexisting GERD; a PPI is appropriate.'
+                },
+                {
+                    q: 'A patient with a COPD exacerbation has increased dyspnoea and purulent sputum. Besides bronchodilators and steroids, what oxygen strategy is correct?',
+                    options: ['Controlled (low-flow) oxygen titrated to SpO2 88–92%', 'High-flow 100% oxygen', 'No oxygen unless SpO2 below 80%', 'Immediate non-invasive ventilation for everyone'],
+                    answer: 0,
+                    explanation: 'In COPD, give controlled oxygen targeting 88–92% to avoid CO2 retention; antibiotics are added when sputum is purulent. NIV is used for persistent respiratory acidosis.'
+                },
+                {
+                    q: 'A patient with a confirmed pulmonary embolism is haemodynamically stable. What is the first-line treatment?',
+                    options: ['A direct oral anticoagulant', 'Systemic thrombolysis', 'IVC filter', 'Aspirin'],
+                    answer: 0,
+                    explanation: 'Stable PE is treated with anticoagulation (a DOAC); thrombolysis is reserved for massive/haemodynamically unstable PE, and IVC filters for when anticoagulation is contraindicated.'
+                },
+                {
+                    q: 'A unilateral pleural effusion is aspirated; the pleural-fluid-to-serum protein ratio is 0.7 with a high LDH. By Light criteria this is:',
+                    options: ['A transudate', 'An exudate', 'A normal finding', 'A haemothorax'],
+                    answer: 1,
+                    explanation: 'A protein ratio above 0.5 or LDH ratio above 0.6 (Light criteria) defines an exudate, which has a different differential (infection, malignancy, TB) from a transudate.'
+                }
+            ]
+        },
+        {
+            id: 'med-gastro',
+            title: '03 — Gastroenterology & Hepatology',
+            title_en: 'GI Bleed · Liver Disease · IBD · Pancreatitis · Biliary · GERD/PUD',
+            summaryHtml: `
+                <h3>Upper GI Bleeding</h3>
+                <ul>
+                    <li>Resuscitate first (restrictive transfusion target Hb ~7–8 g/dL); risk-score with <b>Glasgow-Blatchford</b> (pre-endoscopy) / Rockall (post)</li>
+                    <li><b>Peptic ulcer bleed</b>: IV PPI + endoscopic haemostasis (adrenaline + clip/thermal); test &amp; treat <i>H. pylori</i></li>
+                    <li><b>Variceal bleed</b> in cirrhosis: the step with the greatest <b>mortality benefit</b> is prophylactic <b>IV ceftriaxone</b> (prevents SBP/sepsis) — plus terlipressin/octreotide + band ligation</li>
+                </ul>
+
+                
+                <div class="topic-deck">
+<h4 class="deck-topic">Peptic ulcer disease</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Pathophysiology: Physiological stress (infection - critical illness) leads to increase HCL secretion, which make the patient more susceptible to stress related gastritis and PUD</li><li>Etiology:<ul class="sub"><li>NSAID</li><li>Helicobacter pylori</li></ul></li><li>Epigastric abdominal pain:<ul class="sub"><li>Relieved by eating → Duodenal ulcer → weight gain</li><li>Worsened by eating → Gastric ulcer → weight loss</li></ul></li><li>Nausea / Vomiting (coffee ground vomitus)</li><li>Hematemesis, melena</li><li>New onset of symptoms &gt;60 years old</li><li>Progressive dysphagia, odynophagia Rapid weight loss</li><li>Persistent vomiting Suspected GI bleeding (Low HB, melena, hematemesis)</li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Young age + no red flags → rule out H.pylori (urea breath test)</li><li>Initial test → Barium swallow (if endoscopy unavailable or contraindicated)</li><li>Confirmatory test → Upper GI endoscopy</li></ul></div></div>
+<h4 class="deck-topic">Helicobacter pylori</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Similar to PUD Upper GI bleeding: (Hematemesis, melena)</li><li>Dyspepsia</li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Diagnosis:<ul class="sub"><li>Urea breath test (Diagnostic and confirms eradication)</li><li>Prior to test: stop antibiotics for 4 weeks, PPI for 2 weeks</li></ul></li><li>Treatment:<ul class="sub"><li>Triple therapy:</li><li>PPI + Amoxicillin + clarithromycin</li><li>Quadruple therapy: (if triple failed</li><li>PPI + Bismuth salicylate + Metronidazole + Tetracycline</li></ul></li></ul></div></div>
+                </div>
+<h3>Liver Disease</h3>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Hepatitis B serology — reading the panel</div>
+                <svg viewBox="0 0 700 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="HBsAg positive means active infection. Anti-HBs positive alone means immunity. Anti-HBc IgM positive indicates acute or recent infection. Anti-HBs with anti-HBc indicates cleared past infection; anti-HBs alone indicates vaccination.">
+                <g font-family="system-ui,Arial">
+                <rect x="16" y="22" width="212" height="96" rx="10" fill="#fee2e2" stroke="#ef4444"/><text x="122" y="48" text-anchor="middle" font-size="13.5" font-weight="800" fill="#b91c1c">HBsAg +</text><text x="122" y="74" text-anchor="middle" font-size="12" fill="#334155">ACTIVE infection</text><text x="122" y="98" text-anchor="middle" font-size="11" fill="#475569">acute or chronic</text>
+                <rect x="244" y="22" width="212" height="96" rx="10" fill="#fef3c7" stroke="#f59e0b"/><text x="350" y="48" text-anchor="middle" font-size="13.5" font-weight="800" fill="#b45309">Anti-HBc IgM +</text><text x="350" y="74" text-anchor="middle" font-size="12" fill="#334155">ACUTE / recent</text><text x="350" y="98" text-anchor="middle" font-size="11" fill="#475569">also the window period</text>
+                <rect x="472" y="22" width="212" height="96" rx="10" fill="#dcfce7" stroke="#22c55e"/><text x="578" y="48" text-anchor="middle" font-size="13.5" font-weight="800" fill="#15803d">Anti-HBs +</text><text x="578" y="74" text-anchor="middle" font-size="12" fill="#334155">IMMUNE</text><text x="578" y="98" text-anchor="middle" font-size="11" fill="#475569">vaccine or cleared</text>
+                <rect x="16" y="136" width="668" height="46" rx="9" fill="#dbeafe" stroke="#3b82f6"/><text x="350" y="164" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">Anti-HBs + anti-HBc together = CLEARED past infection · anti-HBs alone = VACCINATED</text>
+                <rect x="16" y="194" width="668" height="42" rx="9" fill="#f1f5f9" stroke="#cbd5e1"/><text x="350" y="220" text-anchor="middle" font-size="12" fill="#334155">HBeAg = high replication / infectivity · acute liver failure prognosis is judged by PT/INR, not transaminases</text>
+                </g></svg>
+                <figcaption>Start with <b>HBsAg</b> (is there virus?), then <b>anti-HBc</b> (has this person ever been infected?). Anti-HBs alone means <b>vaccinated</b>; anti-HBs plus anti-HBc means <b>past cleared infection</b>.</figcaption></figure>
+                <ul>
+                    <li><b>Acute liver failure</b>: best <b>prognostic</b> marker is <b>PT/INR</b> (synthetic function), not the transaminase level; paracetamol → <b>N-acetylcysteine</b> (Rumack-Matthew nomogram at 4 h)</li>
+                    <li><b>Decompensated cirrhosis</b> complications: <b>SBP</b> (ascitic neutrophils ≥250 → cefotaxime + albumin), <b>hepatic encephalopathy</b> (lactulose + rifaximin, treat precipitant), <b>hepatorenal syndrome</b> (terlipressin + albumin), variceal bleeding</li>
+                </ul>
+                <table>
+                    <thead><tr><th>Serology</th><th>Interpretation</th></tr></thead>
+                    <tbody>
+                        <tr><td>HBsAg +</td><td>Active hepatitis B infection (acute or chronic)</td></tr>
+                        <tr><td>Anti-HBs +</td><td>Immunity (vaccination or cleared infection)</td></tr>
+                        <tr><td>Anti-HBc IgM +</td><td>Acute/recent infection</td></tr>
+                        <tr><td>Isolated anti-HBc</td><td>Past infection / window period / occult</td></tr>
+                    </tbody>
+                </table>
+
+                
+                <div class="topic-deck">
+<div class="deck-block deck-tbl"><div class="deck-cap"><span class="deck-tag tag-tbl">Table</span> Acute liver failure — definition</div><table><thead><tr><th>Criteria (all required)</th></tr></thead><tbody><tr><td>INR ≥ 1.5</td></tr><tr><td>Neurological dysfunction — any degree of hepatic encephalopathy</td></tr><tr><td>No prior evidence of liver disease</td></tr><tr><td>Disease course ≤ 26 weeks</td></tr></tbody></table></div>
+<div class="deck-block deck-tbl"><div class="deck-cap"><span class="deck-tag tag-tbl">Table</span> Hepatitis B serology interpretation</div><table><thead><tr><th></th><th>Acute HBV</th><th>Chronic HBV</th><th>Cleared HBV</th><th>Vaccination</th></tr></thead><tbody><tr><td><b>HBcAb IgM</b></td><td>+</td><td>−</td><td>−</td><td>−</td></tr><tr><td><b>HBcAb IgG</b></td><td>+</td><td>+</td><td>+</td><td>−</td></tr><tr><td><b>HBsAg</b></td><td>+</td><td>+</td><td>−</td><td>−</td></tr><tr><td><b>Anti-HBs</b></td><td>−</td><td>−</td><td>+</td><td>+</td></tr><tr><td><b>HBeAg</b></td><td>+</td><td>+/−</td><td>−</td><td>−</td></tr><tr><td><b>Anti-HBe</b></td><td>−</td><td>+/−</td><td>+/−</td><td>−</td></tr><tr><td><b>HBV DNA</b></td><td>High / Low</td><td>Low / High</td><td>−</td><td>−</td></tr></tbody></table></div>
+<div class="deck-block deck-tbl"><div class="deck-cap"><span class="deck-tag tag-tbl">Table</span> Hepatitis B — anti-HBs (immunity) &amp; next step</div><p class="deck-subcap">screen with HBsAg + HBcAb IgM</p><table><thead><tr><th>Anti-HBs (mIU/mL)</th><th>Immunity</th><th>Next step</th></tr></thead><tbody><tr><td><b>&gt;10</b></td><td>Responder</td><td>No further action</td></tr><tr><td><b>&lt;10</b></td><td>Non-responder</td><td>2 doses of HBIG separated by 1 month</td></tr><tr><td><b>Unvaccinated / unknown</b></td><td>—</td><td>3 doses of vaccine + 1 dose of HBIG</td></tr></tbody></table></div>
+<div class="deck-block deck-tbl"><div class="deck-cap"><span class="deck-tag tag-tbl">Table</span> PSC vs PBC vs autoimmune hepatitis</div><table><thead><tr><th>Feature</th><th>Primary sclerosing cholangitis</th><th>Primary biliary cholangitis</th><th>Autoimmune hepatitis</th></tr></thead><tbody><tr><td><b>Epidemiology</b></td><td>♂ &gt; ♀ (2:1); associated with UC</td><td>♀ &gt; ♂ (9:1)</td><td>♀ &gt; ♂ (4:1)</td></tr><tr><td><b>Antibodies</b></td><td>p-ANCA</td><td>AMA-M2</td><td>Type 1: SMA, ANA; Type 2: LKM1, ALC1</td></tr><tr><td><b>Pathophysiology</b></td><td>Inflammation &amp; fibrosis of intra- &amp; extrahepatic bile ducts (↑ cholangiocarcinoma risk)</td><td>Autoimmune destruction of small intrahepatic bile ducts</td><td>Chronic inflammation of liver parenchyma</td></tr><tr><td><b>Most accurate test</b></td><td>MRCP: multifocal stricturing &amp; dilatation (beading)</td><td>Liver biopsy: lymphocytic infiltration, periductal granulomas</td><td>Liver biopsy: lymphoplasmacytic interface hepatitis</td></tr></tbody></table></div>
+<figure class="deck-block algo-flow"><figcaption><span class="deck-tag tag-algo">Algorithm</span> Liver nodule — approach</figcaption><div class="algo-row"><div class="algo-node start" style="animation-delay:0.00s">Liver nodule</div></div><div class="algo-arrow" style="animation-delay:0.05s"></div><div class="algo-fork"><div class="algo-branch"><span class="algo-label" style="animation-delay:0.12s">&lt;1 cm</span><div class="algo-node end" style="animation-delay:0.12s">Repeat ultrasound at 3 months</div></div><div class="algo-branch"><span class="algo-label" style="animation-delay:0.22s">&gt;1 cm</span><div class="algo-node proc" style="animation-delay:0.22s">4-phase MDCT or MRI with contrast</div><div class="algo-arrow mini" style="animation-delay:0.36s"></div><div class="algo-node proc" style="animation-delay:0.32s">Positive study → HCC</div><div class="algo-arrow mini" style="animation-delay:0.46s"></div><div class="algo-node end" style="animation-delay:0.42s">Negative → other contrast study (CT/MRI) or biopsy</div></div></div></figure>
+<h4 class="deck-topic">Hepatitis B</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Sexual (Most commonly)</li><li>Needle stick injury</li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Acute Hepatitis: (Rare presentation except in Hepatits D on top of B)<ul class="sub"><li>Fever</li><li>Nausea, vomiting</li><li>Jaundice, RUQ pain</li></ul></li><li>Chronic hepatitis: (Presents with cirrhosis symptoms)<ul class="sub"><li>Treatment → Entecavir and tenofovir</li></ul></li></ul></div></div>
+<h4 class="deck-topic">Hepatitis C</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Needle stick injury (3%)</li><li>Similar clinical picture of Hepatitis B</li><li>Most common genotype in Saudi arabia → 4</li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Screening test: Anti-HCV Ab<ul class="sub"><li>Confirmatory test: PCR</li><li>Positive → Start treatment</li><li>Negative → no further action needed</li></ul></li><li>Treatment:<ul class="sub"><li>Sofusbuvir + ledipasvir</li><li>Sofusbuvir + velpatasvir</li></ul></li></ul></div></div>
+<h4 class="deck-topic">Autoimmune hepatitis</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Right upper quadrant pain Arthralgia</li><li>Symptoms of liver failure: Jaundice, hepatic encephalopathy,</li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Diagnosis:<ul class="sub"><li>High ALT,AST (Significant elevation)</li><li>Anti-bodies: ANA, ASMA (anti-smooth muscle), ALC (Anti-liver cytosole), ALKM (anti-liver kidney)</li><li>Liver biopsy: shows plasma cell infiltrate</li></ul></li><li>Treatment:<ul class="sub"><li>Steroids +- azathioprine</li></ul></li></ul></div></div>
+<h4 class="deck-topic">Liver cirrhosis</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Eyes: Kayser Fleischer ring Disease of copper metabolism, lead to accumulation of copper in various organs:</li><li>Liver and spleen: Hepatosplenomegaly and jaundice CNS: extrapyramidal symptoms: Tremor, rigidity, depression</li><li>Kidney: Nephrocalcinosis, aminoaciduria</li><li>Coagulopathy:<ul class="sub"><li>Elevated PT/INR (Due to impaired clotting factors synthetization)</li><li>Treatment: correct INR by FFP or vitamin K (especially in malnutrition)</li></ul></li><li>Hepatocellular carcinoma:<ul class="sub"><li>Most common cause of HCC → Hepatitis B</li><li>Screening → US abdomen, serum alpha feto protein every 6 months in cirrhotic patients</li><li>Treatment:</li><li>Single mass &lt;6cm → Resection</li><li>Multiple masses, single mass ≥6cm → transarterial chemoembolization</li></ul></li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Diagnosis:<ul class="sub"><li>Low ceruloplasmin, total serum copper</li><li>High free serum copper, urinary copper</li></ul></li><li>Treatment:<ul class="sub"><li>Chelating agent: D-penicillinamine</li></ul></li></ul></div></div>
+<h4 class="deck-topic">Liver cirrhosis</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Management:<ul class="sub"><li>Treat underlying cause</li><li>Sodium and water restriction &lt;2gm/day</li><li>Diuretics:</li><li>Spironolactone (liver cirrhosis)</li><li>Furosemide (heart failure)</li><li>Therapeutic paracentesis</li><li>Indicated in huge or refractory ascites</li></ul></li></ul></div></div>
+                </div>
+<h3>Inflammatory Bowel Disease</h3>
+                <table>
+                    <thead><tr><th>Feature</th><th>Ulcerative colitis</th><th>Crohn disease</th></tr></thead>
+                    <tbody>
+                        <tr><td>Distribution</td><td>Continuous, rectum → colon</td><td>Skip lesions, mouth → anus</td></tr>
+                        <tr><td>Depth / histology</td><td>Mucosal; crypt abscesses</td><td>Transmural; non-caseating granulomas</td></tr>
+                        <tr><td>Complications</td><td>Toxic megacolon, ↑colorectal cancer</td><td>Fistulae, strictures, perianal disease</td></tr>
+                    </tbody>
+                </table>
+                <ul>
+                    <li><b>Acute severe UC</b> (≥6 bloody stools/day + systemic features, negative cultures) → <b>IV methylprednisolone</b>; rescue infliximab/ciclosporin if no response by day 3; colectomy for toxic megacolon/perforation</li>
+                </ul>
+
+                
+                <div class="topic-deck">
+<div class="deck-block deck-tbl"><div class="deck-cap"><span class="deck-tag tag-tbl">Table</span> Ulcerative colitis — treatment by extent</div><table><thead><tr><th>Site of disease</th><th>Treatment</th></tr></thead><tbody><tr><td><b>Proctitis</b></td><td>Topical (suppository) mesalamine</td></tr><tr><td><b>Extensive / left-sided (up to splenic flexure)</b></td><td>Topical (enema) + oral mesalamine</td></tr><tr><td><b>Unresponsive / severe flare</b></td><td>Steroids</td></tr></tbody></table></div>
+<div class="deck-block deck-tbl"><div class="deck-cap"><span class="deck-tag tag-tbl">Table</span> Ulcerative colitis vs Crohn's disease</div><table><thead><tr><th>Feature</th><th>Ulcerative colitis</th><th>Crohn's disease</th></tr></thead><tbody><tr><td><b>Distribution</b></td><td>Colon only; from anorectal margin, continuous</td><td>Any part of GIT; patchy skip lesions; perianal disease</td></tr><tr><td><b>Depth</b></td><td>Mucosal inflammation</td><td>Transmural inflammation</td></tr><tr><td><b>Histology</b></td><td>Crypt distortion/abscesses; loss of goblet cells</td><td>Deep fissuring ulcers, fistulae; granulomas</td></tr><tr><td><b>Smoking</b></td><td>More common in non-/ex-smokers</td><td>More common in smokers</td></tr><tr><td><b>Presentation</b></td><td>Bloody diarrhoea</td><td>Pain, diarrhoea, weight loss</td></tr><tr><td><b>Management</b></td><td>5-ASA, steroids, azathioprine, biologics; colectomy curative</td><td>Steroids, azathioprine, methotrexate, biologics; surgery not curative</td></tr></tbody></table></div>
+<figure class="deck-block algo-flow"><figcaption><span class="deck-tag tag-algo">Algorithm</span> Positive HCV antibody, negative HCV RNA — approach</figcaption><div class="algo-row"><div class="algo-node start" style="animation-delay:0.00s">Positive HCV antibody, negative HCV nucleic-acid test</div></div><div class="algo-arrow" style="animation-delay:0.05s"></div><div class="algo-row"><div class="algo-node proc" style="animation-delay:0.12s">History, examination &amp; baseline hepatic enzymes</div></div><div class="algo-arrow" style="animation-delay:0.17s"></div><div class="algo-fork"><div class="algo-branch"><span class="algo-label" style="animation-delay:0.24s">No exposure / infection</span><div class="algo-node end" style="animation-delay:0.24s">Reassurance; no further testing</div></div><div class="algo-branch"><span class="algo-label" style="animation-delay:0.34s">Possible recent exposure (abnormal LFTs)</span><div class="algo-node end" style="animation-delay:0.34s">Repeat nucleic-acid testing within 6 months</div></div><div class="algo-branch"><span class="algo-label" style="animation-delay:0.44s">Clinical evidence of infection</span><div class="algo-node end" style="animation-delay:0.44s">Repeat nucleic-acid testing</div></div></div></figure>
+<h4 class="deck-topic">Crohn's disease</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Chronic RLQ pain Crohn's disease affects any part of the GIT, most commonly ileocoloc, terminal ileum</li><li>Chronic diarrhea Extra-intestinal manifestation</li><li>Malabsorption (B12 deficiency)</li><li>Abscess (destructs the surrounding tissue) results in fistula<ul class="sub"><li>Investigated with MRI pelvis to assess the abscess location and presence of potential fistula</li></ul></li></ul></div><div class="deck-card mgmt"><span class="deck-card-h">Management</span><ul><li>Induction:<ul class="sub"><li>First line: steroids (ileal release budesonide, IV methylprednisolone)</li><li>Second line: Immunomodulators: (azathioprine, 6-mercaptopurine)</li></ul></li><li>Maintenance:<ul class="sub"><li>First line: Immunomodulators (azathioprine, 6-mercaptopurine)</li><li>Second line: Biological treatment (adalimumab, infliximab) (in refractory or fistulizing disease)</li></ul></li></ul></div></div>
+<h4 class="deck-topic">Ulcerative colitis</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Chronic LLQ pain UC affect colon only → starts in the rectum and spreads proximally</li><li>Chronic bloody diarrhea Extra-intestinal manifestations</li><li>Colon cancer Toxic megacolon</li><li>Acute flare</li></ul></div></div>
+<h4 class="deck-topic">Irritable bowel syndrome</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Altered bowel habits (Diarrhea and/or constipation) Abdominal pain relieved by defecation</li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Diagnosis: (rule out other causes of the symptoms)<ul class="sub"><li>CBC (used in patients with diarrhea to assess for leukocytosis, which indicates underlying infection)</li><li>Fecal calprotectin &amp; CRP (To rule out inflammatory causes of the symptoms)</li><li>Celiac disease serology</li><li>Giardiasis stool test</li></ul></li><li>Treatment:<ul class="sub"><li>Soluble fiber supplement (psyllium)</li><li>Anti spasmodic → Dicyclomine, TCA</li><li>Anti diarrhea → loperamide</li><li>Anti constipation → polyethylene glycol</li></ul></li></ul></div></div>
+<h4 class="deck-topic">Colon cancer</h4><div class="deck-cards"><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Starts at 45 years old (if not mentioned choose 50)</li><li>Screening tools:<ul class="sub"><li>Colonoscopy every 10 years</li><li>CT colonography every 5 years</li><li>Flexible sigmoidoscopy every 5 years</li><li>Annual fecal occult blood test (Positive FOBT requires additional investigation → colonoscopy)</li></ul></li></ul></div></div>
+                </div>
+<h3>Pancreatico-Biliary</h3>
+                <ul>
+                    <li><b>Acute pancreatitis</b> (lipase &gt;3× ULN): cornerstone is <b>aggressive IV fluids</b> (Ringer lactate) + analgesia; antibiotics only for infected necrosis; gallstone + cholangitis → ERCP</li>
+                    <li><b>Choledocholithiasis</b> (RUQ pain + jaundice + abnormal LFTs): best diagnostic = <b>MRCP</b>; therapeutic = ERCP</li>
+                    <li><b>Ascending cholangitis</b> (Charcot triad: fever, jaundice, RUQ pain) → IV antibiotics + urgent biliary drainage (ERCP)</li>
+                </ul>
+
+                
+                <div class="topic-deck">
+<h4 class="deck-topic">Approach to jaundice</h4><div class="deck-cards"><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Starts at 45 years old (if not mentioned choose 50)</li><li>Screening tools:<ul class="sub"><li>Colonoscopy every 10 years</li><li>CT colonography every 5 years</li><li>Flexible sigmoidoscopy every 5 years</li><li>Annual fecal occult blood test (Positive FOBT requires additional investigation → colonoscopy)</li></ul></li></ul></div></div>
+<h4 class="deck-topic">Ascending cholangitis</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Charcot's triad:<ul class="sub"><li>Fever</li><li>RUQ pain</li><li>Jaundice Charcot's triad &amp; hypotension &amp; altered mental status → Raynaud's pentad</li></ul></li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Diagnosis:<ul class="sub"><li>US abdomen :</li><li>Biliary stone causes biliary dilation</li><li>Liver function tests:</li><li>mild elevation of ALT,AST</li><li>Significant elevation of ALT,GGT</li><li>Blood culture Treatment:</li><li>Antibiotics, ERCP decompression with sphincterotomy, interval cholecystectomy (after 6wks)</li></ul></li></ul></div></div>
+<h4 class="deck-topic">Approach to jaundice</h4><div class="deck-cards"><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Starts at 45 years old (if not mentioned choose 50)</li><li>Screening tools:<ul class="sub"><li>Colonoscopy every 10 years</li><li>CT colonography every 5 years</li><li>Flexible sigmoidoscopy every 5 years</li><li>Annual fecal occult blood test (Positive FOBT requires additional investigation → colonoscopy)</li></ul></li></ul></div></div>
+<h4 class="deck-topic">Acute Pancreatitis</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Acute pancreatitis diagnosis requires 2 out of 3 of:<ul class="sub"><li>Epigastric pain radiated to the back</li><li>Elevated Amylase, lipase &gt;3folds</li><li>Characteristic finding of pancreatitis in:</li><li>Ultrasound: Pancreatic edema, to rule out biliary pancreatitis</li><li>CT Abdomen: (to rule out pancreatitis complications, and assess severity after 48-72 hours)</li></ul></li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Diagnosis:<ul class="sub"><li>Abdominal X-ray: Sentinel loop</li></ul></li><li>Treatment:<ul class="sub"><li>IV fluid resuscitation: Ringer lactate</li><li>Supportive therapy</li><li>No role of antibiotics unless confirmed source of infection detected</li></ul></li></ul></div></div>
+<h4 class="deck-topic">Chronic Pancreatitis</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Epigastric pain radiated to the back</li><li>Steatorrhea Pancreatic diabetes mellitus</li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Diagnosis:<ul class="sub"><li>CT Abdomen with &amp; without contrast (initial and confirmatory test)</li></ul></li><li>Treatment:<ul class="sub"><li>IV fluid resuscitation: Ringer lactate</li><li>Supportive therapy, PPI</li><li>Pain management: SSRI, SNRI, TCA</li><li>Malabsorption management: pancreatic enzyme supplement</li></ul></li></ul></div></div>
+                </div>
+<h3>GERD &amp; PUD</h3>
+                <ul>
+                    <li><b>GERD</b>: lifestyle + PPI; <b>alarm features</b> (dysphagia, weight loss, anaemia, GI bleed, age &gt;55) → urgent endoscopy</li>
+                    <li>Failed PPI with confirmed oesophagitis → 24-h pH study before considering fundoplication; Barrett oesophagus → surveillance endoscopy</li>
+                    <li>Perforated/bleeding ulcer from chronic NSAIDs → most important prevention is <b>stop NSAIDs</b>; refractory PUD + diarrhoea + high gastrin → <b>Zollinger-Ellison</b></li>
+                </ul>
+                <div class="sum-callout">
+                    <b>Algorithm — upper GI bleed in cirrhosis</b>
+                    <ol>
+                        <li>Resuscitate (restrictive transfusion, target Hb ~7–8 g/dL)</li>
+                        <li><b>IV ceftriaxone</b> prophylaxis + IV terlipressin/octreotide</li>
+                        <li>Endoscopy &lt;12 h → band ligation</li>
+                        <li>Uncontrolled → balloon tamponade → TIPS</li>
+                    </ol>
+                </div>
+            
+                
+                <div class="topic-deck">
+<h4 class="deck-topic">GERD</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Typical symptoms: Heartburn, regurgitation</li><li>Atypical symptoms: Dysphagia, odynophagia, non-productive night time cough, hoarsness</li><li>Aspirin → between 12-28 weeks to reduce risk of pre-eclampsia</li><li>Typical symptoms: Heartburn, regurgitation</li><li>Atypical symptoms: Dysphagia, odynophagia, non-productive night time cough, hoarsness</li><li>Aspirin → between 12-28 weeks to reduce risk of pre-eclampsia</li><li>Esophageal stricture:<ul class="sub"><li>Treatment: Proton pump inhibitors (PPI) + balloon dilation</li></ul></li><li>Iron deficiency anemia</li><li>Barret esophagus: (intestinal metaplasia of the esophagus)</li><li>Intestinal metaplasia without dysplasia :<ul class="sub"><li>Barret esophagus &lt;3cm → Repeat endoscopy in 5 years + PPI</li><li>Barret esophagus &gt;3cm → Repeat endoscopy in 3 years +PPI</li></ul></li><li>Intestinal metaplasia with dysplasia:<ul class="sub"><li>Low grade dysplasia → PPI + endoscopy in 6 months</li><li>High grade dysplasia → Surgical management</li></ul></li><li>Typical symptoms: Heartburn, regurgitation</li><li>Atypical symptoms: Dysphagia, odynophagia, non-productive night time cough, hoarsness</li><li>Aspirin → between 12-28 weeks to reduce risk of pre-eclampsia</li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Young patient &amp; no alarm symptoms → clinical diagnosis, start treatment</li><li>Red flags &amp; atypical symptoms → Esophagogastroduodenoscopy (EGD)</li><li>Initial management: Lifestyle modification</li><li>Best management: Proton pump inhibitors 40mg PO OD</li><li>Refractory PPI: Nissen fundoplication</li><li>Young patient &amp; no alarm symptoms → clinical diagnosis, start PPI</li><li>Red flags &amp; atypical symptoms → Esophagogastroduodenoscopy (EGD)</li><li>Initial management: Lifestyle modification</li><li>Best management: Proton pump inhibitors 40mg PO OD</li><li>Refractory PPI: Nissen fundoplication</li><li>Young patient &amp; no alarm symptoms → clinical diagnosis, start PPI</li><li>Red flags &amp; atypical symptoms → Esophagogastroduodenoscopy (EGD)</li><li>Initial management: Lifestyle modification</li><li>Best management: Proton pump inhibitors 40mg PO OD</li><li>Refractory PPI: Nissen fundoplication</li></ul></div></div>
+                </div>
+<section class="topic deck-enrich">
+                    <h3>More from the study deck</h3>
+                    <p class="deck-intro">Extra material for this step that spans more than one topic above.</p>
+<figure class="deck-block algo-flow"><figcaption><span class="deck-tag tag-algo">Algorithm</span> Oesophageal variceal haemorrhage — management</figcaption><div class="algo-row"><div class="algo-node start" style="animation-delay:0.00s">Suspected variceal haemorrhage</div></div><div class="algo-arrow" style="animation-delay:0.05s"></div><div class="algo-row"><div class="algo-node proc" style="animation-delay:0.12s">Resuscitate &amp; stabilise (2 large-bore IV, fluids/blood); octreotide; IV antibiotic prophylaxis (ceftriaxone)</div></div><div class="algo-arrow" style="animation-delay:0.17s"></div><div class="algo-row"><div class="algo-node proc" style="animation-delay:0.24s">Upper endoscopy → confirmed variceal bleeding</div></div><div class="algo-arrow" style="animation-delay:0.29s"></div><div class="algo-fork"><div class="algo-branch"><span class="algo-label" style="animation-delay:0.36s">Endoscopic control</span><div class="algo-node end" style="animation-delay:0.36s">Band ligation (procedure of choice) or sclerotherapy → haemostasis</div></div><div class="algo-branch"><span class="algo-label" style="animation-delay:0.46s">Refractory</span><div class="algo-node proc" style="animation-delay:0.46s">Balloon tamponade until stable</div><div class="algo-arrow mini" style="animation-delay:0.60s"></div><div class="algo-node end" style="animation-delay:0.56s">Rebleeding → repeat endoscopy or TIPS</div></div></div><div class="algo-row"><div class="algo-node proc" style="animation-delay:0.66s">Secondary prophylaxis: non-selective beta-blocker + endoscopic band ligation</div></div></figure>
+<figure class="deck-block algo-flow"><figcaption><span class="deck-tag tag-algo">Algorithm</span> Ascites — SAAG-based approach</figcaption><div class="algo-row"><div class="algo-node start" style="animation-delay:0.00s">Serum-ascites albumin gradient (SAAG)</div></div><div class="algo-arrow" style="animation-delay:0.05s"></div><div class="algo-fork"><div class="algo-branch"><span class="algo-label" style="animation-delay:0.12s">SAAG ≥1.1 (portal HTN)</span><div class="algo-node proc" style="animation-delay:0.12s">Ascitic protein &lt;2.5: cirrhosis, late Budd-Chiari, massive liver metastases</div><div class="algo-arrow mini" style="animation-delay:0.26s"></div><div class="algo-node end" style="animation-delay:0.22s">Ascitic protein ≥2.5: heart failure / constrictive pericarditis, early Budd-Chiari, IVC obstruction, SOS</div></div><div class="algo-branch"><span class="algo-label" style="animation-delay:0.32s">SAAG &lt;1.1 (non-portal)</span><div class="algo-node end" style="animation-delay:0.32s">Biliary leak, nephrotic syndrome, pancreatitis, peritoneal carcinomatosis, tuberculosis</div></div></div></figure>
+<h4 class="deck-topic">Hemochromatosis</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Bronze skin Diabetes</li><li>Liver: Hepatomegaly, cirrhosis, ascites, hepatocellular carcinoma Cardiomyopathy</li><li>Pituitary gland: hypogonadism, erectile dysfunction, testicular atrophy</li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Diagnosis:<ul class="sub"><li>Serum ferritin &gt;300 ng/ml</li><li>Genetic test (HFE test)</li><li>Liver biopsy (gold standard)</li></ul></li><li>Treatment:<ul class="sub"><li>Regular phlebotomy</li></ul></li></ul></div></div>
+<h4 class="deck-topic">Wilson disease</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Eyes: Kayser Fleischer ring Disease of copper metabolism, lead to accumulation of copper in various organs:</li><li>Liver and spleen: Hepatosplenomegaly and jaundice CNS: extrapyramidal symptoms: Tremor, rigidity, depression</li><li>Kidney: Nephrocalcinosis, aminoaciduria</li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Diagnosis:<ul class="sub"><li>Low ceruloplasmin, total serum copper</li><li>High free serum copper, urinary copper</li></ul></li><li>Treatment:<ul class="sub"><li>Chelating agent: D-penicillinamine</li></ul></li></ul></div></div>
+<h4 class="deck-topic">NAFLD / NASH</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>NASH (non-alcoholic steatohepatitis) is an advanced form of NAFLD (Non-alcoholic fatty liver disease) Characterized by hepatic steatosis, inflammation and liver cells damage, which can progress to fibrosis, cirrhosis, liver failure</li><li>Type 2 diabetes &amp; insulin resistance Obesity, metabolic syndrome</li><li>Dyslipidemia Sedentary life style, Poor diet</li><li>All of the risk factors are related to obesity, so weight loss is the most important factor to avoid NAFLD/NASH</li></ul></div></div>
+<h4 class="deck-topic">Esophageal varices</h4><div class="deck-cards"><div class="deck-card mgmt"><span class="deck-card-h">Management</span><ul><li>Beat blocker (propranolol or nadolol)<ul class="sub"><li>Helps to prevent bleeding and reduce portal venous pressure</li></ul></li><li>Antibiotics (ceftriaxone)<ul class="sub"><li>Reduces mortality in bleeding esophageal varices</li></ul></li></ul></div></div>
+<h4 class="deck-topic">Spontaneous bacterial peritonitis</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Abdominal tenderness Abdominal pain</li><li>Fever Medical history of liver cirrhosis, CHF causes ascites</li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Diagnosis:<ul class="sub"><li>Diagnostic paracentesis: Neutrophils ≥250 cells/mm3 in ascitic fluid</li><li>Ascitic culture: E.coli</li></ul></li><li>Treatment:<ul class="sub"><li>Ceftriaxone</li><li>Recurrent SBP → Prophylactic ciprofloxacin</li></ul></li></ul></div></div>
+<h4 class="deck-topic">Celiac disease</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Flatulence Chronic diarrhea</li><li>Malabsorption symptoms (Weight loss, growth failure, iron and vitamin deficiency, low BMI, undigested foor on stool) Celiac associations: Type I DM, Dermatitis herpetiformis</li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Diagnosis:<ul class="sub"><li>Initial test → IgA tissue transglutaminase antibody (tTG IgA)</li><li>Confirmatory test → EGD with Biopsy of small intestine:</li><li>Villous atrophy, crypt hyperplasia, intraepithelial lymphocytic infiltration</li><li>2 nd line confimatory test → Anti-endomysial Antibody</li></ul></li><li>Treatment:<ul class="sub"><li>Gluten free diet</li></ul></li></ul></div></div>
+                </section>
+            `,
+            questions: [
+                {
+                    q: 'A cirrhotic patient is admitted with bleeding oesophageal varices. Besides endoscopic band ligation and a vasoactive drug, which intervention most reduces mortality?',
+                    options: ['Prophylactic IV ceftriaxone', 'High-volume packed red cell transfusion', 'Proton pump inhibitor infusion', 'Fresh frozen plasma'],
+                    answer: 0,
+                    explanation: 'Prophylactic antibiotics (e.g. IV ceftriaxone) reduce infection and death in cirrhotic variceal bleeding and are a key mortality-reducing step.'
+                },
+                {
+                    q: 'A patient with acute liver failure after paracetamol overdose has markedly raised ALT. Which laboratory parameter best reflects prognosis?',
+                    options: ['ALT level', 'Prothrombin time / INR', 'Serum bilirubin alone', 'Alkaline phosphatase'],
+                    answer: 1,
+                    explanation: 'INR/PT reflects hepatic synthetic function and is the key prognostic marker; transaminase magnitude does not correlate with outcome.'
+                },
+                {
+                    q: 'A patient has RUQ pain, jaundice and a dilated common bile duct on ultrasound with stones suspected but not clearly seen. What is the best diagnostic test?',
+                    options: ['Repeat transabdominal ultrasound', 'MRCP', 'Diagnostic ERCP', 'CT abdomen without contrast'],
+                    answer: 1,
+                    explanation: 'MRCP is the best non-invasive test for choledocholithiasis; ERCP is reserved for therapy once a stone is confirmed or for cholangitis.'
+                },
+                {
+                    q: 'A patient with severe ulcerative colitis (8 bloody stools/day, fever, raised CRP, negative stool cultures) is admitted. What is the first-line treatment?',
+                    options: ['Oral mesalazine', 'IV methylprednisolone', 'Immediate colectomy', 'Oral antibiotics'],
+                    answer: 1,
+                    explanation: 'Acute severe UC is treated first with IV corticosteroids; infliximab or ciclosporin is rescue therapy if there is no response by ~day 3.'
+                },
+                {
+                    q: 'A cirrhotic with ascites develops fever and abdominal pain; ascitic fluid shows 350 neutrophils/mm3. What is the diagnosis and treatment?',
+                    options: ['Spontaneous bacterial peritonitis — IV cefotaxime', 'Tuberculous peritonitis — anti-TB therapy', 'Portal hypertension — propranolol', 'Observation only'],
+                    answer: 0,
+                    explanation: 'An ascitic neutrophil count of 250/mm3 or more diagnoses spontaneous bacterial peritonitis; treat empirically with IV cefotaxime (plus albumin).'
+                },
+                {
+                    q: 'A patient develops profuse watery diarrhoea after antibiotics and stool is positive for Clostridioides difficile toxin. What is the first-line treatment?',
+                    options: ['Oral vancomycin (or fidaxomicin)', 'Loperamide', 'Continue the original antibiotic', 'IV gentamicin'],
+                    answer: 0,
+                    explanation: 'C. difficile colitis is now treated first-line with oral vancomycin or fidaxomicin; stop the offending antibiotic and avoid antimotility agents.'
+                },
+                {
+                    q: 'A 50-year-old presents with severe epigastric pain radiating to the back and a lipase 5x the upper limit. What is the most important initial therapy?',
+                    options: ['Aggressive IV fluid resuscitation (Ringer lactate)', 'Immediate ERCP for all patients', 'Early broad-spectrum antibiotics', 'Urgent laparotomy'],
+                    answer: 0,
+                    explanation: 'Early aggressive IV fluid resuscitation is the cornerstone of acute pancreatitis; antibiotics are only for infected necrosis and urgent ERCP only for concurrent cholangitis.'
+                }
+            ]
+        },
+        {
+            id: 'med-endocrine',
+            title: '04 — Endocrinology',
+            title_en: 'Diabetes & DKA · Thyroid · Adrenal · Pituitary · Bone',
+            summaryHtml: `
+                <h3>Diabetes Mellitus</h3>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> DKA vs HHS — telling them apart</div>
+                <svg viewBox="0 0 680 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="DKA occurs in type 1 diabetes with glucose over 250, ketones present and pH under 7.3. HHS occurs in elderly type 2 diabetes with glucose over 600, minimal ketones, pH over 7.3 and osmolality over 320.">
+                <g font-family="system-ui,Arial">
+                <rect x="18" y="24" width="310" height="182" rx="12" fill="#fee2e2" stroke="#ef4444"/><text x="173" y="52" text-anchor="middle" font-size="15" font-weight="800" fill="#b91c1c">DKA</text>
+                <text x="40" y="82" font-size="12.5" fill="#334155">Type 1 diabetes (usually)</text><text x="40" y="108" font-size="12.5" fill="#334155">Glucose &gt;250 mg/dL</text><text x="40" y="134" font-size="12.5" font-weight="700" fill="#b91c1c">Ketones PRESENT · pH &lt;7.3</text><text x="40" y="160" font-size="12.5" fill="#334155">HCO₃ &lt;18 · Kussmaul breathing</text><text x="40" y="188" font-size="11.5" fill="#475569">hours · younger patient</text>
+                <rect x="344" y="24" width="318" height="182" rx="12" fill="#ede9fe" stroke="#8b5cf6"/><text x="503" y="52" text-anchor="middle" font-size="15" font-weight="800" fill="#6d28d9">HHS</text>
+                <text x="366" y="82" font-size="12.5" fill="#334155">Type 2 diabetes (elderly)</text><text x="366" y="108" font-size="12.5" fill="#334155">Glucose &gt;600 mg/dL</text><text x="366" y="134" font-size="12.5" font-weight="700" fill="#6d28d9">Ketones minimal · pH &gt;7.3</text><text x="366" y="160" font-size="12.5" fill="#334155">Osmolality &gt;320 (markedly ↑)</text><text x="366" y="188" font-size="11.5" fill="#475569">days · profound dehydration</text>
+                </g></svg>
+                <figcaption>Both need <b>IV fluids + insulin + potassium replacement</b> and treatment of the precipitant. The discriminator is <b>ketoacidosis</b> (DKA) versus <b>extreme hyperosmolality without acidosis</b> (HHS).</figcaption></figure>
+                <ul>
+                    <li><b>Diagnosis</b>: fasting ≥126 mg/dL (7.0 mmol/L), random ≥200 + symptoms, HbA1c ≥6.5%, or OGTT 2-h ≥200; young + autoantibodies + low C-peptide → T1DM</li>
+                    <li><b>T2DM management</b>: lifestyle + <b>metformin</b> first-line; add <b>SGLT2 inhibitor</b> (CV/renal disease, HF) or <b>GLP-1 agonist</b> (obesity, ASCVD); target HbA1c ~7%</li>
+                    <li><b>Complication screening</b>: annual retinopathy, nephropathy (ACR), foot/neuropathy; statin + ACEi for renoprotection</li>
+                </ul>
+                <table>
+                    <thead><tr><th>Feature</th><th>DKA</th><th>HHS</th></tr></thead>
+                    <tbody>
+                        <tr><td>Type</td><td>T1DM (usually)</td><td>T2DM (elderly)</td></tr>
+                        <tr><td>Glucose</td><td>&gt;250 mg/dL</td><td>&gt;600 mg/dL</td></tr>
+                        <tr><td>Ketones / acidosis</td><td>Present; pH &lt;7.3, HCO₃ &lt;18</td><td>Absent/minimal; pH &gt;7.3</td></tr>
+                        <tr><td>Osmolality</td><td>Variable</td><td>Markedly ↑ (&gt;320)</td></tr>
+                        <tr><td>Treatment</td><td colspan="2">IV fluids + fixed-rate insulin + K⁺ replacement; treat precipitant</td></tr>
+                    </tbody>
+                </table>
+                <div class="sum-callout">
+                    <b>Algorithm — DKA management</b>
+                    <ol>
+                        <li>IV 0.9% saline resuscitation</li>
+                        <li>Check K⁺ → if &lt;3.3 replace K and <b>hold insulin</b>; otherwise start fixed-rate insulin 0.1 U/kg/hr</li>
+                        <li>Add potassium once K⁺ 3.3–5.3 with urine output</li>
+                        <li>Switch fluids to dextrose-containing when glucose &lt;~14 mmol/L (250 mg/dL); treat the trigger</li>
+                    </ol>
+                </div>
+
+                
+                <div class="topic-deck">
+<h4 class="deck-topic">Diabetes before pregnancy</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Glycemic control → HbA1c &lt;6.5</li><li>Folic acid → ≥ 400mg</li><li>Aspirin → between 12-28 weeks to reduce risk of pre-eclampsia</li><li>Macrosomia or IUGR</li><li>Hypertension (pre-eclampsia)</li><li>Respiratory distress syndrome (insulin inhibit surfactants which enhance lung maturation) Polyhydramnios (secondary to fetal osmotic diuresis due to maternal hyperglycemia)</li><li>Single umbilical artery</li></ul></div></div>
+<h4 class="deck-topic">Diabetes mellitus</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Polyuria, polydipsia, polyphagia</li><li>DKA symptoms:<ul class="sub"><li>Nausea, vomiting, abdominal pain</li><li>Fruity smell breathing (due to acetone)</li><li>Kussmaul breathing (deep, rapid breathing to compensate acidosis)</li></ul></li><li>C/P: peripheral neuropathy (pain, numbness, tingling of feet and hands, leads to ulcer formation and infection</li><li>Management:<ul class="sub"><li>Tight glucose control</li><li>Pain management: Pregabalin, duloxetine, amytryptiline</li></ul></li><li>Screening:<ul class="sub"><li>Urine albumin creatinine ratio (1 st line)</li><li>Urine microalbuminuria</li><li>e-GFR, creatinine</li><li>Treatment:</li><li>Start ACE-I/ARBs (nephro-protective medication)</li></ul></li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Diagnosis of DKA:<ul class="sub"><li>Blood glucose &gt;250 mg/dl</li><li>Arterial Ph &lt;7.3</li><li>Bicarbonate &lt;15 mmol/l</li><li>Ketonemia or ketonuria</li><li>Anion gap &gt;12 mEq/l</li></ul></li></ul></div></div>
+<h4 class="deck-topic">Diabetic ketoacidosis</h4><div class="deck-cards"><div class="deck-card mgmt"><span class="deck-card-h">Management</span><ul><li>Fluid resuscitation:<ul class="sub"><li>After initial fluid resuscitation, switch to 0.45% saline</li></ul></li><li>Insulin therapy:<ul class="sub"><li>IV insulin to lower blood glucose and stop ketogenesis, start with low dose (0.1 IU/kg/Hr)</li><li>Goal: to reduce glucose 3-5 mmol/l/hr</li></ul></li><li>Electrolyte correction<ul class="sub"><li>Potassium: correct hypokalemia before start insulin as insulin shift potassium into cells</li><li>Sodium bicarbonate: Consider only in severe acidosis (Ph &lt;6.9)</li></ul></li><li>Treat underlying cause<ul class="sub"><li>Address precipitating factor (missed insulin dose, infection …)</li></ul></li><li>Fluid resuscitation:<ul class="sub"><li>After initial fluid resuscitation, switch to 0.45% saline</li></ul></li><li>Insulin therapy:<ul class="sub"><li>IV insulin to lower blood glucose and stop ketogenesis, start with low dose (0.1 IU/kg/Hr)</li><li>Goal: to reduce glucose 3mmol/l/hr</li></ul></li><li>Electrolyte correction<ul class="sub"><li>Potassium: correct hypokalemia before start insulin as insulin shift potassium into cells</li><li>Sodium bicarbonate: Consider only in severe acidosis (Ph &lt;6.9)</li></ul></li><li>Treat underlying cause<ul class="sub"><li>Address precipitating factor (missed insulin dose, infection …)</li></ul></li></ul></div></div>
+<h4 class="deck-topic">Diabetes mellitus</h4><div class="deck-cards"><div class="deck-card mgmt"><span class="deck-card-h">Management</span><ul><li>Management based on HbA1c at diagnosis:<ul class="sub"><li>HbA1c &gt;10 → insulin</li><li>HbA1c 7.5-10 → metformin (eGFR &lt;30 is contraindication to start metformin)</li><li>HbA1c &lt;7.5 → life style modification &amp; weight loss for 3-6 months</li><li>After 3-6 months if HbA1c &gt;6.5 → start metformin</li><li>Target HbA1c:</li><li>Standard target HbA1c → less than 7 in patients with long life expectancy, no comorbidities</li><li>Non - pharmacological management:</li><li>150min/week of aerobic exercise (spread over at least 3days/week with no more than 2 consecutive days without exercise)</li><li>Low glycemic index diet to lose 5-10% percent of total body weight</li></ul></li></ul></div></div>
+<h4 class="deck-topic">Diabetes mellitus</h4><div class="deck-cards"><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Monitoring:</li><li>Free T4 &amp; TSH AFTER 6-8 weeks after starting or adjusting medication</li><li>TSH Goal: 0.5-2.5 mIU/L</li><li>Normal fT4, elevated TSH indicates suboptimal response or non adherence to medication</li></ul></div></div>
+                </div>
+<h3>Thyroid Disorders</h3>
+                <ul>
+                    <li><b>Hyperthyroidism</b> (Graves most common): beta-blocker (symptoms) + antithyroid (<b>carbimazole/methimazole</b>; <b>PTU in 1st trimester</b>); definitive radioiodine/surgery</li>
+                    <li><b>Thyroid storm</b>: beta-blocker → <b>PTU</b> → iodine (given <b>after</b> PTU) → hydrocortisone</li>
+                    <li><b>Hypothyroidism</b>: levothyroxine; <b>pregnancy</b> increases requirement → raise dose to keep TSH in trimester target</li>
+                    <li><b>Thyroid nodule</b>: TSH + ultrasound → <b>FNA</b> if suspicious features</li>
+                </ul>
+
+                
+                <div class="topic-deck">
+<div class="deck-block deck-tbl"><div class="deck-cap"><span class="deck-tag tag-tbl">Table</span> Subclinical hypothyroidism — when to treat</div><p class="deck-subcap">levothyroxine replacement (repeat test first)</p><table><thead><tr><th></th><th>Indication</th></tr></thead><tbody><tr><td><b>Must treat</b></td><td>TSH &gt;10 with anti-TPO positive; pregnancy or infertility</td></tr><tr><td><b>Consider treating</b></td><td>TSH &gt;10; or TSH 5–10 with anti-TPO positive, hypothyroid symptoms, CV disease/risk factors (e.g. hyperlipidaemia), or goitre</td></tr></tbody></table></div>
+<figure class="deck-block algo-flow"><figcaption><span class="deck-tag tag-algo">Algorithm</span> Elevated TSH with normal thyroid hormones — approach</figcaption><p class="deck-subcap">first step: TSH</p><div class="algo-row"><div class="algo-node start" style="animation-delay:0.00s">Elevated TSH, normal thyroid hormones</div></div><div class="algo-arrow" style="animation-delay:0.05s"></div><div class="algo-fork"><div class="algo-branch"><span class="algo-label" style="animation-delay:0.12s">TSH 5–10 mIU/L</span><div class="algo-node proc" style="animation-delay:0.12s">Symptomatic → 3–6 month levothyroxine trial (continue if benefit)</div><div class="algo-arrow mini" style="animation-delay:0.26s"></div><div class="algo-node end" style="animation-delay:0.22s">Check TPO antibody: positive → consider levothyroxine or annual monitoring; negative → TFTs every 3 years</div></div><div class="algo-branch"><span class="algo-label" style="animation-delay:0.32s">TSH &gt;10 mIU/L</span><div class="algo-node end" style="animation-delay:0.32s">Treat with levothyroxine</div></div></div></figure>
+<figure class="deck-block algo-flow"><figcaption><span class="deck-tag tag-algo">Algorithm</span> Approach to thyroid nodule</figcaption><div class="algo-row"><div class="algo-node start" style="animation-delay:0.00s">Thyroid nodule (often incidental)</div></div><div class="algo-arrow" style="animation-delay:0.05s"></div><div class="algo-row"><div class="algo-node proc" style="animation-delay:0.12s">History &amp; examination; TSH + neck ultrasound</div></div><div class="algo-arrow" style="animation-delay:0.17s"></div><div class="algo-fork"><div class="algo-branch"><span class="algo-label" style="animation-delay:0.24s">TSH subnormal</span><div class="algo-node proc" style="animation-delay:0.24s">Thyroid scintigraphy</div><div class="algo-arrow mini" style="animation-delay:0.38s"></div><div class="algo-node proc" style="animation-delay:0.34s">Hot (functioning) → evaluate for hyperthyroidism</div><div class="algo-arrow mini" style="animation-delay:0.48s"></div><div class="algo-node end" style="animation-delay:0.44s">Cold (non-functioning) → FNA criteria</div></div><div class="algo-branch"><span class="algo-label" style="animation-delay:0.54s">TSH normal / elevated</span><div class="algo-node proc" style="animation-delay:0.54s">Meets FNA criteria (&gt;1 cm, or risk factors) → FNA → cytology</div><div class="algo-arrow mini" style="animation-delay:0.68s"></div><div class="algo-node end" style="animation-delay:0.64s">Not met → monitor with ultrasound</div></div></div></figure>
+<h4 class="deck-topic">Graves disease</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Commonest cause of hyperthyroidism — autoimmune, TSH-receptor stimulating antibodies</li><li>Thyrotoxic features: weight loss with preserved appetite, heat intolerance, palpitations, tremor, anxiety, sweating, diarrhoea, oligomenorrhoea</li><li>Diffuse, smooth, non-tender goitre — often with a bruit</li><li>Signs specific to Graves (not seen in other causes of thyrotoxicosis):<ul class="sub"><li>Ophthalmopathy — proptosis, lid lag, diplopia</li><li>Pretibial myxoedema</li><li>Thyroid acropachy</li></ul></li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Suppressed TSH with elevated free T4 / T3</li><li>TSH-receptor antibodies (TRAb) — confirms the diagnosis</li><li>Radioiodine uptake scan: <b>diffusely increased</b> uptake (distinguishes it from thyroiditis, which shows low uptake)</li></ul></div><div class="deck-card mgmt"><span class="deck-card-h">Management</span><ul><li>Beta-blocker (propranolol) for symptom control</li><li>Antithyroid drugs: carbimazole/methimazole; <b>PTU in the first trimester</b> of pregnancy</li><li>Warn about agranulocytosis — any sore throat or fever needs an urgent FBC</li><li>Definitive: radioactive iodine, or thyroidectomy (radioiodine is contraindicated in pregnancy and in active eye disease)</li></ul></div></div>
+<h4 class="deck-topic">Subacute thyroiditis</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Painful, tender thyroid gland</li><li>Fever, fatigue, malaise</li><li>Hyperthyroidism symptoms (palpitation, tremor, weight loss, heat intolerance, ..)</li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Diagnosis:<ul class="sub"><li>High ESR, Low TSH, High T3/T4</li><li>Reduced radio-iodine uptake</li></ul></li><li>Management:<ul class="sub"><li>NSAID or steroids for pain</li><li>Beta - blockers symptom reliever</li></ul></li></ul></div></div>
+<h4 class="deck-topic">Anti-thyroid drugs during pregnancy</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>First trimester:<ul class="sub"><li>Prophylthiouracil (PTU) (preferred due to low teratogenic risk)</li></ul></li><li>Second - third trimester:<ul class="sub"><li>Switch to methimazole to avoid PTU liver toxicity</li></ul></li><li>Monitoring:<ul class="sub"><li>TSH &amp; Free T4 every 4-6 weeks</li></ul></li><li>Goals:<ul class="sub"><li>Maintain maternal euthyroidism</li><li>Minimize fetal thyroid dysfunction</li></ul></li></ul></div></div>
+<h4 class="deck-topic">Euthyroid sick syndrome</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>The body reduces thyroid hormone activity to conserve energy during stress or acute illness</li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Diagnosis:<ul class="sub"><li>Low T3 (the earliest and most common finding)</li><li>Normal or low T4 (Low in severe cases)</li><li>Normal or low TSH</li><li>High reverse T3 (rT3)</li></ul></li><li>Management:<ul class="sub"><li>Treat underlying cause</li></ul></li></ul></div></div>
+                </div>
+<h3>Adrenal &amp; Pituitary</h3>
+                <ul>
+                    <li><b>Cushing syndrome</b>: ↑late-night salivary cortisol / failed low-dose dexamethasone suppression / ↑24-h urinary cortisol → then ACTH to localise (pituitary/ectopic vs adrenal)</li>
+                    <li><b>Adrenal insufficiency</b>: fatigue, hypotension, ↓Na, ↑K, hyperpigmentation (primary/Addison) → <b>short Synacthen test</b> → hydrocortisone + fludrocortisone; <b>stress-dose</b> in illness; crisis → IV hydrocortisone + fluids</li>
+                    <li><b>Primary hyperaldosteronism (Conn)</b>: resistant HTN + hypokalaemia → <b>aldosterone:renin ratio</b> → spironolactone/adrenalectomy</li>
+                    <li><b>Phaeochromocytoma</b>: episodic headache, palpitations, sweating → plasma/urine metanephrines → <b>alpha-block before beta-block</b></li>
+                    <li><b>Prolactinoma</b>: galactorrhoea, amenorrhoea → dopamine agonist (cabergoline); <b>Acromegaly</b> → IGF-1 + OGTT (fails to suppress GH)</li>
+                </ul>
+
+                
+                <div class="topic-deck">
+<div class="deck-block deck-tbl"><div class="deck-cap"><span class="deck-tag tag-tbl">Table</span> Diabetes insipidus vs SIADH</div><table><thead><tr><th>Parameter</th><th>Diabetes insipidus</th><th>SIADH</th></tr></thead><tbody><tr><td><b>ADH</b></td><td>Hyposecretion → losing water</td><td>Hypersecretion → retaining water</td></tr><tr><td><b>Urine output</b></td><td>High</td><td>Low</td></tr><tr><td><b>Blood osmolality</b></td><td>High</td><td>Low</td></tr><tr><td><b>Serum sodium</b></td><td>High</td><td>Low</td></tr><tr><td><b>Urine specific gravity</b></td><td>Low</td><td>High</td></tr><tr><td><b>Urine osmolality</b></td><td>Low</td><td>High</td></tr><tr><td><b>Clinical</b></td><td>Polyuria, thirst, dehydration, dry mucous membranes</td><td>Fluid overload, weight gain, hyponatraemia</td></tr></tbody></table></div>
+<figure class="deck-block algo-flow"><figcaption><span class="deck-tag tag-algo">Algorithm</span> Pituitary microadenoma (&lt;10 mm) — approach</figcaption><div class="algo-row"><div class="algo-node start" style="animation-delay:0.00s">Microadenoma &lt;10 mm → assess pituitary hormone profile</div></div><div class="algo-arrow" style="animation-delay:0.05s"></div><div class="algo-fork"><div class="algo-branch"><span class="algo-label" style="animation-delay:0.12s">Hormone hypersecretion</span><div class="algo-node proc" style="animation-delay:0.12s">Prolactinoma → dopamine agonist</div><div class="algo-arrow mini" style="animation-delay:0.26s"></div><div class="algo-node end" style="animation-delay:0.22s">Other (GH, ACTH, TSH) → transsphenoidal surgery</div></div><div class="algo-branch"><span class="algo-label" style="animation-delay:0.32s">No hypersecretion / mass effect</span><div class="algo-node proc" style="animation-delay:0.32s">Reassess + MRI at 1, 2, 5 years</div><div class="algo-arrow mini" style="animation-delay:0.46s"></div><div class="algo-node end" style="animation-delay:0.42s">No change → conservative; growth / visual symptoms / hypopituitarism → surgery</div></div></div></figure>
+<figure class="deck-block algo-flow"><figcaption><span class="deck-tag tag-algo">Algorithm</span> Galactorrhoea — workup</figcaption><div class="algo-row"><div class="algo-node start" style="animation-delay:0.00s">Galactorrhoea</div></div><div class="algo-arrow" style="animation-delay:0.05s"></div><div class="algo-row"><div class="algo-node proc" style="animation-delay:0.12s">Pregnancy test</div></div><div class="algo-arrow" style="animation-delay:0.17s"></div><div class="algo-row"><div class="algo-node proc" style="animation-delay:0.24s">TSH and prolactin</div></div><div class="algo-arrow" style="animation-delay:0.29s"></div><div class="algo-row"><div class="algo-node proc" style="animation-delay:0.36s">Brain MRI</div></div><div class="algo-arrow" style="animation-delay:0.41s"></div><div class="algo-row"><div class="algo-node end" style="animation-delay:0.48s">Start medical treatment: cabergoline or bromocriptine</div></div></figure>
+<figure class="deck-block algo-flow"><figcaption><span class="deck-tag tag-algo">Algorithm</span> Cushing's syndrome — diagnostic workup</figcaption><div class="algo-row"><div class="algo-node start" style="animation-delay:0.00s">Check 24-h urinary cortisol</div></div><div class="algo-arrow" style="animation-delay:0.05s"></div><div class="algo-fork"><div class="algo-branch"><span class="algo-label" style="animation-delay:0.12s">Low–normal</span><div class="algo-node end" style="animation-delay:0.12s">Cushing's ruled out</div></div><div class="algo-branch"><span class="algo-label" style="animation-delay:0.22s">&gt;100 mg/dL (Cushing's)</span><div class="algo-node proc" style="animation-delay:0.22s">Check ACTH</div><div class="algo-arrow mini" style="animation-delay:0.36s"></div><div class="algo-node proc" style="animation-delay:0.32s">ACTH low → CT/MRI adrenals</div><div class="algo-arrow mini" style="animation-delay:0.46s"></div><div class="algo-node end" style="animation-delay:0.42s">ACTH high → high-dose dexamethasone: suppressed → MRI pituitary (Cushing's disease); not suppressed → CT chest / IPSS (ectopic ACTH)</div></div></div></figure>
+<figure class="deck-block algo-flow"><figcaption><span class="deck-tag tag-algo">Algorithm</span> Incidental adrenal mass (&gt;1 cm) — approach</figcaption><p class="deck-subcap">hormonal evaluation in all: dexamethasone suppression, plasma/urine metanephrines, aldosterone:renin if hypertensive</p><div class="algo-row"><div class="algo-node start" style="animation-delay:0.00s">Incidental adrenal mass &gt;1 cm → hormonal evaluation</div></div><div class="algo-arrow" style="animation-delay:0.05s"></div><div class="algo-fork"><div class="algo-branch"><span class="algo-label" style="animation-delay:0.12s">Functional (abnormal)</span><div class="algo-node proc" style="animation-delay:0.12s">Endocrinology consult; confirm autonomous secretion</div><div class="algo-arrow mini" style="animation-delay:0.26s"></div><div class="algo-node end" style="animation-delay:0.22s">Consider surgery</div></div><div class="algo-branch"><span class="algo-label" style="animation-delay:0.32s">Non-functional (normal)</span><div class="algo-node proc" style="animation-delay:0.32s">&lt;4 cm &amp; benign imaging → conservative (repeat imaging 6–12 mo)</div><div class="algo-arrow mini" style="animation-delay:0.46s"></div><div class="algo-node end" style="animation-delay:0.42s">≥4 cm or suspicious imaging (&gt;10 HU, irregular, &lt;50% washout) → surgery</div></div></div></figure>
+<h4 class="deck-topic">Pituitary adenoma</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Headache, visual disturbance (bitemporal hemianopia)</li><li>Hormonal imbalance:<ul class="sub"><li>Prolactinoma: galactorrhea, infertility, amenorrhea</li><li>GH-Secreting adenoma: Acromegaly, gigantism</li><li>ACTH-Secreting adenoma: Cushing disease</li></ul></li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Diagnosis:<ul class="sub"><li>Initial tests: Hormonal assays (prolactin, IGF-1, ACTH, TSH, FT4)</li><li>Confirmatory test: MRI Brain with pituitary protocol</li></ul></li><li>Management:<ul class="sub"><li>Medical: Cabergoline (for prolactinoma)</li><li>Surgical: transsphenoidal resection</li></ul></li></ul></div></div>
+<h4 class="deck-topic">Addison disease</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Fatigue, weakness</li><li>Weight loss, anorexia Hyperpigmentation (due to high ACTH - in primary adrenal disease)</li><li>Hypotension, dizziness</li><li>Diagnosis:<ul class="sub"><li>Serum cortisol, ACTH level</li><li>ACTH - Stimulation test (synacthen test)</li><li>Electrolytes disturbance (Hyponatremia, hyperkalemia</li><li>Imaging: (CT adrenal, MRI pituitary in secondary Addison)</li></ul></li><li>Treatment:<ul class="sub"><li>Hydrocortisone, mineralocorticoid replacement (fludrocortisone)</li><li>Stress dose of steroid during acute illness or surgery</li></ul></li></ul></div></div>
+                </div>
+<h3>Bone &amp; Calcium</h3>
+                <ul>
+                    <li><b>Osteoporosis</b> risk: post-menopause, steroids, <b>alcohol</b>, smoking, low BMI; DEXA T-score ≤−2.5 → <b>bisphosphonate</b> first-line (obesity is protective)</li>
+                    <li><b>Primary hyperparathyroidism</b>: ↑Ca + ↑PTH ("stones, bones, groans, psychiatric moans") → parathyroidectomy if symptomatic</li>
+                </ul>
+            
+                
+                <div class="topic-deck">
+<div class="deck-block deck-tbl"><div class="deck-cap"><span class="deck-tag tag-tbl">Table</span> Primary vs secondary vs tertiary hyperparathyroidism</div><table><thead><tr><th></th><th>Primary</th><th>Secondary</th><th>Tertiary</th></tr></thead><tbody><tr><td><b>Calcium</b></td><td>↑</td><td>↓ / normal</td><td>↑</td></tr><tr><td><b>PTH</b></td><td>↑</td><td>↑</td><td>↑↑</td></tr><tr><td><b>Phosphate</b></td><td>↓</td><td>↑ / normal</td><td>↑</td></tr></tbody></table></div>
+<div class="deck-block deck-tbl"><div class="deck-cap"><span class="deck-tag tag-tbl">Table</span> Indications for parathyroidectomy in primary hyperparathyroidism</div><table><thead><tr><th>Indication</th></tr></thead><tbody><tr><td>All patients with symptomatic PHPT</td></tr><tr><td>Serum calcium ≥1 mg/dL above upper limit of normal</td></tr><tr><td>Osteoporosis or fragility fracture</td></tr><tr><td>Age &lt;50 years</td></tr><tr><td>Renal involvement (nephrolithiasis/nephrocalcinosis, 24-h urine Ca &gt;400 mg, GFR &lt;60)</td></tr></tbody></table></div>
+                </div>
+
+            `,
+            questions: [
+                {
+                    q: 'A patient in DKA has an initial serum potassium of 3.0 mmol/L. What is the most appropriate immediate action?',
+                    options: ['Start the insulin infusion immediately', 'Replace potassium and delay insulin until K ≥3.3', 'Give IV sodium bicarbonate', 'Give a large insulin bolus'],
+                    answer: 1,
+                    explanation: 'Insulin drives potassium intracellularly; with K &lt;3.3 it can precipitate fatal hypokalaemia. Replace potassium first and hold insulin until K ≥3.3.'
+                },
+                {
+                    q: 'A pregnant woman with known hypothyroidism has a rising TSH at her booking visit. What is the appropriate management?',
+                    options: ['Stop levothyroxine', 'Increase the levothyroxine dose', 'Add methimazole', 'Reassure and recheck after delivery'],
+                    answer: 1,
+                    explanation: 'Levothyroxine requirements rise in pregnancy; the dose should be increased to keep TSH within the trimester-specific target.'
+                },
+                {
+                    q: 'A 30-year-old presents with hyperthyroidism in the first trimester of pregnancy. Which antithyroid drug is preferred?',
+                    options: ['Methimazole', 'Propylthiouracil', 'Radioactive iodine', 'Carbimazole'],
+                    answer: 1,
+                    explanation: 'PTU is preferred in the first trimester (methimazole is teratogenic early); switch to methimazole after the first trimester.'
+                },
+                {
+                    q: 'Which of the following is a recognised risk factor for osteoporosis?',
+                    options: ['Obesity', 'Chronic alcohol excess', 'High calcium intake', 'Regular weight-bearing exercise'],
+                    answer: 1,
+                    explanation: 'Alcohol excess (with smoking, steroids, low BMI and post-menopausal state) increases osteoporosis risk; higher body weight is relatively protective.'
+                },
+                {
+                    q: 'A hyperthyroid patient develops fever, agitation, atrial fibrillation and heart failure after an infection. In what order are drugs given for thyroid storm?',
+                    options: ['Beta-blocker + PTU, then iodine (after PTU), + hydrocortisone', 'Iodine first, then PTU', 'Radioactive iodine immediately', 'Levothyroxine'],
+                    answer: 0,
+                    explanation: 'Thyroid storm: beta-blocker for symptoms, PTU to block synthesis, iodine given AFTER PTU to block release, plus hydrocortisone; iodine before PTU can worsen it.'
+                },
+                {
+                    q: 'A patient has resistant hypertension with unexplained hypokalaemia. What is the best screening test?',
+                    options: ['Plasma aldosterone-to-renin ratio', '24-hour urinary cortisol', 'Plasma metanephrines', 'Renal ultrasound'],
+                    answer: 0,
+                    explanation: 'Resistant hypertension with hypokalaemia suggests primary hyperaldosteronism (Conn); screen with the aldosterone-to-renin ratio.'
+                },
+                {
+                    q: 'A type 1 diabetic is found unconscious with a capillary glucose of 2.0 mmol/L. What is the immediate treatment?',
+                    options: ['IV dextrose (or IM glucagon if no access)', 'Oral glucose gel', 'A bolus of insulin', 'Observation and recheck in 1 hour'],
+                    answer: 0,
+                    explanation: 'Severe hypoglycaemia with reduced consciousness needs IV dextrose (or IM glucagon if no IV access); oral treatment is unsafe when consciousness is impaired.'
+                }
+            ]
+        },
+        {
+            id: 'med-nephrology',
+            title: '05 — Nephrology & Electrolytes',
+            title_en: 'AKI · CKD · Hyponatraemia · Hyperkalaemia · Acid–Base',
+            summaryHtml: `
+                <h3>Acute Kidney Injury</h3>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> AKI — localising the lesion</div>
+                <svg viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pre-renal AKI shows a raised urea to creatinine ratio, FeNa under 1 percent and bland urine. Intrinsic ATN shows muddy-brown casts and FeNa over 2 percent. Post-renal AKI shows hydronephrosis on ultrasound.">
+                <g font-family="system-ui,Arial">
+                <rect x="14" y="24" width="216" height="150" rx="10" fill="#dbeafe" stroke="#3b82f6"/><text x="122" y="50" text-anchor="middle" font-size="13.5" font-weight="800" fill="#1d4ed8">PRE-renal</text><text x="122" y="78" text-anchor="middle" font-size="12" font-weight="700" fill="#334155">FeNa &lt;1%</text><text x="122" y="102" text-anchor="middle" font-size="11.5" fill="#475569">↑ urea:creatinine</text><text x="122" y="124" text-anchor="middle" font-size="11.5" fill="#475569">bland urine</text><text x="122" y="152" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">restore perfusion</text>
+                <rect x="242" y="24" width="216" height="150" rx="10" fill="#fef3c7" stroke="#f59e0b"/><text x="350" y="50" text-anchor="middle" font-size="13.5" font-weight="800" fill="#b45309">INTRINSIC (ATN)</text><text x="350" y="78" text-anchor="middle" font-size="12" font-weight="700" fill="#334155">FeNa &gt;2%</text><text x="350" y="102" text-anchor="middle" font-size="11.5" fill="#b45309">muddy-brown casts</text><text x="350" y="124" text-anchor="middle" font-size="11.5" fill="#475569">ischaemia · nephrotoxins</text><text x="350" y="152" text-anchor="middle" font-size="11" font-weight="700" fill="#b45309">stop the insult</text>
+                <rect x="470" y="24" width="216" height="150" rx="10" fill="#dcfce7" stroke="#22c55e"/><text x="578" y="50" text-anchor="middle" font-size="13.5" font-weight="800" fill="#15803d">POST-renal</text><text x="578" y="78" text-anchor="middle" font-size="12" font-weight="700" fill="#334155">hydronephrosis on US</text><text x="578" y="102" text-anchor="middle" font-size="11.5" fill="#475569">stones · BPH · tumour</text><text x="578" y="124" text-anchor="middle" font-size="11.5" fill="#475569">obstruction</text><text x="578" y="152" text-anchor="middle" font-size="11" font-weight="700" fill="#15803d">relieve obstruction</text>
+                <rect x="14" y="192" width="672" height="34" rx="9" fill="#f1f5f9" stroke="#cbd5e1"/><text x="350" y="214" text-anchor="middle" font-size="12" font-weight="700" fill="#334155">Emergent dialysis — AEIOU: Acidosis · Electrolytes (K⁺) · Intoxication · Overload · Uraemia</text>
+                </g></svg>
+                <figcaption><b>FeNa</b> and the <b>urine sediment</b> separate pre-renal from ATN; an ultrasound rules out obstruction. Contrast nephropathy is best prevented with peri-procedure isotonic IV hydration.</figcaption></figure>
+                <table>
+                    <thead><tr><th>Category</th><th>Clue</th><th>Examples / action</th></tr></thead>
+                    <tbody>
+                        <tr><td>Pre-renal</td><td>↑urea:creatinine, <b>FeNa &lt;1%</b>, bland urine</td><td>Hypovolaemia, sepsis, HF → restore perfusion</td></tr>
+                        <tr><td>Intrinsic (ATN)</td><td><b>Muddy-brown casts</b>, FeNa &gt;2%</td><td>Ischaemia, nephrotoxins (contrast, aminoglycosides)</td></tr>
+                        <tr><td>Post-renal</td><td>Hydronephrosis on US</td><td>Stones, BPH, tumour → relieve obstruction</td></tr>
+                    </tbody>
+                </table>
+                <ul>
+                    <li>Contrast-induced nephropathy: best prevention is peri-procedure <b>isotonic IV hydration</b></li>
+                    <li><b>Emergent dialysis (AEIOU)</b>: severe <b>A</b>cidosis · refractory <b>E</b>lectrolytes (hyperkalaemia) · <b>I</b>ntoxication · fluid <b>O</b>verload · <b>U</b>raemia (pericarditis/encephalopathy)</li>
+                </ul>
+
+                
+                <div class="topic-deck">
+<div class="deck-block deck-tbl"><div class="deck-cap"><span class="deck-tag tag-tbl">Table</span> Acute kidney injury — pre-renal vs intrarenal vs post-renal</div><table><thead><tr><th>Parameter</th><th>Pre-renal</th><th>Intrarenal</th><th>Post-renal</th></tr></thead><tbody><tr><td><b>Urine sodium</b></td><td>&lt;20 mEq/L</td><td>&gt;40 mEq/L</td><td>&gt;40 mEq/L</td></tr><tr><td><b>FENa</b></td><td>&lt;1%</td><td>&gt;2%</td><td>&gt;1%</td></tr><tr><td><b>Urine osmolality</b></td><td>≥1200 mOsm/kg</td><td>&lt;300 mOsm/kg</td><td>&lt;300 mOsm/kg</td></tr><tr><td><b>Urine:serum creatinine</b></td><td>&gt;40:1</td><td>&lt;20:1</td><td>&lt;20:1</td></tr><tr><td><b>Specific gravity</b></td><td>&gt;1.010</td><td>&lt;1.010</td><td>Varies</td></tr><tr><td><b>Drug causes</b></td><td>ACEi/ARB, NSAIDs, calcineurin inhibitors, diuretics</td><td>Contrast, cisplatin, methotrexate, allopurinol, PPIs, aminoglycosides</td><td>Fluoroquinolones, acyclovir, methotrexate, indinavir, sulfonamides</td></tr></tbody></table></div>
+<div class="deck-block deck-tbl"><div class="deck-cap"><span class="deck-tag tag-tbl">Table</span> Acute indications for dialysis — 'AEIOU'</div><table><thead><tr><th></th><th>Indication</th></tr></thead><tbody><tr><td><b>A — Acidosis</b></td><td>Refractory metabolic acidosis (pH &lt;7.1)</td></tr><tr><td><b>E — Electrolytes</b></td><td>Refractory hyperkalaemia</td></tr><tr><td><b>I — Intoxication</b></td><td>Toxic alcohols, salicylates, lithium, etc.</td></tr><tr><td><b>O — Overload</b></td><td>Fluid overload (e.g. congestive heart failure)</td></tr><tr><td><b>U — Uraemia</b></td><td>Uraemic pericarditis or encephalopathy</td></tr></tbody></table></div>
+<div class="deck-block deck-tbl"><div class="deck-cap"><span class="deck-tag tag-tbl">Table</span> Post-streptococcal GN vs IgA nephropathy</div><table><thead><tr><th>Feature</th><th>PSGN</th><th>IgA nephropathy (Berger's)</th></tr></thead><tbody><tr><td><b>Cause</b></td><td>Post-infectious (Group A β-haemolytic Strep — pharyngitis, impetigo)</td><td>Immune-mediated (IgA deposition in mesangium)</td></tr><tr><td><b>Onset</b></td><td>1–3 weeks after infection (latent period)</td><td>1–2 days after URTI (synpharyngitic) or skin infection</td></tr><tr><td><b>Presentation</b></td><td>Haematuria, oedema, hypertension, oliguria</td><td>Recurrent gross haematuria, often after infection</td></tr><tr><td><b>Complement</b></td><td>Low C3 (normalises 6–8 wk), normal C4</td><td>Normal C3 &amp; C4</td></tr><tr><td><b>Serology</b></td><td>↑ ASO, anti-DNase B</td><td>No specific markers</td></tr><tr><td><b>Biopsy</b></td><td>Subepithelial humps (immune complexes) on EM</td><td>Mesangial IgA on immunofluorescence</td></tr><tr><td><b>Treatment</b></td><td>Supportive; antibiotics if active infection</td><td>Supportive; ACE inhibitors; steroids for severe cases</td></tr></tbody></table></div>
+<h4 class="deck-topic">Contrast induced nephropathy</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Acute kidney injury (AKI) occurring within 48-72 hours after contrast media exposure</li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Increase in serum creatinine by ≥25% or ≥ 0.5 mg/dl within 48 hours after contrast exposure</li><li>Urinalysis: Muddy brown case</li></ul></div><div class="deck-card mgmt"><span class="deck-card-h">Management</span><ul><li>Pre - Post contrast hydration</li><li>Renal function monitoring</li></ul></div></div>
+                </div>
+<h3>Chronic Kidney Disease</h3>
+                <ul>
+                    <li>Staged by eGFR + albuminuria; leading causes DM &amp; HTN</li>
+                    <li><b>ACEi/ARB</b> renoprotective (accept ≤30% creatinine rise) + <b>SGLT2 inhibitor</b>; BP target individualised (~&lt;130/80)</li>
+                    <li>Complications: anaemia (EPO + iron), renal bone disease (↑PO₄, ↓Ca, ↑PTH → phosphate binders + vit D), metabolic acidosis, hyperkalaemia</li>
+                </ul>
+
+                <h3>Sodium &amp; Potassium</h3>
+                <table>
+                    <thead><tr><th>Hyponatraemia by volume</th><th>Examples</th><th>Treatment</th></tr></thead>
+                    <tbody>
+                        <tr><td>Hypovolaemic</td><td>Vomiting/diarrhoea, diuretics</td><td>Isotonic (0.9%) saline</td></tr>
+                        <tr><td>Euvolaemic</td><td>SIADH, hypothyroid</td><td>Fluid restriction (treat cause)</td></tr>
+                        <tr><td>Hypervolaemic</td><td>HF, cirrhosis, nephrotic</td><td>Fluid + salt restriction</td></tr>
+                    </tbody>
+                </table>
+                <ul>
+                    <li>Correct hyponatraemia <b>slowly (&lt;8–10 mmol/L per 24 h)</b> to avoid osmotic demyelination; severe symptomatic (seizures) → 3% hypertonic saline</li>
+                    <li><b>Hypokalaemia</b>: weakness, U waves → replace K (+ Mg); <b>hyperkalaemia</b>: peaked T waves → see algorithm</li>
+                </ul>
+                <div class="sum-callout">
+                    <b>Algorithm — severe hyperkalaemia</b>
+                    <ol>
+                        <li><b>IV calcium gluconate</b> — cardiac membrane stabilisation (first)</li>
+                        <li><b>Insulin + dextrose</b> (± nebulised salbutamol) — shift K⁺ into cells</li>
+                        <li>Sodium bicarbonate if acidotic</li>
+                        <li>Elimination: loop diuretic / K-binder; <b>haemodialysis</b> if refractory</li>
+                    </ol>
+                </div>
+            
+                
+                <div class="topic-deck">
+<div class="deck-block deck-tbl"><div class="deck-cap"><span class="deck-tag tag-tbl">Table</span> Nephrotic syndrome — types</div><table><thead><tr><th>Type</th><th>Common in</th><th>Key features</th><th>Management</th></tr></thead><tbody><tr><td><b>Minimal change disease</b></td><td>Children, young adults</td><td>Sudden onset; normal biopsy; steroid-responsive</td><td>Corticosteroids</td></tr><tr><td><b>FSGS</b></td><td>Adults, African Americans</td><td>Progressive; steroid-resistant; HTN common</td><td>ACEi/ARB</td></tr><tr><td><b>Membranous nephropathy</b></td><td>Adults (50s–60s)</td><td>Thickened GBM; PLA2R antibodies; may be paraneoplastic</td><td>Rituximab, steroids + CNI if high risk; ACEi/ARB</td></tr><tr><td><b>Diabetic nephropathy</b></td><td>Diabetics</td><td>Progressive albuminuria; Kimmelstiel-Wilson nodules</td><td>Glycaemic control; ACEi/ARB; SGLT2 inhibitors</td></tr><tr><td><b>Amyloidosis</b></td><td>Elderly, myeloma</td><td>Systemic; Congo-red positive</td><td>Treat cause; steroids + chemo for myeloma</td></tr></tbody></table></div>
+<figure class="deck-block algo-flow"><figcaption><span class="deck-tag tag-algo">Algorithm</span> Hyponatraemia — approach</figcaption><div class="algo-row"><div class="algo-node start" style="animation-delay:0.00s">Hyponatraemia → serum osmolality</div></div><div class="algo-arrow" style="animation-delay:0.05s"></div><div class="algo-fork"><div class="algo-branch"><span class="algo-label" style="animation-delay:0.12s">Normal (280–295)</span><div class="algo-node end" style="animation-delay:0.12s">Isotonic (pseudo): hyperproteinaemia, hyperlipidaemia</div></div><div class="algo-branch"><span class="algo-label" style="animation-delay:0.22s">High (&gt;295)</span><div class="algo-node end" style="animation-delay:0.22s">Hypertonic: hyperglycaemia, mannitol, radiocontrast</div></div><div class="algo-branch"><span class="algo-label" style="animation-delay:0.32s">Low (&lt;280) → volume status</span><div class="algo-node proc" style="animation-delay:0.32s">Hypovolaemic: extrarenal (UNa&lt;10; vomiting, diarrhoea) or renal loss (UNa&gt;20; diuretics, ACEi, cerebral salt wasting)</div><div class="algo-arrow mini" style="animation-delay:0.46s"></div><div class="algo-node proc" style="animation-delay:0.42s">Euvolaemic: SIADH, hypothyroidism, adrenal insufficiency, psychogenic polydipsia</div><div class="algo-arrow mini" style="animation-delay:0.56s"></div><div class="algo-node end" style="animation-delay:0.52s">Hypervolaemic: heart failure, liver disease, nephrotic syndrome, advanced CKD</div></div></div></figure>
+                </div>
+<section class="topic deck-enrich">
+                    <h3>More from the study deck</h3>
+                    <p class="deck-intro">Extra material for this step that spans more than one topic above.</p>
+<div class="deck-block deck-tbl"><div class="deck-cap"><span class="deck-tag tag-tbl">Table</span> Henoch-Schönlein purpura (HSP)</div><p class="deck-subcap">IgA small-vessel vasculitis; commonest childhood vasculitis (2–11 y); often follows a URTI</p><table><thead><tr><th>Classic tetrad</th><th>Feature</th></tr></thead><tbody><tr><td><b>Palpable purpura</b></td><td>Non-thrombocytopenic; buttocks &amp; lower limbs</td></tr><tr><td><b>Abdominal pain</b></td><td>Colicky; risk of intussusception (ileoileal); heme-positive stool</td></tr><tr><td><b>Renal involvement</b></td><td>Haematuria, proteinuria, raised BUN/Cr</td></tr><tr><td><b>Arthritis</b></td><td>Periarticular; knees &amp; ankles</td></tr></tbody></table><ul class="deck-tbl-notes"><li>95% full recovery after 3–4 weeks; renal failure rare (5–15% of children, 30–50% of adults); adult disease usually more severe.</li></ul></div>
+<figure class="deck-block algo-flow"><figcaption><span class="deck-tag tag-algo">Algorithm</span> Approach to proteinuria</figcaption><p class="deck-subcap">nephrotic/nephritic syndrome needs biopsy — except minimal change disease and diabetic nephropathy with diabetic retinopathy</p><div class="algo-row"><div class="algo-node start" style="animation-delay:0.00s">Dipstick (screening)</div></div><div class="algo-arrow" style="animation-delay:0.05s"></div><div class="algo-row"><div class="algo-node proc" style="animation-delay:0.12s">Exclude transient &amp; orthostatic proteinuria (2 of 3 positive dipsticks over 3–6 months)</div></div><div class="algo-arrow" style="animation-delay:0.17s"></div><div class="algo-row"><div class="algo-node proc" style="animation-delay:0.24s">Quantify: &gt;3 g/day</div></div><div class="algo-arrow" style="animation-delay:0.29s"></div><div class="algo-row"><div class="algo-node end" style="animation-delay:0.36s">Renal biopsy (confirmatory)</div></div></figure>
+<figure class="deck-block algo-flow"><figcaption><span class="deck-tag tag-algo">Algorithm</span> Hypocalcaemia — management</figcaption><div class="algo-row"><div class="algo-node start" style="animation-delay:0.00s">Acute signs? (carpopedal spasm, laryngospasm, bronchospasm, seizures, prolonged QT)</div></div><div class="algo-arrow" style="animation-delay:0.05s"></div><div class="algo-fork"><div class="algo-branch"><span class="algo-label" style="animation-delay:0.12s">Yes / severe (Ca ≤7.5 or ionised ≤3)</span><div class="algo-node end" style="animation-delay:0.12s">IV calcium gluconate</div></div><div class="algo-branch"><span class="algo-label" style="animation-delay:0.22s">No / chronic</span><div class="algo-node proc" style="animation-delay:0.22s">Able to take oral → oral calcium + vitamin D</div><div class="algo-arrow mini" style="animation-delay:0.36s"></div><div class="algo-node end" style="animation-delay:0.32s">Unable to absorb → IV calcium</div></div></div></figure>
+<h4 class="deck-topic">CKD anemia</h4><div class="deck-cards"><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Ferritin &lt;500 ng/ml &amp; transferrin saturation &lt;30% iron replacement therapy</li><li>Ferritin ≥500 ng/ml &amp; transferrin saturation ≥30% erythropoietin stimulating agent</li><li>Target Hb: 10-11.5</li></ul></div></div>
+<h4 class="deck-topic">Rapidly progressive glomerulonephritis</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Good pasture syndrome<ul class="sub"><li>Granulomatosis with polyangiitis (Wegener disease)</li><li>Microscopic polyangiitis</li><li>Eosinophilic granulomatosis with polyangiitis (Churg strauss syndrome)</li><li>Lupus nephritis</li><li>Post streptococcal glomerulonephritis (PSGN)</li><li>IgA nephropathy / Henoch schonlein purpura</li></ul></li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Crescent shape formation in Bowman's space</li></ul></div></div>
+<h4 class="deck-topic">Hyponatremia</h4><div class="deck-cards"><div class="deck-card mgmt"><span class="deck-card-h">Management</span><ul><li>Hypovolemic hyponatremia<ul class="sub"><li>Isotonic saline 0.9%</li></ul></li><li>Hypervolemic hyponatremia<ul class="sub"><li>Lasix + fluid restriction</li></ul></li><li>Symptomatic hyponatremia<ul class="sub"><li>Hypertonic saline 3%</li></ul></li><li>SIADH<ul class="sub"><li>Fluid restriction</li></ul></li><li>Note: rapid correction of hyponatremia (more than 4-6 mmol/l) central pontine myelinolysis</li></ul></div></div>
+<h4 class="deck-topic">Hyperkalemia</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Nausea, vomiting</li><li>Ileus abdominal distension</li><li>Muscle weakness, cramps</li><li>Arrythmia (flattened T waves)</li><li>Renal loss: Diuretics</li><li>GI loss: vomiting, diarrhea, laxative abuse</li></ul></div><div class="deck-card mgmt"><span class="deck-card-h">Management</span><ul><li>Stabilize cardiac membrane - IV calcium gluconate</li><li>Shift potassium into cells - IV insulin &amp; glucose, beta-2 agonist, sodium bicarbonate (if acidotic)</li><li>Excrete potassium from the body - Loop diuretics, kayexalate, dialysis (if severe)</li><li>Prevent recurrence: Stop ACE-I/ARBs, Spironolactone</li><li>Oral KCL (3-3.5 mEq/L)</li><li>IV Potassium (&lt;3 mEq/L or symptomatic)</li></ul></div></div>
+                </section>
+            `,
+            questions: [
+                {
+                    q: 'A patient has a serum potassium of 7.2 mmol/L with peaked T waves on ECG. What is the first drug to give?',
+                    options: ['Insulin with dextrose', 'IV calcium gluconate', 'Nebulised salbutamol', 'Sodium polystyrene sulfonate'],
+                    answer: 1,
+                    explanation: 'IV calcium gluconate is given first to stabilise the myocardium; insulin/dextrose and salbutamol then shift potassium intracellularly.'
+                },
+                {
+                    q: 'A hypovolaemic patient with vomiting has a sodium of 124 mmol/L. What is the appropriate initial treatment?',
+                    options: ['Fluid restriction', 'Isotonic (0.9%) saline', 'Hypertonic 3% saline bolus', 'A vasopressin receptor antagonist'],
+                    answer: 1,
+                    explanation: 'Hypovolaemic hyponatraemia is corrected with isotonic saline; hypertonic saline is reserved for severe symptomatic (seizing) hyponatraemia, and correction must be slow.'
+                },
+                {
+                    q: 'A diabetic with CKD and hypertension is started on an ACE inhibitor and the creatinine rises by 20%. What is the best action?',
+                    options: ['Stop the ACE inhibitor immediately', 'Continue the ACE inhibitor and monitor', 'Switch to a calcium channel blocker', 'Halve the dose and add a diuretic'],
+                    answer: 1,
+                    explanation: 'A creatinine rise of up to ~30% after starting an ACEi/ARB is acceptable and expected; the drug is renoprotective and should be continued with monitoring.'
+                },
+                {
+                    q: 'A patient with chronic hyponatraemia is corrected too rapidly and days later develops dysarthria and quadriparesis. What is the cause?',
+                    options: ['Cerebral oedema', 'Osmotic demyelination syndrome', 'Wernicke encephalopathy', 'Subdural haematoma'],
+                    answer: 1,
+                    explanation: 'Over-rapid correction of chronic hyponatraemia (&gt;8–10 mmol/L/24 h) causes osmotic demyelination (central pontine myelinolysis).'
+                },
+                {
+                    q: 'A patient with acute kidney injury has muddy-brown granular casts on urine microscopy and a fractional excretion of sodium above 2%. What is the diagnosis?',
+                    options: ['Acute tubular necrosis', 'Prerenal azotaemia', 'Postrenal obstruction', 'Acute glomerulonephritis'],
+                    answer: 0,
+                    explanation: 'Muddy-brown granular casts with FeNa above 2% indicate intrinsic AKI from acute tubular necrosis; prerenal AKI has a FeNa below 1% and bland sediment.'
+                },
+                {
+                    q: 'A patient with chronic kidney disease needs a contrast-enhanced CT. What best reduces the risk of contrast-induced nephropathy?',
+                    options: ['IV isotonic fluid hydration before and after contrast', 'Prophylactic furosemide', 'Routine N-acetylcysteine alone', 'IV mannitol'],
+                    answer: 0,
+                    explanation: 'Peri-procedure isotonic IV hydration is the best-supported measure; diuretics and mannitol can worsen it and routine NAC is not reliably effective.'
+                },
+                {
+                    q: 'Which finding is an indication for urgent (emergent) dialysis?',
+                    options: ['Refractory hyperkalaemia or pulmonary oedema or uraemic pericarditis', 'Stable CKD with eGFR 40', 'Isolated proteinuria', 'Asymptomatic mildly raised urea'],
+                    answer: 0,
+                    explanation: 'Emergent dialysis indications (AEIOU): severe Acidosis, Electrolyte disturbance (refractory hyperkalaemia), Intoxication, Overload (pulmonary oedema), and Uraemia (pericarditis/encephalopathy).'
+                }
+            ]
+        },
+        {
+            id: 'med-heme-onc',
+            title: '06 — Haematology & Oncology',
+            title_en: 'Anaemias · TTP/HUS/DIC · Leukaemias · Oncologic Emergencies',
+            summaryHtml: `
+                <h3>Anaemias</h3>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Anaemia — classify by MCV first</div>
+                <svg viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Anaemia is classified by MCV: microcytic under 80 from iron deficiency, thalassaemia, anaemia of chronic disease or sideroblastic; normocytic 80 to 100 from bleeding, haemolysis, chronic disease, CKD or marrow failure; macrocytic over 100 from B12 or folate deficiency, alcohol, hypothyroidism or myelodysplasia.">
+                <g font-family="system-ui,Arial">
+                <rect x="270" y="14" width="160" height="34" rx="9" fill="#e0e7ff" stroke="#6366f1"/><text x="350" y="37" text-anchor="middle" font-size="13" font-weight="800" fill="#4338ca">Anaemia → check MCV</text>
+                <line x1="350" y1="48" x2="120" y2="72" stroke="#94a3b8" stroke-width="2"/><line x1="350" y1="48" x2="350" y2="72" stroke="#94a3b8" stroke-width="2"/><line x1="350" y1="48" x2="580" y2="72" stroke="#94a3b8" stroke-width="2"/>
+                <rect x="14" y="72" width="212" height="130" rx="10" fill="#fee2e2" stroke="#ef4444"/><text x="120" y="96" text-anchor="middle" font-size="13" font-weight="800" fill="#b91c1c">Microcytic &lt;80</text><text x="120" y="122" text-anchor="middle" font-size="11.5" fill="#334155">iron deficiency · thalassaemia</text><text x="120" y="142" text-anchor="middle" font-size="11.5" fill="#334155">chronic disease · sideroblastic</text><text x="120" y="170" text-anchor="middle" font-size="11" font-weight="700" fill="#b91c1c">IDA: ↓ferritin ↑TIBC ↑RDW</text><text x="120" y="190" text-anchor="middle" font-size="10.5" fill="#475569">β-thal trait: ↑HbA2, normal ferritin</text>
+                <rect x="244" y="72" width="212" height="130" rx="10" fill="#fef3c7" stroke="#f59e0b"/><text x="350" y="96" text-anchor="middle" font-size="13" font-weight="800" fill="#b45309">Normocytic 80–100</text><text x="350" y="122" text-anchor="middle" font-size="11.5" fill="#334155">bleeding · haemolysis</text><text x="350" y="142" text-anchor="middle" font-size="11.5" fill="#334155">chronic disease · CKD · marrow</text><text x="350" y="172" text-anchor="middle" font-size="11" font-weight="700" fill="#b45309">↑reticulocytes → bleed/haemolysis</text>
+                <rect x="474" y="72" width="212" height="130" rx="10" fill="#ede9fe" stroke="#8b5cf6"/><text x="580" y="96" text-anchor="middle" font-size="13" font-weight="800" fill="#6d28d9">Macrocytic &gt;100</text><text x="580" y="122" text-anchor="middle" font-size="11.5" fill="#334155">B12 / folate deficiency</text><text x="580" y="142" text-anchor="middle" font-size="11.5" fill="#334155">alcohol · hypothyroid · MDS</text><text x="580" y="172" text-anchor="middle" font-size="11" font-weight="700" fill="#6d28d9">B12: hypersegmented + neuro signs</text>
+                <rect x="14" y="214" width="672" height="34" rx="9" fill="#f1f5f9" stroke="#cbd5e1"/><text x="350" y="236" text-anchor="middle" font-size="12" font-weight="700" fill="#334155">Age &gt;45–50 with unexplained iron deficiency → upper AND lower GI endoscopy (occult malignancy)</text>
+                </g></svg>
+                <figcaption>MCV splits the differential in one step; the <b>reticulocyte count</b> then separates a productive marrow (bleeding/haemolysis) from an underproductive one.</figcaption></figure>
+                <table>
+                    <thead><tr><th>MCV</th><th>Causes</th><th>Key clue</th></tr></thead>
+                    <tbody>
+                        <tr><td>Microcytic</td><td>Iron deficiency, thalassaemia, ACD, sideroblastic</td><td>IDA: ↓ferritin, ↑TIBC, ↑RDW; β-thal trait: ↑HbA2, normal ferritin</td></tr>
+                        <tr><td>Normocytic</td><td>Acute bleed, haemolysis, ACD, CKD, marrow failure</td><td>↑reticulocytes = bleeding/haemolysis</td></tr>
+                        <tr><td>Macrocytic</td><td>B12/folate deficiency, alcohol, hypothyroid, myelodysplasia</td><td>B12: hypersegmented neutrophils + neuro signs</td></tr>
+                    </tbody>
+                </table>
+                <ul>
+                    <li>Always find the source of IDA — age &gt;45–50 with IDA and no obvious cause → <b>upper + lower GI endoscopy</b> (occult malignancy)</li>
+                    <li><b>Sickle cell</b>: hydroxyurea (↑HbF) + prophylactic penicillin; vaso-occlusive crisis → analgesia + hydration + O₂; acute chest syndrome → antibiotics + exchange transfusion</li>
+                </ul>
+
+                
+                <div class="topic-deck">
+<h4 class="deck-topic">Sickle cell disease</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Chest pain, shortness of breath</li><li>Fever ≥38.5</li><li>New pulmonary infiltrate Hypoxia</li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Diagnosis:<ul class="sub"><li>Clinical diagnosis</li><li>Chest X-ray: New pulmonary infiltrate</li></ul></li><li>Management:<ul class="sub"><li>Oxygen, hydration</li><li>Pain management</li><li>Antibiotics</li><li>Exchange transfusion</li><li>Hydroxyurea (Helps prevent all complications of SCD)</li></ul></li></ul></div><div class="deck-card mgmt"><span class="deck-card-h">Management</span><ul><li>Simple transfusion indications:<ul class="sub"><li>Acute severe symptomatic anemia</li><li>Acute hepatic, splenic, sequestration, aplastic crisis</li><li>Mild acute chest syndrome</li><li>Complicated, recurrent vaso-occlusive crisis</li></ul></li><li>Exchange transfusion indications:<ul class="sub"><li>Priaprism</li><li>Severe acute chest syndrome</li><li>Stroke</li><li>Visual disturbance secondary to retinal infarction</li></ul></li></ul></div></div>
+                </div>
+<h3>Thrombocytopenia &amp; Microangiopathies</h3>
+                <table>
+                    <thead><tr><th>Condition</th><th>Features</th><th>Management</th></tr></thead>
+                    <tbody>
+                        <tr><td><b>ITP</b></td><td>Isolated ↓platelets, post-viral (children)</td><td>Observe / steroids / IVIG</td></tr>
+                        <tr><td><b>TTP</b></td><td>MAHA + ↓platelets + neuro + renal + fever (ADAMTS13 ↓)</td><td>Urgent <b>plasma exchange</b>; avoid platelets</td></tr>
+                        <tr><td><b>HUS</b></td><td>MAHA + ↓platelets + AKI (E. coli O157)</td><td>Supportive; avoid antibiotics</td></tr>
+                        <tr><td><b>DIC</b></td><td>↓platelets, ↑PT/APTT, ↑D-dimer, ↓fibrinogen</td><td>Treat cause + FFP/platelets/cryo</td></tr>
+                    </tbody>
+                </table>
+                <ul>
+                    <li>Warfarin major bleed → <b>PCC + IV vitamin K</b>; DOAC → idarucizumab (dabigatran) / andexanet</li>
+                </ul>
+
+                
+                <div class="topic-deck">
+<div class="deck-block deck-tbl"><div class="deck-cap"><span class="deck-tag tag-tbl">Table</span> Thrombotic microangiopathies — DIC · HUS · TTP · HIT</div><table><thead><tr><th>Feature</th><th>DIC</th><th>HUS</th><th>TTP</th><th>HIT</th></tr></thead><tbody><tr><td><b>Key pathology</b></td><td>Systemic coagulation activation → bleeding + thrombosis</td><td>Microthrombi in renal vessels</td><td>Microthrombi in small vessels (widespread)</td><td>Antibodies vs PF4-heparin → platelet activation</td></tr><tr><td><b>Triggers</b></td><td>Sepsis, trauma, malignancy, obstetric emergencies</td><td>E. coli O157:H7 (Shiga toxin)</td><td>ADAMTS13 deficiency</td><td>Heparin exposure (5–10 days)</td></tr><tr><td><b>Classic features</b></td><td>Bleeding, organ dysfunction, thrombosis</td><td>MAHA, renal failure, thrombocytopenia</td><td>MAHA, thrombocytopenia, neuro signs, fever, renal failure</td><td>Thrombocytopenia + thrombosis</td></tr><tr><td><b>Platelets</b></td><td>↓</td><td>↓</td><td>↓</td><td>↓</td></tr><tr><td><b>PT/PTT</b></td><td>↑ prolonged</td><td>Normal</td><td>Normal</td><td>Normal</td></tr><tr><td><b>Fibrinogen</b></td><td>↓</td><td>Normal</td><td>Normal</td><td>Normal</td></tr><tr><td><b>D-dimer</b></td><td>↑</td><td>Normal</td><td>Normal</td><td>Normal</td></tr><tr><td><b>ADAMTS13</b></td><td>Normal</td><td>Normal</td><td>↓↓ (severe)</td><td>Normal</td></tr><tr><td><b>Treatment</b></td><td>Treat cause; FFP, cryoprecipitate if bleeding</td><td>Supportive, dialysis, eculizumab</td><td>Plasma exchange, steroids</td><td>Stop heparin; non-heparin anticoagulant (fondaparinux)</td></tr></tbody></table></div>
+                </div>
+<h3>Haematological Malignancies</h3>
+                <ul>
+                    <li><b>ALL</b> — children, marrow failure; <b>AML</b> — adults, Auer rods; <b>CLL</b> — elderly, mature lymphocytosis + <b>smudge cells</b>; <b>CML</b> — ↑↑WBC, <b>Philadelphia t(9;22)</b> → imatinib</li>
+                    <li><b>Polycythaemia vera</b> (JAK2, aquagenic pruritus, splenomegaly) → venesection + aspirin; multiple myeloma → CRAB (hyperCalcaemia, Renal, Anaemia, Bone lesions) + paraprotein</li>
+                </ul>
+
+                <h3>Oncologic Emergencies</h3>
+                <ul>
+                    <li><b>Neutropenic sepsis</b>: fever + neutrophils &lt;0.5 → broad-spectrum antibiotics (piperacillin-tazobactam) within 1 h — an emergency</li>
+                    <li><b>Tumour lysis syndrome</b> (post-chemo: ↑K, ↑PO₄, ↑urate, ↓Ca, AKI) → hydration + <b>rasburicase</b> (high risk) / allopurinol</li>
+                    <li><b>Malignant spinal cord compression</b> → dexamethasone + urgent MRI + radiotherapy/surgery; <b>SVC obstruction</b> → dyspnoea, facial swelling → CT + treat tumour</li>
+                    <li><b>Hypercalcaemia of malignancy</b> → IV fluids then bisphosphonate</li>
+                </ul>
+                <div class="sum-callout">
+                    <b>Algorithm — microcytic anaemia</b>
+                    <ol>
+                        <li>Check ferritin → low = <b>iron deficiency</b> → find the source (GI workup if age &gt;45 or no obvious cause)</li>
+                        <li>Normal/high ferritin + raised HbA2 → <b>β-thalassaemia trait</b></li>
+                        <li>Consider anaemia of chronic disease (ferritin normal/high, low TIBC)</li>
+                    </ol>
+                </div>
+            
+                <section class="topic deck-enrich">
+                    <h3>More from the study deck</h3>
+                    <p class="deck-intro">Extra material for this step that spans more than one topic above.</p>
+<div class="deck-block deck-tbl"><div class="deck-cap"><span class="deck-tag tag-tbl">Table</span> B12 deficiency · iron deficiency · anaemia of chronic disease</div><table><thead><tr><th>Feature</th><th>Vitamin B12 deficiency</th><th>Iron-deficiency anaemia</th><th>Anaemia of chronic disease</th></tr></thead><tbody><tr><td><b>Cause</b></td><td>Malabsorption (pernicious anaemia — autoimmune parietal-cell loss), gastrectomy, ileal disease (Crohn's), vegan diet</td><td>Chronic blood loss (GI, menses), ↑ demand (pregnancy), malabsorption (coeliac, H. pylori)</td><td>Chronic inflammation (RA, CKD, malignancy, infection) → hepcidin-mediated iron sequestration</td></tr><tr><td><b>Type</b></td><td>Macrocytic, megaloblastic</td><td>Microcytic, hypochromic</td><td>Normocytic / microcytic</td></tr><tr><td><b>Symptoms</b></td><td>Fatigue, pallor, neurological (paraesthesia, ataxia, memory loss), glossitis</td><td>Fatigue, pallor, pica, koilonychia, restless legs</td><td>Fatigue, pallor, features of underlying disease</td></tr><tr><td><b>Labs</b></td><td>↓ B12, ↑ MMA &amp; homocysteine, hypersegmented neutrophils</td><td>↓ ferritin, ↓ serum iron, ↑ TIBC, ↓ MCV, ↑ RDW</td><td>↑ ferritin, ↓ serum iron, ↓ TIBC, normal/↓ MCV</td></tr><tr><td><b>Diagnosis</b></td><td>Anti-parietal-cell / anti-intrinsic-factor antibodies</td><td>Low serum ferritin (early); iron studies</td><td>↑ CRP/ESR; underlying chronic disease</td></tr><tr><td><b>Treatment</b></td><td>B12 (IM) if neurological symptoms</td><td>Oral ferrous sulfate ± vitamin C</td><td>Treat underlying disease; EPO if CKD</td></tr></tbody></table></div>
+<div class="deck-block deck-tbl"><div class="deck-cap"><span class="deck-tag tag-tbl">Table</span> Lymphoma vs chronic lymphocytic leukaemia (CLL)</div><table><thead><tr><th>Feature</th><th>Lymphoma</th><th>CLL</th></tr></thead><tbody><tr><td><b>Age</b></td><td>Any age; often young–middle-aged (40s)</td><td>Elderly (&gt;60 years)</td></tr><tr><td><b>Symptoms</b></td><td>B symptoms (fever, night sweats, weight loss), lymphadenopathy, splenomegaly</td><td>Often asymptomatic; fatigue or lymphadenopathy</td></tr><tr><td><b>Lymphadenopathy</b></td><td>Prominent, bulky (cervical, inguinal, generalised)</td><td>Small, non-tender, or absent</td></tr><tr><td><b>Spleen / liver</b></td><td>Splenomegaly common</td><td>Mild splenomegaly in advanced cases</td></tr><tr><td><b>WBC</b></td><td>Normal or slightly raised</td><td>Marked lymphocytosis (e.g. WBC 28, 65% lymphocytes)</td></tr><tr><td><b>Smear</b></td><td>Non-specific</td><td>Smudge cells characteristic</td></tr><tr><td><b>Diagnosis</b></td><td>Excisional lymph-node biopsy</td><td>Flow cytometry (CD5, CD19, CD23+ B-cells)</td></tr><tr><td><b>Treatment</b></td><td>Chemotherapy, radiotherapy, immunotherapy (by type/stage)</td><td>Observe if asymptomatic; chemoimmunotherapy if symptomatic</td></tr></tbody></table></div>
+<figure class="deck-block algo-flow"><figcaption><span class="deck-tag tag-algo">Algorithm</span> Approach to anaemia — classification by MCV</figcaption><div class="algo-row"><div class="algo-node start" style="animation-delay:0.00s">Low haemoglobin → check MCV</div></div><div class="algo-arrow" style="animation-delay:0.05s"></div><div class="algo-fork"><div class="algo-branch"><span class="algo-label" style="animation-delay:0.12s">Low MCV (&lt;80)</span><div class="algo-node end" style="animation-delay:0.12s">Iron deficiency, thalassaemia, anaemia of chronic disease, lead poisoning, sideroblastic anaemia</div></div><div class="algo-branch"><span class="algo-label" style="animation-delay:0.22s">Normal MCV (80–100)</span><div class="algo-node proc" style="animation-delay:0.22s">Check reticulocyte count</div><div class="algo-arrow mini" style="animation-delay:0.36s"></div><div class="algo-node proc" style="animation-delay:0.32s">High retic → haemolysis (SCD, thalassaemia, spherocytosis, G6PD; AIHA, infection, MAHA) or bleeding</div><div class="algo-arrow mini" style="animation-delay:0.46s"></div><div class="algo-node end" style="animation-delay:0.42s">Low retic → pancytopenia (aplastic, MDS, leukaemia, infiltration) or ACD, renal/liver disease</div></div><div class="algo-branch"><span class="algo-label" style="animation-delay:0.52s">High MCV (&gt;100)</span><div class="algo-node end" style="animation-delay:0.52s">Megaloblastic: B12 / folate deficiency, drugs impairing DNA synthesis; Non-megaloblastic: liver disease, alcohol, hypothyroidism, MDS</div></div></div></figure>
+<figure class="deck-block algo-flow"><figcaption><span class="deck-tag tag-algo">Algorithm</span> Suspected DVT — approach</figcaption><div class="algo-row"><div class="algo-node start" style="animation-delay:0.00s">Suspected DVT → two-level Wells score</div></div><div class="algo-arrow" style="animation-delay:0.05s"></div><div class="algo-fork"><div class="algo-branch"><span class="algo-label" style="animation-delay:0.12s">Wells ≥2 (likely)</span><div class="algo-node proc" style="animation-delay:0.12s">Ultrasound (&lt;4 h)</div><div class="algo-arrow mini" style="animation-delay:0.26s"></div><div class="algo-node proc" style="animation-delay:0.22s">Positive → confirmed DVT → anticoagulation</div><div class="algo-arrow mini" style="animation-delay:0.36s"></div><div class="algo-node end" style="animation-delay:0.32s">Negative → D-dimer; if positive, repeat US in 6–8 days</div></div><div class="algo-branch"><span class="algo-label" style="animation-delay:0.42s">Wells ≤1 (unlikely)</span><div class="algo-node proc" style="animation-delay:0.42s">D-dimer (&lt;4 h)</div><div class="algo-arrow mini" style="animation-delay:0.56s"></div><div class="algo-node proc" style="animation-delay:0.52s">Negative → stop / consider other diagnosis</div><div class="algo-arrow mini" style="animation-delay:0.66s"></div><div class="algo-node end" style="animation-delay:0.62s">Positive → ultrasound</div></div></div></figure>
+<h4 class="deck-topic">Deep vein thrombosis</h4><div class="deck-cards"><div class="deck-card mgmt"><span class="deck-card-h">Management</span><ul><li>First line → Low molecular weight heparin (enoxaparin)<ul class="sub"><li>Prophylactic dose: 40mg SC OD</li><li>Therapeutic dose: 1.5mg/kg SC OD</li></ul></li><li>Second line → Unfractionated heparin (first line in renal impairment)<ul class="sub"><li>Prophylactic dose: 5000 units SC every 8-12 hours</li><li>Therapeutic dose: IV bolus 80 units/kg</li></ul></li><li>Long term management → Warfarin<ul class="sub"><li>Unprovoked DVT → 6 months</li><li>Provoked DVT → 3 months</li><li>Target INR → 2-3</li></ul></li></ul></div></div>
+<h4 class="deck-topic">Schistocytes</h4><div class="deck-cards"><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Disseminated vascular coagulation</li><li>Thrombotic thrombocytopenic purpura</li><li>Hemolytic uremic syndrome</li><li>HELLP syndrome</li><li>Mechanical heart valve</li></ul></div></div>
+                </section>
+            `,
+            questions: [
+                {
+                    q: 'A patient on chemotherapy for bulky lymphoma develops AKI with high potassium, phosphate and uric acid and low calcium. What preventive agent is most appropriate for high-risk patients?',
+                    options: ['Allopurinol only', 'Rasburicase', 'Loop diuretics', 'Calcium supplements'],
+                    answer: 1,
+                    explanation: 'This is tumour lysis syndrome; rasburicase (plus aggressive hydration) is preferred for high-risk patients, while allopurinol is used for lower-risk prophylaxis.'
+                },
+                {
+                    q: 'A woman has fever, confusion, thrombocytopenia, microangiopathic haemolytic anaemia and renal impairment. What is the most appropriate urgent treatment?',
+                    options: ['Platelet transfusion', 'Plasma exchange', 'Broad-spectrum antibiotics', 'High-dose aspirin'],
+                    answer: 1,
+                    explanation: 'The pentad suggests TTP; urgent plasma exchange is life-saving. Platelet transfusion is avoided unless life-threatening bleeding.'
+                },
+                {
+                    q: 'A 62-year-old man is found to have iron-deficiency anaemia with no obvious bleeding source. What is the most important next investigation?',
+                    options: ['Repeat full blood count in 3 months', 'Colonoscopy (and upper GI endoscopy)', 'Bone marrow biopsy', 'Serum erythropoietin'],
+                    answer: 1,
+                    explanation: 'Unexplained IDA in a patient over 45–50 must be investigated for GI malignancy with endoscopy/colonoscopy.'
+                },
+                {
+                    q: 'A neutropenic patient on chemotherapy spikes a fever of 38.5°C. What is the most important immediate action?',
+                    options: ['Wait for blood culture results', 'Start broad-spectrum IV antibiotics within 1 hour', 'Give paracetamol and observe', 'Give G-CSF alone'],
+                    answer: 1,
+                    explanation: 'Neutropenic sepsis is an emergency — empirical broad-spectrum antibiotics (e.g. piperacillin-tazobactam) within an hour, after taking cultures.'
+                },
+                {
+                    q: 'A patient on warfarin presents with a major gastrointestinal bleed and an INR of 6. What is the best reversal strategy?',
+                    options: ['Prothrombin complex concentrate plus IV vitamin K', 'Oral vitamin K alone', 'Fresh frozen plasma given slowly only', 'Stop warfarin and observe'],
+                    answer: 0,
+                    explanation: 'Life-threatening warfarin-related bleeding is reversed rapidly with prothrombin complex concentrate plus IV vitamin K; FFP is slower and less effective.'
+                },
+                {
+                    q: 'An elderly patient is found to have a marked mature lymphocytosis with smudge cells on the blood film. What is the most likely diagnosis?',
+                    options: ['Chronic lymphocytic leukaemia', 'Chronic myeloid leukaemia', 'Acute lymphoblastic leukaemia', 'A reactive lymphocytosis'],
+                    answer: 0,
+                    explanation: 'Mature lymphocytosis with smudge (smear) cells in an older adult is characteristic of CLL, confirmed by flow cytometry.'
+                },
+                {
+                    q: 'A patient has a high haemoglobin, generalised itching after a hot shower, splenomegaly and a JAK2 mutation. What is the mainstay of treatment?',
+                    options: ['Therapeutic phlebotomy plus low-dose aspirin', 'Iron supplementation', 'Anticoagulation alone', 'Observation'],
+                    answer: 0,
+                    explanation: 'Polycythaemia vera is managed with venesection (target haematocrit below 0.45) and low-dose aspirin, with cytoreduction (hydroxycarbamide) in high-risk patients.'
+                }
+            ]
+        },
+        {
+            id: 'med-infectious',
+            title: '07 — Infectious Disease & Sepsis',
+            title_en: 'Sepsis & Septic Shock · Meningitis · Endocarditis · TB · HIV',
+            summaryHtml: `
+                <h3>Sepsis &amp; Septic Shock</h3>
+                <ul>
+                    <li><b>Sepsis-6 (surviving sepsis)</b>: <i>take</i> blood cultures, lactate, urine output; <i>give</i> O₂, IV broad-spectrum antibiotics &lt;1 h, IV crystalloid 30 ml/kg</li>
+                    <li><b>Septic shock</b>: persistent hypotension after fluids (or lactate ≥4) → <b>norepinephrine</b> (first-line vasopressor) targeting MAP ≥65; add vasopressin then hydrocortisone if refractory</li>
+                    <li><b>Source control</b>: drain abscess, remove infected line/device</li>
+                </ul>
+
+                <h3>Meningitis</h3>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Meningitis — reading the CSF</div>
+                <svg viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Bacterial CSF is turbid with high neutrophils, low glucose and high protein. Viral CSF is clear with lymphocytes, normal glucose and normal or raised protein. TB CSF shows a fibrin web with lymphocytes, very low glucose and very high protein.">
+                <g font-family="system-ui,Arial">
+                <rect x="14" y="20" width="220" height="158" rx="10" fill="#fee2e2" stroke="#ef4444"/><text x="124" y="46" text-anchor="middle" font-size="13.5" font-weight="800" fill="#b91c1c">Bacterial</text>
+                <text x="30" y="74" font-size="11.5" fill="#334155">Turbid</text><text x="30" y="98" font-size="11.5" font-weight="700" fill="#b91c1c">↑↑ neutrophils</text><text x="30" y="122" font-size="11.5" fill="#334155">Glucose LOW</text><text x="30" y="146" font-size="11.5" fill="#334155">Protein HIGH</text>
+                <rect x="242" y="20" width="220" height="158" rx="10" fill="#dcfce7" stroke="#22c55e"/><text x="352" y="46" text-anchor="middle" font-size="13.5" font-weight="800" fill="#15803d">Viral</text>
+                <text x="258" y="74" font-size="11.5" fill="#334155">Clear</text><text x="258" y="98" font-size="11.5" font-weight="700" fill="#15803d">↑ lymphocytes</text><text x="258" y="122" font-size="11.5" fill="#334155">Glucose NORMAL</text><text x="258" y="146" font-size="11.5" fill="#334155">Protein normal/↑</text>
+                <rect x="470" y="20" width="216" height="158" rx="10" fill="#ede9fe" stroke="#8b5cf6"/><text x="578" y="46" text-anchor="middle" font-size="13.5" font-weight="800" fill="#6d28d9">Tuberculous</text>
+                <text x="486" y="74" font-size="11.5" fill="#334155">Fibrin web</text><text x="486" y="98" font-size="11.5" font-weight="700" fill="#6d28d9">↑ lymphocytes</text><text x="486" y="122" font-size="11.5" fill="#334155">Glucose VERY low</text><text x="486" y="146" font-size="11.5" fill="#334155">Protein VERY high</text>
+                <rect x="14" y="190" width="672" height="38" rx="9" fill="#f1f5f9" stroke="#cbd5e1"/><text x="350" y="214" text-anchor="middle" font-size="11.5" font-weight="700" fill="#334155">Never delay antibiotics for imaging · CT before LP only if focal deficit, ↓GCS, papilloedema or seizure</text>
+                </g></svg>
+                <figcaption><b>Glucose</b> is the fastest discriminator: low in bacterial, very low in TB, normal in viral. Empirical therapy is <b>ceftriaxone + vancomycin + dexamethasone</b>, adding ampicillin where Listeria is a risk.</figcaption></figure>
+                <table>
+                    <thead><tr><th>CSF</th><th>Bacterial</th><th>Viral</th><th>TB</th></tr></thead>
+                    <tbody>
+                        <tr><td>Appearance</td><td>Turbid</td><td>Clear</td><td>Fibrin web</td></tr>
+                        <tr><td>Cells</td><td>↑↑ neutrophils</td><td>↑ lymphocytes</td><td>↑ lymphocytes</td></tr>
+                        <tr><td>Glucose</td><td>Low</td><td>Normal</td><td>Very low</td></tr>
+                        <tr><td>Protein</td><td>High</td><td>Normal/↑</td><td>Very high</td></tr>
+                    </tbody>
+                </table>
+                <ul>
+                    <li>LP promptly (CT first only if focal deficit / ↓GCS / papilloedema / seizure); do <b>not</b> delay antibiotics for imaging</li>
+                    <li>Empirical: <b>ceftriaxone + vancomycin + dexamethasone</b>; add <b>ampicillin</b> for Listeria risk (elderly, immunosuppressed, neonates); meningococcal contacts → ciprofloxacin prophylaxis</li>
+                </ul>
+
+                
+                <div class="topic-deck">
+<div class="deck-block deck-tbl"><div class="deck-cap"><span class="deck-tag tag-tbl">Table</span> Meningitis — CSF (LP) interpretation</div><table><thead><tr><th>Aetiology</th><th>Glucose</th><th>Protein</th><th>Predominant cell</th></tr></thead><tbody><tr><td><b>Bacterial</b></td><td>Low</td><td>Normal or ↑</td><td>Neutrophils</td></tr><tr><td><b>Viral</b></td><td>Normal</td><td>Normal</td><td>Lymphocytes</td></tr><tr><td><b>TB</b></td><td>Low</td><td>Normal or ↑</td><td>Lymphocytes</td></tr><tr><td><b>Cryptococcus</b></td><td>Low</td><td>Normal or ↑</td><td>Lymphocytes</td></tr></tbody></table></div>
+                </div>
+<h3>Endocarditis, TB &amp; HIV</h3>
+                <ul>
+                    <li><b>Infective endocarditis</b>: fever + new murmur; <b>Duke criteria</b>; blood cultures ×3 + echo (TOE) → prolonged IV antibiotics; surgery for HF, abscess, large vegetation or resistant organism</li>
+                    <li><b>Tuberculosis</b>: <b>2 months RIPE</b> (rifampicin, isoniazid, pyrazinamide, ethambutol) → <b>4 months RI</b>; watch hepatotoxicity, isoniazid → give pyridoxine, ethambutol → optic neuritis</li>
+                </ul>
+                <table>
+                    <thead><tr><th>HIV CD4 count</th><th>Prophylaxis</th></tr></thead>
+                    <tbody>
+                        <tr><td>&lt;200</td><td>Co-trimoxazole — <i>Pneumocystis</i> (PCP)</td></tr>
+                        <tr><td>&lt;100</td><td>Co-trimoxazole also covers <i>Toxoplasma</i></td></tr>
+                        <tr><td>&lt;50</td><td>Azithromycin — <i>Mycobacterium avium</i> complex</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>Occupational &amp; Stewardship</h3>
+                <ul>
+                    <li>Needlestick transmission risk: <b>HBV (~30%) ≫ HCV (~3%) ≫ HIV (~0.3%)</b>; start HIV PEP within hours if source high-risk</li>
+                    <li><b>Necrotising fasciitis</b>: pain out of proportion, crepitus, systemic toxicity → <b>urgent surgical debridement</b> + broad-spectrum antibiotics</li>
+                    <li><b>Stewardship</b>: de-escalate / stop antibiotics once culture-directed and clinically stable</li>
+                </ul>
+                <div class="sum-callout">
+                    <b>Algorithm — suspected sepsis</b>
+                    <ol>
+                        <li>Take: blood cultures, lactate, urine output</li>
+                        <li>Give: O₂, IV broad-spectrum antibiotics &lt;1 h, IV fluids 30 ml/kg</li>
+                        <li>Persistent hypotension/lactate ≥4 → vasopressors (<b>norepinephrine</b>) targeting MAP ≥65</li>
+                        <li>Source control (drain abscess, remove line)</li>
+                    </ol>
+                </div>
+            
+                
+            `,
+            questions: [
+                {
+                    q: 'A septic patient remains hypotensive (MAP 58 mmHg) after 30 ml/kg of crystalloid. What is the first-line vasopressor?',
+                    options: ['Dopamine', 'Norepinephrine', 'Adrenaline', 'Phenylephrine'],
+                    answer: 1,
+                    explanation: 'Norepinephrine is the first-line vasopressor in septic shock; vasopressin and then hydrocortisone are added if it remains refractory.'
+                },
+                {
+                    q: 'A healthcare worker sustains a needlestick from a source patient with unknown serology. Which bloodborne virus carries the highest transmission risk per exposure?',
+                    options: ['HIV', 'Hepatitis C', 'Hepatitis B', 'Hepatitis A'],
+                    answer: 2,
+                    explanation: 'Hepatitis B has the highest per-exposure transmission risk (up to ~30% if e-antigen positive), far higher than HCV (~3%) or HIV (~0.3%).'
+                },
+                {
+                    q: 'A patient with suspected bacterial meningitis has no focal neurological deficit, normal conscious level and no papilloedema. What is the best next step?',
+                    options: ['CT head before any treatment', 'Lumbar puncture then empirical antibiotics + dexamethasone', 'Empirical antibiotics and discharge', 'MRI brain'],
+                    answer: 1,
+                    explanation: 'Without features of raised ICP/focal deficit, perform LP promptly; do not delay antibiotics + dexamethasone. CT first is reserved for those with red flags.'
+                },
+                {
+                    q: 'A patient is diagnosed with new smear-positive pulmonary tuberculosis. What is the standard initial treatment?',
+                    options: ['Rifampicin, isoniazid, pyrazinamide and ethambutol for 2 months, then rifampicin + isoniazid for 4 months', 'Rifampicin alone for 6 months', 'A macrolide for 2 weeks', 'No treatment if the patient is well'],
+                    answer: 0,
+                    explanation: 'Standard TB therapy is 2 months of RIPE (rifampicin, isoniazid, pyrazinamide, ethambutol) followed by 4 months of rifampicin + isoniazid.'
+                },
+                {
+                    q: 'An HIV-positive patient has a CD4 count below 200 cells/mm3. Which prophylaxis is indicated?',
+                    options: ['Co-trimoxazole against Pneumocystis pneumonia', 'Aciclovir against CMV', 'No prophylaxis is needed', 'Isoniazid against MAC'],
+                    answer: 0,
+                    explanation: 'At CD4 below 200, start co-trimoxazole prophylaxis against Pneumocystis jirovecii pneumonia (and Toxoplasma at lower counts).'
+                },
+                {
+                    q: 'A diabetic has a rapidly spreading, exquisitely painful skin infection with crepitus, skin discolouration and systemic toxicity. What is the priority?',
+                    options: ['Urgent surgical debridement plus broad-spectrum antibiotics', 'Oral flucloxacillin and discharge', 'Limb elevation only', 'Topical antibiotics'],
+                    answer: 0,
+                    explanation: 'Pain out of proportion, crepitus and systemic toxicity suggest necrotising fasciitis — a surgical emergency requiring immediate debridement plus broad-spectrum antibiotics.'
+                }
+            ]
+        },
+        {
+            id: 'med-rheum-neuro',
+            title: '08 — Rheumatology & Neurology',
+            title_en: 'RA · SLE · Gout · GCA · Stroke · Intracranial Bleeds',
+            summaryHtml: `
+                <h3>Rheumatology</h3>
+                <figure class="deck-fig"><div class="deck-fig-title"><span class="deck-tag tag-fig">Diagram</span> Gout vs pseudogout — crystal microscopy</div>
+                <div class="deck-imgrow">
+                    <div class="deck-imgcell">
+                        <img class="deck-img" src="/summaries/gout-msu-crystals.webp" width="1200" height="900" loading="lazy" decoding="async"
+                             alt="Synovial fluid under polarised light with a red compensator. Long, thin needle-shaped crystals lie among neutrophils, some glowing yellow and others blue depending on their orientation." />
+                        <p class="deck-imgcap"><b>Gout</b> — monosodium urate
+                        <br><b>NEEDLE-shaped</b> · <b>NEGATIVELY</b> birefringent · 1st MTP joint (podagra)
+                        <br><span class="deck-hi deck-hi--red">acute: NSAID / colchicine / steroid → later allopurinol</span></p>
+                    </div>
+                    <div class="deck-imgcell">
+                        <img class="deck-img" src="/summaries/pseudogout-cppd-crystals.webp" width="900" height="1200" loading="lazy" decoding="async"
+                             alt="Synovial fluid under polarised light. Short, blunt rhomboid and rectangular crystals appear scattered through the field, glowing orange-yellow and blue." />
+                        <p class="deck-imgcap"><b>Pseudogout</b> — calcium pyrophosphate (CPPD)
+                        <br><b>RHOMBOID</b> · <b>POSITIVELY</b> birefringent · knee · chondrocalcinosis
+                        <br><span class="deck-hi deck-hi--blue">weakly birefringent — easy to miss</span></p>
+                    </div>
+                </div>
+                <div class="deck-warn">Can't-miss: a hot swollen joint with fever is septic arthritis until proven otherwise — aspirate BEFORE antibiotics</div>
+                <figcaption>Memory hook: <b>N</b>eedles are <b>N</b>egative (gout); rhomboids are positive (pseudogout). Note how much easier the urate needles are to spot — CPPD is only <b>weakly</b> birefringent, so a negative-looking sample does not exclude it. Always exclude <b>septic arthritis</b> first in any acutely hot joint.</figcaption>
+                <p class="deck-credit">Urate crystals: <a href="https://commons.wikimedia.org/wiki/File:Gout_-_monosodium_urate_crystals_(20X,_polarized,_red_compensator).jpg" target="_blank" rel="noopener noreferrer">Gabriel Caponetti</a>, <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 3.0</a>. CPPD crystals: <a href="https://commons.wikimedia.org/wiki/File:Birefringence_microscopy_of_pseudogout.jpg" target="_blank" rel="noopener noreferrer">Mikael Häggström, M.D.</a>, <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener noreferrer">CC0 1.0</a>. Both resized for web; content unmodified.</p></figure>
+                <ul>
+                    <li><b>Rheumatoid arthritis</b>: symmetric small-joint pain, morning stiffness, +anti-CCP/RF; <b>methotrexate</b> first-line DMARD → add a <b>biologic (anti-TNF, e.g. adalimumab)</b> if persistent erosive disease</li>
+                    <li><b>SLE</b> (arthritis, malar rash, oral ulcers, serositis, low C3/C4, +ANA/anti-dsDNA): <b>hydroxychloroquine</b> for all; immunosuppression for organ involvement; <b>antiphospholipid syndrome</b> (recurrent VTE/miscarriage) → anticoagulation</li>
+                    <li><b>Giant cell arteritis</b>: headache + jaw claudication + ↑ESR (vision threat) → <b>high-dose steroids immediately</b>, then temporal artery biopsy (stays positive for days)</li>
+                    <li><b>Septic arthritis</b> (can't-miss): hot swollen joint + fever → <b>aspirate</b> before antibiotics; IV antibiotics + washout</li>
+                    <li><b>Ankylosing spondylitis</b>: young man, inflammatory back pain, HLA-B27, bamboo spine → exercise + NSAIDs → anti-TNF</li>
+                </ul>
+                <table>
+                    <thead><tr><th>Crystal</th><th>Microscopy</th><th>Management</th></tr></thead>
+                    <tbody>
+                        <tr><td><b>Gout</b> (urate)</td><td>Negatively birefringent needles</td><td>Acute: NSAID/colchicine/steroid; later urate-lowering (allopurinol)</td></tr>
+                        <tr><td><b>Pseudogout</b> (CPPD)</td><td>Positively birefringent rhomboids</td><td>NSAID/colchicine/steroid; treat underlying cause</td></tr>
+                    </tbody>
+                </table>
+
+                
+                <div class="topic-deck">
+<div class="deck-block deck-tbl"><div class="deck-cap"><span class="deck-tag tag-tbl">Table</span> Gout vs pseudogout</div><table><thead><tr><th>Feature</th><th>Gout</th><th>Pseudogout</th></tr></thead><tbody><tr><td><b>Risk factors</b></td><td>Male, renal impairment, obesity, metabolic syndrome, diet (red meat, alcohol, seafood), thiazides, tumour lysis</td><td>Elderly, hyperparathyroidism, haemochromatosis, hypophosphataemia, osteoarthritis</td></tr><tr><td><b>Presentation</b></td><td>Acute monoarthropathy, typically 1st MTP (podagra)</td><td>Acute monoarthropathy, typically knee</td></tr><tr><td><b>Crystal</b></td><td>Monosodium urate</td><td>Calcium pyrophosphate</td></tr><tr><td><b>Polarised light</b></td><td>Negatively birefringent needle crystals</td><td>Weakly positively birefringent rhomboid crystals</td></tr><tr><td><b>X-ray</b></td><td>Well-defined 'punched-out' periarticular erosions</td><td>Chondrocalcinosis</td></tr><tr><td><b>Treatment</b></td><td>1st NSAID; 2nd colchicine; prophylaxis allopurinol (not during acute attack)</td><td>1st NSAID; 2nd colchicine</td></tr></tbody></table></div>
+<figure class="deck-block algo-flow"><figcaption><span class="deck-tag tag-algo">Algorithm</span> Rheumatoid arthritis — treat-to-target (EULAR)</figcaption><div class="algo-row"><div class="algo-node start" style="animation-delay:0.00s">RA diagnosis</div></div><div class="algo-arrow" style="animation-delay:0.05s"></div><div class="algo-fork"><div class="algo-branch"><span class="algo-label" style="animation-delay:0.12s">No MTX contraindication</span><div class="algo-node end" style="animation-delay:0.12s">Methotrexate + short-term glucocorticoids</div></div><div class="algo-branch"><span class="algo-label" style="animation-delay:0.22s">MTX contraindicated</span><div class="algo-node end" style="animation-delay:0.22s">Leflunomide or sulfasalazine + short-term glucocorticoids</div></div></div><div class="algo-row"><div class="algo-node proc" style="animation-delay:0.32s">Not at target by 6 mo → poor prognostic factors present → add biologic/tsDMARD; absent → switch/add csDMARD</div></div><div class="algo-arrow" style="animation-delay:0.37s"></div><div class="algo-row"><div class="algo-node end" style="animation-delay:0.44s">Still not at target → change to another biologic/tsDMARD</div></div></figure>
+<h4 class="deck-topic">Rheumatoid arthritis</h4><div class="deck-cards"><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Inflammatory markers: ESR, CRP (monitoring disease activity)</li><li>Anti - CCP (Confirmatory test), Rheumatoid factor (could be seronegative)</li><li>Initial imaging: Baseline X-ray</li></ul></div><div class="deck-card mgmt"><span class="deck-card-h">Management</span><ul><li>Acute rheumatoid flare: Steroids - NSAID</li><li>Long term management:<ul class="sub"><li>DMARD: Methotrexate (The best), Hydroxychloroquine</li><li>TNF Inhibitors: infliximab, adalimumab</li><li>Indicated in refractory or erosive disease</li></ul></li></ul></div></div>
+<h4 class="deck-topic">Osteoarthritis arthritis</h4><div class="deck-cards"><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Osteoarthritis is clinical diagnosis supported with:<ul class="sub"><li>Baseline X-ray: to rule out inflammatory arthritis</li><li>Auto immune profile: to rule out inflammatory arthritis</li></ul></li></ul></div><div class="deck-card mgmt"><span class="deck-card-h">Management</span><ul><li>First line: NSAID</li><li>Second line: Paracetamol Short term tramadol (if NSAID C/I or non tolerated)</li><li>Intra-articular glucocorticoids: Hip or Knee osteoarthritis</li></ul></div></div>
+<h4 class="deck-topic">Reactive arthritis</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Migratory asymmetrical arthritis</li><li>Eye symptoms: conjunctivitis, iritis Urethritis Preceded by GI/GU infection</li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Diagnosis: (Imaging and labs to rule out other causes)<ul class="sub"><li>Chlamydia/gonorrhea PCR → if urethritis suspected</li><li>Stool culture → GI infection suspected</li></ul></li><li>Treatment:<ul class="sub"><li>NSAID</li><li>Sulfasalazine (severe disease)</li><li>Antibiotics to treat underlying infection</li></ul></li></ul></div></div>
+<h4 class="deck-topic">Psoriatic arthritis</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Asymmetric oligoarthritis, or symmetric polyarthritis</li><li>Dactylitis (sausage digits) Enthesitis: Heel pain Axial involvement: sacroiliitis, spondylitis</li><li>Nail changes: Pitting, onchylosis</li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Diagnosis:<ul class="sub"><li>Clinical picture</li><li>X-ray (pencil in a cup deformity)</li></ul></li><li>Treatment:<ul class="sub"><li>Mild to moderate disease: NSAID</li><li>Severe disease: DMARDs</li></ul></li></ul></div></div>
+<h4 class="deck-topic">Ankylosing spondylitis</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Chronic low back pain (&gt;3months), morning stiffness improves with activity,</li><li>Enthesitis: Heel pain Extra-articular symptoms: Uveitis, Aortic regurgitation, Apical lung fibrosis</li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Diagnosis:<ul class="sub"><li>X-ray or MRI spine: Sacroillitis</li><li>HLA B-27: Positive</li></ul></li><li>Treatment:<ul class="sub"><li>First line: NSAID</li><li>Second line: TNF inhibitors</li></ul></li></ul></div></div>
+<h4 class="deck-topic">Septic arthritis</h4><div class="deck-cards"><div class="deck-card clin"><span class="deck-card-h">Clinical</span><ul><li>Fever</li><li>Acute monoarticular joint pain (Knee - Hip in pediatrics) Decreased range of motion Tenderness, hotness, redness of the affected joint</li></ul></div><div class="deck-card diag"><span class="deck-card-h">Diagnosis · best test</span><ul><li>Diagnosis:<ul class="sub"><li>Blood culture (Staph aureus is the most common isolated organism)</li><li>Arthrocentesis with synovial fluid analysis &amp; culture</li></ul></li><li>Treatment:<ul class="sub"><li>Empirical antibiotics (immediately when septic arthritis suspected) → Vancomycin &amp; wait culture</li><li>MSSA → stop vancomycin &amp; start oxacillin</li><li>Sexual active patient → add ceftriaxone</li></ul></li></ul></div></div>
+                </div>
+<h3>Neurology — Stroke &amp; Intracranial Bleeds</h3>
+                <ul>
+                    <li><b>Acute ischaemic stroke</b>: non-contrast CT to exclude bleed → <b>IV thrombolysis &lt;4.5 h</b> (no contraindication) ± <b>thrombectomy</b> for large-vessel occlusion &lt;6–24 h; then aspirin/clopidogrel, statin, manage risk factors</li>
+                    <li><b>TIA</b>: ABCD² risk, start antiplatelet + imaging carotids; <b>SAH</b> → CT then LP for xanthochromia if CT negative &gt;6–12 h → nimodipine + coiling</li>
+                </ul>
+                <table>
+                    <thead><tr><th>Bleed</th><th>CT appearance</th><th>Typical</th></tr></thead>
+                    <tbody>
+                        <tr><td>Epidural</td><td>Biconvex lens, no suture crossing</td><td>Lucid interval, middle meningeal artery</td></tr>
+                        <tr><td>Subdural</td><td><b>Crescent</b>, crosses sutures</td><td>Elderly/alcoholic/anticoagulated, fall</td></tr>
+                        <tr><td>Subarachnoid</td><td>Blood in basal cisterns</td><td>Thunderclap "worst headache", berry aneurysm</td></tr>
+                    </tbody>
+                </table>
+
+                
+                <div class="topic-deck">
+<div class="deck-block deck-tbl"><div class="deck-cap"><span class="deck-tag tag-tbl">Table</span> Ischaemic stroke — arterial territories</div><table><thead><tr><th>Artery</th><th>Symptoms</th></tr></thead><tbody><tr><td><b>MCA (middle cerebral)</b></td><td>Contralateral face &amp; arm weakness, sensory loss; aphasia (dominant); hemineglect (non-dominant); homonymous hemianopia</td></tr><tr><td><b>ACA (anterior cerebral)</b></td><td>Contralateral leg weakness &amp; sensory loss; urinary incontinence; behavioural changes</td></tr><tr><td><b>PCA (posterior cerebral)</b></td><td>Contralateral homonymous hemianopia; visual agnosia; memory impairment</td></tr></tbody></table></div>
+<figure class="deck-block algo-flow"><figcaption><span class="deck-tag tag-algo">Algorithm</span> Ischaemic stroke — evaluation &amp; management</figcaption><div class="algo-row"><div class="algo-node start" style="animation-delay:0.00s">Features suggestive of stroke</div></div><div class="algo-arrow" style="animation-delay:0.05s"></div><div class="algo-row"><div class="algo-node proc" style="animation-delay:0.12s">Check POC glucose (rule out mimics); initial evaluation — ECG, labs, time of onset, NIHSS, stabilise BP/ICP</div></div><div class="algo-arrow" style="animation-delay:0.17s"></div><div class="algo-row"><div class="algo-node proc" style="animation-delay:0.24s">Emergency non-contrast CT or MRI head</div></div><div class="algo-arrow" style="animation-delay:0.29s"></div><div class="algo-fork"><div class="algo-branch"><span class="algo-label" style="animation-delay:0.36s">Bleeding present</span><div class="algo-node end" style="animation-delay:0.36s">Manage haemorrhage</div></div><div class="algo-branch"><span class="algo-label" style="animation-delay:0.46s">Bleeding absent, no CI to thrombolysis</span><div class="algo-node proc" style="animation-delay:0.46s">≤3 h (or 3–4.5 h) → IV thrombolysis</div><div class="algo-arrow mini" style="animation-delay:0.60s"></div><div class="algo-node proc" style="animation-delay:0.56s">Eligible → mechanical thrombectomy</div><div class="algo-arrow mini" style="animation-delay:0.70s"></div><div class="algo-node end" style="animation-delay:0.66s">Not eligible → specialist management</div></div></div></figure>
+                </div>
+<h3>Neurology — Other Emergencies</h3>
+                <ul>
+                    <li><b>Status epilepticus</b>: ABC, glucose → IV lorazepam → IV levetiracetam/phenytoin → anaesthesia (RSI)</li>
+                    <li><b>Neuromuscular respiratory failure</b> (GBS, myasthenic crisis): monitor <b>forced vital capacity</b> — falling FVC (~15 mL/kg or 1 L) prompts elective intubation before SpO₂ drops; treat with IVIG/plasma exchange</li>
+                    <li><b>Malignant cord compression</b> (back pain + sensory level + weakness + bladder/bowel) → urgent <b>MRI spine</b> + dexamethasone</li>
+                    <li><b>Headache red flags</b>: thunderclap, morning/valsalva-worsened, focal deficit, papilloedema, age &gt;50 with ↑ESR → image</li>
+                </ul>
+            
+                <section class="topic deck-enrich">
+                    <h3>More from the study deck</h3>
+                    <p class="deck-intro">Extra material for this step that spans more than one topic above.</p>
+<div class="deck-block deck-tbl"><div class="deck-cap"><span class="deck-tag tag-tbl">Table</span> Felty's syndrome — 'SANTA' (seropositive RA)</div><table><thead><tr><th></th><th>Component</th></tr></thead><tbody><tr><td><b>S</b></td><td>Splenomegaly</td></tr><tr><td><b>A</b></td><td>Anaemia</td></tr><tr><td><b>N</b></td><td>Neutropenia</td></tr><tr><td><b>T</b></td><td>Thrombocytopenia</td></tr><tr><td><b>A</b></td><td>Arthritis (rheumatoid)</td></tr></tbody></table><ul class="deck-tbl-notes"><li>Seropositive RA associations: Felty syndrome, Bouchard nodes, Heberden nodes. Hand deformities: boutonnière, swan-neck, ulnar deviation of MCP joints.</li></ul></div>
+<div class="deck-block deck-tbl"><div class="deck-cap"><span class="deck-tag tag-tbl">Table</span> SLE — autoantibodies &amp; significance</div><table><thead><tr><th>Antibody</th><th>Significance</th></tr></thead><tbody><tr><td><b>ANA</b></td><td>Screening for lupus (sensitive)</td></tr><tr><td><b>Anti-Smith</b></td><td>Most specific test</td></tr><tr><td><b>Anti-dsDNA</b></td><td>Specific; tracks disease activity</td></tr><tr><td><b>Lupus anticoagulant, anti-cardiolipin, anti-β2-glycoprotein</b></td><td>Antiphospholipid syndrome</td></tr><tr><td><b>Anti-Ro (SSA) &amp; anti-La (SSB)</b></td><td>Neonatal lupus</td></tr><tr><td><b>Complement C3 &amp; C4</b></td><td>Disease activity &amp; lupus nephritis</td></tr><tr><td><b>Anti-histone</b></td><td>Drug-induced lupus</td></tr><tr><td><b>Antineuronal, anti-NMDA receptor, anti-ribosomal P</b></td><td>Neuropsychiatric SLE</td></tr></tbody></table></div>
+<div class="deck-block deck-tbl"><div class="deck-cap"><span class="deck-tag tag-tbl">Table</span> Lupus nephritis — classes &amp; management</div><table><thead><tr><th>Class</th><th>Management</th></tr></thead><tbody><tr><td><b>Class I — minimal mesangial</b></td><td>Blood pressure control</td></tr><tr><td><b>Class II — mesangial proliferative</b></td><td>Supportive; ACE inhibitors for proteinuria</td></tr><tr><td><b>Class III — focal</b></td><td>Mycophenolate (MMF)</td></tr><tr><td><b>Class IV — diffuse</b></td><td>Mycophenolate (MMF)</td></tr><tr><td><b>Class V — membranous</b></td><td>Mycophenolate (MMF)</td></tr><tr><td><b>Class VI — advanced sclerotic</b></td><td>Supportive care, dialysis, renal transplant</td></tr></tbody></table></div>
+<h4 class="deck-topic">Systemic lupus erythematosus</h4><div class="deck-cards"><div class="deck-card mgmt"><span class="deck-card-h">Management</span><ul><li>Hydroxychloroquine (cornerstone treatment of SLE)<ul class="sub"><li>Mild to moderate disease</li><li>Hydroxychloroquine + NSAID</li><li>Low dose steroid + hydroxychloroquine + methotrexate (non responsive to previous step)</li></ul></li><li>Life threatening disease<ul class="sub"><li>High dose steroid + Immunosuppressant</li><li>Preferred immunosuppressant:</li><li>Neuropsychiatric lupus → Cyclophosphamide</li><li>Lupus nephritis → Mycophenolate mofetil (MFM)</li></ul></li></ul></div></div>
+                </section>
+            `,
+            questions: [
+                {
+                    q: 'A 72-year-old woman has a new temporal headache, jaw claudication and an ESR of 90 mm/hr. What is the most appropriate immediate management?',
+                    options: ['Arrange temporal artery biopsy before treatment', 'Start high-dose corticosteroids immediately', 'Prescribe a triptan', 'Start prophylactic propranolol'],
+                    answer: 1,
+                    explanation: 'Giant cell arteritis threatens vision; start high-dose steroids immediately to prevent blindness, then arrange biopsy (which stays positive for days).'
+                },
+                {
+                    q: 'A patient with rheumatoid arthritis has persistent active, erosive disease despite an adequate trial of methotrexate. What is the next step?',
+                    options: ['Add a TNF-alpha inhibitor (biologic)', 'Switch to long-term oral steroids', 'Stop all therapy and observe', 'Add high-dose NSAIDs only'],
+                    answer: 0,
+                    explanation: 'When conventional DMARD therapy (methotrexate) fails to control RA, a biologic such as an anti-TNF agent is added.'
+                },
+                {
+                    q: 'An elderly man on warfarin presents with progressive confusion 3 weeks after a fall. CT shows a crescent-shaped extra-axial collection crossing suture lines. What is the diagnosis?',
+                    options: ['Epidural haematoma', 'Subdural haematoma', 'Subarachnoid haemorrhage', 'Intraparenchymal haemorrhage'],
+                    answer: 1,
+                    explanation: 'A crescent-shaped collection that crosses sutures in an elderly/anticoagulated patient after trauma is a subdural haematoma (bridging vein rupture).'
+                },
+                {
+                    q: 'A patient presents 3 hours after sudden left-sided weakness; CT excludes haemorrhage and there is no contraindication. What is the best treatment?',
+                    options: ['Aspirin only', 'IV thrombolysis (alteplase/tenecteplase)', 'Warfarin', 'Observation for 24 hours'],
+                    answer: 1,
+                    explanation: 'Acute ischaemic stroke within 4.5 hours, with haemorrhage excluded and no contraindication, is treated with IV thrombolysis (± thrombectomy for large-vessel occlusion).'
+                },
+                {
+                    q: 'A patient has an acutely hot, swollen first toe; aspiration shows negatively birefringent needle-shaped crystals. What is appropriate acute management?',
+                    options: ['NSAID, colchicine or a short course of corticosteroid', 'Start allopurinol immediately', 'High-dose aspirin', 'IV antibiotics'],
+                    answer: 0,
+                    explanation: 'Acute gout is treated with an NSAID, colchicine or steroids; urate-lowering therapy (allopurinol) is started later and not initiated during an acute flare.'
+                },
+                {
+                    q: 'A patient has a sudden "worst headache of my life"; a CT done 12 hours later is normal. What is the next step?',
+                    options: ['Lumbar puncture looking for xanthochromia', 'Reassure and discharge', 'Start a triptan', 'MRI of the spine'],
+                    answer: 0,
+                    explanation: 'If CT is negative but subarachnoid haemorrhage is still suspected, perform LP after ~12 hours to detect xanthochromia.'
+                },
+                {
+                    q: 'A patient with a neuromuscular crisis (Guillain-Barré or myasthenia) needs monitoring to decide on ventilation. Which bedside measure is most useful?',
+                    options: ['Forced vital capacity (FVC)', 'Peak expiratory flow', 'Oxygen saturation alone', 'Respiratory rate alone'],
+                    answer: 0,
+                    explanation: 'Serial FVC best predicts neuromuscular respiratory failure; a falling FVC (around 15 mL/kg or 1 L) prompts elective intubation before SpO2 drops.'
+                }
+            ]
+        }
+    ]
+};
+
+export default medicine;
