@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Icon from '../common/Icon.jsx';
 import axios from "../../utils/adminApi.js";
 import "./Bank.css";
@@ -8,9 +8,16 @@ import AdminLayout from './AdminLayout.jsx';
 import { TRACKS, TRACK_KEYS, MEDICAL, specialtiesOf } from '../../utils/tracks.js';
 
 const Bank = () => {
-  const [questions, setQuestions] = useState([]);
   const [allQuestions, setAllQuestions] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  // The visible list is derived from the bank and the search box. It used to be
+  // copied into its own state by an effect, which re-rendered the page twice per
+  // keystroke and tripped React's update-depth guard (error #185) on fast typing.
+  const questions = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return allQuestions;
+    return allQuestions.filter((q) => q.question_text.toLowerCase().includes(term));
+  }, [allQuestions, searchTerm]);
   const [editingQuestion, setEditingQuestion] = useState(null);
   const [formData, setFormData] = useState({
     question_text: "",
@@ -47,26 +54,14 @@ const Bank = () => {
     setLoading(true);
     try {
       const response = await axios.get(`${Globals.URL}/api/all-questions?track=${encodeURIComponent(track)}`);
-      setQuestions(response.data.questions);
       setAllQuestions(response.data.questions);
+      setCurrentIndex(0);
       setLoading(false);
     } catch (error) {
       console.error("Error fetching questions:", error);
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    if (!searchTerm.trim()) {
-      setQuestions(allQuestions);
-    } else {
-      const filtered = allQuestions.filter((q) =>
-        q.question_text.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setQuestions(filtered);
-    }
-    setCurrentIndex(0); // Reset to first question on search
-  }, [searchTerm, allQuestions]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -127,9 +122,6 @@ const Bank = () => {
         `${Globals.URL}/questions/${editingQuestion}`,
         payload
       );
-      setQuestions((prev) =>
-        prev.map((q) => (q.id === editingQuestion ? response.data.question : q))
-      );
       setAllQuestions((prev) =>
         prev.map((q) => (q.id === editingQuestion ? response.data.question : q))
       );
@@ -141,19 +133,23 @@ const Bank = () => {
     }
   };
 
+  // A saved edit can make the open question drop out of the filtered list, so
+  // the position is clamped instead of trusted.
+  const safeIndex = Math.min(currentIndex, Math.max(questions.length - 1, 0));
+
   const goToNext = () => {
-    if (currentIndex < questions.length - 1) {
-      setCurrentIndex(currentIndex + 1);
+    if (safeIndex < questions.length - 1) {
+      setCurrentIndex(safeIndex + 1);
     }
   };
 
   const goToPrev = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
+    if (safeIndex > 0) {
+      setCurrentIndex(safeIndex - 1);
     }
   };
 
-  const currentQuestion = questions[currentIndex];
+  const currentQuestion = questions[safeIndex];
 
   return (
     <AdminLayout bare>
@@ -198,7 +194,10 @@ const Bank = () => {
               type="text"
               placeholder="Search questions..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentIndex(0); // a new search starts at the first match
+              }}
               className="search-input"
             />
           </div>
@@ -345,15 +344,15 @@ const Bank = () => {
                 <div className="navigation-buttons">
                   <button
                     className="quiz-button"
-                    disabled={currentIndex === 0}
+                    disabled={safeIndex === 0}
                     onClick={goToPrev}
                   >
                     Previous
                   </button>
-                  <span>{currentIndex + 1} / {questions.length}</span>
+                  <span>{safeIndex + 1} / {questions.length}</span>
                   <button
                     className="quiz-button"
-                    disabled={currentIndex === questions.length - 1}
+                    disabled={safeIndex === questions.length - 1}
                     onClick={goToNext}
                   >
                     Next
