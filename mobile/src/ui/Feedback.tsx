@@ -2,6 +2,7 @@ import React from 'react';
 import { ActivityIndicator, Modal, Pressable, ScrollView, StyleProp, TouchableOpacity, View, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLang } from '@/i18n/LanguageContext';
+import { useKeyboardHeight } from '@/lib/useKeyboardHeight';
 import { colors, radius, shadow } from '@/theme';
 import { Icon } from './Icon';
 import { Row } from './Layout';
@@ -107,6 +108,7 @@ export function Dialog({
   scroll?: boolean;
 }) {
   const insets = useSafeAreaInsets();
+  const keyboard = useKeyboardHeight();
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={blocking ? undefined : onClose} statusBarTranslucent>
       <Pressable
@@ -117,7 +119,8 @@ export function Dialog({
           alignItems: 'center',
           justifyContent: 'center',
           paddingTop: insets.top + 16,
-          paddingBottom: insets.bottom + 16,
+          // Lifted by the keyboard so a dialog with a text field stays visible.
+          paddingBottom: insets.bottom + 16 + keyboard,
           paddingHorizontal: 16,
         }}
       >

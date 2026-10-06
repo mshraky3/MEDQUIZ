@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useCopy, useLang } from '@/i18n/LanguageContext';
 import appCopy from '@/i18n/appCopy';
+import { useKeyboardHeight } from '@/lib/useKeyboardHeight';
 import { MAX_CONTENT_WIDTH, colors, radius, shadow } from '@/theme';
 import { Icon } from './Icon';
 import { T } from './Text';
@@ -170,6 +171,7 @@ export function Screen({
   scrollRef,
 }: ScreenProps) {
   const insets = useSafeAreaInsets();
+  const keyboard = useKeyboardHeight();
   const body = (
     <View
       style={[
@@ -189,7 +191,7 @@ export function Screen({
         <ScrollView
           ref={scrollRef}
           style={{ flex: 1 }}
-          contentContainerStyle={{ flexGrow: 1, paddingBottom: footer ? 16 : insets.bottom + 16 }}
+          contentContainerStyle={{ flexGrow: 1, paddingBottom: (footer ? 16 : insets.bottom + 16) + keyboard }}
           keyboardShouldPersistTaps="handled"
           refreshControl={refreshControl}
           showsVerticalScrollIndicator={false}
