@@ -12,8 +12,9 @@
     "lint": "expo lint",
     "sync:copy": "node scripts/sync-copy.mjs",
     "sync:summaries": "node scripts/sync-summaries.mjs",
-    "sync:check": "node scripts/sync-copy.mjs --check && node scripts/sync-summaries.mjs --check",
-    "gen:icons": "node scripts/gen-icons.mjs"
+    "sync:check": "node scripts/sync-copy.mjs --check && node scripts/sync-summaries.mjs --check && node scripts/sync-library.mjs --check",
+    "gen:icons": "node scripts/gen-icons.mjs",
+    "sync:library": "node scripts/sync-library.mjs"
   },
   "dependencies": {
     "@expo-google-fonts/cairo": "^0.4.2",
