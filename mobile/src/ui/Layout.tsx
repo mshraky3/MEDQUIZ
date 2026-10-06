@@ -11,7 +11,8 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { useLang } from '@/i18n/LanguageContext';
+import { useCopy, useLang } from '@/i18n/LanguageContext';
+import appCopy from '@/i18n/appCopy';
 import { MAX_CONTENT_WIDTH, colors, radius, shadow } from '@/theme';
 import { Icon } from './Icon';
 import { T } from './Text';
@@ -88,6 +89,7 @@ type HeaderProps = {
 };
 
 export function ScreenHeader({ title, subtitle, noBack, right, onBack }: HeaderProps) {
+  const app = useCopy(appCopy);
   return (
     <Row
       gap={10}
@@ -102,7 +104,7 @@ export function ScreenHeader({ title, subtitle, noBack, right, onBack }: HeaderP
       {!noBack && (
         <TouchableOpacity
           accessibilityRole="button"
-          accessibilityLabel="Back"
+          accessibilityLabel={app.back}
           onPress={onBack || (() => goBack(true))}
           hitSlop={10}
           style={{

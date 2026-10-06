@@ -9,7 +9,7 @@ import { getSourceLabel, getTypeLabel } from '@/lib/labels';
 import { getItem, setItem } from '@/lib/storage';
 import type { Specialty } from '@/lib/tracks';
 import { colors, radius } from '@/theme';
-import { Button, Card, DatePickerDialog, Icon, Input, Row, T, toISO } from '@/ui';
+import { Button, Card, DatePickerDialog, Dialog, Icon, Input, Row, T, toISO } from '@/ui';
 
 const TYPE_PRESETS: Record<string, number[]> = {
   questions: [50, 100, 200, 300],
@@ -452,6 +452,10 @@ export function ExamDateCard({ questionsRemaining }: { questionsRemaining: numbe
 
   const [exam, setExam] = useState<{ date: string; daysRemaining: number; passed: boolean } | null>(null);
   const [picking, setPicking] = useState(false);
+  // Which flow the calendar belongs to: the card saves the date it returns, the
+  // first-run ask only fills its field and waits for Save (as the website does).
+  const [pickFor, setPickFor] = useState<'card' | 'ask'>('card');
+  const [draft, setDraft] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   // "No date set" versus "we have not asked the server yet", so the first-run
@@ -508,6 +512,9 @@ export function ExamDateCard({ questionsRemaining }: { questionsRemaining: numbe
     try {
       await api.delete('/api/exam-date');
       setExam(null);
+      setDraft('');
+      // They just removed it on purpose: do not ask again straight away.
+      dismissAsk();
     } catch {
       /* leave the card as-is; nothing was lost */
     }
@@ -524,16 +531,26 @@ export function ExamDateCard({ questionsRemaining }: { questionsRemaining: numbe
   const minISO = toISO(today);
   const maxISO = toISO(addDays(today, MAX_DAYS_AHEAD));
 
+  const openPicker = (flow: 'card' | 'ask') => {
+    setPickFor(flow);
+    setPicking(true);
+  };
+
   const picker = (
     <DatePickerDialog
       visible={picking}
-      value={exam?.date || ''}
+      value={pickFor === 'ask' ? draft : exam?.date || ''}
       min={minISO}
       max={maxISO}
       title={e.dateLabel}
       confirmLabel={e.saveCta}
       cancelLabel={e.cancelCta}
-      onConfirm={(iso) => void save(iso)}
+      onConfirm={(iso) => {
+        if (pickFor === 'ask') {
+          setDraft(iso);
+          setPicking(false);
+        } else void save(iso);
+      }}
       onClose={() => setPicking(false)}
     />
   );
@@ -548,7 +565,7 @@ export function ExamDateCard({ questionsRemaining }: { questionsRemaining: numbe
       </Row>
       {exam ? (
         <Row gap={14}>
-          <LinkBtn label={e.changeCta} onPress={() => setPicking(true)} />
+          <LinkBtn label={e.changeCta} onPress={() => openPicker('card')} />
           <LinkBtn label={e.clearCta} onPress={() => void clear()} muted />
         </Row>
       ) : null}
@@ -573,26 +590,48 @@ export function ExamDateCard({ questionsRemaining }: { questionsRemaining: numbe
             </View>
           </Row>
           {error ? <T size={13} color={colors.error}>{error}</T> : null}
-          <Button label={e.setCta} size="sm" onPress={() => setPicking(true)} loading={saving} />
+          <Button label={e.setCta} size="sm" onPress={() => openPicker('card')} loading={saving} />
         </Card>
         {picker}
-        {/* The one proper ask: dismissable with one tap, never blocking. */}
-        {askOpen && !picking ? (
-          <Card style={{ gap: 10, borderColor: colors.primary, borderWidth: 2 }}>
-            <Icon name="calendar" size={24} color={colors.primary} />
-            <T weight="extrabold" size={16}>
+        {/* The one proper ask, a dialog like the website's: dismissable with one tap. */}
+        <Dialog visible={askOpen && !picking} onClose={dismissAsk}>
+          <View style={{ gap: 10, alignItems: 'center' }}>
+            <View style={{ width: 52, height: 52, borderRadius: radius.lg, backgroundColor: colors.surfaceTint, alignItems: 'center', justifyContent: 'center' }}>
+              <Icon name="calendar" size={26} color={colors.primary} />
+            </View>
+            <T weight="extrabold" size={18} align="center">
               {e.askTitle}
             </T>
-            <T size={13} color={colors.textMedium}>
+            <T size={13} color={colors.textMedium} align="center">
               {e.askBody}
             </T>
-            <Button label={e.saveCta} onPress={() => setPicking(true)} />
-            <Button label={e.askSkip} variant="ghost" onPress={dismissAsk} />
-            <T size={12} color={colors.textLight}>
-              {e.remindersOn}
+          </View>
+          <View style={{ gap: 6 }}>
+            <T weight="semibold" size={13}>
+              {e.dateLabel}
             </T>
-          </Card>
-        ) : null}
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => openPicker('ask')}
+              accessibilityRole="button"
+              style={{ borderWidth: 1.5, borderColor: draft ? colors.primary : colors.border, borderRadius: radius.md, padding: 12, backgroundColor: colors.surface }}
+            >
+              <T ltr={!!draft} size={15} color={draft ? colors.text : colors.textLight}>
+                {draft || e.dateLabel}
+              </T>
+            </TouchableOpacity>
+          </View>
+          {error ? (
+            <T size={13} color={colors.error}>
+              {error}
+            </T>
+          ) : null}
+          <Button label={e.saveCta} onPress={() => void save(draft)} disabled={!draft} loading={saving} />
+          <Button label={e.askSkip} variant="secondary" onPress={dismissAsk} disabled={saving} />
+          <T size={12} color={colors.textLight} align="center">
+            {e.remindersOn}
+          </T>
+        </Dialog>
       </>
     );
   }

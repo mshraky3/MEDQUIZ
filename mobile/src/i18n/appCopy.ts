@@ -45,6 +45,13 @@ const appCopy = {
     open: 'فتح',
     back: 'رجوع',
     soon: 'قريباً',
+    prevMonth: 'الشهر السابق',
+    nextMonth: 'الشهر التالي',
+    checkoutOnSite: {
+      body: 'يتم الاشتراك في SQB من الموقع الإلكتروني. افتح صفحة الاشتراك، ثم عُد إلى التطبيق وسيظهر اشتراكك فوراً.',
+      open: 'فتح صفحة الاشتراك',
+      webPreview: 'الدفع بالبطاقة يعمل داخل تطبيق أندرويد.',
+    },
     quizApp: {
       saving: 'جاري حفظ نتيجتك…',
       saved: 'تم حفظ نتيجتك في تحليلاتك',
@@ -97,6 +104,13 @@ const appCopy = {
     open: 'Open',
     back: 'Back',
     soon: 'Soon',
+    prevMonth: 'Previous month',
+    nextMonth: 'Next month',
+    checkoutOnSite: {
+      body: 'Plans are bought on the SQB website. Open the subscription page, then come back to the app and your plan will show straight away.',
+      open: 'Open the subscription page',
+      webPreview: 'Card checkout runs inside the Android app.',
+    },
     quizApp: {
       saving: 'Saving your result…',
       saved: 'Your result was saved to your analytics',

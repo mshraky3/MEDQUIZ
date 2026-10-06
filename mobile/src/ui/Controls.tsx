@@ -9,7 +9,8 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import { useLang } from '@/i18n/LanguageContext';
+import { useCopy, useLang } from '@/i18n/LanguageContext';
+import authCopy from '@/i18n/copy/auth.js';
 import { colors, fontFamilies, radius } from '@/theme';
 import { Icon } from './Icon';
 import { Row } from './Layout';
@@ -147,6 +148,7 @@ type InputProps = Omit<TextInputProps, 'style'> & {
 
 export function Input({ label, error, ltr = false, hint, style, inputStyle, trailing, secureTextEntry, ...rest }: InputProps) {
   const { isRTL, lang } = useLang();
+  const login = useCopy(authCopy).login;
   const [focused, setFocused] = useState(false);
   const [hidden, setHidden] = useState(!!secureTextEntry);
   const rtl = !ltr && isRTL;
@@ -197,7 +199,7 @@ export function Input({ label, error, ltr = false, hint, style, inputStyle, trai
             onPress={() => setHidden((h) => !h)}
             hitSlop={10}
             accessibilityRole="button"
-            accessibilityLabel={hidden ? 'Show password' : 'Hide password'}
+            accessibilityLabel={hidden ? login.showPassword : login.hidePassword}
           >
             <Icon name={hidden ? 'eye-off' : 'eye'} size={18} color={colors.textLight} />
           </TouchableOpacity>

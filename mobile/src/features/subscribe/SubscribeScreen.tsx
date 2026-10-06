@@ -3,7 +3,7 @@ import { Linking, Platform, TouchableOpacity, View } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import { router, useLocalSearchParams } from 'expo-router';
 import { IN_APP_CHECKOUT_ENABLED, SITE_URL } from '@/config';
-import { useCopy, useLang } from '@/i18n';
+import { useApp, useCopy, useLang } from '@/i18n';
 import supportCopy from '@/i18n/copy/support.js';
 import { api } from '@/lib/api';
 import { priceLadder, trackFunnel } from '@/lib/analytics';
@@ -32,6 +32,7 @@ type Status = 'loading' | 'ready' | 'blocked' | 'error' | 'unavailable';
 export default function SubscribeScreen() {
   const { user } = useAuth();
   const t = useCopy(supportCopy).subscribe;
+  const app = useApp();
   const { lang } = useLang();
   const params = useLocalSearchParams<{ kind?: string; plan?: string; reason?: string }>();
   const isGroup = params.kind === 'group';
@@ -271,7 +272,7 @@ export default function SubscribeScreen() {
 
       {isTestKey(cfg?.publishableKey) ? (
         <Notice kind="warning">
-          {t.testBannerBefore} 4111 1111 1111 1111 {t.testBannerAfter}
+          {`${t.testBannerBefore} 4111 1111 1111 1111 ${t.testBannerAfter}`}
         </Notice>
       ) : null}
 
@@ -308,14 +309,10 @@ export default function SubscribeScreen() {
       ) : (
         <Card style={{ gap: 10 }}>
           <T color={colors.textMedium}>
-            {Platform.OS === 'web'
-              ? 'Card checkout runs inside the Android app.'
-              : lang === 'ar'
-                ? 'يتم الاشتراك في SQB من الموقع الإلكتروني. افتح صفحة الاشتراك، ثم عُد إلى التطبيق وسيظهر اشتراكك فوراً.'
-                : 'Plans are bought on the SQB website. Open the subscription page, then come back to the app and your plan will show straight away.'}
+            {Platform.OS === 'web' ? app.checkoutOnSite.webPreview : app.checkoutOnSite.body}
           </T>
           <Button
-            label={lang === 'ar' ? 'فتح صفحة الاشتراك' : 'Open the subscription page'}
+            label={app.checkoutOnSite.open}
             icon="external-link"
             onPress={() =>
               WebBrowser.openBrowserAsync(`${SITE_URL}/subscribe${isGroup ? '?kind=group' : ''}`).catch(() => Linking.openURL(`${SITE_URL}/subscribe`))

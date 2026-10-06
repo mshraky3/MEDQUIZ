@@ -75,12 +75,8 @@ export type FontWeight = keyof (typeof fontFamilies)['ar'];
 const shadowBase = (opacity: number, radiusPx: number, offsetY: number, elevation: number): ViewStyle =>
   Platform.select<ViewStyle>({
     android: { elevation },
-    default: {
-      shadowColor: '#0f172a',
-      shadowOpacity: opacity,
-      shadowRadius: radiusPx,
-      shadowOffset: { width: 0, height: offsetY },
-    },
+    // boxShadow, not the shadow* props: React Native 0.86 deprecates those.
+    default: { boxShadow: `0px ${offsetY}px ${radiusPx}px rgba(15, 23, 42, ${opacity})` },
   }) as ViewStyle;
 
 export const shadow = {

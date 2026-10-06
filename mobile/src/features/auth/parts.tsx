@@ -1,7 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, View } from 'react-native';
 import { router } from 'expo-router';
-import { useCopy, useLang } from '@/i18n';
+import { useApp, useCopy, useLang } from '@/i18n';
 import authCopy from '@/i18n/copy/auth.js';
 import { TRACK_KEYS, TRACKS, TrackKey, pick } from '@/lib/tracks';
 import { colors, radius } from '@/theme';
@@ -13,6 +13,7 @@ import { Button, Card, Checkbox, Dialog, Icon, Row, Screen, T, goBack } from '@/
  * switch) over a centred card on the page background.
  */
 export function AuthShell({ children, canGoBack = true }: { children: React.ReactNode; canGoBack?: boolean }) {
+  const app = useApp();
   return (
     <Screen
       header={
@@ -21,7 +22,7 @@ export function AuthShell({ children, canGoBack = true }: { children: React.Reac
             <TouchableOpacity
               onPress={() => goBack(false)}
               accessibilityRole="button"
-              accessibilityLabel="Back"
+              accessibilityLabel={app.back}
               hitSlop={10}
               style={{
                 width: 38,

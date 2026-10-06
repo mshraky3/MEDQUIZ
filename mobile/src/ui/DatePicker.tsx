@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { TouchableOpacity, View } from 'react-native';
-import { useLang } from '@/i18n/LanguageContext';
+import { useCopy, useLang } from '@/i18n/LanguageContext';
+import appCopy from '@/i18n/appCopy';
 import { colors, radius } from '@/theme';
 import { Button } from './Controls';
 import { Icon } from './Icon';
@@ -35,6 +36,7 @@ type Props = {
  */
 export function DatePickerDialog({ visible, value, min, max, title, confirmLabel, cancelLabel, onConfirm, onClose }: Props) {
   const { lang } = useLang();
+  const app = useCopy(appCopy);
   const minDate = fromISO(min) || new Date();
   const maxDate = max ? fromISO(max) : null;
   const start = fromISO(value) || minDate;
@@ -88,13 +90,13 @@ export function DatePickerDialog({ visible, value, min, max, title, confirmLabel
         {title}
       </T>
       <Row justify="space-between">
-        <TouchableOpacity onPress={() => shift(-1)} hitSlop={10} accessibilityRole="button" accessibilityLabel="Previous month">
+        <TouchableOpacity onPress={() => shift(-1)} hitSlop={10} accessibilityRole="button" accessibilityLabel={app.prevMonth}>
           <Icon name="chevron-left" size={22} color={colors.text} flip />
         </TouchableOpacity>
         <T weight="bold" size={15}>
           {monthTitle}
         </T>
-        <TouchableOpacity onPress={() => shift(1)} hitSlop={10} accessibilityRole="button" accessibilityLabel="Next month">
+        <TouchableOpacity onPress={() => shift(1)} hitSlop={10} accessibilityRole="button" accessibilityLabel={app.nextMonth}>
           <Icon name="chevron-right" size={22} color={colors.text} flip />
         </TouchableOpacity>
       </Row>

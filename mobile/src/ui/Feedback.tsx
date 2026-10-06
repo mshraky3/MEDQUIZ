@@ -46,6 +46,18 @@ const NOTICE = {
 } as const;
 
 /** The inline alert box (login errors, hints, session-expired notices). */
+/**
+ * The text of children that are only strings or numbers (`{a} 4111 {b}` arrives
+ * as three of them), or null when there is a real element among them. A raw
+ * string inside a View is a hard error on Android, so text-only children are
+ * always wrapped in a Text.
+ */
+function textOnly(children: React.ReactNode): string | null {
+  const parts = React.Children.toArray(children);
+  if (parts.length === 0) return null;
+  return parts.every((p) => typeof p === 'string' || typeof p === 'number') ? parts.join('') : null;
+}
+
 export function Notice({
   kind = 'info',
   children,
@@ -56,6 +68,7 @@ export function Notice({
   style?: StyleProp<ViewStyle>;
 }) {
   const n = NOTICE[kind];
+  const text = textOnly(children);
   return (
     <Row
       gap={10}
@@ -67,9 +80,9 @@ export function Notice({
         <Icon name={n.icon} size={17} color={n.fg} />
       </View>
       <View style={{ flex: 1 }}>
-        {typeof children === 'string' ? (
+        {text !== null ? (
           <T size={14} color={n.fg} weight="medium">
-            {children}
+            {text}
           </T>
         ) : (
           children
