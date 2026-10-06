@@ -3,37 +3,81 @@
     "name": "SQB",
     "slug": "sqb",
     "owner": "m_alshraky3",
-    "version": "1.0.0",
+    "scheme": "sqb",
+    "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "dark",
-    "scheme": "sqb",
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#0b1021"
-    },
-    "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.m_alshraky3.sqb"
-    },
+    "userInterfaceStyle": "light",
+    "platforms": ["android", "web"],
     "android": {
       "package": "com.m_alshraky3.sqb",
       "adaptiveIcon": {
-        "backgroundColor": "#0b1021",
-        "foregroundImage": "./assets/adaptive-icon.png"
-      }
+        "backgroundColor": "#0B1021",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "softwareKeyboardLayoutMode": "resize",
+      "blockedPermissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.SYSTEM_ALERT_WINDOW"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": false,
+          "data": [
+            { "scheme": "https", "host": "www.smle-question-bank.com", "pathPrefix": "/join/" },
+            { "scheme": "https", "host": "www.smle-question-bank.com", "pathPrefix": "/signup/" },
+            { "scheme": "https", "host": "smle-question-bank.com", "pathPrefix": "/join/" },
+            { "scheme": "https", "host": "smle-question-bank.com", "pathPrefix": "/signup/" }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-router",
       "expo-font",
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-web-browser",
+      [
+        "expo-localization",
+        {
+          "supportsRTL": false,
+          "forcesRTL": false
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 180,
+          "backgroundColor": "#0B1021"
+        }
+      ]
     ],
+    "experiments": {
+      "typedRoutes": true
+    },
     "extra": {
+      "router": {},
       "eas": {
         "projectId": "e3168990-1c46-401f-b7ce-3f27354981b2"
       },
-      "router": {}
+      "apiUrl": "https://medquiz.vercel.app"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/e3168990-1c46-401f-b7ce-3f27354981b2"
     }
   }
 }

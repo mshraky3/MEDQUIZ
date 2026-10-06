@@ -50,6 +50,8 @@ backups/
 # video that nothing imports). Binaries with no build step behind them do not
 # belong in a public repo.
 assets/
+# ...except the Android app's icons and splash (mobile/ builds from git).
+!/mobile/assets/
 
 # User-data exports (emails etc.) produced by backend scripts.
 backend/exports/
