@@ -2,6 +2,7 @@ import React from 'react';
 import { Linking, View } from 'react-native';
 import { router } from 'expo-router';
 import { appRouteForWebPath } from '@/lib/webPaths';
+import { parseInline, type InlinePart } from './docInline';
 import { colors } from '@/theme';
 import { Row, Span, T } from '@/ui';
 
@@ -23,24 +24,8 @@ import { Row, Span, T } from '@/ui';
 export type DocBlock = { p?: string; h3?: string; ul?: string[]; ad?: boolean };
 export type DocSection = { heading?: string; blocks: DocBlock[]; ad?: boolean };
 
-const TOKEN = /(\[\[[^\]]+\]\]|\*\*[^*]+\*\*)/g;
-
-export type InlinePart = { kind: 'text' | 'bold' | 'link'; text: string; href?: string };
-
-/** Splits a string into text, **bold** and [[href|label]] parts. */
-export function parseInline(text: string): InlinePart[] {
-  return String(text)
-    .split(TOKEN)
-    .filter(Boolean)
-    .map((part): InlinePart => {
-      if (part.startsWith('**') && part.endsWith('**')) return { kind: 'bold', text: part.slice(2, -2) };
-      if (part.startsWith('[[') && part.endsWith(']]')) {
-        const [href, label = href] = part.slice(2, -2).split('|');
-        return { kind: 'link', text: label, href };
-      }
-      return { kind: 'text', text: part };
-    });
-}
+export { parseInline };
+export type { InlinePart };
 
 /** Opens a link from a document: an external URL in the browser, a site path inside the app. */
 export function openDocLink(href: string): void {

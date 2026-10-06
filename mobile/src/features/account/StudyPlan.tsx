@@ -6,7 +6,7 @@ import quizCopy from '@/i18n/copy/quiz.js';
 import { ApiError, api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { getSourceLabel, getTypeLabel } from '@/lib/labels';
-import { KEYS, getItem, setItem } from '@/lib/storage';
+import { getItem, setItem } from '@/lib/storage';
 import type { Specialty } from '@/lib/tracks';
 import { colors, radius } from '@/theme';
 import { Button, Card, DatePickerDialog, Icon, Input, Row, T, toISO } from '@/ui';
@@ -311,7 +311,9 @@ export function GoalCard({ specialties, sources }: { specialties: Specialty[]; s
 
       <Row gap={16}>
         <View style={{ width: 80, height: 80 }} accessibilityLabel={g.progressOf(fmt(goal.current), fmt(goal.target))}>
-          <Svg width={80} height={80} viewBox="0 0 80 80" style={{ transform: [{ rotate: '-90deg' }] }}>
+          {/* Rotated by a View: a transform style on an Svg makes react-native-svg's web build warn. */}
+          <View style={{ width: 80, height: 80, transform: [{ rotate: '-90deg' }] }}>
+          <Svg width={80} height={80} viewBox="0 0 80 80">
             <Circle cx={40} cy={40} r={34} stroke={colors.surfaceTint} strokeWidth={8} fill="none" />
             <Circle
               cx={40}
@@ -325,6 +327,7 @@ export function GoalCard({ specialties, sources }: { specialties: Specialty[]; s
               strokeDashoffset={RING_CIRCUMFERENCE * (1 - pctClamped / 100)}
             />
           </Svg>
+          </View>
           <View style={{ position: 'absolute', inset: 0, alignItems: 'center', justifyContent: 'center' }}>
             <T weight="extrabold" size={16} ltr>
               {pctClamped}%

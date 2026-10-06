@@ -29,7 +29,9 @@ const Ring = ({ pct, color }: { pct: number; color: string }) => {
   const c = 2 * Math.PI * 16;
   return (
     <View style={{ width: 40, height: 40 }}>
-      <Svg width={40} height={40} viewBox="0 0 40 40" style={{ transform: [{ rotate: '-90deg' }] }}>
+      {/* Rotated by a View: a transform style on an Svg makes react-native-svg's web build warn. */}
+      <View style={{ width: 40, height: 40, transform: [{ rotate: '-90deg' }] }}>
+      <Svg width={40} height={40} viewBox="0 0 40 40">
         <Circle cx={20} cy={20} r={16} stroke={colors.surfaceTint} strokeWidth={4} fill="none" />
         <Circle
           cx={20}
@@ -43,6 +45,7 @@ const Ring = ({ pct, color }: { pct: number; color: string }) => {
           strokeDashoffset={c * (1 - pct / 100)}
         />
       </Svg>
+          </View>
       <View style={{ position: 'absolute', inset: 0, alignItems: 'center', justifyContent: 'center' }}>
         <T size={10} weight="extrabold" ltr>
           {pct}%

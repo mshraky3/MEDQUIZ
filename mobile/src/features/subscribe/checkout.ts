@@ -191,3 +191,22 @@ export function safeNextPath(requested: string | null | undefined): '/groups' | 
 export function isAllowedCheckoutUrl(url: string): boolean {
   return url === 'about:blank' || /^https:\/\//i.test(url);
 }
+
+export type GroupPlan = Plan & { compareToHalalas?: number | null };
+
+/**
+ * What one person saves by joining the group instead of buying alone.
+ * `compareToHalalas` is the individual plan of the SAME length, sent by the
+ * server so this screen never has to pick which plan to compare against.
+ * Returns null when no comparison came, or when the group plan is not actually
+ * cheaper per seat: the card then says nothing rather than inventing a saving.
+ */
+export function savingsFor(plan: Pick<GroupPlan, 'compareToHalalas' | 'seats' | 'priceHalalas'> | null | undefined) {
+  const solo = Number(plan?.compareToHalalas);
+  const seats = Number(plan?.seats);
+  const total = Number(plan?.priceHalalas);
+  if (!solo || !seats || !total) return null;
+  const perSeat = total / seats;
+  if (perSeat >= solo) return null;
+  return { perSeat: Math.round(perSeat / 100), solo: Math.round(solo / 100), percent: Math.round((1 - perSeat / solo) * 100) };
+}

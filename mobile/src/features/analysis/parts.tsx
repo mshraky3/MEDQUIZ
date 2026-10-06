@@ -1,8 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, View } from 'react-native';
-import { useCopy, useLang } from '@/i18n';
+import { formatNumber, useCopy, useLang } from '@/i18n';
 import analysisCopy from '@/i18n/copy/analysis.js';
-import { formatNumber } from '@/i18n';
 import { Tone } from '@/lib/stats';
 import { colors, radius, toneBg, toneColor } from '@/theme';
 import { Button, Card, Icon, ProgressBar, Row, T } from '@/ui';

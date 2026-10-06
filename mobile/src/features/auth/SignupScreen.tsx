@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View } from 'react-native';
+import { Linking, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Linking } from 'react-native';
 import { SUPPORT_EMAIL } from '@/config';
 import { formatDate, useCopy, useLang } from '@/i18n';
 import authCopy from '@/i18n/copy/auth.js';
@@ -64,7 +63,6 @@ export default function SignupScreen({ mode, token }: { mode: SignupMode; token?
   const isSeat = mode === 'seat';
   const isInvite = mode === 'invite';
   const trackLocked = isInvite;
-  const effectiveTrack = isInvite ? inviteTrack : studyTrack;
   const aliveRef = useRef(true);
   useEffect(() => {
     aliveRef.current = true;

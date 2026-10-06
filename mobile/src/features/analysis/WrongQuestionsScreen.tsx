@@ -7,7 +7,7 @@ import { api, isAborted } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { getSourceLabel, getTypeLabel } from '@/lib/labels';
 import { colors } from '@/theme';
-import { Button, Card, EmptyState, Icon, Input, Row, Spinner, T } from '@/ui';
+import { Button, EmptyState, Icon, Input, Row, Spinner, T } from '@/ui';
 import { TabScreen } from '@/features/common/TabScreen';
 import { ReviewCard } from './parts';
 

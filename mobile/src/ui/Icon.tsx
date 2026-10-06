@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleProp, ViewStyle } from 'react-native';
+import { StyleProp, View, ViewStyle } from 'react-native';
 import Svg, { Circle, Line, Path, Polyline, Rect } from 'react-native-svg';
 import { useLang } from '@/i18n/LanguageContext';
 import { colors } from '@/theme';
@@ -145,7 +145,7 @@ export function Icon({ name, size = 20, color = colors.text, strokeWidth = 2, fl
   const glyph = GLYPHS[name] || EXTRA_GLYPHS[name];
   if (!glyph) return null;
   const mirror = flip && isRTL;
-  return (
+  const svg = (
     <Svg
       width={size}
       height={size}
@@ -155,11 +155,14 @@ export function Icon({ name, size = 20, color = colors.text, strokeWidth = 2, fl
       strokeWidth={strokeWidth}
       strokeLinecap="round"
       strokeLinejoin="round"
-      style={[mirror ? { transform: [{ scaleX: -1 }] } : null, style]}
+      style={style}
     >
       {glyph(color)}
     </Svg>
   );
+  // The flip lives on a View, not on the Svg: a transform style on an Svg makes
+  // react-native-svg's web build emit an invalid `transform-origin` DOM attribute.
+  return mirror ? <View style={{ transform: [{ scaleX: -1 }] }}>{svg}</View> : svg;
 }
 
 /** The "forward" chevron: points toward the reading end (left in Arabic). */

@@ -10,6 +10,7 @@ import { appRouteForWebPath } from '@/lib/webPaths';
 import { colors, radius } from '@/theme';
 import { Button, Card, Chevron, Icon, Row, Screen, ScreenHeader, T } from '@/ui';
 import { DocSections } from './RichDoc';
+import { GUIDE_KEYS } from './guideKeys';
 import { resolveExamRoute } from './examRoutes';
 import { SiteFooter } from '@/features/common/SiteFooter';
 
@@ -156,15 +157,6 @@ export function GuidesHubScreen() {
     </Screen>
   );
 }
-
-const GUIDE_KEYS: Record<string, 'howToUseBank' | 'studyPlan' | 'wrongQuestions' | 'vsPrometric' | 'highYield'> = {
-  'how-to-use-a-question-bank': 'howToUseBank',
-  'smle-study-plan': 'studyPlan',
-  'wrong-questions-method': 'wrongQuestions',
-  'smle-vs-prometric-differences': 'vsPrometric',
-  'smle-high-yield-topics': 'highYield',
-};
-export const GUIDE_SLUGS = Object.keys(GUIDE_KEYS);
 
 type Article = { kicker?: string; title: string; intro?: string; sections: any[] };
 

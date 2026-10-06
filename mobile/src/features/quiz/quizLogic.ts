@@ -78,7 +78,7 @@ export function scoreOf(answers: AnswerRecord[]) {
  * are still failing. One flaky request must not silently drop the rest of the
  * batch (which is what Promise.all would do).
  */
-export async function settleWithRetry(tasks: Array<() => Promise<unknown>>): Promise<{ failures: number }> {
+export async function settleWithRetry(tasks: (() => Promise<unknown>)[]): Promise<{ failures: number }> {
   const firstPass = await Promise.allSettled(tasks.map((task) => task()));
   const failedIndexes = firstPass.map((r, i) => (r.status === 'rejected' ? i : -1)).filter((i) => i !== -1);
   if (failedIndexes.length === 0) return { failures: 0 };
