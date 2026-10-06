@@ -8,7 +8,10 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "platforms": ["android", "web"],
+    "platforms": [
+      "android",
+      "web"
+    ],
     "android": {
       "package": "com.m_alshraky3.sqb",
       "adaptiveIcon": {
@@ -28,12 +31,31 @@
           "action": "VIEW",
           "autoVerify": false,
           "data": [
-            { "scheme": "https", "host": "www.smle-question-bank.com", "pathPrefix": "/join/" },
-            { "scheme": "https", "host": "www.smle-question-bank.com", "pathPrefix": "/signup/" },
-            { "scheme": "https", "host": "smle-question-bank.com", "pathPrefix": "/join/" },
-            { "scheme": "https", "host": "smle-question-bank.com", "pathPrefix": "/signup/" }
+            {
+              "scheme": "https",
+              "host": "www.smle-question-bank.com",
+              "pathPrefix": "/join/"
+            },
+            {
+              "scheme": "https",
+              "host": "www.smle-question-bank.com",
+              "pathPrefix": "/signup/"
+            },
+            {
+              "scheme": "https",
+              "host": "smle-question-bank.com",
+              "pathPrefix": "/join/"
+            },
+            {
+              "scheme": "https",
+              "host": "smle-question-bank.com",
+              "pathPrefix": "/signup/"
+            }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -61,7 +83,8 @@
           "imageWidth": 180,
           "backgroundColor": "#0B1021"
         }
-      ]
+      ],
+      "@react-native-google-signin/google-signin"
     ],
     "experiments": {
       "typedRoutes": true

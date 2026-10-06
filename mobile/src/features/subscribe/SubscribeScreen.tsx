@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Linking, Platform, TouchableOpacity, View } from 'react-native';
+import { AppState, Linking, Platform, TouchableOpacity, View } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import { router, useLocalSearchParams } from 'expo-router';
 import { IN_APP_CHECKOUT_ENABLED, SITE_URL } from '@/config';
@@ -30,7 +30,7 @@ type Status = 'loading' | 'ready' | 'blocked' | 'error' | 'unavailable';
  * the invite links a group buyer is really paying for.
  */
 export default function SubscribeScreen() {
-  const { user } = useAuth();
+  const { user, refreshSubscription } = useAuth();
   const t = useCopy(supportCopy).subscribe;
   const app = useApp();
   const { lang } = useLang();
@@ -75,6 +75,17 @@ export default function SubscribeScreen() {
     // The ladder is fetched once per visit; the kind never changes in place.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kind]);
+
+  // Plans bought on the website (the Play Store build, or a phone without the card
+  // form): the moment the student comes back, read their subscription again so the
+  // app unlocks without waiting for the usual 20 s throttle.
+  useEffect(() => {
+    if (IN_APP_CHECKOUT_ENABLED && Platform.OS !== 'web') return undefined;
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') void refreshSubscription(true);
+    });
+    return () => sub.remove();
+  }, [refreshSubscription]);
 
   // Arriving again from /groups with a different ?plan= must move the picker.
   useEffect(() => {

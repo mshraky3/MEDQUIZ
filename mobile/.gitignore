@@ -39,3 +39,6 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Generated native projects (this app uses prebuild on EAS, never commit them)
+/ios

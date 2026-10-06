@@ -1,246 +1,116 @@
-# SQB Mobile App
+# SQB for Android
 
-Mobile version of the SQB medical quiz platform, built with **Expo SDK 55** and **React Native**.
+The native Android app for **SQB**, the Saudi licensing-exam question bank (SMLE / SNLE).
+It is the website, rebuilt with Expo: same account, same API (`https://medquiz.vercel.app`),
+same questions, same Arabic and English copy. A student can start a quiz on the site and
+finish it in the app, and the analytics, wrong-question list, streak and subscription follow them.
 
-## Tech Stack
+Status, verification log and the list of known gaps: [`docs/STATUS.md`](docs/STATUS.md).
 
-- **Expo SDK 55** with Expo Router (file-based routing)
-- **React Native 0.83** + TypeScript (strict)
-- **expo-secure-store** for session token storage
-- **AsyncStorage** for user data and offline queue
-- **Axios** for API communication
+## Stack
 
-## Project Structure
+| | |
+|---|---|
+| Expo SDK 57, React Native 0.86 (New Architecture), React 19, TypeScript (strict) | `expo-router` file routes in `src/app`, typed routes |
+| Session | bearer token in `expo-secure-store`, profile in AsyncStorage; the API client is a fetch port of the website's axios interceptors (`src/lib/api.ts`) |
+| Language | app-controlled direction (not Android's RTL flip): Arabic RTL / English LTR, exam content always LTR |
+| Lessons | the website's own HTML, CSS and annotation canvas, rendered in a `react-native-webview` |
+| Payments | Moyasar's hosted form inside a WebView (`src/features/subscribe`), switchable off for a Play Store build |
+| Updates | `expo-updates` (OTA), runtime version = app version |
 
-```
-mobile/
-├── app/                    # Expo Router screens
-│   ├── _layout.tsx         # Root layout (AuthProvider, StatusBar)
-│   ├── index.tsx           # Landing page
-│   ├── login.tsx           # Login screen
-│   ├── signup.tsx          # Signup screen
-│   ├── quiz.tsx            # Quiz engine
-│   ├── suggestions.tsx     # Suggestions form
-│   ├── terms.tsx           # Terms of Use
-│   ├── about.tsx           # About screen
-│   ├── faq.tsx             # FAQ accordion
-│   └── (tabs)/             # Tab navigator (protected)
-│       ├── _layout.tsx     # Tab bar config
-│       ├── quizs.tsx       # Quiz setup
-│       ├── analysis.tsx    # Performance analytics
-│       ├── wrong-questions.tsx  # Wrong questions review
-│       └── contact.tsx     # Contact & support
-├── src/
-│   ├── components/ui/      # Reusable UI components
-│   │   ├── Button.tsx      # 4 variants, 3 sizes, loading state
-│   │   ├── Input.tsx       # Labels, errors, password toggle
-│   │   ├── Card.tsx        # Dark themed card
-│   │   ├── AlertBox.tsx    # Info/success/warning/error alerts
-│   │   ├── LoadingScreen.tsx
-│   │   ├── BottomSheet.tsx # Modal picker sheet
-│   │   └── Badge.tsx       # Pill badge
-│   ├── constants/
-│   │   ├── theme.ts        # Colors, spacing, typography tokens
-│   │   └── config.ts       # API URL, app name, session timeout
-│   ├── contexts/
-│   │   └── AuthContext.tsx  # Auth state management
-│   └── utils/
-│       ├── apiClient.ts    # Axios instance with auth interceptor
-│       ├── storage.ts      # SecureStore + AsyncStorage helpers
-│       ├── protectedApi.ts # Authenticated API calls with 401 redirect
-│       └── errorTracking.ts # Error reporting with offline queue
-├── assets/                 # App icons and splash screen
-├── app.json                # Expo configuration
-├── eas.json                # EAS Build profiles
-├── tsconfig.json           # TypeScript config
-└── package.json
-```
-
-## Prerequisites
-
-- **Node.js** >= 18
-- **Expo CLI**: `npm install -g expo-cli`
-- **EAS CLI**: `npm install -g eas-cli`
-- **Expo account** logged in: `npx eas login`
-
-## Getting Started
+## Run it
 
 ```bash
-# Install dependencies
 cd mobile
 npm install
-
-# Start development server
-npx expo start
-
-# Run on Android emulator
-npx expo start --android
-
-# Run on iOS simulator (macOS only)
-npx expo start --ios
+npx expo start            # Expo Go is not enough for Google sign-in; use a dev/preview build
+npx expo start --web      # browser preview of the same code (handy for layout work)
 ```
 
-## Building
-
-### Development Build (APK for testing)
+By default the app talks to production. To try it against a local backend:
 
 ```bash
-npx eas build --profile development --platform android
+EXPO_PUBLIC_API_URL=http://localhost:3000 npx expo start
 ```
 
-### Preview Build (APK for internal distribution)
+The real backend `.env` holds live credentials: point a local backend at a sanitised copy, never the real one.
+
+## Checks (run before every push)
 
 ```bash
-npx eas build --profile preview --platform android
+npm run typecheck     # tsc --noEmit
+npm run lint          # expo lint
+npm test              # vitest: quiz payloads, checkout helpers, copy parity, library, routes
+npm run sync:check    # the copied website data/copy still matches the website
+npx expo-doctor
+npx expo export --platform android   # proves the Hermes bundle builds
 ```
 
-### Production Build (AAB for Play Store)
+## Where things live
+
+```
+src/app/            routes (thin: each file re-exports a screen)
+src/features/       one folder per area: auth, hub, quiz, analysis, summaries, account,
+                    subscribe, support, docs, library, common
+src/ui/             design-system components (Text, Layout, Controls, Feedback, DatePicker)
+src/lib/            api client, auth, storage, tracks, stats, formatting, route mapping
+src/i18n/           language context, app-only strings (appCopy.ts) and the copied website copy
+src/theme/          colours, spacing, fonts (values from the website's index.css)
+scripts/            sync scripts (below)
+docs/               STATUS, GOOGLE_SIGN_IN, PLAY_STORE_PAYMENTS
+```
+
+### Data copied from the website
+
+Nothing here is retyped: the website stays the source of truth and the app copies it.
+
+| Command | Copies | From |
+|---|---|---|
+| `npm run sync:copy` | the Arabic/English copy dictionaries (`src/i18n/copy`) | `my-react-app/src/i18n/copy` |
+| `npm run sync:summaries` | lesson content, path metadata, lesson CSS | `my-react-app/src/components/Summaries` |
+| `npm run sync:library` | free-question library, past-paper grouping, success stories | `my-react-app/src/seo` |
+| `npm run gen:icons` | icon glyphs | the website's icon set |
+
+After the website changes, run the matching command, then `npm run sync:check` and commit the result.
+`npm test` fails if any copy file has a key in one language and not the other.
+
+## Building (EAS)
+
+Account `m_alshraky3` (free plan), project id `e3168990-1c46-401f-b7ce-3f27354981b2`,
+package `com.m_alshraky3.sqb`, slug `sqb`. Builds are listed at
+<https://expo.dev/accounts/m_alshraky3/projects/sqb/builds>.
 
 ```bash
-npx eas build --profile production --platform android
+npx eas-cli login                                      # once per machine
+npx eas-cli build -p android --profile preview         # installable APK (internal link)
+npx eas-cli build -p android --profile production      # AAB for Google Play (auto-increments versionCode)
+npx eas-cli update --channel production --message "…"  # OTA JS update, same runtime version only
 ```
 
-## EAS Project Setup
+| Profile | Output | Channel |
+|---|---|---|
+| `development` | dev-client APK | development |
+| `preview` | APK | preview |
+| `production` | AAB | production |
 
-If the project hasn't been linked to Expo yet:
+Each cloud build uses the free plan's monthly quota. Anything that changes native code
+(a new native module, a permission, `app.json` plugins) needs a new build; JS-only changes
+can go out as an OTA update.
 
-```bash
-npx eas init
-```
+Do not change `API_URL` away from `https://medquiz.vercel.app`: it is compiled into every installed app.
 
-This will populate the `projectId` in `app.json`.
+## Release checklist
 
-## API
+1. `npm run typecheck && npm run lint && npm test && npm run sync:check`
+2. Bump `version` in `app.json` if native code changed (a new version means a new OTA runtime).
+3. Decide the payment build: a Play Store build sets `EXPO_PUBLIC_IN_APP_CHECKOUT=false` ([`docs/PLAY_STORE_PAYMENTS.md`](docs/PLAY_STORE_PAYMENTS.md)).
+4. Google sign-in: set `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` only after the Android OAuth client exists ([`docs/GOOGLE_SIGN_IN.md`](docs/GOOGLE_SIGN_IN.md)).
+5. Build, install the APK on a real phone, sign in, run one quiz end to end.
 
-The app communicates with the backend at `https://medquiz.vercel.app`. Key endpoints:
+## Rules that matter here
 
-| Method | Endpoint | Purpose |
-|--------|----------|---------|
-| POST | `/api/login` | Authenticate user |
-| POST | `/api/register` | Create account |
-| GET | `/api/questions` | Fetch quiz questions |
-| POST | `/api/quiz-sessions` | Save quiz result |
-| POST | `/api/question-attempts` | Save individual answers |
-| POST | `/api/topic-analysis` | Update topic analytics |
-| GET | `/api/analysis/*` | Fetch performance data |
-| GET | `/api/wrong-questions` | Get wrong questions |
-| POST | `/api/suggestions` | Submit user suggestions |
-
-## Configuration
-
-Edit `src/constants/config.ts` to change:
-- `API_URL` — Backend server URL
-- `SESSION_TIMEOUT_MINUTES` — Auto-logout timeout (default: 30)
-
-Edit `src/constants/theme.ts` to customize colors, spacing, and typography.
-
-## App Identity
-
-- **Package**: `com.m_alshraky3.sqb`
-- **Bundle ID**: `com.m_alshraky3.sqb`
-- **Expo Slug**: `sqb`
-- **Expo Owner**: `m_alshraky3`
-
-## Expo account and build info
-
-_Merged in from the former `docs/EXPO_ACCOUNT_AND_BUILD_INFO.txt` (2026-09-20). The local path is `working projects\SQB\mobile`; the API it calls is `https://medquiz.vercel.app` and that URL must not change (it is compiled into installed apps)._
-
-```
-================================================================================
-  EXPO ACCOUNT & EAS BUILD REFERENCE — SQB APP
-================================================================================
-
-EXPO ACCOUNT
-------------
-  Username   : m_alshraky3
-  Account URL: https://expo.dev/accounts/m_alshraky3
-
-PROJECT IDENTITY
-----------------
-  App Name        : SQB
-  Slug            : sqb
-  Owner           : m_alshraky3
-  EAS Project ID  : e3168990-1c46-401f-b7ce-3f27354981b2
-  Android Package : com.m_alshraky3.sqb
-  iOS Bundle ID   : com.m_alshraky3.sqb
-  Version         : 1.0.0
-  Expo SDK        : ~55.0.8
-  React Native    : 0.83.2
-
-LOCAL PROJECT PATH
-------------------
-  C:\Users\muhmo\Desktop\CODE\working projects\SQB\mobile\
-
-================================================================================
-  HOW TO LOG IN (run once per machine)
-================================================================================
-
-  npx eas-cli login
-  # Enter username: m_alshraky3
-  # Enter your Expo account password when prompted
-
-  -- OR using the old expo CLI --
-  npx expo login -u m_alshraky3
-
-  Verify login:
-  npx eas whoami
-
-================================================================================
-  EAS BUILD PROFILES  (defined in mobile/eas.json)
-================================================================================
-
-  PROFILE       | PLATFORM | OUTPUT TYPE | DISTRIBUTION
-  --------------|----------|-------------|-------------
-  development   | Android  | APK         | internal (download link)
-  preview       | Android  | APK         | internal (download link)
-  production    | Android  | AAB         | Google Play store
-
-================================================================================
-  BUILD COMMANDS  (run from inside the mobile/ folder)
-================================================================================
-
-  cd C:\Users\muhmo\Desktop\CODE\working projects\SQB\mobile
-
-  -- Build a downloadable APK (preview profile, recommended for testing) --
-  npx eas build --platform android --profile preview
-
-  -- Build a development APK (includes dev client) --
-  npx eas build --platform android --profile development
-
-  -- Build a production AAB (for Google Play) --
-  npx eas build --platform android --profile production
-
-  -- Build locally on this machine instead of EAS cloud --
-  npx eas build --platform android --profile preview --local
-
-  After a cloud build finishes, EAS prints a download URL.
-  You can also view/download all builds at:
-  https://expo.dev/accounts/m_alshraky3/projects/sqb/builds
-
-================================================================================
-  INSTALL EAS CLI (if not installed)
-================================================================================
-
-  npm install -g eas-cli
-  # then verify:
-  eas --version   # should be >= 5.0.0
-
-================================================================================
-  BACKEND (API used by the app)
-================================================================================
-
-  Production URL : https://medquiz.vercel.app
-  Stack          : Express + PostgreSQL, session-based auth
-
-================================================================================
-  KEY CONFIG FILES
-================================================================================
-
-  mobile/app.json        — Expo config (name, slug, package IDs, EAS project ID)
-  mobile/eas.json        — Build profiles (development / preview / production)
-  mobile/package.json    — Dependencies & scripts
-  mobile/src/constants/config.ts  — API base URL and app constants
-  mobile/src/contexts/AuthContext.tsx — Auth logic
-
-================================================================================
-```
+- The brand is always written **SQB** in user-facing text.
+- Exam names and question text are never translated.
+- Every user-facing string has an Arabic and an English version in the same place; never hard-code a language or a `dir`.
+- The app never sends email; the API does, through the central email gateway.
+- Never commit credentials, keystores (`*.jks`) or `google-services.json`.

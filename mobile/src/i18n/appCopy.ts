@@ -45,6 +45,7 @@ const appCopy = {
     open: 'فتح',
     back: 'رجوع',
     soon: 'قريباً',
+    continueWithGoogle: 'المتابعة باستخدام Google',
     prevMonth: 'الشهر السابق',
     nextMonth: 'الشهر التالي',
     checkoutOnSite: {
@@ -104,6 +105,7 @@ const appCopy = {
     open: 'Open',
     back: 'Back',
     soon: 'Soon',
+    continueWithGoogle: 'Continue with Google',
     prevMonth: 'Previous month',
     nextMonth: 'Next month',
     checkoutOnSite: {
