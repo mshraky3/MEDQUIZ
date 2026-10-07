@@ -50,6 +50,7 @@ no live keys), with the app served as a web preview in a phone-sized viewport.
 
 ## Not verified (be honest about these)
 
+- **Native build:** the first preview APK (EAS build `6d9d5d82-0a66-4f9d-8a59-eb657d2e03ff`, commit `c33b060`) compiled and finished on EAS, so the native modules (WebView, secure store, Google sign-in, updates) build. It predates the keyboard fix in `0185c46`, which is JS-only and arrives with the next build or an OTA update. The APK link is on the build page (<https://expo.dev/accounts/m_alshraky3/projects/sqb/builds/6d9d5d82-0a66-4f9d-8a59-eb657d2e03ff>) until 20 Oct 2026.
 - **No real device or emulator.** This machine has no Android SDK. Everything above is the web build of the same
   code plus a successful native bundle; touch behaviour, the keyboard, the WebViews (lessons, checkout), the
   secure store and the Back button have not run on Android. The first thing to do with the preview APK is install
