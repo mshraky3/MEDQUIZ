@@ -8,7 +8,7 @@ import InstallPrompt from '../common/InstallPrompt.jsx';
 import { Reveal } from './useScrollReveal.jsx';
 import Globals from '../../global.js';
 import { UserContext } from '../../UserContext';
-import { TRACKS, MEDICAL, NURSING, pick } from '../../utils/tracks.js';
+import { TRACKS, MEDICAL, NURSING, DENTAL, pick } from '../../utils/tracks.js';
 import { useCopy, useLang, LanguageToggle, LocaleLink as Link, formatNumber, formatDate } from '../../i18n';
 import landingCopy from '../../i18n/copy/landing.js';
 import nationalDayCopy from '../../i18n/copy/nationalDay.js';
@@ -104,6 +104,15 @@ const Landing = () => {
       exam: pick(TRACKS[NURSING].exam, lang),
       desc: t.tracks.nursingDesc,
       specialties: TRACKS[NURSING].specialties.map((sp) => pick(sp.label, lang)),
+      ready: true,
+    },
+    {
+      key: DENTAL,
+      icon: TRACKS[DENTAL].icon,
+      title: pick(TRACKS[DENTAL].label, lang),
+      exam: pick(TRACKS[DENTAL].exam, lang),
+      desc: t.tracks.dentalDesc,
+      specialties: TRACKS[DENTAL].specialties.map((sp) => pick(sp.label, lang)),
       ready: true,
     },
   ];

@@ -15,7 +15,8 @@ export type Specialty = { key: string; label: Label; icon: string };
 
 export const MEDICAL = 'medical';
 export const NURSING = 'nursing';
-export type TrackKey = typeof MEDICAL | typeof NURSING;
+export const DENTAL = 'dental';
+export type TrackKey = typeof MEDICAL | typeof NURSING | typeof DENTAL;
 export const DEFAULT_TRACK: TrackKey = MEDICAL;
 
 export type TrackDef = {
@@ -82,6 +83,32 @@ export const TRACKS: Record<TrackKey, TrackDef> = {
         label: { ar: 'الأدوية وحسابات الجرعات', en: 'Pharmacology & Dosage Calculations' },
         icon: 'pill',
       },
+    ],
+  },
+  dental: {
+    key: 'dental',
+    label: { ar: 'طب الأسنان', en: 'Dentistry' },
+    exam: { ar: 'اختبار SDLE لطب الأسنان', en: 'Saudi Dental Licensing Exam (SDLE)' },
+    blurb: {
+      ar: 'مسار طب الأسنان: علاج الجذور والترميمية واللثة والتعويضات والتقويم والأطفال والجراحة وطب الفم.',
+      en: 'The dental track: endodontics, restorative, periodontics, prosthodontics, orthodontics, paediatric, surgery and oral medicine.',
+    },
+    bank: { ar: 'البنك المشروح وتجميعات 2026 و2024', en: 'Explained bank, 2026 & 2024 recalls' },
+    icon: 'award',
+    specialties: [
+      { key: 'endodontics', label: { ar: 'علاج الجذور', en: 'Endodontics' }, icon: 'target' },
+      { key: 'restorative dentistry', label: { ar: 'الترميمية', en: 'Restorative Dentistry' }, icon: 'pen' },
+      { key: 'dental materials', label: { ar: 'المواد السنية', en: 'Dental Materials' }, icon: 'bar-chart' },
+      { key: 'periodontics', label: { ar: 'أمراض اللثة', en: 'Periodontics' }, icon: 'shield-check' },
+      { key: 'implant dentistry', label: { ar: 'زراعة الأسنان', en: 'Implant Dentistry' }, icon: 'zap' },
+      { key: 'fixed prosthodontics', label: { ar: 'التعويضات الثابتة', en: 'Fixed Prosthodontics' }, icon: 'link' },
+      { key: 'removable prosthodontics', label: { ar: 'التعويضات المتحركة', en: 'Removable Prosthodontics' }, icon: 'folder' },
+      { key: 'orthodontics', label: { ar: 'تقويم الأسنان', en: 'Orthodontics' }, icon: 'trending-up' },
+      { key: 'pediatric dentistry', label: { ar: 'أسنان الأطفال', en: 'Paediatric Dentistry' }, icon: 'baby' },
+      { key: 'oral surgery', label: { ar: 'جراحة الفم', en: 'Oral Surgery' }, icon: 'scalpel' },
+      { key: 'oral medicine and radiology', label: { ar: 'طب الفم والأشعة', en: 'Oral Medicine & Radiology' }, icon: 'eye' },
+      { key: 'medical dentistry', label: { ar: 'الأدوية والحالات الطبية', en: 'Medical Dentistry' }, icon: 'pill' },
+      { key: 'professionalism and infection control', label: { ar: 'الأخلاقيات ومكافحة العدوى', en: 'Professionalism & Infection Control' }, icon: 'award' },
     ],
   },
 };

@@ -13,11 +13,12 @@
  *   MEDICAL: ['2026-09-15', '2026-12-01'],
  *   NURSING: ['2026-09-20'],
  */
-import { MEDICAL, NURSING } from '../utils/tracks.js';
+import { MEDICAL, NURSING, DENTAL } from '../utils/tracks.js';
 
 export const EXAM_DATES = {
     [MEDICAL]: [],
     [NURSING]: [],
+    [DENTAL]: [],
 };
 
 /** The next future date for a track, or null if none is known. */

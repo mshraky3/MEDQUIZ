@@ -17,6 +17,10 @@ export const SOURCE_LABELS = {
         MedicalGameBoy: 'GameBoy',
         MedicalConfirmed: 'Confirmed',
         MedicalMidgard: 'Midgard',
+        // dental track (SDLE)
+        DentalExplained: 'البنك المشروح بالمراجع',
+        DentalRecall2026: 'تجميعات 2026',
+        DentalRecall2024: 'تجميعات 2024',
         // nursing track — the bank is split the same way the medical one is:
         // the core EMS review file vs. the block appended in its September edition.
         NursingMostRepeated: 'Most Repeated',
@@ -41,6 +45,9 @@ export const SOURCE_LABELS = {
         MedicalGameBoy: 'GameBoy',
         MedicalConfirmed: 'Confirmed',
         MedicalMidgard: 'Midgard',
+        DentalExplained: 'Explained Bank (with references)',
+        DentalRecall2026: '2026 Recalls',
+        DentalRecall2024: '2024 Recalls',
         NursingMostRepeated: 'Most Repeated',
         NursingConfirmed: 'Confirmed',
         // legacy — retired from the bank but present in old sessions

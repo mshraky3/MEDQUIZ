@@ -5,7 +5,7 @@ import { fromISO, monthGrid, toISO } from '@/lib/dates';
 import { formatDate, formatNumber } from '@/lib/format';
 import { SOURCE_LABELS, getSourceLabel, getTypeLabel } from '@/lib/labels';
 import { accuracyTone, calculateBestWorstTopics, formatClock, formatDuration, timeAgo, totalsFromTopics } from '@/lib/stats';
-import { MEDICAL, NURSING, TRACKS, TRACK_KEYS, normalizeTrack, pick, specialtyKeys, trackLabel } from '@/lib/tracks';
+import { MEDICAL, NURSING, DENTAL, TRACKS, TRACK_KEYS, normalizeTrack, pick, specialtyKeys, trackLabel } from '@/lib/tracks';
 import { appRouteForWebPath } from '@/lib/webPaths';
 
 describe('tracks', () => {
@@ -20,13 +20,16 @@ describe('tracks', () => {
     expect(normalizeTrack('__proto__')).toBe(MEDICAL);
   });
 
-  it('keeps the two tracks on disjoint specialty keys', () => {
+  it('keeps the tracks on disjoint specialty keys', () => {
     const med = specialtyKeys(MEDICAL);
     const nur = specialtyKeys(NURSING);
     expect(med.length).toBeGreaterThan(0);
     expect(nur.length).toBeGreaterThan(0);
     expect(med.filter((k) => nur.includes(k))).toEqual([]);
-    expect(TRACK_KEYS.sort()).toEqual(['medical', 'nursing']);
+    expect(TRACK_KEYS.sort()).toEqual(['dental', 'medical', 'nursing']);
+    const den = specialtyKeys(DENTAL);
+    expect(den.length).toBeGreaterThan(0);
+    expect(den.filter((k) => med.includes(k) || nur.includes(k))).toEqual([]);
   });
 
   it('labels in both languages and falls back to Arabic', () => {

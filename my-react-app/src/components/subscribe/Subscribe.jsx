@@ -351,7 +351,7 @@ const Subscribe = () => {
     // The student has spent their 40 free questions. Not an expiry and not a
     // lockout — their account still works — so the page only changes its
     // heading to acknowledge where they are.
-    const showSeptember = (user?.track || 'medical') !== 'nursing';
+    const showSeptember = (user?.track || 'medical') === 'medical';
     const allowanceSpent = params.get('reason') === 'free_allowance_exhausted'
         || user?.free_questions_remaining === 0;
 

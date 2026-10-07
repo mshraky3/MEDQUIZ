@@ -304,7 +304,7 @@ const AdminBroadcast = () => {
                                                     <Icon name={on ? 'check-circle' : 'circle'} size={15} />
                                                     <span className="bc-result-email" dir="ltr">{u.email}</span>
                                                     <span className="bc-result-meta">
-                                                        {TRACKS[u.track === 'nursing' ? 'nursing' : 'medical'].label.en}
+                                                        {TRACKS[TRACKS[u.track] ? u.track : 'medical'].label.en}
                                                         {u.subscription_status ? ` · ${u.subscription_status}` : ''}
                                                     </span>
                                                 </button>
