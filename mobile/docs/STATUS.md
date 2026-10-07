@@ -73,6 +73,12 @@ no live keys), with the app served as a web preview in a phone-sized viewport.
 4. The public library payload says the bank has 5,033 questions; the bank now has 7,115. The site's "5,033" copy
    comes from `publicQuestions.json` (`bankTotal`); re-export it with the backend script when convenient.
 
+## Decisions and progress on 7 Oct 2026 (after the first build)
+- Google Android OAuth client created (see `GOOGLE_SIGN_IN.md`); the build must still be given the web client id.
+- Play Store route chosen: sign-in only plus an optional website-subscribe button; research in `PLAY_STORE_PAYMENTS.md`.
+- Wanted next: one-tap Google sign-in and passwordless email-code sign-in. The second needs a new backend endpoint and
+  the owner's go-ahead (production deploy).
+
 ## Next steps
 
 1. Install the preview APK on a phone and run the release checklist in `README.md`.

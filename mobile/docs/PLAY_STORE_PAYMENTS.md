@@ -1,7 +1,32 @@
 # Card payments and the Google Play policy
 
-**Decision needed from the owner before publishing on Google Play.** Nothing is blocked for sideloaded
-or internal APKs.
+**Decision (owner, 7 Oct 2026): the Play Store build is SIGN-IN ONLY**, with an optional "subscribe on the
+website" button. Nothing is blocked for sideloaded or internal APKs. The build mode itself is **not built yet**
+(see "To build" at the end).
+
+## Research (Google's own pages, checked 7 Oct 2026)
+- Payments policy: apps selling digital goods or subscriptions on Play must use Google Play Billing. Exemptions:
+  physical goods, some services, and "reader" apps (books, news, audio, video) that only let people log in to
+  content bought elsewhere. Inside the app, developers generally may not lead users to other payment methods;
+  outside the app (email, website, social) they may freely tell users about alternatives.
+- Alternative billing and "link to your website" programmes exist only in the US, UK, EEA (plus Australia, Japan,
+  India and South Korea with their own rules). **Saudi Arabia is not listed**, so the standard rule applies.
+  Google says it will add markets through 2027: re-check before shipping.
+- Fees outside those markets: **15 % on auto-renewing subscriptions** (and 15 % on the first USD 1 M of other sales).
+  In the US/UK/EEA it is 10 % + 5 % billing fee.
+- Sources: support.google.com/googleplay/android-developer/answer/10281818 (Payments policy), .../answer/112622
+  (service fees), android-developers.googleblog.com/2026/06/play-expanded-billing.html.
+
+## Options compared
+| Option | Fees to Google | Effort | Play review risk |
+|---|---|---|---|
+| **A. Sign-in only** (chosen): no prices or buy screens in the app; people subscribe on the website with Moyasar | 0 % | small (hide screens in one build mode) | low to medium: SQB is not a reader app, so "login to content bought elsewhere" is allowed in practice but not explicitly for question banks |
+| B. Google Play Billing | 15 % | large (new rail, server verification, granting months) | none |
+| C. Skip Play, share the APK | 0 % | none | none, but users must allow unknown sources |
+
+The "subscribe on the website" button inside the app is the part Google's wording discourages most. It is the owner's
+choice to include it; make it a separate switch so it can be removed in one line if review objects. Fallback if
+Play rejects the app: option B.
 
 ## The issue
 
@@ -45,3 +70,12 @@ Never use live Moyasar keys in a test. With a `pk_test_...` key the screen shows
 Moyasar's published test card works. The checkout page, callback handling and the redirect allow-list
 are covered by unit tests (`src/__tests__/checkout.test.ts`); the card form itself can only be exercised
 on a device with Moyasar's test key.
+
+## To build (not started)
+1. A store mode build flag (e.g. `EXPO_PUBLIC_STORE_MODE=play`): hide plan prices, offers, `groups` buying and the
+   in-app upgrade prompts; keep login, signup (free tier) and everything for subscribers.
+2. A separate flag for the "subscribe on the website" button (opens the site's subscribe page in the browser; the app
+   already re-reads the subscription when the student comes back).
+3. Easier sign-in for that build: Google one-tap (client created, see `GOOGLE_SIGN_IN.md`) and email-code login with
+   no password. The code login needs a NEW backend endpoint (the current OTP only resets a password); it deploys to
+   production and is security-sensitive, so it needs the owner's explicit go.

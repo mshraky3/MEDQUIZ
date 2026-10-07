@@ -1,7 +1,16 @@
 # Google Sign-In in the Android app
 
-**State:** the code is finished and shipped, but the button is **hidden** until the owner does the
-three steps below. Nothing else in the app depends on it (email + password works without it).
+**State (7 Oct 2026):** the code is finished and shipped. **Step 1 is DONE**: the Android OAuth client
+"SQB Android" (package `com.m_alshraky3.sqb`, SHA-1 of the EAS keystore "Build Credentials 8Dgee3dP59") was
+created in the Google Cloud project `oAOUTH` (id `oaouth-433913`) next to "Web client 1". Google says a new client
+can take 5 minutes to a few hours to work. **Still to do:** put the web client id in the build
+(`EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`, step 3) and make a new build; until then the button stays **hidden**.
+The web client id (public, not a secret) is
+`377045259162-9mo7nikgvovph9rbjhku1cffpk6tesr7.apps.googleusercontent.com`.
+Nothing else in the app depends on the button (email + password works without it).
+
+If the app is later published on Google Play with Play App Signing, Google re-signs it with a different key:
+add that key's SHA-1 (Play Console -> Setup -> App signing) as a second Android client.
 
 ## Why it needs the owner
 
