@@ -18,6 +18,7 @@
 
 import { sendMail } from './mailer.js';
 import { sar, splitVat, vatConfig } from './accountingService.js';
+import { bonusMonthsFor } from './goldenMonths.js';
 
 const BRAND = '#0e7490';
 const INK = '#111827';
@@ -59,7 +60,7 @@ const fmtDate = (d) => new Date(d).toISOString().slice(0, 10);
  * invoice that is vague is recoverable; one that is confidently wrong is not.
  */
 export function describeTerm(payment) {
-    const months = PLAN_MONTHS[payment.planId] ?? null;
+    const months = termMonths(payment);
     const seats = Math.max(1, Number(payment.seats) || 1);
     const monthPart = months
         ? `${months} month${months === 1 ? '' : 's'} full access`
@@ -89,16 +90,24 @@ const PLAN_MONTHS = {
     group_5: 4,
 };
 
+/** Months actually credited: the plan's term plus any Golden Months bonus for when it was paid. */
+function termMonths(payment) {
+    const base = PLAN_MONTHS[payment.planId] ?? null;
+    if (base == null) return null;
+    return base + bonusMonthsFor(payment.planId, payment.createdAtMs ?? 0);
+}
+
 /**
  * The same fact as describeTerm, in Arabic, for the email body. The PDF stays
  * English-only (pdfkit cannot shape Arabic — see the file header); the email
  * around it is the part the customer actually reads first.
  */
 export function arTerm(payment) {
-    const months = PLAN_MONTHS[payment.planId] ?? null;
+    const months = termMonths(payment);
     const seats = Math.max(1, Number(payment.seats) || 1);
     const monthAr = months === 1 ? 'شهر واحد'
         : months === 4 ? 'أربعة أشهر'
+        : months === 5 ? 'خمسة أشهر'
         : months === 12 ? 'سنة كاملة'
         : null;
     if (seats > 1) {

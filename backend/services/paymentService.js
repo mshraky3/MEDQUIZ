@@ -24,6 +24,7 @@ import { computeFee, settleEvent } from './accountingService.js';
 import { sendInvoiceEmail } from './invoiceService.js';
 import { trackLabelAr, normalizeTrack } from '../config/tracks.js';
 import { OWNER_EMAIL } from '../config/recipients.js';
+import { bonusMonthsFor, displayBonusMonths } from './goldenMonths.js';
 
 const MOYASAR_API = 'https://api.moyasar.com/v1';
 
@@ -365,12 +366,18 @@ export function getOfferInfo(nowMs = Date.now()) {
 export function listPlansForDisplay(kind = 'all', nowMs = Date.now()) {
     const live = isOfferLive(nowMs);
 
+    // Golden Months: a bonus-time plan carries `bonusMonths` for display; its price is untouched.
+    const withBonus = (plan) => {
+        const bonus = displayBonusMonths(plan.id, nowMs);
+        return bonus > 0 ? { ...plan, bonusMonths: bonus } : plan;
+    };
+
     const decorate = (plan) => {
         const offer = live ? offerPriceFor(plan) : null;
-        if (offer == null) return plan;
+        if (offer == null) return withBonus(plan);
         const cut = 1 - offer / plan.priceHalalas;
         return {
-            ...plan,
+            ...withBonus(plan),
             priceHalalas: offer,
             regularPriceHalalas: plan.priceHalalas,
             compareAtHalalas: cut >= NATIONAL_DAY_OFFER.minVisibleDiscount ? plan.priceHalalas : 0,
@@ -612,8 +619,13 @@ export async function fetchMoyasarPayment(paymentId) {
     return resp.data;
 }
 
-/** New expiry = plan's term from max(now, current expiry) so renewals stack. */
-function computeNewExpiry(currentExpiry, plan) {
+/**
+ * New expiry = plan's term from max(now, current expiry) so renewals stack.
+ * `atMs` is when the payment was created: a Golden Months purchase (see
+ * goldenMonths.js) is credited its bonus months on top of the term. Callers with
+ * no payment (admin grants pass `{ months }` with no id) get no bonus.
+ */
+export function computeNewExpiry(currentExpiry, plan, atMs = Date.now()) {
     const base = currentExpiry && new Date(currentExpiry).getTime() > Date.now()
         ? new Date(currentExpiry)
         : new Date();
@@ -621,7 +633,7 @@ function computeNewExpiry(currentExpiry, plan) {
     // Fall back to the SHORTEST term, never the longest: if a caller ever
     // reaches here without a plan it is a bug, and under-granting is a support
     // ticket while over-granting is a year of free access we cannot claw back.
-    next.setMonth(next.getMonth() + (plan?.months || 1));
+    next.setMonth(next.getMonth() + (plan?.months || 1) + bonusMonthsFor(plan?.id, atMs));
     return next;
 }
 
@@ -839,7 +851,7 @@ export async function activateSubscriptionFromPayment(db, accountId, payment, ev
             return { activated: false, alreadyProcessed: true };
         }
 
-        newExpiry = computeNewExpiry(account.subscription_expiry_date, plan);
+        newExpiry = computeNewExpiry(account.subscription_expiry_date, plan, paymentInstantMs(payment));
 
         await client.query(
             `UPDATE accounts

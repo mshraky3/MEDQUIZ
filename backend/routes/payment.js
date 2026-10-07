@@ -10,6 +10,7 @@
 
 import express from 'express';
 import { logger } from '../utils/observability.js';
+import { getGoldenInfo } from '../services/goldenMonths.js';
 import {
     isPaymentEnforcementEnabled,
     listPlansForDisplay,
@@ -109,6 +110,8 @@ router.get('/config', (req, res) => {
         kind,
         plans: listPlansForDisplay(kind),
         offer: getOfferInfo(),
+        // Golden Months bonus-time offer (null when off); separate from `offer`, which is the price offer.
+        goldenMonths: getGoldenInfo(),
         publishableKey: enabled ? (process.env.MOYASAR_PUBLISHABLE_KEY || null) : null,
     });
 });

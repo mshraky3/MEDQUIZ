@@ -106,6 +106,8 @@ export function settleEvent(row) {
         metadataAccountId: raw?.metadata?.account_id ?? null,
         gatewayRef: row.gateway_ref,
         receivedAt: row.received_at,
+        // When Moyasar created the payment: the clock the Golden Months bonus is judged by.
+        createdAtMs: Date.parse(raw?.created_at || '') || null,
         // Which plan was bought, and how many ACCOUNTS it activated. One
         // payment is still one ledger row — but a group payment activates
         // `seats` subscribers, so any per-subscriber figure that divides by the

@@ -15,6 +15,8 @@ import nationalDayCopy from '../../i18n/copy/nationalDay.js';
 import { NationalDayStrip } from '../common/NationalDayOffer.jsx';
 import { useNationalDayOffer } from '../../utils/nationalDay.js';
 import NationalDaySection from './NationalDaySection.jsx';
+import { GoldenStrip } from '../common/GoldenMonths.jsx';
+import { useGoldenMonths } from '../../utils/goldenMonths.js';
 import './Landing.css';
 
 /**
@@ -72,6 +74,8 @@ const Landing = () => {
   // failed). Everything below that changes for the offer branches on this one
   // value, so with it null the page is byte-for-byte the ordinary page.
   const nd = useNationalDayOffer();
+  // Golden Months (a free bonus month, no price change), or null when off.
+  const gm = useGoldenMonths();
 
   /**
    * The two student populations the platform serves. `ready` reflects whether
@@ -198,8 +202,8 @@ const Landing = () => {
     <>
       {/* Explicit dir: index.css sets body{direction:ltr}, which would cancel
           the documentElement dir for everything inside. */}
-      <div className={`landing-body${nd ? ' has-nd' : ''}`} dir={dir} lang={lang}>
-        {nd && <NationalDayStrip offer={nd.offer} plans={nd.plans} />}
+      <div className={`landing-body${nd || gm ? ' has-nd' : ''}`} dir={dir} lang={lang}>
+        {nd ? <NationalDayStrip offer={nd.offer} plans={nd.plans} /> : gm && <GoldenStrip offer={gm} />}
         <header className="landing-topbar">
           <span className="landing-brand">SQB</span>
           <div className="landing-topbar-actions">

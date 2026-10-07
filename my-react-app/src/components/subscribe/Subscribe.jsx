@@ -10,6 +10,8 @@ import { useCopy, useLang } from '../../i18n';
 import supportCopy from '../../i18n/copy/support.js';
 import nationalDayCopy from '../../i18n/copy/nationalDay.js';
 import { NationalDayBanner } from '../common/NationalDayOffer.jsx';
+import goldenMonthsCopy from '../../i18n/copy/goldenMonths.js';
+import { GoldenBanner } from '../common/GoldenMonths.jsx';
 // The card shell (.login-card, .btn, .alert-box) lives in Login.css. Import it
 // explicitly — landing on /subscribe directly would otherwise render unstyled.
 import '../login/Login.css';
@@ -71,6 +73,7 @@ const Subscribe = () => {
     const location = useLocation();
     const t = useCopy(supportCopy).subscribe;
     const tnd = useCopy(nationalDayCopy);
+    const tgm = useCopy(goldenMonthsCopy);
     const { dir } = useLang();
     // loading  → fetching config / injecting Moyasar
     // ready    → the card form is on screen and usable
@@ -85,6 +88,8 @@ const Subscribe = () => {
     // plans above already carry the offer price as priceHalalas — that is the
     // amount Moyasar is asked to charge — so this is only for the banner.
     const [ndOffer, setNdOffer] = useState(null);
+    // Golden Months (bonus time, price unchanged) while on sale; plans carry bonusMonths.
+    const [gmOffer, setGmOffer] = useState(null);
     const [currency, setCurrency] = useState('SAR');
     const [publishableKey, setPublishableKey] = useState(null);
     const [selectedPlanId, setSelectedPlanId] = useState(null);
@@ -130,6 +135,7 @@ const Subscribe = () => {
 
                 setPlans(cfg.plans);
                 setNdOffer(cfg.offer?.active ? cfg.offer : null);
+                setGmOffer(cfg.goldenMonths?.active ? cfg.goldenMonths : null);
                 // Exposure, recorded separately from subscribe_view on purpose:
                 // the view fires on arrival and must keep counting arrivals
                 // whatever the config does, while this one only fires when real
@@ -142,7 +148,7 @@ const Subscribe = () => {
                     // Which campaign the ladder belongs to, so an offer-priced
                     // ladder is never mistaken for a permanent one in the
                     // price-test report.
-                    offer: cfg.offer?.active ? cfg.offer.id : null,
+                    offer: cfg.offer?.active ? cfg.offer.id : (cfg.goldenMonths?.active ? cfg.goldenMonths.id : null),
                 });
                 setCurrency(cfg.currency || 'SAR');
                 setPublishableKey(cfg.publishableKey);
@@ -373,6 +379,7 @@ const Subscribe = () => {
                     </div>
 
                     {ndOffer && plans.some((p) => p.offerId) && <NationalDayBanner offer={ndOffer} />}
+                    {gmOffer && plans.some((p) => p.bonusMonths) && <GoldenBanner offer={gmOffer} />}
 
                     {/* The September 2026 recall set is SMLE (medicine) only, so a
                         nursing student is not told about it. */}
@@ -391,7 +398,10 @@ const Subscribe = () => {
                             {plans.map((plan) => {
                                 const planCopy = t.plans[plan.id];
                                 if (!planCopy) return null;
-                                const perMonth = Math.round((plan.priceHalalas / plan.months) / 100);
+                                // Bonus months are free time on the SAME price, so the per-month
+                                // figure is spread over the months actually credited.
+                                const bonus = Number(plan.bonusMonths) || 0;
+                                const perMonth = Math.round((plan.priceHalalas / (plan.months + bonus)) / 100);
                                 const planOffer = offer(plan);
                                 return (
                                     <button
@@ -403,7 +413,9 @@ const Subscribe = () => {
                                         {/* An offer badge replaces the static one: a live
                                             discount is the stronger thing to say, and two
                                             badges on one tile would just fight each other. */}
-                                        {planOffer ? (
+                                        {bonus > 0 ? (
+                                            <span className="subscribe-plan-badge offer">{tgm.planBadge}</span>
+                                        ) : planOffer ? (
                                             <span className="subscribe-plan-badge offer">{t.offerBadge(planOffer.pct)}</span>
                                         ) : planCopy.badge && (
                                             <span className="subscribe-plan-badge">{planCopy.badge}</span>
@@ -432,8 +444,18 @@ const Subscribe = () => {
                         {selectedOffer && <span className="subscribe-price-was">{selectedOffer.was}</span>}
                         <span className="subscribe-price-amount">{riyals != null ? riyals : '—'}</span>
                         <span className="subscribe-price-cur">{t.currency}</span>
-                        <span className="subscribe-price-period">{selectedPlan ? t.plans[selectedPlan.id]?.period : ''}</span>
+                        <span className="subscribe-price-period">
+                            {selectedPlan?.bonusMonths
+                                ? tgm.period(selectedPlan.months + selectedPlan.bonusMonths)
+                                : selectedPlan ? t.plans[selectedPlan.id]?.period : ''}
+                        </span>
                     </div>
+
+                    {selectedPlan?.bonusMonths > 0 && (
+                        <p className="subscribe-save-note">
+                            {tgm.note(selectedPlan.months + selectedPlan.bonusMonths, selectedPlan.months)}
+                        </p>
+                    )}
 
                     {selectedOffer && (
                         <p className="subscribe-save-note">

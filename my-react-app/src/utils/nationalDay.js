@@ -79,22 +79,36 @@ export function useNationalDayOffer() {
     const [state, setState] = useState(null);
 
     useEffect(() => {
-        const controller = new AbortController();
-        fetch(`${Globals.URL}/api/payment/config?kind=all`, {
-            signal: controller.signal,
-            cache: 'no-store',
-        })
-            .then((r) => (r.ok ? r.json() : null))
+        let alive = true;
+        loadPublicConfig()
             .then((cfg) => {
-                if (!cfg?.enabled || !cfg.offer?.active) return;
+                if (!alive || !cfg?.enabled || !cfg.offer?.active) return;
                 const plans = offerPlans(cfg.plans);
                 if (plans) setState({ offer: cfg.offer, plans });
             })
             .catch(() => { /* no banner — the ordinary prices stand */ });
-        return () => controller.abort();
+        return () => { alive = false; };
     }, []);
 
     return state;
+}
+
+let configRequest = null;
+
+/**
+ * One /config request per page load, shared by every landing-page offer hook
+ * (National Day, Golden Months): the API runs on metered serverless CPU, so two
+ * hooks must not mean two requests. A failed request is forgotten so a later
+ * mount can try again.
+ */
+export function loadPublicConfig() {
+    if (!configRequest) {
+        configRequest = fetch(`${Globals.URL}/api/payment/config?kind=all`, { cache: 'no-store' })
+            .then((r) => (r.ok ? r.json() : null))
+            .catch(() => null);
+        configRequest.then((cfg) => { if (!cfg) configRequest = null; });
+    }
+    return configRequest;
 }
 
 /** The deadline as a date a person in Saudi Arabia would recognise, in Riyadh time. */
