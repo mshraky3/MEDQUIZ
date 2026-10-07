@@ -34,8 +34,8 @@ NATIONAL_DAY_OFFER.endsAtMs = Date.parse('2026-10-01T23:59:59+03:00');
 const DAY = 24 * 60 * 60 * 1000;
 const inside = startsAtMs + 5 * DAY;
 
-test('the window is Tue 13 Oct to Sun 8 Nov 2026, Riyadh time', () => {
-    assert.equal(startsAtMs, Date.parse('2026-10-13T00:00:00+03:00'));
+test('the window is Thu 8 Oct to Sun 8 Nov 2026, Riyadh time', () => {
+    assert.equal(startsAtMs, Date.parse('2026-10-08T00:00:00+03:00'));
     assert.equal(endsAtMs, Date.parse('2026-11-08T23:59:59+03:00'));
 });
 

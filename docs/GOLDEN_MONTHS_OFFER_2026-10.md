@@ -10,7 +10,7 @@ Owner decision 2026-10-07: during the exam season a **four-month purchase is cre
 | `four_month` | 129 SAR | **5 months** |
 | `monthly`, `annual`, `group_3`, `group_5` | unchanged | unchanged (no bonus) |
 
-Window (Riyadh time): **Tue 13 Oct 2026 00:00 → Sun 8 Nov 2026 23:59:59**. Judged by the payment's **creation time**
+Window (Riyadh time): **Thu 8 Oct 2026 00:00 (moved up from 13 Oct on the owner's go) → Sun 8 Nov 2026 23:59:59**. Judged by the payment's **creation time**
 (`created_at` from Moyasar), with a 6-hour grace after the deadline, so money taken in time always gets its month.
 
 ## Code map

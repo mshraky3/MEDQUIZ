@@ -35,8 +35,8 @@ const isoInstant = (raw, fallbackIso) => {
 
 export const GOLDEN_MONTHS = {
     id: 'golden_months_2026',
-    // Riyadh time (UTC+3): opens at the start of Tue 13 Oct, closes at the end of Sun 8 Nov.
-    startsAtMs: isoInstant(process.env.GOLDEN_MONTHS_STARTS_AT, '2026-10-13T00:00:00+03:00'),
+    // Riyadh time (UTC+3): opens at the start of Thu 8 Oct (moved up from 13 Oct on the owner's go, 2026-10-08), closes at the end of Sun 8 Nov.
+    startsAtMs: isoInstant(process.env.GOLDEN_MONTHS_STARTS_AT, '2026-10-08T00:00:00+03:00'),
     endsAtMs: isoInstant(process.env.GOLDEN_MONTHS_ENDS_AT, '2026-11-08T23:59:59+03:00'),
     // Six hours, same reasoning as NATIONAL_DAY_OFFER.graceMs: money taken must
     // never mean access refused. Short enough that a page left open overnight
