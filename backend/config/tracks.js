@@ -17,6 +17,7 @@
 
 export const MEDICAL = 'medical';
 export const NURSING = 'nursing';
+export const DENTAL = 'dental';
 
 export const DEFAULT_TRACK = MEDICAL;
 
@@ -64,6 +65,35 @@ export const TRACKS = {
             { key: 'pediatric nursing', labelAr: 'تمريض الأطفال', labelEn: 'Pediatric Nursing', icon: 'baby' },
             { key: 'mental health nursing', labelAr: 'الصحة النفسية', labelEn: 'Mental Health Nursing', icon: 'brain' },
             { key: 'nursing pharmacology', labelAr: 'الأدوية وحسابات الجرعات', labelEn: 'Pharmacology & Dosage Calculation', icon: 'pill' },
+        ],
+    },
+    // Third population (2026-10): dental students and interns sitting the SDLE.
+    // Specialty keys follow the same rule as the other tracks: lowercase English,
+    // stored verbatim in questions.question_type, distinct from every medical and
+    // nursing key. The thirteen groups fold the source books' fifteen sections
+    // (trauma sits under endodontics, radiology under oral medicine).
+    [DENTAL]: {
+        key: DENTAL,
+        labelAr: 'طب الأسنان',
+        labelEn: 'Dentistry',
+        examAr: 'اختبار SDLE لطب الأسنان',
+        examEn: 'the Saudi Dental Licensing Exam (SDLE)',
+        audienceAr: 'طلاب وأطباء الأسنان',
+        audienceEn: 'dental students and interns',
+        specialties: [
+            { key: 'endodontics', labelAr: 'علاج الجذور', labelEn: 'Endodontics', icon: 'target' },
+            { key: 'restorative dentistry', labelAr: 'الترميمية', labelEn: 'Restorative Dentistry', icon: 'pen' },
+            { key: 'dental materials', labelAr: 'المواد السنية', labelEn: 'Dental Materials', icon: 'bar-chart' },
+            { key: 'periodontics', labelAr: 'أمراض اللثة', labelEn: 'Periodontics', icon: 'shield-check' },
+            { key: 'implant dentistry', labelAr: 'زراعة الأسنان', labelEn: 'Implant Dentistry', icon: 'zap' },
+            { key: 'fixed prosthodontics', labelAr: 'التعويضات الثابتة', labelEn: 'Fixed Prosthodontics', icon: 'link' },
+            { key: 'removable prosthodontics', labelAr: 'التعويضات المتحركة', labelEn: 'Removable Prosthodontics', icon: 'folder' },
+            { key: 'orthodontics', labelAr: 'تقويم الأسنان', labelEn: 'Orthodontics', icon: 'trending-up' },
+            { key: 'pediatric dentistry', labelAr: 'أسنان الأطفال', labelEn: 'Pediatric Dentistry', icon: 'baby' },
+            { key: 'oral surgery', labelAr: 'جراحة الفم', labelEn: 'Oral Surgery', icon: 'scalpel' },
+            { key: 'oral medicine and radiology', labelAr: 'طب الفم والأشعة', labelEn: 'Oral Medicine & Radiology', icon: 'eye' },
+            { key: 'medical dentistry', labelAr: 'الأدوية والحالات الطبية', labelEn: 'Medical Dentistry', icon: 'pill' },
+            { key: 'professionalism and infection control', labelAr: 'الأخلاقيات ومكافحة العدوى', labelEn: 'Professionalism & Infection Control', icon: 'award' },
         ],
     },
 };

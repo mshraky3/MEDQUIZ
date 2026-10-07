@@ -11,9 +11,9 @@
  */
 
 import assert from 'node:assert/strict';
-import { MEDICAL, NURSING } from '../config/tracks.js';
+import { MEDICAL, NURSING, DENTAL } from '../config/tracks.js';
 import {
-    MEDICAL_SOURCES, NURSING_SOURCES, PICKABLE_SOURCES, SELECTABLE_SOURCES, resolveSources,
+    MEDICAL_SOURCES, NURSING_SOURCES, DENTAL_SOURCES, PICKABLE_SOURCES, SELECTABLE_SOURCES, resolveSources,
 } from '../config/sources.js';
 
 const cases = [
@@ -38,6 +38,16 @@ const cases = [
     ['nursing, legacy label', 'NursingEMS', NURSING, null],
     ['nursing, other track\'s source', 'MedicalGameBoy', NURSING, null],
 
+    // --- dental: always constrained to its own collections (no open fallback) ---
+    ['dental, no source', undefined, DENTAL, DENTAL_SOURCES],
+    ['dental, "mix"', 'mix', DENTAL, DENTAL_SOURCES],
+    ['dental, Explained', 'DentalExplained', DENTAL, ['DentalExplained']],
+    ['dental, Recall2026', 'DentalRecall2026', DENTAL, ['DentalRecall2026']],
+    ['dental, Recall2024', 'DentalRecall2024', DENTAL, ['DentalRecall2024']],
+    ['dental, other track\'s source', 'MedicalGameBoy', DENTAL, DENTAL_SOURCES],
+    ['medical, a dental source', 'DentalExplained', MEDICAL, MEDICAL_SOURCES],
+    ['nursing, a dental source', 'DentalExplained', NURSING, null],
+
     // --- unknown track normalizes to medical --------------------------------
     ['unknown track', undefined, 'wat', MEDICAL_SOURCES],
 ];
@@ -60,6 +70,7 @@ for (const [name, source, track, expected] of cases) {
 const pickableCases = [
     ['medical offers all four collections', PICKABLE_SOURCES[MEDICAL], MEDICAL_SOURCES],
     ['nursing offers both collections', PICKABLE_SOURCES[NURSING], NURSING_SOURCES],
+    ['dental offers its three collections', PICKABLE_SOURCES[DENTAL], DENTAL_SOURCES],
 ];
 
 for (const [name, actual, expected] of pickableCases) {
@@ -75,7 +86,7 @@ for (const [name, actual, expected] of pickableCases) {
 
 // Anything offerable must also be resolvable, or the picker would hand the
 // server a source it then ignores.
-for (const track of [MEDICAL, NURSING]) {
+for (const track of [MEDICAL, NURSING, DENTAL]) {
     for (const s of PICKABLE_SOURCES[track]) {
         try {
             assert.deepEqual(resolveSources(s, track), [s]);

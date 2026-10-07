@@ -2003,7 +2003,10 @@ const ensureOAuthColumns = async () => {
 // 11: questions.sources (multi-collection membership) + its sync trigger + GIN
 //     index, and check_valid_quiz_source rebuilt from ALL_SESSION_SOURCES to
 //     accept MedicalSeptemberRecall.
-const SCHEMA_BOOTSTRAP_VERSION = 11;
+// 12: check_valid_quiz_source rebuilt again to accept the dental collections
+//     (DentalExplained, DentalRecall2026, DentalRecall2024); the `dental` track
+//     itself needs no DDL (track is VARCHAR(20) with no CHECK).
+const SCHEMA_BOOTSTRAP_VERSION = 12;
 async function bootstrapAll() {
     try {
         await db.query(`

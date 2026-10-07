@@ -31,7 +31,7 @@
  *     condition at all rather than an allowlist.
  */
 
-import { MEDICAL, NURSING, DEFAULT_TRACK, normalizeTrack } from './tracks.js';
+import { MEDICAL, NURSING, DENTAL, DEFAULT_TRACK, normalizeTrack } from './tracks.js';
 
 /**
  * Sentinel the client sends for "the whole of my track's bank". Predates the
@@ -67,6 +67,7 @@ export const ALL_SESSION_SOURCES = [
     'FebMarApr25', 'MidgardGameBoy', 'May26', 'June26', 'NursingEMS', 'NursingMostRepeated',
     'NursingConfirmed', 'MedicalGameBoy', 'MedicalConfirmed', 'MedicalMidgard',
     'MedicalMonthlyRecall', 'MedicalSeptemberRecall',
+    'DentalExplained', 'DentalRecall2026', 'DentalRecall2024',
 ];
 
 /**
@@ -76,6 +77,14 @@ export const ALL_SESSION_SOURCES = [
 export const NURSING_SOURCES = ['NursingConfirmed', 'NursingMostRepeated'];
 
 /**
+ * The dental bank's collections, in recommended study order: the explained,
+ * referenced bank first, then the two recall compilations (newest first).
+ * Unlike nursing, the dental fallback DOES constrain to this list (see
+ * resolveSources), so a stray label can never leak into the dental bank.
+ */
+export const DENTAL_SOURCES = ['DentalExplained', 'DentalRecall2026', 'DentalRecall2024'];
+
+/**
  * Which `source` values resolveSources() will honour for a track. A value not
  * listed for the caller's track is ignored, so a crafted one can never reach
  * another bank (and `track` filtering would block it regardless).
@@ -83,6 +92,7 @@ export const NURSING_SOURCES = ['NursingConfirmed', 'NursingMostRepeated'];
 export const SELECTABLE_SOURCES = {
     [MEDICAL]: MEDICAL_SOURCES,
     [NURSING]: NURSING_SOURCES,
+    [DENTAL]: DENTAL_SOURCES,
 };
 
 /**
@@ -96,6 +106,7 @@ export const SELECTABLE_SOURCES = {
 export const PICKABLE_SOURCES = {
     [MEDICAL]: MEDICAL_SOURCES,
     [NURSING]: NURSING_SOURCES,
+    [DENTAL]: DENTAL_SOURCES,
 };
 
 /**
@@ -110,6 +121,7 @@ export const PICKABLE_SOURCES = {
 export const SOURCE_PRIORITY = {
     [MEDICAL]: MEDICAL_SOURCES,
     [NURSING]: NURSING_SOURCES,
+    [DENTAL]: DENTAL_SOURCES,
 };
 
 /**
@@ -126,5 +138,6 @@ export function resolveSources(sourceParam, track = DEFAULT_TRACK) {
         && selectable.includes(sourceParam)) {
         return [sourceParam];
     }
+    if (t === DENTAL) return DENTAL_SOURCES;
     return t === MEDICAL ? MEDICAL_SOURCES : null;
 }
