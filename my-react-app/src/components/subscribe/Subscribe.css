@@ -153,6 +153,72 @@
     color: var(--muted, #64748b);
 }
 
+/* Golden Months: the four-month tile carries gold, and its label reads
+   "4" struck out, then "5 months" — the term grew, the price did not. */
+.subscribe-plan.on-bonus {
+    border-color: #d9a21b;
+    background: linear-gradient(180deg, #fffaf0, #fff4d6);
+    box-shadow: 0 0 0 1px rgba(217, 162, 27, 0.35);
+}
+
+.subscribe-plan.on-bonus.selected {
+    border-color: #c98f12;
+    box-shadow: 0 0 0 3px rgba(217, 162, 27, 0.3);
+}
+
+.subscribe-plan-label-bonus {
+    display: inline-flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 8px;
+    color: #5c4300;
+    direction: ltr;
+}
+
+.subscribe-plan-label-bonus s {
+    font-size: 20px;
+    font-weight: 700;
+    text-decoration-thickness: 2.5px;
+}
+
+.subscribe-plan-label-bonus strong {
+    font-size: 36px;
+    font-weight: 900;
+    line-height: 1;
+    color: #8a5d00;
+}
+
+.subscribe-plan-label-bonus span {
+    font-size: 13px;
+    font-weight: 800;
+    direction: inherit;
+}
+
+/* The tile with the bonus is the wider, taller, louder one (three-tile ladder only). */
+.subscribe-plans:has(.on-bonus):not(:has(.subscribe-plan:nth-child(4))) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr) minmax(0, 1fr);
+}
+
+.subscribe-plan.on-bonus { padding-block: 16px 14px; }
+.subscribe-plan.on-bonus .subscribe-plan-amount { font-size: 22px; }
+.subscribe-plan-permonth-bonus { font-size: 12px; }
+.subscribe-plan-permonth-bonus s { font-size: 12px; }
+
+.subscribe-plan-permonth-bonus {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 5px;
+    font-weight: 700;
+    color: #8a5d00;
+}
+
+.subscribe-plan-permonth-bonus s {
+    color: var(--muted, #64748b);
+    font-weight: 600;
+    text-decoration-thickness: 1.5px;
+    text-decoration-color: var(--error-color, #dc2626);
+}
+
 .subscribe-perks {
     list-style: none;
     margin: 0;

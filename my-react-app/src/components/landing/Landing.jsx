@@ -16,6 +16,7 @@ import { NationalDayStrip } from '../common/NationalDayOffer.jsx';
 import { useNationalDayOffer } from '../../utils/nationalDay.js';
 import NationalDaySection from './NationalDaySection.jsx';
 import { GoldenStrip } from '../common/GoldenMonths.jsx';
+import GoldenMonthsSection from './GoldenMonthsSection.jsx';
 import { useGoldenMonths } from '../../utils/goldenMonths.js';
 import './Landing.css';
 
@@ -203,7 +204,7 @@ const Landing = () => {
       {/* Explicit dir: index.css sets body{direction:ltr}, which would cancel
           the documentElement dir for everything inside. */}
       <div className={`landing-body${nd || gm ? ' has-nd' : ''}`} dir={dir} lang={lang}>
-        {nd ? <NationalDayStrip offer={nd.offer} plans={nd.plans} /> : gm && <GoldenStrip offer={gm} />}
+        {nd ? <NationalDayStrip offer={nd.offer} plans={nd.plans} /> : gm && <GoldenStrip offer={gm.offer} />}
         <header className="landing-topbar">
           <span className="landing-brand">SQB</span>
           <div className="landing-topbar-actions">
@@ -315,6 +316,19 @@ const Landing = () => {
             <NationalDaySection
               offer={nd.offer}
               plans={nd.plans}
+              isAuthenticated={isAuthenticated}
+              isSubscribed={isSubscribed}
+              onCta={trackSignupClick}
+            />
+          )}
+
+          {/* Golden Months: four months become five at the same price. Under
+              the hero for the same reason as the National Day panel (which, if
+              both were ever live, takes this spot instead). */}
+          {!nd && gm && (
+            <GoldenMonthsSection
+              offer={gm.offer}
+              plan={gm.plan}
               isAuthenticated={isAuthenticated}
               isSubscribed={isSubscribed}
               onCta={trackSignupClick}

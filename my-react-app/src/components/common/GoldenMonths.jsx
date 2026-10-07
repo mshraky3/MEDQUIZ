@@ -1,5 +1,4 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import Icon from './Icon.jsx';
 import { useCopy, useLang } from '../../i18n';
 import goldenMonthsCopy from '../../i18n/copy/goldenMonths.js';
@@ -21,13 +20,16 @@ const BonusChip = () => <span className="nd-chip" aria-hidden="true">+1</span>;
 /** Slim bar across the top of the landing page; one link, to checkout. */
 export function GoldenStrip({ offer }) {
     const t = useCopy(goldenMonthsCopy).strip;
-    const navigate = useNavigate();
-    const go = (event) => {
+    // Scrolls to the panel rather than navigating, so a visitor never loses their place.
+    const scrollToOffer = (event) => {
+        const target = document.getElementById('golden-months');
+        if (!target) return;
         event.preventDefault();
-        navigate('/subscribe');
+        const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+        target.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
     };
     return (
-        <a className="nd-strip" href="/subscribe" onClick={go}>
+        <a className="nd-strip" href="#golden-months" onClick={scrollToOffer}>
             <BonusChip />
             <span className="nd-strip-text">
                 <strong>{t.label}</strong>

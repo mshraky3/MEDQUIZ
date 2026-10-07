@@ -23,8 +23,12 @@ Window (Riyadh time): **Tue 13 Oct 2026 00:00 → Sun 8 Nov 2026 23:59:59**. Jud
   `minAcceptableHalalas` and verification are untouched** (a mutation-checked test pins this). Admin grants pass no plan id, so get no bonus.
 - `routes/payment.js` — `/api/payment/config` returns `goldenMonths` (null when off), separate from `offer` (the price offer).
 - `accountingService.settleEvent` adds `createdAtMs`; `invoiceService` states the months credited (5 / "خمسة أشهر") on the PDF and email.
-- Front end (campaign code, removable — see top of `i18n/copy/goldenMonths.js`): `GoldenStrip` on the landing page (only when the
-  National Day offer is not showing), `GoldenBanner` + "+1 month free" badge + "/ 5 months" + "26 SAR/mo" on `/subscribe`.
+- Front end (campaign code, removable — see top of `i18n/copy/goldenMonths.js`): a full **panel on the landing page**
+  (`components/landing/GoldenMonthsSection.*`: headline "pay for 4, study 5", five month tiles with the fifth gold, the price,
+  the per-month cost recalculated, monthly comparison, countdown, CTA), the `GoldenStrip` bar above it, and on `/subscribe` a
+  `GoldenBanner` plus a redesigned four-month plan card: the old term struck out ("4" then "5 months"), per-month recalculated
+  (32 struck, 26), gold styling, wider tile. During the window the card's permanent compare-at 200 / "36% off" step aside.
+  The panel only renders when the National Day offer is not live.
   Landing and National Day share one `/config` request (`loadPublicConfig` in `utils/nationalDay.js`).
 - Tests: `backend/services/goldenMonths.test.js` (window, grace, plan coverage, price untouched, real activation path with a fake db,
   receipts, env override).

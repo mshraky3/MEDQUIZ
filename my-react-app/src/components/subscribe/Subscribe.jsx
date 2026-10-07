@@ -329,7 +329,10 @@ const Subscribe = () => {
         const now = plan.priceHalalas / 100;
         return { was, saved: was - now, pct: Math.round((1 - now / was) * 100) };
     };
-    const selectedOffer = offer(selectedPlan);
+    // While Golden Months is on, the four-month tile tells ONE story (the term grew,
+    // the price did not), so its permanent compare-at "was" price and discount badge
+    // step aside instead of piling a second claim on the same tile.
+    const selectedOffer = selectedPlan?.bonusMonths > 0 ? null : offer(selectedPlan);
 
     const selectPlan = (planId) => {
         if (planId === selectedPlanId) return;
@@ -402,25 +405,32 @@ const Subscribe = () => {
                                 // figure is spread over the months actually credited.
                                 const bonus = Number(plan.bonusMonths) || 0;
                                 const perMonth = Math.round((plan.priceHalalas / (plan.months + bonus)) / 100);
-                                const planOffer = offer(plan);
+                                const planOffer = bonus > 0 ? null : offer(plan);
                                 return (
                                     <button
                                         key={plan.id}
                                         type="button"
-                                        className={`subscribe-plan${plan.id === selectedPlanId ? ' selected' : ''}${planOffer ? ' on-offer' : ''}`}
+                                        className={`subscribe-plan${plan.id === selectedPlanId ? ' selected' : ''}${planOffer ? ' on-offer' : ''}${bonus > 0 ? ' on-bonus' : ''}`}
                                         onClick={() => selectPlan(plan.id)}
                                     >
                                         {/* An offer badge replaces the static one: a live
                                             discount is the stronger thing to say, and two
                                             badges on one tile would just fight each other. */}
-                                        {bonus > 0 ? (
-                                            <span className="subscribe-plan-badge offer">{tgm.planBadge}</span>
-                                        ) : planOffer ? (
+                                        {planOffer ? (
                                             <span className="subscribe-plan-badge offer">{t.offerBadge(planOffer.pct)}</span>
                                         ) : planCopy.badge && (
                                             <span className="subscribe-plan-badge">{planCopy.badge}</span>
                                         )}
-                                        <span className="subscribe-plan-label">{planCopy.label}</span>
+                                        {bonus > 0 ? (
+                                            // Golden Months: the old term struck out, the new one beside it.
+                                            <span className="subscribe-plan-label subscribe-plan-label-bonus">
+                                                <s className="subscribe-plan-was">{plan.months}</s>
+                                                <strong>{plan.months + bonus}</strong>
+                                                <span>{tgm.card.monthWord(plan.months + bonus)}</span>
+                                            </span>
+                                        ) : (
+                                            <span className="subscribe-plan-label">{planCopy.label}</span>
+                                        )}
                                         <span className="subscribe-plan-amount">
                                             {planOffer && <s className="subscribe-plan-was">{planOffer.was}</s>}
                                             {plan.priceHalalas / 100}
@@ -430,6 +440,12 @@ const Subscribe = () => {
                                             // not per month — that is the comparison a buyer is making.
                                             <span className="subscribe-plan-permonth">
                                                 {t.perSeat(Math.round((plan.priceHalalas / plan.seats) / 100))}
+                                            </span>
+                                        ) : bonus > 0 ? (
+                                            // The per-month cost recalculated over the months credited.
+                                            <span className="subscribe-plan-permonth subscribe-plan-permonth-bonus">
+                                                <s>{Math.round(plan.priceHalalas / plan.months / 100)}</s>
+                                                {tgm.card.perMonth(perMonth)}
                                             </span>
                                         ) : plan.months > 1 && (
                                             <span className="subscribe-plan-permonth">{t.perMonth(perMonth)}</span>
