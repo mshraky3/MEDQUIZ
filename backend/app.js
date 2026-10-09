@@ -1034,7 +1034,7 @@ app.use(helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' },
 }));
 
-// Already a dependency, never wired in — every response (the 5,033-row
+// Already a dependency, never wired in — every response (the whole-bank
 // question payloads especially) went over the wire uncompressed.
 // Level 1: several times cheaper to compute than the default 6 for a payload
 // only ~10-15% larger. Every millisecond here is billed function time.
@@ -8133,7 +8133,7 @@ app.put('/api/preferences/language', requireSession, async (req, res) => {
  * Two kinds: recent ACTIVITY, and current INVENTORY. The inventory half is new,
  * and the comment that used to sit here ("the site never states bank size") is
  * no longer true — the landing page says how many questions the bank holds,
- * because "5,033 questions, every one explained" is a verifiable fact and the
+ * because "N questions in the bank" is a verifiable fact and the
  * claim it replaced ("hundreds of students passed") was not one.
  *
  * Hardcoding that number means it is wrong the day after the next import, and

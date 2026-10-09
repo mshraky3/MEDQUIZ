@@ -174,7 +174,7 @@ const authCopy = {
         // in via /login must still choose, same as any other new account).
         trackModal: {
             eyebrow: 'الخطوة الأولى',
-            title: 'هل أنت طالب/خريج تمريض أم طب بشري؟',
+            title: 'هل أنت طالب/خريج طب بشري أم تمريض أم طب أسنان؟',
             body: 'اختيارك يحدّد بنك الأسئلة والملخصات وتحليل الأداء الذي ستستخدمه. اختر بدقّة — لا يمكن تغييره لاحقاً إلا عبر الدعم.',
             confirm: (label) => `متابعة كـ«${label}»`,
             confirmEmpty: 'اختر مسارك للمتابعة',
@@ -388,7 +388,7 @@ const authCopy = {
         // in via /login must still choose, same as any other new account).
         trackModal: {
             eyebrow: 'First step',
-            title: 'Are you a nursing student/graduate, or a medical one?',
+            title: 'Are you a medical, nursing or dental student/graduate?',
             body: 'Your choice decides which question bank, summaries and performance analytics your account uses. Choose carefully — it can only be changed later through support.',
             confirm: (label) => `Continue as “${label}”`,
             confirmEmpty: 'Choose your track to continue',

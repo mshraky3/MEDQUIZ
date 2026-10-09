@@ -213,7 +213,7 @@ const router = createBrowserRouter([{
   ...examRoutePaths().map((path) => pub(path, <ExamPage />)),
 
   // Public question library — the only pages a stranger can read in full with
-  // no account, and the reason they exist: 5,033 explained questions that
+  // no account, and the reason they exist: a bank of explained questions that
   // Google has never been shown. Prerendered at build time by
   // scripts/postbuild-seo.mjs from src/seo/data/publicQuestions.json.
   pub('/questions', <QuestionsHub />),

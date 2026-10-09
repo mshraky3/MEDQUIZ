@@ -1,8 +1,8 @@
 /**
  * The public question library: URL scheme, lookups, SEO config and crawler HTML.
  *
- * Background: the bank holds 5,033 questions, every one with a written
- * explanation, and all of them sit behind the login. Google has five pages of
+ * Background: the bank's questions, most with a written explanation,
+ * sit behind the login. Google has five pages of
  * this site indexed. scripts/exportPublicQuestions.js (in backend/) selects a
  * bounded sample into src/seo/data/publicQuestions.json, and this module turns
  * that file into routes — one static page per question, plus a per-specialty

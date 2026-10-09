@@ -187,7 +187,7 @@ const landingCopy = {
             visitor: {
                 pill: 'جاهز للبدء؟',
                 title: 'كل يوم تأجيل هو يوم تدريب يكسبه غيرك عليك',
-                body: 'أنشئ حسابك، أكّد بريدك، وابدأ فوراً بـ 10 أسئلة مجانية — من بنك يضم 5,033 سؤالاً، لكل واحد منها شرح مكتوب، ويُحدَّث بتجميعات شهرية.',
+                body: 'أنشئ حسابك، أكّد بريدك، وابدأ فوراً بـ 10 أسئلة مجانية — من بنك أسئلة بشروحات مكتوبة، ويُحدَّث بتجميعات شهرية.',
                 primary: 'إنشاء حساب',
                 secondary: 'تسجيل الدخول',
                 note: '10 أسئلة مجانية · ثم من 50 ريالاً شهرياً · دفع آمن عبر ميسر · بدون تجديد تلقائي',
@@ -377,7 +377,7 @@ const landingCopy = {
             visitor: {
                 pill: 'Ready to start?',
                 title: 'Every day you put it off is a day of practice someone else gains on you',
-                body: 'Create your account, confirm your email, and start with 10 free questions — from a bank of 5,033, every one of them explained, updated with monthly collections.',
+                body: 'Create your account, confirm your email, and start with 10 free questions — from a bank with written explanations, updated with monthly collections.',
                 primary: 'Create an account',
                 secondary: 'Log in',
                 note: '10 free questions · then from SAR 50 a month · Secure payment via Moyasar · No auto-renewal',

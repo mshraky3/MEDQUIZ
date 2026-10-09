@@ -96,6 +96,7 @@ const landingCopy = {
             soonNote: 'يمكنك إنشاء حسابك على هذا المسار الآن، وسنبلغك بالبريد فور رفع المحتوى.',
             medicalDesc: 'بنك أسئلة وملخصات كاملة للباطنة والجراحة والأطفال والنساء والولادة.',
             nursingDesc: 'مسار مستقل بأسئلته وملخصاته وتحليلات أدائه الخاصة — منفصل تماماً عن مسار الطب.',
+            dentalDesc: 'مسار طب الأسنان لاختبار SDLE: أسئلة موزعة على 13 تخصصاً، ومنها بنك مشروح بالمراجع وتجميعات الطلاب.',
             cardCta: (title) => `ابدأ مسار ${title}`,
             ctaNote: '10 أسئلة مجانية · بدون بطاقة دفع',
         },
@@ -188,7 +189,7 @@ const landingCopy = {
             visitor: {
                 pill: 'جاهز للبدء؟',
                 title: 'كل يوم تأجيل هو يوم تدريب يكسبه غيرك عليك',
-                body: 'أنشئ حسابك، أكّد بريدك، وابدأ فوراً بـ 10 أسئلة مجانية — من بنك يضم 5,033 سؤالاً، لكل واحد منها شرح مكتوب، ويُحدَّث بتجميعات شهرية.',
+                body: 'أنشئ حسابك، أكّد بريدك، وابدأ فوراً بـ 10 أسئلة مجانية — من بنك أسئلة بشروحات مكتوبة، ويُحدَّث بتجميعات شهرية.',
                 primary: 'إنشاء حساب',
                 secondary: 'تسجيل الدخول',
                 note: '10 أسئلة مجانية · ثم من 50 ريالاً شهرياً · دفع آمن عبر ميسر · بدون تجديد تلقائي',
@@ -285,6 +286,7 @@ const landingCopy = {
             soonNote: 'You can create your account on this track now — we will email you the moment the content goes live.',
             medicalDesc: 'A full question bank and summaries for internal medicine, surgery, paediatrics, and obstetrics & gynaecology.',
             nursingDesc: 'A standalone track with its own questions, summaries and performance analytics — completely separate from the medical track.',
+            dentalDesc: 'The dental track for the SDLE: questions across 13 specialties, including an explained bank with references and student recalls.',
             cardCta: (title) => `Start the ${title} track`,
             ctaNote: '10 free questions · No payment card',
         },
@@ -377,7 +379,7 @@ const landingCopy = {
             visitor: {
                 pill: 'Ready to start?',
                 title: 'Every day you put it off is a day of practice someone else gains on you',
-                body: 'Create your account, confirm your email, and start with 10 free questions — from a bank of 5,033, every one of them explained, updated with monthly collections.',
+                body: 'Create your account, confirm your email, and start with 10 free questions — from a bank with written explanations, updated with monthly collections.',
                 primary: 'Create an account',
                 secondary: 'Log in',
                 note: '10 free questions · then from SAR 50 a month · Secure payment via Moyasar · No auto-renewal',

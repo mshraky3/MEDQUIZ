@@ -70,8 +70,10 @@ no live keys), with the app served as a web preview in a phone-sized viewport.
    timestamp; the app validates sessions through the authenticated subscription endpoint instead.
 3. The exam-date API serialises a DATE through `toISOString()`, so a backend running in a UTC+3 timezone shows
    the day before. Vercel runs in UTC, so production is fine; only a local backend on a Saudi laptop shows it.
-4. The public library payload says the bank has 5,033 questions; the bank now has 7,115. The site's "5,033" copy
-   comes from `publicQuestions.json` (`bankTotal`); re-export it with the backend script when convenient.
+4. The public library payload (`publicQuestions.json`: `bankTotal` and `collections`) still describes the bank as it was
+   on 30 Aug 2026 (5,033 questions, 5 collections); the live bank has 13,036 (medical 7,871, nursing 2,105, dental 3,060 on
+   9 Oct 2026). The landing copy no longer states a number. Regenerate the payload with `backend/scripts/exportPublicQuestions.js`
+   (needs production DB access) and run `npm run sync:library` here; see `knowledge/SQB/11 Improvements backlog.md`.
 
 ## Decisions and progress on 7 Oct 2026 (after the first build)
 - Google Android OAuth client created (see `GOOGLE_SIGN_IN.md`); the build must still be given the web client id.

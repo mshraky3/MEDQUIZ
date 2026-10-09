@@ -1,8 +1,8 @@
 /**
  * Export a fixed sample of the question bank as the PUBLIC, indexable set.
  *
- * Why this exists: 5,033 questions — every one carrying a written explanation —
- * sit behind the login, so Google has never been given a single one of them.
+ * Why this exists: the whole question bank (the live count is on the admin
+ * Overview and in /api/public/stats) sits behind the login, so Google has never been given a single one of them.
  * Search Console shows five indexed pages for the whole site. This script picks
  * a bounded sample and writes it to a JSON file the web build turns into static
  * pages at /questions/<specialty>/<slug>.
