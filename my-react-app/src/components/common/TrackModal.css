@@ -185,6 +185,14 @@
     text-align: center;
 }
 
+/* The cookie bar (z-banner) sits above this modal (z-modal) and, since the
+   third (dental) card made the card taller, covered the "Continue" button of
+   first-time visitors, so they could not finish signup. Hide the bar while
+   the modal is open; it comes back as soon as the track is chosen. */
+body:has(.track-modal) .cookie-consent-overlay {
+    display: none;
+}
+
 @media (max-width: 480px) {
     .track-modal { padding: 12px; }
 
