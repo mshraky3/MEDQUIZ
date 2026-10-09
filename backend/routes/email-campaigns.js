@@ -486,8 +486,9 @@ router.get('/api/email-test/subscription-report', adminAuth, async (req, res) =>
 /**
  * GET /api/email-test/daily-signups-report
  * Force-sends today's signups report immediately (admin only), without
- * touching daily_signups_report_log — so the scheduled 23:00 AST send still
- * happens on its own, unaffected by this preview.
+ * touching daily_signups_report_log — so the scheduled 00:05 AST send still
+ * happens on its own, unaffected by this preview. Today is unfinished, so the
+ * preview is marked PARTIAL.
  */
 router.get('/api/email-test/daily-signups-report', adminAuth, async (req, res) => {
     try {
@@ -508,9 +509,8 @@ router.get('/api/email-test/daily-signups-report', adminAuth, async (req, res) =
  *
  * Deliberately NOT one of Vercel's two Hobby-plan cron slots — both are
  * already spent (see backend/vercel.json). Called once a day from
- * .github/workflows/cron.yml at 20:00 UTC (23:00 AST), which is what makes
- * this a genuine end-of-day report rather than a next-morning one riding
- * along on the existing 09:00 UTC daily-emails cron.
+ * .github/workflows/cron.yml at 21:05 UTC (00:05 AST) and reports the Saudi
+ * day that just ended, so it is always a full day, never a partial one.
  */
 router.get('/api/cron/daily-signups-report', cronAuth, async (req, res) => {
     try {

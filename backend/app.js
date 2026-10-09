@@ -53,6 +53,7 @@ import {
 } from './config/tracks.js';
 import { PICKABLE_SOURCES, SOURCE_PRIORITY, SELECTABLE_SOURCES, resolveSources, ALL_SESSION_SOURCES } from './config/sources.js';
 import { runRecallImport } from './services/recallImportService.js';
+import { isDisposableEmail, DISPOSABLE_EMAIL_MESSAGE } from './utils/disposableEmail.js';
 
 /**
  * How long an admin-granted account keeps access when no explicit term is
@@ -6883,6 +6884,13 @@ app.post('/api/auth/send-otp', rateLimit(db, 'send-otp', { windowMs: 15 * 60_000
 
         const lowerEmail = email.toLowerCase().trim();
 
+        // Free signups only: a throwaway inbox is a free identity (every
+        // account gets free questions). Reset codes for an existing account
+        // are not affected.
+        if (purpose === 'signup' && isDisposableEmail(lowerEmail)) {
+            return res.status(400).json({ success: false, message: DISPOSABLE_EMAIL_MESSAGE });
+        }
+
         // For signup: email must not already be verified/in-use
         if (purpose === 'signup') {
             const existing = await db.query(
@@ -7093,6 +7101,11 @@ app.post('/api/signup/free', async (req, res) => {
 
         if (password.length < 8) {
             return res.status(400).json({ success: false, message: 'Password must be at least 8 characters' });
+        }
+
+        // Same check as send-otp, in case a code was requested before the block existed.
+        if (isDisposableEmail(email)) {
+            return res.status(400).json({ success: false, message: DISPOSABLE_EMAIL_MESSAGE });
         }
 
         const lowerEmail = email.toLowerCase().trim();

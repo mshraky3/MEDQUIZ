@@ -22,8 +22,10 @@
  *
  * Scheduling: NOT one of Vercel's two Hobby-plan cron slots (both already
  * spoken for — see backend/vercel.json). Called from GitHub Actions
- * (.github/workflows/cron.yml), which has no slot limit, at 20:00 UTC
- * (23:00 AST) — a real end-of-day send, not a next-morning one.
+ * (.github/workflows/cron.yml), which has no slot limit, at 21:05 UTC
+ * (00:05 AST), just after the Saudi day ends, and reports that finished day.
+ * (Until 2026-10-09 it ran at 20:00 UTC and counted a UTC day, so it cut off
+ * the last hours of the Saudi evening and could be misread as a full day.)
  */
 
 import { sendMail } from './mailer.js';
@@ -74,6 +76,24 @@ function ensureReportLog(db) {
     return _logTableReady;
 }
 
+const AST_OFFSET_MS = 3 * 3600 * 1000; // Saudi time, UTC+3, no DST
+
+/** Saudi calendar date (YYYY-MM-DD) of an instant. */
+export function astDateTag(instant) {
+    return new Date(instant.getTime() + AST_OFFSET_MS).toISOString().slice(0, 10);
+}
+
+/** The Saudi calendar day `dateTag` as a half-open UTC range [start, end). */
+export function astDayRange(dateTag) {
+    const start = new Date(`${dateTag}T00:00:00+03:00`);
+    return { start, end: new Date(start.getTime() + 24 * 3600 * 1000) };
+}
+
+/** Latest Saudi day that has fully ended at `now` (always yesterday, Saudi time). */
+export function lastCompletedAstDay(now = new Date()) {
+    return astDateTag(new Date(now.getTime() - 24 * 3600 * 1000));
+}
+
 function fmtDate(d) {
     return new Date(d).toISOString().replace('T', ' ').slice(0, 16) + ' UTC';
 }
@@ -100,12 +120,17 @@ function chartRow(label, count, maxCount, color) {
  */
 export async function sendDailySignupsReport(db, opts = {}) {
     await ensureReportLog(db);
-    const reportDate = opts.reportDate || new Date();
-    const dateTag = reportDate.toISOString().slice(0, 10);
+    const now = new Date();
+    // The report day is a Saudi calendar day (the owner's day), not a UTC one.
+    // By default it is today so far (a preview); the scheduler passes the last
+    // completed day. A day that has not ended yet is labelled PARTIAL everywhere
+    // so a half-finished day can never be read as a full one.
+    const dateTag = opts.day || astDateTag(now);
     const record = opts.record !== false;
 
-    const dayStart = new Date(`${dateTag}T00:00:00.000Z`);
-    const dayEnd = new Date(dayStart.getTime() + 24 * 3600 * 1000);
+    const { start: dayStart, end: dayEnd } = astDayRange(dateTag);
+    const partial = dayEnd.getTime() > now.getTime();
+    const dayWord = partial ? 'so far' : 'that day';
 
     const [byMethodRes, totalRes, weekRes] = await Promise.all([
         db.query(
@@ -136,7 +161,7 @@ export async function sendDailySignupsReport(db, opts = {}) {
     }
     const totalUsers = totalRes.rows[0].n;
     const weekAvg = weekRes.rows[0].n / 7;
-    const vsAvgPct = weekAvg > 0 ? Math.round(((newSignups - weekAvg) / weekAvg) * 100) : null;
+    const vsAvgPct = !partial && weekAvg > 0 ? Math.round(((newSignups - weekAvg) / weekAvg) * 100) : null;
 
     // Known methods first (in the fixed display order above), then anything
     // unrecognised collapsed into one "Other" row rather than one row per
@@ -156,7 +181,7 @@ export async function sendDailySignupsReport(db, opts = {}) {
         ? `<table style="width:100%;border-collapse:collapse">
              ${chartData.map((r) => chartRow(r.label, r.count, maxCount, r.color)).join('')}
            </table>`
-        : `<p style="color:#6b7280;font-size:13px;margin:0">No new signups today.</p>`;
+        : `<p style="color:#6b7280;font-size:13px;margin:0">No new signups ${dayWord}.</p>`;
 
     const vsAvgHtml = vsAvgPct === null
         ? ''
@@ -165,12 +190,12 @@ export async function sendDailySignupsReport(db, opts = {}) {
     const summaryHtml = `
         <div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:0 auto">
           <div style="background:linear-gradient(135deg,#059669,#047857);color:#fff;padding:18px 22px;border-radius:10px 10px 0 0">
-            <h2 style="margin:0;font-size:18px">🌱 Daily Signups — ${dateTag}</h2>
-            <p style="margin:6px 0 0;font-size:12px;opacity:.85">${fmtDate(dayStart)} → ${fmtDate(dayEnd)}</p>
+            <h2 style="margin:0;font-size:18px">🌱 Daily Signups — ${dateTag}${partial ? ' (PARTIAL DAY)' : ''}</h2>
+            <p style="margin:6px 0 0;font-size:12px;opacity:.85">${fmtDate(dayStart)} → ${partial ? fmtDate(now) + ' (day not finished)' : fmtDate(dayEnd)} · Saudi day ${dateTag}</p>
           </div>
           <div style="border:1px solid #e5e7eb;border-top:none;padding:18px 22px;border-radius:0 0 10px 10px">
             <table style="width:100%;font-size:14px;border-collapse:collapse;margin-bottom:16px">
-              <tr><td style="padding:6px 0;color:#374151">New signups today</td><td style="text-align:left;font-weight:bold;font-size:20px">${newSignups}</td></tr>
+              <tr><td style="padding:6px 0;color:#374151">New signups ${dayWord}</td><td style="text-align:left;font-weight:bold;font-size:20px">${newSignups}</td></tr>
               <tr><td style="padding:6px 0;color:#374151">Total users to date</td><td style="text-align:left;font-weight:bold">${totalUsers}</td></tr>
               <tr><td style="padding:6px 0;color:#374151">7-day daily average</td><td style="text-align:left;font-weight:bold">${weekAvg.toFixed(1)} ${vsAvgHtml}</td></tr>
             </table>
@@ -181,7 +206,7 @@ export async function sendDailySignupsReport(db, opts = {}) {
         </div>`;
 
     const textLines = [
-        `New signups today: ${newSignups}`,
+        `New signups ${dayWord} (Saudi day ${dateTag}${partial ? ', PARTIAL: the day is not finished' : ''}): ${newSignups}`,
         `Total users to date: ${totalUsers}`,
         `7-day daily average: ${weekAvg.toFixed(1)}${vsAvgPct !== null ? ` (${vsAvgPct >= 0 ? '+' : ''}${vsAvgPct}% vs today)` : ''}`,
         '',
@@ -193,7 +218,7 @@ export async function sendDailySignupsReport(db, opts = {}) {
         event: 'medqize.owner.daily_signups_report',
         name: 'SQB Reports',
         to: REPORT_RECIPIENT,
-        subject: `🌱 Daily Signups — ${newSignups} new user${newSignups === 1 ? '' : 's'} — ${dateTag}`,
+        subject: `🌱 Daily Signups — ${newSignups} new user${newSignups === 1 ? '' : 's'} — ${dateTag}${partial ? ' (partial day)' : ''}`,
         text: textLines.join('\n'),
         html: summaryHtml,
     });
@@ -210,11 +235,11 @@ export async function sendDailySignupsReport(db, opts = {}) {
         );
     }
 
-    return { sent: true, recipient: REPORT_RECIPIENT, newSignups, totalUsers, byMethod, reportDate: dateTag };
+    return { sent: true, recipient: REPORT_RECIPIENT, newSignups, totalUsers, byMethod, reportDate: dateTag, partial };
 }
 
 /**
- * Called from the scheduler: sends once per calendar date (UTC), even if the
+ * Called from the scheduler: sends once per Saudi calendar date, always for the last COMPLETED day, even if the
  * caller fires more than once that day — the ON CONFLICT upsert above means a
  * duplicate call updates the same row's numbers rather than sending twice,
  * but this check skips the network call and DB write entirely when nothing
@@ -222,8 +247,8 @@ export async function sendDailySignupsReport(db, opts = {}) {
  */
 export async function maybeSendDailySignupsReport(db, opts = {}) {
     await ensureReportLog(db);
-    const reportDate = opts.reportDate || new Date();
-    const dateTag = reportDate.toISOString().slice(0, 10);
+    // Always a day that has fully ended, so the scheduled email is never partial.
+    const dateTag = opts.day || lastCompletedAstDay();
     const { rows } = await db.query(
         `SELECT 1 FROM daily_signups_report_log WHERE report_date = $1`,
         [dateTag]
@@ -231,5 +256,5 @@ export async function maybeSendDailySignupsReport(db, opts = {}) {
     if (rows.length && !opts.force) {
         return { sent: false, reason: 'already_sent_today', reportDate: dateTag };
     }
-    return sendDailySignupsReport(db, { ...opts, reportDate });
+    return sendDailySignupsReport(db, { ...opts, day: dateTag });
 }

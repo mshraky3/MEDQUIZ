@@ -29,7 +29,7 @@ on:
     - cron: '30 2 * * *'        # daily cleanup + lifecycle emails
     - cron: '0 8 * * 6'         # weekly: weak-topics DMs (channel topic-summary post is off)
     - cron: '15 * * * *'        # hourly: broadcast drain + welcome emails
-    - cron: '0 20 * * *'        # end-of-day: daily signups report (20:00 UTC = 23:00 AST)
+    - cron: '5 21 * * *'        # daily signups report for the Saudi day that just ended (21:05 UTC = 00:05 AST)
   workflow_dispatch:
     inputs:
       job:
@@ -85,7 +85,7 @@ jobs:
                 '30 2 * * *')      group=daily ;;
                 '0 8 * * 6')       group=weekly ;;
                 '15 * * * *')      group=hourly ;;
-                '0 20 * * *')      group=eod ;;
+                '5 21 * * *')      group=eod ;;
                 *) echo "::error::Unrecognised schedule '${SCHEDULE:-}'"; exit 1 ;;
               esac
               ;;
