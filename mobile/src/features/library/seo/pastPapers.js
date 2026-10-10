@@ -57,8 +57,15 @@ const COLLECTION_META = {
         slug: 'smle-monthly-recall',
         labelAr: 'تجميعات شهرية للطب البشري',
         labelEn: 'Monthly Recall collection (SMLE)',
-        blurbAr: 'أسئلة SMLE مستخرجة من تجميعات الطلاب الشهرية، مع شرح لكل سؤال.',
-        blurbEn: 'SMLE questions extracted from students\' monthly exam-recall compilations, each with an explanation.',
+        blurbAr: 'أسئلة SMLE مستخرجة من تجميعات الطلاب الشهرية بعد الاختبارات.',
+        blurbEn: 'SMLE questions extracted from students\' monthly exam-recall compilations.',
+    },
+    MedicalSeptemberRecall: {
+        slug: 'smle-september-recall',
+        labelAr: 'تجميعة سبتمبر 2026 للطب البشري',
+        labelEn: 'September 2026 Recall (SMLE)',
+        blurbAr: 'أسئلة SMLE التي نقلها المتقدمون بعد اختبارات سبتمبر 2026.',
+        blurbEn: 'SMLE questions candidates reported after the September 2026 sittings.',
     },
     MedicalMidgard: {
         slug: 'smle-midgard',
@@ -95,7 +102,32 @@ const COLLECTION_META = {
         blurbAr: 'أسئلة SNLE الأكثر تكراراً بين الدورات، وهي أعلى ما يستحق المراجعة قبل الاختبار.',
         blurbEn: 'The SNLE questions that recur most across sittings — the highest-yield revision before the exam.',
     },
+    DentalExplained: {
+        slug: 'sdle-core',
+        labelAr: 'المجموعة الأساسية — طب الأسنان',
+        labelEn: 'Core collection (SDLE)',
+        blurbAr: 'المجموعة الأساسية لاختبار SDLE، وتغطي تخصصات طب الأسنان.',
+        blurbEn: 'The core SDLE collection, covering the dental specialties.',
+    },
+    DentalRecall2026: {
+        slug: 'sdle-recall-2026',
+        labelAr: 'تجميعة 2026 — طب الأسنان',
+        labelEn: 'Recall 2026 (SDLE)',
+        blurbAr: 'أسئلة SDLE التي نقلها المتقدمون في اختبارات 2026.',
+        blurbEn: 'SDLE questions candidates reported in the 2026 sittings.',
+    },
+    DentalRecall2024: {
+        slug: 'sdle-recall-2024',
+        labelAr: 'تجميعة 2024 — طب الأسنان',
+        labelEn: 'Recall 2024 (SDLE)',
+        blurbAr: 'أسئلة SDLE التي نقلها المتقدمون في اختبارات 2024.',
+        blurbEn: 'SDLE questions candidates reported in the 2024 sittings.',
+    },
 };
+
+/** The licensing exam each track prepares for. */
+export const TRACK_EXAM = { medical: 'SMLE', nursing: 'SNLE', dental: 'SDLE' };
+export const examFor = (track) => TRACK_EXAM[track] || TRACK_EXAM.medical;
 
 export function collectionPath(slug) {
     return `${PAST_PAPERS_ROOT}/${slug}`;
@@ -162,7 +194,7 @@ export function buildCollections(payload) {
         publishedTotal: index.total,
         collections,
         bySlug: new Map(collections.map((c) => [c.slug, c])),
-        tracks: ['medical', 'nursing']
+        tracks: ['medical', 'nursing', 'dental']
             .map((track) => ({ key: track, collections: collections.filter((c) => c.track === track) }))
             .filter((t) => t.collections.length > 0),
     };
@@ -262,7 +294,7 @@ export function collectionPageHtml(collection, allCollections = [], lang = 'ar')
     const dir = dirFor(lang);
     const isEn = lang === 'en';
     const note = isEn ? HONESTY_NOTE_EN : HONESTY_NOTE_AR;
-    const trackLabel = collection.track === 'medical' ? 'SMLE' : 'SNLE';
+    const trackLabel = examFor(collection.track);
 
     const specialties = collection.specialties
         .map((s) => `          <li><a href="${localizedPath(s.path, lang)}">${escapeHtml(isEn ? s.labelEn : s.labelAr)}</a> — ${escapeHtml(t.collection.openCount(s.count))}</li>`)
@@ -378,7 +410,7 @@ export function collectionSeo(collection, lang = 'ar') {
     const t = pastPapersCopy[lang] || pastPapersCopy.ar;
     const isEn = lang === 'en';
     const label = isEn ? collection.labelEn : collection.labelAr;
-    const trackLabel = collection.track === 'medical' ? 'SMLE' : 'SNLE';
+    const trackLabel = examFor(collection.track);
     const url = absoluteUrl(localizedPath(collection.path, lang));
     return {
         path: collection.path,

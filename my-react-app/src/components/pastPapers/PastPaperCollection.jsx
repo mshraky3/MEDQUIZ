@@ -16,6 +16,7 @@ import {
     buildCollections,
     collectionSeo,
     completePastPaperSeo,
+    examFor,
 } from '../../seo/pastPapers.js';
 import { questionPath } from '../../seo/publicQuestions.js';
 import '../questions/PublicQuestions.css';
@@ -46,7 +47,7 @@ const PastPaperCollection = () => {
     }
 
     const isEn = lang === 'en';
-    const trackLabel = collection.track === 'medical' ? 'SMLE' : 'SNLE';
+    const trackLabel = examFor(collection.track);
 
     return (
         <main className="pq-page" dir={dir}>

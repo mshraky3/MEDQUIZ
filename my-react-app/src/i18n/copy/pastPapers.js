@@ -12,27 +12,27 @@ const pastPapersCopy = {
         breadcrumbLabel: 'مسار التنقل',
 
         seo: {
-            hubTitle: (bankTotal) => `تجميعات أسئلة SMLE وSNLE — ${bankTotal} سؤالاً مع الشرح | SQB`,
-            hubDescription: 'دليل تجميعات أسئلة اختبار الهيئة السعودية للتخصصات الصحية للطب والتمريض: ما تحتويه كل تجميعة، وكم سؤالاً فيها، مع أسئلة مفتوحة للاطلاع من كل واحدة بدون حساب.',
-            hubKeywords: 'smle past papers, تجميعات سملي, تجميعات SMLE, تجميعات SNLE, اسئلة سملي سابقة, snle past papers, اسئلة برومترك سابقة',
-            hubCollectionName: 'تجميعات أسئلة SMLE وSNLE',
-            collectionTitle: (label, total, track) => `${label} — ${total} سؤال ${track} مع الشرح | SQB`,
-            collectionDescription: (blurb, total, track) => `${blurb} ${total} سؤالاً بنمط اختبار ${track}، لكل سؤال شرح مكتوب، مع أسئلة مفتوحة للاطلاع بدون حساب.`,
+            hubTitle: (bankTotal) => `تجميعات أسئلة SMLE وSNLE وSDLE — ${bankTotal} سؤالاً | SQB`,
+            hubDescription: 'دليل تجميعات أسئلة اختبارات الهيئة السعودية للتخصصات الصحية للطب والتمريض وطب الأسنان: ما تحتويه كل تجميعة، وكم سؤالاً فيها، مع أسئلة مفتوحة للاطلاع من بعضها بدون حساب.',
+            hubKeywords: 'smle past papers, تجميعات سملي, تجميعات SMLE, تجميعات SNLE, تجميعات SDLE, اسئلة سملي سابقة, snle past papers, اسئلة برومترك سابقة',
+            hubCollectionName: 'تجميعات أسئلة SMLE وSNLE وSDLE',
+            collectionTitle: (label, total, track) => `${label} — ${total} سؤال ${track} | SQB`,
+            collectionDescription: (blurb, total, track) => `${blurb} ${total} سؤالاً بنمط اختبار ${track}.`,
             collectionKeywords: (labelAr, labelEn, track) => `${labelEn}, ${labelAr}, smle past papers, تجميعات ${track}, اسئلة ${track}`,
         },
 
         relatedLinksLabel: 'روابط ذات صلة',
 
         hub: {
-            kicker: 'SMLE & SNLE collections',
-            title: 'تجميعات أسئلة SMLE وSNLE',
-            intro: (bankTotal, n) => `بنك SQB مبني من ${bankTotal} سؤالاً موزّعة على ${n} تجميعات، لكل سؤال فيها شرح مكتوب. هذه الصفحة تشرح ما تحتويه كل تجميعة، مع أسئلة مفتوحة للاطلاع من كل واحدة منها بدون حساب.`,
-            tracks: { medical: 'الطب البشري — SMLE', nursing: 'التمريض — SNLE' },
+            kicker: 'SMLE, SNLE & SDLE collections',
+            title: 'تجميعات أسئلة SMLE وSNLE وSDLE',
+            intro: (bankTotal, n) => `بنك SQB مبني من ${bankTotal} سؤالاً موزّعة على ${n} تجميعات، وقد يرد السؤال الواحد في أكثر من تجميعة. هذه الصفحة تشرح ما تحتويه كل تجميعة، مع أسئلة مفتوحة للاطلاع من بعضها بدون حساب.`,
+            tracks: { medical: 'الطب البشري — SMLE', nursing: 'التمريض — SNLE', dental: 'طب الأسنان — SDLE' },
             countLabel: (n) => `${n} سؤالاً`,
         },
 
         collection: {
-            intro: (blurb, total, track) => `${blurb} تضم هذه التجميعة ${total} سؤالاً بنمط اختبار ${track}، لكل سؤال منها شرح مكتوب يوضّح سبب صحة الإجابة.`,
+            intro: (blurb, total, track) => `${blurb} تضم هذه التجميعة ${total} سؤالاً بنمط اختبار ${track}.`,
             specialtiesTitle: 'التخصصات التي تغطيها',
             openCount: (n) => `${n} سؤالاً مفتوحاً`,
             samplesTitle: 'أسئلة مفتوحة من هذه التجميعة',
@@ -47,11 +47,11 @@ const pastPapersCopy = {
             },
             {
                 q: 'ما الفرق بين التجميعات؟',
-                a: `البنك مقسّم إلى ${n} تجميعات بمجموع ${bankTotal} سؤالاً. بعضها مرتبط بمصدر معروف بين المتقدمين مثل Midgard وGameBoy، وبعضها مجموعات مبنية على معيار: «الأسئلة المؤكدة» هي ما تكرر وروده في أكثر من مصدر، و«الأكثر تكراراً» هي الأعلى تردداً بين الدورات.`,
+                a: `البنك مبني من ${n} تجميعات تضم ${bankTotal} سؤالاً في المجموع (قد يرد السؤال الواحد في أكثر من تجميعة). بعضها مرتبط بمصدر معروف بين المتقدمين مثل Midgard وGameBoy، وبعضها مجموعات مبنية على معيار: «الأسئلة المؤكدة» هي ما تكرر وروده في أكثر من مصدر، و«الأكثر تكراراً» هي الأعلى تردداً بين الدورات.`,
             },
             {
                 q: 'هل يمكنني الاطلاع على تجميعة كاملة مجاناً؟',
-                a: 'لا. المنشور من كل تجميعة عيّنة مفتوحة للاطلاع بدون حساب. للوصول إلى التجميعات كاملة أنشئ حساباً مجانياً — يمنحك 10 أسئلة من البنك كله بدون بطاقة دفع.',
+                a: 'لا. المنشور هنا عيّنات مفتوحة للاطلاع بدون حساب. للوصول إلى التجميعات كاملة أنشئ حساباً مجانياً — يمنحك 10 أسئلة من البنك كله بدون بطاقة دفع.',
             },
             {
                 q: 'هل تُحدَّث التجميعات؟',
@@ -81,27 +81,27 @@ const pastPapersCopy = {
         breadcrumbLabel: 'Breadcrumb',
 
         seo: {
-            hubTitle: (bankTotal) => `SMLE and SNLE question collections — ${bankTotal} explained questions | SQB`,
-            hubDescription: 'A guide to the SMLE and SNLE question collections: what each one contains, how many questions it holds, and open sample questions from every collection with no account.',
-            hubKeywords: 'smle past papers, snle past papers, SMLE question collections, SMLE recalls, Saudi Prometric past questions, SNLE recalls',
-            hubCollectionName: 'SMLE and SNLE question collections',
-            collectionTitle: (label, total, track) => `${label} — ${total} explained ${track} questions | SQB`,
-            collectionDescription: (blurb, total, track) => `${blurb} ${total} ${track}-style questions, each with a written explanation, plus open samples you can read without an account.`,
+            hubTitle: (bankTotal) => `SMLE, SNLE and SDLE question collections — ${bankTotal} questions | SQB`,
+            hubDescription: 'A guide to the SMLE, SNLE and SDLE question collections: what each one contains, how many questions it holds, and open sample questions from some of them with no account.',
+            hubKeywords: 'smle past papers, snle past papers, SMLE question collections, SMLE recalls, Saudi Prometric past questions, SNLE recalls, SDLE recalls',
+            hubCollectionName: 'SMLE, SNLE and SDLE question collections',
+            collectionTitle: (label, total, track) => `${label} — ${total} ${track} questions | SQB`,
+            collectionDescription: (blurb, total, track) => `${blurb} ${total} ${track}-style questions.`,
             collectionKeywords: (labelAr, labelEn, track) => `${labelEn}, smle past papers, ${track} question collection, ${track} recalls, ${track} practice questions`,
         },
 
         relatedLinksLabel: 'Related links',
 
         hub: {
-            kicker: 'SMLE & SNLE collections',
-            title: 'SMLE and SNLE question collections',
-            intro: (bankTotal, n) => `The SQB bank is built from ${bankTotal} questions across ${n} collections, every one of them explained. This page sets out what each collection contains, with open sample questions from each — no account needed.`,
-            tracks: { medical: 'Medicine — SMLE', nursing: 'Nursing — SNLE' },
+            kicker: 'SMLE, SNLE & SDLE collections',
+            title: 'SMLE, SNLE and SDLE question collections',
+            intro: (bankTotal, n) => `The SQB bank is built from ${bankTotal} questions across ${n} collections, and one question can appear in more than one collection. This page sets out what each collection contains, with open sample questions from some of them — no account needed.`,
+            tracks: { medical: 'Medicine — SMLE', nursing: 'Nursing — SNLE', dental: 'Dentistry — SDLE' },
             countLabel: (n) => `${n} questions`,
         },
 
         collection: {
-            intro: (blurb, total, track) => `${blurb} This collection holds ${total} ${track}-style questions, each with a written explanation of why the answer is right.`,
+            intro: (blurb, total, track) => `${blurb} This collection holds ${total} ${track}-style questions.`,
             specialtiesTitle: 'Specialties it covers',
             openCount: (n) => `${n} open questions`,
             samplesTitle: 'Open questions from this collection',
@@ -116,11 +116,11 @@ const pastPapersCopy = {
             },
             {
                 q: 'What is the difference between the collections?',
-                a: `The bank is split into ${n} collections totalling ${bankTotal} questions. Some carry a name candidates already know, such as Midgard and GameBoy; others are grouped by a rule — "Confirmed" means reported by more than one source, "Most repeated" means highest recurrence across sittings.`,
+                a: `The bank is built from ${n} collections holding ${bankTotal} questions in total (one question can appear in more than one collection). Some carry a name candidates already know, such as Midgard and GameBoy; others are grouped by a rule — "Confirmed" means reported by more than one source, "Most repeated" means highest recurrence across sittings.`,
             },
             {
                 q: 'Can I read a whole collection for free?',
-                a: 'No. What is published from each collection is an open sample you can read without an account. For the collections in full, create a free account — it gives you 10 questions from the whole bank, with no payment card.',
+                a: 'No. What is published here is an open sample you can read without an account. For the collections in full, create a free account — it gives you 10 questions from the whole bank, with no payment card.',
             },
             {
                 q: 'Are the collections updated?',

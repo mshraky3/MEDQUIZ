@@ -23,6 +23,17 @@
  *   node scripts/exportPublicQuestions.js                        # dry run
  *   node scripts/exportPublicQuestions.js --apply                # write the file
  *   node scripts/exportPublicQuestions.js --per-specialty 30 --apply
+ *
+ * Refreshing only the numbers (the usual case after new collections are added):
+ *   node scripts/exportPublicQuestions.js --totals-only          # dry run
+ *   node scripts/exportPublicQuestions.js --totals-only --apply  # rewrite bankTotal + collections only
+ * This keeps the published `questions` (and so every indexed URL) exactly as
+ * they are; a plain re-run re-samples the whole bank and can move them.
+ *
+ * The production database lives on Supabase. backend/.env still holds the frozen
+ * Koyeb copy, which is stale: set DBHOST/DBPORT/DBNAME/DBUSER/DBPASSWORD in the
+ * shell for the one command (dotenv never overrides variables already set).
+ * --apply refuses to write unless the host is Supabase (--allow-any-host to skip).
  */
 import dotenv from 'dotenv';
 import fs from 'node:fs';
@@ -40,6 +51,7 @@ const arg = (name, fallback) => {
     return i >= 0 && args[i + 1] ? args[i + 1] : fallback;
 };
 const APPLY = args.includes('--apply');
+const TOTALS_ONLY = args.includes('--totals-only');
 const PER_SPECIALTY = Math.max(1, Number(arg('per-specialty', 24)));
 // Every question in the bank has an explanation, but a 120-character one makes
 // a thin page — exactly the kind Google already refused to index here. 500 is
@@ -97,7 +109,73 @@ const SPECIALTIES = Object.values(TRACKS).flatMap((track) =>
     }))
 );
 
+/**
+ * How big each collection is in the bank as a whole, and the bank itself.
+ *
+ * A question can belong to several collections (`questions.sources`, kept by a
+ * trigger; `source` is only its primary one), so collection sizes are counted by
+ * membership and will add up to MORE than the bank. The bank total is therefore
+ * its own query (every row, the same figure /api/public/stats reports).
+ */
+async function loadTotals() {
+    const { rows: collectionRows } = await db.query(
+        `SELECT q.track, s AS source, count(*)::int AS total
+           FROM questions q, unnest(COALESCE(q.sources, ARRAY[q.source])) AS s
+          WHERE s IS NOT NULL
+          GROUP BY 1, 2
+          ORDER BY 1, 3 DESC`
+    );
+    const { rows: [bank] } = await db.query('SELECT count(*)::int AS n FROM questions');
+    return { collectionRows, bankTotal: bank.n };
+}
+
+/** Rewrite only bankTotal + collections, leaving the published questions untouched. */
+async function refreshTotalsOnly() {
+    if (!fs.existsSync(OUT_PATH)) throw new Error(`Nothing to refresh: ${OUT_PATH} does not exist`);
+    const existing = JSON.parse(fs.readFileSync(OUT_PATH, 'utf8'));
+    const { collectionRows, bankTotal } = await loadTotals();
+
+    const publishedPerSource = existing.questions.reduce((acc, q) => {
+        acc[q.source] = (acc[q.source] || 0) + 1;
+        return acc;
+    }, {});
+    const collections = collectionRows.map((row) => ({
+        source: row.source,
+        track: row.track,
+        total: row.total,
+        published: publishedPerSource[row.source] || 0,
+    }));
+    const payload = {
+        ...existing,
+        generatedAt: new Date().toISOString().slice(0, 10),
+        bankTotal,
+        collections,
+    };
+
+    console.log(`bankTotal: ${existing.bankTotal} -> ${bankTotal}`);
+    console.log(`collections: ${existing.collections.length} -> ${collections.length}`);
+    for (const c of collections) console.log(`  ${c.track}/${c.source}: ${c.total} (${c.published} published)`);
+    console.log(`published questions kept as they were: ${existing.questions.length}`);
+
+    if (!APPLY) {
+        console.log(`\nDRY RUN — nothing written. Re-run with --apply to write:\n  ${OUT_PATH}`);
+        return;
+    }
+    fs.writeFileSync(OUT_PATH, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
+    console.log(`\nWrote ${OUT_PATH}`);
+}
+
 async function main() {
+    console.log(`Database host: ${process.env.DBHOST || '(not set)'}`);
+    const onSupabase = /\.supabase\.(com|co)$/.test(process.env.DBHOST || '');
+    if (APPLY && !onSupabase && !args.includes('--allow-any-host')) {
+        throw new Error(
+            'Refusing to write: DBHOST is not a Supabase host. backend/.env holds the frozen, stale Koyeb copy; '
+            + 'set the production DB* variables in the shell for this command (or pass --allow-any-host).'
+        );
+    }
+    if (TOTALS_ONLY) return refreshTotalsOnly();
+
     const picked = [];
     const report = [];
 
@@ -166,13 +244,7 @@ async function main() {
     // published sample. The /past-papers pages state these totals, and this is
     // the only place they can come from without giving the web build a
     // database connection.
-    const { rows: collectionRows } = await db.query(
-        `SELECT track, source, count(*)::int AS total
-           FROM questions
-          WHERE source IS NOT NULL
-          GROUP BY 1, 2
-          ORDER BY 1, 3 DESC`
-    );
+    const { collectionRows, bankTotal } = await loadTotals();
     const publishedPerSource = picked.reduce((acc, q) => {
         acc[q.source] = (acc[q.source] || 0) + 1;
         return acc;
@@ -189,7 +261,7 @@ async function main() {
         perSpecialty: PER_SPECIALTY,
         minExplanation: MIN_EXPLANATION,
         count: picked.length,
-        bankTotal: collectionRows.reduce((sum, row) => sum + row.total, 0),
+        bankTotal,
         collections,
         questions: picked,
     };

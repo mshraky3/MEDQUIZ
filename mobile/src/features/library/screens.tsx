@@ -12,7 +12,7 @@ import { SiteFooter } from '@/features/common/SiteFooter';
 import publicQuestionsData from './data/publicQuestions.json';
 import storiesData from './data/successStories.json';
 // The grouping logic is the website's own (copied byte for byte, see scripts/sync-library.mjs).
-import { HONESTY_NOTE_AR, HONESTY_NOTE_EN, buildCollections } from './seo/pastPapers.js';
+import { HONESTY_NOTE_AR, HONESTY_NOTE_EN, buildCollections, examFor } from './seo/pastPapers.js';
 import { buildQuestionIndex, questionPath, relatedQuestions, specialtySlug, stemBody } from './seo/publicQuestions.js';
 import { storiesFrom } from './seo/successStories.js';
 
@@ -453,7 +453,7 @@ export function PastPaperCollectionScreen() {
     );
   }
   const isEn = lang === 'en';
-  const trackLabel = collection.track === 'medical' ? 'SMLE' : 'SNLE';
+  const trackLabel = examFor(collection.track);
   const name = isEn ? collection.labelEn : collection.labelAr;
 
   return (
