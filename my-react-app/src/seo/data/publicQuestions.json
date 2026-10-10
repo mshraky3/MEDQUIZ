@@ -1,10 +1,40 @@
 {
-  "generatedAt": "2026-08-30",
+  "generatedAt": "2026-10-10",
   "perSpecialty": 24,
   "minExplanation": 500,
   "count": 240,
-  "bankTotal": 5033,
+  "bankTotal": 13036,
   "collections": [
+    {
+      "source": "DentalExplained",
+      "track": "dental",
+      "total": 2601,
+      "published": 0
+    },
+    {
+      "source": "DentalRecall2024",
+      "track": "dental",
+      "total": 237,
+      "published": 0
+    },
+    {
+      "source": "DentalRecall2026",
+      "track": "dental",
+      "total": 222,
+      "published": 0
+    },
+    {
+      "source": "MedicalSeptemberRecall",
+      "track": "medical",
+      "total": 3472,
+      "published": 0
+    },
+    {
+      "source": "MedicalMonthlyRecall",
+      "track": "medical",
+      "total": 2082,
+      "published": 0
+    },
     {
       "source": "MedicalMidgard",
       "track": "medical",
