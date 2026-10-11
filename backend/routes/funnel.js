@@ -53,6 +53,16 @@ export const FUNNEL_EVENTS = new Set([
     'subscribe_pay_click',
     'payment_success',
     'payment_failed',
+    // Added 2026-10-11. `campaign_touch`: a page load that carried UTM tags (any
+    // page, once per tab session). `signup_google_created`: written by the
+    // SERVER when POST /api/auth/google creates an account (Google sign-ups were
+    // not in the funnel at all). `subscribe_form_*`: whether the Moyasar card
+    // form actually appeared, did not appear in time, or failed to start.
+    'campaign_touch',
+    'signup_google_created',
+    'subscribe_form_ready',
+    'subscribe_form_blocked',
+    'subscribe_form_error',
 ]);
 
 const MAX_PROPS_BYTES = 2000;

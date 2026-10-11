@@ -21,6 +21,7 @@ import './index.css'
 import App from './App.jsx';
 import { createBrowserRouter, RouterProvider, Navigate, Outlet } from 'react-router-dom';
 import { createRoot } from 'react-dom/client';
+import { captureTouch } from './utils/analytics.js';
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 
@@ -268,6 +269,9 @@ const router = createBrowserRouter([{
   { path: '*', element: <Layout><NotFound /></Layout> },
   ]),
 }]);
+
+// Remember which campaign link brought this visit (any page, not only landing).
+captureTouch();
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

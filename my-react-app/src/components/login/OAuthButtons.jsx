@@ -3,6 +3,7 @@ import axios from 'axios';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import Globals from '../../global.js';
 import { useLang } from '../../i18n';
+import { signupAttribution } from '../../utils/analytics.js';
 
 // Google renders its own official button UI (Google Identity Services) — we
 // don't draw it, we only get to pass the options `renderButton` accepts and
@@ -81,6 +82,9 @@ const OAuthButtons = ({ dividerLabel, onSuccess, onError, track, mode = 'signup'
         // the backend ignores it for an existing account, whose track is
         // already fixed. Undefined on the login page, which passes no track.
         ...(track ? { track } : {}),
+        // Lets the server record WHICH campaign a brand-new Google account came
+        // from (anon id + last UTM touch). Ignored for an existing account.
+        ...signupAttribution(),
       });
       // The credential is still valid for ~1hr — passed through so a caller
       // that gets back `needsTrackSelection` (a brand-new identity with no

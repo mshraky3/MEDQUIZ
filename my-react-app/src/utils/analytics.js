@@ -73,7 +73,10 @@ export function trackFunnel(event, props = {}) {
     safeTrack(event, props);
     try {
         const url = `${Globals.URL}/api/funnel`;
-        const payload = JSON.stringify({ anon_id: anonId(), event, props, ...(credentials() || {}) });
+        // The campaign this person last arrived from rides on every event, so any
+        // step (signup, /subscribe, pay click, payment) can be grouped by
+        // utm_campaign in the admin funnel. An event's own props win.
+        const payload = JSON.stringify({ anon_id: anonId(), event, props: { ...(readTouch() || {}), ...props }, ...(credentials() || {}) });
         if (navigator.sendBeacon) {
             navigator.sendBeacon(url, new Blob([payload], { type: 'application/json' }));
         } else {
@@ -86,6 +89,61 @@ export function trackFunnel(event, props = {}) {
         }
     } catch (_) {
         /* ignore */
+    }
+}
+
+/**
+ * Last-touch campaign memory (added 2026-10-11).
+ *
+ * `captureLandingAttribution` below records UTM once per browser and only on the
+ * landing page, so an email link to /subscribe?utm_campaign=... and every
+ * returning visitor were invisible, and nothing could be grouped by campaign.
+ * This keeps the most recent tagged visit (any page, any visitor, 30 days) and
+ * trackFunnel() attaches it to every event. Only utm_* fields, never personal
+ * data. A visit without tags leaves the stored touch alone.
+ */
+const TOUCH_KEY = 'sqb_touch';
+const TOUCH_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+const TOUCH_FIELDS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content'];
+
+function readTouch() {
+    try {
+        const stored = JSON.parse(safeGetItem(TOUCH_KEY) || 'null');
+        if (!stored?.utm || !stored.ts || Date.now() - stored.ts > TOUCH_TTL_MS) return null;
+        return stored.utm;
+    } catch (_) {
+        return null;
+    }
+}
+
+/** What the server needs to attribute an account it creates itself (Google sign-up). */
+export function signupAttribution() {
+    return { anon_id: anonId(), touch: readTouch() || {} };
+}
+
+/**
+ * Call once at app start. If this page load carries UTM tags, remember them and
+ * beacon one `campaign_touch` per distinct touch per tab session.
+ */
+export function captureTouch() {
+    try {
+        const params = new URLSearchParams(window.location.search);
+        const utm = {};
+        for (const key of TOUCH_FIELDS) {
+            const value = params.get(key);
+            if (value) utm[key] = value.slice(0, 100);
+        }
+        if (!Object.keys(utm).length) return;
+        safeSetItem(TOUCH_KEY, JSON.stringify({ utm, ts: Date.now() }));
+
+        const signature = TOUCH_FIELDS.map((key) => utm[key] || '').join('|');
+        try {
+            if (window.sessionStorage.getItem('sqb_touch_sent') === signature) return;
+            window.sessionStorage.setItem('sqb_touch_sent', signature);
+        } catch (_) { /* no session storage: beacon anyway, the server only counts people */ }
+        trackFunnel('campaign_touch', { landingPath: window.location.pathname });
+    } catch (_) {
+        /* attribution is best-effort and must never affect the page */
     }
 }
 

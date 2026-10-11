@@ -129,6 +129,7 @@ const Subscribe = () => {
                 if (cancelled) return;
 
                 if (!cfg.enabled || !cfg.publishableKey || !cfg.plans?.length) {
+                    trackFunnel('subscribe_form_error', { stage: 'payments_disabled' });
                     navigate('/quizs', { replace: true });
                     return;
                 }
@@ -161,6 +162,7 @@ const Subscribe = () => {
             } catch (err) {
                 if (cancelled) return;
                 console.error('Subscribe init failed:', err);
+                trackFunnel('subscribe_form_error', { stage: 'config', message: String(err?.message || err).slice(0, 100) });
                 setError(t.loadError);
                 setStatus('error');
             }
@@ -205,6 +207,9 @@ const Subscribe = () => {
 
         let cancelled = false;
         let watchdog = null;
+        // Form health, recorded as events: before this a Moyasar script that never
+        // loaded, or a form that never rendered, looked like "didn't pay".
+        const formStartedAt = Date.now();
         // Read the ref once, here, rather than in the cleanup below: by the time
         // cleanup runs the component may already be unmounting and the ref
         // nulled, and this is the node whose children we need to tear down.
@@ -284,12 +289,14 @@ const Subscribe = () => {
                     const form = target.querySelector('form');
                     if (!form) {
                         if (Date.now() >= deadline) {
+                            trackFunnel('subscribe_form_blocked', { plan: plan.id, ms: Date.now() - formStartedAt });
                             setStatus('blocked');
                             return;
                         }
                         watchdog = setTimeout(checkForForm, 500);
                         return;
                     }
+                    trackFunnel('subscribe_form_ready', { plan: plan.id, ms: Date.now() - formStartedAt });
                     // The funnel step used to be our own pay button; that button
                     // is gone (Moyasar's form has its own), so the submit of the
                     // real form is what marks the attempt now — and it is the
@@ -304,6 +311,10 @@ const Subscribe = () => {
             } catch (err) {
                 if (cancelled) return;
                 console.error('Subscribe form init failed:', err);
+                trackFunnel('subscribe_form_error', {
+                    stage: 'form_init', plan: plan.id, ms: Date.now() - formStartedAt,
+                    message: String(err?.message || err).slice(0, 100),
+                });
                 setError(t.loadError);
                 setStatus('error');
             }

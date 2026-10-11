@@ -276,7 +276,51 @@ export async function funnelSnapshot(db, { days = 30 } = {}) {
          GROUP BY event
          ORDER BY count DESC
     `, [days]).catch(() => ({ rows: [] }));
-    return { days, events: rows };
+
+    // The same events grouped by the campaign tag they carried (utm_* in props;
+    // see analytics.js captureTouch). Only tagged traffic: untagged visits have
+    // no campaign to group by. Events written before 2026-10-11 carry tags only
+    // on landing_view, so older windows show the first step only.
+    const { rows: campaignRows } = await db.query(`
+        SELECT COALESCE(NULLIF(props->>'utm_campaign', ''), '(none)') AS campaign,
+               COALESCE(NULLIF(props->>'utm_source', ''), '(none)') AS source,
+               COALESCE(props->>'utm_content', '') AS content,
+               event,
+               COUNT(DISTINCT COALESCE(account_id::text, anon_id))::int AS actors
+          FROM funnel_events
+         WHERE created_at >= NOW() - ($1 || ' days')::interval
+           AND (NULLIF(props->>'utm_campaign', '') IS NOT NULL OR NULLIF(props->>'utm_source', '') IS NOT NULL)
+         GROUP BY 1, 2, 3, 4
+    `, [days]).catch(() => ({ rows: [] }));
+
+    return { days, events: rows, campaigns: pivotCampaignRows(campaignRows) };
+}
+
+/**
+ * One row per campaign/source/content with the people reached at each step.
+ * `visits` is the larger of landing_view and campaign_touch (a first-ever landing
+ * emits both for one person); `signups` adds email and Google account creation.
+ * Exported for the unit test.
+ */
+export function pivotCampaignRows(rows) {
+    const byKey = new Map();
+    for (const r of rows || []) {
+        const key = `${r.campaign}\u0000${r.source}\u0000${r.content}`;
+        if (!byKey.has(key)) {
+            byKey.set(key, { campaign: r.campaign, source: r.source, content: r.content, steps: {} });
+        }
+        byKey.get(key).steps[r.event] = Number(r.actors) || 0;
+    }
+    const n = (steps, event) => steps[event] || 0;
+    return [...byKey.values()].map(({ steps, ...id }) => ({
+        ...id,
+        visits: Math.max(n(steps, 'landing_view'), n(steps, 'campaign_touch')),
+        signups: n(steps, 'signup_otp_verified') + n(steps, 'signup_google_created'),
+        subscribeViews: n(steps, 'subscribe_view'),
+        payClicks: n(steps, 'subscribe_pay_click'),
+        paid: n(steps, 'payment_success'),
+        paymentFailed: n(steps, 'payment_failed'),
+    })).sort((a, b) => b.visits - a.visits || b.signups - a.signups);
 }
 
 /** Open (unresolved) question reports — surfaced on the "needs attention" panel. */

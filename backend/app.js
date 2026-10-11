@@ -21,7 +21,7 @@ import { subscriptionGuard, quizAccessGuard } from './middleware/subscriptionGua
 import summariesRouter from './routes/summaries.js';
 import accountingRouter from './routes/accounting.js';
 import engagementRouter from './routes/engagement.js';
-import funnelRouter from './routes/funnel.js';
+import funnelRouter, { recordFunnelEvent } from './routes/funnel.js';
 import goalsRouter from './routes/goals.js';
 import notificationsRouter from './routes/notifications.js';
 import examDateRouter from './routes/examDate.js';
@@ -2578,6 +2578,7 @@ app.post('/api/auth/google', rateLimit(db, 'oauth_google', { windowMs: 5 * 60_00
     try {
         await client.query('BEGIN');
         let { rows: [userRow] } = await client.query('SELECT * FROM accounts WHERE email = $1 FOR UPDATE', [email]);
+        let createdNow = false;
 
         if (!userRow && mode === 'login') {
             // Signing in, and there is nothing to sign in to. Create nothing,
@@ -2609,6 +2610,7 @@ app.post('/api/auth/google', rateLimit(db, 'oauth_google', { windowMs: 5 * 60_00
                 [email, email, true, false, false, true, requestedTrack, googleId]
             );
             userRow = inserted.rows[0];
+            createdNow = true;
             try {
                 await sendWelcomeEmail(email, email, requestedTrack);
                 await client.query('UPDATE accounts SET welcome_email_sent = TRUE, welcome_email_sent_at = NOW() WHERE id = $1', [userRow.id]);
@@ -2630,6 +2632,22 @@ app.post('/api/auth/google', rateLimit(db, 'oauth_google', { windowMs: 5 * 60_00
         }
 
         await client.query('COMMIT');
+        if (createdNow) {
+            // Google sign-ups were invisible to the funnel (only the email OTP path
+            // emitted a signup event). Recorded here, server-side, with the campaign
+            // the browser says it came from; best-effort, never blocks the sign-in.
+            const touch = req.body.touch && typeof req.body.touch === 'object' ? req.body.touch : {};
+            const campaign = {};
+            for (const key of ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content']) {
+                if (typeof touch[key] === 'string') campaign[key] = touch[key].slice(0, 100);
+            }
+            await recordFunnelEvent(client, {
+                accountId: userRow.id,
+                anonId: typeof req.body.anon_id === 'string' ? req.body.anon_id : null,
+                event: 'signup_google_created',
+                props: { track: requestedTrack, ...campaign },
+            });
+        }
         const result = await issueSessionForAccount(userRow, req);
         return res.status(200).json(result);
     } catch (err) {

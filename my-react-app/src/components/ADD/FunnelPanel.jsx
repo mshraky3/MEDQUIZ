@@ -40,6 +40,12 @@ const MAIN_FUNNEL = [
 const OUTCOME_EVENTS = [
     { event: 'signup_otp_failed', label: 'OTP failed', of: 'signup_otp_sent' },
     { event: 'payment_failed', label: 'Payment failed', of: 'subscribe_pay_click' },
+    // Health of the Moyasar card form on /subscribe (added 2026-10-11): shown vs
+    // not shown. "blocked" = the form never appeared within 8 s; "error" = it
+    // could not even start (config or script load failed).
+    { event: 'subscribe_form_ready', label: 'Card form shown', of: 'subscribe_view' },
+    { event: 'subscribe_form_blocked', label: 'Card form did NOT appear (blocked)', of: 'subscribe_view' },
+    { event: 'subscribe_form_error', label: 'Card form failed to start', of: 'subscribe_view' },
     // Retired 2026-08-08 — nothing emits this any more. Kept so a past cohort's
     // count still renders instead of the step just vanishing from the page.
     { event: 'trial_started', label: 'Free trial started (retired)', of: 'signup_otp_verified' },
@@ -175,6 +181,40 @@ const FunnelPanel = () => {
                                         </tr>
                                     );
                                 })}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Only links that carried utm_* tags. People are counted once per
+                        step; "Visits" is the larger of landing views and tagged page
+                        loads. Older events only carry tags on the landing view. */}
+                    <div className="growth-table-wrap">
+                        <table className="growth-table">
+                            <thead>
+                                <tr>
+                                    <th>Campaign</th><th>Source</th><th>Content</th>
+                                    <th className="num">Visits</th><th className="num">Signups</th>
+                                    <th className="num">/subscribe</th><th className="num">Pay clicks</th>
+                                    <th className="num">Paid</th><th className="num">Failed</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {(data?.campaigns || []).length === 0 && (
+                                    <tr><td colSpan={9}>No tagged campaign traffic in this range yet.</td></tr>
+                                )}
+                                {(data?.campaigns || []).map((c) => (
+                                    <tr key={`${c.campaign}|${c.source}|${c.content}`}>
+                                        <td>{c.campaign}</td>
+                                        <td>{c.source}</td>
+                                        <td>{c.content || '-'}</td>
+                                        <td className="num">{num(c.visits)}</td>
+                                        <td className="num">{num(c.signups)}</td>
+                                        <td className="num">{num(c.subscribeViews)}</td>
+                                        <td className="num">{num(c.payClicks)}</td>
+                                        <td className="num">{num(c.paid)}</td>
+                                        <td className="num">{num(c.paymentFailed)}</td>
+                                    </tr>
+                                ))}
                             </tbody>
                         </table>
                     </div>

@@ -79,7 +79,7 @@ test('the whitelist holds no unreachable names', () => {
     if (!fs.existsSync(CLIENT_SRC)) return;
     const emitted = new Set(emittedEvents(CLIENT_SRC).keys());
     // Written by the server, not the browser, so the scan above cannot see them.
-    const serverSide = new Set(['paywall_hit']);
+    const serverSide = new Set(['paywall_hit', 'signup_google_created']);
     // Retired 2026-08-08 with the engaged-time trial. Kept on the whitelist and
     // in the admin panel so an old cohort's rows still have a label; delete both
     // together or the panel goes back to rendering a bare event name.
