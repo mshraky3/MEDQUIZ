@@ -326,6 +326,31 @@ function formatJson(data) {
   }
 }
 
+// The public site, used for the "Open Page" / "Admin Panel" links when APP_URL
+// is not configured. This used to fall back to http://localhost:5173, so every
+// alert sent from a deployment without APP_URL linked to the reader's own
+// machine. Same constant userEmailService.js and telegramClient.js use.
+const PRODUCTION_SITE_URL = 'https://www.smle-question-bank.com';
+
+const LOCAL_HOST_RE = /^https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])(:\d+)?(\/|$)/i;
+
+/**
+ * Base URL for the links in an alert email.
+ *
+ * APP_URL wins when it is set, so a developer running the API locally still
+ * gets links to their local site. In production a local URL is never used,
+ * even if APP_URL itself was set to one: an alert is read from a phone or
+ * another machine, where localhost is a dead link.
+ */
+export function resolveAppUrl(env = process.env) {
+  const configured = String(env.APP_URL || '').trim().replace(/\/+$/, '');
+  if (!configured) return PRODUCTION_SITE_URL;
+  if (env.NODE_ENV === 'production' && LOCAL_HOST_RE.test(configured)) {
+    return PRODUCTION_SITE_URL;
+  }
+  return configured;
+}
+
 /**
  * Generate beautiful HTML email template
  */
@@ -344,7 +369,7 @@ function generateEmailHtml(errorData, severity, errorId, frequency) {
     ? `<span style="display: inline-block; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 6px 14px; border-radius: 50px; font-size: 12px; font-weight: 700; margin-left: 8px; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);">📊 ${hourlyCount}/hr</span>`
     : '';
 
-  const appUrl = process.env.APP_URL || 'http://localhost:5173';
+  const appUrl = resolveAppUrl();
   const pageUrl = errorData.page ? `${appUrl}${errorData.page}` : appUrl;
 
   // Get severity-specific styles

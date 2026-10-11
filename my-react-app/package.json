@@ -8,6 +8,7 @@
     "build": "vite build",
     "postbuild": "node -e \"const fs=require('fs');const path=require('path');(async()=>{const p=path.resolve('scripts/postbuild-seo.mjs');if(fs.existsSync(p)){await import('file://'+p);}else{console.warn('[postbuild] scripts/postbuild-seo.mjs not found, skipping prerender.');}})().catch((err)=>{console.error(err);process.exit(1);});\"",
     "lint": "eslint .",
+    "test": "node --test \"src/**/*.test.js\"",
     "preview": "vite preview"
   },
   "dependencies": {

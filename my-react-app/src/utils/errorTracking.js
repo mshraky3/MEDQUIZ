@@ -75,6 +75,48 @@ function isIgnorableBrowserError(message) {
 }
 
 /**
+ * Errors thrown by scripts that IN-APP BROWSERS inject into the page.
+ *
+ * The webviews inside social/messaging apps inject their own bridge script into
+ * every page they open. When that script runs before its native half is ready
+ * it throws, e.g. "ReferenceError: Can't find variable: __alhWeb", and the only
+ * stack is the injected snippet itself: "global code@<page url>:1:N". No SQB
+ * file appears anywhere in it, and there is nothing in this codebase to fix.
+ *
+ * Deliberately narrow. BOTH must hold:
+ *   1. the message is a ReferenceError naming a known injected variable
+ *      (Safari "Can't find variable: X" or Chrome "X is not defined"), and
+ *   2. the stack is empty or made only of top-level "global code@" frames that
+ *      point at the page itself, not at a .js file.
+ * So a ReferenceError thrown from our bundle — same message or not — still has
+ * an /assets/*.js frame and still reports.
+ */
+const INJECTED_GLOBALS = ['__alhWeb'];
+
+const INJECTED_NAMES = INJECTED_GLOBALS.join('|');
+const INJECTED_VARIABLE_RE = new RegExp(
+    `can't find variable: (?:${INJECTED_NAMES})\\b|\\b(?:${INJECTED_NAMES}) is not defined\\b`,
+    'i'
+);
+
+// One Safari/WebKit frame of an inline, top-level script: "global code@URL:L:C",
+// where URL is the page (no script file extension) or a bare placeholder.
+const INJECTED_FRAME_RE = /^global code@(?![^\s]*\.(?:m?js|jsx)(?:[?#][^\s]*)?:\d+:\d+$)\S*:\d+:\d+$/;
+
+export function isInjectedInAppBrowserError(message, stack) {
+    const msg = String(message || '').trim();
+    if (!INJECTED_VARIABLE_RE.test(msg)) return false;
+
+    const frames = String(stack || '')
+        .split('\n')
+        .map((line) => line.trim())
+        .filter(Boolean)
+        // Chrome repeats the message as the first stack line; it is not a frame.
+        .filter((line) => !/^(?:uncaught )?referenceerror:/i.test(line));
+    return frames.every((frame) => INJECTED_FRAME_RE.test(frame));
+}
+
+/**
  * A window 'error' event whose message says nothing at all.
  *
  * Two of these were mailed as CRITICAL with the message "Uncaught " — the
@@ -831,7 +873,11 @@ export function reportGlobalError(event) {
     _isReportingError = true;
     try {
         if (isStaleChunkError(event.message)) return;
-        if (isIgnorableBrowserError(event.message) || isContentlessError(event.message)) {
+        if (
+            isIgnorableBrowserError(event.message)
+            || isContentlessError(event.message)
+            || isInjectedInAppBrowserError(event.message, event.error?.stack)
+        ) {
             if (CONFIG.enableConsoleLog) {
                 console.log('[ErrorTracking] Skipping unactionable browser notice:', event.message);
             }
