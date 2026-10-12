@@ -54,8 +54,11 @@ Before you add an item to "Things to look at", check it in the source (the code,
 
 The note is `Daily Reports/<YYYY-MM-DD>.md`.
 
-1. **Vault reachable (local session):** find the vault in Obsidian's config, i.e. `%APPDATA%\obsidian\obsidian.json` on Windows, `~/Library/Application Support/obsidian/obsidian.json` on macOS, or `~/.config/obsidian/obsidian.json` on Linux. Use the vault marked `"open": true`, or else the one with the highest `ts`. Write the note at `<vault>/Daily Reports/<date>.md`. Never guess a drive letter or path.
-2. **No vault (cloud session):** write the note to `docs/daily-reports/<date>.md` in the session's repository, commit it, and push it to the session's branch. Tell the owner the note will reach Obsidian on the next local `/obsidian-sync` after they pull. Also give the full report in chat.
+The vault lives only on the owner's PC, with no sync. Cloud sessions can never reach it, so they leave the note in git. The next local run moves it into the vault.
+
+1. **Vault reachable (local session on the PC):** find the vault in Obsidian's config, i.e. `%APPDATA%\obsidian\obsidian.json` on Windows, `~/Library/Application Support/obsidian/obsidian.json` on macOS, or `~/.config/obsidian/obsidian.json` on Linux. Use the vault marked `"open": true`, or else the one with the highest `ts`. Write the note at `<vault>/Daily Reports/<date>.md`. Never guess a drive letter or path, and never use the `D:\Obsidian\...` path in the `/obsidian-sync` command file, because it belongs to the plugin's author.
+   - **Catch-up:** next, run `git fetch origin` and list every `docs/daily-reports/*.md` on all `origin/claude/*` branches and on `origin/main` (`git ls-tree -r --name-only <ref> docs/daily-reports/`). Copy any that are missing into `<vault>/Daily Reports/` with `git show <ref>:<path>`. These notes come from cloud sessions. Don't overwrite a note that's already in the vault. List what you imported.
+2. **No vault (cloud session):** write the note to `docs/daily-reports/<date>.md` in the session's repository, commit it, and push it to the session's branch. Tell the owner the note will reach Obsidian the next time they run `/daily-reports` on their PC (the catch-up step above). Also give the full report in chat.
 
 If today's note already exists, update it in place. Don't create a second file.
 
