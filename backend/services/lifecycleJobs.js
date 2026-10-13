@@ -19,6 +19,7 @@ import {
     sendAccessEndedEmail,
     sendExamReminderEmail,
     sendOneSessionComebackEmail,
+    sendNeverStartedEmail,
     arDaysCount,
 } from './userEmailService.js';
 import { notify } from './notificationService.js';
@@ -187,6 +188,64 @@ export async function runComebackJob(db, { limit = 200, outOfTime = () => false 
             result.sent++;
         } catch (err) {
             result.errors.push({ job: 'comeback', userId: user.id, error: err.message });
+        }
+    }
+    return result;
+}
+
+/**
+ * Signed up, never answered one question: one nudge about a day later.
+ *
+ * 7 of the 12 signups after Golden Months opened never answered anything, and
+ * 7 of the first 10 payers paid within 24 hours of signing up, so the first
+ * session decides the sale. The comeback job above only covers people who
+ * finished ONE quiz; this covers the ones who never started.
+ *
+ * Only accounts created on or after NEVER_STARTED_FROM are eligible. Older
+ * never-started accounts already got the one-off "your free questions" mail of
+ * 2026-10-11 and must not be swept up by a first run. Opening a quiz at all
+ * (any quiz-session row) or spending any free question excludes the account.
+ * One mail per account, stamped in never_started_email_sent_at.
+ */
+export const NEVER_STARTED_FROM = process.env.NEVER_STARTED_FROM || '2026-10-13T00:00:00+03:00';
+
+export async function runNeverStartedJob(db, { limit = 100, outOfTime = () => false } = {}) {
+    const result = { sent: 0, errors: [] };
+    const { rows } = await db.query(`
+        SELECT a.id, a.username, a.email, a.track, a.preferred_lang,
+               COALESCE(a.free_allowance, ${LEGACY_FREE_QUESTION_ALLOWANCE}) AS allowance
+          FROM accounts a
+         WHERE a.created_at >= $2::timestamptz
+           AND a.created_at <= NOW() - INTERVAL '20 hours'
+           AND a.created_at >= NOW() - INTERVAL '10 days'
+           AND a.never_started_email_sent_at IS NULL
+           AND COALESCE(a.free_questions_used, 0) = 0
+           AND NOT EXISTS (SELECT 1 FROM user_quiz_sessions s WHERE s.user_id = a.id)
+           AND a.email IS NOT NULL
+           AND a.email_verified = TRUE
+           AND a.isactive = TRUE
+           AND COALESCE(a.email_opt_out, FALSE) = FALSE
+           AND a.is_admin_created = FALSE
+           AND a.grandfathered_at IS NULL
+           AND NOT (a.subscription_status = 'active' AND a.subscription_expiry_date > NOW())
+           AND NOT EXISTS (
+                 SELECT 1 FROM payment_events pe
+                  WHERE pe.account_id = a.id AND pe.status = 'paid'
+                    AND pe.livemode IS DISTINCT FROM FALSE)
+         ORDER BY a.id
+         LIMIT $1
+    `, [limit, NEVER_STARTED_FROM]);
+
+    for (const user of rows) {
+        if (outOfTime()) break; // see utils/cronBudget.js
+        try {
+            await sendNeverStartedEmail(user.email, String(user.username).split('@')[0], user.track, {
+                allowance: Number(user.allowance),
+            }, { lang: user.preferred_lang, accountId: user.id });
+            await db.query(`UPDATE accounts SET never_started_email_sent_at = NOW() WHERE id = $1`, [user.id]);
+            result.sent++;
+        } catch (err) {
+            result.errors.push({ job: 'never_started', userId: user.id, error: err.message });
         }
     }
     return result;

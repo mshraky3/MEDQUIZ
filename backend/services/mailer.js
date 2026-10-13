@@ -98,15 +98,29 @@ function toNodemailerAttachments(attachments) {
     });
 }
 
-async function legacySend({ name, to, subject, text, html, attachments }) {
+async function legacySend({ name, to, subject, text, html, attachments, replyTo }) {
     return (await getTransporter()).sendMail({
         from: fromWithName(name),
         to,
         subject,
         text,
         html,
+        replyTo: replyTo || undefined,
         attachments: toNodemailerAttachments(attachments),
     });
+}
+
+/**
+ * Mail to students is sent from `noreply@smle-question-bank.com`, a domain with
+ * no mailbox, so a student's reply used to vanish (found 2026-10-11). Campaign
+ * and lifecycle mail now carries the published support address as Reply-To.
+ * Owner alerts, OTPs, receipts and the rest are untouched. Override with the
+ * MAIL_REPLY_TO env var; an explicit `replyTo` argument always wins.
+ */
+export const SUPPORT_REPLY_TO = 'alshraky3@gmail.com';
+const REPLY_TO_EVENT = /^medqize\.(lifecycle|broadcast)\./;
+export function defaultReplyTo(event) {
+    return REPLY_TO_EVENT.test(event || '') ? (process.env.MAIL_REPLY_TO || SUPPORT_REPLY_TO) : undefined;
 }
 
 // ── gateway ─────────────────────────────────────────────────────────────────
@@ -157,7 +171,7 @@ function toGatewayAttachments(attachments) {
  */
 export async function sendMail({
     name, to, subject, text, html, attachments,
-    event, severity, sourceOrigin, idempotencyKey,
+    event, severity, sourceOrigin, idempotencyKey, replyTo,
 }) {
     // ONE payload serves both paths: the gateway reads `event`/`fromName`/
     // base64 attachments, and legacySend() normalises the attachments back to
@@ -171,6 +185,7 @@ export async function sendMail({
         attachments: toGatewayAttachments(attachments),
         event: event || 'medqize.legacy',
         fromName: name,
+        replyTo: replyTo || defaultReplyTo(event),
         severity,
         sourceOrigin,
         idempotencyKey,

@@ -572,7 +572,8 @@ const Subscribe = () => {
                         <p className="subscribe-norenew">
                             <Icon name="lock" size={14} />
                             {t.secureNoteBefore} <strong>{t.secureNoteProvider}</strong>{t.secureNoteAfter}{' '}
-                            {t.noAutoRenew}
+                            {t.noAutoRenew}{' '}
+                            {t.cardsNote}
                         </p>
 
                         {/* Cross-link to the group plans. They are deliberately

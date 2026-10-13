@@ -415,6 +415,12 @@ function ensureSchema() {
                 ALTER TABLE accounts
                     ADD COLUMN IF NOT EXISTS comeback_email_stage INTEGER DEFAULT NULL
             `);
+            // One "your free questions are ready" nudge per account that signed
+            // up and never answered anything — see lifecycleJobs.runNeverStartedJob.
+            await db.query(`
+                ALTER TABLE accounts
+                    ADD COLUMN IF NOT EXISTS never_started_email_sent_at TIMESTAMPTZ DEFAULT NULL
+            `);
             // The student's own exam date, and how far the reminder ladder has
             // been walked for it. A DATE (not a timestamp) because a sitting is
             // a day, not a moment, and the countdown must read the same whether
@@ -2007,7 +2013,9 @@ const ensureOAuthColumns = async () => {
 // 12: check_valid_quiz_source rebuilt again to accept the dental collections
 //     (DentalExplained, DentalRecall2026, DentalRecall2024); the `dental` track
 //     itself needs no DDL (track is VARCHAR(20) with no CHECK).
-const SCHEMA_BOOTSTRAP_VERSION = 12;
+// 13: accounts.never_started_email_sent_at (day-1 nudge for signups that never
+//     answered a question).
+const SCHEMA_BOOTSTRAP_VERSION = 13;
 async function bootstrapAll() {
     try {
         await db.query(`

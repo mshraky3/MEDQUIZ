@@ -134,6 +134,10 @@ const supportCopy = {
             newSetTitle: 'تجميعة سبتمبر 2026',
             newSetBody: 'أسئلة تذكّرها المختبرون في جلسات SMLE من ١ إلى ٢٤ سبتمبر، مع شرح لكل سؤال. مشمولة في كل الخطط.',
             secureNoteAfter: '. لا نقوم بتخزين بيانات بطاقتك على خوادمنا.',
+            // Payment works only with Saudi-issued cards (the processor refuses
+            // foreign ones), so say so before the form instead of after eight
+            // failed attempts.
+            cardsNote: 'الدفع متاح حالياً بالبطاقات الصادرة في السعودية فقط (مدى، فيزا، ماستركارد).',
             policyBefore: 'الاشتراك لا يُجدَّد تلقائياً — التجديد يدوي. بالمتابعة فإنك توافق على',
             terms: 'شروط الاستخدام',
             and: 'و',
@@ -280,6 +284,7 @@ const supportCopy = {
             secureNoteBefore: 'Payment is secure and processed by',
             secureNoteProvider: 'Moyasar',
             secureNoteAfter: '. We never store your card details on our servers.',
+            cardsNote: 'Payment currently works with cards issued in Saudi Arabia only (mada, Visa, Mastercard).',
             // Label on the perks disclosure. The plan picker and the card form
             // are what someone opens this page for; the perks are the
             // supporting detail, one tap away instead of a third of the page.

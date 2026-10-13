@@ -23,6 +23,7 @@ import {
     runProgressDigestJob,
     runExamReminderJob,
     runComebackJob,
+    runNeverStartedJob,
     EXAM_REMINDER_STAGES,
 } from '../services/lifecycleJobs.js';
 import { maybeSendSubscriptionReport, sendSubscriptionReport } from '../services/subscriptionReportService.js';
@@ -393,6 +394,7 @@ router.get('/api/cron/daily-emails', cronAuth, async (req, res) => {
         ['progressDigest', runProgressDigestJob],
         ['examReminder', runExamReminderJob],
         ['comeback', runComebackJob],
+        ['neverStarted', runNeverStartedJob],
     ]) {
         try {
             if (outOfTime()) break;
@@ -551,7 +553,7 @@ router.get('/api/cron/daily-signups-report', cronAuth, async (req, res) => {
  * immediately after each successful send.
  */
 router.get('/api/cron/lifecycle-emails', cronAuth, async (req, res) => {
-    const out = { trialEnded: 0, renewalSequence: 0, progressDigest: 0, errors: [] };
+    const out = { trialEnded: 0, renewalSequence: 0, progressDigest: 0, neverStarted: 0, errors: [] };
     const outOfTime = cronDeadline(); // see utils/cronBudget.js
     for (const [name, job] of [
         ['trialEnded', runTrialEndedJob],
@@ -559,6 +561,7 @@ router.get('/api/cron/lifecycle-emails', cronAuth, async (req, res) => {
         ['progressDigest', runProgressDigestJob],
         ['examReminder', runExamReminderJob],
         ['comeback', runComebackJob],
+        ['neverStarted', runNeverStartedJob],
     ]) {
         try {
             if (outOfTime()) break;

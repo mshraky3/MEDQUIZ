@@ -10,6 +10,7 @@ import { cronDeadline } from '../utils/cronBudget.js';
 import {
     runTrialEndedJob,
     runComebackJob,
+    runNeverStartedJob,
     runRenewalSequenceJob,
     runProgressDigestJob,
     runExamReminderJob,
@@ -43,6 +44,7 @@ test('cronDeadline is not spent at first and is spent after its budget', async (
 for (const [name, job] of [
     ['trial ended', runTrialEndedJob],
     ['comeback', runComebackJob],
+    ['never started', runNeverStartedJob],
     ['renewal sequence', runRenewalSequenceJob],
     ['progress digest', runProgressDigestJob],
     ['exam reminder', runExamReminderJob],

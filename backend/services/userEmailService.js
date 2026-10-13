@@ -35,11 +35,12 @@
  * omit it (the admin preview routes) simply get no link.
  */
 
-import { sendMail } from './mailer.js';
+import { sendMail, SUPPORT_REPLY_TO } from './mailer.js';
 import { TRACKS, normalizeTrack } from '../config/tracks.js';
 import { unsubUrl } from '../routes/admin-broadcast.js';
 
 const SITE = 'https://www.smle-question-bank.com';
+const SUPPORT_EMAIL = SUPPORT_REPLY_TO;
 
 /** Anything → 'ar' | 'en'. Unknown values fall back to Arabic. */
 export const normalizeLang = (lang) =>
@@ -152,7 +153,7 @@ const wrapLayout = (bodyContent, opts = {}) => {
               ${T(lang, '© 2026 SQB · جميع الحقوق محفوظة', '© 2026 SQB · All rights reserved')}
             </p>
             <p style="margin:0;font-size:11px;color:#1e293b;">
-              ${T(lang, 'هذا البريد تلقائي، يُرجى عدم الرد عليه مباشرةً.', 'This is an automated message — please do not reply to it directly.')}
+              ${T(lang, 'هذا البريد تلقائي، لكن إذا رددت عليه يصل ردك لفريق SQB.', 'This message is automated, but if you reply it reaches the SQB team.')}
             </p>
             ${unsubRow}
           </td>
@@ -219,6 +220,61 @@ export const sendWelcomeEmail = async (to, username, track, opts = {}) => {
     T(lang, `أهلًا يا ${username}! يسعدنا انضمامك إلى SQB — مسار ${c.trackLabel}.`,
              `Welcome, ${username}! You're on the ${c.trackLabel} track at SQB.`),
     { event: 'medqize.lifecycle.welcome' }
+  );
+};
+
+// ─── 1b. NEVER STARTED ─────────────────────────────────────────────────────
+/**
+ * About a day after signup, to an account that never answered a single
+ * question (see lifecycleJobs.runNeverStartedJob). Seven of the twelve signups
+ * after Golden Months opened did exactly that, and payers decide in their first
+ * session, so this is the one nudge that matters before any price is shown.
+ * No offer, no price: just "your free questions are waiting" and a way to ask.
+ *
+ * @param {{allowance?:number}} stats  the account's own free allowance
+ */
+export const sendNeverStartedEmail = async (to, username, track, stats = {}, opts = {}) => {
+  const lang = normalizeLang(opts.lang);
+  const c = copyFor(track, lang);
+  const allowance = Math.max(1, Number(stats.allowance) || 10);
+  const link = `${SITE}/quizs?utm_source=email&utm_medium=lifecycle&utm_campaign=free_start`;
+  const html = wrapLayout(`
+        <tr>
+          <td align="center" style="padding:36px 40px 32px;">
+            <div style="font-size:48px;margin-bottom:16px;">🚀</div>
+            <h1 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#f8fafc;">
+              ${T(lang, `أسئلتك المجانية جاهزة يا ${username}`, `Your free questions are ready, ${username}`)}
+            </h1>
+            <p style="margin:0 0 24px;font-size:14px;color:#94a3b8;line-height:1.7;">
+              ${T(lang,
+                `أنشأت حساباً في SQB لكنك ما جرّبت الأسئلة بعد. حسابك فيه ${allowance} أسئلة مجانية تقدر تبدأ فيها الحين، بدون بطاقة وبدون التزام.`,
+                `You created an SQB account but have not tried the questions yet. Your account includes ${allowance} free questions you can start right now, with no card and no commitment.`)}
+            </p>
+            <table cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:28px;">
+              <tr>
+                <td style="background:#0b1021;border-radius:12px;padding:20px 24px;border:1px solid #1e293b;">
+                  <p style="margin:0 0 8px;font-size:13px;color:#94a3b8;">✅ &nbsp;${T(lang, `افتح مسار ${c.trackLabel} وابدأ اختباراً قصيراً`, `Open the ${c.trackLabel} track and start a short quiz`)}</p>
+                  <p style="margin:0;font-size:13px;color:#94a3b8;">📊 &nbsp;${T(lang, 'بعد كل اختبار تشوف نقاط ضعفك وتعرف من أين تكمل', 'After each quiz you see your weak topics and where to continue')}</p>
+                </td>
+              </tr>
+            </table>
+            ${button(link, T(lang, 'ابدأ أسئلتك المجانية ←', 'Start your free questions →'))}
+            <p style="margin:22px 0 0;font-size:12.5px;color:#64748b;line-height:1.8;">
+              ${T(lang,
+                `إذا واجهتك مشكلة في الدخول أو ما عرفت من أين تبدأ، رد على هذا البريد أو راسلنا على ${SUPPORT_EMAIL}.`,
+                `If you hit a problem signing in or are not sure where to start, reply to this email or write to ${SUPPORT_EMAIL}.`)}
+            </p>
+          </td>
+        </tr>
+    `, { lang, accountId: opts.accountId });
+
+  await sendEmail(
+    to,
+    T(lang, `أسئلتك المجانية جاهزة في SQB`, `Your free SQB questions are ready`),
+    html,
+    T(lang, `أنشأت حساباً في SQB لكنك ما جرّبت الأسئلة بعد. ابدأ أسئلتك المجانية: ${link}`,
+            `You created an SQB account but have not tried the questions yet. Start your free questions: ${link}`),
+    { event: 'medqize.lifecycle.never_started' }
   );
 };
 
