@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { Component, useCallback, useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import Globals from '../../global.js';
@@ -27,6 +27,39 @@ export const GOOGLE_SIGN_IN_AVAILABLE = Boolean(GOOGLE_CLIENT_ID);
 // submit button also matches, rather than a button that silently stops
 // growing partway across the card.
 const GSI_MAX_WIDTH = 400;
+
+/**
+ * Keeps a failure inside Google's own script from taking the page with it.
+ *
+ * GoogleLogin calls google.accounts.id.initialize()/renderButton() from a
+ * useEffect with no guard, and the library only handles a script that fails to
+ * LOAD, not one that throws once loaded. On 14 Oct 2026 an iPhone (Safari
+ * 26.5) threw "undefined is not an object (evaluating 'a.contentType')" from
+ * inside gsi/client; React unmounted the route and the visitor got the global
+ * error screen instead of /signup.
+ *
+ * Google is an optional extra on both callers (the email route is always
+ * there, and /signup shows its "register by email" button whenever Google is
+ * the primary route), so the right failure is to draw nothing — the whole
+ * block, divider included, or "or create your account manually" would dangle
+ * under an empty gap. Only errors thrown while rendering or in an effect reach
+ * here; the sign-in callbacks have their own try/catch.
+ */
+export class GoogleBlockBoundary extends Component {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  componentDidCatch(error) {
+    console.warn('Google sign-in disabled for this page view:', error);
+  }
+
+  render() {
+    return this.state.failed ? null : this.props.children;
+  }
+}
 
 /**
  * @param {'before'|'after'} dividerPosition
@@ -101,29 +134,31 @@ const OAuthButtons = ({ dividerLabel, onSuccess, onError, track, mode = 'signup'
   const divider = <div className="oauth-divider"><span>{dividerLabel}</span></div>;
 
   return (
-    <div className="oauth-block">
-      {dividerPosition === 'before' && divider}
-      <div className="oauth-buttons">
-        <div className="oauth-buttons-google" ref={boxRef}>
-          <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID} locale={lang}>
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={() => onError?.(new Error('google_login_failed'))}
-              text="continue_with"
-              // Rectangular, not pill: GSI gives no radius control, and its
-              // rectangular corner (~4px) is far closer to the card's 12px
-              // than a 20px pill is. Login.css overrides it to 12px on top of
-              // this; rectangular is what shows if that override ever stops
-              // matching Google's markup.
-              shape="rectangular"
-              size="large"
-              width={width}
-            />
-          </GoogleOAuthProvider>
+    <GoogleBlockBoundary>
+      <div className="oauth-block">
+        {dividerPosition === 'before' && divider}
+        <div className="oauth-buttons">
+          <div className="oauth-buttons-google" ref={boxRef}>
+            <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID} locale={lang}>
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => onError?.(new Error('google_login_failed'))}
+                text="continue_with"
+                // Rectangular, not pill: GSI gives no radius control, and its
+                // rectangular corner (~4px) is far closer to the card's 12px
+                // than a 20px pill is. Login.css overrides it to 12px on top of
+                // this; rectangular is what shows if that override ever stops
+                // matching Google's markup.
+                shape="rectangular"
+                size="large"
+                width={width}
+              />
+            </GoogleOAuthProvider>
+          </div>
         </div>
+        {dividerPosition === 'after' && divider}
       </div>
-      {dividerPosition === 'after' && divider}
-    </div>
+    </GoogleBlockBoundary>
   );
 };
 
