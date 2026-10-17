@@ -135,7 +135,7 @@
     transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
 }
 
-.wq-chip:hover { border-color: var(--primary-light, #3b82f6); color: var(--primary-color, #2563eb); }
+.wq-chip:hover { border-color: var(--primary-light, #3b82f6); color: var(--primary-color-ink, var(--primary-color, #2563eb)); }
 .wq-chip:focus-visible { outline: 3px solid var(--primary-light, #3b82f6); outline-offset: 2px; }
 
 .wq-chip.is-on {
@@ -205,7 +205,7 @@
     color: var(--text-light, #5b6779);
 }
 
-.wq-state.is-error h3 { color: var(--error-color, #dc2626); }
+.wq-state.is-error h3 { color: var(--error-color-ink, var(--error-color, #dc2626)); }
 
 /* ------------------------------------------------------------ actions --- */
 
@@ -244,7 +244,7 @@
     border: 1.5px solid var(--border-color, #d4deee);
     border-radius: 999px;
     background: var(--surface, #fff);
-    color: var(--primary-dark, #1d4ed8);
+    color: var(--primary-dark-ink, var(--primary-dark, #1d4ed8));
     font-family: inherit;
     font-size: var(--text-sm, 0.875rem);
     font-weight: 700;

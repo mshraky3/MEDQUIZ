@@ -63,7 +63,7 @@
     white-space: nowrap;
 }
 
-.ap-badge svg { color: var(--primary-color, #2563eb); flex-shrink: 0; }
+.ap-badge svg { color: var(--primary-color-ink, var(--primary-color, #2563eb)); flex-shrink: 0; }
 
 /* Accuracy is the one number that earns colour, on the same ramp Analysis.jsx
    already uses for the hero card's tone-high/mid/low. */
@@ -247,7 +247,7 @@
     border: 1.5px solid var(--border-color, #d4deee);
     border-radius: 999px;
     background: var(--surface, #fff);
-    color: var(--primary-dark, #1d4ed8);
+    color: var(--primary-dark-ink, var(--primary-dark, #1d4ed8));
     font-family: inherit;
     font-size: var(--text-xs, 0.8rem);
     font-weight: 700;
@@ -335,7 +335,7 @@
     flex-shrink: 0;
     border-radius: 9px;
     background: var(--surface-tint, #e1eafb);
-    color: var(--primary-dark, #1d4ed8);
+    color: var(--primary-dark-ink, var(--primary-dark, #1d4ed8));
 }
 
 .ap-tbl-acc { grid-area: acc; justify-self: end; }
@@ -359,7 +359,7 @@
 .ap-tbl-bar {
     height: 7px;
     border-radius: 999px;
-    background: #dde5f3;
+    background: var(--bg-dde5f3);
     overflow: hidden;
 }
 
@@ -388,7 +388,7 @@
     border: 1.5px solid var(--border-color, #d4deee);
     border-radius: 999px;
     background: var(--surface, #fff);
-    color: var(--primary-dark, #1d4ed8);
+    color: var(--primary-dark-ink, var(--primary-dark, #1d4ed8));
     font-family: inherit;
     font-size: var(--text-xs, 0.75rem);
     font-weight: 800;
@@ -492,7 +492,7 @@
     background: var(--surface, #fff);
 }
 
-.ap-note svg { color: var(--primary-color, #2563eb); flex-shrink: 0; margin-top: 2px; }
+.ap-note svg { color: var(--primary-color-ink, var(--primary-color, #2563eb)); flex-shrink: 0; margin-top: 2px; }
 .ap-note div { min-width: 0; }
 .ap-note strong { display: block; margin-bottom: 3px; font-size: var(--text-sm, 0.875rem); font-weight: 800; color: var(--text-dark, #0f1e3d); }
 .ap-note p { margin: 0; font-size: var(--text-xs, 0.75rem); line-height: 1.75; color: var(--text-light, #5b6779); }
@@ -513,7 +513,7 @@
     border: 1.5px solid var(--border-color, #d4deee);
     border-radius: 999px;
     background: var(--surface, #fff);
-    color: var(--primary-dark, #1d4ed8);
+    color: var(--primary-dark-ink, var(--primary-dark, #1d4ed8));
     font-family: inherit;
     font-size: var(--text-xs, 0.75rem);
     font-weight: 800;
@@ -552,8 +552,8 @@
     gap: 10px;
     padding: 13px 14px;
     border-radius: var(--radius-md, 12px);
-    background: rgba(220, 38, 38, 0.08);
-    color: var(--error-color, #dc2626);
+    background: var(--bg-dc2626-a080);
+    color: var(--error-color-ink, var(--error-color, #dc2626));
     font-size: var(--text-sm, 0.875rem);
 }
 

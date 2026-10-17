@@ -35,6 +35,7 @@
   --bg-3b82f6-a200: rgba(59, 130, 246, 0.2);
   --bg-6366f1-a060: rgba(99, 102, 241, 0.06);
   --bg-6366f1-a090: rgba(99, 102, 241, 0.09);
+  --bg-dc2626-a080: rgba(220, 38, 38, 0.08);
   --bg-dde5f3: #dde5f3;
   --bg-dfe7f6: #dfe7f6;
   --bg-e8eef6: #e8eef6;
@@ -42,6 +43,7 @@
   --bg-eef4ff: #eef4ff;
   --bg-ef4444-a100: rgba(239, 68, 68, 0.1);
   --bg-f0f8fb: #f0f8fb;
+  --bg-f0fdf4: #f0fdf4;
   --bg-f1f5f9: #f1f5f9;
   --bg-f8fafc: #f8fafc;
   --bg-fbbf24-a100: rgba(251, 191, 36, 0.1);
@@ -64,6 +66,7 @@
   --fg-334155: #334155;
   --fg-5c4300: #5c4300;
   --fg-78350f: #78350f;
+  --fg-7f1d1d: #7f1d1d;
   --fg-8a5d00: #8a5d00;
   --fg-92400e: #92400e;
   --fg-b45309: #b45309;
@@ -79,6 +82,7 @@
   --line-dbe6fb: #dbe6fb;
   --line-e2e8f0: #e2e8f0;
   --line-e6ecf6: #e6ecf6;
+  --line-fca5a5: #fca5a5;
   --line-fecaca: #fecaca;
   --shade-0f172a-a050: rgba(15, 23, 42, 0.05);
   --shade-0f172a-a080: rgba(15, 23, 42, 0.08);
@@ -86,6 +90,7 @@
   --shade-0f172a-a120: rgba(15, 23, 42, 0.12);
   --shade-0f172a-a150: rgba(15, 23, 42, 0.15);
   --shade-0f172a-a280: rgba(15, 23, 42, 0.28);
+  --shade-0f172a-a300: rgba(15, 23, 42, 0.3);
 }
 
 :root[data-theme="dark"] {
@@ -111,6 +116,7 @@
   --bg-3b82f6-a200: rgba(59, 130, 246, 0.3);
   --bg-6366f1-a060: rgba(99, 102, 241, 0.09);
   --bg-6366f1-a090: rgba(99, 102, 241, 0.135);
+  --bg-dc2626-a080: rgba(220, 38, 38, 0.12);
   --bg-dde5f3: #262d38;
   --bg-dfe7f6: #252b38;
   --bg-e8eef6: #1e2839;
@@ -118,6 +124,7 @@
   --bg-eef4ff: #1b2435;
   --bg-ef4444-a100: rgba(239, 68, 68, 0.15);
   --bg-f0f8fb: #192334;
+  --bg-f0fdf4: #182132;
   --bg-f1f5f9: #1a2435;
   --bg-f8fafc: #182132;
   --bg-fbbf24-a100: rgba(251, 191, 36, 0.15);
@@ -140,6 +147,7 @@
   --fg-334155: #c6d7f0;
   --fg-5c4300: #eacd93;
   --fg-78350f: #ffbea0;
+  --fg-7f1d1d: #fdc0ba;
   --fg-8a5d00: #e7b56c;
   --fg-92400e: #fcb18d;
   --fg-b45309: #fb9d6a;
@@ -155,6 +163,7 @@
   --line-dbe6fb: #2f394b;
   --line-e2e8f0: #2c384d;
   --line-e6ecf6: #2b364b;
+  --line-fca5a5: #6a393a;
   --line-fecaca: #5c2f31;
   --shade-0f172a-a050: rgba(0, 0, 0, 0.2);
   --shade-0f172a-a080: rgba(0, 0, 0, 0.2);
@@ -162,4 +171,5 @@
   --shade-0f172a-a120: rgba(0, 0, 0, 0.264);
   --shade-0f172a-a150: rgba(0, 0, 0, 0.33);
   --shade-0f172a-a280: rgba(0, 0, 0, 0.6);
+  --shade-0f172a-a300: rgba(0, 0, 0, 0.6);
 }
