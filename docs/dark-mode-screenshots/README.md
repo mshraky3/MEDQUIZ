@@ -47,3 +47,4 @@ group-plan label, "0%" accuracy) — judge the colours, not the numbers.
 | quiz-paywall-402, quiz-category-done, quiz-load-error | quiz: free allowance spent, section finished, load failure (phone only) |
 | launcher-congratulations, launcher-mock-exam-modal | launcher: section-finished popup, mock-exam type picker (phone only) |
 | payment-callback-success | `/payment/callback` after a successful payment (phone only) |
+| announcement-{phone,desktop}-{ar,en}-{light,dark} | the "dark mode is here" card on the landing page, cropped to the card |

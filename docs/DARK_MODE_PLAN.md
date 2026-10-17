@@ -277,6 +277,25 @@ HTML carries the no-flash script. `npm run lint`: 0 errors; warnings 25 on
 `main`, 25 here. No line-ending changes (the 34 CRLF files stay CRLF); no
 file had more than a fifth of its lines touched.
 
+## 6b. Launch announcement
+
+A small card on the landing page, under the hero (and under any live offer),
+above the tracks: "جديد · من اقتراحاتكم — الوضع الليلي وصل" / "New · You asked
+for it — Dark mode is here", one line on what it is, and a button that switches
+the whole page to dark right there (pressed again, back to light). Arabic and
+English, both themes, phone and desktop; tracked as
+`landing_theme_announcement_click`. It hides itself from 2027-01-01 (Riyadh);
+removal steps are at the top of `i18n/copy/themeAnnouncement.js`. Screenshots:
+`docs/dark-mode-screenshots/announcement-*`.
+
+Checked on the production build (`vite build` + `vite preview`) as well as the
+dev server: the switch test 15/15, the dark audit (no stray light panels, no
+dark-only contrast failures), and the light comparison against a production
+build of `main`: 41 of 41 routes identical apart from the new card and toggle
+(the only other differences are notation: `main`'s minifier drops redundant
+`0%`/`100%` gradient stop positions, which it cannot do when a stop is a
+`var()`; same rendering).
+
 ## 7. What the owner should check by hand
 
 1. **The Moyasar card form on `/subscribe`, in dark.** Its CDN was blocked
