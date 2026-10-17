@@ -38,6 +38,24 @@
   --card-shadow: 0 8px 28px rgba(37, 99, 235, 0.08), 0 2px 8px rgba(15, 23, 42, 0.04);
 }
 
+/* .landing-body is the one page that carries its own token set, so it gets
+   its own dark values (the generated palette only covers declarations).
+   Brand accents keep their fills; text uses of them read the *-ink tokens. */
+:root[data-theme="dark"] .landing-body {
+  --card: rgba(18, 26, 43, 0.9);
+  --card-strong: #121a2b;
+  --glass: rgba(18, 26, 43, 0.7);
+  --text: #d7e6fe;
+  --dim: #bbcbe2;
+  --accent-violet: #b4a2ff;
+  --pill: rgba(37, 99, 235, 0.2);
+  --border: rgba(96, 165, 250, 0.18);
+  --border-strong: rgba(96, 165, 250, 0.3);
+  --shadow: 0 25px 80px rgba(0, 0, 0, 0.45);
+  --card-grad: linear-gradient(165deg, #121a2b 0%, #16203a 100%);
+  --card-shadow: 0 8px 28px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
 /* Height of the National Day strip (components/common/NationalDayOffer.css).
    Zero with no offer; 40px once one arrives, eased in by the transition on
    .landing-body below. Registered as a <length> so the browser can interpolate

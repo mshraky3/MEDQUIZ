@@ -127,7 +127,7 @@
   gap: 12px;
   padding: 22px;
   border-radius: 18px;
-  background: var(--surface);
+  background: #ffffff;
   color: var(--nd-ink);
   text-align: start;
 }
@@ -180,9 +180,9 @@
 .nd-group-price s {
   font-size: 18px;
   font-weight: 600;
-  color: var(--fg-5b6e62);
+  color: #5b6e62;
   text-decoration-thickness: 2px;
-  text-decoration-color: var(--fg-b4443b);
+  text-decoration-color: #b4443b;
 }
 
 .nd-card-note {
@@ -233,7 +233,7 @@
 .nd-group-seats small {
   font-size: 12.5px;
   font-weight: 600;
-  color: var(--fg-1f6b43);
+  color: #1f6b43;
 }
 
 .nd-group-price {
@@ -374,4 +374,17 @@
 @media (max-width: 620px) {
   .nd-cards { grid-template-columns: minmax(0, 1fr); }
   .nd-card { padding: 20px; }
+}
+
+/* Dark theme: the offer cards stay the white cards they were designed as;
+   see the matching note in GoldenMonthsSection.css. */
+:root[data-theme="dark"] .nd-card {
+  --text-dark: #0f1e3d;
+  --text-medium: #475569;
+  --text-light: #5b6779;
+  --muted: #5b6779;
+  --surface: #ffffff;
+  --surface-2: #f5f8fd;
+  --border-color: #d4deee;
+  color-scheme: light;
 }

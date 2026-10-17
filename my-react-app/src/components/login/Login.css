@@ -67,6 +67,12 @@
   --shadow: var(--shadow-lg);
 }
 
+:root[data-theme="dark"] .login-body {
+  --text: #d7e6fe;
+  --pill-bg: rgba(59, 130, 246, 0.24);
+  --border: rgba(226, 232, 240, 0.13);
+}
+
 .login-body {
   /* min-height:100% + flex:1, not 100vh — this renders inside
      .page-with-navbar, which already reserves 72px for the fixed navbar and
