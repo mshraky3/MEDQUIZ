@@ -1,7 +1,7 @@
 import React from 'react';
 import Icon from '../components/common/Icon.jsx';
 import { common, useCommon } from '../i18n';
-import { useTheme } from './ThemeContext.jsx';
+import { useTheme } from './useTheme.js';
 import { nextTheme } from './theme.js';
 import './ThemeToggle.css';
 

@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     THEME_STORAGE_KEY,
     applyTheme,
@@ -7,6 +7,7 @@ import {
     resolveTheme,
     saveThemePref,
 } from './theme.js';
+import { ThemeContext } from './useTheme.js';
 
 /**
  * Holds the visitor's theme preference and keeps <html data-theme> in step.
@@ -32,12 +33,6 @@ const darkQuery = () => {
         return null;
     }
 };
-
-export const ThemeContext = createContext({
-    pref: 'light',
-    theme: 'light',
-    setPref: () => { },
-});
 
 export const ThemeProvider = ({ children }) => {
     const [pref, setPrefState] = useState(() => readThemePref(getStorage()));
@@ -77,5 +72,3 @@ export const ThemeProvider = ({ children }) => {
     const value = useMemo(() => ({ pref, theme, setPref }), [pref, theme, setPref]);
     return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 };
-
-export const useTheme = () => useContext(ThemeContext);
