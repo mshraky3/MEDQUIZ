@@ -10,6 +10,7 @@ import Globals from '../../global.js';
 import { UserContext } from '../../UserContext';
 import { TRACKS, MEDICAL, NURSING, DENTAL, pick } from '../../utils/tracks.js';
 import { useCopy, useLang, LanguageToggle, LocaleLink as Link, formatNumber, formatDate } from '../../i18n';
+import ThemeToggle from '../../theme/ThemeToggle.jsx';
 import landingCopy from '../../i18n/copy/landing.js';
 import nationalDayCopy from '../../i18n/copy/nationalDay.js';
 import { NationalDayStrip } from '../common/NationalDayOffer.jsx';
@@ -220,6 +221,7 @@ const Landing = () => {
             {/* The landing page has its own topbar (no navbar on "/"), so the
                 language switch has to live here too — it is the first thing a
                 visitor in the wrong language needs. */}
+            <ThemeToggle />
             <LanguageToggle compact />
             {isAuthenticated ? (
               <button className="btn ghost topbar-btn" onClick={handleContinue}>

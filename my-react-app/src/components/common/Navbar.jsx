@@ -5,6 +5,7 @@ import Icon from './Icon.jsx';
 import NotificationBell from './NotificationBell.jsx';
 import apiClient from '../../utils/apiClient.js';
 import { useCommon, useLang, LanguageToggle, LocaleLink as Link, useLocaleNavigate, formatDate } from '../../i18n';
+import ThemeToggle from '../../theme/ThemeToggle.jsx';
 import { stripLocale } from '../../seo/locales.js';
 import './Navbar.css';
 
@@ -157,6 +158,7 @@ const Navbar = () => {
 
       <div className="navbar-left">
         {isAuthenticated && <NotificationBell />}
+        <ThemeToggle className="navbar-theme-toggle" />
         <LanguageToggle className="navbar-lang-toggle" />
         {/* Nothing to open when the nav links are gone. */}
         <button

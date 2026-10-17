@@ -29,15 +29,15 @@
 
 /* Light navbar */
 .lang-toggle-light {
-    border: 1px solid rgba(15, 23, 42, 0.12);
-    background: rgba(15, 23, 42, 0.04);
-    color: #475569;
+    border: 1px solid var(--line-0f172a-a120);
+    background: var(--bg-0f172a-a040);
+    color: var(--text-medium);
 }
 
 .lang-toggle-light:hover {
-    background: rgba(59, 130, 246, 0.12);
+    background: var(--bg-3b82f6-a120);
     border-color: rgba(59, 130, 246, 0.4);
-    color: #2563eb;
+    color: var(--fg-2563eb);
 }
 
 /* Dark landing topbar / footer */
