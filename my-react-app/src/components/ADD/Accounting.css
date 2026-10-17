@@ -20,7 +20,7 @@
     color: var(--admin-muted);
 }
 
-.admin-page-wrapper .acc-error { color: #b91c1c; }
+.admin-page-wrapper .acc-error { color: var(--fg-b91c1c); }
 
 .admin-page-wrapper .acc-head {
     display: flex;
@@ -72,10 +72,10 @@
 
 .admin-page-wrapper .acc-btn.ghost {
     background: transparent;
-    color: #2563eb;
+    color: var(--fg-2563eb);
 }
 
-.admin-page-wrapper .acc-btn.ghost:hover { background: rgba(37, 99, 235, 0.09); }
+.admin-page-wrapper .acc-btn.ghost:hover { background: var(--bg-2563eb-a090); }
 .admin-page-wrapper .acc-btn.sm { padding: 6px 12px; font-size: 0.78rem; }
 
 .admin-page-wrapper .acc-filters {
@@ -120,9 +120,9 @@
     margin-bottom: 16px;
     padding: 10px 14px;
     border-radius: 9px;
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-    color: #b91c1c;
+    background: var(--bg-fef2f2);
+    border: 1px solid var(--line-fecaca);
+    color: var(--fg-b91c1c);
     font-size: 0.84rem;
 }
 
@@ -146,7 +146,7 @@
 
 .admin-page-wrapper .acc-kpi.is-net {
     border-color: rgba(5, 150, 105, 0.4);
-    background: linear-gradient(160deg, #f0fdf4, #ffffff);
+    background: linear-gradient(160deg, var(--bg-f0fdf4), var(--surface));
 }
 
 .admin-page-wrapper .acc-kpi-label {
@@ -172,8 +172,8 @@
     color: var(--admin-muted);
 }
 
-.admin-page-wrapper .acc-kpi.is-cost .acc-kpi-value { color: #b91c1c; }
-.admin-page-wrapper .acc-kpi.is-net .acc-kpi-value { color: #047857; }
+.admin-page-wrapper .acc-kpi.is-cost .acc-kpi-value { color: var(--fg-b91c1c); }
+.admin-page-wrapper .acc-kpi.is-net .acc-kpi-value { color: var(--fg-047857); }
 
 .admin-page-wrapper .acc-kpi-sub {
     font-size: 0.74rem;
@@ -188,11 +188,11 @@
     margin-bottom: 16px;
     padding: 12px 15px;
     border-radius: 11px;
-    border: 1px solid #bfdbfe;
-    background: #eff6ff;
+    border: 1px solid var(--line-bfdbfe);
+    background: var(--bg-eff6ff);
     font-size: 0.82rem;
     line-height: 1.75;
-    color: #1e40af;
+    color: var(--fg-1e40af);
 }
 
 .admin-page-wrapper .acc-note.subtle {
@@ -204,7 +204,7 @@
 .admin-page-wrapper .acc-note code {
     padding: 1px 5px;
     border-radius: 4px;
-    background: rgba(15, 23, 42, 0.07);
+    background: var(--bg-0f172a-a070);
     font-size: 0.94em;
 }
 
@@ -213,8 +213,8 @@
     margin-inline-start: 5px;
     padding: 1px 6px;
     border-radius: 999px;
-    background: rgba(245, 158, 11, 0.18);
-    color: #92400e;
+    background: var(--bg-f59e0b-a180);
+    color: var(--fg-92400e);
     font-size: 0.66rem;
     font-weight: 700;
     vertical-align: middle;
@@ -278,11 +278,11 @@
 .admin-page-wrapper .acc-table tbody tr:last-child td { border-bottom: none; }
 .admin-page-wrapper .acc-table tbody tr:hover { background: var(--admin-bg); }
 
-.admin-page-wrapper .acc-table .cost { color: #b91c1c; }
-.admin-page-wrapper .acc-table .net { color: #047857; font-weight: 700; }
+.admin-page-wrapper .acc-table .cost { color: var(--fg-b91c1c); }
+.admin-page-wrapper .acc-table .net { color: var(--fg-047857); font-weight: 700; }
 .admin-page-wrapper .acc-table .acc-dim { color: var(--admin-muted); font-weight: 400; }
 
-.admin-page-wrapper .acc-table tr.is-refunded { background: #fff7ed; }
+.admin-page-wrapper .acc-table tr.is-refunded { background: var(--bg-fff7ed); }
 
 .admin-page-wrapper .acc-sub-cell {
     max-width: 230px;
@@ -303,20 +303,20 @@
     font: inherit;
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 0.78rem;
-    color: #2563eb;
+    color: var(--fg-2563eb);
     text-decoration: underline;
     text-underline-offset: 2px;
     cursor: pointer;
 }
 
-.admin-page-wrapper .acc-invoice-link:hover { color: #1d4ed8; }
+.admin-page-wrapper .acc-invoice-link:hover { color: var(--fg-1d4ed8); }
 
 .admin-page-wrapper .acc-tag {
     display: inline-block;
     margin-inline-start: 6px;
     padding: 1px 7px;
     border-radius: 999px;
-    background: rgba(15, 23, 42, 0.08);
+    background: var(--bg-0f172a-a080);
     font-size: 0.66rem;
     font-weight: 700;
     color: var(--admin-muted);
@@ -362,8 +362,8 @@
 }
 
 .admin-page-wrapper .acc-scheme-rows b { color: var(--admin-text); }
-.admin-page-wrapper .acc-scheme-rows b.cost { color: #b91c1c; }
-.admin-page-wrapper .acc-scheme-rows b.net { color: #047857; }
+.admin-page-wrapper .acc-scheme-rows b.cost { color: var(--fg-b91c1c); }
+.admin-page-wrapper .acc-scheme-rows b.net { color: var(--fg-047857); }
 
 .admin-page-wrapper .acc-scheme-rate {
     margin-top: 8px;

@@ -16,8 +16,8 @@
     align-items: center;
     gap: 12px;
     padding: 14px 16px;
-    background: rgba(15, 23, 42, 0.03);
-    border: 1px solid #eef2fb;
+    background: var(--bg-0f172a-a030);
+    border: 1px solid var(--line-eef2fb);
     border-radius: 12px;
     min-width: 0;
 }
@@ -29,7 +29,7 @@
 
 .admin-page-wrapper .admin-kpi.is-clickable:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+    box-shadow: 0 6px 16px var(--shade-0f172a-a080);
     border-color: rgba(37, 99, 235, 0.3);
 }
 
@@ -50,20 +50,20 @@
 .admin-page-wrapper .admin-kpi--warning .admin-kpi-ic { background: linear-gradient(135deg, #fbbf24, #d97706); }
 
 .admin-page-wrapper .admin-kpi-body { display: flex; flex-direction: column; min-width: 0; gap: 1px; }
-.admin-page-wrapper .admin-kpi-value { font-size: 1.4rem; font-weight: 800; color: #0f1e3d; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.admin-page-wrapper .admin-kpi-value { font-size: 1.4rem; font-weight: 800; color: var(--text-dark); line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .admin-page-wrapper .admin-kpi-label { font-size: 0.74rem; color: var(--text-light); font-weight: 600; }
 .admin-page-wrapper .admin-kpi-sub { font-size: 0.68rem; color: var(--text-light); }
 
-.admin-page-wrapper .admin-kpi--negative .admin-kpi-value { color: #b91c1c; }
-.admin-page-wrapper .admin-kpi--warning .admin-kpi-value { color: #b45309; }
+.admin-page-wrapper .admin-kpi--negative .admin-kpi-value { color: var(--fg-b91c1c); }
+.admin-page-wrapper .admin-kpi--warning .admin-kpi-value { color: var(--fg-b45309); }
 
 /* Panel */
 .admin-page-wrapper .admin-panel {
     padding: 20px 22px;
-    background: #fff;
-    border: 1px solid #e6ecf7;
+    background: var(--surface);
+    border: 1px solid var(--border-light);
     border-radius: 16px;
-    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+    box-shadow: 0 4px 14px var(--shade-0f172a-a060);
     margin-bottom: 20px;
 }
 
@@ -82,7 +82,7 @@
     gap: 8px;
     margin: 0;
     font-size: 1.1rem;
-    color: #0f1e3d;
+    color: var(--text-dark);
 }
 
 .admin-page-wrapper .admin-panel-sub {
@@ -112,7 +112,7 @@
     text-align: center;
 }
 
-.admin-page-wrapper .admin-chart-state--error { color: #b91c1c; }
+.admin-page-wrapper .admin-chart-state--error { color: var(--fg-b91c1c); }
 
 /* Strip layout — a row of Kpi tiles */
 .admin-page-wrapper .admin-strip {
@@ -131,3 +131,28 @@
 
 @media (max-width: 900px) {
     .admin-page-wrapper .admin-grid-2 { grid-template-columns: 1fr; }}
+
+/* Dark theme for recharts. Axis ticks, grid lines and the neutral "never
+   answered" bar are SVG presentation attributes (chartTheme.js AXIS / GRID,
+   Behavior.jsx), which any CSS rule outranks, so the dark values live here
+   rather than in every chart. Series colours are saturated and read on navy
+   as they are. */
+:root[data-theme="dark"] .recharts-cartesian-axis-tick-value,
+:root[data-theme="dark"] .recharts-polar-angle-axis-tick-value,
+:root[data-theme="dark"] .recharts-label {
+    fill: #9aa8bf;
+}
+
+:root[data-theme="dark"] .recharts-cartesian-grid line,
+:root[data-theme="dark"] .recharts-cartesian-axis-line,
+:root[data-theme="dark"] .recharts-cartesian-axis-tick-line {
+    stroke: rgba(226, 232, 240, 0.12);
+}
+
+:root[data-theme="dark"] .recharts-rectangle[fill="#cbd5e1"] {
+    fill: #34405a;
+}
+
+:root[data-theme="dark"] .recharts-tooltip-cursor {
+    fill: rgba(226, 232, 240, 0.06);
+}

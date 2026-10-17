@@ -71,12 +71,12 @@ const Admin = () => {
     };
 
     const getStatusBadge = (status) => ({
-        pending: { bg: '#fef3c7', color: '#d97706', label: 'Pending' },
-        reviewing: { bg: '#dbeafe', color: '#2563eb', label: 'Reviewing' },
-        planned: { bg: '#dcfce7', color: '#16a34a', label: 'Planned' },
-        implemented: { bg: '#d1fae5', color: '#059669', label: 'Done' },
-        rejected: { bg: '#fee2e2', color: '#dc2626', label: 'Rejected' },
-    }[status] || { bg: '#fef3c7', color: '#d97706', label: 'Pending' });
+        pending: { bg: 'var(--bg-fef3c7)', color: 'var(--fg-d97706)', label: 'Pending' },
+        reviewing: { bg: 'var(--bg-dbeafe)', color: 'var(--fg-2563eb)', label: 'Reviewing' },
+        planned: { bg: 'var(--bg-dcfce7)', color: 'var(--fg-16a34a)', label: 'Planned' },
+        implemented: { bg: 'var(--bg-d1fae5)', color: 'var(--fg-059669)', label: 'Done' },
+        rejected: { bg: 'var(--bg-fee2e2)', color: 'var(--fg-dc2626)', label: 'Rejected' },
+    }[status] || { bg: 'var(--bg-fef3c7)', color: 'var(--fg-d97706)', label: 'Pending' });
 
     const dailySignups = useMemo(
         () => (stats?.charts?.dailySignups || []).map((d) => ({ ...d, label: dayLabel(d.date) })),

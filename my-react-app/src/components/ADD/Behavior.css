@@ -101,13 +101,13 @@
     text-transform: uppercase;
     letter-spacing: 0.4px;
     color: var(--text-light);
-    border-bottom: 1px solid #e6ecf7;
+    border-bottom: 1px solid var(--border-light);
     white-space: nowrap;
 }
 
 .admin-page-wrapper .bhv-table td {
     padding: 10px;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--line-f1f5f9);
     vertical-align: top;
 }
 
@@ -117,13 +117,13 @@
 }
 
 .admin-page-wrapper .bhv-row-click:hover {
-    background: rgba(37, 99, 235, 0.05);
+    background: var(--bg-2563eb-a050);
 }
 
 .admin-page-wrapper .bhv-qtext {
     max-width: 420px;
     line-height: 1.5;
-    color: #0f1e3d;
+    color: var(--text-dark);
 }
 
 .admin-page-wrapper .bhv-qid {
@@ -172,7 +172,7 @@
 .admin-page-wrapper .bhv-threshold input {
     width: 68px;
     padding: 5px 8px;
-    border: 1px solid #d4deee;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     font-size: 0.8rem;
 }
@@ -182,13 +182,13 @@
    intensity is the retention percentage itself, not a bucket. */
 .admin-page-wrapper .bhv-cohort td {
     padding: 7px 9px;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--line-f1f5f9);
     white-space: nowrap;
 }
 
 .admin-page-wrapper .bhv-cohort-week {
     font-weight: 700;
-    color: #0f1e3d;
+    color: var(--text-dark);
 }
 
 .admin-page-wrapper .bhv-cohort-size {
@@ -199,7 +199,7 @@
     text-align: center;
     font-weight: 700;
     font-size: 0.72rem;
-    color: #0f1e3d;
+    color: var(--text-dark);
     background: rgb(37 99 235 / calc(var(--fill, 0) * 0.45));
     border-radius: 4px;
 }
@@ -228,12 +228,12 @@
 }
 
 .admin-page-wrapper .bhv-list li:nth-child(odd) {
-    background: rgba(15, 23, 42, 0.025);
+    background: var(--bg-0f172a-a025);
 }
 
 .admin-page-wrapper .bhv-list-name {
     font-weight: 600;
-    color: #0f1e3d;
+    color: var(--text-dark);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -268,10 +268,10 @@
     max-height: 85vh;
     overflow-y: auto;
     padding: 22px;
-    background: #fff;
-    border: 1px solid #e6ecf7;
+    background: var(--surface);
+    border: 1px solid var(--border-light);
     border-radius: 16px;
-    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.24);
+    box-shadow: 0 24px 60px var(--shade-0f172a-a240);
 }
 
 .admin-page-wrapper .bhv-modal-head {
@@ -285,7 +285,7 @@
 .admin-page-wrapper .bhv-modal-head h3 {
     margin: 0;
     font-size: 1rem;
-    color: #0f1e3d;
+    color: var(--text-dark);
 }
 
 .admin-page-wrapper .bhv-modal-close {
@@ -299,14 +299,14 @@
 }
 
 .admin-page-wrapper .bhv-modal-close:hover {
-    background: rgba(15, 23, 42, 0.06);
+    background: var(--bg-0f172a-a060);
 }
 
 .admin-page-wrapper .bhv-modal-q {
     margin: 0 0 16px;
     font-size: 0.88rem;
     line-height: 1.6;
-    color: #0f1e3d;
+    color: var(--text-dark);
 }
 
 /* Each option is a bar whose width is its share of the answers, with the label
@@ -329,7 +329,7 @@
     padding: 9px 12px;
     border: 1px solid transparent;
     border-radius: 8px;
-    background: rgba(15, 23, 42, 0.03);
+    background: var(--bg-0f172a-a030);
     font-size: 0.8rem;
     overflow: hidden;
 }
@@ -342,11 +342,11 @@
     position: absolute;
     inset-block: 0;
     inset-inline-start: 0;
-    background: rgba(220, 38, 38, 0.14);
+    background: var(--bg-dc2626-a140);
 }
 
 .admin-page-wrapper .bhv-spread li.is-correct .bhv-spread-bar {
-    background: rgba(22, 163, 74, 0.16);
+    background: var(--bg-16a34a-a160);
 }
 
 .admin-page-wrapper .bhv-spread-label,
@@ -359,7 +359,7 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    color: #0f1e3d;
+    color: var(--text-dark);
     font-weight: 600;
 }
 
@@ -372,13 +372,13 @@
 .admin-page-wrapper .bhv-modal-expl {
     margin-top: 14px;
     font-size: 0.8rem;
-    color: #475569;
+    color: var(--text-medium);
 }
 
 .admin-page-wrapper .bhv-modal-expl summary {
     cursor: pointer;
     font-weight: 600;
-    color: #2563eb;
+    color: var(--fg-2563eb);
 }
 
 .admin-page-wrapper .bhv-modal-expl p {
