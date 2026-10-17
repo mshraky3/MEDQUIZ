@@ -91,6 +91,7 @@
   --bg-dbe4f3: #dbe4f3;
   --bg-dbeafe: #dbeafe;
   --bg-dc2626-a080: rgba(220, 38, 38, 0.08);
+  --bg-dc2626-a100: rgba(220, 38, 38, 0.1);
   --bg-dc2626-a120: rgba(220, 38, 38, 0.12);
   --bg-dcfce7: #dcfce7;
   --bg-dde5f3: #dde5f3;
@@ -111,9 +112,11 @@
   --bg-eef3fc: #eef3fc;
   --bg-eef4ff: #eef4ff;
   --bg-eef5fb: #eef5fb;
+  --bg-ef4444-a060: rgba(239, 68, 68, 0.06);
   --bg-ef4444-a080: rgba(239, 68, 68, 0.08);
   --bg-ef4444-a100: rgba(239, 68, 68, 0.1);
   --bg-ef4444-a120: rgba(239, 68, 68, 0.12);
+  --bg-ef4444-a140: rgba(239, 68, 68, 0.14);
   --bg-eff5ff: #eff5ff;
   --bg-f0edff: #f0edff;
   --bg-f0f8fb: #f0f8fb;
@@ -185,6 +188,7 @@
   --fg-3b82f6: #3b82f6;
   --fg-47566d: #47566d;
   --fg-4b5c75: #4b5c75;
+  --fg-4f46e5: #4f46e5;
   --fg-5b6e62: #5b6e62;
   --fg-5c4300: #5c4300;
   --fg-6366f1: #6366f1;
@@ -212,6 +216,7 @@
   --fg-ee5a24: #ee5a24;
   --fg-ff6b6b: #ff6b6b;
   --line-0f172a-a070: rgba(15, 23, 42, 0.07);
+  --line-0f172a-a080: rgba(15, 23, 42, 0.08);
   --line-0f172a-a100: rgba(15, 23, 42, 0.1);
   --line-0f172a-a120: rgba(15, 23, 42, 0.12);
   --line-0f172a-a160: rgba(15, 23, 42, 0.16);
@@ -236,11 +241,13 @@
   --line-e6ecf6: #e6ecf6;
   --line-e9eef8: #e9eef8;
   --line-eef2f8: #eef2f8;
+  --line-f1f5f9: #f1f5f9;
   --line-f2c879: #f2c879;
   --line-fca5a5: #fca5a5;
   --line-fecaca: #fecaca;
   --line-ffffff: #ffffff;
   --line-ffffff-a550: rgba(255, 255, 255, 0.55);
+  --shade-000000-a180: rgba(0, 0, 0, 0.18);
   --shade-020617: #020617;
   --shade-020617-a250: rgba(2, 6, 23, 0.25);
   --shade-020617-a280: rgba(2, 6, 23, 0.28);
@@ -256,6 +263,7 @@
   --shade-0f172a-a120: rgba(15, 23, 42, 0.12);
   --shade-0f172a-a140: rgba(15, 23, 42, 0.14);
   --shade-0f172a-a150: rgba(15, 23, 42, 0.15);
+  --shade-0f172a-a160: rgba(15, 23, 42, 0.16);
   --shade-0f172a-a200: rgba(15, 23, 42, 0.2);
   --shade-0f172a-a220: rgba(15, 23, 42, 0.22);
   --shade-0f172a-a280: rgba(15, 23, 42, 0.28);
@@ -344,6 +352,7 @@
   --bg-dbe4f3: #262e3a;
   --bg-dbeafe: #1f2b3b;
   --bg-dc2626-a080: rgba(220, 38, 38, 0.12);
+  --bg-dc2626-a100: rgba(220, 38, 38, 0.15);
   --bg-dc2626-a120: rgba(220, 38, 38, 0.18);
   --bg-dcfce7: #0e2c1b;
   --bg-dde5f3: #262d38;
@@ -364,9 +373,11 @@
   --bg-eef3fc: #1b2536;
   --bg-eef4ff: #1b2435;
   --bg-eef5fb: #1b2435;
+  --bg-ef4444-a060: rgba(239, 68, 68, 0.09);
   --bg-ef4444-a080: rgba(239, 68, 68, 0.12);
   --bg-ef4444-a100: rgba(239, 68, 68, 0.15);
   --bg-ef4444-a120: rgba(239, 68, 68, 0.18);
+  --bg-ef4444-a140: rgba(239, 68, 68, 0.21);
   --bg-eff5ff: #1a2435;
   --bg-f0edff: #272432;
   --bg-f0f8fb: #192334;
@@ -438,6 +449,7 @@
   --fg-3b82f6: #7caeff;
   --fg-47566d: #b9cae5;
   --fg-4b5c75: #b4c7e4;
+  --fg-4f46e5: #afbafc;
   --fg-5b6e62: #afc4b7;
   --fg-5c4300: #eacd93;
   --fg-6366f1: #a1acfd;
@@ -465,6 +477,7 @@
   --fg-ee5a24: #fb8058;
   --fg-ff6b6b: #f97775;
   --line-0f172a-a070: rgba(226, 232, 240, 0.091);
+  --line-0f172a-a080: rgba(226, 232, 240, 0.104);
   --line-0f172a-a100: rgba(226, 232, 240, 0.13);
   --line-0f172a-a120: rgba(226, 232, 240, 0.156);
   --line-0f172a-a160: rgba(226, 232, 240, 0.208);
@@ -489,11 +502,13 @@
   --line-e6ecf6: #2b364b;
   --line-e9eef8: #2a354a;
   --line-eef2f8: #283348;
+  --line-f1f5f9: #273247;
   --line-f2c879: #553e0e;
   --line-fca5a5: #6a393a;
   --line-fecaca: #5c2f31;
   --line-ffffff: #232e42;
   --line-ffffff-a550: rgba(35, 46, 66, 0.55);
+  --shade-000000-a180: rgba(0, 0, 0, 0.396);
   --shade-020617: rgba(0, 0, 0, 0.6);
   --shade-020617-a250: rgba(0, 0, 0, 0.55);
   --shade-020617-a280: rgba(0, 0, 0, 0.6);
@@ -509,6 +524,7 @@
   --shade-0f172a-a120: rgba(0, 0, 0, 0.264);
   --shade-0f172a-a140: rgba(0, 0, 0, 0.308);
   --shade-0f172a-a150: rgba(0, 0, 0, 0.33);
+  --shade-0f172a-a160: rgba(0, 0, 0, 0.352);
   --shade-0f172a-a200: rgba(0, 0, 0, 0.44);
   --shade-0f172a-a220: rgba(0, 0, 0, 0.484);
   --shade-0f172a-a280: rgba(0, 0, 0, 0.6);

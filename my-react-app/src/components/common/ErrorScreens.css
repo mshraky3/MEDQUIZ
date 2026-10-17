@@ -12,9 +12,9 @@
     min-height: 70vh;
     padding: 40px 20px;
     text-align: center;
-    background: radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.08), transparent 30%),
-        radial-gradient(circle at 85% 10%, rgba(99, 102, 241, 0.09), transparent 25%),
-        linear-gradient(145deg, #eef2fb 0%, #ffffff 60%, #ffffff 100%);
+    background: radial-gradient(circle at 10% 20%, var(--bg-3b82f6-a080), transparent 30%),
+        radial-gradient(circle at 85% 10%, var(--bg-6366f1-a090), transparent 25%),
+        linear-gradient(145deg, var(--bg) 0%, var(--surface) 60%, var(--surface) 100%);
 }
 
 .errscreen-card {
@@ -34,7 +34,7 @@
     line-height: 1;
     letter-spacing: -2px;
     margin-bottom: 12px;
-    background: linear-gradient(135deg, #3b82f6, #4f46e5);
+    background: linear-gradient(135deg, var(--fg-3b82f6), var(--fg-4f46e5));
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -47,8 +47,8 @@
     height: 62px;
     margin: 0 auto 18px;
     border-radius: 18px;
-    background: rgba(220, 38, 38, 0.10);
-    color: var(--error-color, #dc2626);
+    background: var(--bg-dc2626-a100);
+    color: var(--error-color-ink, var(--error-color, #dc2626));
 }
 
 .errscreen-card h1 {
@@ -109,7 +109,7 @@
 }
 
 .errscreen-btn--ghost:hover {
-    background: #ffffff;
+    background: var(--surface);
     transform: translateY(-2px);
 }
 
@@ -126,7 +126,7 @@
 }
 
 .errscreen-links a {
-    color: var(--primary-dark, #1d4ed8);
+    color: var(--primary-dark-ink, var(--primary-dark, #1d4ed8));
     font-weight: 600;
     text-decoration: none;
 }

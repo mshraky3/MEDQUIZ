@@ -20,6 +20,8 @@
 
 /* Solid white pill rather than a ghost button — this is the conversion CTA of
    the whole free tier, so it outweighs the count next to it. */
+/* A white pill on the amber/blue band in both themes: the band does not
+   change with the theme, so neither does the pill on it. */
 .allowance-banner-cta {
     border: none;
     background: #fff;
@@ -28,14 +30,14 @@
     font-weight: 800;
     padding: 0.55rem 1.6rem;
     border-radius: var(--radius-md, 10px);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+    box-shadow: 0 2px 10px var(--shade-000000-a180);
     cursor: pointer;
     transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .allowance-banner-cta:hover {
     transform: translateY(-1px);
-    box-shadow: 0 5px 16px rgba(15, 23, 42, 0.12);
+    box-shadow: 0 5px 16px var(--shade-0f172a-a120);
 }
 
 .allowance-banner-cta:active {
