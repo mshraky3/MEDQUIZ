@@ -18,11 +18,11 @@
 }
 
 .hubcard {
-  background: #fff;
-  border: 1px solid #e6ecf6;
+  background: var(--surface);
+  border: 1px solid var(--line-e6ecf6);
   border-radius: 16px;
   padding: 14px 16px;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 10px 30px var(--shade-0f172a-a050);
   /* Cards in the row are equal height with their content pinned to the top. */
   display: flex;
   flex-direction: column;
@@ -43,7 +43,7 @@
   margin: 0;
   font-size: 13px;
   font-weight: 800;
-  color: #0f1e3d;
+  color: var(--text-dark);
 }
 
 /* ── The big number ──────────────────────────────────────────── */
@@ -58,7 +58,7 @@
   font-size: 28px;
   font-weight: 800;
   line-height: 1;
-  color: #0f1e3d;
+  color: var(--text-dark);
   font-variant-numeric: tabular-nums;
 }
 
@@ -72,7 +72,7 @@
   margin: 0;
   font-size: 15px;
   font-weight: 800;
-  color: #0f1e3d;
+  color: var(--text-dark);
   line-height: 1.35;
 }
 
@@ -88,7 +88,7 @@
   margin: 7px 0 0;
   font-size: 12px;
   font-weight: 700;
-  color: #2563eb;
+  color: var(--fg-2563eb);
 }
 
 .hubcard-note {
@@ -101,27 +101,27 @@
 /* ── Exam card urgency. Earned by the real date, never invented. ── */
 .hubcard--exam.is-soon {
   border-color: rgba(245, 158, 11, 0.4);
-  background: linear-gradient(180deg, rgba(245, 158, 11, 0.07), #fff 62%);
+  background: linear-gradient(180deg, var(--bg-f59e0b-a070), var(--surface) 62%);
 }
-.hubcard--exam.is-soon .hubcard-count-n { color: #b45309; }
+.hubcard--exam.is-soon .hubcard-count-n { color: var(--fg-b45309); }
 
 .hubcard--exam.is-urgent {
   border-color: rgba(239, 68, 68, 0.45);
-  background: linear-gradient(180deg, rgba(239, 68, 68, 0.08), #fff 62%);
+  background: linear-gradient(180deg, var(--bg-ef4444-a080), var(--surface) 62%);
 }
 .hubcard--exam.is-urgent .hubcard-count-n,
-.hubcard--exam.is-urgent .hubcard-headline { color: #b91c1c; }
+.hubcard--exam.is-urgent .hubcard-headline { color: var(--fg-b91c1c); }
 
 .hubcard--exam.is-passed .hubcard-note { color: var(--text-light); }
 
 .hubcard-date {
   width: 100%;
   padding: 8px 10px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--line-e2e8f0);
   border-radius: 10px;
   font-size: 13px;
   font-weight: 700;
-  color: #0f1e3d;
+  color: var(--text-dark);
   margin-bottom: 10px;
   /* Dates are always Latin digits in a date input; keep them LTR so the
      picker's internal ordering doesn't reverse inside an RTL page. */
@@ -138,10 +138,10 @@
 /* ── Streak ──────────────────────────────────────────────────── */
 .hubcard--streak.is-at-risk {
   border-color: rgba(249, 115, 22, 0.4);
-  background: linear-gradient(180deg, rgba(249, 115, 22, 0.06), #fff 62%);
+  background: linear-gradient(180deg, var(--bg-f97316-a060), var(--surface) 62%);
 }
 
-.hubcard-count-n--flame { color: #ea580c; }
+.hubcard-count-n--flame { color: var(--fg-ea580c); }
 
 .hubcard-best {
   font-size: 11.5px;
@@ -173,8 +173,8 @@
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-f1f5f9);
+  border: 1px solid var(--line-e2e8f0);
   color: #fff;
   transition: background 0.2s ease, border-color 0.2s ease;
 }
@@ -211,8 +211,8 @@
   flex-wrap: wrap;
 }
 
-.streak-status--safe { color: #047857; }
-.streak-status--risk { color: #b45309; }
+.streak-status--safe { color: var(--fg-047857); }
+.streak-status--risk { color: var(--fg-b45309); }
 .streak-cta { font-size: 12.5px; }
 
 /* ── Shared empty state (both cards) ─────────────────────────── */
@@ -229,16 +229,16 @@
   width: 38px;
   height: 38px;
   border-radius: 12px;
-  background: linear-gradient(150deg, rgba(59, 130, 246, 0.18), rgba(99, 102, 241, 0.14));
+  background: linear-gradient(150deg, var(--bg-3b82f6-a180), var(--bg-6366f1-a140));
   border: 1px solid rgba(59, 130, 246, 0.26);
-  color: #2563eb;
+  color: var(--fg-2563eb);
   flex: 0 0 auto;
 }
 
 .hubcard-empty-icon--flame {
-  background: linear-gradient(150deg, rgba(249, 115, 22, 0.18), rgba(239, 68, 68, 0.12));
+  background: linear-gradient(150deg, var(--bg-f97316-a180), var(--bg-ef4444-a120));
   border-color: rgba(249, 115, 22, 0.3);
-  color: #ea580c;
+  color: var(--fg-ea580c);
 }
 
 .hubcard-empty-body { flex: 1 1 150px; min-width: 0; }
@@ -247,7 +247,7 @@
   margin: 0 0 3px;
   font-size: 13.5px;
   font-weight: 800;
-  color: #0f1e3d;
+  color: var(--text-dark);
 }
 
 .hubcard-empty-body p {
@@ -288,7 +288,7 @@
     overflow-y: auto;
     padding: 26px 24px 20px;
     border-radius: 16px;
-    background: var(--card-bg, #fff);
+    background: var(--card-bg, var(--surface));
     box-shadow: 0 24px 60px rgba(15, 30, 61, 0.28);
     text-align: center;
 }
@@ -301,8 +301,8 @@
     height: 52px;
     margin-bottom: 12px;
     border-radius: 50%;
-    background: rgba(37, 99, 235, 0.12);
-    color: var(--primary-color, #2563eb);
+    background: var(--bg-2563eb-a120);
+    color: var(--primary-color-ink, var(--primary-color, #2563eb));
 }
 
 .examask-card h2 {
