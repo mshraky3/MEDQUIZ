@@ -55,7 +55,7 @@ const QuestionCard = ({ question, number, onAnswer, className = '' }) => {
             </div>
             {revealed && (
                 <div className="sq-explain">
-                    <b className="sq-verdict" style={{ color: selected === answer ? '#16a34a' : '#dc2626' }}>
+                    <b className="sq-verdict" style={{ color: selected === answer ? 'var(--success-color-ink, #16a34a)' : 'var(--error-color-ink, #dc2626)' }}>
                         <Icon name={selected === answer ? 'check' : 'x'} size={15} />
                         {' '}{selected === answer ? t.correct : t.incorrect}
                     </b>
