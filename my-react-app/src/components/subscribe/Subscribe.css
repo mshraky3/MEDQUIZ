@@ -51,7 +51,7 @@
     color: var(--muted, #64748b);
     text-decoration: line-through;
     text-decoration-thickness: 2px;
-    text-decoration-color: var(--error-color, #dc2626);
+    text-decoration-color: var(--error-color-ink, var(--error-color, #dc2626));
     unicode-bidi: plaintext;
 }
 
@@ -60,7 +60,7 @@
     text-align: center;
     font-size: 13px;
     font-weight: 700;
-    color: var(--success-color, #16a34a);
+    color: var(--success-color-ink, var(--success-color, #16a34a));
 }
 
 /* Plan picker. Three tiers for the personal ladder, two for groups —
@@ -134,7 +134,7 @@
     font-weight: 600;
     color: var(--muted, #64748b);
     text-decoration-thickness: 1.5px;
-    text-decoration-color: var(--error-color, #dc2626);
+    text-decoration-color: var(--error-color-ink, var(--error-color, #dc2626));
     unicode-bidi: plaintext;
 }
 
@@ -157,7 +157,7 @@
    "4" struck out, then "5 months" — the term grew, the price did not. */
 .subscribe-plan.on-bonus {
     border-color: #d9a21b;
-    background: linear-gradient(180deg, #fffaf0, #fff4d6);
+    background: linear-gradient(180deg, var(--bg-fffaf0), var(--bg-fff4d6));
     box-shadow: 0 0 0 1px rgba(217, 162, 27, 0.35);
 }
 
@@ -171,7 +171,7 @@
     align-items: baseline;
     justify-content: center;
     gap: 8px;
-    color: #5c4300;
+    color: var(--fg-5c4300);
     direction: ltr;
 }
 
@@ -185,7 +185,7 @@
     font-size: 36px;
     font-weight: 900;
     line-height: 1;
-    color: #8a5d00;
+    color: var(--fg-8a5d00);
 }
 
 .subscribe-plan-label-bonus span {
@@ -209,14 +209,14 @@
     align-items: baseline;
     gap: 5px;
     font-weight: 700;
-    color: #8a5d00;
+    color: var(--fg-8a5d00);
 }
 
 .subscribe-plan-permonth-bonus s {
     color: var(--muted, #64748b);
     font-weight: 600;
     text-decoration-thickness: 1.5px;
-    text-decoration-color: var(--error-color, #dc2626);
+    text-decoration-color: var(--error-color-ink, var(--error-color, #dc2626));
 }
 
 .subscribe-perks {
@@ -248,8 +248,8 @@
     place-items: center;
     font-size: 10px;
     font-weight: 900;
-    background: rgba(37, 99, 235, 0.12);
-    color: var(--primary-color, #2563eb);
+    background: var(--bg-2563eb-a120);
+    color: var(--primary-color-ink, var(--primary-color, #2563eb));
 }
 
 /* The no-auto-renewal promise, now carrying the "processed by Moyasar" line
@@ -262,7 +262,7 @@
     font-size: 12.5px;
     font-weight: 600;
     line-height: 1.65;
-    color: var(--success-color, #16a34a);
+    color: var(--success-color-ink, var(--success-color, #16a34a));
 }
 
 .subscribe-norenew .app-icon {
@@ -286,14 +286,14 @@
     border-radius: 10px;
     font-size: 13px;
     font-weight: 600;
-    color: var(--primary-color, #2563eb);
+    color: var(--primary-color-ink, var(--primary-color, #2563eb));
     text-decoration: none;
     text-align: center;
     transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 .subscribe-crosslink:hover {
-    background: rgba(37, 99, 235, 0.06);
+    background: var(--bg-2563eb-a060);
     border-color: var(--primary-color, #2563eb);
 }
 
@@ -307,9 +307,9 @@
 }
 
 .subscribe-test-banner {
-    background: #fffbeb;
+    background: var(--bg-fffbeb);
     border: 1px solid #fcd34d;
-    color: #92400e;
+    color: var(--fg-92400e);
     border-radius: 10px;
     padding: 10px 14px;
     margin-bottom: 14px;
@@ -340,7 +340,7 @@
     border-radius: 10px;
     font-size: 13px;
     font-weight: 600;
-    color: var(--primary-color, #2563eb);
+    color: var(--primary-color-ink, var(--primary-color, #2563eb));
     cursor: pointer;
     list-style: none;
     transition: background 0.15s ease, border-color 0.15s ease;
@@ -353,7 +353,7 @@
 }
 
 .subscribe-perks-toggle > summary:hover {
-    background: rgba(37, 99, 235, 0.06);
+    background: var(--bg-2563eb-a060);
     border-color: var(--primary-color, #2563eb);
 }
 
@@ -377,7 +377,7 @@
 }
 
 .subscribe-policy a {
-    color: var(--primary-color, #2563eb);
+    color: var(--primary-color-ink, var(--primary-color, #2563eb));
     text-decoration: underline;
 }
 
@@ -397,13 +397,25 @@
 }
 
 .subscribe-fallback-secondary:hover {
-    background: rgba(37, 99, 235, 0.06);
+    background: var(--bg-2563eb-a060);
     border-color: var(--primary-color, #2563eb);
-    color: var(--primary-color, #2563eb);
+    color: var(--primary-color-ink, var(--primary-color, #2563eb));
 }
 
 .mysr-form {
     margin-top: 8px;
+}
+
+/* Dark theme: Moyasar's card form is their markup and their stylesheet
+   (moyasar.css from their CDN), built for a white page and not themeable
+   from here. It keeps its own light look inside a white frame rather than
+   floating light inputs on navy. */
+:root[data-theme="dark"] .mysr-host {
+    padding: 12px;
+    border-radius: var(--radius-md, 12px);
+    background: #ffffff;
+    color: #0f1e3d;
+    color-scheme: light;
 }
 
 /* Result (callback) states */
@@ -417,11 +429,11 @@
 }
 
 .subscribe-result-icon.success {
-    color: var(--success-color, #16a34a);
+    color: var(--success-color-ink, var(--success-color, #16a34a));
 }
 
 .subscribe-result-icon.failed {
-    color: var(--error-color, #dc2626);
+    color: var(--error-color-ink, var(--error-color, #dc2626));
 }
 
 .subscribe-result h2 {
@@ -525,7 +537,7 @@
     padding: 12px 14px;
     border: 1px solid rgba(37, 99, 235, 0.28);
     border-radius: 12px;
-    background: rgba(37, 99, 235, 0.06);
+    background: var(--bg-2563eb-a060);
     text-align: start;
 }
 
@@ -567,7 +579,7 @@
 }
 
 .subscribe-refund-link:hover {
-    color: var(--primary-color, #2563eb);
+    color: var(--primary-color-ink, var(--primary-color, #2563eb));
 }
 
 @media (min-width: 900px) {
