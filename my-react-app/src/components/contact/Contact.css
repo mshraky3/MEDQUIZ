@@ -24,9 +24,9 @@
     width: 100%;
     height: 100%;
     background:
-        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(35, 109, 237, 0.15), transparent 50%),
-        radial-gradient(ellipse 60% 40% at 80% 50%, rgba(16, 84, 202, 0.1), transparent 40%),
-        radial-gradient(ellipse 50% 30% at 20% 80%, rgba(35, 109, 237, 0.08), transparent 40%);
+        radial-gradient(ellipse 80% 50% at 50% -20%, var(--bg-236ded-a150), transparent 50%),
+        radial-gradient(ellipse 60% 40% at 80% 50%, var(--bg-1054ca-a100), transparent 40%),
+        radial-gradient(ellipse 50% 30% at 20% 80%, var(--bg-236ded-a080), transparent 40%);
     z-index: 0;
     pointer-events: none;
 }
@@ -92,7 +92,7 @@
     margin-bottom: 4px;
     font-weight: 800;
     letter-spacing: -0.5px;
-    background: linear-gradient(135deg, #236ded 0%, #1054ca 100%);
+    background: linear-gradient(135deg, var(--fg-236ded) 0%, var(--fg-1054ca) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -117,7 +117,7 @@
 
 /* Contact Information Section */
 .contact-info-section h2 {
-    color: #1e293b;
+    color: var(--fg-1e293b);
     font-size: 1rem;
     margin-bottom: 10px;
     font-weight: 700;
@@ -138,9 +138,9 @@
     align-items: center;
     gap: 10px;
     padding: 10px;
-    background: rgba(15, 23, 42, 0.04);
+    background: var(--bg-0f172a-a040);
     border-radius: 12px;
-    border: 1px solid rgba(15, 23, 42, 0.10);
+    border: 1px solid var(--line-0f172a-a100);
     transition-property: var(--transition-props);
     transition-duration: 0.3s;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
@@ -149,10 +149,10 @@
 .contact-info-item:hover {
     transform: translateY(-2px);
     box-shadow:
-        0 4px 12px rgba(15, 23, 42, 0.09),
+        0 4px 12px var(--shade-0f172a-a090),
         0 8px 24px rgba(35, 109, 237, 0.1);
     border-color: rgba(35, 109, 237, 0.3);
-    background: rgba(15, 23, 42, 0.04);
+    background: var(--bg-0f172a-a040);
 }
 
 .info-icon {
@@ -172,7 +172,7 @@
 }
 
 .info-content h3 {
-    color: #1e293b;
+    color: var(--fg-1e293b);
     font-size: 0.875rem;
     margin: 0 0 4px 0;
     font-weight: 600;
@@ -186,7 +186,7 @@
 }
 
 .info-link {
-    color: var(--primary-dark);
+    color: var(--primary-dark-ink, var(--primary-dark));
     text-decoration: none;
     font-weight: 600;
     transition-property: var(--transition-props);
@@ -196,13 +196,13 @@
 }
 
 .info-link:hover {
-    color: #6d9ef3;
+    color: var(--fg-6d9ef3);
     text-decoration: none;
 }
 
 /* Contact Form Section */
 .contact-form-section h2 {
-    color: #1e293b;
+    color: var(--fg-1e293b);
     font-size: 1rem;
     margin-bottom: 12px;
     font-weight: 700;
@@ -232,7 +232,7 @@
 }
 
 .form-group label {
-    color: #1e293b;
+    color: var(--fg-1e293b);
     font-weight: 600;
     font-size: 0.85rem;
     letter-spacing: 0.3px;
@@ -242,7 +242,7 @@
 .form-group select,
 .form-group textarea {
     padding: 10px 14px;
-    border: 1px solid rgba(15, 23, 42, 0.10);
+    border: 1px solid var(--line-0f172a-a100);
     border-radius: 10px;
     /* 16px unconditionally — below that, iOS Safari zooms the page on focus.
        This used to only apply under the 768px media query further down. */
@@ -251,8 +251,8 @@
     transition-duration: 0.3s;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     font-family: inherit;
-    background: rgba(15, 23, 42, 0.04);
-    color: #1e293b;
+    background: var(--bg-0f172a-a040);
+    color: var(--fg-1e293b);
 }
 
 .form-group input:focus,
@@ -263,12 +263,12 @@
     box-shadow:
         0 0 0 3px rgba(35, 109, 237, 0.15),
         0 2px 8px rgba(35, 109, 237, 0.1);
-    background: rgba(15, 23, 42, 0.04);
+    background: var(--bg-0f172a-a040);
 }
 
 .form-group input::placeholder,
 .form-group textarea::placeholder {
-    color: #475569;
+    color: var(--text-medium);
 }
 
 /* The chevron was pinned to the right with a matching right-hand padding, so
@@ -291,8 +291,8 @@
 }
 
 .form-group select option {
-    background: #ffffff;
-    color: #1e293b;
+    background: var(--surface);
+    color: var(--fg-1e293b);
 }
 
 .form-group textarea {
@@ -351,11 +351,11 @@
 }
 
 .contact-fallback {
-    background: rgba(15, 23, 42, 0.04);
+    background: var(--bg-0f172a-a040);
     padding: 16px;
     border-radius: 14px;
     margin: 20px 0;
-    border: 1px solid rgba(15, 23, 42, 0.10);
+    border: 1px solid var(--line-0f172a-a100);
 }
 
 .contact-fallback p {
@@ -372,7 +372,7 @@
 }
 
 .contact-fallback-link {
-    color: #1d4ed8;
+    color: var(--fg-1d4ed8);
     text-decoration: none;
     font-weight: 600;
     font-size: 0.9rem;
@@ -386,12 +386,12 @@
     padding: 10px 14px;
     border: 2px solid rgba(37, 99, 235, 0.35);
     border-radius: 10px;
-    background: rgba(37, 99, 235, 0.08);
+    background: var(--bg-2563eb-a080);
 }
 
 .contact-fallback-link:hover {
     color: var(--secondary-dark);
-    background: rgba(37, 99, 235, 0.16);
+    background: var(--bg-2563eb-a160);
     border-color: #2563eb;
     text-decoration: none;
     transform: translateY(-1px);
@@ -605,14 +605,14 @@
 }
 
 .suggestions-button:hover {
-    background: rgba(37, 99, 235, 0.14);
+    background: var(--bg-2563eb-a140);
     box-shadow: 0 8px 25px rgba(37, 99, 235, 0.18);
     transform: translateY(-2px);
 }
 
 .suggestions-icon {
     display: flex;
-    color: var(--primary-color, #2563eb);
+    color: var(--primary-color-ink, var(--primary-color, #2563eb));
 }
 
 .suggestions-text {
@@ -623,13 +623,13 @@
 }
 
 .suggestions-title {
-    color: #1e293b;
+    color: var(--fg-1e293b);
     font-size: 0.95rem;
     font-weight: 700;
 }
 
 .suggestions-subtitle {
-    color: var(--primary-dark);
+    color: var(--primary-dark-ink, var(--primary-dark));
     font-size: 0.8rem;
 }
 
@@ -637,7 +637,7 @@
    in LTR, chosen in JS from `dir`); rotating it again in CSS would flip an
    already-correct character back to pointing the wrong way. */
 .suggestions-arrow {
-    color: var(--primary-color, #2563eb);
+    color: var(--primary-color-ink, var(--primary-color, #2563eb));
     font-size: 1.2rem;
     transition: transform 0.3s ease;
 }

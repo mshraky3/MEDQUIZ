@@ -42,7 +42,7 @@
 
 .pq-breadcrumb a:hover,
 .pq-breadcrumb a:focus-visible {
-  color: var(--primary-color);
+  color: var(--primary-color-ink, var(--primary-color));
   text-decoration: underline;
   text-underline-offset: 3px;
 }
@@ -68,7 +68,7 @@
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--primary-color);
+  color: var(--primary-color-ink, var(--primary-color));
 }
 
 .pq-page h1 {
@@ -138,7 +138,7 @@
   margin-top: 4px;
   font-size: 12.5px;
   font-weight: 600;
-  color: var(--primary-color);
+  color: var(--primary-color-ink, var(--primary-color));
 }
 
 /* --- specialty index list --- */
@@ -161,7 +161,7 @@
 
 .pq-list a:hover,
 .pq-list a:focus-visible {
-  color: var(--primary-color);
+  color: var(--primary-color-ink, var(--primary-color));
   text-decoration: underline;
   text-underline-offset: 3px;
 }
@@ -392,7 +392,7 @@
 .pq-related a:focus-visible,
 .pq-siblings a:hover,
 .pq-siblings a:focus-visible {
-  color: var(--primary-color);
+  color: var(--primary-color-ink, var(--primary-color));
   text-decoration: underline;
   text-underline-offset: 3px;
 }

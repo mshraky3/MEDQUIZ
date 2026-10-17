@@ -21,10 +21,10 @@
   overflow: hidden;
   border-radius: 28px;
   background:
-    radial-gradient(ellipse 55% 80% at 100% 0%, rgba(244, 193, 77, 0.22), transparent 62%),
+    radial-gradient(ellipse 55% 80% at 100% 0%, var(--bg-f4c14d-a220), transparent 62%),
     linear-gradient(160deg, var(--gm-ink-2) 0%, var(--gm-ink) 100%);
   color: #ffffff;
-  box-shadow: 0 30px 64px rgba(11, 23, 48, 0.32);
+  box-shadow: 0 30px 64px var(--shade-0b1730-a320);
   scroll-margin-top: 16px;
 }
 
@@ -119,9 +119,9 @@
   transition-duration: var(--transition-fast, 150ms);
 }
 
-.gm-cta:hover { background: #ffd36b; transform: translateY(-1px); }
+.gm-cta:hover { background: var(--bg-ffd36b); transform: translateY(-1px); }
 .gm-cta:active { transform: translateY(1px); }
-.gm-cta:focus-visible { outline: 3px solid #ffffff; outline-offset: 3px; }
+.gm-cta:focus-visible { outline: 3px solid var(--line-ffffff); outline-offset: 3px; }
 
 .gm-note {
   margin: 0;
@@ -137,7 +137,7 @@
   gap: 18px;
   padding: clamp(20px, 3vw, 28px);
   border-radius: 22px;
-  background: #ffffff;
+  background: var(--surface);
   color: var(--gm-ink);
   text-align: start;
 }
@@ -158,7 +158,7 @@
   justify-items: center;
   padding: 12px 4px 10px;
   border-radius: 12px;
-  background: #eef2fb;
+  background: var(--bg);
   color: var(--gm-ink);
 }
 
@@ -178,7 +178,7 @@
 }
 
 .gm-tile.is-gift {
-  background: linear-gradient(160deg, #ffd978, var(--gm-gold));
+  background: linear-gradient(160deg, var(--bg-ffd978), var(--gm-gold));
   color: var(--gm-ink);
   box-shadow: 0 8px 18px rgba(201, 143, 18, 0.35);
 }
@@ -210,9 +210,9 @@
 .gm-duration s {
   font-size: clamp(30px, 4vw, 40px);
   font-weight: 800;
-  color: #8a95ab;
+  color: var(--fg-8a95ab);
   text-decoration-thickness: 3px;
-  text-decoration-color: #d83a2e;
+  text-decoration-color: var(--fg-d83a2e);
 }
 
 .gm-duration strong {
@@ -259,9 +259,9 @@
 .gm-permonth-values s {
   font-size: 17px;
   font-weight: 700;
-  color: #8a95ab;
+  color: var(--fg-8a95ab);
   text-decoration-thickness: 2px;
-  text-decoration-color: #d83a2e;
+  text-decoration-color: var(--fg-d83a2e);
 }
 .gm-permonth-values strong { font-size: 20px; font-weight: 900; color: var(--gm-gold-deep); }
 
