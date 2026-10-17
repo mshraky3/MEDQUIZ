@@ -7,7 +7,7 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { isInjectedInAppBrowserError } from './errorTracking.js';
+import { isInjectedInAppBrowserError, isWalletInjectedError } from './errorTracking.js';
 
 const SAFARI_MSG = "ReferenceError: Can't find variable: __alhWeb";
 const CHROME_MSG = 'Uncaught ReferenceError: __alhWeb is not defined';
@@ -59,4 +59,19 @@ test('does not match a variable that merely starts with the injected name', () =
 test('ignores empty input', () => {
     assert.equal(isInjectedInAppBrowserError('', ''), false);
     assert.equal(isInjectedInAppBrowserError(undefined, undefined), false);
+});
+
+const WALLET_MSG = "undefined is not an object (evaluating 'window.ethereum.selectedAddress = undefined')";
+
+test('drops the wallet-browser window.ethereum error when no SQB script is in the stack', () => {
+    assert.equal(isWalletInjectedError(WALLET_MSG, ''), true);
+    assert.equal(isWalletInjectedError(WALLET_MSG, 'global code@page:1:42'), true);
+});
+
+test('still reports a window.ethereum error from an SQB script, and unrelated errors', () => {
+    assert.equal(
+        isWalletInjectedError(WALLET_MSG, 'init@https://www.smle-question-bank.com/assets/index-abc123.js:3:900'),
+        false
+    );
+    assert.equal(isWalletInjectedError("undefined is not an object (evaluating 'quiz.questions')", ''), false);
 });

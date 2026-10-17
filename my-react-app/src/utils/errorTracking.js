@@ -117,6 +117,20 @@ export function isInjectedInAppBrowserError(message, stack) {
 }
 
 /**
+ * Errors thrown by crypto-wallet browsers/extensions that inject window.ethereum.
+ * SQB has no wallet code, e.g. "undefined is not an object (evaluating
+ * 'window.ethereum.selectedAddress = undefined')". Dropped only when the message
+ * names window.ethereum AND no stack frame is an http(s) .js file (our bundle).
+ */
+const WALLET_MESSAGE_RE = /\bwindow\.ethereum\b/i;
+const PAGE_SCRIPT_FRAME_RE = /https?:\/\/\S*\.(?:m?js|jsx)(?:[?#]\S*)?:\d+:\d+/i;
+
+export function isWalletInjectedError(message, stack) {
+    if (!WALLET_MESSAGE_RE.test(String(message || ''))) return false;
+    return !PAGE_SCRIPT_FRAME_RE.test(String(stack || ''));
+}
+
+/**
  * A window 'error' event whose message says nothing at all.
  *
  * Two of these were mailed as CRITICAL with the message "Uncaught " — the
@@ -877,6 +891,7 @@ export function reportGlobalError(event) {
             isIgnorableBrowserError(event.message)
             || isContentlessError(event.message)
             || isInjectedInAppBrowserError(event.message, event.error?.stack)
+            || isWalletInjectedError(event.message, event.error?.stack)
         ) {
             if (CONFIG.enableConsoleLog) {
                 console.log('[ErrorTracking] Skipping unactionable browser notice:', event.message);
