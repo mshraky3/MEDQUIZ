@@ -22,7 +22,7 @@
     width: min(460px, 100%);
     padding: 30px 26px 24px;
     border-radius: 18px;
-    background: var(--card-bg, #fff);
+    background: var(--card-bg, var(--surface));
     box-shadow: 0 18px 48px rgba(15, 30, 61, 0.14);
     text-align: center;
 }
@@ -34,7 +34,7 @@
     font-weight: 800;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--primary-color, #2563eb);
+    color: var(--primary-color-ink, var(--primary-color, #2563eb));
 }
 
 .alw-icon {
@@ -45,8 +45,8 @@
     height: 64px;
     margin-bottom: 14px;
     border-radius: 50%;
-    background: rgba(37, 99, 235, 0.12);
-    color: var(--primary-color, #2563eb);
+    background: var(--bg-2563eb-a120);
+    color: var(--primary-color-ink, var(--primary-color, #2563eb));
 }
 
 .alw-card h2 {
@@ -68,7 +68,7 @@
     flex: 1;
     padding: 14px 8px;
     border-radius: 12px;
-    background: rgba(37, 99, 235, 0.07);
+    background: var(--bg-2563eb-a070);
 }
 
 .alw-figure-n {
@@ -76,7 +76,7 @@
     font-size: 28px;
     font-weight: 900;
     line-height: 1.1;
-    color: var(--primary-color, #2563eb);
+    color: var(--primary-color-ink, var(--primary-color, #2563eb));
 }
 
 .alw-figure-l {
@@ -108,7 +108,7 @@
 .alw-facts li svg {
     flex: none;
     margin-top: 2px;
-    color: var(--primary-color, #2563eb);
+    color: var(--primary-color-ink, var(--primary-color, #2563eb));
 }
 
 .alw-pitch {
@@ -149,7 +149,7 @@
     cursor: pointer;
 }
 
-.alw-link:hover { color: var(--primary-color, #2563eb); }
+.alw-link:hover { color: var(--primary-color-ink, var(--primary-color, #2563eb)); }
 
 @media (max-width: 420px) {
     .alw-figures { flex-direction: column; }

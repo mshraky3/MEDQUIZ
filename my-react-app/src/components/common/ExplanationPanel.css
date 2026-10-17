@@ -9,7 +9,7 @@
   border: 1px solid rgba(37, 99, 235, 0.20);
   border-inline-start: 3px solid #2563eb;
   border-radius: 12px;
-  background: rgba(37, 99, 235, 0.05);
+  background: var(--bg-2563eb-a050);
   overflow: hidden;
   animation: sqb-explain-reveal 0.25s ease;
 }
@@ -34,7 +34,7 @@
   padding: 11px 14px;
   border: 0;
   background: transparent;
-  color: #1d4ed8;
+  color: var(--fg-1d4ed8);
   font-family: inherit;
   font-size: 0.92rem;
   font-weight: 700;
@@ -44,7 +44,7 @@
 }
 
 .sqb-explain-toggle:hover {
-  background: rgba(37, 99, 235, 0.07);
+  background: var(--bg-2563eb-a070);
 }
 
 .sqb-explain-toggle:focus-visible {
@@ -71,7 +71,7 @@
   padding: 2px 14px 14px;
   direction: ltr;
   text-align: left;
-  color: #1e293b;
+  color: var(--fg-1e293b);
   font-size: 0.92rem;
   line-height: 1.7;
   overflow-wrap: anywhere;
@@ -90,7 +90,7 @@
 }
 
 .sqb-explain-line strong {
-  color: #0f1e3d;
+  color: var(--text-dark);
   font-weight: 700;
 }
 
@@ -105,7 +105,7 @@
 }
 
 .sqb-explain-list li::marker {
-  color: #2563eb;
+  color: var(--fg-2563eb);
 }
 
 @media (max-width: 768px) {

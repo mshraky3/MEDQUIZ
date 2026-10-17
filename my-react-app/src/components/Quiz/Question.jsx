@@ -31,10 +31,10 @@ const Question = ({
   };
 
   const getTimerColor = () => {
-    if (!timeRemaining) return '#333';
-    if (timeRemaining <= 60) return '#dc3545'; // Red
-    if (timeRemaining <= 300) return '#ffc107'; // Yellow
-    return '#28a745'; // Green
+    if (!timeRemaining) return 'var(--timer-idle-ink, #333)';
+    if (timeRemaining <= 60) return 'var(--timer-danger-ink, #dc3545)'; // Red
+    if (timeRemaining <= 300) return 'var(--timer-warn-ink, #ffc107)'; // Yellow
+    return 'var(--timer-ok-ink, #28a745)'; // Green
   };
 
   // The question, its options and the correct answer are exam material: they

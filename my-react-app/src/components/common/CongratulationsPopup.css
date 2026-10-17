@@ -37,7 +37,7 @@
     border-radius: var(--radius-xl);
     background: var(--surface);
     border: 1px solid var(--border-color);
-    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
+    box-shadow: 0 24px 60px var(--shade-0f172a-a280);
     text-align: center;
     animation: congrats-pop-in 0.3s ease-out;
 }
@@ -52,7 +52,7 @@
     margin: 0 auto 14px;
     border-radius: 50%;
     background: var(--surface-tint);
-    color: var(--primary-color);
+    color: var(--primary-color-ink, var(--primary-color));
     box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.08);
     animation: congrats-icon-pop 0.5s 0.15s ease-out backwards;
 }
@@ -79,7 +79,7 @@
     display: grid;
     place-items: center;
     margin-bottom: 8px;
-    color: var(--primary-color);
+    color: var(--primary-color-ink, var(--primary-color));
 }
 
 .congratulations-achievement h3 {
@@ -119,7 +119,7 @@
     border-radius: 999px;
     background: var(--surface-tint);
     border: 1px solid rgba(37, 99, 235, 0.22);
-    color: var(--primary-dark);
+    color: var(--primary-dark-ink, var(--primary-dark));
     font-size: var(--text-sm);
     font-weight: 700;
     line-height: 1.5;

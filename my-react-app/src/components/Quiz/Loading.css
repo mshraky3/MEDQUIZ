@@ -8,14 +8,14 @@
   min-height: 400px;
   text-align: center;
   padding: 2rem;
-  background: #ffffff;
+  background: var(--surface);
   border-radius: 18px;
-  border: 1px solid #e6ecf6;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+  border: 1px solid var(--line-e6ecf6);
+  box-shadow: 0 10px 30px var(--shade-0f172a-a050);
 }
 
 .loading-content h2 {
-  color: #0f1e3d;
+  color: var(--text-dark);
   font-size: 1.8rem;
   margin-bottom: 0.5rem;
   font-weight: 600;
@@ -31,7 +31,7 @@
 .loading-bar {
   width: 200px;
   height: 3px;
-  background: #eef2fb;
+  background: var(--bg);
   border-radius: 4px;
   overflow: hidden;
 }
