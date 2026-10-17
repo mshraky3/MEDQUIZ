@@ -119,12 +119,41 @@ function parseBlocks(masked) {
 
 const COLOR_RE = /#[0-9a-fA-F]{3,8}\b|rgba?\([^()]*\)|\b(?:white|black)\b/g;
 
-// Ranges inside var(...) (its fallback) and url(...): never rewritten.
+// Every custom property defined anywhere in the app (stylesheets, and inline
+// style={{ '--x': ... }} in JSX). A var() whose name is not in here never
+// resolves, so its fallback IS the colour on screen and gets converted like
+// any literal; the fallback of a defined var() is left alone.
+let DEFINED = null;
+function definedProps() {
+    if (DEFINED) return DEFINED;
+    DEFINED = new Set();
+    const walk = (dir) => {
+        for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+            const f = path.join(dir, e.name);
+            if (e.isDirectory()) walk(f);
+            else if (/\.(css|jsx?|html)$/.test(e.name) && !f.endsWith(`theme${path.sep}palette.css`)) {
+                const text = fs.readFileSync(f, 'utf8');
+                for (const m of text.matchAll(/(--[\w-]+)\s*:/g)) DEFINED.add(m[1]);
+                for (const m of text.matchAll(/['"](--[\w-]+)['"]\s*[:,]/g)) DEFINED.add(m[1]);
+                for (const m of text.matchAll(/setProperty\(\s*['"](--[\w-]+)/g)) DEFINED.add(m[1]);
+            }
+        }
+    };
+    walk(path.join(appRoot, 'src'));
+    for (const m of fs.readFileSync(path.join(appRoot, 'index.html'), 'utf8').matchAll(/(--[\w-]+)\s*:/g)) DEFINED.add(m[1]);
+    return DEFINED;
+}
+
+// Ranges inside url(...) and the fallback of a defined var(...): never rewritten.
 function protectedRanges(value) {
     const ranges = [];
     const re = /\b(var|url)\(/g;
     let m;
     while ((m = re.exec(value))) {
+        if (m[1] === 'var') {
+            const name = value.slice(m.index + 4).match(/^\s*(--[\w-]+)/);
+            if (name && !definedProps().has(name[1])) continue;
+        }
         let depth = 0;
         let k = m.index + m[0].length - 1;
         for (; k < value.length; k += 1) {
@@ -168,6 +197,9 @@ export function convertCss(text, tokens) {
         // Already theme-specific: written by hand for one theme.
         if (/data-theme/.test(block.prelude)) continue;
         const declInfo = block.decls.map((d) => ({ ...d, role: roleOf(d.prop), value: masked.slice(d.valueStart, d.valueEnd) }));
+        // Gradient text: the "background" is the glyph colour.
+        const clippedText = declInfo.some((d) => /background-clip$/.test(d.prop) && /\btext\b/.test(d.value));
+        if (clippedText) declInfo.forEach((d) => { if (d.role === 'bg') d.role = 'fg'; });
         // Does this rule paint its own solid, theme-proof fill?
         const keptFill = declInfo.some((d) => d.role === 'bg' && (
             FILL_VAR.test(d.value) || (() => {
@@ -221,6 +253,50 @@ export function convertCss(text, tokens) {
     let out = text;
     for (const e of edits) out = out.slice(0, e.start) + e.text + out.slice(e.end);
     return { out, stats };
+}
+
+// --- JSX inline styles ------------------------------------------------------
+// style={{ background: '#fff', border: '1px solid #e2e8f0' }} and small colour
+// tables like { bg: '#fef3c7', color: '#d97706' }. Only quoted values under a
+// colour-ish key are touched; inline styles accept var(), so the result is
+// the same token the stylesheets use. SVG attributes (fill="#fff") are NOT
+// handled here — var() in a presentation attribute is not reliable.
+const JSX_KEY_ROLE = (key) => {
+    const k = key.toLowerCase();
+    if (k === 'bg' || k.startsWith('background')) return 'bg';
+    if (k === 'color' || k === 'fg' || k === 'text') return 'fg';
+    if (k.startsWith('border') || k.startsWith('outline')) return 'line';
+    if (k === 'boxshadow' || k === 'textshadow') return 'shade';
+    return null;
+};
+
+export function convertJsx(text, tokens) {
+    const edits = [];
+    let replaced = 0;
+    const re = /\b([A-Za-z]+)\s*:\s*(['"`])([^'"`\n]*?)\2/g;
+    let m;
+    while ((m = re.exec(text))) {
+        const role = JSX_KEY_ROLE(m[1]);
+        if (!role) continue;
+        const valueStart = m.index + m[0].indexOf(m[2]) + 1;
+        for (const c of colorsIn(m[3])) {
+            const hex = hexOf(c.color);
+            let name = null;
+            if (c.color.a >= 1 && SEMANTIC[role] && SEMANTIC[role][hex]) name = SEMANTIC[role][hex];
+            else {
+                const dark = mapToDark(c.color, role);
+                if (!dark) continue;
+                name = tokenName(role, c.color);
+                tokens.set(name, { light: formatColor(c.color), dark: formatColor(dark) });
+            }
+            edits.push({ start: valueStart + c.index, end: valueStart + c.index + c.text.length, text: `var(${name})` });
+            replaced += 1;
+        }
+    }
+    edits.sort((a, b) => b.start - a.start);
+    let out = text;
+    for (const e of edits) out = out.slice(0, e.start) + e.text + out.slice(e.end);
+    return { out, stats: { replaced, kept: 0, ink: 0 } };
 }
 
 // --- palette.css ------------------------------------------------------------
@@ -281,11 +357,30 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.a
     for (const f of files) {
         const abs = path.resolve(f);
         const text = fs.readFileSync(abs, 'utf8');
-        const { out, stats } = convertCss(text, tokens);
+        const { out, stats } = /\.jsx?$/.test(abs) ? convertJsx(text, tokens) : convertCss(text, tokens);
         total = { replaced: total.replaced + stats.replaced, kept: total.kept + stats.kept, ink: total.ink + stats.ink };
         console.log(`${path.relative(appRoot, abs)}: replaced ${stats.replaced}, ink ${stats.ink}, kept ${stats.kept}`);
         if (write && out !== text) fs.writeFileSync(abs, out);
     }
     console.log(`TOTAL replaced ${total.replaced}, ink ${total.ink}, kept ${total.kept}; palette tokens ${tokens.size}`);
+    if (args.includes('--prune')) {
+        // Drop tokens nothing references any more (a rule was hand-edited back
+        // to a literal, or a file was re-converted).
+        const used = new Set();
+        const walk = (dir) => {
+            for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+                const f = path.join(dir, e.name);
+                if (e.isDirectory()) walk(f);
+                else if (/\.(css|jsx?)$/.test(e.name) && f !== PALETTE) {
+                    for (const m of fs.readFileSync(f, 'utf8').matchAll(/var\((--(?:bg|fg|line|shade|graphic)-[0-9a-f]{6}(?:-a\d{3})?)\b/g)) used.add(m[1]);
+                }
+            }
+        };
+        walk(path.join(appRoot, 'src'));
+        for (const name of [...tokens.keys()]) if (!used.has(name)) tokens.delete(name);
+        const missing = [...used].filter((n) => !tokens.has(n));
+        if (missing.length) { console.error('Referenced but undefined:', missing.join(' ')); process.exitCode = 1; }
+        console.log(`pruned to ${tokens.size} tokens`);
+    }
     if (write) writePalette(tokens);
 }

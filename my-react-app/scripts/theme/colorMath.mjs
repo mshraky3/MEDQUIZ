@@ -41,6 +41,9 @@ const fmtAlpha = (a) => String(Math.round(a * 1000) / 1000);
 
 export function formatColor({ r, g, b, a }) {
     if (a >= 1) return `#${hexOf({ r, g, b })}`;
+    // #rrggbbaa alphas are n/255 (0x22 = 0.1333...): three decimals would move
+    // the rendered colour by one step, so those stay in hex.
+    if (Math.abs(Math.round(a * 1000) / 1000 - a) > 1e-6) return `#${hexOf({ r, g, b })}${toHex2(a * 255)}`;
     return `rgba(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)}, ${fmtAlpha(a)})`;
 }
 
