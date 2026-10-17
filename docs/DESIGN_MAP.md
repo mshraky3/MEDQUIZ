@@ -8,6 +8,7 @@
 > **Companion files**
 > - `docs/DESIGN_AUDIT_2026-08-25.md` — the defect register: what was wrong, what was changed, how each fix was verified.
 > - `docs/CSS_MAP.md` — deep-dive on cross-stylesheet class collisions and the fixes already applied.
+> - `docs/DARK_MODE_PLAN.md` — the dark theme: how it works, the page-by-page status, what still needs a person's eye. Screenshots of every page in both themes: `docs/dark-mode-screenshots/`.
 > - `docs/DESIGN_UNIFICATION_SUMMARY.md` — **historical only** (so marked at the top of the file). Describes a retired palette (`#01b3d9`); do not take colour values from it.
 >
 > **Last verified:** 2026-08-25, against `main` @ `0af01c1`, dev server on `:5188`.
@@ -59,7 +60,7 @@ register, so each one now names the guard rail that keeps it from recurring:
 |---|---|---|
 | Motion | `--transition-props` (the 9 properties a hover/focus state changes), `--transition-fast/normal/slow`, and one global `prefers-reduced-motion` block | Good — `transition: all` is gone (was 93 uses) |
 | App bar | `--navbar-h` (72 / 64 / 56 / 52 by breakpoint) | Drives `.navbar`, `.navbar-left` and `.page-with-navbar` together |
-| Colour | `--primary-color` `#2563eb`, `--primary-dark` `#1d4ed8`, `--primary-light` / `--accent-light` `#3b82f6`, `--secondary-color` `#16a34a`, `--secondary-dark` `#166534`, `--accent` → `--primary-color` | Partial — ~1,900 hardcoded hexes remain, but every one that failed contrast is gone |
+| Colour | `--primary-color` `#2563eb`, `--primary-dark` `#1d4ed8`, `--primary-light` / `--accent-light` `#3b82f6`, `--secondary-color` `#16a34a`, `--secondary-dark` `#166534`, `--accent` → `--primary-color` | Every colour that changes between themes reads a token (2026-10, see **Themes** below). What stays literal is deliberate: saturated brand fills, the white text on them, dark scrims, and `var()` fallbacks |
 | Text | `--text-dark` `#0f1e3d`, `--text-medium` `#475569`, `--text-light` / `--muted` `#5b6779` | Good — retoned for AA on `--bg`; 201 hardcoded colours now read the tokens |
 | Surface | `--bg` `#eef2fb`, `--surface` `#ffffff`, `--surface-2` `#f5f8fd`, `--surface-tint` `#e1eafb`, plus global `--card` / `--text` / `--border` / `--shadow` / `--glass` defaults | Good |
 | Elevation | `--shadow-sm/md/lg` (max `rgba(15,23,42,0.16)`) | Good — all 29 black-alpha shadows re-inked to slate |
@@ -71,6 +72,54 @@ register, so each one now names the guard rail that keeps it from recurring:
 | Z-index | `--z-navbar` 1030, `--z-modal-backdrop` 1040, `--z-modal` 1050, `--z-banner` 1080 | Good — every app-level overlay takes a token; zero raw values |
 | Focus | `--focus-ring`, plus a global `:focus-visible` fallback | Good |
 | Direction | `--dir-sign` (1 / -1 under `[dir=rtl]`) | Barely used — logical properties cover almost every case; see §3 |
+
+### Themes — light (default) and dark
+
+**Light is the default and the reference design.** Dark is a second, opt-in
+theme (2026-10, owner-approved exception to the old light-only rule, after a
+paying user asked for it). Light must keep rendering exactly as designed;
+dark is derived from it through tokens.
+
+- **Switch.** `<html data-theme="light|dark">`. A tiny inline script in
+  `index.html` sets it from `localStorage["sqb_theme"]` before the first paint
+  (no flash); `src/theme/ThemeContext.jsx` keeps it in step. Stored values:
+  `light` / `dark` / `system` (follow the device); anything else reads as
+  light. `color-scheme` follows the theme so native controls and scrollbars
+  match. The sun/moon button sits beside the language switch in the app
+  navbar, the landing topbar and the admin navbar; `/account` has the full
+  Light / Dark / Follow device choice. Labels are in `i18n/common.js` (ar/en).
+- **Semantic tokens** (`--surface`, `--surface-2`, `--bg`, `--text-dark`,
+  `--text-medium`, `--text-light`, `--border-color`, shadows, accuracy ramp,
+  focus ring) have a hand-picked dark set in `index.css` under
+  `:root[data-theme="dark"]`. Every dark text token clears WCAG AA on every
+  dark panel token.
+- **Brand fills stay put.** `--primary-color` and friends keep their values in
+  dark (white on `#2563eb` is 5.2:1 on either page). Text that uses a brand or
+  status colour reads `var(--X-ink, var(--X))`: the `-ink` twin exists only in
+  dark, so light resolves to exactly what it always did.
+- **The generated layer** `src/theme/palette.css` (from
+  `scripts/theme/convert-css.mjs`) holds one token per one-off colour that
+  changes in dark. Its names carry the light value (`--bg-dbeafe` *is*
+  `#dbeafe` in light, enforced by `src/theme/palette.test.js`); the dark value
+  comes from the colour's role (background / text / border / shadow / SVG
+  shape). **Do not add to it by hand** — new code uses the semantic tokens.
+- **Page-scoped token sets** (`.landing-body`, `.login-body`) carry their own
+  dark values next to their light ones.
+- **Light islands.** Things drawn for a white page keep their own colours on a
+  white/near-white backing in dark instead of being recoloured: the diagrams
+  and figures inside the summary decks, the Moyasar card form (third-party
+  markup, not themeable), and the National Day / Golden Months offer cards.
+  An island re-pins the semantic text tokens to their light values, so global
+  rules inside it (`p { color: var(--text-medium) }`) still read as in light.
+  `.theme-light-backing` in `index.css` is the helper for new ones.
+- **Charts.** recharts draws axes, grid and neutral bars as SVG attributes;
+  their dark twins are CSS rules in `ADD/ui/ui.css`. Tooltips are inline styles
+  and take the tokens directly.
+- **Rules that hold in both themes:** panels stay opaque (no glass, no blur on
+  a panel); animations are finite; one shared Spinner; quiz answer states
+  carry an icon or text and never rely on colour alone (✓ correct, ✗ wrong,
+  bold + border for the chosen answer); no hardcoded text direction; every
+  new label has an Arabic and an English version.
 
 ### Typography & direction
 
@@ -384,10 +433,11 @@ Specifically re-check this file when you:
 - change `.navbar` / `.navbar-left` height → update the §1 shell table
 - add a `z-index` → check it against the §2.5 ladder
 - add a `@keyframes` → grep the name first; the namespace is global
-- define a token on a page root → note it in the page block, and check §1
+- define a token on a page root → note it in the page block, and check §1 (and give it a dark value — see **Themes**)
+- add a colour → use a semantic token; check the screen in both themes before committing
 - fix an audit item → strike it here **and** in `DESIGN_AUDIT_2026-08-25.md`
 
-And five invariants that are now load-bearing — breaking one silently reopens a
+And six invariants that are now load-bearing — breaking one silently reopens a
 whole class of bug:
 
 - **Scoped stylesheets stay scoped.** `QuizHistory.css`, `FinalExams.css` and
@@ -407,3 +457,9 @@ whole class of bug:
   unreadable — the login Terms popup, then the Congratulations popup, the same bug
   twice. Small `.03`–`.08` tints on inputs, chips, hover states and bar tracks are
   fine; it is the *panel* fill plus blur that is banned.
+- **Light is the default and must not move; dark goes through tokens.** A
+  colour written as a literal is the same in both themes — fine for a
+  saturated fill or the white text on it, wrong for a panel, a border or body
+  text, which will stay light on the dark page. Use the semantic tokens; if a
+  new token is unavoidable, give it a value in the `:root[data-theme="dark"]`
+  block too. The quick test: toggle the theme on the screen you changed.
