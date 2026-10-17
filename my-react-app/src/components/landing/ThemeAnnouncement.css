@@ -1,0 +1,180 @@
+/* "Dark mode is here" card (ThemeAnnouncement.jsx). Every class is ta-
+   prefixed (stylesheets never unload; DESIGN_MAP §1). Colours come from the
+   semantic tokens, so the card is right in both themes without entries in the
+   generated palette. The one exception is the little preview drawing, which
+   shows a light page and a dark page and so is the same in both themes.
+   Opaque panel, no blur; logical properties only, so RTL and LTR both work. */
+
+.ta-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px 22px;
+  padding: 18px 22px;
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+/* --- preview ----------------------------------------------------------- */
+.ta-preview {
+  position: relative;
+  width: 118px;
+  height: 78px;
+  flex-shrink: 0;
+}
+
+.ta-mock {
+  position: absolute;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 72px;
+  height: 64px;
+  padding: 10px 9px;
+  border-radius: 12px;
+  box-sizing: border-box;
+}
+
+.ta-mock i,
+.ta-mock b {
+  display: block;
+  height: 6px;
+  border-radius: 999px;
+}
+
+.ta-mock i:nth-child(2) {
+  width: 70%;
+}
+
+.ta-mock b {
+  width: 46%;
+  height: 10px;
+  margin-top: auto;
+  background: #2563eb;
+}
+
+.ta-mock-light {
+  inset-inline-start: 0;
+  background: #ffffff;
+  border: 1px solid #d4deee;
+}
+
+.ta-mock-light i {
+  background: #cbd5e1;
+}
+
+.ta-mock-dark {
+  inset-inline-start: 44px;
+  top: 14px;
+  background: #121a2b;
+  border: 1px solid #2a3956;
+  box-shadow: 0 6px 16px rgba(2, 6, 23, 0.35);
+}
+
+.ta-mock-dark i {
+  background: #3b4a66;
+}
+
+/* --- text -------------------------------------------------------------- */
+.ta-body {
+  min-width: 0;
+}
+
+.ta-kicker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-light);
+}
+
+.ta-tag {
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--primary-color);
+  color: #ffffff;
+  font-size: 11.5px;
+  font-weight: 800;
+}
+
+.ta-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 6px;
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1.3;
+  color: var(--text-dark);
+}
+
+.ta-title .app-icon {
+  color: var(--primary-color-ink, var(--primary-color));
+}
+
+.ta-text {
+  margin: 0 0 4px;
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: var(--text-medium);
+}
+
+.ta-hint {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text-light);
+}
+
+/* --- action ------------------------------------------------------------ */
+.ta-btn.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  white-space: nowrap;
+}
+
+/* The landing's ghost button is drawn for its light page; on the dark page
+   it needs the theme's own ink and rule. */
+:root[data-theme="dark"] .ta-btn.btn.ghost {
+  color: var(--text-dark);
+  border-color: var(--border-color);
+}
+
+@media (max-width: 768px) {
+  .ta-card {
+    grid-template-columns: auto minmax(0, 1fr);
+    padding: 16px;
+  }
+
+  .ta-actions {
+    grid-column: 1 / -1;
+  }
+
+  .ta-btn.btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .ta-card {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .ta-preview {
+    display: none;
+  }
+
+  .ta-title {
+    font-size: 18px;
+  }
+}

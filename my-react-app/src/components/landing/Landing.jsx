@@ -18,6 +18,7 @@ import { useNationalDayOffer } from '../../utils/nationalDay.js';
 import NationalDaySection from './NationalDaySection.jsx';
 import { GoldenStrip } from '../common/GoldenMonths.jsx';
 import GoldenMonthsSection from './GoldenMonthsSection.jsx';
+import ThemeAnnouncement from './ThemeAnnouncement.jsx';
 import { useGoldenMonths } from '../../utils/goldenMonths.js';
 import './Landing.css';
 
@@ -345,6 +346,10 @@ const Landing = () => {
               onCta={trackSignupClick}
             />
           )}
+
+          {/* Dark mode launch note (Oct 2026). Under any live offer, above the
+              product pitch; hides itself after its end date. */}
+          <ThemeAnnouncement />
 
           {/* Two tracks, one platform. Placed high on the page so a nursing
               student knows within seconds whether this is for them — and each
