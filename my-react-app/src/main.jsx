@@ -18,6 +18,9 @@ import '@fontsource/cairo/700.css'
 import '@fontsource/cairo/800.css'
 import '@fontsource/cairo/900.css'
 import './index.css'
+// The dark-theme migration layer: one token per colour that changes in dark.
+// Light values equal the colours they replaced (see the file's header).
+import './theme/palette.css'
 import App from './App.jsx';
 import { createBrowserRouter, RouterProvider, Navigate, Outlet } from 'react-router-dom';
 import { createRoot } from 'react-dom/client';

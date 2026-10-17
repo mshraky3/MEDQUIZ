@@ -245,6 +245,79 @@
   --z-popover: 1060;
   --z-tooltip: 1070;
   --z-banner: 1080;
+
+  color-scheme: light;
+}
+
+/* ── Dark theme ────────────────────────────────────────────────────────────
+   Opt-in: <html data-theme="dark">, set before first paint by the inline
+   script in index.html and kept in step by src/theme/ThemeContext.jsx. Light
+   stays the default and nothing above changes for it.
+
+   Same Scholar-blue identity on deep navy. Panels stay opaque, and the page
+   is darker than the cards on it, as in light. Every text token clears WCAG
+   AA on every panel token (lowest: --text-light on --surface-tint, 5.9:1).
+   Brand fills (--primary-color & co.) keep their light values — white on
+   #2563eb is 5.2:1 on either page — and text that used them gets the *-ink
+   tokens below instead, which exist only here (the light theme falls back to
+   the fill colour, i.e. exactly what it rendered before).
+
+   The hundreds of one-off colours the stylesheets used are tokenised in
+   src/theme/palette.css (generated, see its header). */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --text-dark: #e8eefb;
+  --text-medium: #b8c4d9;
+  --text-light: #9aa8bf;
+  --bg-light: #0b1220;
+  --bg-white: #121a2b;
+  --border-color: #2a3956;
+  --border-light: #223049;
+
+  --bg: #0b1220;
+  --surface: #121a2b;
+  --surface-2: #172238;
+  --surface-tint: #1c2a47;
+
+  /* Text-only uses of brand and status colours. */
+  --primary-color-ink: #8ab4ff;
+  --primary-dark-ink: #a9c6ff;
+  --primary-light-ink: #8ab4ff;
+  --accent-ink: #8ab4ff;
+  --accent-strong-ink: #8ab4ff;
+  --accent-color-ink: #8ab4ff;
+  --accent-light-ink: #8ab4ff;
+  --info-color-ink: #8ab4ff;
+  --secondary-color-ink: #4ade80;
+  --success-color-ink: #4ade80;
+  --error-color-ink: #fca5a5;
+  --warning-color-ink: #fbbf24;
+  /* Only ever used as text, so it is redefined directly. */
+  --secondary-dark: #6ee7a0;
+
+  --accuracy-high: #4ade80;
+  --accuracy-high-bg: rgba(74, 222, 128, 0.14);
+  --accuracy-mid: #fbbf24;
+  --accuracy-mid-bg: rgba(251, 191, 36, 0.14);
+  --accuracy-low: #f87171;
+  --accuracy-low-bg: rgba(248, 113, 113, 0.14);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 14px 36px rgba(0, 0, 0, 0.55);
+
+  --focus-ring: 0 0 0 3px rgba(96, 165, 250, 0.5);
+}
+
+/* Images and diagrams drawn for a white page (summary figures, content SVGs,
+   logos) keep their own colours on a neutral light backing instead of being
+   recoloured or inverted. Opt in with .theme-light-backing. */
+:root[data-theme="dark"] .theme-light-backing {
+  background: #f8fafc;
+  color: #0f172a;
+  border-radius: var(--radius-md);
+  color-scheme: light;
 }
 
 html[lang="ar"] {
@@ -302,8 +375,8 @@ body {
   background-color: var(--bg);
   /* Soft tinted mesh so pages read with depth instead of flat white. */
   background-image:
-    radial-gradient(900px 600px at 8% -5%, rgba(59, 130, 246, 0.07), transparent 60%),
-    radial-gradient(820px 560px at 100% 0%, rgba(99, 102, 241, 0.06), transparent 55%);
+    radial-gradient(900px 600px at 8% -5%, var(--bg-3b82f6-a070), transparent 60%),
+    radial-gradient(820px 560px at 100% 0%, var(--bg-6366f1-a060), transparent 55%);
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -416,7 +489,7 @@ select:focus-visible {
 
 .btn-secondary {
   background-color: var(--surface);
-  color: var(--primary-dark);
+  color: var(--primary-dark-ink, var(--primary-dark));
   border: 1px solid var(--primary-color);
 }
 
@@ -534,13 +607,13 @@ button.card:hover,
 
 /* Error States */
 .error-message {
-  color: var(--error-color);
+  color: var(--error-color-ink, var(--error-color));
   font-size: var(--text-sm);
   margin-top: var(--space-2);
 }
 
 .success-message {
-  color: var(--success-color);
+  color: var(--success-color-ink, var(--success-color));
   font-size: var(--text-sm);
   margin-top: var(--space-2);
 }
