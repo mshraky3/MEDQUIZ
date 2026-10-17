@@ -23,9 +23,9 @@ const API = Globals.URL;
  */
 
 const STATUS = {
-    pending: { label: 'Pending review', color: '#b45309', bg: '#f59e0b22' },
-    approved: { label: 'Approved', color: '#166534', bg: '#16653422' },
-    rejected: { label: 'Rejected', color: '#b91c1c', bg: '#b91c1c22' },
+    pending: { label: 'Pending review', color: 'var(--fg-b45309)', bg: 'var(--bg-f59e0b-a133)' },
+    approved: { label: 'Approved', color: 'var(--fg-166534)', bg: 'var(--bg-166534-a133)' },
+    rejected: { label: 'Rejected', color: 'var(--fg-b91c1c)', bg: 'var(--bg-b91c1c-a133)' },
 };
 
 const EXPORT_CMD = 'node scripts/exportSuccessStories.js --apply';
@@ -86,7 +86,7 @@ const SuccessStoriesAdmin = () => {
         return (
             <div key={story.id} style={cardStyle}>
                 <div style={cardHeader}>
-                    <span style={{ color: '#5b6779', fontSize: 13 }}>
+                    <span style={{ color: 'var(--text-light)', fontSize: 13 }}>
                         #{story.id} · {story.created_at ? new Date(story.created_at).toLocaleDateString() : '—'} · {story.track}
                     </span>
                     <span style={{ background: meta.bg, color: meta.color, fontSize: 12, padding: '2px 10px', borderRadius: 20 }}>
@@ -102,11 +102,11 @@ const SuccessStoriesAdmin = () => {
 
                 <p style={{ margin: '10px 0 2px', fontWeight: 600 }}>
                     {story.display_name}
-                    {story.exam_result && <span style={{ color: '#166534' }}> · {story.exam_result}</span>}
-                    {story.specialty && <span style={{ color: '#5b6779' }}> · {story.specialty}</span>}
+                    {story.exam_result && <span style={{ color: 'var(--fg-166534)' }}> · {story.exam_result}</span>}
+                    {story.specialty && <span style={{ color: 'var(--text-light)' }}> · {story.specialty}</span>}
                 </p>
-                <p style={{ fontSize: 13, color: '#5b6779', margin: '0 0 4px' }}>
-                    Account: <strong style={{ color: '#0f172a' }}>{story.username}</strong>
+                <p style={{ fontSize: 13, color: 'var(--text-light)', margin: '0 0 4px' }}>
+                    Account: <strong style={{ color: 'var(--fg-0f172a)' }}>{story.username}</strong>
                     {' · '}written in {story.lang === 'en' ? 'English' : 'Arabic'}
                 </p>
 
@@ -117,7 +117,7 @@ const SuccessStoriesAdmin = () => {
                         : ' NO CONSENT ON RECORD — do not publish'}
                 </p>
 
-                <div style={{ marginTop: 14, borderTop: '1px solid #d4deee', paddingTop: 14 }}>
+                <div style={{ marginTop: 14, borderTop: '1px solid var(--border-color)', paddingTop: 14 }}>
                     <label style={labelStyle} htmlFor={`note-${story.id}`}>Note to self (optional)</label>
                     <input
                         id={`note-${story.id}`}
@@ -143,7 +143,7 @@ const SuccessStoriesAdmin = () => {
                                 type="button"
                                 disabled={busy}
                                 onClick={() => setStatus(story.id, 'rejected')}
-                                style={{ ...actionBtn, background: '#fee2e2', color: '#b91c1c', opacity: busy ? 0.5 : 1 }}
+                                style={{ ...actionBtn, background: 'var(--bg-fee2e2)', color: 'var(--fg-b91c1c)', opacity: busy ? 0.5 : 1 }}
                             >
                                 Reject
                             </button>
@@ -153,7 +153,7 @@ const SuccessStoriesAdmin = () => {
                                 type="button"
                                 disabled={busy}
                                 onClick={() => setStatus(story.id, 'pending')}
-                                style={{ ...actionBtn, background: '#f5f8fd', color: '#0f172a', border: '1px solid #d4deee' }}
+                                style={{ ...actionBtn, background: 'var(--surface-2)', color: 'var(--fg-0f172a)', border: '1px solid var(--border-color)' }}
                             >
                                 Back to pending
                             </button>
@@ -166,19 +166,19 @@ const SuccessStoriesAdmin = () => {
 
     return (
         <AdminLayout bare>
-            <div style={{ minHeight: 'calc(100vh - 60px)', background: 'transparent', color: '#0f172a' }}>
+            <div style={{ minHeight: 'calc(100vh - 60px)', background: 'transparent', color: 'var(--fg-0f172a)' }}>
                 <div style={{ maxWidth: 900, margin: '0 auto', padding: '32px 16px' }}>
                     <h1 style={{ fontSize: 24, marginBottom: 8 }}>
                         <Icon name="star" size={16} /> Success Stories
                     </h1>
-                    <p style={{ color: '#5b6779', marginBottom: 20 }}>
+                    <p style={{ color: 'var(--text-light)', marginBottom: 20 }}>
                         Stories students submitted after a strong quiz result. Read each one before
                         approving — this is someone&apos;s name going on a public page.
                     </p>
 
                     {/* The step people will otherwise miss. */}
                     <div style={publishBox}>
-                        <p style={{ margin: '0 0 6px', fontWeight: 700, color: '#0e7490' }}>
+                        <p style={{ margin: '0 0 6px', fontWeight: 700, color: 'var(--fg-0e7490)' }}>
                             <Icon name="info" size={14} /> Approving does not publish
                         </p>
                         <p style={{ margin: '0 0 8px', fontSize: 14, lineHeight: 1.7 }}>
@@ -188,17 +188,17 @@ const SuccessStoriesAdmin = () => {
                             deploy:
                         </p>
                         <code style={{ ...codeStyle, display: 'block', padding: '8px 12px' }}>{EXPORT_CMD}</code>
-                        <p style={{ margin: '8px 0 0', fontSize: 13, color: '#5b6779' }}>
+                        <p style={{ margin: '8px 0 0', fontSize: 13, color: 'var(--text-light)' }}>
                             The same command removes a story: reject it here, re-run, commit. With no
                             approved stories the page stops existing entirely.
                         </p>
                     </div>
 
-                    {loading && <p style={{ color: '#5b6779' }}>Loading…</p>}
+                    {loading && <p style={{ color: 'var(--text-light)' }}>Loading…</p>}
                     {error && (
-                        <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: 16, marginBottom: 24 }}>
-                            <p style={{ color: '#b91c1c', margin: '0 0 12px 0' }}>{error}</p>
-                            <button onClick={fetchStories} style={{ ...actionBtn, background: '#fecaca', color: '#7f1d1d' }}>
+                        <div style={{ background: 'var(--bg-fef2f2)', border: '1px solid var(--line-fecaca)', borderRadius: 8, padding: 16, marginBottom: 24 }}>
+                            <p style={{ color: 'var(--fg-b91c1c)', margin: '0 0 12px 0' }}>{error}</p>
+                            <button onClick={fetchStories} style={{ ...actionBtn, background: 'var(--bg-fecaca)', color: 'var(--fg-7f1d1d)' }}>
                                 Retry
                             </button>
                         </div>
@@ -207,21 +207,21 @@ const SuccessStoriesAdmin = () => {
                     {!loading && !error && (
                         <>
                             <section style={{ marginBottom: 40 }}>
-                                <h2 style={{ fontSize: 18, color: '#b45309', marginBottom: 16 }}>
+                                <h2 style={{ fontSize: 18, color: 'var(--fg-b45309)', marginBottom: 16 }}>
                                     Pending ({pending.length})
                                 </h2>
                                 {pending.length === 0
-                                    ? <p style={{ color: '#5b6779' }}>Nothing waiting for review.</p>
+                                    ? <p style={{ color: 'var(--text-light)' }}>Nothing waiting for review.</p>
                                     : pending.map(card)}
                             </section>
 
                             <section style={{ marginBottom: 40 }}>
-                                <h2 style={{ fontSize: 18, color: '#166534', marginBottom: 16 }}>
+                                <h2 style={{ fontSize: 18, color: 'var(--fg-166534)', marginBottom: 16 }}>
                                     Approved ({approved.length})
                                 </h2>
                                 {approved.length === 0
                                     ? (
-                                        <p style={{ color: '#5b6779' }}>
+                                        <p style={{ color: 'var(--text-light)' }}>
                                             None yet — so /success-stories is not published, and is not
                                             linked from the site.
                                         </p>
@@ -231,7 +231,7 @@ const SuccessStoriesAdmin = () => {
 
                             {rejected.length > 0 && (
                                 <section>
-                                    <h2 style={{ fontSize: 18, color: '#b91c1c', marginBottom: 16 }}>
+                                    <h2 style={{ fontSize: 18, color: 'var(--fg-b91c1c)', marginBottom: 16 }}>
                                         Rejected ({rejected.length})
                                     </h2>
                                     {rejected.map(card)}
@@ -246,8 +246,8 @@ const SuccessStoriesAdmin = () => {
 };
 
 const cardStyle = {
-    background: '#ffffff',
-    border: '1px solid #d4deee',
+    background: 'var(--surface)',
+    border: '1px solid var(--border-color)',
     borderRadius: 10,
     padding: 20,
     marginBottom: 16,
@@ -264,7 +264,7 @@ const cardHeader = {
 const quoteStyle = {
     margin: '12px 0 0',
     padding: '12px 16px',
-    background: '#f5f8fd',
+    background: 'var(--surface-2)',
     borderInlineStart: '3px solid #2563eb',
     borderRadius: 6,
     fontSize: 15,
@@ -273,8 +273,8 @@ const quoteStyle = {
 };
 
 const publishBox = {
-    background: '#ecfeff',
-    border: '1px solid #a5f3fc',
+    background: 'var(--bg-ecfeff)',
+    border: '1px solid var(--line-a5f3fc)',
     borderRadius: 10,
     padding: '14px 16px',
     marginBottom: 28,
@@ -292,16 +292,16 @@ const codeStyle = {
 const labelStyle = {
     display: 'block',
     fontSize: 13,
-    color: '#5b6779',
+    color: 'var(--text-light)',
     marginBottom: 6,
 };
 
 const inputStyle = {
     width: '100%',
-    background: '#f5f8fd',
-    border: '1px solid #d4deee',
+    background: 'var(--surface-2)',
+    border: '1px solid var(--border-color)',
     borderRadius: 6,
-    color: '#0f172a',
+    color: 'var(--fg-0f172a)',
     padding: '8px 12px',
     fontSize: 14,
     boxSizing: 'border-box',

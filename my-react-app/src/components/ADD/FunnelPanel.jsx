@@ -159,7 +159,7 @@ const FunnelPanel = () => {
                                 <LabelList
                                     dataKey="barLabel"
                                     position="right"
-                                    style={{ fontSize: 11, fill: '#475569', fontWeight: 700 }}
+                                    style={{ fontSize: 11, fill: 'var(--text-medium)', fontWeight: 700 }}
                                 />
                             </Bar>
                         </BarChart>

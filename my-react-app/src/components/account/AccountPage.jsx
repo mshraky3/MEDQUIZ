@@ -6,13 +6,14 @@ import { UserContext } from '../../UserContext';
 import Spinner from '../common/Spinner.jsx';
 import Icon from '../common/Icon.jsx';
 import SEO from '../common/SEO.jsx';
-import { useCopy, useLang } from '../../i18n';
+import { useCommon, useCopy, useLang } from '../../i18n';
 import { formatDate } from '../../i18n/format.js';
 import accountCopy from '../../i18n/copy/account.js';
 import { specialtiesOf, userTrack } from '../../utils/tracks.js';
 import ExamDateCard from '../quizs/ExamDateCard.jsx';
 import StreakCard from '../quizs/StreakCard.jsx';
 import GoalCard from '../quizs/GoalCard.jsx';
+import { ThemeChoice } from '../../theme/ThemeToggle.jsx';
 // The subscribe/renew CTA below matches the button style used on the page it
 // navigates to (/subscribe, styled via Login.css) — was previously the
 // plainer global default, a jarring style change across a single click.
@@ -40,6 +41,7 @@ const AccountPage = () => {
     const { user, sessionToken } = useContext(UserContext);
     const navigate = useNavigate();
     const t = useCopy(accountCopy);
+    const common = useCommon();
     const { dir, lang } = useLang();
 
     const [state, setState] = useState('loading'); // loading | ready | error
@@ -256,6 +258,11 @@ const AccountPage = () => {
                                     sources={content?.selectableSources || []}
                                 />
                             </div>
+                        </section>
+
+                        <section className="account-card">
+                            <h2 className="account-subheading">{common.theme.label}</h2>
+                            <ThemeChoice />
                         </section>
 
                         <div className="account-actions">

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Icon from '../common/Icon.jsx';
 import './AdminLayout.css';
+import ThemeToggle from '../../theme/ThemeToggle.jsx';
 
 /**
  * Replaces AdminNavbar.jsx. Every /admin/* page renders through this —
@@ -82,6 +83,7 @@ const AdminLayout = ({ children, containerClassName = '', bare = false }) => {
                         ))}
                     </div>
 
+                    <ThemeToggle lang="en" className="admin-theme-toggle" />
                     <button className="admin-back-btn" onClick={handleGoBack}>
                         ← Site
                     </button>

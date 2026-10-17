@@ -18,6 +18,9 @@ import '@fontsource/cairo/700.css'
 import '@fontsource/cairo/800.css'
 import '@fontsource/cairo/900.css'
 import './index.css'
+// The dark-theme migration layer: one token per colour that changes in dark.
+// Light values equal the colours they replaced (see the file's header).
+import './theme/palette.css'
 import App from './App.jsx';
 import { createBrowserRouter, RouterProvider, Navigate, Outlet } from 'react-router-dom';
 import { createRoot } from 'react-dom/client';
@@ -99,6 +102,7 @@ const AdminGate = lazy(() => import('./components/common/AdminGate.jsx'));
 
 import Globals from './global.js';
 import { UserProvider } from './UserContext.jsx';
+import { ThemeProvider } from './theme/ThemeContext.jsx';
 import { LanguageProvider, AdminShell, useCommon } from './i18n';
 import { hasEnglishTwin, localizedPath } from './seo/locales.js';
 import { examRoutePaths } from './seo/examGuides.js';
@@ -276,6 +280,7 @@ captureTouch();
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <LanguageProvider>
+      <ThemeProvider>
       <UserProvider>
         <RouterProvider router={router} />
         <CookieConsent />
@@ -285,6 +290,7 @@ createRoot(document.getElementById('root')).render(
         {import.meta.env.PROD && <Analytics />}
         {import.meta.env.PROD && <SpeedInsights />}
       </UserProvider>
+      </ThemeProvider>
     </LanguageProvider>
   </StrictMode>,
 )

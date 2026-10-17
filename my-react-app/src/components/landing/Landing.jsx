@@ -10,6 +10,7 @@ import Globals from '../../global.js';
 import { UserContext } from '../../UserContext';
 import { TRACKS, MEDICAL, NURSING, DENTAL, pick } from '../../utils/tracks.js';
 import { useCopy, useLang, LanguageToggle, LocaleLink as Link, formatNumber, formatDate } from '../../i18n';
+import ThemeToggle from '../../theme/ThemeToggle.jsx';
 import landingCopy from '../../i18n/copy/landing.js';
 import nationalDayCopy from '../../i18n/copy/nationalDay.js';
 import { NationalDayStrip } from '../common/NationalDayOffer.jsx';
@@ -17,6 +18,7 @@ import { useNationalDayOffer } from '../../utils/nationalDay.js';
 import NationalDaySection from './NationalDaySection.jsx';
 import { GoldenStrip } from '../common/GoldenMonths.jsx';
 import GoldenMonthsSection from './GoldenMonthsSection.jsx';
+import ThemeAnnouncement from './ThemeAnnouncement.jsx';
 import { useGoldenMonths } from '../../utils/goldenMonths.js';
 import './Landing.css';
 
@@ -220,6 +222,7 @@ const Landing = () => {
             {/* The landing page has its own topbar (no navbar on "/"), so the
                 language switch has to live here too — it is the first thing a
                 visitor in the wrong language needs. */}
+            <ThemeToggle />
             <LanguageToggle compact />
             {isAuthenticated ? (
               <button className="btn ghost topbar-btn" onClick={handleContinue}>
@@ -343,6 +346,10 @@ const Landing = () => {
               onCta={trackSignupClick}
             />
           )}
+
+          {/* Dark mode launch note (Oct 2026). Under any live offer, above the
+              product pitch; hides itself after its end date. */}
+          <ThemeAnnouncement />
 
           {/* Two tracks, one platform. Placed high on the page so a nursing
               student knows within seconds whether this is for them — and each

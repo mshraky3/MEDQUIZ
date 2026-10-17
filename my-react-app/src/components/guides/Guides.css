@@ -19,8 +19,8 @@
     display: inline-flex;
     padding: var(--space-2) var(--space-3);
     border-radius: 999px;
-    background: rgba(35, 109, 237, 0.12);
-    color: var(--primary-light);
+    background: var(--bg-236ded-a120);
+    color: var(--primary-light-ink, var(--primary-light));
     font-weight: 700;
     font-size: var(--text-sm);
     margin-bottom: var(--space-3);
@@ -71,7 +71,7 @@
 .guide-card:hover {
     transform: translateY(-4px);
     border-color: rgba(35, 109, 237, 0.35);
-    box-shadow: 0 12px 40px rgba(15, 23, 42, 0.14), 0 0 20px rgba(35, 109, 237, 0.1);
+    box-shadow: 0 12px 40px var(--shade-0f172a-a140), 0 0 20px rgba(35, 109, 237, 0.1);
 }
 
 .guide-card h2 {
@@ -86,7 +86,7 @@
 }
 
 .guide-card h2 a:hover {
-    color: var(--primary-light);
+    color: var(--primary-light-ink, var(--primary-light));
 }
 
 .guide-card p {
@@ -98,14 +98,14 @@
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
-    color: var(--primary-color);
+    color: var(--primary-color-ink, var(--primary-color));
     text-decoration: none;
     font-weight: 700;
     transition: color var(--transition-fast);
 }
 
 .guide-cta:hover {
-    color: var(--primary-light);
+    color: var(--primary-light-ink, var(--primary-light));
 }
 
 .guide-article section,

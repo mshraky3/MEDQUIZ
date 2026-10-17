@@ -13,14 +13,14 @@
   padding: 30px;
   background: var(--surface-2);
   border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.14);
+  box-shadow: 0 8px 32px var(--shade-0f172a-a140);
   border: 1px solid var(--border-color);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
 .admin-page-wrapper .add-question-container h2 {
   text-align: center;
-  color: #1e293b;
+  color: var(--fg-1e293b);
   margin-bottom: 20px;
   font-size: 24px;
 }
@@ -45,20 +45,20 @@
   margin-top: 6px;
   padding: 12px;
   font-size: 16px;
-  border: 1px solid rgba(15, 23, 42, 0.10);
+  border: 1px solid var(--line-0f172a-a100);
   border-radius: 8px;
   width: 100%;
   box-sizing: border-box;
   transition-property: var(--transition-props);
   transition-duration: 0.3s;
   transition-timing-function: ease;
-  background: rgba(15, 23, 42, 0.04);
-  color: #1e293b;
+  background: var(--bg-0f172a-a040);
+  color: var(--fg-1e293b);
 }
 
 .admin-page-wrapper .question-form input::placeholder,
 .admin-page-wrapper .question-form textarea::placeholder {
-  color: #475569;
+  color: var(--text-medium);
 }
 
 .admin-page-wrapper .question-form input:focus,
@@ -67,7 +67,7 @@
   border-color: #236ded;
   outline: none;
   box-shadow: 0 0 0 3px rgba(35, 109, 237, 0.1);
-  background: rgba(15, 23, 42, 0.04);
+  background: var(--bg-0f172a-a040);
 }
 
 .admin-page-wrapper .question-form textarea {
@@ -76,7 +76,7 @@
 }
 
 .admin-page-wrapper .question-form select {
-  background-color: rgba(15, 23, 42, 0.04);
+  background-color: var(--bg-0f172a-a040);
   appearance: none;
   background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%2394a3b8' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
@@ -86,8 +86,8 @@
 }
 
 .admin-page-wrapper .question-form select option {
-  background: #ffffff;
-  color: #1e293b;
+  background: var(--surface);
+  color: var(--fg-1e293b);
 }
 
 .admin-page-wrapper .submit-button {
@@ -114,7 +114,7 @@
 
 /* Success and Error Messages */
 .admin-page-wrapper .error {
-  color: var(--error-color);
+  color: var(--error-color-ink, var(--error-color));
   text-align: center;
   font-size: 14px;
   margin-top: -10px;

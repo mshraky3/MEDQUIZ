@@ -27,8 +27,8 @@
 
 .sqb-spinner-ring:nth-child(2) {
     inset: 22%;
-    border-bottom-color: #d4deee;
-    border-left-color: #d4deee;
+    border-bottom-color: var(--border-color);
+    border-left-color: var(--border-color);
     animation: sqb-spin 1.5s cubic-bezier(0.5, 0, 0.5, 1) infinite reverse;
 }
 

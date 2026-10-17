@@ -52,6 +52,15 @@ const common = {
             title: 'لماذا هذه الإجابة صحيحة',
             unavailable: 'لا يوجد شرح لهذا السؤال بعد.',
         },
+        // Theme switch (navbar button + the full choice on /account).
+        theme: {
+            label: 'المظهر',
+            light: 'فاتح',
+            dark: 'داكن',
+            system: 'حسب الجهاز',
+            toDark: 'التبديل إلى الوضع الليلي',
+            toLight: 'التبديل إلى الوضع النهاري',
+        },
         loading: 'جاري التحميل',
         loadingEllipsis: 'جاري التحميل…',
         footer: {
@@ -156,6 +165,14 @@ const common = {
         explanation: {
             title: 'Why this answer is correct',
             unavailable: 'No explanation for this question yet.',
+        },
+        theme: {
+            label: 'Appearance',
+            light: 'Light',
+            dark: 'Dark',
+            system: 'Follow device',
+            toDark: 'Switch to dark mode',
+            toLight: 'Switch to light mode',
         },
         loading: 'Loading',
         loadingEllipsis: 'Loading…',

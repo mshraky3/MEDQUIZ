@@ -8,16 +8,16 @@
    so its padding, radius and (absent) margin have to agree with its neighbours
    or the row looks misaligned. */
 .goalx {
-  background: #fff;
-  border: 1px solid #e6ecf6;
+  background: var(--surface);
+  border: 1px solid var(--line-e6ecf6);
   border-radius: 16px;
   padding: 14px 16px;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 10px 30px var(--shade-0f172a-a050);
 }
 
 .goalx.is-achieved {
   border-color: rgba(16, 185, 129, 0.4);
-  background: linear-gradient(180deg, rgba(16, 185, 129, 0.06), #fff 60%);
+  background: linear-gradient(180deg, var(--bg-10b981-a060), var(--surface) 60%);
 }
 
 .goalx-head {
@@ -36,7 +36,7 @@
   margin: 0;
   font-size: 13px;
   font-weight: 800;
-  color: #0f1e3d;
+  color: var(--text-dark);
 }
 
 .goalx-head-actions { display: flex; gap: 10px; }
@@ -47,7 +47,7 @@
   padding: 0;
   font-size: 11.5px;
   font-weight: 700;
-  color: #2563eb;
+  color: var(--fg-2563eb);
   cursor: pointer;
 }
 .goalx-link:hover { text-decoration: underline; }
@@ -78,7 +78,7 @@
 
 .goalx-ring-bg {
   fill: none;
-  stroke: #eef2f8;
+  stroke: var(--graphic-eef2f8);
   stroke-width: 9;
 }
 
@@ -96,7 +96,7 @@
   position: absolute;
   font-size: 14px;
   font-weight: 800;
-  color: #0f1e3d;
+  color: var(--text-dark);
 }
 
 .goalx-detail { min-width: 0; }
@@ -105,7 +105,7 @@
   margin: 0;
   font-size: 18px;
   font-weight: 800;
-  color: #0f1e3d;
+  color: var(--text-dark);
   line-height: 1.2;
 }
 
@@ -123,14 +123,14 @@
   margin: 6px 0 0;
   font-size: 12px;
   font-weight: 700;
-  color: #2563eb;
+  color: var(--fg-2563eb);
 }
 
 .goalx-achieved {
   margin: 6px 0 0;
   font-size: 12.5px;
   font-weight: 800;
-  color: #047857;
+  color: var(--fg-047857);
 }
 .goalx-achieved span {
   display: block;
@@ -144,7 +144,7 @@
 .goalx-progress {
   margin-top: 12px;
   padding-top: 11px;
-  border-top: 1px solid #eef2f8;
+  border-top: 1px solid var(--line-eef2f8);
 }
 
 .goalx-progress-title {
@@ -170,10 +170,10 @@
   gap: 5px;
   padding: 4px 9px;
   border-radius: 999px;
-  background: #f1f5f9;
+  background: var(--bg-f1f5f9);
   font-size: 11.5px;
   font-weight: 700;
-  color: #334155;
+  color: var(--fg-334155);
 }
 
 .goalx-trend {
@@ -184,8 +184,8 @@
   font-weight: 700;
 }
 
-.goalx-trend--up { color: #047857; }
-.goalx-trend--down { color: #b45309; }
+.goalx-trend--up { color: var(--fg-047857); }
+.goalx-trend--down { color: var(--fg-b45309); }
 .goalx-trend--flat { color: var(--text-light); font-weight: 500; }
 
 .goalx-progress-empty {
@@ -208,9 +208,9 @@
   width: 38px;
   height: 38px;
   border-radius: 12px;
-  background: linear-gradient(150deg, rgba(59, 130, 246, 0.18), rgba(99, 102, 241, 0.14));
+  background: linear-gradient(150deg, var(--bg-3b82f6-a180), var(--bg-6366f1-a140));
   border: 1px solid rgba(59, 130, 246, 0.26);
-  color: #2563eb;
+  color: var(--fg-2563eb);
   flex: 0 0 auto;
 }
 
@@ -220,7 +220,7 @@
   margin: 0 0 3px;
   font-size: 13.5px;
   font-weight: 800;
-  color: #0f1e3d;
+  color: var(--text-dark);
 }
 
 .goalx-empty-body p {
@@ -251,17 +251,17 @@
 
 .goalx-choice {
   padding: 6px 11px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--line-e2e8f0);
   border-radius: 999px;
-  background: #fff;
+  background: var(--surface);
   font-size: 12px;
   font-weight: 700;
-  color: #475569;
+  color: var(--text-medium);
   cursor: pointer;
   transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
 }
 
-.goalx-choice:hover { border-color: #93b4f7; color: #2563eb; }
+.goalx-choice:hover { border-color: var(--line-93b4f7); color: var(--fg-2563eb); }
 
 .goalx-choice.is-on {
   background: #2563eb;
@@ -273,12 +273,12 @@
   margin-top: 10px;
   width: 130px;
   padding: 9px 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--line-e2e8f0);
   border-radius: 10px;
   /* 16px — below that, iOS Safari zooms the page on focus. */
   font-size: 16px;
   font-weight: 700;
-  color: #0f1e3d;
+  color: var(--text-dark);
 }
 
 .goalx-input:focus {
@@ -300,11 +300,11 @@
   align-items: center;
   padding: 3px 10px;
   border-radius: 999px;
-  background: rgba(37, 99, 235, 0.09);
+  background: var(--bg-2563eb-a090);
   border: 1px solid rgba(37, 99, 235, 0.18);
   font-size: 11.5px;
   font-weight: 700;
-  color: #2563eb;
+  color: var(--fg-2563eb);
 }
 
 .goalx-scope-hint {
@@ -317,24 +317,24 @@
 .goalx-error {
   margin: 0 0 12px;
   font-size: 13px;
-  color: #dc2626;
+  color: var(--fg-dc2626);
 }
 
 .goalx-actions { display: flex; gap: 10px; }
 
 .goalx-btn {
   padding: 8px 15px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--line-e2e8f0);
   border-radius: 11px;
-  background: #fff;
+  background: var(--surface);
   font-size: 12.5px;
   font-weight: 800;
-  color: #475569;
+  color: var(--text-medium);
   cursor: pointer;
   transition: background 0.18s ease, border-color 0.18s ease;
 }
 
-.goalx-btn:hover { border-color: #cbd5e1; background: #f8fafc; }
+.goalx-btn:hover { border-color: var(--line-cbd5e1); background: var(--bg-f8fafc); }
 
 .goalx-btn--primary {
   background: #2563eb;

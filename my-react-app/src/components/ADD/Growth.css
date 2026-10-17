@@ -22,7 +22,7 @@
     display: inline-flex;
     gap: 4px;
     padding: 3px;
-    background: rgba(15, 23, 42, 0.04);
+    background: var(--bg-0f172a-a040);
     border-radius: 10px;
 }
 
@@ -32,14 +32,14 @@
     font-family: inherit;
     font-size: 0.8rem;
     font-weight: 700;
-    color: #475569;
+    color: var(--text-medium);
     background: transparent;
     border: none;
     border-radius: 8px;
     cursor: pointer;
 }
 
-.admin-page-wrapper .growth-presets button:hover { background: #fff; color: #2563eb; }
+.admin-page-wrapper .growth-presets button:hover { background: var(--surface); color: var(--fg-2563eb); }
 
 .admin-page-wrapper .growth-date {
     display: inline-flex;
@@ -55,9 +55,9 @@
     min-height: 36px;
     font-family: inherit;
     font-size: 0.8rem;
-    color: #0f1e3d;
-    background: #fff;
-    border: 1px solid #d4deee;
+    color: var(--text-dark);
+    background: var(--surface);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
 }
 
@@ -83,7 +83,7 @@
     font-weight: 600;
 }
 
-.admin-page-wrapper .growth-state--error { color: #b91c1c; }
+.admin-page-wrapper .growth-state--error { color: var(--fg-b91c1c); }
 .admin-page-wrapper .growth-state button {
     margin-inline-start: 8px;
     padding: 6px 14px;
@@ -110,7 +110,7 @@
 .admin-page-wrapper .growth-table td {
     padding: 10px 12px;
     text-align: left;
-    border-bottom: 1px solid #eef2fb;
+    border-bottom: 1px solid var(--line-eef2fb);
 }
 
 .admin-page-wrapper .growth-table th {
@@ -121,7 +121,7 @@
     letter-spacing: 0.04em;
 }
 
-.admin-page-wrapper .growth-table td { color: #0f1e3d; }
+.admin-page-wrapper .growth-table td { color: var(--text-dark); }
 .admin-page-wrapper .growth-table .num { text-align: right; font-variant-numeric: tabular-nums; }
 
 .admin-page-wrapper .growth-empty {

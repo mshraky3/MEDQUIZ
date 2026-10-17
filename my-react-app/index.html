@@ -40,11 +40,47 @@
     <meta name="twitter:image" content="https://www.smle-question-bank.com/og-image.svg" />
     <meta name="twitter:image:alt" content="SQB - بنك أسئلة SMLE وSNLE وبرومترك" />
 
+    <!-- Theme before first paint, so a dark-mode visitor never sees a flash of
+         the light page. Same key and values as src/theme/theme.js: light by
+         default, and on any missing, unknown or unreadable value. -->
+    <script>
+      (function () {
+        var t = 'light';
+        try {
+          var p = window.localStorage.getItem('sqb_theme');
+          if (p === 'dark') t = 'dark';
+          else if (p === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) t = 'dark';
+        } catch (e) {}
+        var r = document.documentElement;
+        r.setAttribute('data-theme', t);
+        r.style.colorScheme = t;
+        if (t === 'dark') {
+          var m = document.querySelector('meta[name="theme-color"]');
+          if (m) m.setAttribute('content', '#0b1220');
+        }
+      })();
+    </script>
+
     <style>
       body {
         margin: 0;
         background: #eef2fb;
         color: #0f172a;
+      }
+
+      :root[data-theme="dark"] body {
+        background: #0b1220;
+        color: #e8eefb;
+      }
+
+      :root[data-theme="dark"] .seo-shell h1,
+      :root[data-theme="dark"] .seo-shell h2 {
+        color: #f1f5ff;
+      }
+
+      :root[data-theme="dark"] .seo-shell a,
+      :root[data-theme="dark"] .seo-kicker {
+        color: #5eead4;
       }
 
       .seo-shell {

@@ -144,10 +144,10 @@ const ForgotPassword = () => {
                                     style={{ textAlign: 'center', fontSize: 28, letterSpacing: 12 }}
                                 />
                             </div>
-                            <p style={{ fontSize: 13, color: '#64748b', marginBottom: 12 }}>
-                                {t.otpSentTo} <strong style={{ color: '#94a3b8' }} dir="ltr">{email}</strong>
+                            <p style={{ fontSize: 13, color: 'var(--fg-64748b)', marginBottom: 12 }}>
+                                {t.otpSentTo} <strong style={{ color: 'var(--fg-94a3b8)' }} dir="ltr">{email}</strong>
                             </p>
-                            <p style={{ fontSize: 13, color: '#64748b', marginBottom: 12, lineHeight: 1.6 }}>
+                            <p style={{ fontSize: 13, color: 'var(--fg-64748b)', marginBottom: 12, lineHeight: 1.6 }}>
                                 {t.spamHintBefore} <strong>{t.spamFolder}</strong> {t.spamOr} <strong>{t.trashFolder}</strong>.
                             </p>
                             {error && <div className="alert-box error">{error}</div>}

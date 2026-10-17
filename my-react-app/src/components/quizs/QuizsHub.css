@@ -200,7 +200,7 @@
 /* The suggested specialty. Amber, and the only row that carries any fill. */
 .hubx .hubx-spec.is-next {
     border-color: #f59e0b;
-    background: #fffbeb;
+    background: var(--bg-fffbeb);
     box-shadow: none;
 }
 
@@ -224,11 +224,11 @@
     height: 32px;
     border-radius: 9px;
     background: var(--surface-tint, #e1eafb);
-    color: var(--primary-dark, #1d4ed8);
+    color: var(--primary-dark-ink, var(--primary-dark, #1d4ed8));
     flex-shrink: 0;
 }
 
-.hubx .hubx-spec.is-next .hubx-spec-icon { background: #fde68a; color: #92400e; }
+.hubx .hubx-spec.is-next .hubx-spec-icon { background: var(--bg-fde68a); color: var(--fg-92400e); }
 .hubx .hubx-spec-label { min-width: 0; }
 
 /* Coverage meter. Ten discrete blocks rather than a continuous bar: real
@@ -252,7 +252,7 @@
 .hubx .hubx-seg {
     height: 11px;
     border-radius: 3px;
-    background: #dde5f3;
+    background: var(--bg-dde5f3);
 }
 
 .hubx .hubx-seg.is-on { background: var(--primary-color, #2563eb); }
@@ -297,8 +297,8 @@
 .hubx .hubx-tag {
     padding: 2px 9px;
     border-radius: 999px;
-    background: #fde68a;
-    color: #92400e;
+    background: var(--bg-fde68a);
+    color: var(--fg-92400e);
     font-size: 0.68rem;
     font-style: normal;
     font-weight: 800;
@@ -310,7 +310,7 @@
     width: 44px;
     height: 12px;
     border-radius: 5px;
-    background: linear-gradient(90deg, #eef2fb 25%, #dfe7f6 37%, #eef2fb 63%);
+    background: linear-gradient(90deg, var(--bg) 25%, var(--bg-dfe7f6) 37%, var(--bg) 63%);
     background-size: 400% 100%;
     animation: hubx-shimmer 1.3s ease-in-out infinite;
 }
@@ -321,7 +321,7 @@
     border: 1.5px solid var(--border-color, #d4deee);
     border-radius: 999px;
     background: var(--surface, #fff);
-    color: var(--primary-dark, #1d4ed8);
+    color: var(--primary-dark-ink, var(--primary-dark, #1d4ed8));
     font-family: inherit;
     font-size: var(--text-xs, 0.75rem);
     font-weight: 700;
@@ -365,15 +365,15 @@
     gap: 10px;
     padding: 14px;
     border-radius: var(--radius-sm, 8px);
-    background: #fef2f2;
-    border: 1px solid #fecaca;
+    background: var(--bg-fef2f2);
+    border: 1px solid var(--line-fecaca);
 }
 
 .hubx .hubx-inline-error p {
     margin: 0;
     font-size: var(--text-sm, 0.875rem);
     font-weight: 600;
-    color: #b91c1c;
+    color: var(--fg-b91c1c);
     animation: none;
 }
 
@@ -386,7 +386,7 @@
     border: 1.5px solid #b91c1c;
     border-radius: 999px;
     background: transparent;
-    color: #b91c1c;
+    color: var(--fg-b91c1c);
     font-family: inherit;
     font-size: var(--text-xs, 0.75rem);
     font-weight: 700;
@@ -429,7 +429,7 @@
     display: grid;
     gap: 16px;
     padding: 20px;
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(37, 99, 235, 0.03));
+    background: linear-gradient(135deg, var(--bg-3b82f6-a120), var(--bg-2563eb-a030));
 }
 
 .hubx .hubx-qpanel-title { display: flex; align-items: flex-start; gap: 14px; min-width: 0; }
@@ -468,14 +468,14 @@
 .hubx .hubx-qpanel-stat {
     font-size: var(--text-xs, 0.78rem);
     font-weight: 700;
-    color: var(--primary-dark, #1d4ed8);
+    color: var(--primary-dark-ink, var(--primary-dark, #1d4ed8));
 }
 
 .hubx .hubx-step-flag {
     padding: 2px 9px;
     border-radius: 999px;
-    background: #fef3c7;
-    color: #92400e;
+    background: var(--bg-fef3c7);
+    color: var(--fg-92400e);
     font-size: 0.68rem;
     font-weight: 800;
     white-space: nowrap;
@@ -510,7 +510,7 @@
 .hubx .hubx-qbtn--ghost {
     background: var(--surface, #fff);
     border-color: var(--border-color, #d4deee);
-    color: var(--primary-dark, #1d4ed8);
+    color: var(--primary-dark-ink, var(--primary-dark, #1d4ed8));
 }
 
 .hubx .hubx-qbtn:hover { transform: translateY(-1px); }
@@ -548,7 +548,7 @@
     padding: 16px 18px;
     border: 1.5px solid rgba(37, 99, 235, 0.4);
     border-radius: var(--radius-md, 12px);
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(37, 99, 235, 0.04));
+    background: linear-gradient(135deg, var(--bg-3b82f6-a120), var(--bg-2563eb-a040));
     font-family: inherit;
     text-align: start;
     cursor: pointer;
@@ -582,7 +582,7 @@
     color: var(--text-medium, #475569);
 }
 
-.hubx .hubx-qfeature-meta b { display: inline-flex; align-items: center; gap: 6px; color: var(--primary-dark, #1d4ed8); font-weight: 800; }
+.hubx .hubx-qfeature-meta b { display: inline-flex; align-items: center; gap: 6px; color: var(--primary-dark-ink, var(--primary-dark, #1d4ed8)); font-weight: 800; }
 
 .hubx .hubx-qgrid {
     display: grid;
@@ -610,7 +610,7 @@
 .hubx .hubx-qtile-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .hubx .hubx-qtile-body strong { font-size: var(--text-sm, 0.875rem); font-weight: 800; color: var(--text-dark, #0f1e3d); line-height: 1.35; }
 .hubx .hubx-qtile-body span { font-size: 0.72rem; font-weight: 600; color: var(--text-light, #5b6779); }
-.hubx .hubx-qtile-go { margin-inline-start: auto; color: var(--primary-dark, #1d4ed8); flex-shrink: 0; }
+.hubx .hubx-qtile-go { margin-inline-start: auto; color: var(--primary-dark-ink, var(--primary-dark, #1d4ed8)); flex-shrink: 0; }
 
 /* Side column: the other two destinations, slim. */
 .hubx .hubx-side-card {
@@ -639,7 +639,7 @@
     height: 44px;
     border-radius: var(--radius-sm, 10px);
     background: var(--surface-tint, #e1eafb);
-    color: var(--primary-dark, #1d4ed8);
+    color: var(--primary-dark-ink, var(--primary-dark, #1d4ed8));
     flex-shrink: 0;
 }
 
@@ -661,7 +661,7 @@
     padding: 14px 18px;
     border: 1.5px solid #fcd34d;
     border-radius: var(--radius-md, 12px);
-    background: #fffbeb;
+    background: var(--bg-fffbeb);
     font-family: inherit;
     text-align: start;
     cursor: pointer;
@@ -677,15 +677,15 @@
     width: 38px;
     height: 38px;
     border-radius: 10px;
-    background: #fde68a;
-    color: #92400e;
+    background: var(--bg-fde68a);
+    color: var(--fg-92400e);
     flex-shrink: 0;
 }
 
 .hubx .hubx-review-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.hubx .hubx-review-text strong { font-size: var(--text-sm, 0.9rem); font-weight: 800; color: #78350f; }
-.hubx .hubx-review-text span { font-size: var(--text-xs, 0.75rem); line-height: 1.6; color: #92400e; }
-.hubx .hubx-review-go { margin-inline-start: auto; color: #b45309; flex-shrink: 0; }
+.hubx .hubx-review-text strong { font-size: var(--text-sm, 0.9rem); font-weight: 800; color: var(--fg-78350f); }
+.hubx .hubx-review-text span { font-size: var(--text-xs, 0.75rem); line-height: 1.6; color: var(--fg-92400e); }
+.hubx .hubx-review-go { margin-inline-start: auto; color: var(--fg-b45309); flex-shrink: 0; }
 
 /* ---------------------------------------------------------- telegram ----- */
 /* Its own strip. It used to be the fourth cell of the KPI grid, which put a
@@ -729,8 +729,8 @@
     min-height: 40px;
     padding: 8px 20px;
     border-radius: 999px;
-    background: #fff;
-    color: #0c7cb0;
+    background: var(--surface);
+    color: var(--fg-0c7cb0);
     font-size: var(--text-xs, 0.8rem);
     font-weight: 800;
 }
@@ -816,7 +816,7 @@
     padding: 14px 16px;
     border-radius: var(--radius-md, 12px);
     border: 1px solid #fcd34d;
-    background: linear-gradient(135deg, #fffbeb, #fef3c7);
+    background: linear-gradient(135deg, var(--bg-fffbeb), var(--bg-fef3c7));
 }
 
 .hubx .hubx-notice-icon {
@@ -839,13 +839,13 @@
 .hubx .hubx-notice-body strong {
     font-size: var(--text-sm, 0.9rem);
     font-weight: 800;
-    color: #78350f;
+    color: var(--fg-78350f);
 }
 
 .hubx .hubx-notice-body span {
     font-size: var(--text-xs, 0.8rem);
     line-height: 1.7;
-    color: #92400e;
+    color: var(--fg-92400e);
 }
 
 /* Disabled affordances read as "not yet", not as broken. */
@@ -857,5 +857,5 @@
 .hubx .hubx-practise:disabled:hover {
     background: var(--surface, #fff);
     border-color: var(--border-color, #d4deee);
-    color: var(--primary-dark, #1d4ed8);
+    color: var(--primary-dark-ink, var(--primary-dark, #1d4ed8));
 }

@@ -67,6 +67,12 @@
   --shadow: var(--shadow-lg);
 }
 
+:root[data-theme="dark"] .login-body {
+  --text: #d7e6fe;
+  --pill-bg: rgba(59, 130, 246, 0.24);
+  --border: rgba(226, 232, 240, 0.13);
+}
+
 .login-body {
   /* min-height:100% + flex:1, not 100vh — this renders inside
      .page-with-navbar, which already reserves 72px for the fixed navbar and
@@ -78,9 +84,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.08), transparent 30%),
-    radial-gradient(circle at 85% 10%, rgba(99, 102, 241, 0.09), transparent 25%),
-    linear-gradient(145deg, #eef2fb 0%, #ffffff 60%, #ffffff 100%);
+  background: radial-gradient(circle at 10% 20%, var(--bg-3b82f6-a080), transparent 30%),
+    radial-gradient(circle at 85% 10%, var(--bg-6366f1-a090), transparent 25%),
+    linear-gradient(145deg, var(--bg) 0%, var(--surface) 60%, var(--surface) 100%);
   color: var(--text);
   /* Was a hardcoded 'Inter' stack. --font-family-primary switches to Cairo on
      html[lang="ar"] (index.css), so hardcoding Inter here meant the Arabic
@@ -139,7 +145,7 @@
 .login-title {
   font-size: clamp(26px, 4vw, 34px);
   font-weight: 800;
-  color: #0f1e3d;
+  color: var(--text-dark);
   margin: 8px 0;
   letter-spacing: -0.5px;
 }
@@ -182,7 +188,7 @@
 .login-input {
   width: 100%;
   padding: 14px 16px;
-  background: rgba(15, 23, 42, 0.04);
+  background: var(--bg-0f172a-a040);
   border: 1px solid var(--border);
   border-radius: 12px;
   color: var(--text);
@@ -199,7 +205,7 @@
 .login-input:focus {
   outline: none;
   border-color: var(--accent);
-  background: rgba(15, 23, 42, 0.04);
+  background: var(--bg-0f172a-a040);
   box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15), 0 8px 16px rgba(59, 130, 246, 0.2);
   transform: translateY(-2px);
 }
@@ -242,7 +248,7 @@
 }
 
 .password-toggle:hover {
-  color: var(--accent);
+  color: var(--accent-ink, var(--accent));
   transform: translateY(-50%) scale(1.2) rotate(10deg);
 }
 
@@ -256,9 +262,9 @@
 }
 
 .alert-box.success {
-  background: rgba(34, 197, 94, 0.1);
+  background: var(--bg-22c55e-a100);
   border-color: rgba(34, 197, 94, 0.3);
-  color: #1e293b;
+  color: var(--fg-1e293b);
 }
 
 /* The text colour here was #fca5a5 — a light pink meant for a dark theme,
@@ -267,15 +273,15 @@
    plans fail to load, so the one message a stuck buyer needs was the one they
    could not read. */
 .alert-box.error {
-  background: rgba(239, 68, 68, 0.1);
+  background: var(--bg-ef4444-a100);
   border-color: rgba(239, 68, 68, 0.3);
-  color: var(--error-color, #dc2626);
+  color: var(--error-color-ink, var(--error-color, #dc2626));
 }
 
 .alert-box.warning {
-  background: rgba(251, 191, 36, 0.1);
+  background: var(--bg-fbbf24-a100);
   border-color: rgba(251, 191, 36, 0.3);
-  color: #1e293b;
+  color: var(--fg-1e293b);
 }
 
 .btn {
@@ -455,14 +461,14 @@
 }
 
 .link-primary {
-  color: var(--accent);
+  color: var(--accent-ink, var(--accent));
   text-decoration: none;
   font-weight: 600;
   transition: color 0.2s ease;
 }
 
 .link-primary:hover {
-  color: var(--accent-strong, #2563eb);
+  color: var(--accent-strong-ink, var(--accent-strong, #2563eb));
   text-decoration: underline;
 }
 
@@ -586,7 +592,7 @@
   overflow-y: auto;
   margin: 4px -28px 16px;
   padding: 14px 28px;
-  background: rgba(15, 23, 42, 0.03);
+  background: var(--bg-0f172a-a030);
 }
 
 .terms-section::-webkit-scrollbar {
@@ -594,12 +600,12 @@
 }
 
 .terms-section::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.04);
+  background: var(--bg-0f172a-a040);
   border-radius: 3px;
 }
 
 .terms-section::-webkit-scrollbar-thumb {
-  background: rgba(15, 23, 42, 0.16);
+  background: var(--bg-0f172a-a160);
   border-radius: 3px;
 }
 
@@ -683,20 +689,20 @@
 }
 
 .popup-btn.no-thanks:hover {
-  background: rgba(15, 23, 42, 0.04);
-  border-color: rgba(15, 23, 42, 0.16);
+  background: var(--bg-0f172a-a040);
+  border-color: var(--line-0f172a-a160);
 }
 
 .popup-btn.Contact-Us,
 .popup-btn.contact-support {
-  background: rgba(59, 130, 246, 0.1);
+  background: var(--bg-3b82f6-a100);
   border-color: var(--accent);
-  color: var(--accent);
+  color: var(--accent-ink, var(--accent));
 }
 
 .popup-btn.Contact-Us:hover,
 .popup-btn.contact-support:hover {
-  background: rgba(59, 130, 246, 0.2);
+  background: var(--bg-3b82f6-a200);
   transform: translateY(-2px);
 }
 

@@ -60,7 +60,7 @@
     margin-inline-start: 8px;
     border: none;
     background: none;
-    color: #2563eb;
+    color: var(--fg-2563eb);
     font: inherit;
     text-decoration: underline;
     cursor: pointer;
@@ -84,7 +84,7 @@
     margin: 0 0 16px;
     padding: 11px 14px;
     border-radius: 10px;
-    background: rgba(37, 99, 235, 0.07);
+    background: var(--bg-2563eb-a070);
     font-size: 0.88rem;
     line-height: 1.7;
     color: var(--admin-text);

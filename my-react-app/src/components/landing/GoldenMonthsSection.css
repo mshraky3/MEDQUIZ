@@ -284,3 +284,17 @@
 @media (max-width: 420px) {
   .gm-tile span { font-size: 10px; }
 }
+
+/* Dark theme: the offer card stays the white card it was designed as. Global
+   rules inside it (index.css's p { color: var(--text-medium) }, for one) read
+   the semantic tokens, so those are pinned back to their light values here. */
+:root[data-theme="dark"] .gm-card {
+  --text-dark: #0f1e3d;
+  --text-medium: #475569;
+  --text-light: #5b6779;
+  --muted: #5b6779;
+  --surface: #ffffff;
+  --surface-2: #f5f8fd;
+  --border-color: #d4deee;
+  color-scheme: light;
+}

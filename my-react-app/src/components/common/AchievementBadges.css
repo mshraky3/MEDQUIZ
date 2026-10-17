@@ -24,14 +24,14 @@
     transition-timing-function: ease;
     cursor: pointer;
     white-space: nowrap;
-    color: #1e293b;
+    color: var(--fg-1e293b);
 }
 
 .achievement-badge-small:hover {
     transform: scale(1.05);
     border-color: rgba(37, 99, 235, 0.3);
     box-shadow:
-        0 4px 12px rgba(15, 23, 42, 0.11),
+        0 4px 12px var(--shade-0f172a-a110),
         0 0 15px rgba(35, 109, 237, 0.15);
 }
 
@@ -41,7 +41,7 @@
 
 .achievement-text {
     font-weight: bold;
-    color: var(--primary-dark);
+    color: var(--primary-dark-ink, var(--primary-dark));
     font-size: 0.8rem;
     text-transform: capitalize;
 }

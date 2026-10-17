@@ -1,0 +1,93 @@
+/* Theme switch. The navbar button borrows the language pill's ghost look
+   (i18n/LanguageToggle.css) so the two read as one group of controls. */
+.theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    min-height: 44px;
+    padding: 0;
+    border-radius: 999px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.theme-toggle-light {
+    border: 1px solid var(--line-0f172a-a120);
+    background: var(--bg-0f172a-a040);
+    color: var(--text-medium);
+}
+
+.theme-toggle-light:hover {
+    background: var(--bg-3b82f6-a120);
+    border-color: rgba(59, 130, 246, 0.4);
+    color: var(--primary-color-ink, var(--primary-color));
+}
+
+.theme-toggle-dark {
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.08);
+    color: #e2e8f0;
+}
+
+.theme-toggle-dark:hover {
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.4);
+    color: #ffffff;
+}
+
+.theme-toggle:focus-visible,
+.theme-choice-opt:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+}
+
+@media (max-width: 480px) {
+    .theme-toggle {
+        width: 36px;
+        min-height: 36px;
+    }
+}
+
+/* Light / Dark / Follow device (on /account). */
+.theme-choice {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    padding: 4px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--surface-2);
+}
+
+.theme-choice-opt {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 44px;
+    padding: 0 10px;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--text-medium);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.theme-choice-opt:hover {
+    color: var(--text-dark);
+}
+
+/* Selected is said three ways — fill, border and weight — not by colour
+   alone, and aria-checked carries it for screen readers. */
+.theme-choice-opt.is-active {
+    background: var(--surface);
+    border-color: var(--primary-color);
+    color: var(--text-dark);
+    font-weight: 800;
+    box-shadow: var(--shadow-sm);
+}

@@ -5,7 +5,7 @@
        login/Login.css). */
     min-height: 100%;
     flex: 1 0 auto;
-    background: linear-gradient(135deg, #eef2fb 0%, #ffffff 50%, #ffffff 100%);
+    background: linear-gradient(135deg, var(--bg) 0%, var(--surface) 50%, var(--surface) 100%);
     /* Was `100px 20px 40px`. .page-with-navbar already reserves the navbar's
        72px with its own padding-top, so this page opened with 172px of empty
        space above its heading — a sixth of a laptop screen, spent on nothing,
@@ -23,7 +23,7 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    color: var(--primary-color, #236ded);
+    color: var(--primary-color-ink, var(--primary-color, #236ded));
     text-decoration: none;
     font-weight: 600;
     font-size: 0.95rem;
@@ -46,7 +46,7 @@
 .faq-header h1 {
     font-size: 2.2rem;
     font-weight: 800;
-    background: linear-gradient(135deg, var(--primary-color, #236ded), #818cf8);
+    background: linear-gradient(135deg, var(--primary-color-ink, var(--primary-color, #236ded)), var(--fg-818cf8));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -66,8 +66,8 @@
 }
 
 .faq-item {
-    background: rgba(15, 23, 42, 0.04);
-    border: 1px solid rgba(15, 23, 42, 0.10);
+    background: var(--bg-0f172a-a040);
+    border: 1px solid var(--line-0f172a-a100);
     border-radius: 16px;
     overflow: hidden;
     transition-property: var(--transition-props);
@@ -81,7 +81,7 @@
 
 .faq-item-open {
     border-color: rgba(35, 109, 237, 0.35);
-    background: rgba(15, 23, 42, 0.04);
+    background: var(--bg-0f172a-a040);
 }
 
 .faq-question {
@@ -92,7 +92,7 @@
     padding: 1.25rem 1.5rem;
     border: none;
     background: transparent;
-    color: #1e293b;
+    color: var(--fg-1e293b);
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
@@ -104,7 +104,7 @@
 }
 
 .faq-question:hover {
-    color: var(--primary-dark);
+    color: var(--primary-dark-ink, var(--primary-dark));
 }
 
 .faq-icon {
@@ -112,8 +112,8 @@
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: rgba(35, 109, 237, 0.15);
-    color: var(--primary-dark);
+    background: var(--bg-236ded-a150);
+    color: var(--primary-dark-ink, var(--primary-dark));
     display: flex;
     align-items: center;
     justify-content: center;
@@ -165,8 +165,8 @@
 .faq-contact-cta {
     margin-top: 3rem;
     padding: 2.5rem;
-    background: rgba(15, 23, 42, 0.04);
-    border: 1px solid rgba(15, 23, 42, 0.10);
+    background: var(--bg-0f172a-a040);
+    border: 1px solid var(--line-0f172a-a100);
     border-radius: 20px;
     text-align: center;
 }
@@ -174,7 +174,7 @@
 .faq-contact-cta h2 {
     font-size: 1.4rem;
     font-weight: 700;
-    color: #1e293b;
+    color: var(--fg-1e293b);
     margin-bottom: 0.5rem;
 }
 

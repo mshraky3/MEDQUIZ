@@ -375,3 +375,16 @@
   .nd-cards { grid-template-columns: minmax(0, 1fr); }
   .nd-card { padding: 20px; }
 }
+
+/* Dark theme: the offer cards stay the white cards they were designed as;
+   see the matching note in GoldenMonthsSection.css. */
+:root[data-theme="dark"] .nd-card {
+  --text-dark: #0f1e3d;
+  --text-medium: #475569;
+  --text-light: #5b6779;
+  --muted: #5b6779;
+  --surface: #ffffff;
+  --surface-2: #f5f8fd;
+  --border-color: #d4deee;
+  color-scheme: light;
+}
