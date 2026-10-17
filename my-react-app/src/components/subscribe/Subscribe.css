@@ -411,6 +411,11 @@
    from here. It keeps its own light look inside a white frame rather than
    floating light inputs on navy. */
 :root[data-theme="dark"] .mysr-host {
+    --text-dark: #0f1e3d;
+    --text-medium: #475569;
+    --text-light: #5b6779;
+    --surface: #ffffff;
+    --border-color: #d4deee;
     padding: 12px;
     border-radius: var(--radius-md, 12px);
     background: #ffffff;

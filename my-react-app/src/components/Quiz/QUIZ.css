@@ -925,3 +925,12 @@
   --timer-warn-ink: #fbbf24;
   --timer-ok-ink: #4ade80;
 }
+
+/* Dark theme: the chosen (not yet marked) answer. Light shows it with a pale
+   blue fill, a blue border and bold text; on navy the pale fill all but
+   disappears, so dark gets a stronger tint and a brighter border. Weight
+   still carries it too, so it never rests on colour alone. */
+:root[data-theme="dark"] .option-button.selected {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: #60a5fa;
+}

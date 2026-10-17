@@ -314,6 +314,11 @@
    logos) keep their own colours on a neutral light backing instead of being
    recoloured or inverted. Opt in with .theme-light-backing. */
 :root[data-theme="dark"] .theme-light-backing {
+  --text-dark: #0f1e3d;
+  --text-medium: #475569;
+  --text-light: #5b6779;
+  --surface: #ffffff;
+  --border-color: #d4deee;
   background: #f8fafc;
   color: #0f172a;
   border-radius: var(--radius-md);
