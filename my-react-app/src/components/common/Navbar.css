@@ -223,7 +223,7 @@
 .hamburger-line {
   width: 22px;
   height: 2px;
-  background: #1e293b;
+  background: var(--line-1e293b);
   border-radius: 2px;
   transition-property: var(--transition-props);
   transition-duration: 0.3s;
