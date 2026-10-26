@@ -129,8 +129,8 @@ const supportCopy = {
             // supporting detail, one tap away instead of a third of the page.
             perksToggle: 'ما الذي يشمله الاشتراك؟',
             newSetTag: 'جديد',
-            newSetTitle: 'تجميعة سبتمبر 2026',
-            newSetBody: 'أسئلة تذكّرها المختبرون في جلسات SMLE من ١ إلى ٢٤ سبتمبر، مع شرح لكل سؤال. مشمولة في كل الخطط.',
+            newSetTitle: 'تجميعة أكتوبر 2026',
+            newSetBody: 'أسئلة تذكّرها المختبرون في جلسات SMLE من ١ إلى ٢٢ أكتوبر، والمزيد قادم. بدون شرح مكتوب. مشمولة في كل الخطط.',
             secureNoteAfter: '. لا نقوم بتخزين بيانات بطاقتك على خوادمنا.',
             // Payment works only with Saudi-issued cards (the processor refuses
             // foreign ones), so say so before the form instead of after eight
@@ -288,8 +288,8 @@ const supportCopy = {
             // supporting detail, one tap away instead of a third of the page.
             perksToggle: "What's included?",
             newSetTag: 'New',
-            newSetTitle: 'September 2026 recalls',
-            newSetBody: 'Questions examinees recalled from the SMLE sittings of 1–24 September, each with an explanation. Included in every plan.',
+            newSetTitle: 'October 2026 recalls',
+            newSetBody: 'Questions examinees recalled from the SMLE sittings of 1–22 October, with more to come. No written explanations. Included in every plan.',
             policyBefore: 'The subscription does not auto-renew — renewal is manual. By continuing you agree to the',
             terms: 'Terms of Use',
             and: 'and the',
