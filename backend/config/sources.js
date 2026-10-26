@@ -50,11 +50,12 @@ export const UNIFIED_BANK = 'MidgardGameBoy';
 export const KEPT_SOURCES = ['MidgardGameBoy', 'January25', 'FebMarApr25', 'May26', 'June26'];
 
 /**
- * The medical bank's four collections, ordered by recommended study
- * priority (see SOURCE_PRIORITY) — MonthlyRecall first (freshest exam-recall
- * content), then GameBoy, Confirmed, Midgard last.
+ * The medical bank's collections, ordered by recommended study
+ * priority (see SOURCE_PRIORITY) — the newest recall month first (October,
+ * then September), then the older Monthly Recalls, GameBoy, Confirmed,
+ * Midgard last.
  */
-export const MEDICAL_SOURCES = ['MedicalSeptemberRecall', 'MedicalMonthlyRecall', 'MedicalGameBoy', 'MedicalConfirmed', 'MedicalMidgard'];
+export const MEDICAL_SOURCES = ['MedicalOctoberRecall', 'MedicalSeptemberRecall', 'MedicalMonthlyRecall', 'MedicalGameBoy', 'MedicalConfirmed', 'MedicalMidgard'];
 
 /**
  * Every value user_quiz_sessions.source may hold (the CHECK constraint
@@ -66,7 +67,7 @@ export const ALL_SESSION_SOURCES = [
     'general', 'Midgard', 'GameBoy', 'October25', 'November25', 'December25', 'January25',
     'FebMarApr25', 'MidgardGameBoy', 'May26', 'June26', 'NursingEMS', 'NursingMostRepeated',
     'NursingConfirmed', 'MedicalGameBoy', 'MedicalConfirmed', 'MedicalMidgard',
-    'MedicalMonthlyRecall', 'MedicalSeptemberRecall',
+    'MedicalMonthlyRecall', 'MedicalSeptemberRecall', 'MedicalOctoberRecall',
     'DentalExplained', 'DentalRecall2026', 'DentalRecall2024',
 ];
 

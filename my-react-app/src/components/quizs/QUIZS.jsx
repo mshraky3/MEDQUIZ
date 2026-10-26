@@ -20,7 +20,7 @@ import quizCopy from '../../i18n/copy/quiz.js';
 const SOURCE = 'MidgardGameBoy';
 
 // The collection promoted on the Questions panel while it is the freshest.
-const FEATURED_SOURCE = 'MedicalSeptemberRecall';
+const FEATURED_SOURCE = 'MedicalOctoberRecall';
 
 // Blocks in a specialty's coverage meter. A continuous bar is the obvious
 // choice and the wrong one here: a student who has answered 18 of 1,308

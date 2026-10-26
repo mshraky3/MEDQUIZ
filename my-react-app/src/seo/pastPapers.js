@@ -58,6 +58,13 @@ const COLLECTION_META = {
         blurbAr: 'أسئلة SMLE مستخرجة من تجميعات الطلاب الشهرية بعد الاختبارات.',
         blurbEn: 'SMLE questions extracted from students\' monthly exam-recall compilations.',
     },
+    MedicalOctoberRecall: {
+        slug: 'smle-october-recall',
+        labelAr: 'تجميعة أكتوبر 2026 للطب البشري',
+        labelEn: 'October 2026 Recall (SMLE)',
+        blurbAr: 'أسئلة SMLE التي نقلها المتقدمون بعد اختبارات أكتوبر 2026.',
+        blurbEn: 'SMLE questions candidates reported after the October 2026 sittings.',
+    },
     MedicalSeptemberRecall: {
         slug: 'smle-september-recall',
         labelAr: 'تجميعة سبتمبر 2026 للطب البشري',

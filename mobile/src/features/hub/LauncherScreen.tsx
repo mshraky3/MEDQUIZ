@@ -15,7 +15,7 @@ import { WHOLE_BANK } from './HubScreen';
 
 const COUNT_PRESETS = [10, 25, 50];
 const MAX_QUESTIONS = 500;
-const FEATURED_SOURCE = 'MedicalSeptemberRecall';
+const FEATURED_SOURCE = 'MedicalOctoberRecall';
 
 type SourceInfo = { key: string; total: number; priority?: number; completedPct?: number };
 type ContentStatus = {

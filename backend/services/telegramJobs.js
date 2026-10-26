@@ -28,8 +28,8 @@ export async function runDailyChannelPostJob(db) {
     }
     // While a collection is being promoted, two of the day's three polls come from
     // it. Set TELEGRAM_FEATURED_SOURCE to an empty string to turn this off; the
-    // default is the September 2026 recall set (2026-10 campaign).
-    const featured = process.env.TELEGRAM_FEATURED_SOURCE ?? 'MedicalSeptemberRecall';
+    // default is the October 2026 recall set (September was the default until the October import).
+    const featured = process.env.TELEGRAM_FEATURED_SOURCE ?? 'MedicalOctoberRecall';
     const q = await pickChannelQuestion(db, { featuredSource: featured && postedToday < 2 ? featured : null });
     if (!q) return { sent: false, reason: 'no questions in the bank' };
 

@@ -19,7 +19,7 @@ import { AchievementBadges } from './AchievementBadges';
 // account's own track.
 export const WHOLE_BANK = 'MidgardGameBoy';
 // The collection promoted on the Questions panel while it is the freshest.
-const FEATURED_SOURCE = 'MedicalSeptemberRecall';
+const FEATURED_SOURCE = 'MedicalOctoberRecall';
 // Ten discrete blocks always light at least one, so "barely started" looks
 // deliberate rather than like a broken sliver of a progress bar.
 const METER_BLOCKS = 10;

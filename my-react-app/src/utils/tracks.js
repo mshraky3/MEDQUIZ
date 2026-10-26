@@ -28,7 +28,7 @@ export const TRACKS = {
         // Display name of the track's question bank, shown on the launcher.
         // Names all three 2026H2 collections, same convention as nursing's
         // bank label below — proper names, identical in both languages.
-        bank: { ar: 'تجميعات سبتمبر والتجميعات الشهرية وGameBoy وConfirmed وMidgard', en: 'September & Monthly Recalls, GameBoy, Confirmed & Midgard questions' },
+        bank: { ar: 'تجميعات أكتوبر وسبتمبر والتجميعات الشهرية وGameBoy وConfirmed وMidgard', en: 'October, September & Monthly Recalls, GameBoy, Confirmed & Midgard questions' },
         icon: 'stethoscope',
         specialties: [
             { key: 'medicine', label: { ar: 'الباطنة', en: 'Internal Medicine' }, icon: 'stethoscope' },

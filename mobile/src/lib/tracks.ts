@@ -39,8 +39,8 @@ export const TRACKS: Record<TrackKey, TrackDef> = {
       en: 'SMLE questions and summaries for medicine, surgery, paediatrics and OB/GYN.',
     },
     bank: {
-      ar: 'تجميعات سبتمبر والتجميعات الشهرية وGameBoy وConfirmed وMidgard',
-      en: 'September & Monthly Recalls, GameBoy, Confirmed & Midgard questions',
+      ar: 'تجميعات أكتوبر وسبتمبر والتجميعات الشهرية وGameBoy وConfirmed وMidgard',
+      en: 'October, September & Monthly Recalls, GameBoy, Confirmed & Midgard questions',
     },
     icon: 'stethoscope',
     specialties: [

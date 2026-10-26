@@ -2015,7 +2015,8 @@ const ensureOAuthColumns = async () => {
 //     itself needs no DDL (track is VARCHAR(20) with no CHECK).
 // 13: accounts.never_started_email_sent_at (day-1 nudge for signups that never
 //     answered a question).
-const SCHEMA_BOOTSTRAP_VERSION = 13;
+// 14: check_valid_quiz_source rebuilt again to accept MedicalOctoberRecall.
+const SCHEMA_BOOTSTRAP_VERSION = 14;
 async function bootstrapAll() {
     try {
         await db.query(`

@@ -23,7 +23,7 @@ const WHOLE_BANK = 'MidgardGameBoy';
 const COUNT_PRESETS = [10, 25, 50];
 
 // The collection promoted at the top of the source list while it is the freshest.
-const FEATURED_SOURCE = 'MedicalSeptemberRecall';
+const FEATURED_SOURCE = 'MedicalOctoberRecall';
 const MAX_QUESTIONS = 500;
 
 /**

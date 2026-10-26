@@ -26,6 +26,7 @@ export function getTypeLabel(type: string | null | undefined, lang: Lang = 'ar')
 
 export const SOURCE_LABELS: Record<Lang, Record<string, string>> = {
   ar: {
+    MedicalOctoberRecall: 'تجميعة أكتوبر 2026',
     MedicalSeptemberRecall: 'تجميعة سبتمبر 2026',
     MedicalMonthlyRecall: 'التجميعات الشهرية (حتى أغسطس)',
     MedicalGameBoy: 'GameBoy',
@@ -50,6 +51,7 @@ export const SOURCE_LABELS: Record<Lang, Record<string, string>> = {
     GameBoy: 'GameBoy',
   },
   en: {
+    MedicalOctoberRecall: 'October 2026 Recalls',
     MedicalSeptemberRecall: 'September 2026 Recalls',
     MedicalMonthlyRecall: 'Monthly Recalls (through August)',
     MedicalGameBoy: 'GameBoy',

@@ -10,6 +10,7 @@ export const SOURCE_LABELS = {
     ar: {
         // medical track — the newest collection, added after the 2026H2
         // rebuild's three, drawn from raw Telegram exam-recall text.
+        MedicalOctoberRecall: 'تجميعة أكتوبر 2026',
         MedicalSeptemberRecall: 'تجميعة سبتمبر 2026',
         // Monthly collections up to and including August; September has its own.
         MedicalMonthlyRecall: 'التجميعات الشهرية (حتى أغسطس)',
@@ -40,6 +41,7 @@ export const SOURCE_LABELS = {
         GameBoy: 'GameBoy',
     },
     en: {
+        MedicalOctoberRecall: 'October 2026 Recalls',
         MedicalSeptemberRecall: 'September 2026 Recalls',
         MedicalMonthlyRecall: 'Monthly Recalls (through August)',
         MedicalGameBoy: 'GameBoy',
