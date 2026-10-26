@@ -1,0 +1,130 @@
+/* "October 2026 recalls" card (RecallAnnouncement.jsx). Every class is ra-
+   prefixed (stylesheets never unload; DESIGN_MAP s1). Colours come from the
+   semantic tokens, so it is right in light and dark. Opaque panel, no blur;
+   logical properties only, so RTL and LTR both work. */
+
+.ra-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px 22px;
+  padding: 18px 22px;
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  margin-block-end: 12px;
+}
+
+.ra-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 78px;
+  height: 78px;
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  background: var(--surface-2, var(--surface));
+  flex-shrink: 0;
+}
+
+.ra-month {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--primary-color-ink, var(--primary-color));
+}
+
+.ra-range {
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--text-dark);
+}
+
+.ra-body {
+  min-width: 0;
+}
+
+.ra-kicker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-light);
+}
+
+.ra-tag {
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--primary-color);
+  color: #ffffff;
+  font-size: 11.5px;
+  font-weight: 800;
+}
+
+.ra-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 6px;
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1.3;
+  color: var(--text-dark);
+}
+
+.ra-title .app-icon {
+  color: var(--primary-color-ink, var(--primary-color));
+}
+
+.ra-text {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: var(--text-medium);
+}
+
+.ra-btn.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .ra-card {
+    grid-template-columns: auto minmax(0, 1fr);
+    padding: 16px;
+  }
+
+  .ra-actions {
+    grid-column: 1 / -1;
+  }
+
+  .ra-btn.btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .ra-card {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .ra-preview {
+    display: none;
+  }
+
+  .ra-title {
+    font-size: 18px;
+  }
+}

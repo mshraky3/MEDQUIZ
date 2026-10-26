@@ -19,6 +19,7 @@ import NationalDaySection from './NationalDaySection.jsx';
 import { GoldenStrip } from '../common/GoldenMonths.jsx';
 import GoldenMonthsSection from './GoldenMonthsSection.jsx';
 import ThemeAnnouncement from './ThemeAnnouncement.jsx';
+import RecallAnnouncement from './RecallAnnouncement.jsx';
 import { useGoldenMonths } from '../../utils/goldenMonths.js';
 import './Landing.css';
 
@@ -349,6 +350,7 @@ const Landing = () => {
 
           {/* Dark mode launch note (Oct 2026). Under any live offer, above the
               product pitch; hides itself after its end date. */}
+          <RecallAnnouncement />
           <ThemeAnnouncement />
 
           {/* Two tracks, one platform. Placed high on the page so a nursing
