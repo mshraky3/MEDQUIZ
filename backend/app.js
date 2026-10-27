@@ -19,6 +19,7 @@ import { checkSubscriptionAccess, checkQuizAccess, isPaymentEnforcementEnabled, 
 import { adminAuth, isAdminRequest } from './middleware/adminAuth.js';
 import { subscriptionGuard, quizAccessGuard } from './middleware/subscriptionGuard.js';
 import summariesRouter from './routes/summaries.js';
+import questionImagesRouter from './routes/question-images.js';
 import accountingRouter from './routes/accounting.js';
 import engagementRouter from './routes/engagement.js';
 import funnelRouter, { recordFunnelEvent } from './routes/funnel.js';
@@ -54,6 +55,7 @@ import {
 import { PICKABLE_SOURCES, SOURCE_PRIORITY, SELECTABLE_SOURCES, resolveSources, ALL_SESSION_SOURCES } from './config/sources.js';
 import { runRecallImport } from './services/recallImportService.js';
 import { markQuestionsSeen, MAX_SEEN_IDS } from './services/seenService.js';
+import { ensureQuestionImagesTables, attachQuestionImages } from './services/questionImagesService.js';
 import { isDisposableEmail, DISPOSABLE_EMAIL_MESSAGE } from './utils/disposableEmail.js';
 
 /**
@@ -1723,6 +1725,16 @@ const ensureSuggestionsTable = async () => {
 // startup (same pattern as the tables above) so the feature needs NO manual
 // production migration. The two decks we already have are seeded idempotently;
 // the upload script (scripts/uploadSummaries.js) fills in page_count.
+const ensureQuestionImagesSchema = async () => {
+    try {
+        await ensureQuestionImagesTables(db);
+        logger.info('question_images tables ensured');
+    } catch (err) {
+        reportBootstrapFailure('ensureQuestionImagesSchema', err);
+    }
+};
+// Kicked off from bootstrapAll() below.
+
 const ensureSummariesTables = async () => {
     try {
         await db.query(`
@@ -2017,7 +2029,8 @@ const ensureOAuthColumns = async () => {
 // 13: accounts.never_started_email_sent_at (day-1 nudge for signups that never
 //     answered a question).
 // 14: check_valid_quiz_source rebuilt again to accept MedicalOctoberRecall.
-const SCHEMA_BOOTSTRAP_VERSION = 14;
+// 15: question_images + question_image_links (additive, ensureQuestionImagesSchema).
+const SCHEMA_BOOTSTRAP_VERSION = 15;
 async function bootstrapAll() {
     try {
         await db.query(`
@@ -2055,6 +2068,7 @@ async function bootstrapAll() {
     await ensureSuccessStoriesTable();
     await ensureSuggestionsTable();
     await ensureSummariesTables();
+    await ensureQuestionImagesSchema();
     await ensureTelegramSchema();
     await ensureOAuthColumns();
     try {
@@ -4318,6 +4332,8 @@ app.get('/api/questions', requireQuizAccess, async (req, res) => {
         logger.debug(`Questions query executed in ${endTime - startTime}ms, returned ${rows.length} questions`);
 
         const served = dedupeByText(rows);
+        // Approved clarification images / rebuilt tables (rows without any stay unchanged).
+        await attachQuestionImages(db, served);
 
         // Record what was handed out. This is NOT the charge — the allowance is
         // spent on submit (POST /quiz-sessions), so a quiz that is fetched and
@@ -8083,6 +8099,7 @@ app.use('/', (req, res, next) => { req.db = db; next(); }, emailCampaignsRouter)
 app.use('/api/payment', (req, res, next) => { req.db = db; next(); }, paymentRoutes);
 
 // Topic Summaries Routes (slide decks + study questions + reading progress)
+app.use('/api/question-images', questionImagesRouter);
 app.use('/api/summaries', (req, res, next) => { req.db = db; next(); }, summariesRouter);
 
 // Accounting (admin-only). Every money figure in the product resolves through
