@@ -1,0 +1,20 @@
+/* Scoped: every class is prefixed qimg-. Colours come from theme tokens only. */
+.qimg-block { margin: 0 0 14px; }
+.qimg-figure { margin: 0 0 8px; }
+.qimg-open { display: block; width: 100%; padding: 0; border: 1px solid var(--border-color); border-radius: 10px;
+  background: var(--surface-2); cursor: zoom-in; overflow: hidden; }
+/* Pictures are drawn for a light page: keep a light backing in dark mode. */
+.qimg-pic { display: block; max-width: 100%; max-height: 320px; margin: 0 auto; object-fit: contain; background: #fff; }
+.qimg-note { margin: 6px 0 0; font-size: 0.78rem; line-height: 1.5; color: var(--text-light); font-style: italic; text-align: start; }
+.qimg-credit { font-style: normal; }
+.qimg-failed { margin: 0; padding: 10px; font-size: 0.85rem; color: var(--text-light); border: 1px dashed var(--border-color); border-radius: 10px; }
+.qimg-table-wrap { overflow-x: auto; border: 1px solid var(--border-color); border-radius: 10px; background: var(--surface); }
+.qimg-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; color: var(--text-dark); direction: ltr; text-align: start; }
+.qimg-table th, .qimg-table td { padding: 7px 10px; border-bottom: 1px solid var(--border-light); text-align: start; }
+.qimg-table th { background: var(--surface-2); font-weight: 600; white-space: nowrap; }
+.qimg-table tr:last-child td { border-bottom: 0; }
+.qimg-lightbox { position: fixed; inset: 0; z-index: var(--z-modal); display: flex; align-items: center; justify-content: center;
+  padding: 16px; background: rgba(0, 0, 0, 0.88); cursor: zoom-out; }
+.qimg-big { max-width: 100%; max-height: 100%; object-fit: contain; background: #fff; border-radius: 8px; }
+.qimg-close { position: absolute; top: 12px; inset-inline-end: 12px; width: 40px; height: 40px; border: 0; border-radius: 50%;
+  background: var(--surface); color: var(--text-dark); font-size: 1.5rem; line-height: 1; cursor: pointer; }

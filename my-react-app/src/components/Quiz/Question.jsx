@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Icon from '../common/Icon.jsx';
 import ExplanationPanel from '../common/ExplanationPanel.jsx';
 import ReportModal from './ReportModal';
+import QuestionImages from './QuestionImages';
 import { useCopy, useLang } from '../../i18n';
 import quizCopy from '../../i18n/copy/quiz.js';
 import './ReportModal.css';
@@ -64,6 +65,8 @@ const Question = ({
           </div>
           <div className="question-content">
             <div className="question-text">{safeQuestionText}</div>
+
+            <QuestionImages images={question?.images} />
 
             <div className="options">
               {optionKeys.map((optKey) => {
