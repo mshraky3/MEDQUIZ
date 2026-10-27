@@ -2,6 +2,8 @@ import React, { useEffect, useState, useRef, useContext } from 'react';
 import Icon from '../common/Icon.jsx';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import apiClient from '../../utils/apiClient.js';
+import Globals from '../../global.js';
+import { createSeenQueue, sendSeenBeacon } from '../../utils/seenQueue.js';
 import './QUIZ.css';
 import Loading from './Loading';
 import ErrorScreen from './ErrorScreen';
@@ -292,12 +294,33 @@ const QUIZ = () => {
     }
   };
 
+  // Tell the server a question was answered as soon as it is, so leaving the
+  // quiz without submitting does not bring the same questions back. Best
+  // effort: the final submit still records everything.
+  const seenQueueRef = useRef(null);
+  if (!seenQueueRef.current) {
+    seenQueueRef.current = createSeenQueue({ send: (ids) => sendSeenBeacon(Globals.URL, ids) });
+  }
+  useEffect(() => {
+    const queue = seenQueueRef.current;
+    const onHide = () => { if (document.visibilityState === 'hidden') queue.flush(); };
+    const onPageHide = () => queue.flush();
+    document.addEventListener('visibilitychange', onHide);
+    window.addEventListener('pagehide', onPageHide);
+    return () => {
+      document.removeEventListener('visibilitychange', onHide);
+      window.removeEventListener('pagehide', onPageHide);
+      queue.flush();
+    };
+  }, []);
+
   const handleSelectOption = (option) => {
     // In study mode the first pick is final: the answer is about to be shown,
     // so allowing a change afterwards would let the score be edited with the
     // answer in view.
     if (studyMode && revealedIndexes.has(currentQuestionIndex)) return;
 
+    if (!isFinalQuiz) seenQueueRef.current.add(questions[currentQuestionIndex]?.id);
     setSelectedAnswer(option);
     // Save answer for current question
     setQuestionAnswers(prev => ({
