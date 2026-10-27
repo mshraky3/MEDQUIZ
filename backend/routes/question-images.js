@@ -1,4 +1,5 @@
-// GET /api/question-images/file/:name - stream a question picture from R2 (qimg/ prefix).
+// GET /api/question-images/file/:name - stream a question picture from R2 (qimg/ prefix);
+// when R2 is not configured, redirect to the same file published with the web app.
 // Public on purpose (the files are illustrations, referenced by <img>, which cannot send
 // an Authorization header). File names carry a version/hash, so they cache for a year.
 import express from 'express';
@@ -6,12 +7,17 @@ import { getObject, isR2Configured } from '../services/r2Service.js';
 import { logger } from '../utils/observability.js';
 
 const router = express.Router();
+const WEB_ORIGIN = (process.env.WEB_ORIGIN || 'https://www.smle-question-bank.com').replace(/\/+$/, '');
 const TYPES = { webp: 'image/webp', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', svg: 'image/svg+xml' };
 
 router.get('/file/:name', async (req, res) => {
     const m = /^([a-zA-Z0-9_-]+)\.(webp|png|jpg|jpeg|svg)$/.exec(req.params.name);
     if (!m) return res.status(400).json({ message: 'Invalid image name' });
-    if (!isR2Configured()) return res.status(503).json({ message: 'Content storage not configured' });
+    if (!isR2Configured()) {
+        // Production has no R2 keys yet: the same files are published with the web app (public/qimg/).
+        res.setHeader('Cache-Control', 'public, max-age=3600');
+        return res.redirect(302, `${WEB_ORIGIN}/qimg/${req.params.name}`);
+    }
     try {
         const obj = await getObject(`qimg/${req.params.name}`);
         res.setHeader('Content-Type', TYPES[m[2]]);
