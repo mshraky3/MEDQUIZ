@@ -53,6 +53,7 @@ import {
 } from './config/tracks.js';
 import { PICKABLE_SOURCES, SOURCE_PRIORITY, SELECTABLE_SOURCES, resolveSources, ALL_SESSION_SOURCES } from './config/sources.js';
 import { runRecallImport } from './services/recallImportService.js';
+import { markQuestionsSeen, MAX_SEEN_IDS } from './services/seenService.js';
 import { isDisposableEmail, DISPOSABLE_EMAIL_MESSAGE } from './utils/disposableEmail.js';
 
 /**
@@ -4160,6 +4161,27 @@ function dedupeByText(rows) {
     }
     return out;
 }
+
+// Record questions as seen when they are ANSWERED (best effort, called by the
+// web and mobile quiz as the student picks an option). The user id and track
+// come from the session, never the body; touches no accounts counter.
+app.post('/api/questions/seen', requireSession, async (req, res) => {
+    const ids = req.body?.question_ids;
+    if (!Array.isArray(ids) || ids.length === 0 || ids.length > MAX_SEEN_IDS) {
+        return res.status(400).json({ message: `question_ids must be 1 to ${MAX_SEEN_IDS} ids` });
+    }
+    try {
+        const recorded = await markQuestionsSeen(db, {
+            userId: req.accountId,
+            track: resolveContentTrack(req),
+            questionIds: ids,
+        });
+        res.json({ success: true, recorded });
+    } catch (err) {
+        logger.error('[SEEN] could not record seen questions:', err);
+        res.status(500).json({ message: 'Could not record seen questions' });
+    }
+});
 
 app.get('/api/questions', requireQuizAccess, async (req, res) => {
 
