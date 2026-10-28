@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { contentMaxWidthFor, sizeClassFor, targetScaleFor, textScaleFor } from '../lib/layout';
+import { contentMaxWidthFor, sizeClassFor, targetScaleFor, textScaleFor } from '../lib/layoutLogic';
 import { paletteCell } from '../features/quiz/quizLogic';
 
 describe('window size classes', () => {
