@@ -59,7 +59,7 @@ Google Sign-In is Google's own SDK. Funnel events go to SQB's own `/api/funnel`.
 - Data types, all "collected", purpose "App functionality" (and "Account management"), not shared:
   - **Personal info: Name, Email address** (registration), user IDs.
   - **App activity:** quiz answers, performance and progress, in-app actions (study analytics, funnel events).
-  - **App info and performance:** crash/error reports sent to `/api/error-report` if the app sends them (verify before filling).
+  - **App info and performance:** the app has no crash-reporting code (no `error-report` call found in `mobile/src`); declare nothing here unless one is added.
   - **Device or other IDs:** not collected by the app itself; the server logs IP and device type at sign-in (privacy policy section 2): declare "Device or other IDs" as collected to be safe.
   - Phone / WhatsApp number only if the user types it in the contact form (optional): declare "Phone number", optional.
   - **Financial info: none** in the Play build (card data is entered only on the website, handled by Moyasar).
@@ -100,7 +100,7 @@ Google Sign-In is Google's own SDK. Funnel events go to SQB's own `/api/funnel`.
 - **Do not** put in the listing: prices, "free month", "reward", "rate us", competitor names, "official".
 
 ## 5. Build readiness (what is done in the branch `feat/play-launch`)
-Worktree `C:\Users\muhmo\sqb-play-launch` (local commits only, nothing pushed; the main checkout was not touched).
+Branch `feat/play-launch` off `origin/main` `9c961c8` (local commits only, nothing pushed; the main checkout was not touched; the temporary worktree was removed, reopen it with `git worktree add <folder> feat/play-launch`).
 | Check | Result |
 |---|---|
 | Sign-in-only mode | **Was not built** (the notes said "next session"). Built now: `EXPO_PUBLIC_STORE_MODE=play` (`src/config.ts`). In that build: `/subscribe` and `/groups` show a neutral screen (`PlayAccessScreen`); the welcome page loses the pricing, comparison and "why subscribe" sections, the price chips and the group plan card; Account, More menu, footer, free-allowance banner and every paywall CTA lose their buy buttons; the card form is off. |
