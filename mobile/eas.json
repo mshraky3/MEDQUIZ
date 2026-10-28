@@ -18,6 +18,14 @@
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "377045259162-9mo7nikgvovph9rbjhku1cffpk6tesr7.apps.googleusercontent.com"
       }
     },
+    "play-preview": {
+      "extends": "preview",
+      "channel": "preview",
+      "env": {
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "377045259162-9mo7nikgvovph9rbjhku1cffpk6tesr7.apps.googleusercontent.com",
+        "EXPO_PUBLIC_STORE_MODE": "play"
+      }
+    },
     "production": {
       "autoIncrement": true,
       "android": { "buildType": "app-bundle" },
