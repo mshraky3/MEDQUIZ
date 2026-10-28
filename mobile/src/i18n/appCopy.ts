@@ -48,6 +48,13 @@ const appCopy = {
     continueWithGoogle: 'المتابعة باستخدام Google',
     prevMonth: 'الشهر السابق',
     nextMonth: 'الشهر التالي',
+    palette: {
+      title: 'الأسئلة',
+      progress: (answered: number, total: number) => `أجبت عن ${answered} من ${total}`,
+      goTo: (n: number) => `الذهاب إلى السؤال ${n}`,
+      legend: 'المظلل: لقد أجبت عنه. الأزرق الممتلئ: السؤال الحالي.',
+    },
+    pickLesson: 'اختر درساً من القائمة لتبدأ القراءة هنا.',
     playAccess: {
       title: 'اشتراكك',
       body: 'هذا التطبيق لتسجيل الدخول والمذاكرة. إدارة الاشتراك تتم من حسابك على الموقع الإلكتروني، وإذا كان لديك سؤال تواصل معنا.',
@@ -116,6 +123,13 @@ const appCopy = {
     continueWithGoogle: 'Continue with Google',
     prevMonth: 'Previous month',
     nextMonth: 'Next month',
+    palette: {
+      title: 'Questions',
+      progress: (answered: number, total: number) => `${answered} of ${total} answered`,
+      goTo: (n: number) => `Go to question ${n}`,
+      legend: 'Tinted: answered. Solid blue: the current question.',
+    },
+    pickLesson: 'Pick a lesson from the list to read it here.',
     playAccess: {
       title: 'Your subscription',
       body: 'This app is for signing in and studying. Your subscription is managed from your account on the website. If you have a question, contact us.',

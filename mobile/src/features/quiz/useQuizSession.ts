@@ -288,6 +288,14 @@ export function useQuizSession(params: QuizParams) {
     if (index > 0) setIndex(index - 1);
   }, [index]);
 
+  /** Jump to a question (the question palette on wide screens). Out-of-range is ignored. */
+  const goTo = useCallback(
+    (target: number) => {
+      if (Number.isInteger(target) && target >= 0 && target < questions.length) setIndex(target);
+    },
+    [questions.length]
+  );
+
   const retryFetch = useCallback(() => {
     setErrorKey(null);
     setQuestions([]);
@@ -432,6 +440,7 @@ export function useQuizSession(params: QuizParams) {
     select,
     next,
     previous,
+    goTo,
     finish,
     retryFetch,
     resetCategory,

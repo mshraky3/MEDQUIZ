@@ -5,13 +5,16 @@
     "owner": "m_alshraky3",
     "scheme": "sqb",
     "version": "2.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "platforms": [
       "android",
       "web"
     ],
+    "ios": {
+      "supportsTablet": true
+    },
     "android": {
       "package": "com.m_alshraky3.sqb",
       "adaptiveIcon": {
@@ -84,7 +87,8 @@
           "backgroundColor": "#0B1021"
         }
       ],
-      "@react-native-google-signin/google-signin"
+      "@react-native-google-signin/google-signin",
+      "./plugins/withLargeScreens"
     ],
     "experiments": {
       "typedRoutes": true

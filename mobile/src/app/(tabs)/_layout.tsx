@@ -4,6 +4,7 @@ import { Tabs } from 'expo-router';
 import type { BottomTabBarProps } from 'expo-router/build/react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useApp } from '@/i18n';
+import { useLayout } from '@/lib/layout';
 import { colors } from '@/theme';
 import { Icon, Row, T } from '@/ui';
 
@@ -19,6 +20,7 @@ const TAB_ICONS: Record<string, string> = {
 function TabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const app = useApp();
+  const { targetScale } = useLayout();
   const labels: Record<string, string> = {
     index: app.tabs.home,
     summaries: app.tabs.summaries,
@@ -36,7 +38,8 @@ function TabBar({ state, navigation }: BottomTabBarProps) {
         paddingTop: 6,
       }}
     >
-      <Row justify="space-around" align="flex-end">
+      {/* On a tablet the five tabs stay a comfortable arm's length apart, centred. */}
+      <Row justify="space-around" align="flex-end" style={{ width: '100%', maxWidth: 640, alignSelf: 'center' }}>
         {state.routes.map((route, index) => {
           const focused = state.index === index;
           const color = focused ? colors.primary : colors.textLight;
@@ -52,7 +55,7 @@ function TabBar({ state, navigation }: BottomTabBarProps) {
               accessibilityLabel={labels[route.name]}
               onPress={onPress}
               activeOpacity={0.7}
-              style={{ flex: 1, alignItems: 'center', gap: 2, paddingVertical: 4 }}
+              style={{ flex: 1, alignItems: 'center', gap: 2, paddingVertical: Math.round(4 * targetScale), minHeight: Math.round(48 * targetScale) }}
             >
               <View
                 style={{

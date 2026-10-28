@@ -37,7 +37,19 @@ const enLabel = (item: { title?: string; title_en?: string }) => {
  * opens for a non-subscriber.
  */
 export default function LessonScreen() {
-  const { slug } = useLocalSearchParams<{ slug: string }>();
+  return <LessonView />;
+}
+
+type LessonViewProps = {
+  /** Two-pane layout: the lesson picked in the list beside it (no route involved). */
+  slug?: string;
+  /** Two-pane layout: close clears the selection instead of going back. */
+  onClose?: () => void;
+};
+
+export function LessonView({ slug: slugProp, onClose }: LessonViewProps) {
+  const params = useLocalSearchParams<{ slug: string }>();
+  const slug = slugProp ?? params.slug;
   const { user } = useAuth();
   const t = useCopy(summariesCopy);
   const { isRTL } = useLang();
@@ -107,7 +119,7 @@ export default function LessonScreen() {
     if (next === 'questions') changeTool('move');
   };
 
-  const close = () => goBack(true);
+  const close = () => (onClose ? onClose() : goBack(true));
 
   if (state === 'loading') {
     return (

@@ -1,6 +1,7 @@
 import React, { createContext, useContext } from 'react';
 import { StyleProp, Text as RNText, TextProps, TextStyle } from 'react-native';
 import { useLang } from '@/i18n/LanguageContext';
+import { useLayout } from '@/lib/layout';
 import { colors, fontFamilies, FontWeight } from '@/theme';
 
 export type TProps = TextProps & {
@@ -33,11 +34,12 @@ const NestedText = createContext(false);
 export function T({ weight = 'regular', size, color, ltr = false, align = 'start', lh, style, children, ...rest }: TProps) {
   const { lang, isRTL } = useLang();
   const nested = useContext(NestedText);
+  const { textScale } = useLayout();
   const family = fontFamilies[ltr ? 'en' : lang][weight];
 
   if (nested) {
     const run: TextStyle = { fontFamily: family };
-    if (size !== undefined) run.fontSize = size;
+    if (size !== undefined) run.fontSize = Math.round(size * textScale);
     if (color !== undefined) run.color = color;
     return (
       <RNText {...rest} style={[run, style]}>
@@ -46,7 +48,7 @@ export function T({ weight = 'regular', size, color, ltr = false, align = 'start
     );
   }
 
-  const fontSize = size ?? 15;
+  const fontSize = Math.round((size ?? 15) * textScale);
   const rtl = ltr ? false : isRTL;
   const textAlign: TextStyle['textAlign'] =
     align === 'center' ? 'center' : align === 'start' ? (rtl ? 'right' : 'left') : rtl ? 'left' : 'right';

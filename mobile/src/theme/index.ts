@@ -100,5 +100,3 @@ export const toneBg = {
   neutral: colors.surfaceTint,
 } as const;
 
-/** Content width cap so tablets and the web preview don't stretch lines. */
-export const MAX_CONTENT_WIDTH = 720;

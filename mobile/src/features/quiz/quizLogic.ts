@@ -223,6 +223,14 @@ export function parseSnapshot(raw: string | null, now: number = Date.now()): Qui
 }
 
 /** Index of the first question without an answer, or -1. */
+export type PaletteCell = 'current' | 'answered' | 'open';
+
+/** State of one number in the question palette (wide screens). Never shows right/wrong. */
+export function paletteCell(i: number, current: number, answers: Record<number, string>): PaletteCell {
+  if (i === current) return 'current';
+  return answers[i] ? 'answered' : 'open';
+}
+
 export function firstUnanswered(count: number, questionAnswers: Record<number, string>): number {
   for (let i = 0; i < count; i += 1) if (!questionAnswers[i]) return i;
   return -1;

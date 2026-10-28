@@ -4,9 +4,11 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useApp, useCopy, useLang } from '@/i18n';
 import quizCopy from '@/i18n/copy/quiz.js';
 import { useAuth } from '@/lib/auth';
+import { useLayout } from '@/lib/layout';
 import { getSourceLabel } from '@/lib/labels';
 import { colors } from '@/theme';
 import { Button, Dialog, Icon, Row, T } from '@/ui';
+import { QuestionPalette } from './QuestionPalette';
 import { QuestionView } from './QuestionView';
 import {
   AllowanceSpentView,
@@ -36,7 +38,8 @@ export default function QuizScreen() {
   );
   const t = useCopy(quizCopy).quiz;
   const app = useApp();
-  const { lang } = useLang();
+  const { lang, isRTL } = useLang();
+  const { twoPane } = useLayout();
   const { user } = useAuth();
   const quiz = useQuizSession(params);
   const [confirmExit, setConfirmExit] = useState(false);
@@ -116,8 +119,7 @@ export default function QuizScreen() {
 
   if (!quiz.current) return <ErrorView message={t.errInvalidData} onRetry={quiz.retryFetch} onBack={goHome} />;
 
-  return (
-    <>
+  const question = (
       <QuestionView
         // Remount per question so scroll position and the explanation reset.
         key={quiz.index}
@@ -134,6 +136,19 @@ export default function QuizScreen() {
         onFinish={quiz.finish}
         onExit={() => setConfirmExit(true)}
       />
+  );
+
+  return (
+    <>
+      {twoPane ? (
+        // Wide window: the question beside the palette (palette at the reading end).
+        <View style={{ flex: 1, flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+          <View style={{ flex: 1 }}>{question}</View>
+          <QuestionPalette total={quiz.total} current={quiz.index} answers={quiz.answers} onGo={quiz.goTo} />
+        </View>
+      ) : (
+        question
+      )}
 
       <Dialog visible={quiz.showUnanswered} blocking scroll={false}>
         <Row gap={8}>

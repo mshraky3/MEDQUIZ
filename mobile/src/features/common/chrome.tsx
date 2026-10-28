@@ -101,8 +101,6 @@ export function AppBar({ title }: { title?: string }) {
         paddingHorizontal: 16,
         paddingVertical: 10,
         backgroundColor: colors.surface,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.border,
       }}
     >
       <T weight="extrabold" size={title ? 18 : 22} color={colors.primary} ltr={!title} numberOfLines={1} style={{ flexShrink: 1 }}>

@@ -10,6 +10,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { useCopy, useLang } from '@/i18n/LanguageContext';
+import { useLayout } from '@/lib/layout';
 import authCopy from '@/i18n/copy/auth.js';
 import { colors, fontFamilies, radius } from '@/theme';
 import { Icon } from './Icon';
@@ -49,6 +50,7 @@ export function Button({
   accessibilityLabel,
 }: ButtonProps) {
   const s = BUTTON_SIZES[size];
+  const { targetScale } = useLayout();
   const off = disabled || loading;
   const palette = {
     primary: { bg: colors.primary, fg: colors.white, border: colors.primary },
@@ -68,7 +70,7 @@ export function Button({
       onPress={onPress}
       style={[
         {
-          minHeight: s.h,
+          minHeight: Math.round(s.h * targetScale),
           paddingHorizontal: s.px,
           borderRadius: radius.md,
           backgroundColor: palette.bg,

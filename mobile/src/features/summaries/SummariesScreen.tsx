@@ -2,13 +2,15 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ScrollView, TouchableOpacity, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { router } from 'expo-router';
-import { useCopy, useLang } from '@/i18n';
+import { useApp, useCopy, useLang } from '@/i18n';
 import summariesCopy from '@/i18n/copy/summaries.js';
 import { useAuth } from '@/lib/auth';
+import { LIST_PANE_WIDTH, useLayout } from '@/lib/layout';
 import { examLabel, trackLabel, userTrack } from '@/lib/tracks';
 import { colors, radius } from '@/theme';
 import { Button, Card, Chevron, EmptyState, Icon, Input, ProgressBar, Row, Screen, Spinner, T } from '@/ui';
 import { AppBar, FreeAllowanceBanner } from '@/features/common/chrome';
+import { LessonView } from './LessonScreen';
 import { PathCheckpoint } from './PathCheckpoint';
 // The path logic is the website's own (copied byte for byte, see scripts/sync-summaries.mjs).
 import { EMPTY_PATH_SHAPE, isStepUnlocked, loadPath } from './pathMeta';
@@ -69,7 +71,11 @@ const Ring = ({ pct, color }: { pct: number; color: string }) => {
 export default function SummariesScreen() {
   const { user } = useAuth();
   const t = useCopy(summariesCopy);
-  const { lang } = useLang();
+  const { lang, isRTL } = useLang();
+  const app = useApp();
+  const { twoPane } = useLayout();
+  // Two-pane layout: the lesson open in the right pane (left in Arabic).
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const track = userTrack(user);
   // Paid, admin-created or grandfathered accounts read every lesson; everyone
   // else reads the first of each specialty. `accessAllowed` is the login's answer
@@ -147,9 +153,11 @@ export default function SummariesScreen() {
   const openStep = useCallback(
     (step: Step) => {
       updatePath((p) => ({ ...p, lastStepId: step.id, lastAt: Date.now() }));
-      router.push({ pathname: '/summaries/[slug]', params: { slug: step.id } });
+      // Side by side on a wide window: the lesson opens in the right pane, no navigation.
+      if (twoPane) setSelectedId(step.id);
+      else router.push({ pathname: '/summaries/[slug]', params: { slug: step.id } });
     },
-    [updatePath]
+    [updatePath, twoPane]
   );
 
   const toggleMilestone = (id: string) =>
@@ -343,8 +351,8 @@ export default function SummariesScreen() {
     );
   };
 
-  return (
-    <Screen header={header} scrollRef={scrollRef} contentStyle={{ gap: 16 }}>
+  const list = (
+    <Screen header={header} scrollRef={scrollRef} contentStyle={{ gap: 16 }} maxWidth={twoPane ? 0 : undefined}>
       <View style={{ gap: 10 }}>
         <Row gap={6}>
           <Icon name="rocket" size={14} color={colors.primary} />
@@ -626,5 +634,27 @@ export default function SummariesScreen() {
         </View>
       )}
     </Screen>
+  );
+
+  if (!twoPane) return list;
+
+  // Wide window: the study path on one side, the lesson on the other. Row order follows the
+  // reading direction (list on the right in Arabic).
+  return (
+    <View style={{ flex: 1, flexDirection: isRTL ? 'row-reverse' : 'row', backgroundColor: colors.bg }}>
+      <View style={{ width: LIST_PANE_WIDTH, borderColor: colors.border, borderStartWidth: isRTL ? 1 : 0, borderEndWidth: isRTL ? 0 : 1 }}>{list}</View>
+      <View style={{ flex: 1 }}>
+        {selectedId ? (
+          <LessonView key={selectedId} slug={selectedId} onClose={() => setSelectedId(null)} />
+        ) : (
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24 }}>
+            <Icon name="book-open" size={44} color={colors.textLight} />
+            <T color={colors.textMedium} align="center">
+              {app.pickLesson}
+            </T>
+          </View>
+        )}
+      </View>
+    </View>
   );
 }

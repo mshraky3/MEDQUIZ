@@ -14,7 +14,8 @@ import { router } from 'expo-router';
 import { useCopy, useLang } from '@/i18n/LanguageContext';
 import appCopy from '@/i18n/appCopy';
 import { useKeyboardHeight } from '@/lib/useKeyboardHeight';
-import { MAX_CONTENT_WIDTH, colors, radius, shadow } from '@/theme';
+import { useLayout } from '@/lib/layout';
+import { colors, radius, shadow } from '@/theme';
 import { Icon } from './Icon';
 import { T } from './Text';
 
@@ -98,8 +99,6 @@ export function ScreenHeader({ title, subtitle, noBack, right, onBack }: HeaderP
         paddingHorizontal: 16,
         paddingVertical: 10,
         backgroundColor: colors.surface,
-        borderBottomWidth: StyleSheet.hairlineWidth * 2,
-        borderBottomColor: colors.border,
       }}
     >
       {!noBack && (
@@ -147,7 +146,7 @@ type ScreenProps = {
   contentStyle?: StyleProp<ViewStyle>;
   refreshControl?: React.ReactElement<RefreshControlProps>;
   bg?: string;
-  /** Content max width (default 720). Pass 0 for full bleed. */
+  /** Content max width (default: 720 on phones, wider on tablets). Pass 0 for full bleed. */
   maxWidth?: number;
   padded?: boolean;
   /** Gives the caller the ScrollView (scroll to a section, remember position). */
@@ -166,17 +165,19 @@ export function Screen({
   contentStyle,
   refreshControl,
   bg = colors.bg,
-  maxWidth = MAX_CONTENT_WIDTH,
+  maxWidth,
   padded = true,
   scrollRef,
 }: ScreenProps) {
   const insets = useSafeAreaInsets();
+  const layout = useLayout();
+  const cap = maxWidth === undefined ? layout.contentMaxWidth : maxWidth;
   const keyboard = useKeyboardHeight();
   const body = (
     <View
       style={[
         { width: '100%', alignSelf: 'center', flexGrow: 1 },
-        maxWidth ? { maxWidth } : null,
+        cap ? { maxWidth: cap } : null,
         padded ? { padding: 16, gap: 16 } : null,
         contentStyle,
       ]}
@@ -186,7 +187,12 @@ export function Screen({
   );
   return (
     <View style={{ flex: 1, backgroundColor: bg, paddingTop: header ? 0 : insets.top }}>
-      {header ? <View style={{ paddingTop: insets.top, backgroundColor: colors.surface }}>{header}</View> : null}
+      {header ? (
+        <View style={{ paddingTop: insets.top, backgroundColor: colors.surface, borderBottomWidth: StyleSheet.hairlineWidth * 2, borderBottomColor: colors.border }}>
+          {/* The bar spans the window; what is in it lines up with the content column below. */}
+          <View style={{ width: '100%', alignSelf: 'center', maxWidth: cap || undefined }}>{header}</View>
+        </View>
+      ) : null}
       {scroll ? (
         <ScrollView
           ref={scrollRef}
@@ -201,7 +207,11 @@ export function Screen({
       ) : (
         <View style={{ flex: 1 }}>{body}</View>
       )}
-      {footer ? <View style={{ paddingBottom: insets.bottom }}>{footer}</View> : null}
+      {footer ? (
+        <View style={{ paddingBottom: insets.bottom }}>
+          <View style={{ width: '100%', alignSelf: 'center', maxWidth: cap || undefined }}>{footer}</View>
+        </View>
+      ) : null}
     </View>
   );
 }
