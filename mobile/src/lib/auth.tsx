@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { AppState } from 'react-native';
+import { AppState, Platform } from 'react-native';
 import { api, setApiHandlers, setApiSession } from './api';
 import { KEYS, getJson, getSecret, removeItem, removeSecret, setJson, setSecret } from './storage';
 
@@ -109,6 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [sessionExpired, setSessionExpired] = useState(false);
   const lastSubscriptionFetch = useRef(0);
   const userRef = useRef<SessionUser | null>(null);
+  const refreshSubscriptionRef = useRef<(force?: boolean) => Promise<void>>(async () => {});
   userRef.current = user;
 
   const persist = useCallback(async (nextUser: SessionUser | null, nextToken: string | null) => {
@@ -199,6 +200,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setToken(nextToken);
       setSessionExpired(false);
       await persist(clean, nextToken);
+      // One free month for signing in from the app. The server decides (it answers 404 until
+      // APP_FREE_MONTH_ENABLED=true, and refuses anyone who is not eligible), so this is a
+      // quiet request: any answer or failure is ignored. See SQB/mobile/docs/FREE-MONTH-DESIGN.md.
+      if (Platform.OS === 'android') {
+        void api
+          .post<{ granted?: boolean }>('/api/app/free-month', { platform: 'android-app' }, { timeoutMs: 8000 })
+          .then((res) => {
+            if (res?.granted) void refreshSubscriptionRef.current(true);
+          })
+          .catch(() => {});
+      }
     },
     [persist]
   );
@@ -239,6 +251,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     },
     [updateUser]
   );
+
+  refreshSubscriptionRef.current = refreshSubscription;
 
   // Coming back to the app after a while: the allowance may have changed.
   useEffect(() => {

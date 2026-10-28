@@ -26,6 +26,7 @@ import funnelRouter, { recordFunnelEvent } from './routes/funnel.js';
 import goalsRouter from './routes/goals.js';
 import notificationsRouter from './routes/notifications.js';
 import examDateRouter from './routes/examDate.js';
+import appFreeMonthRouter from './routes/appFreeMonth.js';
 import groupRoutes from './routes/groups.js';
 import trialRouter from './routes/trial.js';
 import telegramRouter from './routes/telegram.js';
@@ -8121,6 +8122,8 @@ app.use('/api/notifications', requireSession, (req, res, next) => { req.db = db;
 // The student's own sitting date — the anchor for the hub countdown and the
 // staged reminder emails.
 app.use('/api/exam-date', requireSession, (req, res, next) => { req.db = db; next(); }, examDateRouter);
+// One free month for a first sign-in from the Android app. 404 until APP_FREE_MONTH_ENABLED=true.
+app.use('/api/app', requireSession, (req, res, next) => { req.db = db; next(); }, appFreeMonthRouter);
 // Group subscriptions. No requireSession at mount: /seat/:token is a public
 // link check used before signup — each route inside applies its own guard.
 app.use('/api/groups', (req, res, next) => { req.db = db; next(); }, groupRoutes);
