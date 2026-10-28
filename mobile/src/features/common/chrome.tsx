@@ -7,6 +7,7 @@ import { useCommon, useLang } from '@/i18n';
 import { colors } from '@/theme';
 import { Icon, Row, T } from '@/ui';
 import { LanguageToggle } from './LanguageToggle';
+import { PLAY_BUILD } from '@/config';
 
 /**
  * The in-app milestone feed bell. Only ever shows things that happened to this
@@ -160,15 +161,17 @@ export function FreeAllowanceBanner() {
           {usedUp ? t.freeAllowance.spent : t.freeAllowance.remaining(remaining)}
         </T>
       </Row>
-      <TouchableOpacity
-        onPress={() => router.push('/subscribe')}
-        accessibilityRole="button"
-        style={{ backgroundColor: colors.primary, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 }}
-      >
-        <T weight="bold" size={12} color={colors.white}>
-          {t.freeAllowance.cta}
-        </T>
-      </TouchableOpacity>
+      {PLAY_BUILD ? null : (
+        <TouchableOpacity
+          onPress={() => router.push('/subscribe')}
+          accessibilityRole="button"
+          style={{ backgroundColor: colors.primary, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 }}
+        >
+          <T weight="bold" size={12} color={colors.white}>
+            {t.freeAllowance.cta}
+          </T>
+        </TouchableOpacity>
+      )}
     </Row>
   );
 }

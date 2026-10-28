@@ -3,7 +3,7 @@ import { Linking, View } from 'react-native';
 import Constants from 'expo-constants';
 import * as Updates from 'expo-updates';
 import { Href, router, useFocusEffect } from 'expo-router';
-import { TELEGRAM_CHANNEL_URL } from '@/config';
+import { PLAY_BUILD, TELEGRAM_CHANNEL_URL } from '@/config';
 import { formatDate, useApp, useCommon, useLang } from '@/i18n';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
@@ -128,8 +128,8 @@ export default function MoreScreen() {
       {section(app.more.study, [
         <ListRow key="acc" icon="user" title={app.more.account} subtitle={app.more.accountHint} onPress={go('/account')} right={arrow} />,
         hasGroup ? <ListRow key="grp" icon="users" title={app.more.group} subtitle={app.more.groupHint} onPress={go('/groups')} right={arrow} /> : null,
-        <ListRow key="sub" icon="rocket" title={app.more.subscribe} subtitle={app.more.subscribeHint} onPress={go('/subscribe')} right={arrow} />,
-        !hasGroup ? <ListRow key="grps" icon="users" title={app.more.groups} onPress={go('/groups')} right={arrow} /> : null,
+        PLAY_BUILD ? null : <ListRow key="sub" icon="rocket" title={app.more.subscribe} subtitle={app.more.subscribeHint} onPress={go('/subscribe')} right={arrow} />,
+        !hasGroup && !PLAY_BUILD ? <ListRow key="grps" icon="users" title={app.more.groups} onPress={go('/groups')} right={arrow} /> : null,
         <ListRow key="not" icon="bell" title={app.more.notifications} onPress={go('/notifications')} right={arrow} />,
       ])}
 

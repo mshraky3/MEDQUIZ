@@ -9,6 +9,7 @@ import { specialtiesOf, userTrack } from '@/lib/tracks';
 import { colors, radius } from '@/theme';
 import { Button, Card, Icon, Notice, ProgressBar, Row, Screen, ScreenHeader, Spinner, T } from '@/ui';
 import { ExamDateCard, GoalCard, StreakCard } from './StudyPlan';
+import { PLAY_BUILD } from '@/config';
 
 /**
  * /account: the one place that answers "what do I actually have?" Everything
@@ -198,8 +199,8 @@ export default function AccountScreen() {
           </View>
 
           <View style={{ gap: 10 }}>
-            {!isLegacy ? <Button label={isPaid ? t.renewCta : t.subscribeCta} size="lg" onPress={() => router.push('/subscribe')} /> : null}
-            <Button label={hasGroup ? t.groupCta : t.groupBuyCta} icon="users" variant="secondary" onPress={() => router.push('/groups')} />
+            {!isLegacy && !PLAY_BUILD ? <Button label={isPaid ? t.renewCta : t.subscribeCta} size="lg" onPress={() => router.push('/subscribe')} /> : null}
+            {!PLAY_BUILD || hasGroup ? <Button label={hasGroup ? t.groupCta : t.groupBuyCta} icon="users" variant="secondary" onPress={() => router.push('/groups')} /> : null}
             <Button label={t.contactCta} icon="message-circle" variant="secondary" onPress={() => router.push('/contact')} />
             <Button label={t.backToQuizzes} variant="ghost" onPress={() => router.replace('/(tabs)')} />
           </View>

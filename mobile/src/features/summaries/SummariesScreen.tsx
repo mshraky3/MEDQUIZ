@@ -13,6 +13,7 @@ import { PathCheckpoint } from './PathCheckpoint';
 // The path logic is the website's own (copied byte for byte, see scripts/sync-summaries.mjs).
 import { EMPTY_PATH_SHAPE, isStepUnlocked, loadPath } from './pathMeta';
 import { useSummaryProgress } from './summaryStore';
+import { PLAY_BUILD } from '@/config';
 
 type Step = any;
 type Milestone = any;
@@ -238,7 +239,7 @@ export default function SummariesScreen() {
           <T ltr size={13} color={colors.textMedium}>
             {step.why}
           </T>
-          <Button label={t.lockedCta} size="sm" onPress={() => router.push('/subscribe')} />
+          {PLAY_BUILD ? null : <Button label={t.lockedCta} size="sm" onPress={() => router.push('/subscribe')} />}
         </Card>
       );
     }

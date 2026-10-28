@@ -1,7 +1,7 @@
 import React from 'react';
 import { Linking, TouchableOpacity, View } from 'react-native';
 import { router, Href } from 'expo-router';
-import { SUPPORT_EMAIL, TELEGRAM_CHANNEL_URL } from '@/config';
+import { PLAY_BUILD, SUPPORT_EMAIL, TELEGRAM_CHANNEL_URL } from '@/config';
 import { useCommon } from '@/i18n';
 import { colors } from '@/theme';
 import { Divider, Row, T } from '@/ui';
@@ -17,7 +17,7 @@ export function SiteFooter() {
     {
       title: f.platform,
       links: [
-        { label: f.groupPlans, to: '/groups' },
+        ...(PLAY_BUILD ? [] : [{ label: f.groupPlans, to: '/groups' }]),
         { label: f.successStories, to: '/success-stories' },
         { label: f.freeQuestions, to: '/questions' },
         { label: f.collections, to: '/past-papers' },

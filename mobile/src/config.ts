@@ -27,10 +27,29 @@ export const TELEGRAM_CHANNEL_URL = 'https://t.me/sqb_exam';
 export const GOOGLE_WEB_CLIENT_ID: string = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || '';
 
 /**
+ * The Google Play build (owner decision 2026-10-07: SIGN-IN ONLY). Set
+ * EXPO_PUBLIC_STORE_MODE=play in the `production` EAS profile. In this mode the
+ * app shows no prices, plans, offers or buy screens and has no card form: people
+ * sign in and study, and payment stays on the website (Moyasar, 0 % Google fee).
+ * Every other build (preview APK, sideload) keeps the full app. Inlined at build
+ * time. See docs/PLAY-LAUNCH-CHECKLIST.md.
+ */
+export const PLAY_BUILD: boolean = process.env.EXPO_PUBLIC_STORE_MODE === 'play';
+
+/**
+ * Play build only: an optional "manage your plan on the website" button on the
+ * neutral screen that replaces /subscribe. OFF unless EXPO_PUBLIC_WEBSITE_SUBSCRIBE_BUTTON
+ * is exactly 'true'. It is the part of the sign-in-only design that Play's
+ * payments policy discourages most (no steering to other payment methods inside
+ * the app), so it is a separate switch the owner can leave off.
+ */
+export const WEBSITE_SUBSCRIBE_BUTTON: boolean = PLAY_BUILD && process.env.EXPO_PUBLIC_WEBSITE_SUBSCRIBE_BUTTON === 'true';
+
+/**
  * In-app card checkout. The site sells through Moyasar and the app mirrors it.
  * Google Play requires Play Billing for digital goods sold inside an app it
  * distributes, so a Play Store build must set this to false (the paywall then
  * explains that plans are bought on the website). Sideloaded/internal APKs keep
  * the full checkout. See docs/PLAY_STORE_PAYMENTS.md.
  */
-export const IN_APP_CHECKOUT_ENABLED = process.env.EXPO_PUBLIC_IN_APP_CHECKOUT !== 'false';
+export const IN_APP_CHECKOUT_ENABLED = !PLAY_BUILD && process.env.EXPO_PUBLIC_IN_APP_CHECKOUT !== 'false';

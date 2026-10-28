@@ -12,6 +12,7 @@ import { LessonCommands, LessonWebView } from './LessonWebView';
 import { QuestionCard } from './QuestionCard';
 import { isStepUnlocked, loadPath } from './pathMeta';
 import { useSummaryProgress } from './summaryStore';
+import { PLAY_BUILD } from '@/config';
 
 const TOOLS = [
   { id: 'move', icon: 'cursor', labelKey: 'move' },
@@ -142,7 +143,7 @@ export default function LessonScreen() {
           <T ltr color={colors.textMedium} align="center">
             {step.why}
           </T>
-          <Button label={t.lockedCta} onPress={() => router.replace('/subscribe')} />
+          {PLAY_BUILD ? null : <Button label={t.lockedCta} onPress={() => router.replace('/subscribe')} />}
           <Button label={t.close} variant="ghost" onPress={close} />
         </Card>
       </Screen>

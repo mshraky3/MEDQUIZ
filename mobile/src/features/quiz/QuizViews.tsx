@@ -14,6 +14,7 @@ import { ExplanationPanel } from '@/features/common/ExplanationPanel';
 import type { AnswerRecord } from './quizLogic';
 import type { SubmitState } from './useQuizSession';
 import { StoryPrompt, useStoryPrompt } from './StoryPrompt';
+import { PLAY_BUILD } from '@/config';
 
 export function LoadingView() {
   const t = useCopy(quizCopy).quiz;
@@ -219,7 +220,7 @@ export function AllowanceSpentView({ userId, onBack }: { userId?: number; onBack
               </T>
             </View>
           )}
-          <Button label={t.paywallCta} size="lg" onPress={() => router.replace('/subscribe')} />
+          {PLAY_BUILD ? null : <Button label={t.paywallCta} size="lg" onPress={() => router.replace('/subscribe')} />}
           {hasProof ? <Button label={t.spent.seeAnalysis} variant="secondary" onPress={() => router.replace('/(tabs)/analysis')} /> : null}
           <Button label={t.paywallBack} variant="ghost" onPress={onBack} />
         </Card>
@@ -242,7 +243,7 @@ export function PaywallView({ backlog, onBack }: { backlog: boolean; onBack: () 
           <T color={colors.textMedium} align="center">
             {backlog ? t.paywallBacklogBody : t.paywallSubscriberBody}
           </T>
-          <Button label={backlog ? t.paywallBacklogCta : t.paywallCta} onPress={backlog ? onBack : () => router.replace('/subscribe')} />
+          {backlog || !PLAY_BUILD ? <Button label={backlog ? t.paywallBacklogCta : t.paywallCta} onPress={backlog ? onBack : () => router.replace('/subscribe')} /> : null}
           {!backlog ? <Button label={t.paywallBack} variant="secondary" onPress={onBack} /> : null}
         </Card>
       </View>

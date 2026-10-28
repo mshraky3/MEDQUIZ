@@ -48,6 +48,14 @@ const appCopy = {
     continueWithGoogle: 'المتابعة باستخدام Google',
     prevMonth: 'الشهر السابق',
     nextMonth: 'الشهر التالي',
+    playAccess: {
+      title: 'اشتراكك',
+      body: 'هذا التطبيق لتسجيل الدخول والمذاكرة. إدارة الاشتراك تتم من حسابك على الموقع الإلكتروني، وإذا كان لديك سؤال تواصل معنا.',
+      websiteBody: 'تتم إدارة الاشتراك من حسابك على الموقع الإلكتروني. افتح الموقع، ثم عُد إلى التطبيق وسيظهر اشتراكك فوراً.',
+      website: 'فتح حسابي على الموقع',
+      contact: 'تواصل معنا',
+      back: 'رجوع',
+    },
     checkoutOnSite: {
       body: 'يتم الاشتراك في SQB من الموقع الإلكتروني. افتح صفحة الاشتراك، ثم عُد إلى التطبيق وسيظهر اشتراكك فوراً.',
       open: 'فتح صفحة الاشتراك',
@@ -108,6 +116,14 @@ const appCopy = {
     continueWithGoogle: 'Continue with Google',
     prevMonth: 'Previous month',
     nextMonth: 'Next month',
+    playAccess: {
+      title: 'Your subscription',
+      body: 'This app is for signing in and studying. Your subscription is managed from your account on the website. If you have a question, contact us.',
+      websiteBody: 'Your subscription is managed from your account on the website. Open the website, then come back to the app and your plan will show straight away.',
+      website: 'Open my account on the website',
+      contact: 'Contact us',
+      back: 'Back',
+    },
     checkoutOnSite: {
       body: 'Plans are bought on the SQB website. Open the subscription page, then come back to the app and your plan will show straight away.',
       open: 'Open the subscription page',

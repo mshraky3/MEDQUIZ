@@ -9,6 +9,7 @@ import { colors, radius } from '@/theme';
 import { Button, Card, Icon, Row, Screen, T } from '@/ui';
 import { LanguageToggle } from '@/features/common/LanguageToggle';
 import { SiteFooter } from '@/features/common/SiteFooter';
+import { PLAY_BUILD } from '@/config';
 
 /**
  * The worked example inside the explanations section: a shortened but faithful
@@ -386,6 +387,8 @@ export default function WelcomeScreen() {
           ))}
         </Row>
 
+        {PLAY_BUILD ? null : (
+          <>
         <Card style={{ gap: 8 }}>
           <T size={13} color={colors.textLight} weight="semibold">
             {t.value.plan}
@@ -444,6 +447,8 @@ export default function WelcomeScreen() {
           ))}
           <Button label={t.value.group.cta} variant="secondary" onPress={() => router.push('/groups')} />
         </Card>
+          </>
+        )}
       </View>
 
       {/* Final call to action */}
