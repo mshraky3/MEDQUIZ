@@ -17,7 +17,7 @@ export function SiteFooter() {
     {
       title: f.platform,
       links: [
-        ...(PLAY_BUILD ? [] : [{ label: f.groupPlans, to: '/groups' }]),
+        ...(PLAY_BUILD ? [] : ([{ label: f.groupPlans, to: '/groups' }] as FooterLink[])),
         { label: f.successStories, to: '/success-stories' },
         { label: f.freeQuestions, to: '/questions' },
         { label: f.collections, to: '/past-papers' },

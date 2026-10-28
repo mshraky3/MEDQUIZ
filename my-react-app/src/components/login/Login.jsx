@@ -9,6 +9,7 @@ import { safeGetItem } from '../../utils/safeStorage.js';
 import { useCopy, useLang } from '../../i18n';
 import authCopy from '../../i18n/copy/auth.js';
 import OAuthButtons from './OAuthButtons.jsx';
+import AndroidAppCard from './AndroidAppCard.jsx';
 
 const Login = () => {
   const { setUser, user, sessionToken } = useContext(UserContext);
@@ -332,6 +333,8 @@ const Login = () => {
               </div>
             </form>
           </div>
+          {/* Hidden until the tester and download links are configured. */}
+          <AndroidAppCard />
         </div>
 
         {/* Terms of Use Popup */}

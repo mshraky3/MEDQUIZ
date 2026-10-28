@@ -156,7 +156,7 @@ export default function WelcomeScreen() {
         <Button label={t.hero.primary} onPress={() => goSignup()} size="lg" />
         <Button label={t.hero.secondary} variant="secondary" onPress={() => router.push('/login')} size="lg" />
         <View style={{ gap: 6 }}>
-          {t.hero.trust.map((item: string) => (
+          {(PLAY_BUILD ? t.hero.trust.slice(0, 3) : t.hero.trust).map((item: string) => (
             <Row key={item} gap={8}>
               <Icon name="check-circle" size={16} color={colors.success} />
               <T size={14} color={colors.textMedium} style={{ flex: 1 }}>
@@ -236,7 +236,8 @@ export default function WelcomeScreen() {
         </T>
       </View>
 
-      {/* Compare */}
+      {/* Compare (has a cost row: not in the Play build) */}
+      {PLAY_BUILD ? null : (
       <View style={{ gap: 14 }}>
         <SectionHead pill={t.compare.pill} title={t.compare.title} body={t.compare.body} />
         {compareColumns.map((col) => (
@@ -272,6 +273,7 @@ export default function WelcomeScreen() {
           {t.compare.ctaNote}
         </T>
       </View>
+      )}
 
       {/* Explanations */}
       <View style={{ gap: 14 }}>
@@ -369,7 +371,8 @@ export default function WelcomeScreen() {
         </T>
       </Card>
 
-      {/* Value and pricing */}
+      {/* Value and pricing (not in the Play build) */}
+      {PLAY_BUILD ? null : (
       <View style={{ gap: 14 }}>
         <SectionHead pill={t.value.pill} title={t.value.title} body={t.value.body} />
         <Row wrap gap={8}>
@@ -450,6 +453,7 @@ export default function WelcomeScreen() {
           </>
         )}
       </View>
+      )}
 
       {/* Final call to action */}
       <View style={{ backgroundColor: colors.navy, borderRadius: radius.xl, padding: 22, gap: 12 }}>
@@ -464,9 +468,11 @@ export default function WelcomeScreen() {
         </T>
         <Button label={t.ctaBand.visitor.primary} onPress={() => goSignup()} size="lg" />
         <Button label={t.ctaBand.visitor.secondary} variant="secondary" onPress={() => router.push('/login')} size="lg" />
-        <T size={12} color="#94a3b8">
-          {t.ctaBand.visitor.note}
-        </T>
+        {PLAY_BUILD ? null : (
+          <T size={12} color="#94a3b8">
+            {t.ctaBand.visitor.note}
+          </T>
+        )}
       </View>
 
       <SiteFooter />
