@@ -55,8 +55,19 @@ const appCopy = {
       legend: 'المظلل: لقد أجبت عنه. الأزرق الممتلئ: السؤال الحالي.',
     },
     pickLesson: 'اختر درساً من القائمة لتبدأ القراءة هنا.',
+    webAccount: {
+      title: 'إنشاء حساب',
+      body: 'يتم إنشاء حساب SQB من الموقع الإلكتروني. أنشئ حسابك هناك ثم عُد وسجّل الدخول بنفس البريد وكلمة المرور، وسيعمل الحساب الواحد على الموقع وعلى التطبيق.',
+      signIn: 'تسجيل الدخول',
+    },
     playAccess: {
       title: 'اشتراكك',
+      status: {
+        subscriber: 'اشتراكك فعّال ولديك وصول كامل إلى الأسئلة والملخصات.',
+        free: (n: number) => `حسابك على الباقة المجانية، وتبقّى لك ${n} من الأسئلة المجانية.`,
+        free_spent: 'استخدمت أسئلتك المجانية. حسابك وتحليلك ودروسك المجانية تبقى متاحة.',
+      },
+      cta: 'حالة الحساب',
       body: 'هذا التطبيق لتسجيل الدخول والمذاكرة. إدارة الاشتراك تتم من حسابك على الموقع الإلكتروني، وإذا كان لديك سؤال تواصل معنا.',
       websiteBody: 'تتم إدارة الاشتراك من حسابك على الموقع الإلكتروني. افتح الموقع، ثم عُد إلى التطبيق وسيظهر اشتراكك فوراً.',
       website: 'فتح حسابي على الموقع',
@@ -130,8 +141,19 @@ const appCopy = {
       legend: 'Tinted: answered. Solid blue: the current question.',
     },
     pickLesson: 'Pick a lesson from the list to read it here.',
+    webAccount: {
+      title: 'Create an account',
+      body: 'SQB accounts are created on the SQB website. Create yours there, then come back and sign in with the same email and password. One account works on the website and in the app.',
+      signIn: 'Sign in',
+    },
     playAccess: {
       title: 'Your subscription',
+      status: {
+        subscriber: 'Your subscription is active and you have full access to the questions and summaries.',
+        free: (n: number) => `Your account is on the free allowance, with ${n} free questions left.`,
+        free_spent: 'You have used your free questions. Your account, your analysis and the free lessons stay open.',
+      },
+      cta: 'Account status',
       body: 'This app is for signing in and studying. Your subscription is managed from your account on the website. If you have a question, contact us.',
       websiteBody: 'Your subscription is managed from your account on the website. Open the website, then come back to the app and your plan will show straight away.',
       website: 'Open my account on the website',

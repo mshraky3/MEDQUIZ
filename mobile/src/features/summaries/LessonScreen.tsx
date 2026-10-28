@@ -13,6 +13,7 @@ import { QuestionCard } from './QuestionCard';
 import { isStepUnlocked, loadPath } from './pathMeta';
 import { useSummaryProgress } from './summaryStore';
 import { PLAY_BUILD } from '@/config';
+import { AccountStatusButton } from '@/features/subscribe/AccountStatusButton';
 
 const TOOLS = [
   { id: 'move', icon: 'cursor', labelKey: 'move' },
@@ -155,7 +156,7 @@ export function LessonView({ slug: slugProp, onClose }: LessonViewProps) {
           <T ltr color={colors.textMedium} align="center">
             {step.why}
           </T>
-          {PLAY_BUILD ? null : <Button label={t.lockedCta} onPress={() => router.replace('/subscribe')} />}
+          {PLAY_BUILD ? <AccountStatusButton /> : <Button label={t.lockedCta} onPress={() => router.replace('/subscribe')} />}
           <Button label={t.close} variant="ghost" onPress={close} />
         </Card>
       </Screen>

@@ -5,6 +5,7 @@ import { router } from 'expo-router';
 import { SITE_URL, WEBSITE_SUBSCRIBE_BUTTON } from '@/config';
 import { useApp } from '@/i18n';
 import { useAuth } from '@/lib/auth';
+import { accountAccess } from '@/lib/subscriptionState';
 import { colors } from '@/theme';
 import { Button, Card, Icon, Screen, ScreenHeader, T } from '@/ui';
 
@@ -18,7 +19,12 @@ import { Button, Card, Icon, Screen, ScreenHeader, T } from '@/ui';
  */
 export default function PlayAccessScreen() {
   const app = useApp().playAccess;
-  const { refreshSubscription } = useAuth();
+  const { user, refreshSubscription } = useAuth();
+  const access = accountAccess(user);
+  // Read the subscription again on opening so the status is the server's, not an old session's.
+  useEffect(() => {
+    void refreshSubscription(true);
+  }, [refreshSubscription]);
 
   useEffect(() => {
     if (!WEBSITE_SUBSCRIBE_BUTTON) return undefined;
@@ -36,8 +42,13 @@ export default function PlayAccessScreen() {
       <Card pad={22} style={{ alignItems: 'center', gap: 12 }}>
         <Icon name="user" size={38} color={colors.primary} />
         <T color={colors.textMedium} align="center">
-          {WEBSITE_SUBSCRIBE_BUTTON ? app.websiteBody : app.body}
+          {access === 'free' ? app.status.free(Number(user?.free_questions_remaining)) : app.status[access]}
         </T>
+        {access === 'subscriber' ? null : (
+          <T color={colors.textMedium} align="center">
+            {WEBSITE_SUBSCRIBE_BUTTON ? app.websiteBody : app.body}
+          </T>
+        )}
         {WEBSITE_SUBSCRIBE_BUTTON ? <Button label={app.website} icon="external-link" onPress={openWebsite} /> : null}
         <Button label={app.contact} variant="secondary" icon="message-circle" onPress={() => router.push('/contact')} />
         <Button label={app.back} variant="ghost" onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)'))} />

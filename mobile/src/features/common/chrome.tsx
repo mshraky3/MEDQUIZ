@@ -3,7 +3,7 @@ import { AppState, TouchableOpacity, View } from 'react-native';
 import { router, useFocusEffect, usePathname } from 'expo-router';
 import { api } from '@/lib/api';
 import { isFreeTier, useAuth } from '@/lib/auth';
-import { useCommon, useLang } from '@/i18n';
+import { useApp, useCommon, useLang } from '@/i18n';
 import { colors } from '@/theme';
 import { Icon, Row, T } from '@/ui';
 import { LanguageToggle } from './LanguageToggle';
@@ -125,6 +125,7 @@ const MIN_REFETCH_MS = 20_000;
 export function FreeAllowanceBanner() {
   const { user, refreshSubscription } = useAuth();
   const t = useCommon();
+  const app = useApp();
   const pathname = usePathname();
   const last = useRef(0);
 
@@ -159,7 +160,17 @@ export function FreeAllowanceBanner() {
           {usedUp ? t.freeAllowance.spent : t.freeAllowance.remaining(remaining)}
         </T>
       </Row>
-      {PLAY_BUILD ? null : (
+      {PLAY_BUILD ? (
+        <TouchableOpacity
+          onPress={() => router.push('/subscribe')}
+          accessibilityRole="button"
+          style={{ backgroundColor: colors.primary, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 }}
+        >
+          <T weight="bold" size={12} color={colors.white}>
+            {app.playAccess.cta}
+          </T>
+        </TouchableOpacity>
+      ) : (
         <TouchableOpacity
           onPress={() => router.push('/subscribe')}
           accessibilityRole="button"

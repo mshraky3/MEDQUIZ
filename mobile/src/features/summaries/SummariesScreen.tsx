@@ -16,6 +16,7 @@ import { PathCheckpoint } from './PathCheckpoint';
 import { EMPTY_PATH_SHAPE, isStepUnlocked, loadPath } from './pathMeta';
 import { useSummaryProgress } from './summaryStore';
 import { PLAY_BUILD } from '@/config';
+import { AccountStatusButton } from '@/features/subscribe/AccountStatusButton';
 
 type Step = any;
 type Milestone = any;
@@ -247,7 +248,7 @@ export default function SummariesScreen() {
           <T ltr size={13} color={colors.textMedium}>
             {step.why}
           </T>
-          {PLAY_BUILD ? null : <Button label={t.lockedCta} size="sm" onPress={() => router.push('/subscribe')} />}
+          {PLAY_BUILD ? <AccountStatusButton size="sm" /> : <Button label={t.lockedCta} size="sm" onPress={() => router.push('/subscribe')} />}
         </Card>
       );
     }
