@@ -53,6 +53,15 @@ const common = {
             title: 'لماذا هذه الإجابة صحيحة',
             unavailable: 'لا يوجد شرح لهذا السؤال بعد.',
         },
+        // Theme switch (navbar button + the full choice on /account).
+        theme: {
+            label: 'المظهر',
+            light: 'فاتح',
+            dark: 'داكن',
+            system: 'حسب الجهاز',
+            toDark: 'التبديل إلى الوضع الليلي',
+            toLight: 'التبديل إلى الوضع النهاري',
+        },
         loading: 'جاري التحميل',
         loadingEllipsis: 'جاري التحميل…',
         footer: {
@@ -73,7 +82,7 @@ const common = {
             telegram: 'قناة تيليجرام',
             contactPage: 'صفحة الاتصال',
             contactUs: 'اتصل بنا',
-            rights: (year) => `© ${year} SQB — بنك أسئلة SMLE. جميع الحقوق محفوظة.`,
+            rights: (year) => `© ${year} SQB. جميع الحقوق محفوظة.`,
             legalEntity: 'شركة دار الخبرة التجارية  |  السجل التجاري (الرقم الموحد): 7040567922',
             disclaimer: 'هذه المنصة للأغراض التعليمية فقط، وغير تابعة للهيئة السعودية للتخصصات الصحية أو Prometric.',
         },
@@ -158,6 +167,14 @@ const common = {
             title: 'Why this answer is correct',
             unavailable: 'No explanation for this question yet.',
         },
+        theme: {
+            label: 'Appearance',
+            light: 'Light',
+            dark: 'Dark',
+            system: 'Follow device',
+            toDark: 'Switch to dark mode',
+            toLight: 'Switch to light mode',
+        },
         loading: 'Loading',
         loadingEllipsis: 'Loading…',
         footer: {
@@ -178,7 +195,7 @@ const common = {
             telegram: 'Telegram channel',
             contactPage: 'Contact page',
             contactUs: 'Contact us',
-            rights: (year) => `© ${year} SQB — SMLE Question Bank. All rights reserved.`,
+            rights: (year) => `© ${year} SQB. All rights reserved.`,
             legalEntity: 'Dar Al Khibra Trading Co.  |  Commercial Registration (Unified No.): 7040567922',
             disclaimer: 'This platform is for educational purposes only. It is not affiliated with SCFHS or Prometric.',
         },

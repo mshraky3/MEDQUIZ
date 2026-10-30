@@ -45,11 +45,11 @@ const pastPapersCopy = {
         faq: (bankTotal, n) => [
             {
                 q: 'هل هذه أوراق اختبارات SMLE سابقة رسمية؟',
-                a: 'لا. لا تنشر الهيئة السعودية للتخصصات الصحية ولا Prometric أوراق اختبارات سابقة، وأي جهة تدّعي بيع أوراق رسمية فهي غير صادقة. ما تجده هنا تجميعات أسئلة أعدّها فريق SQB اعتماداً على ما ينقله المتقدمون بعد الاختبار، ثم روجعت إجاباتها وأُعيدت صياغتها على نمط الاختبار الحالي.',
+                a: 'لا. لا تنشر الهيئة السعودية للتخصصات الصحية ولا Prometric أوراق اختبارات سابقة، وأي جهة تدّعي بيع أوراق رسمية فهي غير صادقة. ما تجده هنا مجموعات أسئلة تدريبية أعدّها فريق SQB، روجعت إجاباتها وصيغت على نمط الاختبار الحالي.',
             },
             {
                 q: 'ما الفرق بين التجميعات؟',
-                a: `البنك مبني من ${n} تجميعات تضم ${bankTotal} سؤالاً في المجموع (قد يرد السؤال الواحد في أكثر من تجميعة). بعضها مرتبط بمصدر معروف بين المتقدمين مثل Midgard وGameBoy، وبعضها مجموعات مبنية على معيار: «الأسئلة المؤكدة» هي ما تكرر وروده في أكثر من مصدر، و«الأكثر تكراراً» هي الأعلى تردداً بين الدورات.`,
+                a: `البنك مبني من ${n} تجميعات تضم ${bankTotal} سؤالاً في المجموع (قد يرد السؤال الواحد في أكثر من تجميعة). بعضها مرتبط بمصدر معروف بين المتقدمين مثل Midgard وGameBoy، وبعضها مجموعات مبنية على معيار: «الأسئلة المؤكدة» هي ما ورد في أكثر من مصدر، و«الأكثر تكراراً» هي الأكثر ورودًا عبر مصادر البنك.`,
             },
             {
                 q: 'هل يمكنني الاطلاع على تجميعة كاملة مجاناً؟',
@@ -85,11 +85,11 @@ const pastPapersCopy = {
         seo: {
             hubTitle: (bankTotal) => `SMLE, SNLE and SDLE question collections — ${bankTotal} questions | SQB`,
             hubDescription: 'A guide to the SMLE, SNLE and SDLE question collections: what each one contains, how many questions it holds, and open sample questions from some of them with no account.',
-            hubKeywords: 'smle past papers, snle past papers, SMLE question collections, SMLE recalls, Saudi Prometric past questions, SNLE recalls, SDLE recalls',
+            hubKeywords: 'smle past papers, snle past papers, SMLE question collections, Saudi Prometric past questions',
             hubCollectionName: 'SMLE, SNLE and SDLE question collections',
             collectionTitle: (label, total, track) => `${label} — ${total} ${track} questions | SQB`,
             collectionDescription: (blurb, total, track) => `${blurb} ${total} ${track}-style questions.`,
-            collectionKeywords: (labelAr, labelEn, track) => `${labelEn}, smle past papers, ${track} question collection, ${track} recalls, ${track} practice questions`,
+            collectionKeywords: (labelAr, labelEn, track) => `${labelEn}, smle past papers, ${track} question collection, ${track} practice questions`,
         },
 
         relatedLinksLabel: 'Related links',
@@ -114,11 +114,11 @@ const pastPapersCopy = {
         faq: (bankTotal, n) => [
             {
                 q: 'Are these official past SMLE papers?',
-                a: 'No. Neither SCFHS nor Prometric publishes past exam papers, and anyone claiming to sell official papers is not being straight with you. What you find here are collections assembled by the SQB team from what candidates report after sitting the exam, then answer-checked and rewritten to the current exam style.',
+                a: 'No. Neither SCFHS nor Prometric publishes past exam papers, and anyone claiming to sell official papers is not being straight with you. What you find here are practice-question collections prepared by the SQB team, answer-checked and written in the current exam style.',
             },
             {
                 q: 'What is the difference between the collections?',
-                a: `The bank is built from ${n} collections holding ${bankTotal} questions in total (one question can appear in more than one collection). Some carry a name candidates already know, such as Midgard and GameBoy; others are grouped by a rule — "Confirmed" means reported by more than one source, "Most repeated" means highest recurrence across sittings.`,
+                a: `The bank is built from ${n} collections holding ${bankTotal} questions in total (one question can appear in more than one collection). Some carry a name candidates already know, such as Midgard and GameBoy; others are grouped by a rule — "Confirmed" means the question appears in more than one source, "Most repeated" means it recurs most often across the bank's sources.`,
             },
             {
                 q: 'Can I read a whole collection for free?',
