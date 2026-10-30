@@ -78,7 +78,7 @@ router.post('/', async (req, res) => {
               <p style="margin:0 0 6px;font-size:11px;color:#475569;text-transform:uppercase;letter-spacing:1px;">User's Reason</p>
               <p style="margin:0;color:#e2e8f0;font-size:14px;">${reason}</p>
             </div>` : '<p style="color:#475569;font-size:13px;font-style:italic;">No reason provided.</p>'}
-            <a href="https://medquiz-web.vercel.app/question-reports" style="display:inline-block;margin-top:8px;padding:10px 20px;background:#22d3ee;color:#0b1021;border-radius:6px;font-weight:700;text-decoration:none;font-size:13px;">Review in Admin Panel →</a>
+            <a href="https://www.smle-question-bank.com/admin/reports" style="display:inline-block;margin-top:8px;padding:10px 20px;background:#22d3ee;color:#0b1021;border-radius:6px;font-weight:700;text-decoration:none;font-size:13px;">Review in Admin Panel →</a>
           </td>
         </tr>
         <tr>
