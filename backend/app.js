@@ -56,6 +56,7 @@ import {
 import { PICKABLE_SOURCES, SOURCE_PRIORITY, SELECTABLE_SOURCES, resolveSources, ALL_SESSION_SOURCES } from './config/sources.js';
 import { runRecallImport } from './services/recallImportService.js';
 import { markQuestionsSeen, MAX_SEEN_IDS } from './services/seenService.js';
+import { insertFinalQuizAttempts, jsonBodyParser, FINAL_QUIZ_JSON_LIMIT } from './services/finalQuizAttempts.js';
 import { ensureQuestionImagesTables, attachQuestionImages } from './services/questionImagesService.js';
 import { isDisposableEmail, DISPOSABLE_EMAIL_MESSAGE } from './utils/disposableEmail.js';
 
@@ -1098,7 +1099,10 @@ app.use(cors({
     maxAge: 7200
 }));
 
-app.use(express.json());
+// 100 KB everywhere except the final-exam submit, which carries one entry per
+// question and was refused with 413 once an exam passed ~500 questions
+// (services/finalQuizAttempts.js explains the 2 MB cap).
+app.use(jsonBodyParser(express, { '/final-quiz/submit': FINAL_QUIZ_JSON_LIMIT }));
 
 // ── No silent 500s ──────────────────────────────────────────────────────────
 // Mounted here, before every route, so it wraps the response for all of them.
@@ -7720,7 +7724,9 @@ app.post('/final-quiz/submit', requireSession, subscriberOnly, async (req, res) 
             timeTaken,
             timeLimit,
             sessionMetadata,
-            requestBody: req.body
+            // Counts, not the whole body: an exam body is 100 KB to 1 MB.
+            questionIdsCount: Array.isArray(questionIds) ? questionIds.length : null,
+            attemptsCount: Array.isArray(questionAttempts) ? questionAttempts.length : null
         });
 
         const score = totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
@@ -7800,25 +7806,9 @@ app.post('/final-quiz/submit', requireSession, subscriberOnly, async (req, res) 
                 attemptsCount: questionAttempts.length
             });
 
-            for (const attempt of questionAttempts) {
-                await db.query(`
-                    INSERT INTO final_quiz_attempts (
-                        session_id,
-                        question_id,
-                        user_answer,
-                        correct_answer,
-                        is_correct,
-                        time_taken
-                    ) VALUES ($1, $2, $3, $4, $5, $6)
-                `, [
-                    sessionId,
-                    attempt.questionId,
-                    attempt.userAnswer,
-                    attempt.correctAnswer,
-                    attempt.isCorrect,
-                    attempt.timeTaken || 0
-                ]);
-            }
+            // One multi-row INSERT per 1,000 answers instead of one query per
+            // answer (1,200 round trips inside a 60 s function before).
+            await insertFinalQuizAttempts(db, sessionId, questionAttempts);
 
             logger.info('Question attempts inserted successfully', {
                 sessionId,
