@@ -59,6 +59,8 @@ const appCopy = {
       title: 'إنشاء حساب',
       body: 'يتم إنشاء حساب SQB من الموقع الإلكتروني. أنشئ حسابك هناك ثم عُد وسجّل الدخول بنفس البريد وكلمة المرور، وسيعمل الحساب الواحد على الموقع وعلى التطبيق.',
       signIn: 'تسجيل الدخول',
+      open: 'فتح الموقع لإنشاء الحساب',
+      loginLink: 'أنشئ حسابك من الموقع',
     },
     playAccess: {
       title: 'اشتراكك',
@@ -145,6 +147,8 @@ const appCopy = {
       title: 'Create an account',
       body: 'SQB accounts are created on the SQB website. Create yours there, then come back and sign in with the same email and password. One account works on the website and in the app.',
       signIn: 'Sign in',
+      open: 'Open the website to create an account',
+      loginLink: 'Create your account on the website',
     },
     playAccess: {
       title: 'Your subscription',

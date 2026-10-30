@@ -13,7 +13,7 @@ const androidAppCopy = {
     ar: {
         pill: 'تطبيق أندرويد',
         title: 'SQB على أندرويد',
-        body: 'نجرّب تطبيق SQB لأندرويد مع مجموعة من الطلاب، ونحتاج ملاحظاتك لتحسينه. انضم إلى المجرّبين ثم نزّل التطبيق من متجر Google Play.',
+        body: 'نجرّب تطبيق SQB لأندرويد مع مجموعة من الطلاب، ونحتاج ملاحظاتك لتحسينه. انضم إلى المجرّبين ثم نزّل التطبيق من متجر Google Play. تُنشأ الحسابات من الموقع فقط، والتطبيق لتسجيل الدخول والمذاكرة.',
         freeMonth: 'شهر مجاني لمن يسجّل الدخول بحسابه من التطبيق مرة واحدة لكل حساب.',
         join: 'انضم إلى المجرّبين',
         download: 'تنزيل التطبيق',
@@ -22,7 +22,7 @@ const androidAppCopy = {
     en: {
         pill: 'Android app',
         title: 'SQB for Android',
-        body: 'We are testing the SQB Android app with a group of students and we need your feedback to improve it. Join the testers, then get the app from Google Play.',
+        body: 'We are testing the SQB Android app with a group of students and we need your feedback to improve it. Join the testers, then get the app from Google Play. Accounts are created on the website only; the app is for signing in and studying.',
         freeMonth: 'A free month for signing in from the app once, one per account.',
         join: 'Join the testers',
         download: 'Get the app',

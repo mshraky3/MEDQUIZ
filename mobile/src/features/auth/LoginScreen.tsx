@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Linking, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { SUPPORT_EMAIL } from '@/config';
-import { useCopy } from '@/i18n';
+import { PLAY_BUILD, SUPPORT_EMAIL } from '@/config';
+import { useApp, useCopy } from '@/i18n';
 import authCopy from '@/i18n/copy/auth.js';
 import { ApiError, api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
@@ -19,6 +19,7 @@ type LoginResponse = { user?: any; sessionToken: string; showTerms?: boolean };
  */
 export default function LoginScreen() {
   const copy = useCopy(authCopy).login;
+  const app = useApp();
   const { signIn, sessionExpired, clearExpiredNotice } = useAuth();
   const params = useLocalSearchParams<{ message?: string; username?: string }>();
 
@@ -163,7 +164,7 @@ export default function LoginScreen() {
           <T size={14} color={colors.warning} weight="medium">
             {copy.googleNoAccount}{' '}
           </T>
-          <Link label={copy.googleNoAccountCta} onPress={() => router.push('/signup')} />
+          <Link label={PLAY_BUILD ? app.webAccount.loginLink : copy.googleNoAccountCta} onPress={() => router.push('/signup')} />
         </Notice>
       ) : null}
 
@@ -175,7 +176,7 @@ export default function LoginScreen() {
         <T color={colors.textMedium} size={14}>
           {copy.noAccount}
         </T>
-        <Link label={copy.signupLink} onPress={() => router.push('/signup')} />
+        <Link label={PLAY_BUILD ? app.webAccount.loginLink : copy.signupLink} onPress={() => router.push('/signup')} />
       </Row>
 
       <TermsDialog visible={!!pending} busy={acceptingTerms} onAccept={acceptTerms} />

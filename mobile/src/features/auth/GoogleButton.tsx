@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import { GOOGLE_WEB_CLIENT_ID } from '@/config';
+import { GOOGLE_WEB_CLIENT_ID, PLAY_BUILD } from '@/config';
 import { useApp } from '@/i18n';
 import { api } from '@/lib/api';
 import { colors, radius } from '@/theme';
@@ -102,7 +102,7 @@ export function GoogleButton({ mode, dividerLabel, dividerPosition = 'before', t
           '/api/auth/google',
           // mode 'login' tells the backend not to create an account for an
           // identity it has never seen; track is only used on first sign-in.
-          { credential, mode, ...(track ? { track } : {}) },
+          { credential, mode, ...(PLAY_BUILD ? { client: 'android-play' } : {}), ...(track ? { track } : {}) },
           { auth: false }
         );
         // The credential rides along so a caller that gets needsTrackSelection

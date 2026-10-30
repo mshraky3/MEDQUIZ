@@ -8,6 +8,7 @@ import { Pool } from 'pg';
 import crypto from 'crypto';
 import { rateLimit } from './middleware/rateLimit.js';
 import { sendMail } from './services/mailer.js';
+import { refusesNewGoogleAccount } from './services/googleSignIn.js';
 import errorReportRoutes from './routes/error-report.js';
 import questionReportsRouter from './routes/question-reports.js';
 import successStoriesRouter from './routes/success-stories.js';
@@ -2579,6 +2580,8 @@ app.post('/api/auth/google', rateLimit(db, 'oauth_google', { windowMs: 5 * 60_00
     // has never seen — and then walking the visitor through a track picker and
     // a terms checkbox, i.e. the entire signup flow, on the sign-in screen.
     const mode = req.body.mode === 'login' ? 'login' : 'signup';
+    // 'android-play' is sent by the Google Play build of the app, where accounts are created
+    // on the website only. It can only make this route refuse, never grant, so a forged value is harmless.
     if (!GOOGLE_CLIENT_ID) {
         logger.error('GOOGLE_CLIENT_ID is not set — /api/auth/google cannot verify tokens');
         return res.status(500).json({ message: 'Google sign-in is not configured' });
@@ -2605,7 +2608,7 @@ app.post('/api/auth/google', rateLimit(db, 'oauth_google', { windowMs: 5 * 60_00
         let { rows: [userRow] } = await client.query('SELECT * FROM accounts WHERE email = $1 FOR UPDATE', [email]);
         let createdNow = false;
 
-        if (!userRow && mode === 'login') {
+        if (!userRow && refusesNewGoogleAccount(req.body)) {
             // Signing in, and there is nothing to sign in to. Create nothing,
             // send no welcome email — the page tells them so and points at
             // /signup. Note this is reached only when the email is genuinely
