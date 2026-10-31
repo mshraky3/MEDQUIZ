@@ -1,0 +1,20 @@
+/* Delete-account page. Reuses the legal page shell (Legal.css); only the form
+   is new. Colours come from tokens, so light and dark both work. */
+.delete-account-form {
+    display: grid;
+    gap: var(--space-4);
+    margin-top: var(--space-4);
+    padding: var(--space-5);
+    background: var(--surface-2, var(--surface));
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+}
+.delete-account-form label { display: block; font-weight: 600; color: var(--text-dark); margin-bottom: var(--space-2); }
+.delete-account-form .form-input { min-height: 44px; }
+.delete-account-check { display: flex; gap: var(--space-3); align-items: flex-start; color: var(--text-dark); }
+.delete-account-check input { margin-top: 0.3em; width: 1.1em; height: 1.1em; flex: none; }
+.delete-account-ok { margin: 0; padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); border: 1px solid var(--border-color); background: var(--surface); color: var(--text-dark); }
+.delete-account-actions .btn { width: 100%; min-height: 44px; }
+.delete-account-danger { background: var(--error-color); color: #fff; }
+.delete-account-danger:hover:not(:disabled) { filter: brightness(0.92); }
+@media (min-width: 560px) { .delete-account-actions .btn { width: auto; } }

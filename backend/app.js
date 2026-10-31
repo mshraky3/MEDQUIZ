@@ -42,6 +42,7 @@ import {
 } from './services/adminMetricsService.js';
 import summaryContent from './content/summaryHtml/index.js';
 import { notifyBackendError, configureAlertThrottle } from './services/errorNotificationService.js';
+import { deleteAccountData, DELETION_OUTCOME } from './services/accountDeletionService.js';
 // Shared logging + the "no silent 500" interceptor. logger and
 // isTransientConnectionError used to be defined locally in this file; they now
 // live in one module so the route files can use the same ones.
@@ -6094,6 +6095,121 @@ app.delete('/users/:userId', adminAuth, async (req, res) => {
     } catch (err) {
         console.error('Error deleting user:', err);
         res.status(500).json({ message: 'Failed to delete user and associated data' });
+    }
+});
+
+// ============================================
+// ACCOUNT DELETION (self-service, Google Play)
+// ============================================
+// Two public steps, no session needed, so a person who cannot log in can still
+// ask: (1) a 6-digit code is e-mailed to the address on the account, (2) the
+// code + the exact address confirm it. Mailbox control is the same proof the
+// password-reset flow accepts. The first step answers 200 whether or not an
+// account exists, so it cannot be used to find out who has one.
+// OFF unless ACCOUNT_DELETION_ENABLED=true (set only after a pg_dump); what is
+// deleted vs kept lives in services/accountDeletionService.js.
+const accountDeletionEnabled = () => String(process.env.ACCOUNT_DELETION_ENABLED || '').toLowerCase() === 'true';
+const DELETE_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+app.post('/api/account/delete/request', rateLimit(db, 'account-delete-request', { windowMs: 15 * 60_000, max: 6 }), async (req, res) => {
+    if (!accountDeletionEnabled()) {
+        return res.status(503).json({ success: false, code: 'disabled', message: 'Self-service deletion is not available yet. Please e-mail support.' });
+    }
+    try {
+        const email = String(req.body?.email || '').toLowerCase().trim();
+        if (!DELETE_EMAIL_RE.test(email)) {
+            return res.status(400).json({ success: false, message: 'Invalid email format' });
+        }
+        const generic = { success: true, message: 'If an account exists for this address, a code was sent to it.' };
+        const found = await db.query('SELECT id FROM accounts WHERE lower(email) = $1', [email]);
+        if (found.rows.length === 0) return res.status(200).json(generic);
+
+        const recent = await db.query(
+            `SELECT COUNT(*)::int AS c FROM signup_otps WHERE email = $1 AND created_at > NOW() - INTERVAL '15 minutes'`,
+            [email]
+        );
+        if (recent.rows[0].c >= 5) return res.status(200).json(generic);
+
+        await db.query('UPDATE signup_otps SET used = TRUE WHERE email = $1 AND used = FALSE', [email]);
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        await db.query(
+            'INSERT INTO signup_otps (email, otp_code, expires_at) VALUES ($1, $2, $3)',
+            [email, otp, new Date(Date.now() + 10 * 60 * 1000)]
+        );
+        const text = `رمز تأكيد حذف حسابك في SQB هو: ${otp} (صالح 10 دقائق). إذا لم تطلب حذف الحساب فتجاهل هذه الرسالة ولن يتغير شيء.
+
+Your SQB account deletion code is: ${otp} (valid 10 minutes). If you did not ask to delete your account, ignore this message and nothing will change.`;
+        const html = `<div style="font-family:Segoe UI,Tahoma,Arial,sans-serif;max-width:440px;margin:auto;padding:24px;line-height:1.8;color:#0f1e3d">
+  <p dir="rtl">رمز تأكيد حذف حسابك في SQB:</p>
+  <p style="font-size:34px;font-weight:800;letter-spacing:10px;text-align:center;color:#2563eb">${otp}</p>
+  <p dir="rtl" style="font-size:13px;color:#64748b">صالح 10 دقائق. إذا لم تطلب حذف الحساب فتجاهل هذه الرسالة ولن يتغير شيء.</p>
+  <hr style="border:none;border-top:1px solid #e5eaf3">
+  <p style="font-size:13px;color:#64748b">Your SQB account deletion code is above (valid 10 minutes). If you did not ask to delete your account, ignore this message and nothing will change.</p>
+</div>`;
+        await sendEmail(email, 'رمز تأكيد حذف الحساب — SQB / SQB account deletion code', text, html, {
+            event: 'medqize.otp.delete_account',
+            idempotencyKey: `otp:${email}:${otp}`,
+            sourceOrigin: req.headers.referer || req.headers.origin,
+        });
+        return res.status(200).json(generic);
+    } catch (err) {
+        logger.error('Error requesting account deletion code', err);
+        return res.status(500).json({ success: false, message: 'Failed to send code' });
+    }
+});
+
+app.post('/api/account/delete/confirm', rateLimit(db, 'account-delete-confirm', { windowMs: 15 * 60_000, max: 12 }), async (req, res) => {
+    if (!accountDeletionEnabled()) {
+        return res.status(503).json({ success: false, code: 'disabled', message: 'Self-service deletion is not available yet. Please e-mail support.' });
+    }
+    let client;
+    try {
+        const email = String(req.body?.email || '').toLowerCase().trim();
+        const code = String(req.body?.code || '').trim();
+        if (!DELETE_EMAIL_RE.test(email) || !/^\d{6}$/.test(code)) {
+            return res.status(400).json({ success: false, message: 'Email and a 6-digit code are required' });
+        }
+        const otp = await verifyOtp(email, code);
+        if (!otp.ok) {
+            return res.status(401).json({ success: false, message: 'Invalid or expired code' });
+        }
+        const found = await db.query('SELECT id, username FROM accounts WHERE lower(email) = $1', [email]);
+        if (found.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'No account found' });
+        }
+        const { id: accountId, username } = found.rows[0];
+
+        client = await db.connect();
+        let result;
+        try {
+            await client.query('BEGIN');
+            result = await deleteAccountData(client, accountId);
+            if (result.outcome === DELETION_OUTCOME.REFUSED || result.outcome === DELETION_OUTCOME.NOT_FOUND) {
+                await client.query('ROLLBACK');
+            } else {
+                await client.query('COMMIT');
+            }
+        } catch (err) {
+            await client.query('ROLLBACK').catch(() => {});
+            throw err;
+        }
+
+        if (result.outcome === DELETION_OUTCOME.REFUSED) {
+            // Code stays unused so the person can retry after contacting support.
+            return res.status(409).json({
+                success: false,
+                reason: result.reason,
+                message: 'This account still has paid time or a group plan running, so it cannot be deleted automatically. Please e-mail support.',
+            });
+        }
+        await db.query('UPDATE signup_otps SET used = TRUE WHERE id = $1', [otp.id]);
+        invalidateSessionCache(username);
+        return res.json({ success: true, outcome: result.outcome });
+    } catch (err) {
+        logger.error('Error deleting account', err);
+        return res.status(500).json({ success: false, message: 'Failed to delete the account' });
+    } finally {
+        if (client) client.release();
     }
 });
 
