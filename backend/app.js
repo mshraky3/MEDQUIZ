@@ -6113,6 +6113,7 @@ const DELETE_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 app.post('/api/account/delete/request', rateLimit(db, 'account-delete-request', { windowMs: 15 * 60_000, max: 6 }), async (req, res) => {
     if (!accountDeletionEnabled()) {
+        res.locals.__expected5xx = true; // expected 503, must not page the owner
         return res.status(503).json({ success: false, code: 'disabled', message: 'Self-service deletion is not available yet. Please e-mail support.' });
     }
     try {
@@ -6160,6 +6161,7 @@ Your SQB account deletion code is: ${otp} (valid 10 minutes). If you did not ask
 
 app.post('/api/account/delete/confirm', rateLimit(db, 'account-delete-confirm', { windowMs: 15 * 60_000, max: 12 }), async (req, res) => {
     if (!accountDeletionEnabled()) {
+        res.locals.__expected5xx = true; // expected 503, must not page the owner
         return res.status(503).json({ success: false, code: 'disabled', message: 'Self-service deletion is not available yet. Please e-mail support.' });
     }
     let client;
