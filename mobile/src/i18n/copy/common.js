@@ -53,6 +53,15 @@ const common = {
             title: 'لماذا هذه الإجابة صحيحة',
             unavailable: 'لا يوجد شرح لهذا السؤال بعد.',
         },
+        // Theme switch (navbar button + the full choice on /account).
+        theme: {
+            label: 'المظهر',
+            light: 'فاتح',
+            dark: 'داكن',
+            system: 'حسب الجهاز',
+            toDark: 'التبديل إلى الوضع الليلي',
+            toLight: 'التبديل إلى الوضع النهاري',
+        },
         loading: 'جاري التحميل',
         loadingEllipsis: 'جاري التحميل…',
         footer: {
@@ -68,6 +77,7 @@ const common = {
             suggestions: 'الاقتراحات',
             terms: 'شروط الخدمة',
             refund: 'سياسة الاسترداد',
+            deleteAccount: 'حذف الحساب',
             privacy: 'سياسة الخصوصية',
             email: 'البريد الإلكتروني',
             telegram: 'قناة تيليجرام',
@@ -158,6 +168,14 @@ const common = {
             title: 'Why this answer is correct',
             unavailable: 'No explanation for this question yet.',
         },
+        theme: {
+            label: 'Appearance',
+            light: 'Light',
+            dark: 'Dark',
+            system: 'Follow device',
+            toDark: 'Switch to dark mode',
+            toLight: 'Switch to light mode',
+        },
         loading: 'Loading',
         loadingEllipsis: 'Loading…',
         footer: {
@@ -173,6 +191,7 @@ const common = {
             suggestions: 'Suggestions',
             terms: 'Terms of Service',
             refund: 'Refund Policy',
+            deleteAccount: 'Delete account',
             privacy: 'Privacy Policy',
             email: 'Email',
             telegram: 'Telegram channel',

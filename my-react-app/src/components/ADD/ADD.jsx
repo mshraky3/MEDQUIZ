@@ -931,7 +931,11 @@ const ADD = (props) => {
                     // and picking the wrong one is invisible afterwards.
                     const stillLive = currentExpiry && currentExpiry.getTime() > Date.now();
                     const preview = new Date(stillLive ? currentExpiry : new Date());
+                    // Same month-end clamp as the server (31 Oct + 1 month = 30 Nov).
+                    const previewDay = preview.getDate();
+                    preview.setDate(1);
                     preview.setMonth(preview.getMonth() + grantMonths);
+                    preview.setDate(Math.min(previewDay, new Date(preview.getFullYear(), preview.getMonth() + 1, 0).getDate()));
                     return (
                         <div className="modal-overlay" onClick={() => !grantSaving && setGrantTarget(null)}>
                             <div className="modal-content grant-modal" onClick={(e) => e.stopPropagation()}>

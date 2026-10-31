@@ -23,6 +23,7 @@ import { sendMail } from './mailer.js';
 import { computeFee, settleEvent } from './accountingService.js';
 import { sendInvoiceEmail } from './invoiceService.js';
 import { trackLabelAr, normalizeTrack } from '../config/tracks.js';
+import { addMonthsClamped } from '../utils/addMonths.js';
 import { OWNER_EMAIL } from '../config/recipients.js';
 import { bonusMonthsFor, displayBonusMonths } from './goldenMonths.js';
 
@@ -629,12 +630,11 @@ export function computeNewExpiry(currentExpiry, plan, atMs = Date.now()) {
     const base = currentExpiry && new Date(currentExpiry).getTime() > Date.now()
         ? new Date(currentExpiry)
         : new Date();
-    const next = new Date(base);
     // Fall back to the SHORTEST term, never the longest: if a caller ever
     // reaches here without a plan it is a bug, and under-granting is a support
     // ticket while over-granting is a year of free access we cannot claw back.
-    next.setMonth(next.getMonth() + (plan?.months || 1) + bonusMonthsFor(plan?.id, atMs));
-    return next;
+    // addMonthsClamped, not setMonth: 31 Oct + 1 month must be 30 Nov, not 1 Dec.
+    return addMonthsClamped(base, (plan?.months || 1) + bonusMonthsFor(plan?.id, atMs));
 }
 
 /**

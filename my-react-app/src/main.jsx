@@ -60,6 +60,7 @@ const Contact = lazy(() => import('./components/contact/Contact.jsx'));
 const Privacy = lazy(() => import('./components/legal/Privacy.jsx'));
 const Terms = lazy(() => import('./components/legal/Terms.jsx'));
 const RefundPolicy = lazy(() => import('./components/legal/RefundPolicy.jsx'));
+const DeleteAccount = lazy(() => import('./components/legal/DeleteAccount.jsx'));
 const About = lazy(() => import('./components/legal/About.jsx'));
 const FAQ = lazy(() => import('./components/legal/FAQ.jsx'));
 const Suggestions = lazy(() => import('./components/suggestions/Suggestions.jsx'));
@@ -199,6 +200,8 @@ const router = createBrowserRouter([{
   pub('/privacy', <Privacy />),
   pub('/terms', <Terms />),
   pub('/refund-policy', <RefundPolicy />),
+  // Public on purpose: this URL goes in the Google Play Data safety form.
+  pub('/delete-account', <DeleteAccount />),
   pub('/suggestions', <Suggestions />),
   // Public on purpose. It is a price page for a guest and a seat manager for
   // the person who bought one — GroupsPage picks which, and only the guest
