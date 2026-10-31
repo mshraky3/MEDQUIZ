@@ -1,9 +1,10 @@
 import React, { useCallback, useState } from 'react';
 import { Linking, View } from 'react-native';
 import Constants from 'expo-constants';
+import * as WebBrowser from 'expo-web-browser';
 import * as Updates from 'expo-updates';
 import { Href, router, useFocusEffect } from 'expo-router';
-import { PLAY_BUILD, TELEGRAM_CHANNEL_URL } from '@/config';
+import { PLAY_BUILD, SITE_URL, TELEGRAM_CHANNEL_URL } from '@/config';
 import { formatDate, useApp, useCommon, useLang } from '@/i18n';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
@@ -149,6 +150,8 @@ export default function MoreScreen() {
         <ListRow key="terms" icon="file-text" title={common.footer.terms} onPress={go('/terms')} right={arrow} />,
         <ListRow key="priv" icon="shield-check" title={common.footer.privacy} onPress={go('/privacy')} right={arrow} />,
         <ListRow key="ref" icon="refresh" title={common.footer.refund} onPress={go('/refund-policy')} right={arrow} />,
+        // Opens the public web page (the same URL as the Play Data safety form).
+        <ListRow key="del" icon="user" title={app.more.deleteAccount} onPress={() => { const u = `${SITE_URL}/delete-account`; WebBrowser.openBrowserAsync(u).catch(() => Linking.openURL(u).catch(() => {})); }} right={<Icon name="external-link" size={16} color={colors.textLight} />} />,
       ])}
 
       <Card style={{ gap: 12 }}>

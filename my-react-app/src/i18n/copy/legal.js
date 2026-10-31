@@ -194,7 +194,7 @@ const legalCopy = {
 
         privacy: {
             title: 'سياسة الخصوصية',
-            updated: 'آخر تحديث: فبراير 2026',
+            updated: 'آخر تحديث: أكتوبر 2026',
             sections: [
                 {
                     heading: '1. مقدمة',
@@ -297,6 +297,16 @@ const legalCopy = {
                                 '**بيانات الأداء في الاختبارات:** تُحفظ طوال مدة وجود حسابك',
                                 '**بيانات ملفات تعريف الارتباط:** تُحفظ ملفات الإعلانات عادةً حتى 13 شهراً',
                                 '**بيانات نموذج الاتصال:** تُحفظ حتى 12 شهراً',
+                            ],
+                        },
+                        { h3: 'حذف الحساب' },
+                        {
+                            ul: [
+                                '**كيف تطلب الحذف:** من صفحة [[/delete-account|حذف الحساب]] دون الحاجة إلى تسجيل الدخول، أو من تبويب «المزيد» في تطبيق SQB (يفتح الصفحة نفسها).',
+                                '**ما الذي يُحذف:** بريدك واسم المستخدم وكلمة المرور وربط حساب جوجل، وسجل إجاباتك واختباراتك وتحليل أدائك وأهدافك وإنجازاتك وتقدمك في الملخصات، وسجل الدخول (عنوان IP ونوع الجهاز) وقصة النجاح وبلاغاتك عن الأسئلة.',
+                                '**ما الذي يبقى:** سجلات الدفع فقط (رقم العملية والمبلغ والعملة والحالة والتاريخ والباقة) للمدة التي تلزمنا بها أنظمة الضريبة والمحاسبة في المملكة، وتُمحى منها البيانات الشخصية. وإذا سبق أن دفعت يبقى سجل الحساب فارغاً دون اسم أو بريد ويُنهى الوصول إليه.',
+                                '**متى لا يتم الحذف:** لا يتم تلقائياً ما دام لديك اشتراك مدفوع ساري أو باقة جماعية تملكها ما زالت قائمة. راسلنا وتنطبق [[/refund-policy|سياسة الاسترداد]].',
+                                '**نسخ خارج أنظمتنا:** طلب الحذف لا يصل إلى سجلات الجهات التي تشغّل الخدمة (مثل بوابة الدفع ومزوّد البريد والاستضافة) ولا إلى النسخ الاحتياطية لديها.',
                             ],
                         },
                     ],
@@ -628,7 +638,7 @@ const legalCopy = {
 
         privacy: {
             title: 'Privacy Policy',
-            updated: 'Last updated: February 2026',
+            updated: 'Last updated: October 2026',
             sections: [
                 {
                     heading: '1. Introduction',
@@ -729,6 +739,16 @@ const legalCopy = {
                                 '**Quiz performance data:** retained for the lifetime of your account',
                                 '**Cookie data:** advertising cookies are typically retained for up to 13 months',
                                 '**Contact form data:** retained for up to 12 months',
+                            ],
+                        },
+                        { h3: 'Deleting your account' },
+                        {
+                            ul: [
+                                '**How to ask:** from the [[/delete-account|Delete account]] page, no sign-in needed, or from the “More” tab in the SQB app (it opens the same page).',
+                                '**What is deleted:** your e-mail, username, password and linked Google sign-in, your answer history, quizzes, performance analysis, goals, achievements and summary progress, your sign-in history (IP address and device type), any success story, and your question reports.',
+                                '**What is kept:** payment records only (reference, amount, currency, status, date, plan), for the period Saudi tax and accounting rules require; personal data is removed from them. If you ever paid, the account record stays as an empty shell with no name or e-mail, and access to it is ended.',
+                                '**When deletion is not done:** it is not done automatically while you have paid time still running or own a group plan that is still active. E-mail us and our [[/refund-policy|Refund Policy]] applies.',
+                                '**Copies outside our systems:** a deletion request does not reach the logs of the services that run SQB (for example the payment gateway, e-mail provider and hosting) or their backups.',
                             ],
                         },
                     ],

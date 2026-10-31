@@ -33,6 +33,9 @@ const renderInline = (text, keyPrefix) =>
         }
         if (part.startsWith('[[') && part.endsWith(']]')) {
             const [href, label = href] = part.slice(2, -2).split('|');
+            if (/^mailto:/i.test(href)) {
+                return <a key={key} href={href}>{label}</a>;
+            }
             if (/^https?:/i.test(href)) {
                 return (
                     <a key={key} href={href} target="_blank" rel="noopener noreferrer">{label}</a>
@@ -55,7 +58,7 @@ const Block = ({ block, id }) => {
     return <p>{renderInline(block.p, id)}</p>;
 };
 
-const LegalDoc = ({ doc }) => {
+const LegalDoc = ({ doc, children }) => {
     const t = useCommon();
     const { dir } = useLang();
 
@@ -77,6 +80,7 @@ const LegalDoc = ({ doc }) => {
                         ))}
                     </section>
                 ))}
+                {children}
             </div>
         </div>
     );

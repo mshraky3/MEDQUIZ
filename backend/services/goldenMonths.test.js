@@ -14,6 +14,7 @@ process.env.PAYMENT_ENFORCEMENT_ENABLED = 'true';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import { addMonthsClamped } from '../utils/addMonths.js';
 
 const {
     GOLDEN_MONTHS, isGoldenLive, displayBonusMonths, bonusMonthsFor, getGoldenInfo,
@@ -101,7 +102,7 @@ test('computeNewExpiry credits 5 months inside the window, 4 outside, and none f
     // Stacks on a running subscription like any renewal.
     const running = new Date(Date.now() + 30 * DAY);
     const stacked = computeNewExpiry(running, PLANS.four_month, inside);
-    const expected = new Date(running); expected.setMonth(expected.getMonth() + 5);
+    const expected = addMonthsClamped(running, 5);
     assert.equal(stacked.getTime(), expected.getTime());
 });
 

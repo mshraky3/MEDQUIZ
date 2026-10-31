@@ -47,6 +47,7 @@ const Footer = () => {
     { to: '/terms', label: t.footer.terms },
     { to: '/refund-policy', label: t.footer.refund },
     { to: '/privacy', label: t.footer.privacy },
+    { to: '/delete-account', label: t.footer.deleteAccount },
   ];
 
   return (
