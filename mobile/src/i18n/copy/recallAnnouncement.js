@@ -8,31 +8,32 @@
  * <RecallAnnouncement /> line in Landing.jsx. The card also hides itself after
  * SHOW_UNTIL (RecallAnnouncement.jsx), so forgetting only leaves dead code.
  *
- * Honest wording only: recall questions have no written explanations, the set
- * covers 1-22 October so far, and no question count is used as the pitch.
+ * Honest wording only: these questions have no written explanations, they are
+ * described as practice questions in the current exam style (never as recalled
+ * from real sittings, no sitting dates), and no question count is used as the pitch.
  */
 const recallAnnouncementCopy = {
     ar: {
-        sectionLabel: 'إعلان: تجميعة أكتوبر 2026',
+        sectionLabel: 'إعلان: إضافة أكتوبر 2026',
         tag: 'جديد',
         from: 'للطب البشري (SMLE)',
-        title: 'تجميعة أكتوبر 2026 وصلت',
-        body: 'أسئلة تذكّرها المختبرون في جلسات SMLE من ١ إلى ٢٢ أكتوبر، والمزيد قادم. أسئلة التجميعات بدون شرح مكتوب.',
-        cta: 'ابدأ بتجميعة أكتوبر',
+        title: 'إضافة أكتوبر 2026 وصلت',
+        body: 'أسئلة تدريبية جديدة بنمط الاختبار الحالي، والمزيد قادم. هذه الأسئلة بدون شرح مكتوب.',
+        cta: 'ابدأ بمجموعة أكتوبر',
         monthShort: 'أكتوبر',
-        range: '١–٢٢',
-        previewLabel: 'أسئلة أكتوبر من ١ إلى ٢٢',
+        range: '2026',
+        previewLabel: 'مجموعة أكتوبر 2026',
     },
     en: {
-        sectionLabel: 'Announcement: October 2026 recalls',
+        sectionLabel: 'Announcement: October 2026 additions',
         tag: 'New',
         from: 'Medicine (SMLE)',
-        title: 'October 2026 recalls are here',
-        body: 'Questions examinees recalled from the SMLE sittings of 1–22 October, with more to come. Recall questions have no written explanations.',
-        cta: 'Start the October recalls',
+        title: 'October 2026 additions are here',
+        body: 'New practice questions in the current exam style, with more to come. These questions have no written explanations.',
+        cta: 'Start the October set',
         monthShort: 'Oct',
-        range: '1–22',
-        previewLabel: 'October questions, 1 to 22',
+        range: '2026',
+        previewLabel: 'October 2026 set',
     },
 };
 
