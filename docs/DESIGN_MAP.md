@@ -16,6 +16,12 @@
 > statically (their API is backed by a hosted production database that this audit
 > deliberately did not touch).
 >
+> **Dark mode re-check, 2026-10-30, against `main` @ `46a47d7`** (read from the code, not
+> re-measured in a browser): the **Themes** section below, the admin theme tokens in §2.4
+> and the theme toggle in §2.5. Page blocks in §2 that were measured on 2026-08-25 describe
+> the light theme; for how each page looks in dark and what still needs a person's eye, see
+> `docs/DARK_MODE_PLAN.md`.
+>
 > **All 22 audit items are fixed.** The per-page **Defects** lines in §2 now read
 > as history rather than as an open list — they are kept because they say what
 > each page's failure mode *was*, which is the fastest way to recognise it coming
@@ -85,9 +91,21 @@ dark is derived from it through tokens.
   (no flash); `src/theme/ThemeContext.jsx` keeps it in step. Stored values:
   `light` / `dark` / `system` (follow the device); anything else reads as
   light. `color-scheme` follows the theme so native controls and scrollbars
-  match. The sun/moon button sits beside the language switch in the app
-  navbar, the landing topbar and the admin navbar; `/account` has the full
-  Light / Dark / Follow device choice. Labels are in `i18n/common.js` (ar/en).
+  match, and the browser-chrome colour (`theme-color`) switches with it
+  (`THEME_COLORS` in `theme/theme.js`). **The toggle is a sun/moon button in the
+  top bar**, placed next to the language switch: in the app `Navbar`
+  (`.navbar-theme-toggle`, just before `LanguageToggle`), in the landing topbar
+  (the landing page has no `Navbar`) and in the admin navbar
+  (`.admin-theme-toggle`). `/account` has the full Light / Dark / Follow device
+  choice (`ThemeChoice`). Every other page renders inside `Layout`, so it has the
+  navbar toggle too (login and sign-up included). Labels are in
+  `i18n/common.js` (ar/en).
+- **Files.** `src/theme/theme.js` (storage key `sqb_theme`, values, default
+  `light`; `index.html` carries a copy of its read/resolve logic, keep the two
+  in step), `ThemeContext.jsx` + `useTheme.js` (state, follows the device
+  when the choice is `system`), `ThemeToggle.jsx/.css` (the button and
+  `ThemeChoice`), `palette.css` (generated), with `theme.test.js` and
+  `palette.test.js` beside them.
 - **Semantic tokens** (`--surface`, `--surface-2`, `--bg`, `--text-dark`,
   `--text-medium`, `--text-light`, `--border-color`, shadows, accuracy ramp,
   focus ring) have a hand-picked dark set in `index.css` under
@@ -107,11 +125,14 @@ dark is derived from it through tokens.
   dark values next to their light ones.
 - **Light islands.** Things drawn for a white page keep their own colours on a
   white/near-white backing in dark instead of being recoloured: the diagrams
-  and figures inside the summary decks, the Moyasar card form (third-party
-  markup, not themeable), and the National Day / Golden Months offer cards.
-  An island re-pins the semantic text tokens to their light values, so global
-  rules inside it (`p { color: var(--text-medium) }`) still read as in light.
-  `.theme-light-backing` in `index.css` is the helper for new ones.
+  and figures inside the summary decks (`.deck-fig svg`, `.deck-img` in
+  `Summaries.css`), the Moyasar card form (`.mysr-host`, third-party markup,
+  not themeable) and the National Day / Golden Months offer cards (`.nd-card`,
+  `.gm-card`). An island re-pins the semantic text tokens to their light values
+  in its own `:root[data-theme="dark"] .x` block, so global rules inside it
+  (`p { color: var(--text-medium) }`) still read as in light.
+  `.theme-light-backing` in `index.css` is the generic helper for new ones (no
+  component uses it yet).
 - **Charts.** recharts draws axes, grid and neutral bars as SVG attributes;
   their dark twins are CSS rules in `ADD/ui/ui.css`. Tooltips are inline styles
   and take the tokens directly.
@@ -375,7 +396,7 @@ All admin routes are wrapped by `AdminShell` (pins LTR + English) → `AdminGate
 
 - **Shared CSS** `AdminLayout.css` (232) · `Admin.css` (1914) · `ui/ui.css` (125)
 - **Shell root** `.admin-page-wrapper` → `.admin-container` (max 1600px); the admin navbar is `z-index: 1000`
-- **Theme** driven by five tokens — `--admin-bg`, `--admin-surface`, `--admin-text`, `--admin-border`, `--admin-muted` — that are **never defined anywhere**. All 71 uses render from their inline fallback. See **B5**.
+- **Theme** driven by five tokens — `--admin-bg`, `--admin-surface`, `--admin-text`, `--admin-border`, `--admin-muted` — defined on `.admin-page-wrapper` in `AdminLayout.css` and mapped onto the global semantic tokens (`--surface-2`, `--surface`, `--text-dark`, `--border-color`, `--text-light`), so the admin section follows light and dark with the rest of the app. 71 uses. (Until 2026-08 they were defined nowhere; see **B5**.) The admin navbar has its own theme toggle (`.admin-theme-toggle`); admin is pinned LTR + English but not light.
 
 | Route | Component | Extra CSS | Notes |
 |---|---|---|---|
@@ -394,13 +415,14 @@ Legacy redirects: `/ADD_ACCOUNT`, `/ADDQ`, `/Bank`, `/TEMP_LINKS`, `/question-re
 
 **2026-09** the admin card surfaces (`.stat-card` and its `-large` / `-small` / `-mini` variants, `.admin-section`, `.table-card`, `.recent-section`, `.add-user-form`, `.add-question-container`, Bank's `.question-card`) carried the same glass recipe on a plain `#ffffff` page. They are opaque `--surface-2` + `--border-color` now — near-identical to look at, but no longer see-through and no `blur(20px)` on every card of a long list.
 
-**Admin defects** `A2` (`add.css`'s `.modal-overlay` at z 1000 ties with the admin navbar), `B5` (undefined theme tokens with drifted fallbacks), `B2` (`#4ade80` status text on pale green)
+**Admin defects** `A2` (`add.css`'s `.modal-overlay` at z 1000 ties with the admin navbar), `B5` (undefined theme tokens with drifted fallbacks; fixed, see above), `B2` (`#4ade80` status text on pale green)
 
 ### 2.5 Global chrome
 
 | Component | CSS | z-index | Notes |
 |---|---|---|---|
 | `Navbar` | `Navbar.css` (621) | **1030** | fixed; `.user-menu-dropdown` is a local `z-index: 1` (it lives inside the navbar's own stacking context, so a local value is correct — this table previously said 1100/above `--z-modal`, which was stale against the A2 fix already recorded in `DESIGN_AUDIT_2026-08-25.md`). **Signed in, the bar carries no nav links at all** (2026-09): brand, notifications, language, back, user menu — chrome only. Home/Analytics/Study Material/Contact went first as duplicates of the brand link, the hub's journey cards and the footer; Wrong Questions followed once it had a proper home on the hub (`.hubx-review`, which can state how many are waiting). The hamburger is hidden for authed users since there is nothing to open, and `.navbar-center` stays in the DOM as an empty div because `.navbar` is a three-column grid. Signed-out visitors keep the marketing nav — there is no dashboard to carry it for them. The dropdown's "My group" link is conditional on actually owning a group (`GET /api/groups/mine`), fetched once on mount. |
+| `ThemeToggle` | `theme/ThemeToggle.css` | — | the sun/moon button in the top bar (app `Navbar`, landing topbar, admin navbar); `ThemeChoice` is the three-way choice on `/account`. See **Themes** |
 | `Footer` | `Footer.css` (142) | — | `margin-top:auto`; 1100px cap; breakpoint 640 |
 | `CookieConsent` | `CookieConsent.css` | **10000** | mounted at the app root, outside the router |
 | `CongratulationsPopup` | `CongratulationsPopup.css` | 1050 (`--z-modal`) | Opens over `QuizLauncher` when a type × source is finished. Solid `--surface` panel on a 0.55-slate scrim, built like `TrackModal`. **Rebuilt 2026-09:** it was a 4%-slate "glass" panel, so the scrim showed straight through it (measured 1.3–2.2:1 on the title, body copy and chips; now ≥ 5.2:1). Every class is `congratulations-`-prefixed — its old generic `.restart-button` / `.type-badge` / `.source-badge` collided with `QUIZ.css`'s result screen and the QuizHistory badges. |

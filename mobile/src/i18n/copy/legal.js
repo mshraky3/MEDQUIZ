@@ -23,12 +23,12 @@ const legalCopy = {
             sections: [
                 {
                     heading: '1. قبول الشروط',
-                    blocks: [{ p: 'باستخدامك منصة SMLE Question Bank («الخدمة») فإنك تقبل الالتزام بشروط الاستخدام هذه. إذا كنت لا توافق عليها، فيرجى عدم استخدام الخدمة.' }],
+                    blocks: [{ p: 'باستخدامك منصة SQB («الخدمة») فإنك تقبل الالتزام بشروط الاستخدام هذه. إذا كنت لا توافق عليها، فيرجى عدم استخدام الخدمة.' }],
                 },
                 {
                     heading: '2. وصف الخدمة',
                     blocks: [
-                        { p: 'SMLE Question Bank منصة تعليمية تساعد الأطباء وطلاب الطب والتمريض على التحضير لاختبار الترخيص السعودي (SMLE) واختبار التمريض (SNLE). تقدّم الخدمة:' },
+                        { p: 'SQB منصة تعليمية تساعد الأطباء وطلاب الطب والتمريض على التحضير لاختبار الترخيص السعودي (SMLE) واختبار التمريض (SNLE). تقدّم الخدمة:' },
                         {
                             ul: [
                                 'بنك أسئلة شامل يُحدَّث باستمرار',
@@ -72,7 +72,7 @@ const legalCopy = {
                 {
                     heading: '5. الملكية الفكرية',
                     blocks: [
-                        { p: 'كل ما تحتويه المنصة — بما في ذلك الأسئلة والتفسيرات والرسوم والشعارات والبرمجيات — مملوك لـ SMLE Question Bank أو لمزوّدي محتواها، ومحميّ بقوانين الملكية الفكرية.' },
+                        { p: 'كل ما تحتويه المنصة — بما في ذلك الأسئلة والتفسيرات والرسوم والشعارات والبرمجيات — مملوك لـ SQB أو لمزوّدي محتواها، ومحميّ بقوانين الملكية الفكرية.' },
                         { p: 'لا يجوز لك نسخ أي محتوى أو توزيعه أو تعديله أو اشتقاق أعمال منه دون إذن كتابي مسبق منّا.' },
                     ],
                 },
@@ -96,7 +96,7 @@ const legalCopy = {
                 },
                 {
                     heading: '8. حدود المسؤولية',
-                    blocks: [{ p: 'إلى أقصى حدّ يسمح به النظام، لا تتحمّل SMLE Question Bank أي مسؤولية عن أضرار غير مباشرة أو عرضية أو خاصة أو تبعية أو تأديبية، ولا عن أي خسارة في الأرباح أو الإيرادات أو البيانات أو السمعة، سواء وقعت بشكل مباشر أو غير مباشر.' }],
+                    blocks: [{ p: 'إلى أقصى حدّ يسمح به النظام، لا تتحمّل SQB أي مسؤولية عن أضرار غير مباشرة أو عرضية أو خاصة أو تبعية أو تأديبية، ولا عن أي خسارة في الأرباح أو الإيرادات أو البيانات أو السمعة، سواء وقعت بشكل مباشر أو غير مباشر.' }],
                 },
                 {
                     heading: '9. الاشتراك والدفع',
@@ -163,7 +163,7 @@ const legalCopy = {
                                 '**الخطة الشهرية:** يمكن طلب استرجاع كامل خلال **3 أيام** من تاريخ الشراء فقط.',
                                 '**خطة 4 أشهر والخطة السنوية:** يمكن طلب استرجاع كامل خلال **14 يوماً** من تاريخ الشراء.',
                                 'في جميع الحالات، يجب أن يكون طلب الاسترجاع بحسن نيّة، وطلبات الاسترجاع بعد انتهاء المهلة المذكورة أعلاه غير مؤهّلة عادةً، إلا في الحالات التي يوجبها نظام حماية المستهلك السعودي.',
-                                'يمكن إلغاء التجديد في أي وقت لمنع أي خصم مستقبلي؛ والإلغاء يوقف التجديد التالي ولا يسترجع قيمة الفترة الجارية بأثر رجعي.',
+                                'الخطط دفعة واحدة ولا تتجدّد تلقائياً (راجع [[/terms|شروط الاستخدام]])، لذلك لا يوجد تجديد لإلغائه ولن يُخصم منك أي مبلغ مستقبلاً ما لم تقم بعملية شراء جديدة بنفسك. والتوقف عن استخدام SQB وحده لا يسترجع قيمة الفترة الجارية؛ ويخضع الاسترجاع للمهل المذكورة أعلاه.',
                                 'الحسابات التي حصلت على وصول مجاني (المستخدمون السابقون والحسابات التي أنشأها المشرفون) لا تُحتسب عليها رسوم، وبالتالي لا تنطبق عليها سياسة الاسترجاع.',
                             ],
                         },
@@ -201,7 +201,7 @@ const legalCopy = {
                 {
                     heading: '1. مقدمة',
                     blocks: [
-                        { p: 'مرحباً بك في SMLE Question Bank («SQB» أو «نحن»). نلتزم بحماية معلوماتك الشخصية وحقك في الخصوصية. توضّح هذه السياسة كيف نجمع معلوماتك ونستخدمها ونفصح عنها ونحميها عند زيارتك لموقعنا (www.smle-question-bank.com) واستخدامك لخدماتنا.' },
+                        { p: 'مرحباً بك في SQB («نحن»). نلتزم بحماية معلوماتك الشخصية وحقك في الخصوصية. توضّح هذه السياسة كيف نجمع معلوماتك ونستخدمها ونفصح عنها ونحميها عند زيارتك لموقعنا (www.smle-question-bank.com) واستخدامك لخدماتنا.' },
                     ],
                 },
                 {
@@ -341,6 +341,8 @@ const legalCopy = {
                                 'الحصول على الخدمة نفسها والسعر نفسه حتى عند ممارستك لحقوق الخصوصية',
                             ],
                         },
+                        { h3: 'حقوقك بموجب نظام حماية البيانات الشخصية في المملكة العربية السعودية (PDPL)' },
+                        { p: 'نعالج البيانات الشخصية للمستخدمين في المملكة وفق نظام حماية البيانات الشخصية السعودي ولوائحه التنفيذية. ولك، بحسب ما يقرره النظام، الحق في العلم بالغرض من جمع بياناتك وكيفية معالجتها، والوصول إليها والحصول على نسخة منها، وطلب تصحيحها، وطلب إتلافها، وسحب موافقتك متى كانت المعالجة قائمة عليها. لممارسة أيٍّ من هذه الحقوق تواصل معنا عبر البيانات الواردة في قسم «تواصل معنا» أدناه. وإن رأيت أن حقوقك لم تُراعَ فيمكنك تقديم شكوى إلى الجهة المختصة، وهي الهيئة السعودية للبيانات والذكاء الاصطناعي (سدايا).' },
                     ],
                 },
                 {
@@ -457,12 +459,12 @@ const legalCopy = {
             sections: [
                 {
                     heading: '1. Acceptance of terms',
-                    blocks: [{ p: 'By accessing and using SMLE Question Bank (“the Service”), you accept and agree to be bound by these Terms of Service. If you do not agree to them, please do not use the Service.' }],
+                    blocks: [{ p: 'By accessing and using SQB (“the Service”), you accept and agree to be bound by these Terms of Service. If you do not agree to them, please do not use the Service.' }],
                 },
                 {
                     heading: '2. Description of the service',
                     blocks: [
-                        { p: 'SMLE Question Bank is an educational platform that helps doctors and medical and nursing students prepare for the Saudi Medical Licensing Examination (SMLE) and the Saudi Nursing Licensure Examination (SNLE). The Service provides:' },
+                        { p: 'SQB is an educational platform that helps doctors and medical and nursing students prepare for the Saudi Medical Licensing Examination (SMLE) and the Saudi Nursing Licensure Examination (SNLE). The Service provides:' },
                         {
                             ul: [
                                 'Access to a comprehensive, regularly updated question bank',
@@ -506,14 +508,14 @@ const legalCopy = {
                 {
                     heading: '5. Intellectual property',
                     blocks: [
-                        { p: 'All content on SMLE Question Bank — including but not limited to questions, explanations, graphics, logos and software — is the property of SMLE Question Bank or its content suppliers, and is protected by intellectual property law.' },
+                        { p: 'All content on SQB — including but not limited to questions, explanations, graphics, logos and software — is the property of SQB or its content suppliers, and is protected by intellectual property law.' },
                         { p: 'You may not reproduce, distribute, modify or create derivative works from any content without our prior written consent.' },
                     ],
                 },
                 {
                     heading: '6. Educational disclaimer',
                     blocks: [
-                        { p: 'The content provided on SMLE Question Bank is for educational and informational purposes only. While we work to keep it accurate and up to date:' },
+                        { p: 'The content provided on SQB is for educational and informational purposes only. While we work to keep it accurate and up to date:' },
                         {
                             ul: [
                                 'We are not affiliated with Prometric, SCFHS, or any official licensing body',
@@ -530,7 +532,7 @@ const legalCopy = {
                 },
                 {
                     heading: '8. Limitation of liability',
-                    blocks: [{ p: 'To the maximum extent permitted by law, SMLE Question Bank shall not be liable for any indirect, incidental, special, consequential or punitive damages, nor for any loss of profits or revenue, whether incurred directly or indirectly, nor for any loss of data, use, goodwill or other intangible losses.' }],
+                    blocks: [{ p: 'To the maximum extent permitted by law, SQB shall not be liable for any indirect, incidental, special, consequential or punitive damages, nor for any loss of profits or revenue, whether incurred directly or indirectly, nor for any loss of data, use, goodwill or other intangible losses.' }],
                 },
                 {
                     heading: '9. Subscription and payment',
@@ -597,7 +599,7 @@ const legalCopy = {
                                 '**Monthly plan:** a full refund may be requested within **3 days** of purchase.',
                                 '**4-month and annual plans:** a full refund may be requested within **14 days** of purchase.',
                                 'In all cases the request must be made in good faith, and requests made after the window above are generally not eligible, except where required by applicable Saudi consumer protection law.',
-                                'Renewals may be cancelled at any time to prevent future billing; cancellation stops the next renewal but does not retroactively refund the current active period.',
+                                'Plans are a single payment and do not renew automatically (see the [[/terms|Terms of Service]]), so there is no renewal to cancel and you will not be charged again unless you make a new purchase yourself. Simply ceasing to use SQB does not by itself refund the current active period; refunds follow the windows above.',
                                 'Accounts that received access for free (grandfathered users and admin-created accounts) are not billed and are therefore not eligible for refunds.',
                             ],
                         },
@@ -634,7 +636,7 @@ const legalCopy = {
             sections: [
                 {
                     heading: '1. Introduction',
-                    blocks: [{ p: 'Welcome to SMLE Question Bank (“SQB”, “we”, “our”, “us”). We are committed to protecting your personal information and your right to privacy. This Privacy Policy explains how we collect, use, disclose and safeguard your information when you visit our website (www.smle-question-bank.com) and use our services.' }],
+                    blocks: [{ p: 'Welcome to SQB (“we”, “our”, “us”). We are committed to protecting your personal information and your right to privacy. This Privacy Policy explains how we collect, use, disclose and safeguard your information when you visit our website (www.smle-question-bank.com) and use our services.' }],
                 },
                 {
                     heading: '2. Information we collect',
@@ -773,6 +775,8 @@ const legalCopy = {
                                 'Receive equal service and pricing, even if you exercise your privacy rights',
                             ],
                         },
+                        { h3: 'Rights under the Saudi Personal Data Protection Law (PDPL)' },
+                        { p: 'We process the personal data of users in Saudi Arabia in line with the Saudi Personal Data Protection Law (PDPL) and its implementing regulations. Under the PDPL you have, as the law provides, the right to be informed of why your data is collected and how it is processed, to access it and obtain a copy, to ask for it to be corrected, to ask for it to be destroyed, and to withdraw your consent where processing relies on it. To exercise any of these rights, contact us using the details in “Contact us” below. If you believe your rights have not been respected, you may complain to the competent authority, the Saudi Data and Artificial Intelligence Authority (SDAIA).' },
                     ],
                 },
                 {

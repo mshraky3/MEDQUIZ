@@ -27,9 +27,9 @@ const landingCopy = {
             secondary: 'تسجيل الخروج',
         },
         hero: {
-            // New-collection notice above the pill, shown while the September set is the freshest addition.
+            // New-collection notice above the pill, shown while the October set is the freshest addition.
             newTag: 'جديد',
-            newSet: 'تجميعة أكتوبر 2026 لاختبار SMLE (١–٢٢ أكتوبر)، والمزيد قادم',
+            newSet: 'مجموعة أكتوبر 2026 لاختبار SMLE: أسئلة تدريبية جديدة بنمط الاختبار الحالي، والمزيد قادم',
             pill: 'مساران: طب بشري وتمريض · ابدأ بـ 10 أسئلة مجانية',
             title: 'تدرّب بذكاء، واجتَز اختبار الترخيص بثقة',
             body: 'بنك أسئلة محدّث على نمط البرومترك، مع تفسير واضح لكل إجابة وتحليل فوري يكشف نقاط ضعفك ويرتّب أولويات مراجعتك — كل ما تحتاجه للوصول إلى درجتك المستهدفة في مكان واحد.',
@@ -96,7 +96,7 @@ const landingCopy = {
             soonNote: 'يمكنك إنشاء حسابك على هذا المسار الآن، وسنبلغك بالبريد فور رفع المحتوى.',
             medicalDesc: 'بنك أسئلة وملخصات كاملة للباطنة والجراحة والأطفال والنساء والولادة.',
             nursingDesc: 'مسار مستقل بأسئلته وملخصاته وتحليلات أدائه الخاصة — منفصل تماماً عن مسار الطب.',
-            dentalDesc: 'مسار طب الأسنان لاختبار SDLE: أسئلة موزعة على 13 تخصصاً، ومنها بنك مشروح بالمراجع وتجميعات الطلاب.',
+            dentalDesc: 'مسار طب الأسنان لاختبار SDLE: أسئلة موزعة على 13 تخصصاً، ومنها بنك مشروح بالمراجع ومجموعات أسئلة تدريبية إضافية.',
             cardCta: (title) => `ابدأ مسار ${title}`,
             ctaNote: '10 أسئلة مجانية · بدون بطاقة دفع',
         },
@@ -217,7 +217,7 @@ const landingCopy = {
         },
         hero: {
             newTag: 'New',
-            newSet: 'October 2026 recall set for the SMLE (1–22 October), more coming',
+            newSet: 'October 2026 set for the SMLE: new practice questions in the current exam style, more coming',
             pill: 'Two tracks: medicine and nursing · Start with 10 free questions',
             title: 'Practise smarter, and walk into your licensing exam confident',
             body: 'A question bank updated to the Prometric style, a clear explanation for every answer, and instant analytics that expose your weak spots and tell you what to revise next — everything you need to hit your target score, in one place.',
@@ -286,7 +286,7 @@ const landingCopy = {
             soonNote: 'You can create your account on this track now — we will email you the moment the content goes live.',
             medicalDesc: 'A full question bank and summaries for internal medicine, surgery, paediatrics, and obstetrics & gynaecology.',
             nursingDesc: 'A standalone track with its own questions, summaries and performance analytics — completely separate from the medical track.',
-            dentalDesc: 'The dental track for the SDLE: questions across 13 specialties, including an explained bank with references and student recalls.',
+            dentalDesc: 'The dental track for the SDLE: questions across 13 specialties, including an explained bank with references and additional practice collections.',
             cardCta: (title) => `Start the ${title} track`,
             ctaNote: '10 free questions · No payment card',
         },
