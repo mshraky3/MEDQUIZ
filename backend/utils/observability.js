@@ -163,6 +163,7 @@ export function alertOn5xx(notify) {
             const ctx = requestStore.getStore();
             if (ctx?.alerted) return;              // one alert per request
             if (res.statusCode < 500) return;
+            if (res.locals?.__expected5xx === true) return; // handler marked this 5xx as expected (e.g. feature switched off)
             if (ctx) ctx.alerted = true;
 
             const err = ctx?.error
