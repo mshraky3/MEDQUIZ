@@ -10,7 +10,7 @@
  * previously showed English and Arabic stacked paragraph-by-paragraph, which is
  * unreadable in either language. The company name, commercial registration
  * number, contact details, and the names SMLE / SNLE / SCFHS / Prometric /
- * Moyasar / Google AdSense / GDPR / CCPA stay as they are in both versions.
+ * Moyasar / GDPR / CCPA stay as they are in both versions.
  */
 
 const CONTACT_EMAIL = 'alshraky3@gmail.com';
@@ -19,7 +19,7 @@ const legalCopy = {
     ar: {
         terms: {
             title: 'شروط الاستخدام',
-            updated: 'آخر تحديث: أكتوبر 2026',
+            updated: 'آخر تحديث: نوفمبر 2026',
             sections: [
                 {
                     heading: '1. قبول الشروط',
@@ -91,15 +91,11 @@ const legalCopy = {
                     ],
                 },
                 {
-                    heading: '7. الإعلانات',
-                    blocks: [{ p: 'قد تعرض الخدمة إعلانات من أطراف ثالثة، من بينها Google AdSense. نحن غير مسؤولين عن محتوى هذه الإعلانات، وأي تعامل بينك وبين المعلن هو مسؤوليتكما وحدكما.' }],
-                },
-                {
-                    heading: '8. حدود المسؤولية',
+                    heading: '7. حدود المسؤولية',
                     blocks: [{ p: 'إلى أقصى حدّ يسمح به النظام، لا تتحمّل SQB أي مسؤولية عن أضرار غير مباشرة أو عرضية أو خاصة أو تبعية أو تأديبية، ولا عن أي خسارة في الأرباح أو الإيرادات أو البيانات أو السمعة، سواء وقعت بشكل مباشر أو غير مباشر.' }],
                 },
                 {
-                    heading: '9. الاشتراك والدفع',
+                    heading: '8. الاشتراك والدفع',
                     blocks: [
                         { p: 'تعمل الخدمة بنظام مجاني محدود مع اشتراكات مدفوعة اختيارية:' },
                         {
@@ -119,23 +115,23 @@ const legalCopy = {
                     ],
                 },
                 {
-                    heading: '10. تعديل الخدمة',
+                    heading: '9. تعديل الخدمة',
                     blocks: [{ p: 'نحتفظ بالحق في تعديل الخدمة أو تعليقها أو إيقافها (كلياً أو جزئياً) في أي وقت، بإشعار أو بدونه، ودون أن نتحمّل مسؤولية تجاهك أو تجاه أي طرف ثالث نتيجة ذلك.' }],
                 },
                 {
-                    heading: '11. إنهاء الحساب',
+                    heading: '10. إنهاء الحساب',
                     blocks: [{ p: 'يجوز لنا إيقاف حسابك أو إنهاء وصولك إلى الخدمة فوراً، دون إشعار مسبق أو مسؤولية، لأي سبب — بما في ذلك مخالفة هذه الشروط.' }],
                 },
                 {
-                    heading: '12. تعديل الشروط',
+                    heading: '11. تعديل الشروط',
                     blocks: [{ p: 'نحتفظ بالحق في تحديث هذه الشروط في أي وقت، وسننشر إشعاراً على الموقع عند إجراء تغييرات جوهرية. استمرارك في استخدام الخدمة بعد التغيير يُعدّ قبولاً بالشروط الجديدة.' }],
                 },
                 {
-                    heading: '13. القانون الواجب التطبيق',
+                    heading: '12. القانون الواجب التطبيق',
                     blocks: [{ p: 'تخضع هذه الشروط لأنظمة المملكة العربية السعودية وتُفسَّر وفقاً لها، دون اعتبار لقواعد تنازع القوانين.' }],
                 },
                 {
-                    heading: '14. للتواصل',
+                    heading: '13. للتواصل',
                     blocks: [
                         { p: 'إذا كان لديك أي سؤال حول هذه الشروط، تواصل معنا:' },
                         { p: `**البريد الإلكتروني:** ${CONTACT_EMAIL}` },
@@ -196,7 +192,7 @@ const legalCopy = {
 
         privacy: {
             title: 'سياسة الخصوصية',
-            updated: 'آخر تحديث: أكتوبر 2026',
+            updated: 'آخر تحديث: نوفمبر 2026',
             sections: [
                 {
                     heading: '1. مقدمة',
@@ -228,6 +224,8 @@ const legalCopy = {
                         },
                         { h3: 'المعلومات المجمَّعة تلقائياً' },
                         { p: 'عند دخولك موقعنا قد نجمع تلقائياً معلومات عن جهازك، منها نوع المتصفح وعنوان IP والمنطقة الزمنية وبعض ملفات تعريف الارتباط المخزّنة على جهازك. كما نجمع معلومات عن الصفحات التي تزورها، والموقع أو عبارة البحث التي أوصلتك إلينا، وكيفية تفاعلك مع الموقع.' },
+                        { h3: 'تطبيق أندرويد وتسجيل الدخول بحساب Google' },
+                        { p: 'يستخدم تطبيق SQB لأندرويد حسابك نفسه وبياناتك نفسها على الموقع، وتُنشأ الحسابات عبر الموقع. وإذا سجّلت الدخول بحساب Google فإننا نستخدم البريد الإلكتروني الموثَّق للحساب ومعرّف حساب Google لربطه بحسابك في SQB. ولا نعرض إعلانات ولا نستخدم معرّفات إعلانية.' },
                     ],
                 },
                 {
@@ -240,7 +238,6 @@ const legalCopy = {
                                 'تقديم تجربة اختبارات مخصّصة وتتبّع تقدّمك',
                                 'تحليل خدماتنا ومحتوانا وتحسينهما',
                                 'التواصل معك بشأن التحديثات والمزايا الجديدة',
-                                'عرض إعلانات مناسبة عبر Google AdSense',
                                 'الحماية من الاحتيال والنشاط غير المصرّح به',
                                 'الالتزام بالمتطلبات النظامية',
                             ],
@@ -248,7 +245,7 @@ const legalCopy = {
                         { p: '**الأساس النظامي للمعالجة (GDPR):** نعالج بياناتك الشخصية استناداً إلى:' },
                         {
                             ul: [
-                                '**الموافقة:** عند موافقتك على استخدام ملفات تعريف الارتباط والإعلانات المخصّصة',
+                                '**الموافقة:** عند موافقتك على استخدام ملفات تعريف الارتباط',
                                 '**العقد:** لتقديم الخدمات التي اشتركت فيها',
                                 '**المصلحة المشروعة:** لتحسين المنصة ومنع الاحتيال',
                             ],
@@ -256,32 +253,13 @@ const legalCopy = {
                     ],
                 },
                 {
-                    heading: '4. الإعلانات وخدمات الأطراف الثالثة',
-                    blocks: [
-                        { p: 'نستخدم **Google AdSense** لعرض الإعلانات على موقعنا. ويستخدم AdSense ملفات تعريف الارتباط وإشارات الويب لعرض إعلانات بناءً على زياراتك السابقة لموقعنا أو لمواقع أخرى على الإنترنت.' },
-                        { p: '**ملف DoubleClick DART من Google:** تستخدم Google، بصفتها طرفاً ثالثاً، ملف DART لعرض إعلانات لزوّار موقعنا بناءً على زياراتهم لموقعنا ولمواقع أخرى. ويمكن للمستخدمين إلغاء الاشتراك في هذا الملف عبر سياسة خصوصية شبكة إعلانات ومحتوى Google.' },
-                        { p: 'يستخدم مزوّدو الأطراف الثالثة، ومنهم Google، ملفات تعريف الارتباط لعرض إعلانات بناءً على زيارات المستخدم السابقة لموقعنا أو لمواقع أخرى.' },
-                        { p: 'يمكنك إلغاء الاشتراك في الإعلانات المخصّصة عبر:' },
-                        {
-                            ul: [
-                                '[[https://www.google.com/settings/ads|إعدادات إعلانات Google]]',
-                                '[[https://policies.google.com/technologies/ads|خصوصية وشروط Google — الإعلانات]]',
-                                '[[https://optout.networkadvertising.org/|صفحة إلغاء الاشتراك في Network Advertising Initiative]]',
-                                '[[https://optout.aboutads.info/|صفحة إلغاء الاشتراك في Digital Advertising Alliance]]',
-                            ],
-                        },
-                        { p: 'لمزيد من المعلومات عن كيفية استخدام Google للبيانات، راجع [[https://policies.google.com/privacy|سياسة خصوصية Google]].' },
-                    ],
-                },
-                {
-                    heading: '5. ملفات تعريف الارتباط وتقنيات التتبّع',
+                    heading: '4. ملفات تعريف الارتباط وتقنيات التتبّع',
                     blocks: [
                         { p: 'نستخدم ملفات تعريف الارتباط وتقنيات تتبّع مشابهة لتتبّع النشاط على موقعنا وتخزين بعض المعلومات. أنواع الملفات التي نستخدمها:' },
                         {
                             ul: [
                                 '**الملفات الأساسية:** لازمة لعمل الموقع بشكل صحيح (مثل تسجيل الدخول وإدارة الجلسة)',
                                 '**ملفات التحليلات:** تساعدنا على فهم كيفية تفاعل الزوّار مع الموقع',
-                                '**ملفات الإعلانات:** تستخدمها Google AdSense وشركاؤها لعرض إعلانات مناسبة لسلوك تصفّحك',
                                 '**ملفات التفضيلات:** تحفظ إعداداتك وتفضيلاتك (مثل لغة الواجهة)',
                             ],
                         },
@@ -290,14 +268,13 @@ const legalCopy = {
                     ],
                 },
                 {
-                    heading: '6. الاحتفاظ بالبيانات',
+                    heading: '5. الاحتفاظ بالبيانات',
                     blocks: [
                         { p: 'نحتفظ بمعلوماتك الشخصية طالما ظلّ حسابك نشطاً أو بالقدر اللازم لتقديم خدماتنا. وتحديداً:' },
                         {
                             ul: [
                                 '**بيانات الحساب:** تُحفظ حتى تطلب حذف حسابك',
                                 '**بيانات الأداء في الاختبارات:** تُحفظ طوال مدة وجود حسابك',
-                                '**بيانات ملفات تعريف الارتباط:** تُحفظ ملفات الإعلانات عادةً حتى 13 شهراً',
                                 '**بيانات نموذج الاتصال:** تُحفظ حتى 12 شهراً',
                             ],
                         },
@@ -314,11 +291,11 @@ const legalCopy = {
                     ],
                 },
                 {
-                    heading: '7. أمن البيانات',
+                    heading: '6. أمن البيانات',
                     blocks: [{ p: 'نطبّق إجراءات أمنية تقنية وتنظيمية مناسبة لحماية معلوماتك الشخصية، بما في ذلك النقل الآمن للبيانات. ومع ذلك، لا توجد وسيلة نقل عبر الإنترنت أو تخزين إلكتروني آمنة بنسبة 100%.' }],
                 },
                 {
-                    heading: '8. حقوقك',
+                    heading: '7. حقوقك',
                     blocks: [
                         { h3: 'لجميع المستخدمين' },
                         {
@@ -327,7 +304,6 @@ const legalCopy = {
                                 'تصحيح البيانات غير الدقيقة',
                                 'طلب حذف بياناتك',
                                 'الاعتراض على معالجة بياناتك',
-                                'إلغاء الاشتراك في الإعلانات المخصّصة',
                             ],
                         },
                         { h3: 'حقوق GDPR (مستخدمو الاتحاد الأوروبي)' },
@@ -356,19 +332,19 @@ const legalCopy = {
                     ],
                 },
                 {
-                    heading: '9. خصوصية الأطفال',
+                    heading: '8. خصوصية الأطفال',
                     blocks: [{ p: 'خدمتنا غير موجّهة للأطفال دون سن 13 عاماً، ولا نجمع معلومات شخصية منهم عن قصد. وإذا اكتشفنا أن طفلاً دون 13 عاماً قدّم لنا معلومات شخصية، فسنحذفها فوراً.' }],
                 },
                 {
-                    heading: '10. نقل البيانات دولياً',
+                    heading: '9. نقل البيانات دولياً',
                     blocks: [{ p: 'قد تُنقل معلوماتك وتُحفظ على خوادم خارج بلد إقامتك. ونحرص على وجود ضمانات كافية لحماية بياناتك عند نقلها دولياً.' }],
                 },
                 {
-                    heading: '11. التغييرات على هذه السياسة',
+                    heading: '10. التغييرات على هذه السياسة',
                     blocks: [{ p: 'قد نحدّث سياسة الخصوصية من وقت لآخر، وسنخطرك بأي تغييرات بنشر السياسة الجديدة على هذه الصفحة وتحديث تاريخ «آخر تحديث». ونشجّعك على مراجعة هذه الصفحة دورياً.' }],
                 },
                 {
-                    heading: '12. تواصل معنا',
+                    heading: '11. تواصل معنا',
                     blocks: [
                         { p: 'إذا كان لديك أي سؤال حول سياسة الخصوصية هذه، أو رغبت في ممارسة حقوقك على بياناتك، أو لديك أي ملاحظة على طريقة التعامل معها، تواصل معنا:' },
                         {
@@ -465,7 +441,7 @@ const legalCopy = {
     en: {
         terms: {
             title: 'Terms of Service',
-            updated: 'Last updated: October 2026',
+            updated: 'Last updated: November 2026',
             sections: [
                 {
                     heading: '1. Acceptance of terms',
@@ -537,15 +513,11 @@ const legalCopy = {
                     ],
                 },
                 {
-                    heading: '7. Advertisements',
-                    blocks: [{ p: 'The Service may display advertisements provided by third parties, including Google AdSense. We are not responsible for the content of those advertisements; your interactions with advertisers are solely between you and the advertiser.' }],
-                },
-                {
-                    heading: '8. Limitation of liability',
+                    heading: '7. Limitation of liability',
                     blocks: [{ p: 'To the maximum extent permitted by law, SQB shall not be liable for any indirect, incidental, special, consequential or punitive damages, nor for any loss of profits or revenue, whether incurred directly or indirectly, nor for any loss of data, use, goodwill or other intangible losses.' }],
                 },
                 {
-                    heading: '9. Subscription and payment',
+                    heading: '8. Subscription and payment',
                     blocks: [
                         { p: 'The Service operates on a limited free tier with optional paid subscriptions:' },
                         {
@@ -565,23 +537,23 @@ const legalCopy = {
                     ],
                 },
                 {
-                    heading: '10. Service modifications',
+                    heading: '9. Service modifications',
                     blocks: [{ p: 'We reserve the right to modify, suspend or discontinue the Service (or any part of it) at any time, with or without notice. We shall not be liable to you or any third party for any such modification, suspension or discontinuation.' }],
                 },
                 {
-                    heading: '11. Termination',
+                    heading: '10. Termination',
                     blocks: [{ p: 'We may terminate or suspend your account and access to the Service immediately, without prior notice or liability, for any reason — including breach of these Terms.' }],
                 },
                 {
-                    heading: '12. Changes to these terms',
+                    heading: '11. Changes to these terms',
                     blocks: [{ p: 'We reserve the right to update these Terms at any time. We will notify users of significant changes by posting a notice on our website. Continued use of the Service after a change constitutes acceptance of the new Terms.' }],
                 },
                 {
-                    heading: '13. Governing law',
+                    heading: '12. Governing law',
                     blocks: [{ p: 'These Terms are governed by, and construed in accordance with, the laws of the Kingdom of Saudi Arabia, without regard to its conflict of law provisions.' }],
                 },
                 {
-                    heading: '14. Contact information',
+                    heading: '13. Contact information',
                     blocks: [
                         { p: 'If you have any questions about these Terms, please contact us at:' },
                         { p: `**Email:** ${CONTACT_EMAIL}` },
@@ -642,7 +614,7 @@ const legalCopy = {
 
         privacy: {
             title: 'Privacy Policy',
-            updated: 'Last updated: October 2026',
+            updated: 'Last updated: November 2026',
             sections: [
                 {
                     heading: '1. Introduction',
@@ -672,6 +644,8 @@ const legalCopy = {
                         },
                         { h3: 'Automatically collected information' },
                         { p: 'When you access our website we may automatically collect certain information about your device, including your browser, IP address, time zone and some of the cookies installed on your device. We also collect information about the pages you visit, the site or search terms that referred you to us, and how you interact with our website.' },
+                        { h3: 'Android app and Google sign-in' },
+                        { p: 'The SQB Android app uses the same SQB account and the same data as the website, and accounts are created on the website. If you sign in with Google, we use the verified e-mail address of your Google account and Google’s account identifier to link it to your SQB account. We do not show advertisements and do not use advertising identifiers.' },
                     ],
                 },
                 {
@@ -684,7 +658,6 @@ const legalCopy = {
                                 'Provide a personalised quiz experience and track your progress',
                                 'Analyse and improve our services and content',
                                 'Communicate with you about updates and features',
-                                'Display relevant advertisements through Google AdSense',
                                 'Protect against fraudulent or unauthorised activity',
                                 'Comply with legal obligations',
                             ],
@@ -692,7 +665,7 @@ const legalCopy = {
                         { p: '**Legal basis for processing (GDPR):** we process your personal data on the basis of:' },
                         {
                             ul: [
-                                '**Consent:** when you agree to cookie usage and personalised ads',
+                                '**Consent:** when you agree to cookie usage',
                                 '**Contract:** to provide the services you have subscribed to',
                                 '**Legitimate interest:** to improve our platform and prevent fraud',
                             ],
@@ -700,32 +673,13 @@ const legalCopy = {
                     ],
                 },
                 {
-                    heading: '4. Advertising and third-party services',
-                    blocks: [
-                        { p: 'We use **Google AdSense** to display advertisements on our website. Google AdSense uses cookies and web beacons to serve ads based on your prior visits to our website or to other websites.' },
-                        { p: '**Google’s DoubleClick DART cookie:** Google, as a third-party vendor, uses the DART cookie to serve ads to our visitors based on their visits to our site and other sites. Users may opt out of the DART cookie by visiting the Google ad and content network privacy policy.' },
-                        { p: 'Third-party vendors, including Google, use cookies to serve ads based on a user’s prior visits to our website or other websites.' },
-                        { p: 'You may opt out of personalised advertising by visiting:' },
-                        {
-                            ul: [
-                                '[[https://www.google.com/settings/ads|Google Ads Settings]]',
-                                '[[https://policies.google.com/technologies/ads|Google Privacy & Terms — Advertising]]',
-                                '[[https://optout.networkadvertising.org/|Network Advertising Initiative opt-out page]]',
-                                '[[https://optout.aboutads.info/|Digital Advertising Alliance opt-out page]]',
-                            ],
-                        },
-                        { p: 'For more information about how Google uses data, see the [[https://policies.google.com/privacy|Google Privacy Policy]].' },
-                    ],
-                },
-                {
-                    heading: '5. Cookies and tracking technologies',
+                    heading: '4. Cookies and tracking technologies',
                     blocks: [
                         { p: 'We use cookies and similar tracking technologies to track activity on our website and store certain information. The types of cookie we use are:' },
                         {
                             ul: [
                                 '**Essential cookies:** required for the website to function properly (e.g. authentication, session management)',
                                 '**Analytics cookies:** help us understand how visitors interact with our website',
-                                '**Advertising cookies:** used by Google AdSense and its partners to display relevant advertisements based on your browsing behaviour',
                                 '**Preference cookies:** remember your settings and preferences (e.g. your language)',
                             ],
                         },
@@ -734,14 +688,13 @@ const legalCopy = {
                     ],
                 },
                 {
-                    heading: '6. Data retention',
+                    heading: '5. Data retention',
                     blocks: [
                         { p: 'We retain your personal information for as long as your account is active, or as needed to provide our services. Specifically:' },
                         {
                             ul: [
                                 '**Account data:** retained until you request account deletion',
                                 '**Quiz performance data:** retained for the lifetime of your account',
-                                '**Cookie data:** advertising cookies are typically retained for up to 13 months',
                                 '**Contact form data:** retained for up to 12 months',
                             ],
                         },
@@ -758,11 +711,11 @@ const legalCopy = {
                     ],
                 },
                 {
-                    heading: '7. Data security',
+                    heading: '6. Data security',
                     blocks: [{ p: 'We implement appropriate technical and organisational security measures to protect your personal information, including secure data transmission. However, no method of transmission over the internet or of electronic storage is 100% secure.' }],
                 },
                 {
-                    heading: '8. Your rights',
+                    heading: '7. Your rights',
                     blocks: [
                         { h3: 'For all users' },
                         {
@@ -771,7 +724,6 @@ const legalCopy = {
                                 'Correct inaccurate data',
                                 'Request deletion of your data',
                                 'Object to the processing of your data',
-                                'Opt out of personalised advertising',
                             ],
                         },
                         { h3: 'GDPR rights (EU/EEA users)' },
@@ -800,19 +752,19 @@ const legalCopy = {
                     ],
                 },
                 {
-                    heading: '9. Children’s privacy',
+                    heading: '8. Children’s privacy',
                     blocks: [{ p: 'Our service is not intended for children under 13 years of age, and we do not knowingly collect personal information from them. If we discover that a child under 13 has provided us with personal information, we will delete it immediately.' }],
                 },
                 {
-                    heading: '10. International data transfers',
+                    heading: '9. International data transfers',
                     blocks: [{ p: 'Your information may be transferred to, and held on, servers located outside your country of residence. We ensure that adequate safeguards are in place to protect your data when it is transferred internationally.' }],
                 },
                 {
-                    heading: '11. Changes to this policy',
+                    heading: '10. Changes to this policy',
                     blocks: [{ p: 'We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new policy on this page and updating the “Last updated” date. We encourage you to review this page periodically.' }],
                 },
                 {
-                    heading: '12. Contact us',
+                    heading: '11. Contact us',
                     blocks: [
                         { p: 'If you have any questions about this Privacy Policy, wish to exercise your data rights, or have concerns about how your data is handled, please contact us at:' },
                         {
