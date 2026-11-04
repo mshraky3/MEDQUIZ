@@ -71,6 +71,13 @@ const QUIZ = () => {
   const t = useCopy(quizCopy).quiz;
   const { lang, dir } = useLang();
   const { user, sessionToken } = useContext(UserContext);
+  // Booleans/refs for the fetch effect below: `user`, `sessionToken` and `t` are
+  // objects/strings whose identity can change mid-quiz (auth restored from
+  // storage after mount, language switch). Depending on them re-ran the fetch
+  // and swapped the question set under answers keyed by index.
+  const hasAuth = !!user && !!sessionToken;
+  const tRef = useRef(t);
+  tRef.current = t;
   // A bookmarked/back-button /quiz/:n has no location.state, but the user is
   // still signed in — falling back to the session's own id (matching
   // QUIZS.jsx:45) is what lets sendQuizData actually submit instead of
@@ -114,10 +121,14 @@ const QUIZ = () => {
       }
     })();
   }
-  // Consumed on the fetch effect's first run only — a later refetch (manual
-  // retry, changed params) must hit the network like normal, not keep
-  // replaying the same restored snapshot forever.
-  const skipInitialFetchRef = useRef(!!savedRef.current);
+  // The restored snapshot replaces the first fetch only; a manual retry or
+  // different params must hit the network like normal, not keep replaying
+  // the same restored snapshot forever.
+  // It now remembers WHICH quiz the snapshot belongs to: the restored questions
+  // are kept for that quiz only (even if auth or the language settles later),
+  // while a genuinely different quiz (other params) or a retry still fetches.
+  const paramsKey = `${numQuestions}|${types}|${source}|${id}|${isFinalQuiz ? 'f' : 'n'}`;
+  const restoredParamsKeyRef = useRef(savedRef.current ? paramsKey : null);
 
   const [questions, setQuestions] = useState(() => savedRef.current?.questions || []);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(() => savedRef.current?.currentQuestionIndex || 0);
@@ -152,6 +163,8 @@ const QUIZ = () => {
   });
   const [timerExpired, setTimerExpired] = useState(false);
   const [questionAnswers, setQuestionAnswers] = useState(() => savedRef.current?.questionAnswers || {});
+  const answersRef = useRef(questionAnswers);
+  answersRef.current = questionAnswers;
   // Indexes whose answer has been revealed in study mode. Held here rather than
   // in <Question> because that component is keyed by index and remounts on
   // every navigation, which would reset the reveal when the student goes back.
@@ -189,9 +202,10 @@ const QUIZ = () => {
   }, [timeRemaining, timerMinutes, timerExpired, quizFinished]);
 
   useEffect(() => {
-    if (skipInitialFetchRef.current) {
+    if (restoredParamsKeyRef.current === paramsKey && retryCount === 0) {
       // The restored snapshot already has everything this effect would fetch.
-      skipInitialFetchRef.current = false;
+      // Kept for every re-run until "Another quiz"/retry bumps retryCount, so a
+      // late auth change can no longer replace the restored questions.
       return undefined;
     }
 
@@ -208,8 +222,8 @@ const QUIZ = () => {
 
         let response;
         if (isFinalQuiz) {
-          if (!user || !sessionToken) {
-            setError(t.errFinalAuth);
+          if (!hasAuth) {
+            setError(tRef.current.errFinalAuth);
             setLoading(false);
             return;
           }
@@ -225,16 +239,24 @@ const QUIZ = () => {
           const sanitizedQuestions = response.data.questions.filter(isValidQuestion);
 
           if (sanitizedQuestions.length > 0) {
+            // Never swap the question set under answers already given for the
+            // old one (answers are keyed by position). A genuine new set
+            // (first load, retry, another quiz) starts from a clean slate.
+            if (Object.keys(answersRef.current).length > 0) return;
             setQuestions(sanitizedQuestions);
+            setQuestionAnswers({});
+            setCurrentQuestionIndex(0);
+            setSelectedAnswer(null);
+            setRevealedIndexes(new Set());
           } else {
-            setError(t.errInvalidData);
+            setError(tRef.current.errInvalidData);
           }
         } else if (response.data.completed) {
           // No unseen questions left because the whole category is finished —
           // show the completion screen instead of an error.
           setCategoryDone({ total: response.data.totalInCategory || 0 });
         } else {
-          setError(t.errNoQuestions);
+          setError(tRef.current.errNoQuestions);
         }
       } catch (err) {
         if (err.code === 'ERR_CANCELED' || err.name === 'CanceledError') return;
@@ -245,7 +267,7 @@ const QUIZ = () => {
           setPaywalled(err.response.data?.reason || 'free_allowance_exhausted');
         } else {
           console.error('Error fetching questions:', err);
-          setError(t.errLoadFailed);
+          setError(tRef.current.errLoadFailed);
         }
       } finally {
         setLoading(false);
@@ -254,7 +276,7 @@ const QUIZ = () => {
 
     fetchQuestions();
     return () => controller.abort();
-  }, [numQuestions, types, source, id, retryCount, isFinalQuiz, user, sessionToken, t]);
+  }, [numQuestions, types, source, id, retryCount, isFinalQuiz, hasAuth, paramsKey]);
 
   const handleRetry = () => {
     setError(null);
