@@ -131,6 +131,26 @@ export function isWalletInjectedError(message, stack) {
 }
 
 /**
+ * Errors raised by a visitor's own browser EXTENSION (MetaMask and other wallets,
+ * password managers, translators ...). The stack names the extension's own
+ * scheme, e.g. "chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/inpage.js",
+ * or the message is the known wallet "Failed to connect to MetaMask". SQB has no
+ * wallet code, so these were mailed as CRITICAL for nothing.
+ *
+ * Deliberately narrow, like the checks above: a stack that ALSO contains an
+ * http(s) .js frame (our bundle) is treated as ours and still reports.
+ */
+const EXTENSION_FRAME_RE = /(?:chrome|moz|safari|safari-web|ms-browser)-extension:\/\//i;
+const WALLET_CONNECT_RE = /^(?:uncaught\s*(?:\(in promise\)\s*)?)?(?:error:\s*)?failed to connect to metamask(?:\W|$)/i;
+
+export function isBrowserExtensionError(message, stack) {
+    const st = String(stack || '');
+    if (PAGE_SCRIPT_FRAME_RE.test(st)) return false;
+    if (EXTENSION_FRAME_RE.test(st)) return true;
+    return WALLET_CONNECT_RE.test(String(message || '').trim());
+}
+
+/**
  * A window 'error' event whose message says nothing at all.
  *
  * Two of these were mailed as CRITICAL with the message "Uncaught " — the
@@ -818,7 +838,11 @@ export function reportUnhandledRejection(event) {
         // Injected extension scripts share this page's event loop, and their
         // rejections land on our window. They are not this app's to fix, and
         // they arrived in enough volume to crowd out real alerts.
-        if (isExtensionNoise(error) || isIgnorableBrowserError(error?.message)) {
+        if (
+            isExtensionNoise(error)
+            || isIgnorableBrowserError(error?.message)
+            || isBrowserExtensionError(error?.message, error?.stack)
+        ) {
             if (CONFIG.enableConsoleLog) {
                 console.log('[ErrorTracking] Skipping non-application rejection:', error);
             }
@@ -892,6 +916,7 @@ export function reportGlobalError(event) {
             || isContentlessError(event.message)
             || isInjectedInAppBrowserError(event.message, event.error?.stack)
             || isWalletInjectedError(event.message, event.error?.stack)
+            || isBrowserExtensionError(event.message, event.error?.stack)
         ) {
             if (CONFIG.enableConsoleLog) {
                 console.log('[ErrorTracking] Skipping unactionable browser notice:', event.message);
