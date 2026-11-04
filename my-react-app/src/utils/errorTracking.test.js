@@ -7,7 +7,7 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { isInjectedInAppBrowserError, isWalletInjectedError } from './errorTracking.js';
+import { isInjectedInAppBrowserError, isWalletInjectedError, isBrowserExtensionError } from './errorTracking.js';
 
 const SAFARI_MSG = "ReferenceError: Can't find variable: __alhWeb";
 const CHROME_MSG = 'Uncaught ReferenceError: __alhWeb is not defined';
@@ -74,4 +74,28 @@ test('still reports a window.ethereum error from an SQB script, and unrelated er
         false
     );
     assert.equal(isWalletInjectedError("undefined is not an object (evaluating 'quiz.questions')", ''), false);
+});
+
+// --- browser extension errors (MetaMask etc.) ---------------------------------
+const NL = String.fromCharCode(10);
+const EXT_STACK = 'Error: Failed to connect to MetaMask' + NL + '    at Object.connect (chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/scripts/inpage.js:1:12345)';
+const OUR_FRAME = '    at q (https://www.smle-question-bank.com/assets/index-abc123.js:1:2)';
+
+test('drops errors whose stack comes from a chrome-extension:// or moz-extension:// script', () => {
+    assert.equal(isBrowserExtensionError('Failed to connect to MetaMask', EXT_STACK), true);
+    assert.equal(
+        isBrowserExtensionError('x is not a function', 'TypeError: x' + NL + '    at a (moz-extension://1234-abcd/content.js:2:3)'),
+        true
+    );
+});
+
+test('drops the MetaMask connect message even when the stack is empty', () => {
+    assert.equal(isBrowserExtensionError('Failed to connect to MetaMask', ''), true);
+    assert.equal(isBrowserExtensionError('Failed to connect to MetaMask', undefined), true);
+});
+
+test('still reports real errors, including one that merely passes through our bundle', () => {
+    assert.equal(isBrowserExtensionError('Cannot read properties of undefined', 'TypeError: x' + NL + OUR_FRAME), false);
+    assert.equal(isBrowserExtensionError('Network Error', ''), false);
+    assert.equal(isBrowserExtensionError('Failed to connect to MetaMask', EXT_STACK + NL + OUR_FRAME), false);
 });
