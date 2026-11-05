@@ -150,6 +150,11 @@
   letter-spacing: -0.5px;
 }
 
+/* The signup page renders this as its h1: keep the look of the old div. */
+h1.login-title {
+  line-height: inherit;
+}
+
 .login-subtitle {
   color: var(--muted);
   font-size: 15px;

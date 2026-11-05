@@ -1,5 +1,6 @@
 import guidesCopy from '../i18n/copy/guides.js';
 import { guideArticleHtml, guidesHubHtml, guidesTeaserHtml, siteFooterNavHtml } from './prerenderHtml.js';
+import { capDescription, capTitle } from './fitText.js';
 import { EN_PRERENDER, FAQ_ITEMS_EN, enLandingHtml, enQuestionsTeaserHtml } from './staticPrerenderEn.js';
 import {
     absoluteUrl,
@@ -141,14 +142,14 @@ const webSiteSchema = {
     alternateName: 'SQB',
     url: SITE_ORIGIN,
     inLanguage: 'ar-SA',
-    description: 'منصة عربية للتحضير لاختبار SMLE للطب البشري وSNLE للتمريض والبرومترك، من خلال بنك أسئلة وتحليلات أداء ومسارات تدريب عملية.'
+    description: 'منصة عربية للتحضير لاختبار SMLE للطب البشري وSNLE للتمريض وSDLE لطب الأسنان والبرومترك، من خلال بنك أسئلة وتحليلات أداء ومسارات تدريب عملية.'
 };
 
 const routeMap = {
     '/': {
-        title: 'اس كيو بي | بنك أسئلة SMLE وSNLE وبرومترك في السعودية',
-        description: 'منصة SQB تساعدك على التحضير لاختبار SMLE للطب البشري وSNLE للتمريض والبرومترك، عبر بنك أسئلة عربي، تحليلات أداء، اختبارات تدريبية، ومراجعة ذكية لطلاب الطب والتمريض في السعودية.',
-        keywords: 'SMLE, SNLE, Prometric, Saudi Medical Licensing Examination, Saudi Nursing Licensure Examination, بنك أسئلة SMLE, بنك اسئلة تمريض, اسئلة SNLE, اسئلة برومترك, اسئلة الهيئة السعودية للتخصصات الصحية, تحضير SMLE, تحضير اختبار التمريض, منصة طبية, بنك اسئلة طبية, Saudi Prometric questions, nursing MCQ, medical MCQ',
+        title: 'اس كيو بي | بنك أسئلة SMLE وSNLE وSDLE وبرومترك',
+        description: 'منصة SQB للتحضير لاختبار SMLE للطب البشري وSNLE للتمريض وSDLE لطب الأسنان والبرومترك: بنك أسئلة عربي، تحليلات أداء، واختبارات تدريبية.',
+        keywords: 'SMLE, SNLE, SDLE, Saudi Dental Licensing Examination, Prometric, Saudi Medical Licensing Examination, Saudi Nursing Licensure Examination, بنك أسئلة SMLE, بنك اسئلة تمريض, اسئلة SNLE, اسئلة برومترك, اسئلة الهيئة السعودية للتخصصات الصحية, تحضير SMLE, تحضير اختبار التمريض, منصة طبية, بنك اسئلة طبية, Saudi Prometric questions, nursing MCQ, medical MCQ',
         alternates: ['ar-SA', 'ar', 'x-default'],
         structuredData: [
             routePageData('/', 'اس كيو بي | بنك أسئلة SMLE وبرومترك', 'منصة عربية للتحضير لاختبار الهيئة السعودية للتخصصات الصحية وبرومترك.'),
@@ -679,7 +680,7 @@ ${guidesTeaserHtml(guidesCopy.ar.hub, {
     // junk path itself.
     default: {
         title: 'SQB | بنك أسئلة SMLE وSNLE',
-        description: 'منصة عربية للتحضير لاختبار SMLE للطب البشري وSNLE للتمريض والبرومترك، من خلال بنك أسئلة وتحليلات أداء.',
+        description: 'منصة عربية للتحضير لاختبار SMLE للطب البشري وSNLE للتمريض وSDLE لطب الأسنان والبرومترك، من خلال بنك أسئلة وتحليلات أداء.',
         keywords: 'SQB, SMLE, SNLE, Prometric, بنك أسئلة SMLE, بنك أسئلة تمريض',
         robots: 'noindex, nofollow, noarchive',
         canonicalPath: '/',
@@ -698,8 +699,8 @@ ${guidesTeaserHtml(guidesCopy.ar.hub, {
  */
 const enOverlay = {
     '/': {
-        title: 'SQB | SMLE & SNLE Question Bank for Saudi Arabia',
-        description: 'SQB helps you prepare for the SMLE (medicine), the SNLE (nursing) and Prometric exams with a large question bank, performance analytics, mock exams and smart review.'
+        title: 'SQB | SMLE, SNLE & SDLE Question Bank for Saudi Arabia',
+        description: 'SQB helps you prepare for the SMLE (medicine), SNLE (nursing), SDLE (dental) and Prometric exams with a question bank, performance analytics and mock exams.'
     },
     '/about': { title: 'About us | SQB', description: 'Who is behind SQB, what the platform offers, and how it helps you prepare for the SMLE, SNLE and Prometric exams.' },
     '/faq': { title: 'Frequently asked questions | SQB', description: 'Answers to the most common questions about SQB: subscriptions, the question bank, the nursing track, refunds and support.' },
@@ -780,8 +781,8 @@ export function getSeoConfig(pathname = '/') {
     const route = routeMap[key] || routeMap.default;
     const canonicalPath = route.canonicalPath || path;
     const overlay = (lang === 'en' && (enOverlay[key] || enOverlay.default)) || null;
-    const title = overlay?.title || route.title;
-    const description = overlay?.description || route.description;
+    const title = capTitle(overlay?.title || route.title);
+    const description = capDescription(overlay?.description || route.description);
 
     return {
         title,

@@ -442,7 +442,7 @@ const Signup = () => {
                 <div className="login-wrapper signup-wide">
                     <div className="login-card signup-short" style={{ textAlign: 'center' }}>
                         <div className="success-icon" style={{ color: 'var(--success-color, #16a34a)', marginBottom: 20 }}><Icon name="check-circle" size={56} /></div>
-                        <h2 style={{ color: 'var(--text-dark, #0f1e3d)', fontWeight: 700, marginBottom: 12 }}>{t.successTitle}</h2>
+                        <h1 style={{ color: 'var(--text-dark, #0f1e3d)', fontWeight: 700, marginBottom: 12, fontSize: 'var(--text-3xl)' }}>{t.successTitle}</h1>
                         <p style={{ color: 'var(--text-dark, #0f1e3d)', fontWeight: 600, marginBottom: 8 }}>
                             {isGroupSeat ? t.successSeat : isTempLink ? t.successInvite : t.successFree}
                         </p>
@@ -478,7 +478,7 @@ const Signup = () => {
                 <div className="login-wrapper signup-wide">
                     <div className="login-card signup-short" style={{ textAlign: 'center' }}>
                         <div className="login-header">
-                            <div className="login-title">{t.invalidLinkTitle}</div>
+                            <h1 className="login-title">{t.invalidLinkTitle}</h1>
                             <div className="login-subtitle">
                                 {/* A paid seat gets the specific reason — "already
                                     used" and "expired" need different answers from
@@ -527,9 +527,9 @@ const Signup = () => {
                                 {isGroupSeat ? t.pillSeat : t.pillInvite}
                             </div>
                         )}
-                        <div className="login-title">
+                        <h1 className="login-title">
                             {isGroupSeat ? t.titleSeat : isTempLink ? t.titleInvite : t.titleFree}
-                        </div>
+                        </h1>
                         <div className="login-subtitle">
                             {step === 'credentials'
                                 ? (isGroupSeat

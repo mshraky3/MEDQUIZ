@@ -253,13 +253,13 @@ function buildLlmsTxt(routes) {
     return items.length ? `## ${heading}\n\n${items.map(line).join('\n')}` : null;
   }).filter(Boolean);
 
-  return `# SQB — SMLE & SNLE question bank
+  return `# SQB — SMLE, SNLE & SDLE question bank
 
 > A preparation platform for the Saudi Commission for Health Specialties
-> licensing exams: the SMLE for medicine and the SNLE for nursing. A question
-> bank with a written explanation for every answer, illustrated topic
-> summaries, performance analytics, and study guides. Two separate tracks —
-> medical and nursing — with their own questions, summaries and analytics.
+> licensing exams: the SMLE for medicine, the SNLE for nursing and the SDLE for
+> dentistry. A question bank with a written explanation for every answer,
+> illustrated topic summaries, performance analytics, and study guides.
+> Separate tracks — medical, nursing and dental — with their own questions, summaries and analytics.
 
 SQB is an independent educational platform. It is **not affiliated with the
 Saudi Commission for Health Specialties (SCFHS) or with Prometric**, and

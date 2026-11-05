@@ -20,6 +20,7 @@
  */
 
 import publicQuestionsCopy from '../i18n/copy/publicQuestions.js';
+import { capDescription, capTitle, fitText, TITLE_TARGET, DESCRIPTION_TARGET } from './fitText.js';
 import { explanationHtml, explanationPlain } from './explanation.js';
 import { faqHtml, faqPageSchema } from './faqSchema.js';
 import {
@@ -368,12 +369,19 @@ export function questionSeo(question, lang = 'ar') {
     const t = publicQuestionsCopy[lang] || publicQuestionsCopy.ar;
     const routePath = questionPath(question);
     const label = lang === 'en' ? question.specialtyLabelEn : question.specialtyLabelAr;
+    // Title: size the headline so "headline | specialty | SQB" is about 60 characters.
+    const suffixLength = t.seo.questionTitle('', question.specialtyLabelEn).length;
+    const headlineMax = Math.max(20, TITLE_TARGET - suffixLength);
     return {
         path: routePath,
-        title: t.seo.questionTitle(question.headline, question.specialtyLabelEn),
-        description: t.seo
-            .questionDescription(question.headline, question.specialtyLabelAr, question.specialtyLabelEn)
-            .slice(0, 300),
+        title: t.seo.questionTitle(fitText(question.headline, headlineMax), question.specialtyLabelEn),
+        description: fitText(
+            t.seo.questionDescription(
+                fitText(question.headline, 90), question.specialtyLabelAr, question.specialtyLabelEn,
+            ),
+            DESCRIPTION_TARGET,
+            { ellipsis: true },
+        ),
         keywords: t.seo.questionKeywords(question.specialtyLabelAr, question.specialtyLabelEn),
         structuredData: [
             quizSchema(question, routePath, lang),
@@ -454,8 +462,8 @@ const DEFAULT_ROBOTS = 'index, follow, max-image-preview:large, max-snippet:-1, 
  */
 export function completeSeo(partial, lang = 'ar') {
     return {
-        title: partial.title,
-        description: partial.description,
+        title: capTitle(partial.title),
+        description: capDescription(partial.description),
         keywords: partial.keywords,
         image: `${SITE_ORIGIN}/og-image.png`,
         imageAlt: partial.title,
