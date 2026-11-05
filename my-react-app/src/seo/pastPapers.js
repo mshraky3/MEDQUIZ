@@ -373,7 +373,7 @@ function completeSeo(partial, lang = 'ar') {
         title: partial.title,
         description: partial.description,
         keywords: partial.keywords,
-        image: `${SITE_ORIGIN}/og-image.svg`,
+        image: `${SITE_ORIGIN}/og-image.png`,
         imageAlt: partial.title,
         url: absoluteUrl(localizedPath(partial.path, lang)),
         type: 'article',

@@ -12,7 +12,7 @@ import {
 
 const SITE_ORIGIN = 'https://www.smle-question-bank.com';
 const SITE_NAME = 'SQB';
-const DEFAULT_IMAGE = `${SITE_ORIGIN}/og-image.svg`;
+const DEFAULT_IMAGE = `${SITE_ORIGIN}/og-image.png`;
 const DEFAULT_ROBOTS = 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1';
 // Freshness signal: recomputed at module load (build time for prerendered HTML,
 // current date for client-injected JSON-LD). Keeps `dateModified` from going stale.
@@ -204,7 +204,7 @@ ${guidesTeaserHtml(guidesCopy.ar.hub, {
     '/about': {
         title: 'من نحن | SQB',
         description: 'تعرف على منصة SQB ورسالتها في مساعدة الأطباء وطلاب الطب على التحضير لاختبار SMLE والبرومترك في السعودية عبر بنك أسئلة وتحليلات عملية.',
-        keywords: 'من نحن SQB, About SMLE Question Bank, منصة SQB, تحضير SMLE, بنك أسئلة برومترك',
+        keywords: 'من نحن SQB, منصة SQB, تحضير SMLE, بنك أسئلة برومترك',
         alternates: ['ar-SA', 'ar', 'x-default'],
         structuredData: [
             {
@@ -381,6 +381,31 @@ ${guidesTeaserHtml(guidesCopy.ar.hub, {
       <main class="seo-shell" dir="rtl">
         <h1>شروط الخدمة</h1>
         <p>تشرح هذه الصفحة شروط استخدام منصة SQB، بما في ذلك مسؤوليات المستخدم وطبيعة المحتوى التعليمي داخل الموقع.</p>
+      </main>
+    `
+    },
+    // Public on purpose: this URL is the one given to the Google Play Data
+    // safety form. It had no prerender, so a non-JS fetch (and the Play
+    // reviewer's crawler) got the home shell with the home canonical. No
+    // English twin: the page itself serves both languages from one URL.
+    '/delete-account': {
+        title: 'حذف حسابك في SQB | SQB',
+        description: 'اطلب حذف حسابك وبياناتك في SQB في أي وقت دون تسجيل الدخول: ما الذي يُحذف، وما الذي يبقى، وكيف تؤكد الطلب برمز يصل إلى بريدك.',
+        keywords: 'حذف حساب SQB, delete SQB account, حذف البيانات, طلب حذف الحساب',
+        alternates: ['ar-SA', 'ar', 'x-default'],
+        structuredData: [
+            routePageData('/delete-account', 'حذف حسابك في SQB | SQB', 'صفحة طلب حذف الحساب والبيانات في منصة SQB.'),
+            breadcrumbs([
+                { name: 'الرئيسية', path: '/' },
+                { name: 'حذف الحساب', path: '/delete-account' }
+            ])
+        ],
+        prerenderHtml: `
+      <main class="seo-shell" dir="rtl">
+        <h1>حذف حسابك في SQB</h1>
+        <p>يمكنك طلب حذف حسابك وبياناتك في أي وقت من هذه الصفحة، دون الحاجة إلى تسجيل الدخول. يصلك رمز تأكيد من 6 أرقام على بريد الحساب، ثم يتم الحذف عند إدخاله.</p>
+        <p>توضّح الصفحة ما الذي يُحذف وما الذي يبقى (سجلات الدفع فقط وفق متطلبات الأنظمة في المملكة)، ومتى لا يتم الحذف تلقائياً، وكيف تتواصل معنا. إن كانت لديك أسئلة فراسلنا من <a href="/contact">صفحة التواصل</a>.</p>
+        <p>Delete your SQB account: request deletion of your account and personal data at any time, with a 6-digit confirmation code sent to your account email.</p>
       </main>
     `
     },
