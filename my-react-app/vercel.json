@@ -10,6 +10,9 @@
             ]
         }
     ],
+    "redirects": [
+        { "source": "/t", "destination": "/?utm_source=tiktok&utm_medium=bio&utm_campaign=tt_bio", "permanent": false }
+    ],
     "rewrites": [
         { "source": "/.well-known/(.*)", "destination": "/.well-known/$1" },
 
