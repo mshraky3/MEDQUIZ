@@ -92,3 +92,10 @@ test('the old brand name is gone from the footer and the noscript block', () => 
   assert.ok(!/SMLE Question Bank/.test(read('index.html')));
   assert.ok(!/SMLE Question Bank/.test(read('src/components/common/Footer.jsx')));
 });
+
+test('/t is a short redirect to the tagged TikTok bio link (80 character bio limit)', () => {
+  const r = (vercel.redirects || []).find((x) => x.source === '/t');
+  assert.ok(r, 'a redirect for /t');
+  assert.equal(r.permanent, false);
+  assert.match(r.destination, /^\/\?utm_source=tiktok&utm_medium=bio&utm_campaign=tt_bio$/);
+});
