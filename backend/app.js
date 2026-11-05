@@ -13,6 +13,7 @@ import errorReportRoutes from './routes/error-report.js';
 import questionReportsRouter from './routes/question-reports.js';
 import successStoriesRouter from './routes/success-stories.js';
 import emailCampaignsRouter from './routes/email-campaigns.js';
+import integrityRouter from './routes/integrity.js';
 import adminBroadcastRouter, { unsubToken } from './routes/admin-broadcast.js';
 import paymentRoutes from './routes/payment.js';
 import { checkSubscriptionAccess, checkQuizAccess, isPaymentEnforcementEnabled, FREE_QUESTION_ALLOWANCE, LEGACY_FREE_QUESTION_ALLOWANCE, allowanceFor, getPlan,
@@ -42,6 +43,8 @@ import {
 } from './services/adminMetricsService.js';
 import summaryContent from './content/summaryHtml/index.js';
 import { notifyBackendError, configureAlertThrottle } from './services/errorNotificationService.js';
+import { recomputeSessionSummary } from './services/sessionSummary.js';
+import { validationMode, judgeAttempts, judgeAnswer, loadQuestionsById, summarizeJudgements } from './services/attemptValidation.js';
 import { deleteAccountData, DELETION_OUTCOME } from './services/accountDeletionService.js';
 // Shared logging + the "no silent 500" interceptor. logger and
 // isTransientConnectionError used to be defined locally in this file; they now
@@ -4480,7 +4483,9 @@ app.post('/topic-analysis', requireSession, async (req, res) => {
             DO UPDATE SET 
                 total_answered = user_topic_analysis.total_answered + EXCLUDED.total_answered,
                 total_correct = user_topic_analysis.total_correct + EXCLUDED.total_correct,
-                accuracy = ROUND((EXCLUDED.total_correct::numeric / EXCLUDED.total_answered::numeric) * 100, 2),
+                -- cumulative: (all correct so far) / (all answered so far), not just this batch
+                accuracy = ROUND(((user_topic_analysis.total_correct + EXCLUDED.total_correct)::numeric
+                                  / NULLIF(user_topic_analysis.total_answered + EXCLUDED.total_answered, 0)::numeric) * 100, 2),
                 avg_time = (user_topic_analysis.avg_time * user_topic_analysis.total_answered + EXCLUDED.avg_time * EXCLUDED.total_answered) 
                             / (user_topic_analysis.total_answered + EXCLUDED.total_answered),
                 last_practiced = NOW()
@@ -4514,13 +4519,42 @@ app.post('/question-attempts', requireSession, async (req, res) => {
         return res.status(400).json({ message: "Missing required attempt data" });
     }
     try {
+        // The browser is not trusted for the pairing (see services/attemptValidation.js):
+        // the server looks the question up, checks the chosen text is one of its options,
+        // and decides is_correct itself from the current key.
+        let storedOption = selected_option;
+        let storedCorrect = is_correct;
+        const mode = validationMode();
+        if (mode !== 'off') {
+            const [{ verdict, reject }] = await judgeAttempts(db, [{ question_id, selected_option }], (a) => ({ questionId: a.question_id, selected: a.selected_option }), mode);
+            if (verdict.status === 'ok') {
+                storedOption = verdict.canonical;
+                storedCorrect = verdict.isCorrect;
+            } else if (verdict.status === 'not_an_option' || verdict.status === 'unknown_question') {
+                logger.warn('ATTEMPT_NOT_AN_OPTION', { user_id, question_id, quiz_session_id, status: verdict.status, mode });
+                if (reject) {
+                    return res.status(400).json({
+                        code: verdict.status === 'unknown_question' ? 'UNKNOWN_QUESTION' : 'OPTION_NOT_IN_QUESTION',
+                        message: 'The chosen answer is not one of the options of this question',
+                    });
+                }
+            }
+            // The session must be the caller's own. Checked only when validation is on.
+            const own = await db.query('SELECT user_id FROM user_quiz_sessions WHERE id = $1', [quiz_session_id]);
+            if (own.rows.length === 0 || Number(own.rows[0].user_id) !== user_id) {
+                logger.warn('ATTEMPT_SESSION_NOT_OWNED', { user_id, quiz_session_id, mode });
+                if (mode === 'enforce') {
+                    return res.status(400).json({ code: 'SESSION_NOT_OWNED', message: 'quiz_session_id does not belong to this account' });
+                }
+            }
+        }
         const result = await db.query(
             `INSERT INTO user_question_attempts 
             (user_id, question_id, selected_option, is_correct, time_taken, quiz_session_id)
             VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
             // See POST /quiz-sessions — client-supplied seconds into a
             // numeric column, so it needs the same ceiling.
-            [user_id, question_id, selected_option, is_correct, clampSeconds(time_taken), quiz_session_id]
+            [user_id, question_id, storedOption, storedCorrect, clampSeconds(time_taken), quiz_session_id]
         );
         res.status(201).json(result.rows[0]);
     } catch (err) {
@@ -4574,13 +4608,13 @@ app.post('/user-analysis', requireSession, async (req, res) => {
 
         const result = await db.query(`
       INSERT INTO user_analysis 
-      (user_id, total_quizzes, total_questions_answered, total_correct_options, accuracy, fastest_response, slowest_response, last_active)
+      (user_id, total_quizzes, total_questions_answered, total_correct_answers, accuracy, fastest_response, slowest_response, last_active)
       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
       ON CONFLICT (user_id)
       DO UPDATE SET
         total_quizzes = EXCLUDED.total_quizzes,
         total_questions_answered = EXCLUDED.total_questions_answered,
-        total_correct_options = EXCLUDED.total_correct_options,
+        total_correct_answers = EXCLUDED.total_correct_answers,
         accuracy = EXCLUDED.accuracy,
         fastest_response = EXCLUDED.fastest_response,
         slowest_response = EXCLUDED.slowest_response,
@@ -4898,6 +4932,7 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
         // duplicate row. Once the INSERT succeeds this handler must not fail:
         // degrade the extras, always return the session.
         let touchedCardinalities = [];
+        let rejectedAttempts = 0;
         let completedCategories = [];
         let milestones = [];
         try {
@@ -4941,8 +4976,21 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
                     sessionId: result.rows[0].id
                 });
 
-                // Parallelize question attempt inserts for better performance
-                const attemptPromises = question_attempts.map(attempt =>
+                // Server-side pairing check (services/attemptValidation.js): is_correct is
+                // recomputed from the current key; in enforce mode a pair whose chosen text is
+                // not one of the question's options is dropped (the session itself is kept).
+                const mode = validationMode();
+                const judged = await judgeAttempts(db, question_attempts, (a) => ({ questionId: a.question_id, selected: a.selected_option }), mode);
+                const sums = summarizeJudgements(judged);
+                if (sums.bad > 0) {
+                    logger.warn('ATTEMPT_NOT_AN_OPTION', { user_id, sessionId: result.rows[0].id, bad: sums.bad, total: sums.total, mode });
+                }
+                if (sums.suspectSwap) {
+                    notifyBackendError(new Error('ATTEMPT_PAIRING_SUSPECT: answers do not belong to their questions'), req,
+                        { user_id, sessionId: result.rows[0].id, bad: sums.bad, total: sums.total, mode }).catch(() => { /* already logged */ });
+                }
+                rejectedAttempts = judged.filter((j) => j.reject).length;
+                const attemptPromises = question_attempts.map((attempt, i) => judged[i].reject ? Promise.resolve(null) :
                     db.query(`
                         INSERT INTO user_question_attempts
                         (user_id, question_id, selected_option, is_correct, time_taken, quiz_session_id)
@@ -4950,8 +4998,8 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
                     `, [
                         user_id,
                         attempt.question_id,
-                        attempt.selected_option,
-                        attempt.is_correct,
+                        judged[i].verdict?.status === 'ok' ? judged[i].verdict.canonical : attempt.selected_option,
+                        judged[i].verdict?.status === 'ok' ? judged[i].verdict.isCorrect : attempt.is_correct,
                         // Same ceiling story as the session duration, and worse
                         // consequences: this INSERT lives inside the block that
                         // swallows its own failures, so one question left open
@@ -4971,6 +5019,10 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
 
                 // Use allSettled to continue even if some attempts fail
                 const attemptResults = await Promise.allSettled(attemptPromises);
+                // The session totals follow the rows that were really stored (services/sessionSummary.js).
+                await recomputeSessionSummary(db, result.rows[0].id, user_id, {
+                    onError: (e) => logger.warn('Session summary recompute failed', { error: e.message }),
+                });
                 // Log any failures for debugging
                 attemptResults.forEach((attemptResult, index) => {
                     if (attemptResult.status === 'rejected') {
@@ -5039,6 +5091,7 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
             session_id: result.rows[0].session_id,
             completedCategories,
             milestones,
+            ...(rejectedAttempts > 0 ? { rejected_attempts: rejectedAttempts } : {}),
             message: 'Quiz session created successfully'
         });
     } catch (err) {
@@ -6341,6 +6394,23 @@ function requireOwnUser(paramName) {
             logger.warn('Blocked cross-account access', {
                 accountId: req.accountId, requested, param: paramName, path: req.originalUrl,
             });
+            return res.status(403).json({ message: 'Forbidden' });
+        }
+        next();
+    };
+}
+
+// Same check for a user id sent in the JSON body (POST /final-quiz/submit used to trust it).
+// An absent id is filled from the session; a different one is refused.
+function requireOwnBodyUser(field) {
+    return (req, res, next) => {
+        const sent = req.body ? req.body[field] : undefined;
+        if (sent === undefined || sent === null || sent === '') {
+            req.body = { ...(req.body || {}), [field]: req.accountId };
+            return next();
+        }
+        if (Number(sent) !== req.accountId) {
+            logger.warn('Blocked cross-account write', { accountId: req.accountId, sent, field, path: req.originalUrl });
             return res.status(403).json({ message: 'Forbidden' });
         }
         next();
@@ -7815,7 +7885,7 @@ app.get('/final-quiz/questions', requireSession, subscriberOnly, async (req, res
 });
 
 // Submit final quiz session
-app.post('/final-quiz/submit', requireSession, subscriberOnly, async (req, res) => {
+app.post('/final-quiz/submit', requireSession, requireOwnBodyUser('userId'), subscriberOnly, async (req, res) => {
     const {
         userId,
         questionType,
@@ -7927,9 +7997,39 @@ app.post('/final-quiz/submit', requireSession, subscriberOnly, async (req, res) 
                 attemptsCount: questionAttempts.length
             });
 
+            // Server-side pairing check (services/attemptValidation.js): the key and
+            // is_correct come from the questions table, not from the browser.
+            let attemptsToStore = questionAttempts;
+            const mode = validationMode();
+            if (mode !== 'off') {
+                const questions = await loadQuestionsById(db, questionAttempts.map((a) => a.questionId));
+                const judged = questionAttempts.map((a) => judgeAnswer(questions.get(Number(a.questionId)), a.userAnswer));
+                const bad = judged.filter((v) => v.status === 'not_an_option' || v.status === 'unknown_question').length;
+                if (bad > 0) {
+                    logger.warn('ATTEMPT_NOT_AN_OPTION', { userId, sessionId, bad, total: judged.length, mode });
+                    if (bad >= 3 && bad >= Math.ceil(judged.length * 0.2)) {
+                        notifyBackendError(new Error('ATTEMPT_PAIRING_SUSPECT: final exam answers do not belong to their questions'), req,
+                            { userId, sessionId, bad, total: judged.length, mode }).catch(() => { /* already logged */ });
+                    }
+                }
+                attemptsToStore = questionAttempts
+                    .map((a, i) => {
+                        const v = judged[i];
+                        if (v.status === 'ok') {
+                            return { ...a, userAnswer: v.canonical, correctAnswer: questions.get(Number(a.questionId)).correct_option, isCorrect: v.isCorrect };
+                        }
+                        return a;
+                    })
+                    .filter((a, i) => !(mode === 'enforce' && (judged[i].status === 'not_an_option' || judged[i].status === 'unknown_question')));
+            }
+
             // One multi-row INSERT per 1,000 answers instead of one query per
             // answer (1,200 round trips inside a 60 s function before).
-            await insertFinalQuizAttempts(db, sessionId, questionAttempts);
+            await insertFinalQuizAttempts(db, sessionId, attemptsToStore);
+            await recomputeSessionSummary(db, sessionId, userId, {
+                final: true,
+                onError: (e) => logger.warn('Final session summary recompute failed', { error: e.message }),
+            });
 
             logger.info('Question attempts inserted successfully', {
                 sessionId,
@@ -8205,6 +8305,7 @@ app.use('/api/success-stories', (req, res, next) => { req.db = db; next(); }, su
 
 // Email Campaign Routes (test + cron)
 app.use('/', (req, res, next) => { req.db = db; next(); }, emailCampaignsRouter);
+app.use('/', (req, res, next) => { req.db = db; next(); }, integrityRouter);
 
 // Payment Routes (Moyasar) — LIVE. Gated by PAYMENT_ENFORCEMENT_ENABLED
 // (every endpoint returns 503 if the flag is ever turned off).
