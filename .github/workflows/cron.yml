@@ -119,6 +119,8 @@ jobs:
               # Idempotent per calendar date (daily_signups_report_log), so a
               # retried or re-run workflow can never double-send.
               call /api/cron/daily-signups-report || failed=1
+              # Mails the owner only when answers no longer match their questions or totals do not add up.
+              call /api/cron/integrity-check || failed=1
               ;;
           esac
           exit $failed

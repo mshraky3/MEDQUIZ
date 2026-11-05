@@ -132,6 +132,6 @@ test('app.js is wired to the per-route limit and the batched insert', () => {
     const src = fs.readFileSync(path.join(here, '..', 'app.js'), 'utf8');
     assert.match(src, /app\.use\(jsonBodyParser\(express, \{ '\/final-quiz\/submit': FINAL_QUIZ_JSON_LIMIT \}\)\)/);
     assert.ok(!/app\.use\(express\.json\(\)\)/.test(src), 'no global default parser left in front');
-    assert.match(src, /await insertFinalQuizAttempts\(db, sessionId, questionAttempts\)/);
+    assert.match(src, /await insertFinalQuizAttempts\(db, sessionId, attemptsToStore\)/);
     assert.ok(!/INSERT INTO final_quiz_attempts/.test(src), 'per-row insert removed from app.js');
 });
