@@ -16,6 +16,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import fs from 'node:fs';
 import { getPrerenderRoutes, SITE_ORIGIN } from '../src/seo/siteMetadata.js';
+import { capDescription, capTitle } from '../src/seo/fitText.js';
 import { siteFooterNavHtml } from '../src/seo/prerenderHtml.js';
 import { buildPublicQuestionRoutes, QUESTIONS_ROOT } from '../src/seo/publicQuestions.js';
 import { buildPastPaperRoutes, PAST_PAPERS_ROOT } from '../src/seo/pastPapers.js';
@@ -47,7 +48,9 @@ const setMeta = (html, attr, value) => {
 const setAttr = (html, re, value) =>
   html.replace(re, (_m, pre, post) => `${pre}${escapeAttr(value)}${post}`);
 
-function buildRouteHtml(template, seo, prerenderHtml) {
+function buildRouteHtml(template, rawSeo, prerenderHtml) {
+  // Final guard: no page ships a title over 70 or a description over 160 characters.
+  const seo = { ...rawSeo, title: capTitle(rawSeo.title), description: capDescription(rawSeo.description) };
   let html = template;
 
   // <html lang/dir>. The template is Arabic/RTL; an English page that keeps
@@ -253,13 +256,13 @@ function buildLlmsTxt(routes) {
     return items.length ? `## ${heading}\n\n${items.map(line).join('\n')}` : null;
   }).filter(Boolean);
 
-  return `# SQB — SMLE & SNLE question bank
+  return `# SQB — SMLE, SNLE & SDLE question bank
 
 > A preparation platform for the Saudi Commission for Health Specialties
-> licensing exams: the SMLE for medicine and the SNLE for nursing. A question
-> bank with a written explanation for every answer, illustrated topic
-> summaries, performance analytics, and study guides. Two separate tracks —
-> medical and nursing — with their own questions, summaries and analytics.
+> licensing exams: the SMLE for medicine, the SNLE for nursing and the SDLE for
+> dentistry. A question bank with a written explanation for every answer,
+> illustrated topic summaries, performance analytics, and study guides.
+> Separate tracks — medical, nursing and dental — with their own questions, summaries and analytics.
 
 SQB is an independent educational platform. It is **not affiliated with the
 Saudi Commission for Health Specialties (SCFHS) or with Prometric**, and

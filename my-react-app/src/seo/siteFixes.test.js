@@ -99,3 +99,12 @@ test('/t is a short redirect to the tagged TikTok bio link (80 character bio lim
   assert.equal(r.permanent, false);
   assert.match(r.destination, /^\/\?utm_source=tiktok&utm_medium=bio&utm_campaign=tt_bio$/);
 });
+
+test('vercel.json caches hashed assets for a year and images/icons for a day', () => {
+  const rule = (src) => vercel.headers.find((h) => h.source === src)?.headers.find((x) => x.key === 'Cache-Control')?.value;
+  assert.equal(rule('/assets/(.*)'), 'public, max-age=31536000, immutable');
+  assert.match(rule('/qimg/(.*)'), /^public, max-age=86400, stale-while-revalidate=\d+$/);
+  assert.match(rule('/icons/(.*)'), /^public, max-age=86400, stale-while-revalidate=\d+$/);
+  // The security headers block must still be there and still be the catch-all.
+  assert.ok(vercel.headers.find((h) => h.source === '/(.*)'));
+});

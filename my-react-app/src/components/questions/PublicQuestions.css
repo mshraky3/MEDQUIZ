@@ -500,3 +500,16 @@
 }
 
 .pq-explanation li { margin-bottom: 5px; line-height: 1.7; }
+
+/* Phone: every link in these lists is at least 32px tall (touch target). */
+@media (max-width: 640px) {
+  .footer-nav a,
+  .pq-list a,
+  .pq-siblings a,
+  .pq-sibling-links a,
+  .pq-related a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+  }
+}
