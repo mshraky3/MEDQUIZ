@@ -16,6 +16,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import fs from 'node:fs';
 import { getPrerenderRoutes, SITE_ORIGIN } from '../src/seo/siteMetadata.js';
+import { capDescription, capTitle } from '../src/seo/fitText.js';
 import { siteFooterNavHtml } from '../src/seo/prerenderHtml.js';
 import { buildPublicQuestionRoutes, QUESTIONS_ROOT } from '../src/seo/publicQuestions.js';
 import { buildPastPaperRoutes, PAST_PAPERS_ROOT } from '../src/seo/pastPapers.js';
@@ -47,7 +48,9 @@ const setMeta = (html, attr, value) => {
 const setAttr = (html, re, value) =>
   html.replace(re, (_m, pre, post) => `${pre}${escapeAttr(value)}${post}`);
 
-function buildRouteHtml(template, seo, prerenderHtml) {
+function buildRouteHtml(template, rawSeo, prerenderHtml) {
+  // Final guard: no page ships a title over 70 or a description over 160 characters.
+  const seo = { ...rawSeo, title: capTitle(rawSeo.title), description: capDescription(rawSeo.description) };
   let html = template;
 
   // <html lang/dir>. The template is Arabic/RTL; an English page that keeps
