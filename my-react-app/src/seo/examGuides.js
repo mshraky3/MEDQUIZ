@@ -236,7 +236,7 @@ export function examSeo(path, lang = 'ar') {
         title: `${page.title} | SQB`,
         description,
         keywords: keywordsFor(lang, kindKey, label),
-        image: `${SITE_ORIGIN}/og-image.svg`,
+        image: `${SITE_ORIGIN}/og-image.png`,
         imageAlt: page.title,
         url,
         type: kind === 'root' || kind === 'hub' ? 'website' : 'article',

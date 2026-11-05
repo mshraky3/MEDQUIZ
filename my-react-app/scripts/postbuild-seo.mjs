@@ -116,7 +116,8 @@ const SITEMAP_HINTS = {
   '/groups': { priority: '0.7', changefreq: 'monthly' },
   '/privacy': { priority: '0.4', changefreq: 'yearly' },
   '/terms': { priority: '0.4', changefreq: 'yearly' },
-  '/refund-policy': { priority: '0.4', changefreq: 'yearly' }
+  '/refund-policy': { priority: '0.4', changefreq: 'yearly' },
+  '/delete-account': { priority: '0.3', changefreq: 'yearly' }
 };
 const GUIDE_DETAIL_HINT = { priority: '0.8', changefreq: 'weekly' };
 // The published question set is a fixed sample that only changes when
@@ -236,7 +237,7 @@ function buildLlmsTxt(routes) {
     ['Practice questions, open to everyone', (p) => p === QUESTIONS_ROOT || p.startsWith(`${QUESTIONS_ROOT}/`)],
     ['Past-paper collections', (p) => p === PAST_PAPERS_ROOT || p.startsWith(`${PAST_PAPERS_ROOT}/`)],
     ['About the platform', (p) => ['/', '/about', '/faq', '/contact', '/groups', SUCCESS_STORIES_ROOT].includes(p)],
-    ['Policies', (p) => ['/privacy', '/terms', '/refund-policy'].includes(p)],
+    ['Policies', (p) => ['/privacy', '/terms', '/refund-policy', '/delete-account'].includes(p)],
   ];
 
   const line = ({ path: routePath, seo }) =>
@@ -327,6 +328,25 @@ if (!fs.existsSync(templatePath)) {
     fs.mkdirSync(path.dirname(outPath), { recursive: true });
     fs.writeFileSync(outPath, buildRouteHtml(template, seo, prerenderHtml), 'utf8');
     count += 1;
+  }
+
+  // dist/404.html: what Vercel serves, with a real 404 status, for any path
+  // that is neither a file nor one of the explicit app rewrites in vercel.json.
+  // It is the app shell, so the router's own NotFound page renders for a
+  // visitor with JavaScript; the static text inside #root is for everyone else.
+  // noindex, no canonical, no hreflang, no structured data: it is not a page.
+  {
+    let nf = template;
+    nf = nf.replace(/<title>[\s\S]*?<\/title>/, '<title>الصفحة غير موجودة | SQB</title>');
+    nf = setMeta(nf, 'name="robots"', 'noindex, nofollow');
+    nf = nf.replace(/\s*<link rel="canonical" href="[^"]*"\s*\/?>/, '');
+    nf = nf.replace(/\s*<link rel="alternate" hreflang="[^"]*" href="[^"]*"\s*\/?>/g, '');
+    nf = nf.replace(/\s*<script type="application\/ld\+json">[\s\S]*?<\/script>/g, '');
+    nf = nf.replace(
+      '<div id="root"></div>',
+      '<div id="root"><main style="font-family:sans-serif;text-align:center;padding:60px 16px"><h1>404</h1><p>الصفحة غير موجودة | Page not found</p><p><a href="/">SQB</a></p></main></div>'
+    );
+    fs.writeFileSync(path.join(distDir, '404.html'), nf, 'utf8');
   }
 
   const sitemapPath = path.join(distDir, 'sitemap.xml');

@@ -1,12 +1,41 @@
 {
-    "rewrites": [
-        {
-            "source": "/.well-known/(.*)",
-            "destination": "/.well-known/$1"
-        },
+    "headers": [
         {
             "source": "/(.*)",
-            "destination": "/"
+            "headers": [
+                { "key": "X-Content-Type-Options", "value": "nosniff" },
+                { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+                { "key": "Content-Security-Policy", "value": "frame-ancestors 'none'" },
+                { "key": "X-Frame-Options", "value": "DENY" }
+            ]
         }
+    ],
+    "rewrites": [
+        { "source": "/.well-known/(.*)", "destination": "/.well-known/$1" },
+
+        { "source": "/signup/:token", "destination": "/" },
+        { "source": "/join/:token", "destination": "/" },
+        { "source": "/forgot-password", "destination": "/" },
+        { "source": "/suggestions", "destination": "/" },
+        { "source": "/success-stories", "destination": "/" },
+        { "source": "/en/success-stories", "destination": "/" },
+
+        { "source": "/quizs", "destination": "/" },
+        { "source": "/quiz/:numQuestions", "destination": "/" },
+        { "source": "/analysis", "destination": "/" },
+        { "source": "/wrong-questions", "destination": "/" },
+        { "source": "/summaries", "destination": "/" },
+        { "source": "/summaries/:slug", "destination": "/" },
+        { "source": "/subscribe", "destination": "/" },
+        { "source": "/account", "destination": "/" },
+        { "source": "/payment/callback", "destination": "/" },
+
+        { "source": "/admin", "destination": "/" },
+        { "source": "/admin/:section", "destination": "/" },
+        { "source": "/ADD_ACCOUNT", "destination": "/" },
+        { "source": "/ADDQ", "destination": "/" },
+        { "source": "/Bank", "destination": "/" },
+        { "source": "/TEMP_LINKS", "destination": "/" },
+        { "source": "/question-reports", "destination": "/" }
     ]
 }

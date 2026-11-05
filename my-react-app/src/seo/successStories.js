@@ -50,7 +50,7 @@ export function successStoriesSeo(count, lang = 'ar') {
         keywords: lang === 'en'
             ? 'SMLE success stories, SNLE pass, SMLE testimonials, passed the Saudi licensing exam'
             : 'قصص نجاح SMLE, تجارب اجتياز سملي, آراء طلاب SQB, اجتزت اختبار الهيئة',
-        image: `${SITE_ORIGIN}/og-image.svg`,
+        image: `${SITE_ORIGIN}/og-image.png`,
         imageAlt: t.meta.title,
         url,
         type: 'website',

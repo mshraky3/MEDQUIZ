@@ -55,9 +55,9 @@ const Footer = () => {
       <div className="footer-inner">
         <div className="footer-top">
           <div className="footer-brand">
-            {/* The product name stays "SMLE Question Bank" in both languages —
-                it is the brand, and the exam it names has an English name. */}
-            <span className="footer-logo"><Icon name="book-open" size={17} /> SMLE Question Bank</span>
+            {/* The product name is "SQB" in both languages —
+                it is the brand. */}
+            <span className="footer-logo"><Icon name="book-open" size={17} /> SQB</span>
             <p className="footer-tagline">{t.footer.tagline}</p>
           </div>
 
