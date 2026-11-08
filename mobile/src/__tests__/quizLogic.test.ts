@@ -12,6 +12,7 @@ import {
   parseSnapshot,
   scoreOf,
   settleWithRetry,
+  saveAttempts,
   snapshotSlot,
   type Question,
   type QuizParams,
@@ -150,6 +151,42 @@ describe('settleWithRetry', () => {
     expect(await settleWithRetry([task, task])).toEqual({ failures: 0 });
     expect(task).toHaveBeenCalledTimes(2);
     expect(await settleWithRetry([])).toEqual({ failures: 0 });
+  });
+});
+
+describe('saveAttempts', () => {
+  const sleep = async () => {};
+  const mk = (n: number) => Array.from({ length: n }, (_, i) => ({ user_id: 1, question_id: i + 1, selected_option: 'a', is_correct: true, time_taken: 3, quiz_session_id: 9 }));
+  const err = (status: number) => Object.assign(new Error('x'), { status });
+
+  it('sends 150 answers as ONE batch request', async () => {
+    const post = vi.fn().mockResolvedValue({});
+    const r = await saveAttempts(post, mk(150), { sessionId: 9, userId: 1, sleep });
+    expect(post).toHaveBeenCalledTimes(1);
+    expect(post.mock.calls[0][0]).toBe('/question-attempts/batch');
+    expect(post.mock.calls[0][1].attempts).toHaveLength(150);
+    expect(r).toEqual({ failures: 0, usedFallback: false });
+  });
+
+  it('falls back to per-answer calls, at most 5 at once, retrying 5xx but not 4xx', async () => {
+    let live = 0;
+    let peak = 0;
+    const tries: Record<number, number> = {};
+    const post = vi.fn(async (path: string, body: any) => {
+      if (path.endsWith('/batch')) throw err(404);
+      live += 1;
+      peak = Math.max(peak, live);
+      await new Promise((r) => setTimeout(r, 0));
+      live -= 1;
+      tries[body.question_id] = (tries[body.question_id] || 0) + 1;
+      if (body.question_id === 1 && tries[1] < 3) throw err(500);
+      if (body.question_id === 2) throw err(400);
+    });
+    const r = await saveAttempts(post, mk(30), { sessionId: 9, userId: 1, sleep });
+    expect(peak).toBeLessThanOrEqual(5);
+    expect(tries[1]).toBe(3);
+    expect(tries[2]).toBe(1);
+    expect(r).toEqual({ failures: 1, usedFallback: true });
   });
 });
 

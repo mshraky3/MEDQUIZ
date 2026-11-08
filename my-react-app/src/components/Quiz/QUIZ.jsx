@@ -18,6 +18,7 @@ import { UserContext } from '../../UserContext';
 import { useCopy, useLang } from '../../i18n';
 import quizCopy from '../../i18n/copy/quiz.js';
 import { safeGetSessionItem, safeSetSessionItem, safeRemoveSessionItem } from '../../utils/safeStorage.js';
+import { saveAttempts } from '../../utils/attemptsSync.js';
 
 /**
  * The per-question record the result screen reviews. Built in two places (the
@@ -588,12 +589,12 @@ const QUIZ = () => {
           setCompletedTopics(sessionRes.data.completedCategories);
         }
 
-        // Send individual question attempts (skip for final quiz). One failed
-        // request no longer drops the rest of the batch — see settleWithRetry.
+        // Send individual question attempts (skip for final quiz). One batch
+        // request, with a capped per-answer fallback — see utils/attemptsSync.js.
         if (!isFinalQuiz) {
-          const attemptTasks = finalAnswers.map((answer, index) => () => {
+          const attemptBodies = finalAnswers.map((answer, index) => {
             const question = validQuestions[index];
-            const attemptData = {
+            return {
               user_id: id,
               question_id: question.id,
               selected_option: answer.selected,
@@ -601,11 +602,14 @@ const QUIZ = () => {
               time_taken: Math.floor(duration / totalQuestions),
               quiz_session_id: quiz_session_id
             };
-
-            return apiClient.post('/question-attempts', attemptData);
           });
 
-          const { failures } = await settleWithRetry(attemptTasks);
+          // One batch request instead of one request per answer (see utils/attemptsSync.js).
+          const { failures } = await saveAttempts(
+            (url, body) => apiClient.post(url, body),
+            attemptBodies,
+            { sessionId: quiz_session_id, userId: id }
+          );
           if (failures > 0) {
             console.warn(`${failures} question attempt(s) failed to sync after retry.`);
           }

@@ -86,6 +86,72 @@ export async function settleWithRetry(tasks: (() => Promise<unknown>)[]): Promis
   return { failures: retryPass.filter((r) => r.status === 'rejected').length };
 }
 
+/** Fallback cap: never more than this many per-answer requests at once. */
+export const FALLBACK_CONCURRENCY = 5;
+
+// Worth retrying: no HTTP answer at all (network), 5xx, or the pooler's EMAXCONN text.
+function isRetryable(err: unknown): boolean {
+  const status = (err as { status?: number } | null)?.status;
+  return !(typeof status === 'number' && status >= 400 && status < 500);
+}
+
+async function withBackoff<T>(task: () => Promise<T>, tries: number, sleep: (ms: number) => Promise<void>): Promise<T> {
+  let last: unknown;
+  for (let i = 0; i < tries; i += 1) {
+    try {
+      return await task();
+    } catch (err) {
+      last = err;
+      if (!isRetryable(err) || i === tries - 1) break;
+      await sleep(400 * 2 ** i);
+    }
+  }
+  throw last;
+}
+
+/**
+ * Saves the answers of one finished quiz with ONE request (POST /question-attempts/batch).
+ * One request per answer, all at once, exhausted the database connection limit on a
+ * 150-question quiz (7 Nov 2026). If the batch cannot be saved, falls back to the old
+ * per-answer route, at most FALLBACK_CONCURRENCY at a time.
+ */
+export async function saveAttempts(
+  post: (path: string, body: unknown) => Promise<unknown>,
+  attempts: { user_id: number; question_id: number; selected_option: unknown; is_correct: boolean; time_taken: number; quiz_session_id: number }[],
+  opts: { sessionId: number; userId: number; sleep?: (ms: number) => Promise<void>; concurrency?: number },
+): Promise<{ failures: number; usedFallback: boolean }> {
+  const sleep = opts.sleep ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
+  if (attempts.length === 0) return { failures: 0, usedFallback: false };
+  try {
+    await withBackoff(
+      () => post('/question-attempts/batch', {
+        user_id: opts.userId,
+        quiz_session_id: opts.sessionId,
+        attempts: attempts.map(({ question_id, selected_option, is_correct, time_taken }) => ({ question_id, selected_option, is_correct, time_taken })),
+      }),
+      3,
+      sleep,
+    );
+    return { failures: 0, usedFallback: false };
+  } catch {
+    // fall through to the per-answer route
+  }
+  let next = 0;
+  let failures = 0;
+  const worker = async () => {
+    while (next < attempts.length) {
+      const body = attempts[next++];
+      try {
+        await withBackoff(() => post('/question-attempts', body), 3, sleep);
+      } catch {
+        failures += 1;
+      }
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(opts.concurrency ?? FALLBACK_CONCURRENCY, attempts.length) }, worker));
+  return { failures, usedFallback: true };
+}
+
 /** The body of POST /quiz-sessions (regular) or /final-quiz/submit (mock exam). */
 export function buildSessionPayload(args: {
   userId: number;
