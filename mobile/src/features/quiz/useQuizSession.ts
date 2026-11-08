@@ -17,6 +17,7 @@ import {
   parseSnapshot,
   scoreOf,
   settleWithRetry,
+  saveAttempts,
   snapshotSlot,
 } from './quizLogic';
 
@@ -396,7 +397,7 @@ export function useQuizSession(params: QuizParams) {
       if (!isFinalQuiz) {
         const sessionId = sessionRes.id as number;
         const attempts = buildAttemptPayloads({ userId, sessionId, validQuestions, answers: answerRecords, durationSeconds });
-        await settleWithRetry(attempts.map((body) => () => api.post('/question-attempts', body)));
+        await saveAttempts((path, body) => api.post(path, body), attempts, { sessionId, userId });
         const topics = buildTopicPayloads({ userId, validQuestions, answers: answerRecords, durationSeconds });
         await settleWithRetry(topics.map((body) => () => api.post('/topic-analysis', body)));
       }

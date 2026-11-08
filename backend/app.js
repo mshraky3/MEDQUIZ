@@ -61,6 +61,7 @@ import {
 import { PICKABLE_SOURCES, SOURCE_PRIORITY, SELECTABLE_SOURCES, resolveSources, ALL_SESSION_SOURCES } from './config/sources.js';
 import { runRecallImport } from './services/recallImportService.js';
 import { markQuestionsSeen, MAX_SEEN_IDS } from './services/seenService.js';
+import { recordAttemptsBatch } from './services/attemptsBatch.js';
 import { insertFinalQuizAttempts, jsonBodyParser, FINAL_QUIZ_JSON_LIMIT } from './services/finalQuizAttempts.js';
 import { ensureQuestionImagesTables, attachQuestionImages } from './services/questionImagesService.js';
 import { isDisposableEmail, DISPOSABLE_EMAIL_MESSAGE } from './utils/disposableEmail.js';
@@ -1107,7 +1108,7 @@ app.use(cors({
 // 100 KB everywhere except the final-exam submit, which carries one entry per
 // question and was refused with 413 once an exam passed ~500 questions
 // (services/finalQuizAttempts.js explains the 2 MB cap).
-app.use(jsonBodyParser(express, { '/final-quiz/submit': FINAL_QUIZ_JSON_LIMIT }));
+app.use(jsonBodyParser(express, { '/final-quiz/submit': FINAL_QUIZ_JSON_LIMIT, '/question-attempts/batch': '1mb' }));
 
 // ── No silent 500s ──────────────────────────────────────────────────────────
 // Mounted here, before every route, so it wraps the response for all of them.
@@ -4562,6 +4563,26 @@ app.post('/question-attempts', requireSession, async (req, res) => {
         res.status(500).json({ message: 'Failed to record question attempt' });
     }
 
+});
+
+// All answers of one finished quiz in one request (see services/attemptsBatch.js).
+// The single-attempt route above stays as the fallback. Body limit for this path: see jsonBodyParser.
+app.post('/question-attempts/batch', requireSession, async (req, res) => {
+    const { user_id: bodyUserId, quiz_session_id, attempts } = req.body || {};
+    const user_id = req.accountId;
+    if (bodyUserId != null && Number(bodyUserId) !== user_id) {
+        return res.status(400).json({ message: 'user_id does not match the authenticated session' });
+    }
+    try {
+        const out = await recordAttemptsBatch(db, {
+            userId: user_id, sessionId: quiz_session_id, attempts, mode: validationMode(), clampSeconds,
+            log: (msg, meta) => logger.warn(msg, meta),
+        });
+        res.status(out.status).json(out.body);
+    } catch (err) {
+        logger.error('Error inserting question attempts batch', err);
+        res.status(500).json({ message: 'Failed to record question attempts' });
+    }
 });
 
 app.post('/user-analysis', requireSession, async (req, res) => {
