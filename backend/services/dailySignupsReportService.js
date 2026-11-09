@@ -1,5 +1,9 @@
 /**
- * Daily Signups Report
+ * "SQB daily" digest (formerly the Daily Signups Report; the file keeps its name because the cron route and the
+ * dedupe table are unchanged). Since 2026-11-09 this one mail also carries payments, question reports, the integrity
+ * check and filtered error noise: see dailyDigestService.js. The signup part below is unchanged.
+ *
+ * Original description of the signup part:
  * ------------------------------------------------------------------
  * Once a day, near the end of the Saudi business day, emails the owner a
  * single summary of new users: how many joined, broken down by HOW they
@@ -30,6 +34,7 @@
 
 import { sendMail } from './mailer.js';
 import { OWNER_EMAIL } from '../config/recipients.js';
+import { collectDigestExtras, renderDailyDigest } from './dailyDigestService.js';
 
 const REPORT_RECIPIENT = OWNER_EMAIL;
 
@@ -43,20 +48,12 @@ const SIGNUP_METHOD_LABELS = {
     temp_link: 'Temp-link invite',
     group_seat: 'Group seat',
 };
-const SIGNUP_METHOD_COLORS = {
-    email_otp: '#0e7490',
-    google: '#4285F4',
-    admin: '#7c3aed',
-    temp_link: '#d97706',
-    group_seat: '#059669',
-};
 // Anything not in the map above (a signup_method value added later and not
 // yet taught to this report, or a legacy NULL that predates the backfill)
 // falls back to this rather than being silently dropped from the chart —
 // dropping it would make "new users today" in the chart disagree with the
 // headline count right above it.
 const OTHER_LABEL = 'Other';
-const OTHER_COLOR = '#6b7280';
 
 let _logTableReady = null;
 function ensureReportLog(db) {
@@ -92,25 +89,6 @@ export function astDayRange(dateTag) {
 /** Latest Saudi day that has fully ended at `now` (always yesterday, Saudi time). */
 export function lastCompletedAstDay(now = new Date()) {
     return astDateTag(new Date(now.getTime() - 24 * 3600 * 1000));
-}
-
-function fmtDate(d) {
-    return new Date(d).toISOString().replace('T', ' ').slice(0, 16) + ' UTC';
-}
-
-/** One CSS bar-chart row: label, count, and a width-proportional bar. */
-function chartRow(label, count, maxCount, color) {
-    const pct = maxCount > 0 ? Math.max((count / maxCount) * 100, count > 0 ? 4 : 0) : 0;
-    return `
-        <tr>
-          <td style="padding:4px 10px 4px 0;font-size:13px;color:#374151;white-space:nowrap;width:1%">${label}</td>
-          <td style="padding:4px 0;width:100%">
-            <div style="background:#f1f5f9;border-radius:4px;overflow:hidden;height:18px">
-              <div style="background:${color};width:${pct}%;height:18px;border-radius:4px"></div>
-            </div>
-          </td>
-          <td style="padding:4px 0 4px 10px;font-size:13px;font-weight:bold;color:#111827;text-align:right;white-space:nowrap;width:1%">${count}</td>
-        </tr>`;
 }
 
 /**
@@ -168,59 +146,28 @@ export async function sendDailySignupsReport(db, opts = {}) {
     // stray value — a NULL from a pre-backfill row and a future new method
     // shouldn't each get their own bar.
     const knownRows = Object.entries(SIGNUP_METHOD_LABELS)
-        .map(([method, label]) => ({ method, label, count: byMethod[method] || 0, color: SIGNUP_METHOD_COLORS[method] }));
+        .map(([method, label]) => ({ method, label, count: byMethod[method] || 0 }));
     const otherCount = Object.entries(byMethod)
         .filter(([method]) => !(method in SIGNUP_METHOD_LABELS))
         .reduce((sum, [, n]) => sum + n, 0);
     const chartData = otherCount > 0
-        ? [...knownRows, { method: 'other', label: OTHER_LABEL, count: otherCount, color: OTHER_COLOR }]
+        ? [...knownRows, { method: 'other', label: OTHER_LABEL, count: otherCount }]
         : knownRows;
-    const maxCount = Math.max(...chartData.map((r) => r.count), 1);
-
-    const chartHtml = chartData.some((r) => r.count > 0)
-        ? `<table style="width:100%;border-collapse:collapse">
-             ${chartData.map((r) => chartRow(r.label, r.count, maxCount, r.color)).join('')}
-           </table>`
-        : `<p style="color:#6b7280;font-size:13px;margin:0">No new signups ${dayWord}.</p>`;
-
-    const vsAvgHtml = vsAvgPct === null
-        ? ''
-        : `<span style="color:${vsAvgPct >= 0 ? '#059669' : '#b91c1c'}">${vsAvgPct >= 0 ? '+' : ''}${vsAvgPct}% vs 7-day avg</span>`;
-
-    const summaryHtml = `
-        <div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:0 auto">
-          <div style="background:linear-gradient(135deg,#059669,#047857);color:#fff;padding:18px 22px;border-radius:10px 10px 0 0">
-            <h2 style="margin:0;font-size:18px">🌱 Daily Signups — ${dateTag}${partial ? ' (PARTIAL DAY)' : ''}</h2>
-            <p style="margin:6px 0 0;font-size:12px;opacity:.85">${fmtDate(dayStart)} → ${partial ? fmtDate(now) + ' (day not finished)' : fmtDate(dayEnd)} · Saudi day ${dateTag}</p>
-          </div>
-          <div style="border:1px solid #e5e7eb;border-top:none;padding:18px 22px;border-radius:0 0 10px 10px">
-            <table style="width:100%;font-size:14px;border-collapse:collapse;margin-bottom:16px">
-              <tr><td style="padding:6px 0;color:#374151">New signups ${dayWord}</td><td style="text-align:left;font-weight:bold;font-size:20px">${newSignups}</td></tr>
-              <tr><td style="padding:6px 0;color:#374151">Total users to date</td><td style="text-align:left;font-weight:bold">${totalUsers}</td></tr>
-              <tr><td style="padding:6px 0;color:#374151">7-day daily average</td><td style="text-align:left;font-weight:bold">${weekAvg.toFixed(1)} ${vsAvgHtml}</td></tr>
-            </table>
-            <h3 style="margin:0 0 8px;font-size:13px;color:#059669">By how they joined</h3>
-            ${chartHtml}
-            <p style="font-size:12px;color:#6b7280;margin-top:16px">Full per-account detail is on the admin dashboard's Users page.</p>
-          </div>
-        </div>`;
-
-    const textLines = [
-        `New signups ${dayWord} (Saudi day ${dateTag}${partial ? ', PARTIAL: the day is not finished' : ''}): ${newSignups}`,
-        `Total users to date: ${totalUsers}`,
-        `7-day daily average: ${weekAvg.toFixed(1)}${vsAvgPct !== null ? ` (${vsAvgPct >= 0 ? '+' : ''}${vsAvgPct}% vs today)` : ''}`,
-        '',
-        'By how they joined:',
-        ...chartData.map((r) => `  ${r.label}: ${r.count}`),
-    ];
+    const extras = await collectDigestExtras(db, dayStart, dayEnd);
+    const digest = renderDailyDigest({
+        dateTag, partial, newSignups, totalUsers, weekAvg, vsAvgPct,
+        signupLines: chartData.map((r) => [r.label, r.count]),
+        ...extras,
+    });
 
     await sendMail({
+        // Event name kept from the old Daily Signups report so the gateway's routing rules still apply.
         event: 'medqize.owner.daily_signups_report',
         name: 'SQB Reports',
         to: REPORT_RECIPIENT,
-        subject: `🌱 Daily Signups — ${newSignups} new user${newSignups === 1 ? '' : 's'} — ${dateTag}${partial ? ' (partial day)' : ''}`,
-        text: textLines.join('\n'),
-        html: summaryHtml,
+        subject: digest.subject,
+        text: digest.text,
+        html: digest.html,
     });
 
     if (record) {

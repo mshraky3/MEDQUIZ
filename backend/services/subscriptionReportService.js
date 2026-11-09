@@ -1,14 +1,14 @@
 /**
  * Subscription Report Service
  * ------------------------------------------------------------------
- * Every 2 days, emails the owner a PDF listing the new paid
+ * Once a week (was every 2 days until 2026-11-09), emails the owner a PDF listing the new paid
  * subscriptions: subscriber name/email, gross amount, Moyasar fee, and
  * the net amount after the fee.
  *
  * Scheduling: piggybacks on the existing daily 9:00 cron
  * (GET /api/cron/daily-emails) — `maybeSendSubscriptionReport` runs on
  * every daily invocation but only actually sends when the last report
- * is ≥ 47 hours old, i.e. every second day. This avoids adding a third
+ * is ≥ 167 hours old, i.e. once a week. This avoids adding a third
  * Vercel cron entry (the Hobby plan allows only two per project).
  *
  * Fees, refunds and net are computed by services/accountingService.js —
@@ -20,10 +20,11 @@
 import { sendMail } from './mailer.js';
 import { TRACK_KEYS, trackLabelAr } from '../config/tracks.js';
 import { OWNER_EMAIL } from '../config/recipients.js';
+import { renderOwnerMail, ADMIN_LINKS } from './ownerMail.js';
 import { fetchPaidEvents, summarize, sar } from './accountingService.js';
 
 const REPORT_RECIPIENT = OWNER_EMAIL;
-const REPORT_INTERVAL_HOURS = 47; // "every 2 days" with 1h tolerance for cron jitter
+const REPORT_INTERVAL_HOURS = 167; // weekly (since 2026-11-09; was every 2 days) with 1h tolerance for cron jitter
 const DEFAULT_WINDOW_HOURS = 48;  // first run / fallback window
 
 let _logTableReady = null;
@@ -165,9 +166,39 @@ async function buildReportPdf(rows, totals, periodStart, periodEnd) {
         doc.moveDown(1);
         doc.font('Helvetica').fontSize(8).fillColor('#6b7280')
             .text('* Fee estimated from the card scheme (mada / credit) + VAT because Moyasar did not report an exact fee for this payment. Exact figures are always available in the Moyasar dashboard.', left, doc.y, { width: usable })
-            .text('Automated report — sent every 2 days by the SQB backend. Covers all study tracks.', left, doc.y + 4, { width: usable });
+            .text('Automated report — sent weekly by the SQB backend. Covers all study tracks.', left, doc.y + 4, { width: usable });
 
         doc.end();
+    });
+}
+
+/**
+ * The mail body of the subscriptions report (shared owner layout). The PDF is attached by the caller.
+ * Exported so the layout can be rendered and tested without a database.
+ */
+export function buildSubscriptionReportMail({ rows, totals, byTrack, periodStart, periodEnd }) {
+    const n = rows.length;
+    const headline = n === 0
+        ? 'No new subscriptions in this period.'
+        : `${n} new subscription${n === 1 ? '' : 's'}: ${sar(totals.net)} SAR net received.`;
+    const money = [
+        ['New subscriptions', String(n), { bold: true }],
+        ['Gross total', `${sar(totals.gross)} SAR`],
+        ['Fees (Moyasar)', `-${sar(totals.fee)} SAR`],
+    ];
+    if (totals.refunded > 0) money.push(['Refunded', `-${sar(totals.refunded)} SAR`]);
+    money.push(['Net received', `${sar(totals.net)} SAR`, { bold: true }]);
+    return renderOwnerMail({
+        status: 'info',
+        title: 'Subscriptions report',
+        headline,
+        intro: `Period: ${fmtDate(periodStart)} to ${fmtDate(periodEnd)}. Sent once a week.`,
+        sections: [
+            { rows: money },
+            { title: 'By track', rows: byTrack.map((t) => [`${t.label} (${t.track})`, `${t.count} · ${sar(t.net)} SAR net`]) },
+        ],
+        todo: 'Nothing to do. Names and every payment are in the attached PDF. For partner reports follow the cash-out ledger rules.',
+        action: { label: 'Open Accounting', url: ADMIN_LINKS.accounting },
     });
 }
 
@@ -213,31 +244,7 @@ export async function sendSubscriptionReport(db, opts = {}) {
     const pdf = await buildReportPdf(rows, totals, periodStart, periodEnd);
     const dateTag = new Date().toISOString().slice(0, 10);
 
-    const summaryHtml = `
-        <div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:0 auto">
-          <div style="background:linear-gradient(135deg,#0e7490,#155e75);color:#fff;padding:18px 22px;border-radius:10px 10px 0 0">
-            <h2 style="margin:0;font-size:18px">📈 New Subscriptions Report</h2>
-            <p style="margin:6px 0 0;font-size:12px;opacity:.85">${fmtDate(periodStart)} → ${fmtDate(periodEnd)}</p>
-          </div>
-          <div style="border:1px solid #e5e7eb;border-top:none;padding:18px 22px;border-radius:0 0 10px 10px">
-            <table style="width:100%;font-size:14px;border-collapse:collapse">
-              <tr><td style="padding:6px 0;color:#374151">New subscriptions</td><td style="text-align:left;font-weight:bold">${rows.length}</td></tr>
-              <tr><td style="padding:6px 0;color:#374151">Gross total</td><td style="text-align:left;font-weight:bold">${sar(totals.gross)} SAR</td></tr>
-              <tr><td style="padding:6px 0;color:#374151">Fees (Moyasar)</td><td style="text-align:left;font-weight:bold">−${sar(totals.fee)} SAR</td></tr>
-              ${totals.refunded > 0 ? `<tr><td style="padding:6px 0;color:#b91c1c">Refunded</td><td style="text-align:left;font-weight:bold;color:#b91c1c">−${sar(totals.refunded)} SAR</td></tr>` : ''}
-              <tr><td style="padding:6px 0;color:#374151">Net received</td><td style="text-align:left;font-weight:bold;color:#059669">${sar(totals.net)} SAR</td></tr>
-            </table>
-            <h3 style="margin:18px 0 6px;font-size:13px;color:#0e7490">By track</h3>
-            <table style="width:100%;font-size:13px;border-collapse:collapse">
-              ${byTrack.map((t) => `
-                <tr>
-                  <td style="padding:5px 0;color:#374151">${t.label} <span style="color:#9ca3af">(${t.track})</span></td>
-                  <td style="text-align:left;font-weight:bold">${t.count} · ${sar(t.net)} SAR net</td>
-                </tr>`).join('')}
-            </table>
-            <p style="font-size:12px;color:#6b7280;margin-top:14px">Full details (names + per-payment amounts) in the attached PDF.</p>
-          </div>
-        </div>`;
+    const summary = buildSubscriptionReportMail({ rows, totals, byTrack, periodStart, periodEnd });
 
     await sendMail({
         // Carries a PDF, and goes to the owner.
@@ -245,8 +252,8 @@ export async function sendSubscriptionReport(db, opts = {}) {
         name: 'SQB Reports',
         to: REPORT_RECIPIENT,
         subject: `📈 Subscriptions Report — ${rows.length} new (${sar(totals.net)} SAR net) — ${dateTag}`,
-        text: `New subscriptions: ${rows.length}\nGross: ${sar(totals.gross)} SAR\nFees: -${sar(totals.fee)} SAR\nRefunded: -${sar(totals.refunded)} SAR\nNet received: ${sar(totals.net)} SAR\nPeriod: ${fmtDate(periodStart)} -> ${fmtDate(periodEnd)}`,
-        html: summaryHtml,
+        text: summary.text,
+        html: summary.html,
         attachments: [
             { filename: `subscriptions-report-${dateTag}.pdf`, content: pdf, contentType: 'application/pdf' },
         ],
@@ -275,7 +282,7 @@ export async function sendSubscriptionReport(db, opts = {}) {
 
 /**
  * Called from the daily cron: sends the report only when the previous one
- * is ≥ 47h old (i.e. every second day). The new period starts exactly where
+ * is ≥ 167h old (i.e. once a week). The new period starts exactly where
  * the last one ended so no subscription is ever skipped or double-counted,
  * even across month boundaries or missed cron runs.
  */

@@ -407,12 +407,12 @@ router.get('/api/cron/daily-emails', cronAuth, async (req, res) => {
         }
     }
 
-    // ── 4. Bi-daily subscription report ───────────────────────
+    // ── 4. Weekly subscription report (was every 2 days until 2026-11-09) ──
     // Runs on every daily invocation but only sends when the last report is
-    // ≥ 47h old — i.e. a PDF of new subscriptions every 2 days. Kept inside
+    // ≥ 167h old — i.e. a PDF of new subscriptions once a week. Kept inside
     // this cron so the project stays within Vercel's 2-cron (Hobby) limit.
     try {
-        // Skipped when out of time: it re-checks "last report >= 47h old" next run.
+        // Skipped when out of time: it re-checks "last report >= 167h old" next run.
         if (!outOfTime()) results.subscriptionReport = await maybeSendSubscriptionReport(db);
     } catch (err) {
         logger.error('cron/daily-emails subscription report error:', err);

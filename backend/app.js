@@ -54,6 +54,8 @@ import {
 } from './utils/observability.js';
 import { sendWelcomeEmail, sendGroupSeatClaimedEmail } from './services/userEmailService.js';
 import { OWNER_EMAIL } from './config/recipients.js';
+import { checkSchemaVersion, newGuardState } from './utils/bootstrapGuard.js';
+import { buildContactMail, buildSuggestionMail } from './services/ownerMailTemplates.js';
 import {
     DEFAULT_TRACK, TRACK_KEYS, TRACKS, isValidTrack, normalizeTrack,
     specialtyKeys, trackLabelAr, trackLabelEn, trackForSpecialty,
@@ -2042,32 +2044,22 @@ const ensureOAuthColumns = async () => {
 // 14: check_valid_quiz_source rebuilt again to accept MedicalOctoberRecall.
 // 15: question_images + question_image_links (additive, ensureQuestionImagesSchema).
 const SCHEMA_BOOTSTRAP_VERSION = 15;
+const _versionGuard = newGuardState();
 async function bootstrapAll() {
+    // A failed or slow version check must NEVER start the full DDL list (7 Nov 2026: 25 instances x ~100 statements
+    // against a database already out of connections). Only a check that succeeded and found the schema behind runs
+    // it. See utils/bootstrapGuard.js.
+    let status;
     try {
-        await db.query(`
-            CREATE TABLE IF NOT EXISTS schema_bootstrap_version (
-                version    INTEGER PRIMARY KEY,
-                applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-            )
-        `);
-        const { rows: [current] } = await db.query(
-            `SELECT version FROM schema_bootstrap_version ORDER BY version DESC LIMIT 1`
-        );
-        if (current && current.version >= SCHEMA_BOOTSTRAP_VERSION) {
-            logger.info(`Schema already at bootstrap version ${current.version}, skipping DDL sequence`);
-            return;
-        }
+        status = await checkSchemaVersion(db, SCHEMA_BOOTSTRAP_VERSION, _versionGuard);
     } catch (err) {
-        reportBootstrapFailure('bootstrapAll:versionCheck', err);
-        // A connection that never came up says nothing about the schema, and
-        // answering it by firing 100+ DDL statements at a database we just
-        // failed to reach is how the "Query read timeout" lock pile-up started
-        // in the first place. Rethrow so bootstrapOnce() re-arms and the next
-        // request retries the cheap check instead.
-        if (isTransientConnectionError(err)) throw err;
-        // Anything else (bad SQL, missing privileges) leaves the version
-        // genuinely unknown — fall through to the full sequence rather than
-        // silently skipping bootstrap forever.
+        // Logged, not mailed: this is the "database is busy" noise, and the 5xx alerting still covers real outages.
+        logger.warn('bootstrapAll: version check unanswered, skipping all DDL, a later request retries', { error: err.message });
+        throw err; // bootstrapOnce() re-arms; the request middleware ignores the rejection and serves the request
+    }
+    if (status === 'current') {
+        logger.info('Schema already at bootstrap version ' + SCHEMA_BOOTSTRAP_VERSION + ' or newer, skipping DDL sequence');
+        return;
     }
     await ensureSchema();
     await ensurePaymentSchema();
@@ -6574,39 +6566,8 @@ app.post('/api/contact', rateLimit(db, 'contact', { windowMs: 60 * 60_000, max: 
 
         // Send email notification for contact form
         try {
-            const emailSubject = `📞 Contact Form - ${subject || 'General Inquiry'} [${req.body.track || 'unknown'}]`;
-            const emailText = `
-New contact form submission from SQB:
-
-Name: ${name}
-Mobile: ${mobile}
-Account: ${senderUsername}
-Track: ${senderTrack}
-Subject: ${subject || 'General Inquiry'}
-Submitted: ${new Date().toLocaleString()}
-
-Message:
-${message}
-
-Please respond to the user as soon as possible.
-            `;
-
-            const emailHtml = `
-                <h2>📞 Contact Form Submission</h2>
-                <p><strong>Name:</strong> ${name}</p>
-                <p><strong>Mobile:</strong> ${mobile}</p>
-                <p><strong>Account:</strong> ${senderUsername}</p>
-                <p><strong>Track:</strong> ${senderTrack}</p>
-                <p><strong>Subject:</strong> ${subject || 'General Inquiry'}</p>
-                <p><strong>Submitted:</strong> ${new Date().toLocaleString()}</p>
-                <hr>
-                <p><strong>Message:</strong></p>
-                <p>${message.replace(/\n/g, '<br>')}</p>
-                <hr>
-                <p>Please respond to the user as soon as possible.</p>
-            `;
-
-            await sendEmail(OWNER_EMAIL, emailSubject, emailText, emailHtml, {
+            const contactMail = buildContactMail({ name, mobile, username: senderUsername, senderTrack, subject, message, trackKey: req.body.track });
+            await sendEmail(OWNER_EMAIL, contactMail.subject, contactMail.text, contactMail.html, {
                 event: 'medqize.owner.contact_form',
                 sourceOrigin: req.headers.referer || req.headers.origin,
             });
@@ -6679,134 +6640,15 @@ app.post('/api/suggestions', rateLimit(db, 'suggestions', { windowMs: 60 * 60_00
 
         const suggestion = result.rows[0];
 
-        // Send email notification
-        const categoryLabels = {
-            feature: '✨ New Feature',
-            improvement: '🚀 Improvement',
-            ui: '🎨 UI/Design',
-            content: '📚 Content/Questions',
-            bug: '🐛 Bug Report',
-            other: '💡 Other'
-        };
-
-        const priorityLabels = {
-            low: '🟢 Nice to have',
-            medium: '🟡 Would be helpful',
-            high: '🔴 Really need this'
-        };
-
-        const emailHtml = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-</head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);">
-  <table width="100%" cellpadding="0" cellspacing="0" style="padding: 40px 20px;">
-    <tr>
-      <td align="center">
-        <table width="600" cellpadding="0" cellspacing="0" style="background: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.3);">
-          
-          <!-- Header -->
-          <tr>
-            <td style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 50%, #6d28d9 100%); padding: 40px; text-align: center;">
-              <div style="font-size: 50px; margin-bottom: 16px;">💡</div>
-              <h1 style="margin: 0; color: white; font-size: 24px; font-weight: 800;">New Suggestion Received</h1>
-              <p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.8); font-size: 14px;">SQB Feedback System</p>
-            </td>
-          </tr>
-          
-          <!-- Category & Priority Badges -->
-          <tr>
-            <td style="padding: 24px 32px; background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
-              <table width="100%">
-                <tr>
-                  <td>
-                    <span style="display: inline-block; background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; padding: 8px 16px; border-radius: 50px; font-size: 13px; font-weight: 600;">
-                      ${categoryLabels[category] || category}
-                    </span>
-                  </td>
-                  <td align="right">
-                    <span style="display: inline-block; background: #f1f5f9; padding: 8px 16px; border-radius: 50px; font-size: 13px; font-weight: 600; color: #475569;">
-                      ${priorityLabels[priority] || priority}
-                    </span>
-                    <span style="display: inline-block; background: #eef2ff; padding: 8px 16px; border-radius: 50px; font-size: 13px; font-weight: 600; color: #4338ca; margin-right: 6px;">
-                      ${senderTrack}
-                    </span>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-          
-          <!-- Title -->
-          <tr>
-            <td style="padding: 32px 32px 16px 32px;">
-              <h2 style="margin: 0; color: #1e293b; font-size: 20px; font-weight: 700;">
-                📝 ${title}
-              </h2>
-            </td>
-          </tr>
-          
-          <!-- Description -->
-          <tr>
-            <td style="padding: 0 32px 32px 32px;">
-              <div style="background: linear-gradient(135deg, #f8fafc, #f1f5f9); border-radius: 12px; padding: 20px; border-left: 4px solid #8b5cf6;">
-                <p style="margin: 0; color: #475569; font-size: 15px; line-height: 1.7; white-space: pre-wrap;">${description}</p>
-              </div>
-            </td>
-          </tr>
-          
-          <!-- Meta Info -->
-          <tr>
-            <td style="padding: 0 32px 32px 32px;">
-              <table width="100%" style="background: #f8fafc; border-radius: 12px; overflow: hidden;">
-                <tr>
-                  <td style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0;">
-                    <span style="color: #64748b; font-size: 12px;">📅 Submitted</span><br>
-                    <span style="color: #1e293b; font-size: 14px; font-weight: 600;">${new Date().toLocaleString()}</span>
-                  </td>
-                  <td style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0;">
-                    <span style="color: #64748b; font-size: 12px;">🔢 Suggestion ID</span><br>
-                    <span style="color: #1e293b; font-size: 14px; font-weight: 600;">#${suggestion.id}</span>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-          
-          <!-- Action Button -->
-          <tr>
-            <td style="padding: 0 32px 32px 32px; text-align: center;">
-              <a href="https://medquiz.vercel.app/admin" style="display: inline-block; background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: white; padding: 14px 32px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 14px; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);">
-                📋 View in Admin Panel
-              </a>
-            </td>
-          </tr>
-          
-          <!-- Footer -->
-          <tr>
-            <td style="background: #1e293b; padding: 24px 32px; text-align: center;">
-              <p style="margin: 0; color: rgba(255,255,255,0.6); font-size: 12px;">
-                Auto-generated by SQB Feedback System
-              </p>
-            </td>
-          </tr>
-          
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
-        `;
+        // Send email notification (shared owner layout, see services/ownerMailTemplates.js)
+        const suggestionMail = buildSuggestionMail({ id: suggestion.id, category, priority, title, description, senderTrack, trackKey: req.body.track });
 
         try {
             await sendEmail(
                 OWNER_EMAIL,
-                `💡 New Suggestion: ${title} [${req.body.track || 'unknown'}]`,
-                `New suggestion received:\n\nCategory: ${category}\nPriority: ${priority}\nTitle: ${title}\n\nDescription:\n${description}`,
-                emailHtml,
+                suggestionMail.subject,
+                suggestionMail.text,
+                suggestionMail.html,
                 {
                     event: 'medqize.owner.suggestion',
                     sourceOrigin: req.headers.referer || req.headers.origin,
