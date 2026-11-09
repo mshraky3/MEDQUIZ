@@ -3,6 +3,7 @@ import { adminAuth } from '../middleware/adminAuth.js';
 import { sendMail } from '../services/mailer.js';
 import { trackLabelAr, normalizeTrack, specialtyLabel } from '../config/tracks.js';
 import { OWNER_EMAIL } from '../config/recipients.js';
+import { renderOwnerMail, ADMIN_LINKS } from '../services/ownerMail.js';
 import { logger } from '../utils/observability.js';
 
 const router = express.Router();
@@ -18,6 +19,28 @@ const sendEmail = async (to, subject, html, opts = {}) => {
         ...opts,
     });
 };
+
+/** Owner alert for a new question report (shared owner layout; the student's text is escaped). */
+export function buildQuestionReportMail({ reportId, userEmail, qTrack, qTypeLabel, questionText, reason }) {
+    const mail = renderOwnerMail({
+        status: 'attention',
+        title: 'Question report',
+        headline: `A student reported a question (report #${reportId}).`,
+        sections: [
+            { rows: [
+                ['Report', `#${reportId}`, { bold: true }],
+                ['From', userEmail],
+                ['Track', `${trackLabelAr(qTrack)} (${qTrack})`],
+                ['Specialty', qTypeLabel],
+            ] },
+            { title: 'The question', quote: questionText },
+            { title: "The student's reason", quote: reason || 'No reason was given.' },
+        ],
+        todo: 'Open the report, read the question, and either fix the question or dismiss the report. The student is not told anything until you act.',
+        action: { label: 'Review in Admin Panel', url: ADMIN_LINKS.reports },
+    });
+    return { subject: `🚩 New Question Report #${reportId} — ${qTrack}`, ...mail };
+}
 
 // POST /api/question-reports — user submits a report
 router.post('/', async (req, res) => {
@@ -49,50 +72,8 @@ router.post('/', async (req, res) => {
 
         // Notify admin
         try {
-            await sendEmail(
-                ADMIN_EMAIL,
-                `🚩 New Question Report #${reportId} — ${qTrack}`,
-                `<!DOCTYPE html>
-<html>
-<body style="margin:0;padding:0;background:#0b1021;font-family:'Segoe UI',Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0b1021;padding:32px 0;">
-    <tr><td align="center">
-      <table width="500" cellpadding="0" cellspacing="0" style="background:#111827;border-radius:12px;overflow:hidden;border:1px solid #1e293b;">
-        <tr>
-          <td style="padding:24px 32px 20px;background:#111827;border-bottom:1px solid #1e293b;">
-            <img src="https://www.smle-question-bank.com/tab_logo.png" width="28" height="28" alt="SQB" style="vertical-align:middle;border-radius:6px;margin-right:8px;">
-            <span style="font-size:22px;font-weight:800;color:#22d3ee;vertical-align:middle;">SQB</span>
-            <span style="font-size:13px;color:#64748b;margin-left:12px;vertical-align:middle;">Admin Alert</span>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:28px 32px 12px;">
-            <p style="margin:0 0 6px;font-size:18px;color:#f8fafc;font-weight:700;">🚩 New Question Report</p>
-            <p style="margin:0 0 20px;font-size:13px;color:#64748b;">Report #${reportId} — submitted by ${user_email}</p>
-            <p style="margin:-12px 0 20px;font-size:13px;color:#22d3ee;">المسار: ${trackLabelAr(qTrack)} (${qTrack}) · التخصص: ${qTypeLabel}</p>
-            <div style="background:#0b1021;border:1px solid #1e293b;border-radius:8px;padding:16px;margin-bottom:16px;">
-              <p style="margin:0 0 6px;font-size:11px;color:#475569;text-transform:uppercase;letter-spacing:1px;">Question</p>
-              <p style="margin:0;color:#e2e8f0;font-size:14px;">${questionText}</p>
-            </div>
-            ${reason ? `<div style="background:#0b1021;border:1px solid #1e293b;border-radius:8px;padding:16px;margin-bottom:16px;">
-              <p style="margin:0 0 6px;font-size:11px;color:#475569;text-transform:uppercase;letter-spacing:1px;">User's Reason</p>
-              <p style="margin:0;color:#e2e8f0;font-size:14px;">${reason}</p>
-            </div>` : '<p style="color:#475569;font-size:13px;font-style:italic;">No reason provided.</p>'}
-            <a href="https://www.smle-question-bank.com/admin/reports" style="display:inline-block;margin-top:8px;padding:10px 20px;background:#22d3ee;color:#0b1021;border-radius:6px;font-weight:700;text-decoration:none;font-size:13px;">Review in Admin Panel →</a>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:16px 32px 24px;border-top:1px solid #1e293b;">
-            <p style="margin:0;font-size:11px;color:#334155;">SQB · Question Reports System</p>
-          </td>
-        </tr>
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`,
-                { event: 'medqize.owner.question_report_filed' }
-            );
+            const mail = buildQuestionReportMail({ reportId, userEmail: user_email, qTrack, qTypeLabel, questionText, reason });
+            await sendEmail(ADMIN_EMAIL, mail.subject, mail.html, { text: mail.text, event: 'medqize.owner.question_report_filed' });
         } catch (emailErr) {
             logger.error('[QuestionReports] Admin notification email failed:', emailErr);
             // Don't fail the request if email fails

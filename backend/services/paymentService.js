@@ -25,6 +25,8 @@ import { sendInvoiceEmail } from './invoiceService.js';
 import { trackLabelAr, normalizeTrack } from '../config/tracks.js';
 import { addMonthsClamped } from '../utils/addMonths.js';
 import { OWNER_EMAIL } from '../config/recipients.js';
+import { renderOwnerMail, ADMIN_LINKS } from './ownerMail.js';
+import { sendWithRetry, recordOwnerMail, withinTime } from './paymentMailTracking.js';
 import { bonusMonthsFor, displayBonusMonths } from './goldenMonths.js';
 
 const MOYASAR_API = 'https://api.moyasar.com/v1';
@@ -36,10 +38,40 @@ const MOYASAR_API = 'https://api.moyasar.com/v1';
 const sarFmt = (halalas) => (Number(halalas || 0) / 100).toFixed(2);
 
 /**
- * Fire-and-forget email to the owner when money actually arrives.
- * Never throws — a mail failure must not break payment activation.
+ * Builds the owner's "Payment received" mail (shared owner layout).
+ * Exported so the layout can be rendered and tested without a database.
  */
-async function notifyPaymentReceived(db, accountId, payment, expiryDate) {
+export function buildPaymentReceivedMail({ who, trackName, trackKey, gross, feeHalalas, estimated, card, expiryDate, ref }) {
+    const net = gross - feeHalalas;
+    const until = new Date(expiryDate).toISOString().slice(0, 10);
+    const mail = renderOwnerMail({
+        status: 'ok',
+        title: 'Payment received',
+        headline: `${sarFmt(gross)} SAR received from ${who}. Their access is active until ${until}.`,
+        sections: [{
+            rows: [
+                ['Subscriber', who, { bold: true }],
+                ['Track', trackName],
+                ['Gross', `${sarFmt(gross)} SAR`, { bold: true }],
+                [`Fee${estimated ? ' (estimated)' : ''}`, `${sarFmt(feeHalalas)} SAR`],
+                ['Net', `${sarFmt(net)} SAR`, { bold: true }],
+                ['Card', card],
+                ['Active until', until],
+                ['Moyasar ref', ref || '—', { mono: true }],
+            ],
+        }],
+        action: { label: 'Open Accounting', url: ADMIN_LINKS.accounting },
+    });
+    return { subject: `💰 Payment received — ${sarFmt(gross)} SAR from ${who} [${trackKey}]`, ...mail };
+}
+
+/**
+ * Email to the owner when money actually arrives. Never throws (a mail failure must not break payment activation)
+ * but it no longer fails silently: it retries, and the result is recorded in payment_events (see
+ * paymentMailTracking.js) so the daily digest can list any paid payment without a sent mail.
+ */
+async function notifyPaymentReceived(db, accountId, payment, expiryDate, eventId = null) {
+    let result = { ok: false, attempts: 0, error: 'not attempted' };
     try {
         const acct = await db.query(
             'SELECT email, track FROM accounts WHERE id = $1', [accountId]
@@ -52,37 +84,27 @@ async function notifyPaymentReceived(db, accountId, payment, expiryDate) {
         const trackName = `${trackLabelAr(trackKey)} / ${trackKey}`;
         const gross = Number(payment?.amount) || 0;
         const { feeHalalas, estimated } = computeFee(payment, gross);
-        const net = gross - feeHalalas;
         const card = payment?.source?.company ? String(payment.source.company).toUpperCase() : '—';
+        const mail = buildPaymentReceivedMail({ who, trackName, trackKey, gross, feeHalalas, estimated, card, expiryDate, ref: payment?.id });
 
-        await sendMail({
+        result = await sendWithRetry(() => sendMail({
             event: 'medqize.owner.payment_received',
             name: 'SQB Payments',
             to: OWNER_EMAIL,
-            subject: `💰 Payment received — ${sarFmt(gross)} SAR from ${who} [${trackKey}]`,
-            text: `Payment received\nFrom: ${who}\nTrack: ${trackName}\nGross: ${sarFmt(gross)} SAR\nFee${estimated ? ' (est.)' : ''}: ${sarFmt(feeHalalas)} SAR\nNet: ${sarFmt(net)} SAR\nCard: ${card}\nSubscription until: ${new Date(expiryDate).toISOString().slice(0, 10)}\nMoyasar ref: ${payment?.id || '—'}`,
-            html: `
-              <div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto">
-                <div style="background:linear-gradient(135deg,#059669,#047857);color:#fff;padding:16px 22px;border-radius:10px 10px 0 0">
-                  <h2 style="margin:0;font-size:17px">💰 Payment received — ${sarFmt(gross)} SAR</h2>
-                </div>
-                <div style="border:1px solid #e5e7eb;border-top:none;padding:16px 22px;border-radius:0 0 10px 10px;font-size:14px">
-                  <table style="width:100%;border-collapse:collapse">
-                    <tr><td style="padding:5px 0;color:#374151">Subscriber</td><td style="font-weight:bold">${who}</td></tr>
-                    <tr><td style="padding:5px 0;color:#374151">Track</td><td style="font-weight:bold">${trackName}</td></tr>
-                    <tr><td style="padding:5px 0;color:#374151">Gross</td><td style="font-weight:bold">${sarFmt(gross)} SAR</td></tr>
-                    <tr><td style="padding:5px 0;color:#374151">Fee${estimated ? ' (estimated)' : ''}</td><td>${sarFmt(feeHalalas)} SAR</td></tr>
-                    <tr><td style="padding:5px 0;color:#374151">Net</td><td style="font-weight:bold;color:#059669">${sarFmt(net)} SAR</td></tr>
-                    <tr><td style="padding:5px 0;color:#374151">Card</td><td>${card}</td></tr>
-                    <tr><td style="padding:5px 0;color:#374151">Active until</td><td>${new Date(expiryDate).toISOString().slice(0, 10)}</td></tr>
-                    <tr><td style="padding:5px 0;color:#374151">Moyasar ref</td><td style="font-family:monospace;font-size:12px">${payment?.id || '—'}</td></tr>
-                  </table>
-                </div>
-              </div>`,
-        });
+            subject: mail.subject,
+            text: mail.text,
+            html: mail.html,
+            // A retry after a slow success must never send twice.
+            idempotencyKey: `owner-payment:${payment?.id || eventId}`,
+        }));
     } catch (err) {
-        console.error('[payment] owner notification email failed:', err.message);
+        result = { ok: false, attempts: 1, error: String(err?.message || err).slice(0, 200) };
     }
+    if (!result.ok) {
+        console.error(`[payment] OWNER PAYMENT MAIL FAILED after ${result.attempts} attempt(s) for payment ${payment?.id}: ${result.error}`);
+    }
+    await recordOwnerMail(db, eventId, result);
+    return result;
 }
 
 export class PaymentDisabledError extends Error {
@@ -904,7 +926,13 @@ export async function activateSubscriptionFromPayment(db, accountId, payment, ev
         email: null,
     });
 
-    (async () => {
+    // The two mails go out ONE AFTER THE OTHER and are awaited, within a hard 7 s cap. They used to start in the
+    // background at the same instant: the mail provider then answered "550 Too many requests, 10 per second", and on
+    // Vercel the instance can be frozen once the response is out, so a mail still in flight was never sent
+    // (payment_events 48, 1 Nov 2026). If the cap is hit the work carries on in the background and the daily digest
+    // reports the payment as "paid, no owner mail". See paymentMailTracking.js.
+    await withinTime((async () => {
+        await notifyPaymentReceived(db, accountId, payment, newExpiry, claim.rows[0].id);
         try {
             // The customer's own copy: their emailed PDF receipt.
             const who = await db.query('SELECT email FROM accounts WHERE id = $1', [accountId]);
@@ -913,10 +941,7 @@ export async function activateSubscriptionFromPayment(db, accountId, payment, ev
         } catch (err) {
             console.error('[payment] invoice email failed:', err.message);
         }
-    })();
-    notifyPaymentReceived(db, accountId, payment, newExpiry).catch((err) => {
-        console.error('[payment] owner notification failed:', err.message);
-    });
+    })(), 7000);
 
     return {
         activated: true,

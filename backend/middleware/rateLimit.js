@@ -86,10 +86,10 @@ export function rateLimit(db, bucket, { windowMs = 60_000, max = 10, keyFn = cli
             // (Vercel's Hobby plan caps the project at two, both already
             // spoken for), so instead of a scheduled sweep, roughly 1 request
             // in 200 across ALL rate-limited routes does the housekeeping.
-            // Fire-and-forget: a missed sweep just means slightly more rows
+            // The error-alert buckets are kept 3 days (instead of 1 hour) because the daily mail counts them. Fire-and-forget: a missed sweep just means slightly more rows
             // until the next one hits, never a correctness problem.
             if (Math.random() < 0.005) {
-                db.query(`DELETE FROM rate_limit_hits WHERE window_start < NOW() - INTERVAL '1 hour'`)
+                db.query(`DELETE FROM rate_limit_hits WHERE (window_start < NOW() - INTERVAL '1 hour' AND bucket NOT IN ('error_ignored', 'alert_email')) OR window_start < NOW() - INTERVAL '3 days'`)
                     .catch(() => { /* next sweep will catch it */ });
             }
 
