@@ -20,6 +20,7 @@ import { GoldenStrip } from '../common/GoldenMonths.jsx';
 import GoldenMonthsSection from './GoldenMonthsSection.jsx';
 import ThemeAnnouncement from './ThemeAnnouncement.jsx';
 import RecallAnnouncement from './RecallAnnouncement.jsx';
+import TelegramCard from './TelegramCard.jsx';
 import { useGoldenMonths } from '../../utils/goldenMonths.js';
 import './Landing.css';
 
@@ -352,6 +353,7 @@ const Landing = () => {
               product pitch; hides itself after its end date. */}
           <RecallAnnouncement />
           <ThemeAnnouncement />
+          <TelegramCard />
 
           {/* Two tracks, one platform. Placed high on the page so a nursing
               student knows within seconds whether this is for them — and each
