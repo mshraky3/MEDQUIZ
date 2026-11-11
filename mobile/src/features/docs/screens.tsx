@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { Linking, TouchableOpacity, View } from 'react-native';
 import { Href, router, useLocalSearchParams } from 'expo-router';
-import { SUPPORT_EMAIL } from '@/config';
+import { PLAY_BUILD, SUPPORT_EMAIL } from '@/config';
 import { useCommon, useCopy, useLang } from '@/i18n';
 import faqCopy from '@/i18n/copy/faq.js';
 import guidesCopy from '@/i18n/copy/guides.js';
 import legalCopy from '@/i18n/copy/legal.js';
+import { visibleFaqItems } from '@/lib/playFaq';
 import { appRouteForWebPath } from '@/lib/webPaths';
 import { colors, radius } from '@/theme';
 import { Button, Card, Chevron, Icon, Row, Screen, ScreenHeader, T } from '@/ui';
@@ -53,7 +54,7 @@ export function FaqScreen() {
         <T color={colors.textMedium}>{t.subtitle}</T>
       </View>
 
-      {(t.items as { question: string; answer: string }[]).map((faq, index) => {
+      {visibleFaqItems(t.items as { question: string; answer: string }[], PLAY_BUILD).map((faq, index) => {
         const isOpen = open === index;
         return (
           <Card key={faq.question} pad={0} style={{ overflow: 'hidden', borderColor: isOpen ? colors.primary : colors.border }}>
