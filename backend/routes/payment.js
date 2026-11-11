@@ -108,10 +108,8 @@ router.get('/config', (req, res) => {
         ? req.query.kind
         : 'individual';
     const nowMs = Date.now();
-    const offer = getOfferInfo(nowMs);
-    const goldenMonths = getGoldenInfo(nowMs);
     const cache = paymentConfigCachePolicy({
-        kind, offer, goldenMonths, nowMs,
+        kind, offer: getOfferInfo(nowMs), goldenMonths: getGoldenInfo(nowMs), nowMs,
         startsAtMs: [NATIONAL_DAY_OFFER.startsAtMs, GOLDEN_MONTHS.startsAtMs],
     });
     res.set('Cache-Control', cache.header);
@@ -126,10 +124,10 @@ router.get('/config', (req, res) => {
         enabled,
         currency: getCurrency(),
         kind,
-        plans: listPlansForDisplay(kind, nowMs),
-        offer,
+        plans: listPlansForDisplay(kind),
+        offer: getOfferInfo(),
         // Golden Months bonus-time offer (null when off); separate from `offer`, which is the price offer.
-        goldenMonths,
+        goldenMonths: getGoldenInfo(),
         publishableKey: enabled ? (process.env.MOYASAR_PUBLISHABLE_KEY || null) : null,
     });
 });
