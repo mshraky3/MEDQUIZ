@@ -14,11 +14,12 @@ import { specialtyKeys, userTrack, trackLabel, examLabel } from '../../utils/tra
 import { readQuizMode, writeQuizMode, STUDY, EXAM } from '../../utils/quizMode.js';
 import { useCopy, useLang, formatNumber } from '../../i18n';
 import quizCopy from '../../i18n/copy/quiz.js';
+import { WHOLE_BANK_SOURCE, shouldCheckCompletion } from '../../utils/completionCheck.js';
 
 // Sentinel meaning "the whole of my track's bank". The backend resolves it to
 // all three medical sources, and to no source filter at all for nursing — so
 // it is always the right thing to send when no collection is picked.
-const WHOLE_BANK = 'MidgardGameBoy';
+const WHOLE_BANK = WHOLE_BANK_SOURCE;
 
 const COUNT_PRESETS = [10, 25, 50];
 
@@ -152,6 +153,9 @@ const QuizLauncher = ({ id, contentStatus }) => {
     };
 
     const checkCompletionForSource = async (source) => {
+        // The whole-bank sentinel matches no question, so the server can only say "not completed":
+        // skip the 4 to 13 pointless requests (see utils/completionCheck.js).
+        if (!shouldCheckCompletion(source)) return;
         for (const type of availableTypes) {
             const isCompleted = await checkCompletion(type, source);
             if (isCompleted) break; // only one popup at a time
