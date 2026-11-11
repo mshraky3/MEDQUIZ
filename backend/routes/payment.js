@@ -10,7 +10,8 @@
 
 import express from 'express';
 import { logger } from '../utils/observability.js';
-import { getGoldenInfo } from '../services/goldenMonths.js';
+import { getGoldenInfo, GOLDEN_MONTHS } from '../services/goldenMonths.js';
+import { paymentConfigCachePolicy } from '../services/paymentConfigCache.js';
 import {
     isPaymentEnforcementEnabled,
     listPlansForDisplay,
@@ -21,6 +22,7 @@ import {
     verifyAndActivate,
     checkQuizAccess,
     allowanceFor,
+    NATIONAL_DAY_OFFER,
 } from '../services/paymentService.js';
 
 const router = express.Router();
@@ -88,8 +90,10 @@ function requirePaymentEnabled(req, res, next) {
  * `offer` is the dated National Day offer while it is on sale, else null; when
  * it is on, the offered plans already carry the offer price as `priceHalalas`
  * (the amount the checkout charges) and the base price as `compareAtHalalas`.
- * Nothing about the offer is cached: a stale `offer` would advertise a price
- * the server has stopped honouring.
+ * Nothing about a LIVE offer is cached: a stale `offer` would advertise a price
+ * the server has stopped honouring. Only `?kind=all` (the landing probe) is cached
+ * at the CDN, and only while no offer / Golden Months is live or about to start
+ * (services/paymentConfigCache.js); every other case stays no-store.
  *
  * ?kind=individual (default) — the three personal terms, for /subscribe.
  * ?kind=group                — the two multi-seat plans, for /groups.
@@ -99,19 +103,33 @@ function requirePaymentEnabled(req, res, next) {
  * the ordinary checkout, where nothing explains the invite links.
  */
 router.get('/config', (req, res) => {
-    res.set('Cache-Control', 'no-store');
     const enabled = isPaymentEnforcementEnabled();
     const kind = ['individual', 'group', 'all'].includes(req.query.kind)
         ? req.query.kind
         : 'individual';
+    const nowMs = Date.now();
+    const offer = getOfferInfo(nowMs);
+    const goldenMonths = getGoldenInfo(nowMs);
+    const cache = paymentConfigCachePolicy({
+        kind, offer, goldenMonths, nowMs,
+        startsAtMs: [NATIONAL_DAY_OFFER.startsAtMs, GOLDEN_MONTHS.startsAtMs],
+    });
+    res.set('Cache-Control', cache.header);
+    if (cache.shared) {
+        // Same body for everyone, so a shared copy must not carry one origin's CORS
+        // header to the other (www vs bare domain): public data, any origin, no
+        // credentials (the landing fetch sends none). Same approach as /api/public/stats.
+        res.set('Access-Control-Allow-Origin', '*');
+        res.removeHeader('Access-Control-Allow-Credentials');
+    }
     res.json({
         enabled,
         currency: getCurrency(),
         kind,
-        plans: listPlansForDisplay(kind),
-        offer: getOfferInfo(),
+        plans: listPlansForDisplay(kind, nowMs),
+        offer,
         // Golden Months bonus-time offer (null when off); separate from `offer`, which is the price offer.
-        goldenMonths: getGoldenInfo(),
+        goldenMonths,
         publishableKey: enabled ? (process.env.MOYASAR_PUBLISHABLE_KEY || null) : null,
     });
 });
