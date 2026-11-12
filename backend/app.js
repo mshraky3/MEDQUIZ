@@ -61,6 +61,7 @@ import {
     specialtyKeys, trackLabelAr, trackLabelEn, trackForSpecialty,
 } from './config/tracks.js';
 import { PICKABLE_SOURCES, SOURCE_PRIORITY, SELECTABLE_SOURCES, resolveSources, ALL_SESSION_SOURCES } from './config/sources.js';
+import { makeCheckCompletionHandler } from './services/completionCheck.js';
 import { runRecallImport } from './services/recallImportService.js';
 import { markQuestionsSeen, MAX_SEEN_IDS } from './services/seenService.js';
 import { recordAttemptsBatch } from './services/attemptsBatch.js';
@@ -5539,42 +5540,7 @@ app.get('/questions', adminAuth, async (req, res) => {
 });
 
 // Check if user has completed all questions in a cardinality (type + source combination)
-app.get('/api/check-completion/:userId', requireSession, requireOwnUser('userId'), async (req, res) => {
-    const { userId } = req.params;
-    const { type, source } = req.query;
-
-    try {
-        // Get total questions for this cardinality, within the caller's bank
-        const track = resolveContentTrack(req);
-        const totalQuery = await db.query(`
-            SELECT COUNT(*) as total
-            FROM questions
-            WHERE track = $1 AND question_type = $2 AND $3 = ANY(sources)
-        `, [track, type, source]);
-
-        // Get completed questions for this cardinality
-        const completedQuery = await db.query(`
-            SELECT COUNT(*) as completed
-            FROM user_question_progress p
-            JOIN questions q ON q.id = p.question_id
-            WHERE p.user_id = $1 AND q.question_type = $2 AND $3 = ANY(q.sources)
-        `, [userId, type, source]);
-
-        const total = parseInt(totalQuery.rows[0].total);
-        const completed = parseInt(completedQuery.rows[0].completed);
-        const isCompleted = total > 0 && completed >= total;
-
-        res.json({
-            total,
-            completed,
-            isCompleted,
-            percentage: total > 0 ? Math.round((completed / total) * 100) : 0
-        });
-    } catch (err) {
-        console.error('Error checking completion:', err);
-        res.status(500).json({ message: 'Failed to check completion' });
-    }
-});
+app.get('/api/check-completion/:userId', requireSession, requireOwnUser('userId'), makeCheckCompletionHandler({ db, resolveContentTrack }));
 
 // Award achievement when user completes a cardinality
 app.post('/api/award-achievement', requireSession, async (req, res) => {
