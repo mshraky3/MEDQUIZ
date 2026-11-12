@@ -106,7 +106,7 @@ import { UserProvider } from './UserContext.jsx';
 import { ThemeProvider } from './theme/ThemeContext.jsx';
 import { LanguageProvider, AdminShell, useCommon } from './i18n';
 import { hasEnglishTwin, localizedPath } from './seo/locales.js';
-import { examRoutePaths } from './seo/examGuides.js';
+import { examRoutePaths } from './seo/examPaths.js';
 
 import { initErrorTracking } from './utils/errorTracking.js';
 import { reloadOnceForStaleChunk } from './utils/staleChunkReload.js';

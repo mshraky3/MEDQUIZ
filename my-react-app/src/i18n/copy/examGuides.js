@@ -39,16 +39,20 @@
  * `{ p }`, `{ h3 }`, `{ ul }`, with `**bold**` and `[[/path|label]]` inline.
  */
 
-export const EXAMS_ROOT = '/exams';
+// The route constants live in seo/examPaths.js (tiny) so that main.jsx can build
+// its route table without pulling this ~115 KB of prose into the entry chunk.
+// Re-exported here so every existing import keeps working unchanged.
+import {
+    EXAMS_ROOT,
+    SHARED_PAGES,
+    EXAM_PAGES,
+    EXAM_KEYS,
+    examPath,
+    examPagePath,
+    sharedPagePath,
+} from '../../seo/examPaths.js';
 
-/** The two shared pages, and the four each exam owns. */
-export const SHARED_PAGES = ['format', 'test-day'];
-export const EXAM_PAGES = ['blueprint', 'passing-score', 'eligibility', 'attempts'];
-export const EXAM_KEYS = ['smle', 'snle'];
-
-export const examPath = (exam) => `${EXAMS_ROOT}/${exam}`;
-export const examPagePath = (exam, page) => `${EXAMS_ROOT}/${exam}/${page}`;
-export const sharedPagePath = (page) => `${EXAMS_ROOT}/${page}`;
+export { EXAMS_ROOT, SHARED_PAGES, EXAM_PAGES, EXAM_KEYS, examPath, examPagePath, sharedPagePath };
 
 const SMLE_PDF = 'https://scfhs.org.sa/sites/default/files/2026-05/Saudi%20Medical%20Licensure%20Examination%20(SMLE)%20Blueprint_2026_0.pdf';
 const SNLE_PDF = 'https://scfhs.org.sa/sites/default/files/2025-09/SNLE%20Applicant%20Guide%20.pdf';
