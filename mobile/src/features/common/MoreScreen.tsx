@@ -8,6 +8,7 @@ import { PLAY_BUILD, SITE_URL, TELEGRAM_CHANNEL_URL } from '@/config';
 import { formatDate, useApp, useCommon, useLang } from '@/i18n';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
+import { useLayout } from '@/lib/layout';
 import { colors, radius } from '@/theme';
 import { Button, Card, Chevron, Divider, Icon, ListRow, Row, T } from '@/ui';
 import { LanguageToggle } from './LanguageToggle';
@@ -23,6 +24,8 @@ export default function MoreScreen() {
   const common = useCommon();
   const app = useApp();
   const { lang } = useLang();
+  const { columns } = useLayout();
+  const twoCol = columns(360, 2) > 1;
   const [hasGroup, setHasGroup] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [updateMsg, setUpdateMsg] = useState('');
@@ -101,8 +104,8 @@ export default function MoreScreen() {
 
   const arrow = <Chevron />;
 
-  return (
-    <TabScreen title={app.more.title} contentStyle={{ gap: 18 }}>
+  const main = (
+    <>
       <Card style={{ gap: 6 }}>
         <Row gap={12}>
           <View style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: colors.infoBg, alignItems: 'center', justifyContent: 'center' }}>
@@ -145,7 +148,10 @@ export default function MoreScreen() {
         <ListRow key="contact" icon="mail" title={common.nav.contact} onPress={go('/contact')} right={arrow} />,
         <ListRow key="tg" icon="send" title={common.footer.telegram} onPress={() => Linking.openURL(TELEGRAM_CHANNEL_URL).catch(() => {})} right={<Icon name="external-link" size={16} color={colors.textLight} />} />,
       ])}
-
+    </>
+  );
+  const side = (
+    <>
       {section(app.more.legal, [
         <ListRow key="terms" icon="file-text" title={common.footer.terms} onPress={go('/terms')} right={arrow} />,
         <ListRow key="priv" icon="shield-check" title={common.footer.privacy} onPress={go('/privacy')} right={arrow} />,
@@ -153,7 +159,6 @@ export default function MoreScreen() {
         // Opens the public web page (the same URL as the Play Data safety form).
         <ListRow key="del" icon="user" title={app.more.deleteAccount} onPress={() => { const u = `${SITE_URL}/delete-account`; WebBrowser.openBrowserAsync(u).catch(() => Linking.openURL(u).catch(() => {})); }} right={<Icon name="external-link" size={16} color={colors.textLight} />} />,
       ])}
-
       <Card style={{ gap: 12 }}>
         <Row justify="space-between">
           <View>
@@ -195,8 +200,23 @@ export default function MoreScreen() {
         ) : null}
         {updateReady ? <Button label={app.more.restart} icon="refresh" onPress={() => void Updates.reloadAsync()} /> : null}
       </Card>
-
       <Button label={loggingOut ? app.more.loggingOut : app.more.logout} icon="log-out" variant="secondary" loading={loggingOut} onPress={() => void logout()} />
+    </>
+  );
+
+  return (
+    <TabScreen title={app.more.title} contentStyle={{ gap: 18 }} width="wide">
+      {twoCol ? (
+        <Row gap={18} align="flex-start">
+          <View style={{ flex: 1, gap: 18 }}>{main}</View>
+          <View style={{ flex: 1, gap: 18 }}>{side}</View>
+        </Row>
+      ) : (
+        <>
+          {main}
+          {side}
+        </>
+      )}
     </TabScreen>
   );
 }

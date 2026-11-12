@@ -3,6 +3,7 @@ import { TouchableOpacity, View } from 'react-native';
 import { router } from 'expo-router';
 import { useApp, useCopy, useLang } from '@/i18n';
 import authCopy from '@/i18n/copy/auth.js';
+import { useLayout } from '@/lib/layout';
 import { TRACK_KEYS, TRACKS, TrackKey, pick } from '@/lib/tracks';
 import { colors, radius } from '@/theme';
 import { LanguageToggle } from '@/features/common/LanguageToggle';
@@ -14,8 +15,11 @@ import { Button, Card, Checkbox, Dialog, Icon, Row, Screen, T, goBack } from '@/
  */
 export function AuthShell({ children, canGoBack = true }: { children: React.ReactNode; canGoBack?: boolean }) {
   const app = useApp();
+  const { isTablet } = useLayout();
   return (
     <Screen
+      width="form"
+      wideHeader
       header={
         <Row justify="space-between" style={{ paddingHorizontal: 16, paddingVertical: 10 }}>
           {canGoBack ? (
@@ -46,7 +50,7 @@ export function AuthShell({ children, canGoBack = true }: { children: React.Reac
       }
     >
       <View style={{ flex: 1, justifyContent: 'center', paddingVertical: 8 }}>
-        <Card pad={22} style={{ gap: 16 }}>
+        <Card pad={isTablet ? 32 : 22} style={{ gap: isTablet ? 18 : 16 }}>
           {children}
         </Card>
       </View>

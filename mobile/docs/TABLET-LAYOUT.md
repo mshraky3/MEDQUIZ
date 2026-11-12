@@ -1,0 +1,16 @@
+# Tablet layout (for agents), 2026-11-12
+
+Phones are untouched: every rule below is a no-op in a window narrower than 600 dp. Layout and UI only; no answer, scoring, session, payment, login or API code.
+
+1. **Breakpoints** (`src/lib/layoutLogic.ts`, pure and unit-tested): compact < 600, medium 600-839 (7-inch portrait = 800 dp), expanded >= 840 (7-inch landscape 1280, 10-inch portrait 1067, 10-inch landscape 1707; AVDs are density 240). `useLayout()` (`src/lib/layout.ts`) is the one hook: `size`, `isTablet`, `isExpanded`, `rail`, `columns(minItem, max)`, `capFor(preset)`, `splitQuestion(paneWidth)`.
+2. **Width presets** on `<Screen width=...>`: `form` 520/560 (sign-in, sign-up, contact, suggestions, account-on-web), `reading` 720/840 (default: lists, lessons, settings), `wide` 1040/1120 (landing, dashboards), `full`. A phone keeps the old 720 cap. Text scale 1.07 / 1.14 and tap targets 1.08 / 1.15 stay as before.
+3. **Grid primitive**: `<Columns count={columns(min, max)}>` (`src/ui/Layout.tsx`): equal cells, short last row padded, RTL-aware. One column renders the plain vertical stack, so phones render as before. Children that should fill the cell use `{ flex: 1 }` only when `count > 1` (a `flex: 1` child collapses in an auto-height stack).
+4. **Public screens**: sign-in cards (`AuthShell`) are a centred 520-560 card under a header that spans the window. Landing: on expanded the hero sits beside a facts card; track, comparison, explanation, step and price cards go in 2 to 4 columns; buttons become compact pills, not full-width bars; footer links in 4 columns.
+5. **Tabs**: on expanded windows the bottom bar becomes an 88 dp side rail (`tabBarPosition` left, or right in Arabic). Below that the bottom bar stays.
+6. **Home (hub)**: tiles in one row of four; quick start + next steps in one column, the specialty ledger and badges beside it (when 2 columns of 360 dp fit).
+7. **Quiz builder (launcher)**: what to practise (collections, specialties) beside how (mode, count, timer, summary); the Start button is a centred 360 dp button.
+8. **Question**: on expanded landscape the stem is one column and the options (then explanation) the other (`splitsQuestion`, pane >= 900 dp after the 300 dp palette). Portrait tablets keep the stacked order in the 840 column. The palette pane already existed.
+9. **Results**: on expanded the score and next steps stay in a 360 dp column beside the answer review. **More**: two columns (account/study/help | legal/language/updates/sign out).
+10. **Not changed on purpose**: Analysis keeps one column (its sections are scroll anchors, `focus=mocks`), Summaries keeps its existing list + lesson two panes, Dialogs stay max 480 dp.
+11. **Rules to keep**: never hard-code `dir` (use `Row`, `isRTL`); use `Columns`/`useLayout`, not `Dimensions`; hide prices behind `PLAY_BUILD` as before; add every new breakpoint rule to `layoutLogic.ts` with a test in `src/__tests__/layout.test.ts`.
+12. **Verification status**: see the PR. Signed-out screens were captured at tablet sizes in headless Chrome (react-native-web, Play mode); signed-in screens are verified by tests and code review only (no credentials, no mock mode in the repo). Nothing was run on an Android emulator or device: that needs a native build, which is the owner's decision (EAS).

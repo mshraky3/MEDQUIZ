@@ -6,7 +6,8 @@ import landingCopy from '@/i18n/copy/landing.js';
 import { api } from '@/lib/api';
 import { MEDICAL, NURSING, TRACKS, TrackKey, pick } from '@/lib/tracks';
 import { colors, radius } from '@/theme';
-import { Button, Card, Icon, Row, Screen, T } from '@/ui';
+import { useLayout } from '@/lib/layout';
+import { Button, Card, Columns, Icon, Row, Screen, T } from '@/ui';
 import { LanguageToggle } from '@/features/common/LanguageToggle';
 import { SiteFooter } from '@/features/common/SiteFooter';
 import { PLAY_BUILD } from '@/config';
@@ -65,6 +66,15 @@ function SectionHead({ pill, title, body }: { pill?: string; title: string; body
 export default function WelcomeScreen() {
   const t = useCopy(landingCopy);
   const { lang } = useLang();
+  const { isTablet, size, columns } = useLayout();
+  // Phone: one column, full-width buttons (unchanged). Tablet: hero beside its facts card,
+  // track and feature cards in columns, buttons as compact pills in a row.
+  const split = size === 'expanded';
+  const trackCols = columns(340, 2);
+  const compareCols = columns(300, 3);
+  // Three short points do not fit two columns without an orphan: stack them instead.
+  const pointCols = split ? 1 : columns(330, 2) === 2 && t.explain.points.length % 2 === 1 ? 1 : columns(330, 2);
+  const stepCols = columns(230, 4);
   const [stats, setStats] = useState<LiveStats | null>(null);
 
   // Bank size and deck count, counted from the database on request. Failure is
@@ -98,8 +108,149 @@ export default function WelcomeScreen() {
     { key: 'courses', label: t.compare.colCourses, icon: 'users' },
   ];
 
+  const explainPoints = (
+    <Columns count={pointCols} gap={18}>
+        {t.explain.points.map((point: { icon: string; title: string; desc: string }) => (
+          <Row key={point.title} gap={12} align="flex-start">
+            <View
+              style={{
+                width: 42,
+                height: 42,
+                borderRadius: radius.md,
+                backgroundColor: colors.surfaceTint,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Icon name={point.icon} size={21} color={colors.primary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <T weight="bold" size={15}>
+                {point.title}
+              </T>
+              <T size={13} color={colors.textMedium}>
+                {point.desc}
+              </T>
+            </View>
+          </Row>
+        ))}
+        </Columns>
+  );
+  const explainSample = (
+    <Card style={{ gap: 8 }}>
+          <Row gap={8}>
+            <Icon name="lightbulb" size={16} color={colors.primary} />
+            <T weight="bold" size={14} color={colors.primary}>
+              {t.explain.sampleTitle}
+            </T>
+          </Row>
+          <T ltr weight="bold" size={14}>
+            {EXPLANATION_SAMPLE.stem}
+          </T>
+          {EXPLANATION_SAMPLE.blocks.map((block) => (
+            <View key={block.label} style={{ gap: 2 }}>
+              <T ltr weight="bold" size={13}>
+                {block.label}
+              </T>
+              {block.lines.map((line) => (
+                <Row key={line} gap={6} align="flex-start" ltr>
+                  <T ltr size={13} color={colors.textMedium}>
+                    •
+                  </T>
+                  <T ltr size={13} color={colors.textMedium} style={{ flex: 1 }}>
+                    {line}
+                  </T>
+                </Row>
+              ))}
+            </View>
+          ))}
+        </Card>
+  );
+
+  const heroText = (
+    <>
+      <TouchableOpacity activeOpacity={0.8} onPress={() => goSignup()}>
+        <Row
+          gap={8}
+          style={{
+            alignSelf: 'flex-start',
+            backgroundColor: colors.surface,
+            borderWidth: 1.5,
+            borderColor: colors.border,
+            borderRadius: 999,
+            paddingHorizontal: 10,
+            paddingVertical: 6,
+          }}
+        >
+          <View style={{ backgroundColor: colors.primary, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 1 }}>
+            <T weight="bold" size={11} color={colors.white}>
+              {t.hero.newTag}
+            </T>
+          </View>
+          <T weight="semibold" size={12} style={{ flexShrink: 1 }}>
+            {t.hero.newSet}
+          </T>
+        </Row>
+      </TouchableOpacity>
+      <View style={{ alignSelf: 'flex-start', backgroundColor: colors.infoBg, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 4 }}>
+        <T weight="bold" size={12} color={colors.primary}>
+          {t.hero.pill}
+        </T>
+      </View>
+      <T weight="extrabold" size={isTablet ? 36 : 30} style={{ lineHeight: isTablet ? 54 : 46 }}>
+        {t.hero.title}
+      </T>
+      <T size={16} color={colors.textMedium} style={isTablet ? { maxWidth: 680 } : undefined}>
+        {t.hero.body}
+      </T>
+      {isTablet ? (
+        <Row gap={12} wrap style={{ paddingTop: 4 }}>
+          <Button label={t.hero.primary} onPress={() => goSignup()} size="lg" full={false} />
+          <Button label={t.hero.secondary} variant="secondary" onPress={() => router.push('/login')} size="lg" full={false} />
+        </Row>
+      ) : (
+        <>
+          <Button label={t.hero.primary} onPress={() => goSignup()} size="lg" />
+          <Button label={t.hero.secondary} variant="secondary" onPress={() => router.push('/login')} size="lg" />
+        </>
+      )}
+    </>
+  );
+  const heroFacts = (
+    <>
+      <View style={{ gap: 6 }}>
+        {(PLAY_BUILD ? t.hero.trust.slice(0, 3) : t.hero.trust).map((item: string) => (
+          <Row key={item} gap={8}>
+            <Icon name="check-circle" size={16} color={colors.success} />
+            <T size={14} color={colors.textMedium} style={{ flex: 1 }}>
+              {item}
+            </T>
+          </Row>
+        ))}
+      </View>
+      {stats ? (
+        <Row wrap gap={14}>
+          <T size={13} weight="semibold" color={colors.primary}>
+            {t.hero.liveQuestions(formatNumber(stats.questionsTotal, lang))}
+          </T>
+          {stats.summaryDecks ? (
+            <T size={13} weight="semibold" color={colors.primary}>
+              {t.hero.liveDecks(formatNumber(stats.summaryDecks, lang))}
+            </T>
+          ) : null}
+          {stats.contentUpdatedAt ? (
+            <T size={13} weight="semibold" color={colors.primary}>
+              {t.hero.liveUpdated(formatDate(stats.contentUpdatedAt, lang))}
+            </T>
+          ) : null}
+        </Row>
+      ) : null}
+    </>
+  );
+
   return (
     <Screen
+      width="wide"
       header={
         <Row justify="space-between" style={{ paddingHorizontal: 16, paddingVertical: 10 }}>
           <T weight="extrabold" size={22} color={colors.primary} ltr>
@@ -115,80 +266,29 @@ export default function WelcomeScreen() {
           </Row>
         </Row>
       }
-      contentStyle={{ gap: 28 }}
+      contentStyle={{ gap: isTablet ? 40 : 28, paddingTop: isTablet ? 12 : 0 }}
     >
       {/* Hero */}
-      <View style={{ gap: 14, paddingTop: 6 }}>
-        <TouchableOpacity activeOpacity={0.8} onPress={() => goSignup()}>
-          <Row
-            gap={8}
-            style={{
-              alignSelf: 'flex-start',
-              backgroundColor: colors.surface,
-              borderWidth: 1.5,
-              borderColor: colors.border,
-              borderRadius: 999,
-              paddingHorizontal: 10,
-              paddingVertical: 6,
-            }}
-          >
-            <View style={{ backgroundColor: colors.primary, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 1 }}>
-              <T weight="bold" size={11} color={colors.white}>
-                {t.hero.newTag}
-              </T>
-            </View>
-            <T weight="semibold" size={12} style={{ flexShrink: 1 }}>
-              {t.hero.newSet}
-            </T>
-          </Row>
-        </TouchableOpacity>
-        <View style={{ alignSelf: 'flex-start', backgroundColor: colors.infoBg, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 4 }}>
-          <T weight="bold" size={12} color={colors.primary}>
-            {t.hero.pill}
-          </T>
+      {split ? (
+        <Row gap={32} align="flex-start">
+          <View style={{ flex: 1.25, gap: 14, paddingTop: 6 }}>{heroText}</View>
+          <Card pad={22} style={{ flex: 1, gap: 14 }}>
+            {heroFacts}
+          </Card>
+        </Row>
+      ) : (
+        <View style={{ gap: 14, paddingTop: 6 }}>
+          {heroText}
+          {heroFacts}
         </View>
-        <T weight="extrabold" size={30} style={{ lineHeight: 46 }}>
-          {t.hero.title}
-        </T>
-        <T size={16} color={colors.textMedium}>
-          {t.hero.body}
-        </T>
-        <Button label={t.hero.primary} onPress={() => goSignup()} size="lg" />
-        <Button label={t.hero.secondary} variant="secondary" onPress={() => router.push('/login')} size="lg" />
-        <View style={{ gap: 6 }}>
-          {(PLAY_BUILD ? t.hero.trust.slice(0, 3) : t.hero.trust).map((item: string) => (
-            <Row key={item} gap={8}>
-              <Icon name="check-circle" size={16} color={colors.success} />
-              <T size={14} color={colors.textMedium} style={{ flex: 1 }}>
-                {item}
-              </T>
-            </Row>
-          ))}
-        </View>
-        {stats ? (
-          <Row wrap gap={14}>
-            <T size={13} weight="semibold" color={colors.primary}>
-              {t.hero.liveQuestions(formatNumber(stats.questionsTotal, lang))}
-            </T>
-            {stats.summaryDecks ? (
-              <T size={13} weight="semibold" color={colors.primary}>
-                {t.hero.liveDecks(formatNumber(stats.summaryDecks, lang))}
-              </T>
-            ) : null}
-            {stats.contentUpdatedAt ? (
-              <T size={13} weight="semibold" color={colors.primary}>
-                {t.hero.liveUpdated(formatDate(stats.contentUpdatedAt, lang))}
-              </T>
-            ) : null}
-          </Row>
-        ) : null}
-      </View>
+      )}
 
       {/* Tracks */}
       <View style={{ gap: 14 }}>
         <SectionHead pill={t.tracks.pill} title={t.tracks.title} body={t.tracks.body} />
+        <Columns count={trackCols}>
         {studyTracks.map((st) => (
-          <Card key={st.key} style={{ gap: 10 }}>
+          <Card key={st.key} style={[{ gap: 10 }, trackCols > 1 ? { flex: 1 } : null]}>
             <Row gap={12}>
               <View
                 style={{
@@ -228,9 +328,11 @@ export default function WelcomeScreen() {
                 </View>
               ))}
             </Row>
+            {trackCols > 1 ? <View style={{ flex: 1 }} /> : null}
             <Button label={t.tracks.cardCta(st.title)} onPress={() => goSignup(st.key)} />
           </Card>
         ))}
+        </Columns>
         <T size={12} color={colors.textLight} align="center">
           {t.tracks.ctaNote}
         </T>
@@ -240,10 +342,11 @@ export default function WelcomeScreen() {
       {PLAY_BUILD ? null : (
       <View style={{ gap: 14 }}>
         <SectionHead pill={t.compare.pill} title={t.compare.title} body={t.compare.body} />
+        <Columns count={compareCols}>
         {compareColumns.map((col) => (
           <Card
             key={col.key}
-            style={[{ gap: 10 }, col.key === 'sqb' ? { borderColor: colors.primary, borderWidth: 2 } : null]}
+            style={[{ gap: 10 }, compareCols > 1 ? { flex: 1 } : null, col.key === 'sqb' ? { borderColor: colors.primary, borderWidth: 2 } : null]}
           >
             <Row gap={10}>
               <Icon name={col.icon} size={20} color={col.key === 'sqb' ? colors.primary : colors.textMedium} />
@@ -268,6 +371,7 @@ export default function WelcomeScreen() {
             ))}
           </Card>
         ))}
+        </Columns>
         <Button label={t.compare.cta} onPress={() => goSignup()} />
         <T size={12} color={colors.textLight} align="center">
           {t.compare.ctaNote}
@@ -278,58 +382,17 @@ export default function WelcomeScreen() {
       {/* Explanations */}
       <View style={{ gap: 14 }}>
         <SectionHead pill={t.explain.pill} title={t.explain.title} body={t.explain.body} />
-        {t.explain.points.map((point: { icon: string; title: string; desc: string }) => (
-          <Row key={point.title} gap={12} align="flex-start">
-            <View
-              style={{
-                width: 42,
-                height: 42,
-                borderRadius: radius.md,
-                backgroundColor: colors.surfaceTint,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Icon name={point.icon} size={21} color={colors.primary} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <T weight="bold" size={15}>
-                {point.title}
-              </T>
-              <T size={13} color={colors.textMedium}>
-                {point.desc}
-              </T>
-            </View>
+        {split ? (
+          <Row gap={28} align="flex-start">
+            <View style={{ flex: 1 }}>{explainPoints}</View>
+            <View style={{ flex: 1.3 }}>{explainSample}</View>
           </Row>
-        ))}
-        <Card style={{ gap: 8 }}>
-          <Row gap={8}>
-            <Icon name="lightbulb" size={16} color={colors.primary} />
-            <T weight="bold" size={14} color={colors.primary}>
-              {t.explain.sampleTitle}
-            </T>
-          </Row>
-          <T ltr weight="bold" size={14}>
-            {EXPLANATION_SAMPLE.stem}
-          </T>
-          {EXPLANATION_SAMPLE.blocks.map((block) => (
-            <View key={block.label} style={{ gap: 2 }}>
-              <T ltr weight="bold" size={13}>
-                {block.label}
-              </T>
-              {block.lines.map((line) => (
-                <Row key={line} gap={6} align="flex-start" ltr>
-                  <T ltr size={13} color={colors.textMedium}>
-                    •
-                  </T>
-                  <T ltr size={13} color={colors.textMedium} style={{ flex: 1 }}>
-                    {line}
-                  </T>
-                </Row>
-              ))}
-            </View>
-          ))}
-        </Card>
+        ) : (
+          <>
+            {explainPoints}
+            {explainSample}
+          </>
+        )}
         <Button label={t.explain.cta} onPress={() => goSignup()} />
         <T size={12} color={colors.textLight} align="center">
           {t.explain.ctaNote}
@@ -339,6 +402,7 @@ export default function WelcomeScreen() {
       {/* Flow */}
       <Card style={{ gap: 12 }}>
         <SectionHead pill={t.flow.pill} title={t.flow.title} body={t.flow.body} />
+        <Columns count={stepCols} gap={18}>
         {t.flow.steps.map((step: { label: string; hint: string }, index: number) => (
           <Row key={step.label} gap={12} align="flex-start">
             <View
@@ -365,6 +429,7 @@ export default function WelcomeScreen() {
             </View>
           </Row>
         ))}
+        </Columns>
         <Button label={t.flow.cta} onPress={() => goSignup()} />
         <T size={12} color={colors.textLight} align="center">
           {t.flow.ctaNote}
@@ -391,7 +456,7 @@ export default function WelcomeScreen() {
         </Row>
 
         {PLAY_BUILD ? null : (
-          <>
+          <Columns count={columns(340, 2)}>
         <Card style={{ gap: 8 }}>
           <T size={13} color={colors.textLight} weight="semibold">
             {t.value.plan}
@@ -450,7 +515,7 @@ export default function WelcomeScreen() {
           ))}
           <Button label={t.value.group.cta} variant="secondary" onPress={() => router.push('/groups')} />
         </Card>
-          </>
+          </Columns>
         )}
       </View>
       )}
@@ -466,8 +531,17 @@ export default function WelcomeScreen() {
         <T size={14} color="#cbd5e1">
           {t.ctaBand.visitor.body}
         </T>
-        <Button label={t.ctaBand.visitor.primary} onPress={() => goSignup()} size="lg" />
-        <Button label={t.ctaBand.visitor.secondary} variant="secondary" onPress={() => router.push('/login')} size="lg" />
+        {isTablet ? (
+          <Row gap={12} wrap>
+            <Button label={t.ctaBand.visitor.primary} onPress={() => goSignup()} size="lg" full={false} />
+            <Button label={t.ctaBand.visitor.secondary} variant="secondary" onPress={() => router.push('/login')} size="lg" full={false} />
+          </Row>
+        ) : (
+          <>
+            <Button label={t.ctaBand.visitor.primary} onPress={() => goSignup()} size="lg" />
+            <Button label={t.ctaBand.visitor.secondary} variant="secondary" onPress={() => router.push('/login')} size="lg" />
+          </>
+        )}
         {PLAY_BUILD ? null : (
           <T size={12} color="#94a3b8">
             {t.ctaBand.visitor.note}

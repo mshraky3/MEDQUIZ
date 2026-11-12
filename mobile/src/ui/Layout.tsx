@@ -14,7 +14,8 @@ import { router } from 'expo-router';
 import { useCopy, useLang } from '@/i18n/LanguageContext';
 import appCopy from '@/i18n/appCopy';
 import { useKeyboardHeight } from '@/lib/useKeyboardHeight';
-import { useLayout } from '@/lib/layout';
+import { ContentWidth, useLayout } from '@/lib/layout';
+import { chunk } from '@/lib/layoutLogic';
 import { colors, radius, shadow } from '@/theme';
 import { Icon } from './Icon';
 import { T } from './Text';
@@ -148,6 +149,10 @@ type ScreenProps = {
   bg?: string;
   /** Content max width (default: 720 on phones, wider on tablets). Pass 0 for full bleed. */
   maxWidth?: number;
+  /** Tablet width preset ("form" cards, "reading" lists, "wide" dashboards). A phone ignores it. */
+  width?: ContentWidth;
+  /** Let the header bar span the wide column even when the body is a narrow one (sign-in cards). */
+  wideHeader?: boolean;
   padded?: boolean;
   /** Gives the caller the ScrollView (scroll to a section, remember position). */
   scrollRef?: React.Ref<ScrollView>;
@@ -166,12 +171,14 @@ export function Screen({
   refreshControl,
   bg = colors.bg,
   maxWidth,
+  width,
+  wideHeader = false,
   padded = true,
   scrollRef,
 }: ScreenProps) {
   const insets = useSafeAreaInsets();
   const layout = useLayout();
-  const cap = maxWidth === undefined ? layout.contentMaxWidth : maxWidth;
+  const cap = maxWidth !== undefined ? maxWidth : width ? layout.capFor(width) : layout.contentMaxWidth;
   const keyboard = useKeyboardHeight();
   const body = (
     <View
@@ -190,7 +197,7 @@ export function Screen({
       {header ? (
         <View style={{ paddingTop: insets.top, backgroundColor: colors.surface, borderBottomWidth: StyleSheet.hairlineWidth * 2, borderBottomColor: colors.border }}>
           {/* The bar spans the window; what is in it lines up with the content column below. */}
-          <View style={{ width: '100%', alignSelf: 'center', maxWidth: cap || undefined }}>{header}</View>
+          <View style={{ width: '100%', alignSelf: 'center', maxWidth: (wideHeader ? layout.capFor('wide') : cap) || undefined }}>{header}</View>
         </View>
       ) : null}
       {scroll ? (
@@ -212,6 +219,41 @@ export function Screen({
           <View style={{ width: '100%', alignSelf: 'center', maxWidth: cap || undefined }}>{footer}</View>
         </View>
       ) : null}
+    </View>
+  );
+}
+
+type ColumnsProps = {
+  /** Number of columns (from `useLayout().columns(...)`). 1 renders a plain vertical stack. */
+  count: number;
+  gap?: number;
+  children: React.ReactNode;
+  style?: StyleProp<ViewStyle>;
+};
+
+/**
+ * An equal-width card grid: rows of `count` cells that grow to the same width, the short last
+ * row padded with an empty cell so cards never stretch. With one column it is exactly the
+ * vertical stack the phone layouts already use, so a phone renders the same as before.
+ */
+export function Columns({ count, gap = 14, children, style }: ColumnsProps) {
+  const items = React.Children.toArray(children).filter(Boolean);
+  if (count <= 1) return <View style={[{ gap }, style]}>{items}</View>;
+  const rows = chunk(items, count);
+  return (
+    <View style={[{ gap }, style]}>
+      {rows.map((row, r) => (
+        <Row key={r} gap={gap} align="stretch">
+          {row.map((item, i) => (
+            <View key={i} style={{ flex: 1, flexBasis: 0, minWidth: 0 }}>
+              {item}
+            </View>
+          ))}
+          {Array.from({ length: count - row.length }, (_, k) => (
+            <View key={`pad${k}`} style={{ flex: 1, flexBasis: 0 }} />
+          ))}
+        </Row>
+      ))}
     </View>
   );
 }
