@@ -59,7 +59,7 @@ export default function SuggestionsScreen() {
 
   if (success) {
     return (
-      <Screen header={header}>
+      <Screen width="form" header={header}>
         <Card pad={22} style={{ alignItems: 'center', gap: 12 }}>
           <Icon name="check-circle" size={52} color={colors.success} />
           <T weight="extrabold" size={20} align="center">
@@ -75,7 +75,7 @@ export default function SuggestionsScreen() {
   }
 
   return (
-    <Screen header={header}>
+    <Screen width="form" header={header}>
       <View style={{ gap: 8, alignItems: 'center' }}>
         <View style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: colors.warningBg, alignItems: 'center', justifyContent: 'center' }}>
           <Icon name="lightbulb" size={30} color={colors.warning} />

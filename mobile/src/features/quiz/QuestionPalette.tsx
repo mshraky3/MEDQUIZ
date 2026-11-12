@@ -5,6 +5,8 @@ import { colors, radius } from '@/theme';
 import { Card, Row, T } from '@/ui';
 import { paletteCell } from './quizLogic';
 
+export const PALETTE_WIDTH = 300;
+
 /**
  * The question palette: every question as a numbered tile, so a tablet can jump around a
  * quiz or exam. Shows answered / not answered only, never right or wrong (exam mode).
@@ -24,7 +26,7 @@ export function QuestionPalette({
   const { isRTL } = useLang();
   const answered = Object.keys(answers).length;
   return (
-    <View style={{ width: 300, backgroundColor: colors.surface, borderColor: colors.border, borderLeftWidth: isRTL ? 0 : 1, borderRightWidth: isRTL ? 1 : 0 }}>
+    <View style={{ width: PALETTE_WIDTH, backgroundColor: colors.surface, borderColor: colors.border, borderLeftWidth: isRTL ? 0 : 1, borderRightWidth: isRTL ? 1 : 0 }}>
       <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
         <T weight="extrabold" size={15}>
           {app.title}

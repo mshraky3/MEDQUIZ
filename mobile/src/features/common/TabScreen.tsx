@@ -14,12 +14,14 @@ export function TabScreen({
   refreshing = false,
   title,
   contentStyle,
+  width,
 }: {
   children: React.ReactNode;
   onRefresh?: () => void | Promise<void>;
   refreshing?: boolean;
   title?: string;
   contentStyle?: React.ComponentProps<typeof Screen>['contentStyle'];
+  width?: React.ComponentProps<typeof Screen>['width'];
 }) {
   return (
     <Screen
@@ -30,6 +32,7 @@ export function TabScreen({
         </View>
       }
       contentStyle={contentStyle}
+      width={width}
       refreshControl={
         onRefresh ? (
           <RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} tintColor={colors.primary} colors={[colors.primary]} />

@@ -3,8 +3,9 @@ import { Linking, TouchableOpacity, View } from 'react-native';
 import { router, Href } from 'expo-router';
 import { PLAY_BUILD, SUPPORT_EMAIL, TELEGRAM_CHANNEL_URL } from '@/config';
 import { useCommon } from '@/i18n';
+import { useLayout } from '@/lib/layout';
 import { colors } from '@/theme';
-import { Divider, Row, T } from '@/ui';
+import { Columns, Divider, Row, T } from '@/ui';
 
 type FooterLink = { label: string; to?: Href; url?: string };
 
@@ -12,6 +13,7 @@ type FooterLink = { label: string; to?: Href; url?: string };
 export function SiteFooter() {
   const t = useCommon();
   const f = t.footer;
+  const { columns } = useLayout();
 
   const groups: { title: string; links: FooterLink[] }[] = [
     {
@@ -64,7 +66,7 @@ export function SiteFooter() {
       <T size={13} color={colors.textMedium}>
         {f.tagline}
       </T>
-      <View style={{ gap: 16 }}>
+      <Columns count={columns(200, 4)} gap={16}>
         {groups.map((g) => (
           <View key={g.title} style={{ gap: 6 }}>
             <T weight="bold" size={13} color={colors.text}>
@@ -81,7 +83,7 @@ export function SiteFooter() {
             </Row>
           </View>
         ))}
-      </View>
+      </Columns>
       <Divider />
       <T size={12} color={colors.textLight}>
         {f.rights(new Date().getFullYear())}

@@ -10,6 +10,7 @@ import { getSourceLabel, getTypeLabel } from '@/lib/labels';
 import { readQuizMode } from '@/lib/quizMode';
 import { accuracyTone } from '@/lib/stats';
 import { bankLabel, examLabel, normalizeTrack, specialtiesOf, trackLabel, userTrack } from '@/lib/tracks';
+import { useLayout } from '@/lib/layout';
 import { colors, radius, toneColor } from '@/theme';
 import { Button, Card, Chevron, Icon, Notice, Row, T } from '@/ui';
 import { TabScreen } from '@/features/common/TabScreen';
@@ -69,6 +70,9 @@ export default function HubScreen() {
   const myTrack = userTrack(user);
   const specialties = specialtiesOf(myTrack);
   const fmt = (n: number) => formatNumber(n, lang);
+  // Tablet: the quick start and what to do next in one column, the specialty ledger beside it.
+  const { columns } = useLayout();
+  const twoCol = columns(360, 2) > 1;
 
   const [stats, setStats] = useState<Stats | null>(null);
   const [topics, setTopics] = useState<TopicRow[]>([]);
@@ -227,56 +231,8 @@ export default function HubScreen() {
     </TouchableOpacity>
   );
 
-  return (
-    <TabScreen onRefresh={onRefresh} refreshing={refreshing}>
-      <View style={{ gap: 4 }}>
-        <T weight="extrabold" size={24}>
-          {firstName ? (
-            <>
-              {t.greetingNamePrefix}
-              <T weight="extrabold" size={24} ltr>
-                {firstName}
-              </T>
-              {t.greetingNameSuffix}
-            </>
-          ) : (
-            t.greeting
-          )}
-        </T>
-        <T color={colors.textLight}>{t.subtitle}</T>
-      </View>
-
-      <Row wrap gap={10}>
-        {tiles.map((tile) => (
-          <Card key={tile.k} pad={12} style={{ width: '48%', flexGrow: 1, alignItems: 'center', gap: 2 }}>
-            <T weight="extrabold" size={22} color={colors.primary} ltr align="center">
-              {loading ? ' ' : tile.value}
-            </T>
-            <T size={12} color={colors.textLight} align="center">
-              {tile.label}
-            </T>
-          </Card>
-        ))}
-      </Row>
-
-      {bankEmpty || summariesEmpty ? (
-        <Notice kind="info">
-          <T weight="bold" size={14} color={colors.primary}>
-            {bankEmpty && summariesEmpty
-              ? t.noticeBoth(trackLabel(myTrack, lang))
-              : bankEmpty
-                ? t.noticeBank(trackLabel(myTrack, lang))
-                : t.noticeSummaries(trackLabel(myTrack, lang))}
-          </T>
-          <T size={13} color={colors.primary}>
-            {t.noticeBody(examLabel(myTrack, lang))}
-            {!bankEmpty && t.noticeQuestionsReady}
-            {!summariesEmpty && t.noticeSummariesReady}
-            {bankEmpty && summariesEmpty && t.noticeWillEmail}
-          </T>
-        </Notice>
-      ) : null}
-
+  const quizBlock = (
+    <>
       {/* Questions come first and biggest: it is where students spend most of their time. */}
       <Card
         pad={16}
@@ -375,7 +331,10 @@ export default function HubScreen() {
           </View>
         ) : null}
       </Card>
-
+    </>
+  );
+  const ledgerBlock = (
+    <>
       {/* The specialty ledger: how much of each pool is used up, the accuracy on
           what was answered, and one button to practise it. */}
       <View style={{ gap: 10 }}>
@@ -463,7 +422,10 @@ export default function HubScreen() {
           </T>
         ) : null}
       </View>
-
+    </>
+  );
+  const extrasBlock = (
+    <>
       {sideCard('summaries', 'book-open', t.stepSummariesTitle, summariesStat, () => router.push('/(tabs)/summaries'))}
       {sideCard('analysis', 'bar-chart', t.stepAnalysisTitle, analysisStat, () => router.push('/(tabs)/analysis'))}
 
@@ -503,8 +465,83 @@ export default function HubScreen() {
           </T>
         </Row>
       </TouchableOpacity>
-
+    </>
+  );
+  const badgesBlock = (
+    <>
       {id ? <AchievementBadges userId={id} /> : null}
+    </>
+  );
+
+  return (
+    <TabScreen onRefresh={onRefresh} refreshing={refreshing} width="wide">
+      <View style={{ gap: 4 }}>
+        <T weight="extrabold" size={24}>
+          {firstName ? (
+            <>
+              {t.greetingNamePrefix}
+              <T weight="extrabold" size={24} ltr>
+                {firstName}
+              </T>
+              {t.greetingNameSuffix}
+            </>
+          ) : (
+            t.greeting
+          )}
+        </T>
+        <T color={colors.textLight}>{t.subtitle}</T>
+      </View>
+
+      <Row wrap gap={10}>
+        {tiles.map((tile) => (
+          <Card key={tile.k} pad={12} style={{ width: twoCol ? '23%' : '48%', flexGrow: 1, alignItems: 'center', gap: 2 }}>
+            <T weight="extrabold" size={22} color={colors.primary} ltr align="center">
+              {loading ? ' ' : tile.value}
+            </T>
+            <T size={12} color={colors.textLight} align="center">
+              {tile.label}
+            </T>
+          </Card>
+        ))}
+      </Row>
+
+      {bankEmpty || summariesEmpty ? (
+        <Notice kind="info">
+          <T weight="bold" size={14} color={colors.primary}>
+            {bankEmpty && summariesEmpty
+              ? t.noticeBoth(trackLabel(myTrack, lang))
+              : bankEmpty
+                ? t.noticeBank(trackLabel(myTrack, lang))
+                : t.noticeSummaries(trackLabel(myTrack, lang))}
+          </T>
+          <T size={13} color={colors.primary}>
+            {t.noticeBody(examLabel(myTrack, lang))}
+            {!bankEmpty && t.noticeQuestionsReady}
+            {!summariesEmpty && t.noticeSummariesReady}
+            {bankEmpty && summariesEmpty && t.noticeWillEmail}
+          </T>
+        </Notice>
+      ) : null}
+
+      {twoCol ? (
+        <Row gap={18} align="flex-start">
+          <View style={{ flex: 1.05, gap: 16 }}>
+            {quizBlock}
+            {extrasBlock}
+          </View>
+          <View style={{ flex: 1, gap: 16 }}>
+            {ledgerBlock}
+            {badgesBlock}
+          </View>
+        </Row>
+      ) : (
+        <>
+          {quizBlock}
+          {ledgerBlock}
+          {extrasBlock}
+          {badgesBlock}
+        </>
+      )}
     </TabScreen>
   );
 }

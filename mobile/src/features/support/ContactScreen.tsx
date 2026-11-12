@@ -73,7 +73,7 @@ export default function ContactScreen() {
 
   if (success) {
     return (
-      <Screen header={header}>
+      <Screen width="form" header={header}>
         <Card pad={22} style={{ alignItems: 'center', gap: 12 }}>
           <Icon name="check-circle" size={44} color={colors.success} />
           <T weight="extrabold" size={20} align="center">
@@ -99,7 +99,7 @@ export default function ContactScreen() {
   }
 
   return (
-    <Screen header={header}>
+    <Screen width="form" header={header}>
       <T color={colors.textMedium}>{t.subtitle}</T>
 
       <TouchableOpacity activeOpacity={0.85} onPress={() => Linking.openURL(`mailto:${SUPPORT_EMAIL}`).catch(() => {})} accessibilityRole="link">

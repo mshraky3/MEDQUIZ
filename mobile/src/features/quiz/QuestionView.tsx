@@ -3,6 +3,8 @@ import { TouchableOpacity, View } from 'react-native';
 import { useCopy, useLang } from '@/i18n';
 import quizCopy from '@/i18n/copy/quiz.js';
 import { useAuth } from '@/lib/auth';
+import { useLayout } from '@/lib/layout';
+import { PALETTE_WIDTH } from './QuestionPalette';
 import { formatClock } from '@/lib/stats';
 import { colors, radius } from '@/theme';
 import { Button, Card, Icon, ProgressBar, Row, Screen, T } from '@/ui';
@@ -56,11 +58,85 @@ export function QuestionView({
   const { user } = useAuth();
   const [showReport, setShowReport] = useState(false);
   const isLast = number === total;
+  // Wide landscape pane: the stem on one side and the options on the other, so a long vignette
+  // and its answers are on screen together. Narrower panes keep the stacked phone order.
+  const { width, twoPane, splitQuestion } = useLayout();
+  const split = splitQuestion(width - (twoPane ? PALETTE_WIDTH : 0));
+
+  const stemBlock = (
+    <>
+        <T weight="bold" size={13} color={colors.primary}>
+          {t.questionLabel(number)}
+        </T>
+        <Card pad={16}>
+          <T ltr size={17} lh={1.5}>
+            {question.question_text || t.questionUnavailable}
+          </T>
+        </Card>
+    </>
+  );
+  const optionsBlock = (
+    <>
+        <View style={{ gap: 10 }}>
+          {OPTION_KEYS.map((key) => {
+            const option = question[key] as string | null | undefined;
+            const isSelected = selected === option;
+            const isCorrect = revealed && !!option && option === question.correct_option;
+            const isWrong = revealed && isSelected && !isCorrect;
+            const border = isCorrect ? colors.success : isWrong ? colors.error : isSelected ? colors.primary : colors.border;
+            const bg = isCorrect ? colors.successBg : isWrong ? colors.errorBg : isSelected ? colors.infoBg : colors.surface;
+            return (
+              <TouchableOpacity
+                key={key}
+                activeOpacity={0.8}
+                disabled={!option || revealed}
+                onPress={() => option && onSelect(option)}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: isSelected, disabled: !option || revealed }}
+              >
+                <Row
+                  ltr
+                  gap={10}
+                  style={{ borderRadius: radius.lg, borderWidth: 2, borderColor: border, backgroundColor: bg, padding: 14, minHeight: 54 }}
+                >
+                  <T ltr size={15} style={{ flex: 1 }} weight={isSelected || isCorrect ? 'semibold' : 'regular'}>
+                    {option || t.optionUnavailable}
+                  </T>
+                  {isCorrect ? <Icon name="check-circle" size={20} color={colors.success} /> : null}
+                  {isWrong ? <Icon name="x-circle" size={20} color={colors.error} /> : null}
+                </Row>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+    </>
+  );
+  const explanationBlock = (
+    <>
+        {/* Study mode: the answer is already on screen, so the explanation opens with it. */}
+        {revealed ? <ExplanationPanel explanation={question.explanation} defaultOpen /> : null}
+    </>
+  );
+  const reportBlock = (
+    <>
+        {user?.id && user.email ? (
+          <TouchableOpacity onPress={() => setShowReport(true)} hitSlop={8} accessibilityRole="button" style={{ alignSelf: isRTL ? 'flex-end' : 'flex-start' }}>
+            <Row gap={6}>
+              <Icon name="flag" size={15} color={colors.textLight} />
+              <T size={13} color={colors.textLight} weight="semibold">
+                {t.report}
+              </T>
+            </Row>
+          </TouchableOpacity>
+        ) : null}
+    </>
+  );
 
   return (
     <Screen
       scroll
       padded={false}
+      width={split ? 'wide' : undefined}
       header={
         <View>
           <Row justify="space-between" style={{ paddingHorizontal: 14, paddingVertical: 10 }}>
@@ -117,61 +193,25 @@ export function QuestionView({
       }
     >
       <View style={{ padding: 16, gap: 14 }}>
-        <T weight="bold" size={13} color={colors.primary}>
-          {t.questionLabel(number)}
-        </T>
-        <Card pad={16}>
-          <T ltr size={17} lh={1.5}>
-            {question.question_text || t.questionUnavailable}
-          </T>
-        </Card>
-
-        <View style={{ gap: 10 }}>
-          {OPTION_KEYS.map((key) => {
-            const option = question[key] as string | null | undefined;
-            const isSelected = selected === option;
-            const isCorrect = revealed && !!option && option === question.correct_option;
-            const isWrong = revealed && isSelected && !isCorrect;
-            const border = isCorrect ? colors.success : isWrong ? colors.error : isSelected ? colors.primary : colors.border;
-            const bg = isCorrect ? colors.successBg : isWrong ? colors.errorBg : isSelected ? colors.infoBg : colors.surface;
-            return (
-              <TouchableOpacity
-                key={key}
-                activeOpacity={0.8}
-                disabled={!option || revealed}
-                onPress={() => option && onSelect(option)}
-                accessibilityRole="radio"
-                accessibilityState={{ selected: isSelected, disabled: !option || revealed }}
-              >
-                <Row
-                  ltr
-                  gap={10}
-                  style={{ borderRadius: radius.lg, borderWidth: 2, borderColor: border, backgroundColor: bg, padding: 14, minHeight: 54 }}
-                >
-                  <T ltr size={15} style={{ flex: 1 }} weight={isSelected || isCorrect ? 'semibold' : 'regular'}>
-                    {option || t.optionUnavailable}
-                  </T>
-                  {isCorrect ? <Icon name="check-circle" size={20} color={colors.success} /> : null}
-                  {isWrong ? <Icon name="x-circle" size={20} color={colors.error} /> : null}
-                </Row>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-
-        {/* Study mode: the answer is already on screen, so the explanation opens with it. */}
-        {revealed ? <ExplanationPanel explanation={question.explanation} defaultOpen /> : null}
-
-        {user?.id && user.email ? (
-          <TouchableOpacity onPress={() => setShowReport(true)} hitSlop={8} accessibilityRole="button" style={{ alignSelf: isRTL ? 'flex-end' : 'flex-start' }}>
-            <Row gap={6}>
-              <Icon name="flag" size={15} color={colors.textLight} />
-              <T size={13} color={colors.textLight} weight="semibold">
-                {t.report}
-              </T>
-            </Row>
-          </TouchableOpacity>
-        ) : null}
+        {split ? (
+          <Row gap={20} align="flex-start">
+            <View style={{ flex: 1, gap: 14 }}>
+              {stemBlock}
+              {reportBlock}
+            </View>
+            <View style={{ flex: 1.1, gap: 14 }}>
+              {optionsBlock}
+              {explanationBlock}
+            </View>
+          </Row>
+        ) : (
+          <>
+            {stemBlock}
+            {optionsBlock}
+            {explanationBlock}
+            {reportBlock}
+          </>
+        )}
       </View>
 
       {showReport && user?.id && user.email ? (

@@ -3,7 +3,7 @@ import { TouchableOpacity, View } from 'react-native';
 import { Tabs } from 'expo-router';
 import type { BottomTabBarProps } from 'expo-router/build/react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useApp } from '@/i18n';
+import { useApp, useLang } from '@/i18n';
 import { useLayout } from '@/lib/layout';
 import { colors } from '@/theme';
 import { Icon, Row, T } from '@/ui';
@@ -20,7 +20,8 @@ const TAB_ICONS: Record<string, string> = {
 function TabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const app = useApp();
-  const { targetScale } = useLayout();
+  const { isRTL } = useLang();
+  const { targetScale, rail } = useLayout();
   const labels: Record<string, string> = {
     index: app.tabs.home,
     summaries: app.tabs.summaries,
@@ -28,6 +29,66 @@ function TabBar({ state, navigation }: BottomTabBarProps) {
     review: app.tabs.review,
     more: app.tabs.more,
   };
+  const onTab = (route: (typeof state.routes)[number], focused: boolean) => {
+    const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
+    if (!focused && !event.defaultPrevented) navigation.navigate(route.name, route.params);
+  };
+
+  // Wide windows (landscape tablets, unfolded foldables): a vertical rail at the reading start
+  // edge instead of a bottom bar, so the content gets the full height. TabsLayout puts it there.
+  if (rail) {
+    return (
+      <View
+        style={{
+          width: 88,
+          backgroundColor: colors.surface,
+          borderColor: colors.border,
+          borderLeftWidth: isRTL ? 1 : 0,
+          borderRightWidth: isRTL ? 0 : 1,
+          paddingTop: Math.max(insets.top, 12) + 4,
+          paddingBottom: Math.max(insets.bottom, 12),
+          alignItems: 'center',
+          gap: 6,
+        }}
+      >
+        <T weight="extrabold" size={20} color={colors.primary} ltr style={{ marginBottom: 14 }}>
+          SQB
+        </T>
+        {state.routes.map((route, index) => {
+          const focused = state.index === index;
+          const color = focused ? colors.primary : colors.textLight;
+          return (
+            <TouchableOpacity
+              key={route.key}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: focused }}
+              accessibilityLabel={labels[route.name]}
+              onPress={() => onTab(route, focused)}
+              activeOpacity={0.7}
+              style={{ width: 76, alignItems: 'center', gap: 4, paddingVertical: 6, minHeight: 56 }}
+            >
+              <View
+                style={{
+                  width: 56,
+                  height: 32,
+                  borderRadius: 16,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: focused ? colors.infoBg : 'transparent',
+                }}
+              >
+                <Icon name={TAB_ICONS[route.name] || 'circle'} size={22} color={color} strokeWidth={focused ? 2.4 : 2} />
+              </View>
+              <T weight={focused ? 'bold' : 'medium'} size={11} color={color} align="center" numberOfLines={1}>
+                {labels[route.name]}
+              </T>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    );
+  }
+
   return (
     <View
       style={{
@@ -43,10 +104,7 @@ function TabBar({ state, navigation }: BottomTabBarProps) {
         {state.routes.map((route, index) => {
           const focused = state.index === index;
           const color = focused ? colors.primary : colors.textLight;
-          const onPress = () => {
-            const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
-            if (!focused && !event.defaultPrevented) navigation.navigate(route.name, route.params);
-          };
+          const onPress = () => onTab(route, focused);
           return (
             <TouchableOpacity
               key={route.key}
@@ -79,8 +137,12 @@ function TabBar({ state, navigation }: BottomTabBarProps) {
 }
 
 export default function TabsLayout() {
+  const { rail } = useLayout();
+  const { isRTL } = useLang();
+  // The rail sits at the reading start edge: left in English, right in Arabic.
+  const tabBarPosition = rail ? (isRTL ? 'right' : 'left') : 'bottom';
   return (
-    <Tabs tabBar={(props) => <TabBar {...props} />} screenOptions={{ headerShown: false }}>
+    <Tabs tabBar={(props) => <TabBar {...props} />} screenOptions={{ headerShown: false, tabBarPosition }}>
       <Tabs.Screen name="index" />
       <Tabs.Screen name="summaries" />
       <Tabs.Screen name="analysis" />

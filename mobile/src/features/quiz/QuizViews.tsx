@@ -7,6 +7,7 @@ import { api } from '@/lib/api';
 import { getSourceLabel, getTypeLabel } from '@/lib/labels';
 import { calculateBestWorstTopics, formatDuration, totalsFromTopics } from '@/lib/stats';
 import { useAuth } from '@/lib/auth';
+import { useLayout } from '@/lib/layout';
 import { useLoad } from '@/lib/useLoad';
 import { colors, radius } from '@/theme';
 import { Button, Card, Dialog, Icon, Row, Screen, Spinner, T } from '@/ui';
@@ -285,6 +286,8 @@ export function ResultView({
   const app = useApp().quizApp;
   const { lang, isRTL } = useLang();
   const { user } = useAuth();
+  // Wide window: the score and next steps stay in a column beside the answer review.
+  const { isExpanded } = useLayout();
   const wrongCount = answers.filter((a) => !a.isCorrect).length;
   // Asked at the top of a good result and nowhere else: goodwill is highest in
   // the seconds after someone does well. The bar is a strong score on a real quiz.
@@ -297,8 +300,8 @@ export function ResultView({
   const pct = Number(accuracy);
   const tone = pct >= 75 ? colors.accuracyHigh : pct >= 50 ? colors.accuracyMid : colors.accuracyLow;
 
-  return (
-    <Screen contentStyle={{ gap: 14 }}>
+  const summaryBlock = (
+    <>
       {completedTopics.length > 0 ? (
         <Row gap={10} style={{ backgroundColor: colors.warningBg, borderRadius: radius.lg, padding: 14 }} align="flex-start">
           <Icon name="trophy" size={20} color={colors.warning} />
@@ -373,7 +376,10 @@ export function ResultView({
         }
       />
       <Button label={q.paywallBack} variant="ghost" onPress={onHome} />
-
+    </>
+  );
+  const reviewBlock = (
+    <>
       {answers.length > 0 ? (
         <View style={{ gap: 12, marginTop: 6 }}>
           <T weight="extrabold" size={18}>
@@ -471,6 +477,22 @@ export function ResultView({
           )}
         </View>
       ) : null}
+    </>
+  );
+
+  return (
+    <Screen contentStyle={{ gap: 14 }} width={isExpanded ? 'wide' : undefined}>
+      {isExpanded && answers.length > 0 ? (
+        <Row gap={20} align="flex-start">
+          <View style={{ width: 360, gap: 14 }}>{summaryBlock}</View>
+          <View style={{ flex: 1 }}>{reviewBlock}</View>
+        </Row>
+      ) : (
+        <>
+          {summaryBlock}
+          {reviewBlock}
+        </>
+      )}
     </Screen>
   );
 }

@@ -6,6 +6,7 @@ import quizCopy from '@/i18n/copy/quiz.js';
 import { ApiError, api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { getSourceLabel, getTypeLabel } from '@/lib/labels';
+import { useLayout } from '@/lib/layout';
 import { EXAM, STUDY, useQuizMode } from '@/lib/quizMode';
 import { examLabel, specialtyKeys, trackLabel, userTrack } from '@/lib/tracks';
 import { useLoad } from '@/lib/useLoad';
@@ -40,6 +41,7 @@ export default function LauncherScreen() {
   const id = user?.id;
   const fmt = (n: number) => formatNumber(n, lang);
   const myTrack = userTrack(user);
+  const { isTablet, columns } = useLayout();
   const availableTypes = useMemo(() => specialtyKeys(myTrack), [myTrack]);
 
   const status = useLoad<ContentStatus>((signal) => api.get('/api/track-content-status', { signal }), []);
@@ -215,15 +217,11 @@ export default function LauncherScreen() {
     </Row>
   );
 
-  return (
-    <Screen
-      header={header}
-      footer={
-        <View style={{ padding: 12, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border }}>
-          <Button label={t.startQuiz} icon="rocket" size="lg" onPress={start} />
-        </View>
-      }
-    >
+  // Tablet: what to practise (collections, specialties) on one side, how (mode, count, timer,
+  // the summary) on the other. A phone keeps the single column in the same order.
+  const twoCol = columns(360, 2) > 1;
+  const what = (
+    <>
       {/* Collections, when the track has more than one. */}
       {sources.length > 1 ? (
         <Card style={{ gap: 10 }}>
@@ -340,6 +338,10 @@ export default function LauncherScreen() {
         </Row>
       </Card>
 
+    </>
+  );
+  const how = (
+    <>
       <Card style={{ gap: 16 }}>
         <View style={{ gap: 8 }}>
           {sectionTitle('lightbulb', t.modeLegend)}
@@ -431,6 +433,34 @@ export default function LauncherScreen() {
           </Row>
         </TouchableOpacity>
       ) : null}
+    </>
+  );
+
+  return (
+    <Screen
+      width="wide"
+      header={header}
+      footer={
+        <View style={{ padding: 12, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border }}>
+          {isTablet ? (
+            <Button label={t.startQuiz} icon="rocket" size="lg" onPress={start} full={false} style={{ alignSelf: 'center', minWidth: 360 }} />
+          ) : (
+            <Button label={t.startQuiz} icon="rocket" size="lg" onPress={start} />
+          )}
+        </View>
+      }
+    >
+      {twoCol ? (
+        <Row gap={16} align="flex-start">
+          <View style={{ flex: 1, gap: 16 }}>{what}</View>
+          <View style={{ flex: 1, gap: 16 }}>{how}</View>
+        </Row>
+      ) : (
+        <>
+          {what}
+          {how}
+        </>
+      )}
 
       {/* Mock exam: pick the specialty ... */}
       <Dialog visible={finalStep === 'type'} onClose={() => setFinalStep('closed')}>

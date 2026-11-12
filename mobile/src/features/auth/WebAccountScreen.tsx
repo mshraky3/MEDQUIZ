@@ -19,7 +19,7 @@ export default function WebAccountScreen({ path = '/signup' }: { path?: string }
   const goLogin = () => router.replace('/login');
 
   return (
-    <Screen header={<ScreenHeader title={t.title} />}>
+    <Screen width="form" header={<ScreenHeader title={t.title} />}>
       <Card pad={22} style={{ alignItems: 'center', gap: 12 }}>
         <Icon name="user" size={38} color={colors.primary} />
         <T color={colors.textMedium} align="center">
