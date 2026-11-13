@@ -163,6 +163,7 @@ export function QuizHistory({ userId }: { userId: number }) {
                         correctAnswer={q.correct_option}
                         correctAnswerLabel={t.correctAnswer}
                         isCorrect={!!q.is_correct}
+                        images={q.images}
                       />
                     ))}
                   </>
@@ -306,6 +307,7 @@ export function FinalExams({ userId }: { userId: number }) {
                         correctAnswerLabel={t.correctAnswer}
                         isCorrect={!!q.is_correct}
                         explanation={q.explanation}
+                        images={q.images}
                       />
                     ))}
                   </>
@@ -402,6 +404,7 @@ export function AttemptsList({ attempts }: { attempts: any[] }) {
           correctAnswerLabel={t.correctAnswer}
           isCorrect={!!a.is_correct}
           explanation={a.explanation}
+          images={a.images}
         />
       ))}
       {attempts.length > 5 ? (
