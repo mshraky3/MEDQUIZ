@@ -65,7 +65,7 @@ const common = {
         loading: 'جاري التحميل',
         loadingEllipsis: 'جاري التحميل…',
         footer: {
-            tagline: 'منصتك الشاملة للتحضير لاختبار SMLE وSNLE والبرومترك',
+            tagline: 'منصتك الشاملة للتحضير لاختبار SMLE وSNLE وSDLE (طب الأسنان) والبرومترك',
             platform: 'المنصة',
             information: 'معلومات',
             legal: 'الشؤون القانونية',
@@ -179,7 +179,7 @@ const common = {
         loading: 'Loading',
         loadingEllipsis: 'Loading…',
         footer: {
-            tagline: 'Your complete prep platform for the SMLE, SNLE and Prometric exams',
+            tagline: 'Your complete prep platform for the SMLE, SNLE, SDLE (dental) and Prometric exams',
             platform: 'Platform',
             information: 'Information',
             legal: 'Legal',

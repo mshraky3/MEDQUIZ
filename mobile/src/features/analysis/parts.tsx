@@ -6,6 +6,7 @@ import { Tone } from '@/lib/stats';
 import { colors, radius, toneBg, toneColor } from '@/theme';
 import { Button, Card, Icon, ProgressBar, Row, T } from '@/ui';
 import { ExplanationPanel } from '@/features/common/ExplanationPanel';
+import { QuestionImages } from '@/features/quiz/QuestionImages';
 
 /** A small labelled chip used in review card headers. */
 export function Badge2({ icon, label }: { icon: string; label: string }) {
@@ -43,6 +44,8 @@ type ReviewProps = {
   isCorrect: boolean;
   explanation?: string | null;
   questionId?: number | null;
+  /** Clarification pictures, shown when a review row carries them (the quiz endpoint does; review endpoints do not yet). */
+  images?: unknown;
 };
 
 /**
@@ -69,6 +72,7 @@ export function ReviewCard(p: ReviewProps) {
       <T ltr size={15}>
         {p.question}
       </T>
+      <QuestionImages images={p.images} />
       <View style={{ gap: 6 }}>
         <View style={{ backgroundColor: p.isCorrect ? colors.successBg : colors.errorBg, borderRadius: radius.md, padding: 10, gap: 2 }}>
           <T size={11} weight="bold" color={p.isCorrect ? colors.success : colors.error}>

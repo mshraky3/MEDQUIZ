@@ -10,6 +10,7 @@ import { colors, radius } from '@/theme';
 import { Button, Card, Icon, ProgressBar, Row, Screen, T } from '@/ui';
 import { ExplanationPanel } from '@/features/common/ExplanationPanel';
 import { OPTION_KEYS, Question } from './quizLogic';
+import { QuestionImages } from './QuestionImages';
 import { ReportDialog } from './ReportDialog';
 
 const timerColor = (seconds: number | null) => {
@@ -73,6 +74,7 @@ export function QuestionView({
             {question.question_text || t.questionUnavailable}
           </T>
         </Card>
+        <QuestionImages images={question.images} />
     </>
   );
   const optionsBlock = (

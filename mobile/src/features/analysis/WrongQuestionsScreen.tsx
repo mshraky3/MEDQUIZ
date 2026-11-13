@@ -207,6 +207,7 @@ export default function WrongQuestionsScreen() {
                   correctAnswerLabel={t.correctAnswer}
                   isCorrect={false}
                   explanation={q.explanation}
+                  images={q.images}
                 />
               ))}
               {hasMore ? (
