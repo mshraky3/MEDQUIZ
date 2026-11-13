@@ -114,3 +114,18 @@ test('app.js wires the tables, version bump, attach call and route', () => {
     assert.match(src, /await attachQuestionImages\(db, served\)/);
     assert.match(src, /app\.use\('\/api\/question-images'/);
 });
+
+test('idKey attaches images to attempt rows by question_id, not by the attempt id', async () => {
+    let askedIds = null;
+    const db = {
+        query: async (_sql, [ids]) => {
+            askedIds = ids;
+            return { rows: [{ question_id: 7, kind: 'illustration', image_key: 'qimg/a.webp', alt_en: 'x' }] };
+        },
+    };
+    const rows = [{ id: 900, question_id: 7 }, { id: 7, question_id: 8 }];
+    await attachQuestionImages(db, rows, 'question_id');
+    assert.deepEqual(askedIds, [7, 8]);
+    assert.equal(rows[0].images[0].url, '/api/question-images/file/a.webp');
+    assert.equal('images' in rows[1], false);
+});

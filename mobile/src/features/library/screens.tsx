@@ -9,6 +9,7 @@ import { parseExplanation } from '@/lib/explanation';
 import { colors, radius } from '@/theme';
 import { Button, Card, Chevron, Icon, Row, Screen, ScreenHeader, Span, T } from '@/ui';
 import { SiteFooter } from '@/features/common/SiteFooter';
+import { QuestionImages } from '@/features/quiz/QuestionImages';
 import publicQuestionsData from './data/publicQuestions.json';
 import storiesData from './data/successStories.json';
 // The grouping logic is the website's own (copied byte for byte, see scripts/sync-library.mjs).
@@ -295,6 +296,8 @@ export function QuestionDetailScreen() {
         <T ltr color={colors.textMedium} lh={1.6}>
           {stemBody(question)}
         </T>
+        {/* Present only once the public export carries pictures (see PR notes); nothing renders until then. */}
+        <QuestionImages images={(question as { images?: unknown }).images} />
       </View>
 
       <T size={13} color={colors.textLight}>
