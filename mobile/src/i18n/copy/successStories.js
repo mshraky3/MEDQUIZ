@@ -67,7 +67,7 @@ const successStoriesCopy = {
             ? 'One story so far, published with its author’s permission.'
             : `${n} students who prepared with us, published with their permission.`),
         ctaTitle: 'Start your own',
-        ctaBody: 'Start with forty free questions on a free account, no card needed.',
+        ctaBody: 'Start with 10 free questions on a free account, no card needed.',
         ctaSignup: 'Create a free account',
 
         // ── The in-app ask ──
