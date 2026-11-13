@@ -65,12 +65,13 @@ export function toPublicImage(r) {
 /**
  * Adds `images` to the rows that have approved links. Rows without links are
  * returned untouched (no `images` key), so their shape does not change.
+ * `idKey` names the question id column when the rows are attempts (`question_id`).
  * Never throws: a failure here must not break serving questions.
  */
-export async function attachQuestionImages(db, rows) {
+export async function attachQuestionImages(db, rows, idKey = 'id') {
     if (!Array.isArray(rows) || rows.length === 0) return rows;
     try {
-        const ids = rows.map((r) => r.id).filter((n) => Number.isInteger(n));
+        const ids = rows.map((r) => r[idKey]).filter((n) => Number.isInteger(n));
         if (ids.length === 0) return rows;
         const { rows: links } = await db.query(
             `SELECT l.question_id, i.*
@@ -86,7 +87,7 @@ export async function attachQuestionImages(db, rows) {
             if (!byQ.has(l.question_id)) byQ.set(l.question_id, []);
             byQ.get(l.question_id).push(toPublicImage(l));
         }
-        for (const r of rows) if (byQ.has(r.id)) r.images = byQ.get(r.id);
+        for (const r of rows) if (byQ.has(r[idKey])) r.images = byQ.get(r[idKey]);
     } catch {
         /* table missing or DB hiccup: serve the questions without images */
     }

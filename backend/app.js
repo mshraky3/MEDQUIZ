@@ -3802,6 +3802,7 @@ app.get('/question-attempts/session/:sessionId', requireSession, requireOwnSessi
               ORDER BY a.attempted_at ASC`,
             [sessionId]
         );
+        await attachQuestionImages(db, result.rows, 'question_id');
         res.json(result.rows);
     } catch (err) {
         res.status(500).json({ message: 'Server error' });
@@ -3880,6 +3881,7 @@ app.get('/wrong-questions/user/:userId', requireSession, requireOwnUser('userId'
             ORDER BY total DESC
         `, facetParams);
 
+        await attachQuestionImages(db, result.rows, 'question_id');
         res.json({
             wrongQuestions: result.rows,
             total: countResult.rows[0].total,
@@ -5366,6 +5368,7 @@ app.get('/quiz-sessions/:sessionId', requireSession, requireOwnSession('sessionI
         // Check if this is an old session (no question attempts)
         const isOldSession = convertedAttempts.length === 0;
 
+        await attachQuestionImages(db, convertedAttempts, 'question_id');
         res.json({
             session: convertedSession,
             question_attempts: convertedAttempts,
@@ -7701,6 +7704,7 @@ app.get('/final-quiz/questions', requireSession, subscriberOnly, async (req, res
             count: questions.length
         });
 
+        await attachQuestionImages(db, questions);
         res.json({ questions });
 
     } catch (err) {
@@ -8108,6 +8112,7 @@ app.get('/final-quiz/session/:sessionId/questions', requireSession, requireOwnSe
             questionCount: questionsResult.rows.length
         });
 
+        await attachQuestionImages(db, questionsResult.rows);
         res.json({ questions: questionsResult.rows });
 
     } catch (err) {
