@@ -63,6 +63,7 @@ import {
 import { PICKABLE_SOURCES, SOURCE_PRIORITY, SELECTABLE_SOURCES, resolveSources, ALL_SESSION_SOURCES } from './config/sources.js';
 import { makeCheckCompletionHandler } from './services/completionCheck.js';
 import { runRecallImport } from './services/recallImportService.js';
+import { createBankCounts } from './services/bankCounts.js';
 import { markQuestionsSeen, MAX_SEEN_IDS } from './services/seenService.js';
 import { recordAttemptsBatch } from './services/attemptsBatch.js';
 import { insertFinalQuizAttempts, jsonBodyParser, FINAL_QUIZ_JSON_LIMIT } from './services/finalQuizAttempts.js';
@@ -1022,6 +1023,8 @@ const sendEmail = async (to, subject, text, html = null, opts = {}) => {
 // a medical response can never be served to a nursing student (or vice versa).
 const questionsCache = new Map(); // track -> { data, timestamp }
 const QUESTIONS_CACHE_TTL = 5 * 60 * 1000;
+// Question-bank sizes (per specialty / collection), 5 min per instance: see services/bankCounts.js.
+const bankCounts = createBankCounts({ db });
 
 function readQuestionsCache(track) {
     const hit = questionsCache.get(track);
@@ -3973,17 +3976,10 @@ app.get('/api/track-content-status', requireSession, async (req, res) => {
         const trackTypes = specialtyKeys(track);
         const trackSources = PICKABLE_SOURCES[track] || [];
         const [byType, bySource, summaryCount, completedByType, completedBySource] = await Promise.all([
-            db.query(
-                `SELECT question_type, COUNT(*)::int AS total
-                 FROM questions WHERE track = $1 GROUP BY question_type`,
-                [track]
-            ),
-            db.query(
-                `SELECT s AS source, COUNT(*)::int AS total
-                 FROM questions, unnest(sources) AS s
-                 WHERE track = $1 GROUP BY s`,
-                [track]
-            ),
+            // Bank sizes come from the 5-minute snapshot (services/bankCounts.js): same rows as the
+            // two GROUP BY queries that used to run here on every hub visit.
+            bankCounts.typeResult(track),
+            bankCounts.sourceResult(track),
             db.query(
                 `SELECT COUNT(*)::int AS total FROM summaries
                  WHERE track = $1 AND is_published = TRUE`,
@@ -5055,14 +5051,18 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
                 const checks = await Promise.all(touchedCardinalities.map(async ({ type, source }) => {
                     try {
                         const [totalRes, doneRes] = await Promise.all([
-                            db.query(
-                                // Track-scoped like every other bank-size denominator.
-                                // Specialty names happen to be disjoint across tracks
-                                // today, but "topic complete" must not depend on that.
-                                `SELECT COUNT(*)::int AS c FROM questions
-                                  WHERE track = $1 AND question_type = $2 AND $3 = ANY(sources)`,
-                                [resolveContentTrack(req), type, source]
-                            ),
+                            // Track-scoped like every other bank-size denominator.
+                            // Specialty names happen to be disjoint across tracks
+                            // today, but "topic complete" must not depend on that.
+                            // Served from the 5-minute bank snapshot; a non-string type or
+                            // source (never expected) falls back to the original query.
+                            bankCounts.comboCount(resolveContentTrack(req), type, source).then((n) => (n == null
+                                ? db.query(
+                                    `SELECT COUNT(*)::int AS c FROM questions
+                                      WHERE track = $1 AND question_type = $2 AND $3 = ANY(sources)`,
+                                    [resolveContentTrack(req), type, source]
+                                )
+                                : { rows: [{ c: n }] })),
                             db.query(
                                 `SELECT COUNT(*)::int AS c FROM user_question_progress p
                                  JOIN questions q ON q.id = p.question_id
@@ -5470,6 +5470,7 @@ app.post('/admin/import-recall', adminAuth, async (req, res) => {
             allowedSourcesFor: (t) => SELECTABLE_SOURCES[normalizeTrack(t)] || [],
             specialtyKeysFor: (t) => specialtyKeys(normalizeTrack(t)),
         });
+        bankCounts.invalidate(); // a real import changed the bank sizes (a dry run only costs one refresh)
         res.status(out.status).json(out.json);
     } catch (err) {
         logger.error('Recall import failed', err);
@@ -5512,6 +5513,7 @@ app.post('/api/questions', adminAuth, async (req, res) => {
         // Invalidate every track's cache — a question can move between banks
         // on edit, so clearing only one of them could strand a stale row.
         questionsCache.clear();
+        bankCounts.invalidate();
 
         res.status(201).json({
             message: "Question added successfully",
@@ -5742,6 +5744,7 @@ app.delete('/questions/:id', adminAuth, async (req, res) => {
         // Invalidate every track's cache — a question can move between banks
         // on edit, so clearing only one of them could strand a stale row.
         questionsCache.clear();
+        bankCounts.invalidate();
 
         res.json({
             message: "Question deleted successfully",
@@ -5817,6 +5820,7 @@ app.put('/questions/:id', adminAuth, async (req, res) => {
         // Invalidate every track's cache — a question can move between banks
         // on edit, so clearing only one of them could strand a stale row.
         questionsCache.clear();
+        bankCounts.invalidate();
 
         res.json({
             message: "Question updated successfully",
