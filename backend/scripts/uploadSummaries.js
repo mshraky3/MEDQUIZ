@@ -1,4 +1,8 @@
 /**
+ * LEGACY (checked 2026-11-16): neither the web app nor the Android app reads the page images this script
+ * produces (no call to /api/summaries/:slug/page/:n); both render the in-code lessons. It writes to LIVE R2 and
+ * the LIVE database and inserts decks with is_published = TRUE. Read docs/CONTENT_INTAKE.md before running it.
+ *
  * One-time: render the topic-summary PDFs in ../../source-material/summarys/ to per-page WebP
  * images, upload them privately to R2, store the source PDF (never served), and
  * update the `summaries` table (page_count, r2_prefix). NEVER deployed/run on
