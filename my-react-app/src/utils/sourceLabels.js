@@ -10,6 +10,7 @@ export const SOURCE_LABELS = {
     ar: {
         // medical track — the newest collection, added after the 2026H2
         // rebuild's three, drawn from raw Telegram exam-recall text.
+        MedicalNovemberRecall: 'تجميعة نوفمبر 2026',
         MedicalOctoberRecall: 'تجميعة أكتوبر 2026',
         MedicalSeptemberRecall: 'تجميعة سبتمبر 2026',
         // Monthly collections up to and including August; September has its own.
@@ -21,11 +22,13 @@ export const SOURCE_LABELS = {
         // dental track (SDLE)
         DentalExplained: 'البنك المشروح بالمراجع',
         DentalRecall2026: 'تجميعات 2026',
+        DentalRecall2025: 'تجميعات 2025',
         DentalRecall2024: 'تجميعات 2024',
         // nursing track — the bank is split the same way the medical one is:
         // the core EMS review file vs. the block appended in its September edition.
         NursingMostRepeated: 'Most Repeated',
         NursingConfirmed: 'Confirmed',
+        NursingRecall: 'تجميعات التمريض',
         // legacy — retired from the bank but present in old sessions
         MidgardGameBoy: 'Midgard & GameBoy2026',
         January25: 'يناير 2026',
@@ -41,6 +44,7 @@ export const SOURCE_LABELS = {
         GameBoy: 'GameBoy',
     },
     en: {
+        MedicalNovemberRecall: 'November 2026 Recalls',
         MedicalOctoberRecall: 'October 2026 Recalls',
         MedicalSeptemberRecall: 'September 2026 Recalls',
         MedicalMonthlyRecall: 'Monthly Recalls (through August)',
@@ -49,9 +53,11 @@ export const SOURCE_LABELS = {
         MedicalMidgard: 'Midgard',
         DentalExplained: 'Explained Bank (with references)',
         DentalRecall2026: '2026 Recalls',
+        DentalRecall2025: '2025 Recalls',
         DentalRecall2024: '2024 Recalls',
         NursingMostRepeated: 'Most Repeated',
         NursingConfirmed: 'Confirmed',
+        NursingRecall: 'Nursing Recalls',
         // legacy — retired from the bank but present in old sessions
         MidgardGameBoy: 'Midgard & GameBoy2026',
         January25: 'January 2026',

@@ -10,10 +10,11 @@ const raw = (extra = {}) => ({
     options: { A: 'MI', B: 'GERD', C: '?', D: 'PE' }, answer_letter: 'B', ...extra,
 });
 
-test('October is the first medical source and is allowed in the session CHECK list', () => {
-    assert.equal(MEDICAL_SOURCES[0], 'MedicalOctoberRecall');
-    assert.equal(MEDICAL_SOURCES[1], 'MedicalSeptemberRecall');
-    assert.equal(SOURCE_PRIORITY[MEDICAL][0], 'MedicalOctoberRecall');
+test('November, then October, lead the medical sources and all are allowed in the session CHECK list', () => {
+    assert.equal(MEDICAL_SOURCES[0], 'MedicalNovemberRecall');
+    assert.equal(MEDICAL_SOURCES[1], 'MedicalOctoberRecall');
+    assert.equal(MEDICAL_SOURCES[2], 'MedicalSeptemberRecall');
+    assert.equal(SOURCE_PRIORITY[MEDICAL][0], 'MedicalNovemberRecall');
     assert.ok(ALL_SESSION_SOURCES.includes('MedicalOctoberRecall'));
     for (const s of MEDICAL_SOURCES) assert.ok(ALL_SESSION_SOURCES.includes(s), s);
 });

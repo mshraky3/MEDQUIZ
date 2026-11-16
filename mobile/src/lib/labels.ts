@@ -26,6 +26,7 @@ export function getTypeLabel(type: string | null | undefined, lang: Lang = 'ar')
 
 export const SOURCE_LABELS: Record<Lang, Record<string, string>> = {
   ar: {
+    MedicalNovemberRecall: 'تجميعة نوفمبر 2026',
     MedicalOctoberRecall: 'تجميعة أكتوبر 2026',
     MedicalSeptemberRecall: 'تجميعة سبتمبر 2026',
     MedicalMonthlyRecall: 'التجميعات الشهرية (حتى أغسطس)',
@@ -34,9 +35,11 @@ export const SOURCE_LABELS: Record<Lang, Record<string, string>> = {
     MedicalMidgard: 'Midgard',
     DentalExplained: 'البنك المشروح بالمراجع',
     DentalRecall2026: 'تجميعات 2026',
+    DentalRecall2025: 'تجميعات 2025',
     DentalRecall2024: 'تجميعات 2024',
     NursingMostRepeated: 'Most Repeated',
     NursingConfirmed: 'Confirmed',
+    NursingRecall: 'تجميعات التمريض',
     MidgardGameBoy: 'Midgard & GameBoy2026',
     January25: 'يناير 2026',
     FebMarApr25: 'فبراير – مارس – أبريل 2026',
@@ -51,6 +54,7 @@ export const SOURCE_LABELS: Record<Lang, Record<string, string>> = {
     GameBoy: 'GameBoy',
   },
   en: {
+    MedicalNovemberRecall: 'November 2026 Recalls',
     MedicalOctoberRecall: 'October 2026 Recalls',
     MedicalSeptemberRecall: 'September 2026 Recalls',
     MedicalMonthlyRecall: 'Monthly Recalls (through August)',
@@ -59,9 +63,11 @@ export const SOURCE_LABELS: Record<Lang, Record<string, string>> = {
     MedicalMidgard: 'Midgard',
     DentalExplained: 'Explained Bank (with references)',
     DentalRecall2026: '2026 Recalls',
+    DentalRecall2025: '2025 Recalls',
     DentalRecall2024: '2024 Recalls',
     NursingMostRepeated: 'Most Repeated',
     NursingConfirmed: 'Confirmed',
+    NursingRecall: 'Nursing Recalls',
     MidgardGameBoy: 'Midgard & GameBoy2026',
     January25: 'January 2026',
     FebMarApr25: 'February – March – April 2026',

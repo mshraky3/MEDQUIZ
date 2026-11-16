@@ -2044,7 +2044,9 @@ const ensureOAuthColumns = async () => {
 //     answered a question).
 // 14: check_valid_quiz_source rebuilt again to accept MedicalOctoberRecall.
 // 15: question_images + question_image_links (additive, ensureQuestionImagesSchema).
-const SCHEMA_BOOTSTRAP_VERSION = 15;
+// 16: check_valid_quiz_source rebuilt again to accept MedicalNovemberRecall, DentalRecall2025 and NursingRecall
+//     (the 16 Nov 2026 batch; the code imports no data, see docs/CONTENT_INTAKE.md).
+const SCHEMA_BOOTSTRAP_VERSION = 16;
 const _versionGuard = newGuardState();
 async function bootstrapAll() {
     // A failed or slow version check must NEVER start the full DDL list (7 Nov 2026: 25 instances x ~100 statements

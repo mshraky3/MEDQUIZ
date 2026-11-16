@@ -55,7 +55,7 @@ export const KEPT_SOURCES = ['MidgardGameBoy', 'January25', 'FebMarApr25', 'May2
  * then September), then the older Monthly Recalls, GameBoy, Confirmed,
  * Midgard last.
  */
-export const MEDICAL_SOURCES = ['MedicalOctoberRecall', 'MedicalSeptemberRecall', 'MedicalMonthlyRecall', 'MedicalGameBoy', 'MedicalConfirmed', 'MedicalMidgard'];
+export const MEDICAL_SOURCES = ['MedicalNovemberRecall', 'MedicalOctoberRecall', 'MedicalSeptemberRecall', 'MedicalMonthlyRecall', 'MedicalGameBoy', 'MedicalConfirmed', 'MedicalMidgard'];
 
 /**
  * Every value user_quiz_sessions.source may hold (the CHECK constraint
@@ -67,15 +67,15 @@ export const ALL_SESSION_SOURCES = [
     'general', 'Midgard', 'GameBoy', 'October25', 'November25', 'December25', 'January25',
     'FebMarApr25', 'MidgardGameBoy', 'May26', 'June26', 'NursingEMS', 'NursingMostRepeated',
     'NursingConfirmed', 'MedicalGameBoy', 'MedicalConfirmed', 'MedicalMidgard',
-    'MedicalMonthlyRecall', 'MedicalSeptemberRecall', 'MedicalOctoberRecall',
-    'DentalExplained', 'DentalRecall2026', 'DentalRecall2024',
+    'MedicalMonthlyRecall', 'MedicalSeptemberRecall', 'MedicalOctoberRecall', 'MedicalNovemberRecall',
+    'DentalExplained', 'DentalRecall2026', 'DentalRecall2024', 'DentalRecall2025', 'NursingRecall',
 ];
 
 /**
  * The nursing bank's two collections, ordered by recommended study priority
  * (see SOURCE_PRIORITY) — Confirmed first.
  */
-export const NURSING_SOURCES = ['NursingConfirmed', 'NursingMostRepeated'];
+export const NURSING_SOURCES = ['NursingConfirmed', 'NursingMostRepeated', 'NursingRecall'];
 
 /**
  * The dental bank's collections, in recommended study order: the explained,
@@ -83,7 +83,7 @@ export const NURSING_SOURCES = ['NursingConfirmed', 'NursingMostRepeated'];
  * Unlike nursing, the dental fallback DOES constrain to this list (see
  * resolveSources), so a stray label can never leak into the dental bank.
  */
-export const DENTAL_SOURCES = ['DentalExplained', 'DentalRecall2026', 'DentalRecall2024'];
+export const DENTAL_SOURCES = ['DentalExplained', 'DentalRecall2026', 'DentalRecall2025', 'DentalRecall2024'];
 
 /**
  * Which `source` values resolveSources() will honour for a track. A value not
