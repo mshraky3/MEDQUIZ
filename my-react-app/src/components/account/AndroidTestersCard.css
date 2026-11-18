@@ -1,7 +1,7 @@
 /* "Android testers offer" card on /account. Sits inside .account-card (AccountPage.css),
    so only the inside is styled here. Tokens only; opaque; no animation; logical
    properties and no hardcoded direction, so Arabic (RTL) and English mirror on their own. */
-.atc { display: flex; flex-direction: column; gap: 12px; }
+.atc { display: flex; flex-direction: column; gap: 12px; overflow-wrap: anywhere; min-width: 0; }
 
 .atc-head { display: flex; align-items: center; gap: 12px; }
 

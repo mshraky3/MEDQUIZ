@@ -99,8 +99,11 @@ test('the offer is off unless ANDROID_TESTERS_OFFER_ENABLED is exactly "true"', 
 
 test('e-mail check and the canonical key', () => {
     assert.equal(cleanPlayEmail('  Student@Gmail.COM '), 'student@gmail.com');
-    for (const bad of ['', 'abc', 'a@b', 'a b@c.com', '@x.com', 'x@.com', '=cmd@x.com', 'x@x..com', 'x'.repeat(250) + '@x.com', null, undefined, 42]) {
-        assert.equal(cleanPlayEmail(bad), null, String(bad));
+    assert.equal(cleanPlayEmail('a.b@school.edu.sa'), 'a.b@school.edu.sa');
+    assert.equal(cleanPlayEmail('ab@x.co'), 'ab@x.co');
+    for (const bad of ['', 'abc', 'a@b', 'a b@c.com', '@x.com', 'x@.com', '=cmd@x.com', 'x@x..com', 'x'.repeat(250) + '@x.com', null, undefined, 42,
+        'a..b@gmail.com', 'ab.@gmail.com', 'ab@x.c', 'ab@x.c1', 'ab@x.123', { toString: () => 'ok@gmail.com' }, ['ok@gmail.com'], true]) {
+        assert.equal(cleanPlayEmail(bad), null, JSON.stringify(bad));
     }
     assert.equal(emailKey('a.b.c+tag@gmail.com'), 'abc@gmail.com');
     assert.equal(emailKey('abc@googlemail.com'), 'abc@gmail.com');
@@ -348,6 +351,44 @@ test('routes: join, refuse, export, and the Android sign-in call grants the 3 mo
         await s.close();
         delete process.env.ANDROID_TESTERS_OFFER_ENABLED;
         delete process.env.OWNER_TESTER_EMAILS;
+    }
+});
+
+test('routes: a non-string e-mail is a clean 400, not a 500', { skip }, async () => {
+    process.env.ANDROID_TESTERS_OFFER_ENABLED = 'true';
+    const { db } = await setup();
+    const s = await serve(db, 1);
+    try {
+        for (const email of [{ toString: 'x' }, ['a@gmail.com'], 42, true, null]) {
+            const r = await s.call('POST', '/api/android-testers/join', { email });
+            assert.equal(r.status, 400, JSON.stringify(email));
+            assert.equal(r.json.reason, 'invalid_email');
+        }
+        assert.equal((await s.call('POST', '/api/android-testers/join', { email: 'a..b@gmail.com' })).status, 400);
+        assert.equal((await getOfferStatus(db, 1)).taken, 0);
+    } finally {
+        await s.close();
+        delete process.env.ANDROID_TESTERS_OFFER_ENABLED;
+    }
+});
+
+test('routes: tester flag on, table missing, plain free month off: the sign-in call is not a 5xx', { skip }, async () => {
+    process.env.ANDROID_TESTERS_OFFER_ENABLED = 'true';
+    delete process.env.APP_FREE_MONTH_ENABLED;
+    const pg = new PGlite();
+    await pg.exec(`CREATE TABLE accounts (id INT PRIMARY KEY, email_verified BOOLEAN DEFAULT TRUE, subscription_status TEXT,
+        subscription_expiry_date TIMESTAMPTZ, is_admin_created BOOLEAN NOT NULL DEFAULT FALSE, grandfathered_at TIMESTAMPTZ, renewal_reminder_stage TEXT);
+        CREATE TABLE payment_events (id BIGSERIAL PRIMARY KEY, account_id INT, event_type TEXT NOT NULL, gateway TEXT, gateway_ref TEXT,
+        amount_halalas INT, currency TEXT, status TEXT, raw_payload JSONB, received_at TIMESTAMPTZ DEFAULT NOW());
+        INSERT INTO accounts (id) VALUES (1);`);
+    const s = await serve(poolOver(pg), 1);
+    try {
+        const out = await s.call('POST', '/api/app/free-month', { platform: 'android-app' });
+        assert.equal(out.status, 404, 'same answer as before the offer existed');
+        assert.equal((await pg.query('SELECT COUNT(*)::int AS n FROM payment_events')).rows[0].n, 0);
+    } finally {
+        await s.close();
+        delete process.env.ANDROID_TESTERS_OFFER_ENABLED;
     }
 });
 

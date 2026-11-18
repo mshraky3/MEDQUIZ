@@ -38,8 +38,12 @@ const EMAIL_RE = /^[a-z0-9][a-z0-9._%+'-]*@[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[
 
 /** Trimmed, lowercased address, or null when it is not a plausible e-mail. */
 export function cleanPlayEmail(raw) {
-    const v = String(raw ?? '').trim().toLowerCase();
+    if (typeof raw !== 'string') return null; // objects, numbers, arrays: a clean refusal, never a throw
+    const v = raw.trim().toLowerCase();
     if (v.length < 6 || v.length > 254 || !EMAIL_RE.test(v)) return null;
+    const [local, domain] = v.split('@');
+    if (local.includes('..') || local.endsWith('.')) return null;
+    if (!/\.[a-z]{2,}$/.test(domain)) return null; // a real TLD of 2+ letters
     return v;
 }
 

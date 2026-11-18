@@ -32,6 +32,7 @@ test('Arabic and English copy have the same keys, brand is SQB, no emoji, no men
     assert.equal(shape(copy.ar), shape(copy.en));
     const text = JSON.stringify([copy.ar, copy.en]) + copy.ar.spots(3) + copy.en.spots(3);
     assert.ok(!/MEDQ|medq/i.test(text));
+    assert.ok(!/another account|حساب آخر/i.test(JSON.stringify([copy.ar.errors.emailTaken, copy.en.errors.emailTaken])), 'neutral: never says who uses an address');
     assert.ok(!/\p{Extended_Pictographic}/u.test(text), 'no emoji');
     assert.ok(!/rating|review|تقييم|مراجعة/i.test(text), 'Play policy: nothing about ratings or reviews');
     assert.match(copy.en.spots(7), /7/);

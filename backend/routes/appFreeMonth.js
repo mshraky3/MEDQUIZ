@@ -24,8 +24,13 @@ router.post('/free-month', async (req, res) => {
                 const offer = await redeemTesterOffer(req.db, req.accountId, { platform: req.body?.platform });
                 if (offer.granted || !month) return res.json({ success: true, ...offer });
             } catch (err) {
-                logger.error('[android-testers] redeem failed:', err);
-                if (!month) return res.status(500).json({ success: false, message: 'Could not apply the offer' });
+                // 42P01 = migration 002 not run yet: answer exactly as before the offer existed.
+                if (err && err.code === '42P01') {
+                    if (!month) return res.status(404).json({ success: false, message: 'Not found' });
+                } else {
+                    logger.error('[android-testers] redeem failed:', err);
+                    if (!month) return res.status(500).json({ success: false, message: 'Could not apply the offer' });
+                }
             }
         }
         const result = await redeemAppFreeMonth(req.db, req.accountId, { platform: req.body?.platform });
