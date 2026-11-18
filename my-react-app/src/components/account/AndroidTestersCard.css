@@ -1,0 +1,67 @@
+/* "Android testers offer" card on /account. Sits inside .account-card (AccountPage.css),
+   so only the inside is styled here. Tokens only; opaque; no animation; logical
+   properties and no hardcoded direction, so Arabic (RTL) and English mirror on their own. */
+.atc { display: flex; flex-direction: column; gap: 12px; overflow-wrap: anywhere; min-width: 0; }
+
+.atc-head { display: flex; align-items: center; gap: 12px; }
+
+.atc-icon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--bg-2563eb-a090);
+  color: var(--fg-2563eb);
+}
+
+.atc-pill { display: block; font-size: 12px; font-weight: 700; color: var(--fg-2563eb); }
+
+.atc-title { margin: 0; font-size: 17px; font-weight: 800; line-height: 1.3; color: var(--text-dark); }
+
+.atc-body, .atc-hint, .atc-full, .atc-error, .atc-spots { margin: 0; font-size: 14px; line-height: 1.7; }
+.atc-body { color: var(--text-medium); }
+.atc-hint { font-size: 12.5px; color: var(--text-light); }
+.atc-spots { font-weight: 800; color: var(--fg-2563eb); }
+.atc-full { font-weight: 700; color: var(--text-dark); }
+.atc-error { color: var(--fg-dc2626); font-weight: 700; }
+
+.atc-form, .atc-done { display: flex; flex-direction: column; gap: 8px; }
+
+.atc-label { font-size: 13px; font-weight: 800; color: var(--text-dark); }
+
+.atc-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 12px;
+  border: 1px solid var(--line-e2e8f0);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text-dark);
+  /* 16px: below that, iOS Safari zooms the page on focus. */
+  font-size: 16px;
+}
+
+.atc-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.atc-submit { align-self: flex-start; text-align: center; text-decoration: none; }
+
+.atc-done-title {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-dark);
+}
+
+@media (max-width: 480px) {
+  .atc-submit { align-self: stretch; }
+}
