@@ -28,7 +28,7 @@ export const TRACKS = {
         // Display name of the track's question bank, shown on the launcher.
         // Names all three 2026H2 collections, same convention as nursing's
         // bank label below — proper names, identical in both languages.
-        bank: { ar: 'تجميعات أكتوبر وسبتمبر والتجميعات الشهرية وGameBoy وConfirmed وMidgard', en: 'October, September & Monthly Recalls, GameBoy, Confirmed & Midgard questions' },
+        bank: { ar: 'تجميعات نوفمبر وأكتوبر وسبتمبر والتجميعات الشهرية وGameBoy وConfirmed وMidgard', en: 'November, October, September & Monthly Recalls, GameBoy, Confirmed & Midgard questions' },
         icon: 'stethoscope',
         specialties: [
             { key: 'medicine', label: { ar: 'الباطنة', en: 'Internal Medicine' }, icon: 'stethoscope' },
@@ -45,7 +45,7 @@ export const TRACKS = {
             ar: 'مسار التمريض: الأساسيات، الباطني والجراحي، الأمومة، الأطفال، الصحة النفسية والأدوية.',
             en: 'The nursing track: fundamentals, med-surg, maternal, paediatric, mental health and pharmacology.',
         },
-        bank: { ar: 'الأسئلة المؤكدة والأكثر تكراراً', en: 'Confirmed & Most Repeated questions' },
+        bank: { ar: 'الأسئلة المؤكدة والأكثر تكراراً وتجميعات التمريض', en: 'Confirmed, Most Repeated & Nursing Recalls' },
         icon: 'shield-check',
         specialties: [
             { key: 'nursing fundamentals', label: { ar: 'أساسيات التمريض', en: 'Nursing Fundamentals' }, icon: 'shield-check' },
@@ -64,7 +64,7 @@ export const TRACKS = {
             ar: 'مسار طب الأسنان: علاج الجذور والترميمية واللثة والتعويضات والتقويم والأطفال والجراحة وطب الفم.',
             en: 'The dental track: endodontics, restorative, periodontics, prosthodontics, orthodontics, paediatric, surgery and oral medicine.',
         },
-        bank: { ar: 'البنك المشروح وتجميعات 2026 و2024', en: 'Explained bank, 2026 & 2024 recalls' },
+        bank: { ar: 'البنك المشروح وتجميعات 2026 و2025 و2024', en: 'Explained bank, 2026, 2025 & 2024 recalls' },
         icon: 'award',
         specialties: [
             { key: 'endodontics', label: { ar: 'علاج الجذور', en: 'Endodontics' }, icon: 'target' },

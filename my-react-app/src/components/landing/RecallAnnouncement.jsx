@@ -7,9 +7,9 @@ import './RecallAnnouncement.css';
 
 // News, not a feature of the page: hides itself after this date (Riyadh time).
 // Removal steps are at the top of i18n/copy/recallAnnouncement.js.
-const SHOW_UNTIL = new Date('2026-11-20T00:00:00+03:00');
+const SHOW_UNTIL = new Date('2026-12-10T00:00:00+03:00');
 
-/** "October 2026 recalls are here": a small card under the hero (same pattern as ThemeAnnouncement). */
+/** "November 2026 recall sets are here": a small card under the hero (same pattern as ThemeAnnouncement). */
 const RecallAnnouncement = () => {
     const t = useCopy(recallAnnouncementCopy);
     if (Date.now() >= SHOW_UNTIL.getTime()) return null;
@@ -37,7 +37,7 @@ const RecallAnnouncement = () => {
                 <Link
                     to="/quizs"
                     className="btn primary ra-btn"
-                    onClick={() => safeTrack('landing_recall_announcement_click', { set: 'october_2026' })}
+                    onClick={() => safeTrack('landing_recall_announcement_click', { set: 'november_2026' })}
                 >
                     <Icon name="stethoscope" size={17} />
                     <span>{t.cta}</span>

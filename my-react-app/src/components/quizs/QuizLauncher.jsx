@@ -24,7 +24,7 @@ const WHOLE_BANK = WHOLE_BANK_SOURCE;
 const COUNT_PRESETS = [10, 25, 50];
 
 // The collection promoted at the top of the source list while it is the freshest.
-const FEATURED_SOURCE = 'MedicalOctoberRecall';
+const FEATURED_SOURCE = 'MedicalNovemberRecall';
 const MAX_QUESTIONS = 500;
 
 /**
