@@ -8,7 +8,7 @@ import guidesCopy from '@/i18n/copy/guides.js';
 import legalCopy from '@/i18n/copy/legal.js';
 import { visibleFaqItems } from '@/lib/playFaq';
 import { appRouteForWebPath } from '@/lib/webPaths';
-import { colors, radius } from '@/theme';
+import { useColors, radius } from '@/theme';
 import { Button, Card, Chevron, Icon, Row, Screen, ScreenHeader, T } from '@/ui';
 import { DocSections } from './RichDoc';
 import { GUIDE_KEYS } from './guideKeys';
@@ -22,6 +22,7 @@ function useBack() {
 
 /** Terms, privacy, refund policy and about: one renderer over the website's structured legal copy. */
 export function LegalScreen({ doc }: { doc: 'terms' | 'privacy' | 'refund' | 'about' }) {
+  const colors = useColors();
   const data = useCopy(legalCopy)[doc];
   const back = useBack();
   return (
@@ -42,6 +43,7 @@ export function LegalScreen({ doc }: { doc: 'terms' | 'privacy' | 'refund' | 'ab
 
 /** Frequently asked questions: an accordion over the website's FAQ copy. */
 export function FaqScreen() {
+  const colors = useColors();
   const t = useCopy(faqCopy);
   const back = useBack();
   const [open, setOpen] = useState<number | null>(null);
@@ -63,7 +65,7 @@ export function FaqScreen() {
                 <T weight="bold" size={15} style={{ flex: 1 }}>
                   {faq.question}
                 </T>
-                <Icon name={isOpen ? 'chevron-up' : 'chevron-down'} size={18} color={colors.primary} />
+                <Icon name={isOpen ? 'chevron-up' : 'chevron-down'} size={18} color={colors.primaryInk} />
               </Row>
             </TouchableOpacity>
             {isOpen ? (
@@ -97,6 +99,7 @@ export function FaqScreen() {
 type CardEntry = { path: string; title: string; excerpt?: string };
 
 function CardLink({ card, onPress }: { card: CardEntry; onPress: () => void }) {
+  const colors = useColors();
   return (
     <TouchableOpacity activeOpacity={0.85} onPress={onPress} accessibilityRole="link">
       <Row gap={12} style={{ backgroundColor: colors.surface, borderRadius: radius.lg, borderWidth: 1.5, borderColor: colors.border, padding: 14 }}>
@@ -123,12 +126,13 @@ const open = (path: string) => {
 
 /** Study guides: the hub of articles. */
 export function GuidesHubScreen() {
+  const colors = useColors();
   const t = useCopy(guidesCopy).hub;
   const back = useBack();
   return (
     <Screen header={<ScreenHeader title={t.title} onBack={back} />} contentStyle={{ gap: 14 }}>
       <View style={{ gap: 6 }}>
-        <T weight="bold" size={12} color={colors.primary}>
+        <T weight="bold" size={12} color={colors.primaryInk}>
           {t.kicker}
         </T>
         <T weight="extrabold" size={24} style={{ lineHeight: 36 }}>
@@ -145,7 +149,7 @@ export function GuidesHubScreen() {
         </T>
         {(t.notes as string[]).map((note) => (
           <Row key={note} gap={8} align="flex-start">
-            <T color={colors.primary} weight="bold">
+            <T color={colors.primaryInk} weight="bold">
               •
             </T>
             <T size={13} color={colors.textMedium} style={{ flex: 1 }}>
@@ -162,11 +166,12 @@ export function GuidesHubScreen() {
 type Article = { kicker?: string; title: string; intro?: string; sections: any[] };
 
 function ArticleView({ article, children }: { article: Article; children?: React.ReactNode }) {
+  const colors = useColors();
   return (
     <>
       <View style={{ gap: 6 }}>
         {article.kicker ? (
-          <T weight="bold" size={12} color={colors.primary}>
+          <T weight="bold" size={12} color={colors.primaryInk}>
             {article.kicker}
           </T>
         ) : null}
@@ -205,10 +210,11 @@ export function GuideScreen() {
 }
 
 function NotFoundBlock() {
+  const colors = useColors();
   const common = useCommon();
   return (
     <Card style={{ gap: 10, alignItems: 'center' }}>
-      <Icon name="help-circle" size={34} color={colors.primary} />
+      <Icon name="help-circle" size={34} color={colors.primaryInk} />
       <T weight="extrabold" size={18} align="center">
         {common.errors.notFoundTitle}
       </T>

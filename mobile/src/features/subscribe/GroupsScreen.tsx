@@ -6,7 +6,7 @@ import { formatDate, useApp, useCopy, useLang } from '@/i18n';
 import groupsCopy from '@/i18n/copy/groups.js';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { colors, radius } from '@/theme';
+import { useColors, radius } from '@/theme';
 import { Button, Card, Icon, Notice, Row, Screen, ScreenHeader, Spinner, T, Link } from '@/ui';
 import { savingsFor, type GroupPlan } from './checkout';
 
@@ -22,6 +22,7 @@ type Group = { id: number; seats: number; months: number; expiresAt: string; exp
  * only meets the login wall when they choose to buy.
  */
 export default function GroupsScreen() {
+  const colors = useColors();
   const { user, token } = useAuth();
   const t = useCopy(groupsCopy);
   const app = useApp();
@@ -83,7 +84,7 @@ export default function GroupsScreen() {
       {!(state === 'ready' && groups.length > 0) ? (
         <View style={{ gap: 6 }}>
           <View style={{ alignSelf: 'flex-start', backgroundColor: colors.infoBg, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3 }}>
-            <T weight="bold" size={12} color={colors.primary}>
+            <T weight="bold" size={12} color={colors.primaryInk}>
               {t.pill}
             </T>
           </View>
@@ -117,7 +118,7 @@ export default function GroupsScreen() {
                         {(plan.compareAtHalalas || 0) / 100}
                       </T>
                     ) : null}
-                    <T weight="extrabold" size={28} color={colors.primary}>
+                    <T weight="extrabold" size={28} color={colors.primaryInk}>
                       {t.priceWithCurrency(plan.priceHalalas / 100)}
                     </T>
                   </Row>
@@ -125,7 +126,7 @@ export default function GroupsScreen() {
                     {t.monthsLabel(plan.months)} · {t.perSeat(Math.round(plan.priceHalalas / seats / 100))}
                   </T>
                   {saving ? (
-                    <T size={13} weight="semibold" color={colors.success}>
+                    <T size={13} weight="semibold" color={colors.successInk}>
                       {t.compare(t.priceWithCurrency(saving.perSeat), t.priceWithCurrency(saving.solo), saving.percent)}
                     </T>
                   ) : null}
@@ -146,7 +147,7 @@ export default function GroupsScreen() {
                         padding: 10,
                       }}
                     >
-                      <Icon name={n === 1 ? 'user' : 'link'} size={15} color={n === 1 ? colors.primary : colors.textMedium} />
+                      <Icon name={n === 1 ? 'user' : 'link'} size={15} color={n === 1 ? colors.primaryInk : colors.textMedium} />
                       <T size={13} style={{ flex: 1 }}>
                         {n === 1 ? t.seatYouPreview : t.seatLinkPreview(n)}
                       </T>
@@ -186,10 +187,10 @@ export default function GroupsScreen() {
                 </T>
                 {group.expired ? (
                   <Notice kind="warning">
-                    <T weight="bold" size={14} color={colors.warning}>
+                    <T weight="bold" size={14} color={colors.warningInk}>
                       {t.expiredTitle}
                     </T>
-                    <T size={13} color={colors.warning}>
+                    <T size={13} color={colors.warningInk}>
                       {t.expiredBody}
                     </T>
                   </Notice>
@@ -203,17 +204,17 @@ export default function GroupsScreen() {
                   <Card key={seat.seatIndex} pad={12} style={{ gap: 8, borderColor: seat.isYou ? colors.primary : colors.border }}>
                     <Row justify="space-between" gap={8}>
                       <Row gap={8}>
-                        <Icon name={seat.isYou ? 'user' : seat.claimed ? 'check' : 'link'} size={15} color={seat.claimed || seat.isYou ? colors.success : colors.primary} />
+                        <Icon name={seat.isYou ? 'user' : seat.claimed ? 'check' : 'link'} size={15} color={seat.claimed || seat.isYou ? colors.successInk : colors.primaryInk} />
                         <T weight="bold" size={14}>
                           {seat.isYou ? t.seatYou : t.seatNumber(seat.seatIndex)}
                         </T>
                       </Row>
                       {seat.isYou ? (
-                        <T size={12} color={colors.success} weight="semibold">
+                        <T size={12} color={colors.successInk} weight="semibold">
                           {t.seatActive}
                         </T>
                       ) : seat.claimed ? (
-                        <T size={12} color={colors.success} weight="semibold">
+                        <T size={12} color={colors.successInk} weight="semibold">
                           {seat.claimedAt ? t.seatUsedOn(formatDate(seat.claimedAt, lang)) : t.seatActive}
                         </T>
                       ) : !seat.link ? (

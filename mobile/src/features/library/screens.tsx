@@ -6,7 +6,7 @@ import pastPapersCopy from '@/i18n/copy/pastPapers.js';
 import publicQuestionsCopy from '@/i18n/copy/publicQuestions.js';
 import successStoriesCopy from '@/i18n/copy/successStories.js';
 import { parseExplanation } from '@/lib/explanation';
-import { colors, radius } from '@/theme';
+import { useColors, radius } from '@/theme';
 import { Button, Card, Chevron, Icon, Row, Screen, ScreenHeader, Span, T } from '@/ui';
 import { SiteFooter } from '@/features/common/SiteFooter';
 import { QuestionImages } from '@/features/quiz/QuestionImages';
@@ -34,6 +34,7 @@ function useBack(fallback: string) {
 }
 
 function SignupCta({ t }: { t: any }) {
+  const colors = useColors();
   return (
     <Card pad={18} style={{ gap: 8, alignItems: 'center', backgroundColor: colors.infoBg, borderColor: colors.primary }}>
       <T weight="extrabold" size={17} align="center">
@@ -51,6 +52,7 @@ function SignupCta({ t }: { t: any }) {
 }
 
 function Faq({ title, items }: { title: string; items: { q: string; a: string }[] }) {
+  const colors = useColors();
   if (!items?.length) return null;
   return (
     <View style={{ gap: 10 }}>
@@ -72,9 +74,10 @@ function Faq({ title, items }: { title: string; items: { q: string; a: string }[
 }
 
 function NotFound({ t, backTo }: { t: any; backTo: string }) {
+  const colors = useColors();
   return (
     <Card style={{ gap: 10, alignItems: 'center' }}>
-      <Icon name="help-circle" size={34} color={colors.primary} />
+      <Icon name="help-circle" size={34} color={colors.primaryInk} />
       <T weight="extrabold" size={18} align="center">
         {t.notFound.title}
       </T>
@@ -87,6 +90,7 @@ function NotFound({ t, backTo }: { t: any; backTo: string }) {
 }
 
 function LinkRow({ label, sub, onPress }: { label: string; sub?: string; onPress: () => void }) {
+  const colors = useColors();
   return (
     <TouchableOpacity activeOpacity={0.85} onPress={onPress} accessibilityRole="link">
       <Row gap={12} style={{ backgroundColor: colors.surface, borderRadius: radius.lg, borderWidth: 1.5, borderColor: colors.border, padding: 14 }}>
@@ -108,6 +112,7 @@ function LinkRow({ label, sub, onPress }: { label: string; sub?: string; onPress
 
 /** /questions: the free sample library, one card per specialty. */
 export function QuestionsHubScreen() {
+  const colors = useColors();
   const t = useCopy(publicQuestionsCopy);
   const { lang } = useLang();
   const back = useBack('/');
@@ -115,7 +120,7 @@ export function QuestionsHubScreen() {
   return (
     <Screen header={<ScreenHeader title={t.breadcrumbRoot} onBack={back} />} contentStyle={{ gap: 18 }}>
       <View style={{ gap: 6 }}>
-        <T weight="bold" size={12} color={colors.primary}>
+        <T weight="bold" size={12} color={colors.primaryInk}>
           {t.hub.kicker}
         </T>
         <T weight="extrabold" size={24} style={{ lineHeight: 36 }}>
@@ -147,6 +152,7 @@ export function QuestionsHubScreen() {
 
 /** /questions/:specialty: every published question in one specialty. */
 export function QuestionsSpecialtyScreen() {
+  const colors = useColors();
   const { specialty } = useLocalSearchParams<{ specialty: string }>();
   const t = useCopy(publicQuestionsCopy);
   const { lang } = useLang();
@@ -166,7 +172,7 @@ export function QuestionsSpecialtyScreen() {
   return (
     <Screen header={<ScreenHeader title={label} onBack={back} />} contentStyle={{ gap: 16 }}>
       <View style={{ gap: 6 }}>
-        <T ltr weight="bold" size={12} color={colors.primary}>
+        <T ltr weight="bold" size={12} color={colors.primaryInk}>
           {group.labelEn}
         </T>
         <T weight="extrabold" size={22} style={{ lineHeight: 34 }}>
@@ -186,7 +192,7 @@ export function QuestionsSpecialtyScreen() {
             accessibilityRole="link"
           >
             <Row ltr gap={10} style={{ backgroundColor: colors.surface, borderRadius: radius.md, borderWidth: 1.5, borderColor: colors.border, padding: 12 }}>
-              <T ltr size={12} weight="bold" color={colors.primary}>
+              <T ltr size={12} weight="bold" color={colors.primaryInk}>
                 {i + 1}
               </T>
               <T ltr size={14} style={{ flex: 1 }}>
@@ -210,7 +216,7 @@ export function QuestionsSpecialtyScreen() {
                 accessibilityRole="link"
                 style={{ paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.surface }}
               >
-                <T size={13} color={colors.primary} weight="semibold">
+                <T size={13} color={colors.primaryInk} weight="semibold">
                   {lang === 'en' ? s.labelEn : s.labelAr}
                 </T>
               </TouchableOpacity>
@@ -224,6 +230,7 @@ export function QuestionsSpecialtyScreen() {
 
 /** The explanation, as the website renders it (bold labels and bullets, nothing else). */
 function ExplanationText({ text }: { text: string }) {
+  const colors = useColors();
   const blocks = useMemo(() => parseExplanation(text), [text]);
   return (
     <View style={{ gap: 6 }}>
@@ -232,7 +239,7 @@ function ExplanationText({ text }: { text: string }) {
           <View key={i} style={{ gap: 4 }}>
             {block.items.map((item, j) => (
               <Row key={j} ltr gap={8} align="flex-start">
-                <T ltr color={colors.primary} weight="bold">
+                <T ltr color={colors.primaryInk} weight="bold">
                   •
                 </T>
                 <T ltr size={14} style={{ flex: 1 }} lh={1.55}>
@@ -266,6 +273,7 @@ function ExplanationText({ text }: { text: string }) {
  * cloaking). Picking an option adds your own answer on top: self-testing, not a gate.
  */
 export function QuestionDetailScreen() {
+  const colors = useColors();
   const { slug } = useLocalSearchParams<{ specialty: string; slug: string }>();
   const t = useCopy(publicQuestionsCopy);
   const { lang } = useLang();
@@ -287,7 +295,7 @@ export function QuestionDetailScreen() {
   return (
     <Screen header={<ScreenHeader title={specialtyLabel} onBack={back} />} contentStyle={{ gap: 16 }}>
       <View style={{ gap: 10 }}>
-        <T ltr weight="bold" size={12} color={colors.primary}>
+        <T ltr weight="bold" size={12} color={colors.primaryInk}>
           {question.specialtyLabelEn}
         </T>
         <T ltr weight="extrabold" size={19} style={{ lineHeight: 28 }}>
@@ -324,7 +332,7 @@ export function QuestionDetailScreen() {
                 }}
               >
                 <View style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: colors.surfaceTint, alignItems: 'center', justifyContent: 'center' }}>
-                  <T ltr size={12} weight="bold" color={colors.primary}>
+                  <T ltr size={12} weight="bold" color={colors.primaryInk}>
                     {LETTERS[i]}
                   </T>
                 </View>
@@ -333,12 +341,12 @@ export function QuestionDetailScreen() {
                     {option}
                   </T>
                   {isCorrect ? (
-                    <T size={11} weight="bold" color={colors.success}>
+                    <T size={11} weight="bold" color={colors.successInk}>
                       {t.question.answerLabel}
                     </T>
                   ) : null}
                   {wrong ? (
-                    <T size={11} weight="bold" color={colors.error}>
+                    <T size={11} weight="bold" color={colors.errorInk}>
                       {t.question.yourAnswer}
                     </T>
                   ) : null}
@@ -383,6 +391,7 @@ export function QuestionDetailScreen() {
 
 /** /past-papers: what each collection in the bank is, and how big it is. */
 export function PastPapersHubScreen() {
+  const colors = useColors();
   const t = useCopy(pastPapersCopy);
   const { lang } = useLang();
   const back = useBack('/');
@@ -391,7 +400,7 @@ export function PastPapersHubScreen() {
   return (
     <Screen header={<ScreenHeader title={t.breadcrumbRoot} onBack={back} />} contentStyle={{ gap: 18 }}>
       <View style={{ gap: 6 }}>
-        <T weight="bold" size={12} color={colors.primary}>
+        <T weight="bold" size={12} color={colors.primaryInk}>
           {t.hub.kicker}
         </T>
         <T weight="extrabold" size={24} style={{ lineHeight: 36 }}>
@@ -424,12 +433,12 @@ export function PastPapersHubScreen() {
       <Faq title={t.faqTitle} items={t.faq(collections.bankTotal, collections.collectionCount)} />
       <Row wrap gap={14}>
         <TouchableOpacity onPress={() => router.push('/questions')}>
-          <T color={colors.primary} weight="semibold" size={14}>
+          <T color={colors.primaryInk} weight="semibold" size={14}>
             {t.links.allQuestions}
           </T>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => router.push('/guides')}>
-          <T color={colors.primary} weight="semibold" size={14}>
+          <T color={colors.primaryInk} weight="semibold" size={14}>
             {t.links.guides}
           </T>
         </TouchableOpacity>
@@ -441,6 +450,7 @@ export function PastPapersHubScreen() {
 
 /** /past-papers/:slug: one collection, what it holds, and open samples from it. */
 export function PastPaperCollectionScreen() {
+  const colors = useColors();
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const t = useCopy(pastPapersCopy);
   const { lang } = useLang();
@@ -462,7 +472,7 @@ export function PastPaperCollectionScreen() {
   return (
     <Screen header={<ScreenHeader title={name} onBack={back} />} contentStyle={{ gap: 16 }}>
       <View style={{ gap: 6 }}>
-        <T ltr weight="bold" size={12} color={colors.primary}>
+        <T ltr weight="bold" size={12} color={colors.primaryInk}>
           {collection.labelEn}
         </T>
         <T weight="extrabold" size={22} style={{ lineHeight: 34 }}>
@@ -527,7 +537,7 @@ export function PastPaperCollectionScreen() {
                   accessibilityRole="link"
                   style={{ paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.surface }}
                 >
-                  <T size={13} color={colors.primary} weight="semibold">
+                  <T size={13} color={colors.primaryInk} weight="semibold">
                     {isEn ? c.labelEn : c.labelAr}
                   </T>
                 </TouchableOpacity>
@@ -546,13 +556,14 @@ export function PastPaperCollectionScreen() {
  * is no state in which it shows an example or a placeholder quote.
  */
 export function SuccessStoriesScreen() {
+  const colors = useColors();
   const t = useCopy(successStoriesCopy);
   const back = useBack('/');
   const stories = storiesFrom(storiesData as any) as any[];
   return (
     <Screen header={<ScreenHeader title={t.title} onBack={back} />} contentStyle={{ gap: 16 }}>
       <View style={{ gap: 6 }}>
-        <T weight="bold" size={12} color={colors.primary}>
+        <T weight="bold" size={12} color={colors.primaryInk}>
           {t.kicker}
         </T>
         <T weight="extrabold" size={24} style={{ lineHeight: 36 }}>
@@ -572,7 +583,7 @@ export function SuccessStoriesScreen() {
               {s.name}
             </T>
             {s.examResult ? (
-              <T size={12} color={colors.success}>
+              <T size={12} color={colors.successInk}>
                 {s.examResult}
               </T>
             ) : null}

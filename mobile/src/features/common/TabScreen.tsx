@@ -1,6 +1,6 @@
 import React from 'react';
 import { RefreshControl, View } from 'react-native';
-import { colors } from '@/theme';
+import { useColors } from '@/theme';
 import { Screen } from '@/ui';
 import { AppBar, FreeAllowanceBanner } from './chrome';
 
@@ -23,6 +23,7 @@ export function TabScreen({
   contentStyle?: React.ComponentProps<typeof Screen>['contentStyle'];
   width?: React.ComponentProps<typeof Screen>['width'];
 }) {
+  const colors = useColors();
   return (
     <Screen
       header={

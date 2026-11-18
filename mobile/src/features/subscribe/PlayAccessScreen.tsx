@@ -6,7 +6,7 @@ import { SITE_URL, WEBSITE_SUBSCRIBE_BUTTON } from '@/config';
 import { useApp } from '@/i18n';
 import { useAuth } from '@/lib/auth';
 import { accountAccess } from '@/lib/subscriptionState';
-import { colors } from '@/theme';
+import { useColors } from '@/theme';
 import { Button, Card, Icon, Screen, ScreenHeader, T } from '@/ui';
 
 /**
@@ -18,6 +18,7 @@ import { Button, Card, Icon, Screen, ScreenHeader, T } from '@/ui';
  * site unlocks the app at once.
  */
 export default function PlayAccessScreen() {
+  const colors = useColors();
   const app = useApp().playAccess;
   const { user, refreshSubscription } = useAuth();
   const access = accountAccess(user);
@@ -40,7 +41,7 @@ export default function PlayAccessScreen() {
   return (
     <Screen width="form" header={<ScreenHeader title={app.title} />}>
       <Card pad={22} style={{ alignItems: 'center', gap: 12 }}>
-        <Icon name="user" size={38} color={colors.primary} />
+        <Icon name="user" size={38} color={colors.primaryInk} />
         <T color={colors.textMedium} align="center">
           {access === 'free' ? app.status.free(Number(user?.free_questions_remaining)) : app.status[access]}
         </T>

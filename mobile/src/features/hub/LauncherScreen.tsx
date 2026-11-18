@@ -10,7 +10,7 @@ import { useLayout } from '@/lib/layout';
 import { EXAM, STUDY, useQuizMode } from '@/lib/quizMode';
 import { examLabel, specialtyKeys, trackLabel, userTrack } from '@/lib/tracks';
 import { useLoad } from '@/lib/useLoad';
-import { colors, radius } from '@/theme';
+import { useColors, radius } from '@/theme';
 import { Button, Card, Chip, Chevron, Dialog, Icon, Input, ProgressBar, Row, Screen, ScreenHeader, Spinner, T } from '@/ui';
 import { WHOLE_BANK } from './HubScreen';
 
@@ -34,6 +34,7 @@ const pctOf = (s: SourceInfo) => Math.min(100, Math.max(0, s.completedPct || 0))
  * with its own question-count lookup rather than another setting on this one.
  */
 export default function LauncherScreen() {
+  const colors = useColors();
   const copy = useCopy(quizCopy);
   const t = copy.launcher;
   const { lang } = useLang();
@@ -210,7 +211,7 @@ export default function LauncherScreen() {
 
   const sectionTitle = (icon: string, label: string) => (
     <Row gap={8}>
-      <Icon name={icon} size={16} color={colors.primary} />
+      <Icon name={icon} size={16} color={colors.primaryInk} />
       <T weight="extrabold" size={15}>
         {label}
       </T>
@@ -419,7 +420,7 @@ export default function LauncherScreen() {
         <TouchableOpacity activeOpacity={0.85} onPress={() => setFinalStep('type')} accessibilityRole="button">
           <Row gap={12} style={{ backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.border, borderRadius: radius.lg, padding: 14 }}>
             <View style={{ width: 40, height: 40, borderRadius: radius.md, backgroundColor: colors.warningBg, alignItems: 'center', justifyContent: 'center' }}>
-              <Icon name="target" size={20} color={colors.warning} />
+              <Icon name="target" size={20} color={colors.warningInk} />
             </View>
             <View style={{ flex: 1 }}>
               <T weight="bold" size={15}>
@@ -465,7 +466,7 @@ export default function LauncherScreen() {
       {/* Mock exam: pick the specialty ... */}
       <Dialog visible={finalStep === 'type'} onClose={() => setFinalStep('closed')}>
         <Row gap={8}>
-          <Icon name="target" size={19} color={colors.primary} />
+          <Icon name="target" size={19} color={colors.primaryInk} />
           <T weight="bold" size={17} style={{ flex: 1 }}>
             {t.finalTypeTitle}
           </T>
@@ -480,7 +481,7 @@ export default function LauncherScreen() {
       {/* ... then the time limit. */}
       <Dialog visible={finalStep === 'time'} onClose={() => setFinalStep('closed')}>
         <Row gap={8}>
-          <Icon name="target" size={19} color={colors.primary} />
+          <Icon name="target" size={19} color={colors.primaryInk} />
           <T weight="bold" size={17} style={{ flex: 1 }}>
             {t.finalTimeTitle}
           </T>
@@ -490,7 +491,7 @@ export default function LauncherScreen() {
         </T>
         {!finalLoading && finalCount < 1 ? (
           <>
-            <T size={13} color={colors.warning}>
+            <T size={13} color={colors.warningInk}>
               {t.finalNotEnough}
             </T>
             <Button
@@ -542,11 +543,11 @@ export default function LauncherScreen() {
       {/* Category completed. */}
       <Dialog visible={!!congrats} onClose={() => setCongrats(null)}>
         <View style={{ alignItems: 'center', gap: 8 }}>
-          <Icon name="sparkles" size={34} color={colors.warning} />
+          <Icon name="sparkles" size={34} color={colors.warningInk} />
           <T weight="extrabold" size={22}>
             {copy.congrats.title}
           </T>
-          <Icon name="trophy" size={30} color={colors.warning} />
+          <Icon name="trophy" size={30} color={colors.warningInk} />
           {congrats ? (
             <>
               <T weight="bold" size={16} align="center">
@@ -560,12 +561,12 @@ export default function LauncherScreen() {
               </T>
               <Row gap={8} wrap justify="center">
                 <View style={{ backgroundColor: colors.infoBg, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 4 }}>
-                  <T size={12} weight="bold" color={colors.primary}>
+                  <T size={12} weight="bold" color={colors.primaryInk}>
                     {getTypeLabel(congrats.type, lang)}
                   </T>
                 </View>
                 <View style={{ backgroundColor: colors.infoBg, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 4 }}>
-                  <T size={12} weight="bold" color={colors.primary}>
+                  <T size={12} weight="bold" color={colors.primaryInk}>
                     {getSourceLabel(congrats.source, lang)}
                   </T>
                 </View>

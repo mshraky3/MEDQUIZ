@@ -7,7 +7,7 @@ import supportCopy from '@/i18n/copy/support.js';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { userTrack } from '@/lib/tracks';
-import { colors, radius } from '@/theme';
+import { useColors, radius } from '@/theme';
 import { Button, Card, Chevron, Chip, Icon, Input, Notice, Row, Screen, ScreenHeader, T } from '@/ui';
 
 const SUBJECTS = ['subscription', 'report issue', 'other'] as const;
@@ -19,6 +19,7 @@ const SUBJECTS = ['subscription', 'report issue', 'other'] as const;
  * the message can be sent from the phone's mail app instead.
  */
 export default function ContactScreen() {
+  const colors = useColors();
   const t = useCopy(supportCopy).contact;
   const { user } = useAuth();
   const [form, setForm] = useState<{ name: string; mobile: string; subject: (typeof SUBJECTS)[number]; message: string }>({
@@ -75,7 +76,7 @@ export default function ContactScreen() {
     return (
       <Screen width="form" header={header}>
         <Card pad={22} style={{ alignItems: 'center', gap: 12 }}>
-          <Icon name="check-circle" size={44} color={colors.success} />
+          <Icon name="check-circle" size={44} color={colors.successInk} />
           <T weight="extrabold" size={20} align="center">
             {t.successTitle}
           </T>
@@ -87,8 +88,8 @@ export default function ContactScreen() {
           </T>
           <TouchableOpacity onPress={() => Linking.openURL(`mailto:${SUPPORT_EMAIL}`).catch(() => {})} accessibilityRole="link">
             <Row gap={6}>
-              <Icon name="mail" size={15} color={colors.primary} />
-              <T weight="semibold" color={colors.primary} ltr>
+              <Icon name="mail" size={15} color={colors.primaryInk} />
+              <T weight="semibold" color={colors.primaryInk} ltr>
                 {SUPPORT_EMAIL}
               </T>
             </Row>
@@ -125,13 +126,13 @@ export default function ContactScreen() {
           <TouchableOpacity key={info.title} onPress={() => Linking.openURL(info.url).catch(() => {})} accessibilityRole="link">
             <Row gap={12}>
               <View style={{ width: 40, height: 40, borderRadius: radius.md, backgroundColor: colors.surfaceTint, alignItems: 'center', justifyContent: 'center' }}>
-                <Icon name={info.icon} size={20} color={colors.primary} />
+                <Icon name={info.icon} size={20} color={colors.primaryInk} />
               </View>
               <View style={{ flex: 1 }}>
                 <T weight="bold" size={14}>
                   {info.title}
                 </T>
-                <T size={13} color={colors.primary} ltr>
+                <T size={13} color={colors.primaryInk} ltr>
                   {info.value}
                 </T>
               </View>
@@ -142,7 +143,7 @@ export default function ContactScreen() {
 
       <TouchableOpacity activeOpacity={0.85} onPress={() => router.push('/suggestions')} accessibilityRole="button">
         <Row gap={12} style={{ backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.border, borderRadius: radius.lg, padding: 14 }}>
-          <Icon name="lightbulb" size={22} color={colors.warning} />
+          <Icon name="lightbulb" size={22} color={colors.warningInk} />
           <View style={{ flex: 1 }}>
             <T weight="bold">{t.suggestionsTitle}</T>
             <T size={12} color={colors.textLight}>

@@ -3,7 +3,7 @@ import { ActivityIndicator, Image, Modal, Pressable, ScrollView, TouchableOpacit
 import { API_URL } from '@/config';
 import { useLang } from '@/i18n';
 import { altFor, IMAGE_UI, noteFor, pictureHeight, QuestionImage, resolveImageUrl, usableImages } from '@/lib/questionImages';
-import { colors, radius } from '@/theme';
+import { useColors, radius } from '@/theme';
 import { Icon, T } from '@/ui';
 
 /**
@@ -19,6 +19,7 @@ function lightboxWidth(screenWidth: number, height: number, natural: { width: nu
 }
 
 function Picture({ img }: { img: QuestionImage }) {
+  const colors = useColors();
   const { lang } = useLang();
   const ui = IMAGE_UI[lang === 'ar' ? 'ar' : 'en'];
   const [state, setState] = useState<'loading' | 'ready' | 'failed'>('loading');
@@ -63,7 +64,7 @@ function Picture({ img }: { img: QuestionImage }) {
           accessibilityRole="button"
           hitSlop={8}
         >
-          <T size={13} weight="bold" color={colors.primary}>
+          <T size={13} weight="bold" color={colors.primaryInk}>
             {ui.retry}
           </T>
         </TouchableOpacity>
@@ -96,7 +97,7 @@ function Picture({ img }: { img: QuestionImage }) {
         />
         {state === 'loading' ? (
           <View style={{ position: 'absolute', top: 0, bottom: 0, start: 0, end: 0, alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: colors.surface2 }}>
-            <ActivityIndicator color={colors.primary} />
+            <ActivityIndicator color={colors.primaryInk} />
             <T size={12} color={colors.textLight}>
               {ui.loading}
             </T>
@@ -136,6 +137,7 @@ function Picture({ img }: { img: QuestionImage }) {
 }
 
 function RebuiltTable({ table }: { table: NonNullable<QuestionImage['table']> }) {
+  const colors = useColors();
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator style={{ borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, backgroundColor: colors.surface }}>
       <View>
@@ -165,6 +167,7 @@ function RebuiltTable({ table }: { table: NonNullable<QuestionImage['table']> })
 }
 
 export function QuestionImages({ images }: { images: unknown }) {
+  const colors = useColors();
   const { lang } = useLang();
   const list = usableImages(images);
   if (list.length === 0) return null;

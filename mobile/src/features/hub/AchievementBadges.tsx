@@ -2,7 +2,7 @@ import React from 'react';
 import { View } from 'react-native';
 import { api } from '@/lib/api';
 import { useLoad } from '@/lib/useLoad';
-import { colors, radius } from '@/theme';
+import { useColors, radius } from '@/theme';
 import { Icon, Row, T } from '@/ui';
 
 type Achievement = {
@@ -30,6 +30,7 @@ export function shortAchievementText(name: string): string {
 
 /** Small badges for finished (type, source) categories. Renders nothing when there are none. */
 export function AchievementBadges({ userId }: { userId: number }) {
+  const colors = useColors();
   const { data } = useLoad<Achievement[]>(
     async (signal) => {
       const res = await api.get(`/api/user-achievements/${userId}`, { signal });
@@ -55,7 +56,7 @@ export function AchievementBadges({ userId }: { userId: number }) {
           }}
         >
           <View>
-            <Icon name={iconFor(a.achievement_type)} size={16} color={colors.warning} />
+            <Icon name={iconFor(a.achievement_type)} size={16} color={colors.warningInk} />
           </View>
           <T size={12} weight="semibold" ltr>
             {shortAchievementText(a.achievement_name)}

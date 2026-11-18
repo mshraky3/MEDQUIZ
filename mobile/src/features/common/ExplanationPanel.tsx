@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { TouchableOpacity, View } from 'react-native';
 import { useCommon } from '@/i18n';
 import { api } from '@/lib/api';
-import { colors, radius } from '@/theme';
+import { useColors, radius } from '@/theme';
 import { Icon, Row, Span, T } from '@/ui';
 
 /**
@@ -62,6 +62,7 @@ export function explainBlocks(explanation: string): ExplainBlock[] {
 }
 
 function Inline({ text, size = 14 }: { text: string; size?: number }) {
+  const colors = useColors();
   return (
     <T ltr size={size} color={colors.text} lh={1.55}>
       {inlineRuns(text).map((run, i) => (
@@ -74,6 +75,7 @@ function Inline({ text, size = 14 }: { text: string; size?: number }) {
 }
 
 export function ExplanationBody({ explanation }: { explanation: string }) {
+  const colors = useColors();
   return (
     <View style={{ gap: 6 }}>
       {explainBlocks(explanation).map((block, i) =>
@@ -81,7 +83,7 @@ export function ExplanationBody({ explanation }: { explanation: string }) {
           <View key={i} style={{ gap: 4 }}>
             {block.items.map((item, j) => (
               <Row key={j} gap={8} align="flex-start" ltr>
-                <T ltr size={14} color={colors.primary} weight="bold">
+                <T ltr size={14} color={colors.primaryInk} weight="bold">
                   •
                 </T>
                 <View style={{ flex: 1 }}>
@@ -109,6 +111,7 @@ export function ExplanationPanel({
   questionId?: number | null;
   defaultOpen?: boolean;
 }) {
+  const colors = useColors();
   const t = useCommon().explanation;
   const [open, setOpen] = useState(defaultOpen);
   // null = not fetched yet, '' = fetched and this question has none.
@@ -153,11 +156,11 @@ export function ExplanationPanel({
         style={{ padding: 12 }}
       >
         <Row gap={8}>
-          <Icon name="lightbulb" size={17} color={colors.primary} />
-          <T weight="bold" size={14} color={colors.primary} style={{ flex: 1 }}>
+          <Icon name="lightbulb" size={17} color={colors.primaryInk} />
+          <T weight="bold" size={14} color={colors.primaryInk} style={{ flex: 1 }}>
             {t.title}
           </T>
-          <Icon name={open ? 'chevron-up' : 'chevron-down'} size={17} color={colors.primary} />
+          <Icon name={open ? 'chevron-up' : 'chevron-down'} size={17} color={colors.primaryInk} />
         </Row>
       </TouchableOpacity>
       {open ? (

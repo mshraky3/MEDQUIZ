@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { useCopy } from '@/i18n';
 import quizCopy from '@/i18n/copy/quiz.js';
 import { api } from '@/lib/api';
-import { colors, radius } from '@/theme';
+import { useColors, radius } from '@/theme';
 import { Button, Dialog, Icon, Input, Row, T } from '@/ui';
 import type { Question } from './quizLogic';
 
@@ -19,6 +19,7 @@ export function ReportDialog({
   userEmail: string;
   onClose: () => void;
 }) {
+  const colors = useColors();
   const t = useCopy(quizCopy).report;
   const [reason, setReason] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -42,7 +43,7 @@ export function ReportDialog({
   return (
     <Dialog visible onClose={onClose}>
       <Row gap={8}>
-        <Icon name="flag" size={17} color={colors.error} />
+        <Icon name="flag" size={17} color={colors.errorInk} />
         <T weight="bold" size={17} style={{ flex: 1 }}>
           {t.title}
         </T>
@@ -50,7 +51,7 @@ export function ReportDialog({
       {status === 'success' ? (
         <>
           <Row gap={8} align="flex-start">
-            <Icon name="check-circle" size={18} color={colors.success} />
+            <Icon name="check-circle" size={18} color={colors.successInk} />
             <T style={{ flex: 1 }}>{t.success}</T>
           </Row>
           <Button label={t.close} onPress={onClose} />
@@ -74,7 +75,7 @@ export function ReportDialog({
             inputStyle={{ minHeight: 76, textAlignVertical: 'top' }}
           />
           {status === 'error' ? (
-            <T size={13} color={colors.error}>
+            <T size={13} color={colors.errorInk}>
               {t.error}
             </T>
           ) : null}

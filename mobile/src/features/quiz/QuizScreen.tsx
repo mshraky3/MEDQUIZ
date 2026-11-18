@@ -6,7 +6,7 @@ import quizCopy from '@/i18n/copy/quiz.js';
 import { useAuth } from '@/lib/auth';
 import { useLayout } from '@/lib/layout';
 import { getSourceLabel } from '@/lib/labels';
-import { colors } from '@/theme';
+import { useColors } from '@/theme';
 import { Button, Dialog, Icon, Row, T } from '@/ui';
 import { QuestionPalette } from './QuestionPalette';
 import { QuestionView } from './QuestionView';
@@ -29,6 +29,7 @@ const goHome = () => router.replace('/(tabs)');
  * the question view and the result. All of the logic is in useQuizSession.
  */
 export default function QuizScreen() {
+  const colors = useColors();
   const raw = useLocalSearchParams();
   const params = useMemo(
     () => parseQuizParams(raw as Record<string, string | string[] | undefined>),
@@ -152,13 +153,13 @@ export default function QuizScreen() {
 
       <Dialog visible={quiz.showUnanswered} blocking scroll={false}>
         <Row gap={8}>
-          <Icon name="alert-triangle" size={19} color={colors.warning} />
+          <Icon name="alert-triangle" size={19} color={colors.warningInk} />
           <T weight="bold" size={16} style={{ flex: 1 }}>
             {t.unansweredTitle(quiz.unansweredCount)}
           </T>
         </Row>
         <T color={colors.textMedium}>
-          {t.unansweredRedirectBefore} <T weight="extrabold" color={colors.primary} ltr>{quiz.countdown}</T>...
+          {t.unansweredRedirectBefore} <T weight="extrabold" color={colors.primaryInk} ltr>{quiz.countdown}</T>...
         </T>
       </Dialog>
 

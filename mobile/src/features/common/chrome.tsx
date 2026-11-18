@@ -4,7 +4,7 @@ import { router, useFocusEffect, usePathname } from 'expo-router';
 import { api } from '@/lib/api';
 import { isFreeTier, useAuth } from '@/lib/auth';
 import { useApp, useCommon, useLang } from '@/i18n';
-import { colors } from '@/theme';
+import { useColors } from '@/theme';
 import { Icon, Row, T } from '@/ui';
 import { LanguageToggle } from './LanguageToggle';
 import { PLAY_BUILD } from '@/config';
@@ -47,6 +47,7 @@ export function useNotificationCount() {
 }
 
 export function NotificationBell() {
+  const colors = useColors();
   const t = useCommon().notifications;
   const { isRTL } = useLang();
   const { unread } = useNotificationCount();
@@ -94,6 +95,7 @@ export function NotificationBell() {
 
 /** Brand, bell and language switch: the top bar of every tab screen. */
 export function AppBar({ title }: { title?: string }) {
+  const colors = useColors();
   return (
     <Row
       justify="space-between"
@@ -103,7 +105,7 @@ export function AppBar({ title }: { title?: string }) {
         backgroundColor: colors.surface,
       }}
     >
-      <T weight="extrabold" size={title ? 18 : 22} color={colors.primary} ltr={!title} numberOfLines={1} style={{ flexShrink: 1 }}>
+      <T weight="extrabold" size={title ? 18 : 22} color={colors.primaryInk} ltr={!title} numberOfLines={1} style={{ flexShrink: 1 }}>
         {title || 'SQB'}
       </T>
       <Row gap={8}>
@@ -123,6 +125,7 @@ const MIN_REFETCH_MS = 20_000;
  * the free lessons stay open, so there is nowhere to send anyone.
  */
 export function FreeAllowanceBanner() {
+  const colors = useColors();
   const { user, refreshSubscription } = useAuth();
   const t = useCommon();
   const app = useApp();
@@ -155,8 +158,8 @@ export function FreeAllowanceBanner() {
       }}
     >
       <Row gap={8} style={{ flex: 1 }}>
-        <Icon name={usedUp ? 'lock' : 'help-circle'} size={16} color={usedUp ? colors.warning : colors.primary} />
-        <T size={13} weight="semibold" color={usedUp ? colors.warning : colors.primary} style={{ flex: 1 }}>
+        <Icon name={usedUp ? 'lock' : 'help-circle'} size={16} color={usedUp ? colors.warningInk : colors.primaryInk} />
+        <T size={13} weight="semibold" color={usedUp ? colors.warningInk : colors.primaryInk} style={{ flex: 1 }}>
           {usedUp ? t.freeAllowance.spent : t.freeAllowance.remaining(remaining)}
         </T>
       </Row>

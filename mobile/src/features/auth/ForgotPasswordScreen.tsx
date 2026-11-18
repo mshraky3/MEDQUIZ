@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import { useCopy } from '@/i18n';
 import authCopy from '@/i18n/copy/auth.js';
 import { ApiError, api } from '@/lib/api';
-import { colors } from '@/theme';
+import { useColors } from '@/theme';
 import { Button, Input, Link, Notice, Row, T } from '@/ui';
 import { AuthShell } from './parts';
 
@@ -12,6 +12,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /** Reset a forgotten password: email -> 6-digit code -> new password. */
 export default function ForgotPasswordScreen() {
+  const colors = useColors();
   const t = useCopy(authCopy).forgot;
   const [step, setStep] = useState<'email' | 'otp' | 'password'>('email');
   const [email, setEmail] = useState('');

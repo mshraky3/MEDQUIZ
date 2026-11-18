@@ -20,7 +20,8 @@ import {
 } from '@expo-google-fonts/inter';
 import { LanguageProvider, useLang } from '@/i18n/LanguageContext';
 import { AuthProvider, useAuth } from '@/lib/auth';
-import { colors } from '@/theme';
+import * as SystemUI from 'expo-system-ui';
+import { ThemeProvider, useColors, useTheme } from '@/theme';
 import { RouteError } from '@/features/common/RouteError';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -29,13 +30,20 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 export { RouteError as ErrorBoundary };
 
 function RootNavigator({ fontsLoaded }: { fontsLoaded: boolean }) {
+  const colors = useColors();
   const { ready: authReady, user, token } = useAuth();
   const { ready: langReady, isRTL } = useLang();
-  const ready = fontsLoaded && authReady && langReady;
+  const { ready: themeReady, isDark } = useTheme();
+  const ready = fontsLoaded && authReady && langReady && themeReady;
 
   useEffect(() => {
     if (ready) SplashScreen.hideAsync().catch(() => {});
   }, [ready]);
+
+  // The window behind the screens (keyboard resize, overscroll) follows the theme too.
+  useEffect(() => {
+    SystemUI.setBackgroundColorAsync(colors.bg).catch(() => {});
+  }, [colors.bg]);
 
   if (!ready) return null;
 
@@ -43,7 +51,7 @@ function RootNavigator({ fontsLoaded }: { fontsLoaded: boolean }) {
 
   return (
     <>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <Stack
         screenOptions={{
           headerShown: false,
@@ -96,12 +104,14 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <LanguageProvider>
-        <AuthProvider>
-          {/* A font that fails to load must not leave the app on the splash. */}
-          <RootNavigator fontsLoaded={fontsLoaded || !!fontError} />
-        </AuthProvider>
-      </LanguageProvider>
+      <ThemeProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            {/* A font that fails to load must not leave the app on the splash. */}
+            <RootNavigator fontsLoaded={fontsLoaded || !!fontError} />
+          </AuthProvider>
+        </LanguageProvider>
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }

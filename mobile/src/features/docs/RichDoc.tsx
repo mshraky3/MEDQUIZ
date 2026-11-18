@@ -3,7 +3,7 @@ import { Linking, View } from 'react-native';
 import { router } from 'expo-router';
 import { appRouteForWebPath } from '@/lib/webPaths';
 import { parseInline, type InlinePart } from './docInline';
-import { colors } from '@/theme';
+import { useColors } from '@/theme';
 import { Row, Span, T } from '@/ui';
 
 /**
@@ -37,16 +37,17 @@ export function openDocLink(href: string): void {
   if (target) router.push(target);
 }
 
-function Inline({ text, size = 15, color = colors.text }: { text: string; size?: number; color?: string }) {
+function Inline({ text, size = 15, color }: { text: string; size?: number; color?: string }) {
+  const colors = useColors();
   return (
-    <T size={size} color={color} lh={1.7}>
+    <T size={size} color={color ?? colors.text} lh={1.7}>
       {parseInline(text).map((part, i) =>
         part.kind === 'bold' ? (
           <Span key={i} weight="bold" size={size} color={colors.text}>
             {part.text}
           </Span>
         ) : part.kind === 'link' ? (
-          <Span key={i} weight="semibold" size={size} color={colors.primary} onPress={() => openDocLink(part.href!)} style={{ textDecorationLine: 'underline' }}>
+          <Span key={i} weight="semibold" size={size} color={colors.primaryInk} onPress={() => openDocLink(part.href!)} style={{ textDecorationLine: 'underline' }}>
             {part.text}
           </Span>
         ) : (
@@ -60,6 +61,7 @@ function Inline({ text, size = 15, color = colors.text }: { text: string; size?:
 }
 
 export function DocBlocks({ blocks }: { blocks: DocBlock[] }) {
+  const colors = useColors();
   return (
     <View style={{ gap: 10 }}>
       {blocks.map((block, i) => {
@@ -75,7 +77,7 @@ export function DocBlocks({ blocks }: { blocks: DocBlock[] }) {
             <View key={i} style={{ gap: 6 }}>
               {block.ul.map((item, j) => (
                 <Row key={j} gap={8} align="flex-start">
-                  <T color={colors.primary} weight="bold" style={{ marginTop: 1 }}>
+                  <T color={colors.primaryInk} weight="bold" style={{ marginTop: 1 }}>
                     •
                   </T>
                   <View style={{ flex: 1 }}>

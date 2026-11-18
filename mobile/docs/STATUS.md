@@ -28,6 +28,8 @@ study plan, lessons, payments or free library). Source of truth for behaviour: t
 
 Arabic (RTL) and English (LTR) throughout; default follows the device language; exam content stays LTR.
 
+Themes (18 Nov 2026): light and dark, choice System / Light / Dark on the More tab (saved on the device, default System). Not yet judged on a phone; the lesson reading pages (WebView) and the Moyasar card form stay light. The adaptive launcher icon (`android-icon-foreground.png`, `android-icon-monochrome.png`) now carries the SQB logo instead of the Expo template; `scripts/gen-android-icons.py` regenerates it from `icon.png`, preview in `docs/android-icon-preview.png`. Both the icon and `userInterfaceStyle: automatic` are native config: they need a new build, not an OTA update.
+
 ## What was verified, and how
 
 All of this ran against a **local copy of the real backend code** (frozen database snapshot, test accounts,

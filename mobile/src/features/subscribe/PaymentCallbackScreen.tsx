@@ -6,7 +6,7 @@ import supportCopy from '@/i18n/copy/support.js';
 import { ApiError, api } from '@/lib/api';
 import { trackFunnel } from '@/lib/analytics';
 import { useAuth } from '@/lib/auth';
-import { colors } from '@/theme';
+import { useColors } from '@/theme';
 import { Button, Card, Icon, Screen, Spinner, T } from '@/ui';
 import { safeNextPath } from './checkout';
 
@@ -16,6 +16,7 @@ import { safeNextPath } from './checkout';
  * account comes from the session, never from anything in the URL.
  */
 export default function PaymentCallbackScreen() {
+  const colors = useColors();
   const t = useCopy(supportCopy).callback;
   const { updateUser, refreshSubscription } = useAuth();
   const params = useLocalSearchParams<{ id?: string; status?: string; message?: string; next?: string }>();
@@ -96,7 +97,7 @@ export default function PaymentCallbackScreen() {
             </>
           ) : state === 'success' ? (
             <>
-              <Icon name="check-circle" size={64} color={colors.success} />
+              <Icon name="check-circle" size={64} color={colors.successInk} />
               <T weight="extrabold" size={20} align="center">
                 {t.successTitle}
               </T>
@@ -109,7 +110,7 @@ export default function PaymentCallbackScreen() {
             </>
           ) : (
             <>
-              <Icon name="x-circle" size={64} color={colors.error} />
+              <Icon name="x-circle" size={64} color={colors.errorInk} />
               <T weight="extrabold" size={20} align="center">
                 {t.failedTitle}
               </T>

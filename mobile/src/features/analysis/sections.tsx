@@ -5,7 +5,7 @@ import analysisCopy from '@/i18n/copy/analysis.js';
 import { api, isAborted } from '@/lib/api';
 import { getSourceLabel, getTypeLabel } from '@/lib/labels';
 import { formatDuration } from '@/lib/stats';
-import { colors, radius } from '@/theme';
+import { useColors, radius } from '@/theme';
 import { Button, Card, Icon, Row, Spinner, T } from '@/ui';
 import { AccuracyPill, Badge2, Pager, ReviewCard } from './parts';
 import { ExplanationPanel } from '@/features/common/ExplanationPanel';
@@ -13,9 +13,10 @@ import { ExplanationPanel } from '@/features/common/ExplanationPanel';
 const PAGE_SIZE = 10;
 const tone = (pct: number) => (pct >= 75 ? 'high' : pct >= 50 ? 'mid' : 'low');
 
-const Note = ({ icon, title, body }: { icon: string; title: string; body?: string }) => (
-  <Row gap={10} align="flex-start" style={{ backgroundColor: colors.surface2, borderRadius: radius.md, padding: 12 }}>
-    <Icon name={icon} size={18} color={colors.primary} />
+const Note = ({ icon, title, body }: { icon: string; title: string; body?: string }) => {
+  const colors = useColors();
+  return (<Row gap={10} align="flex-start" style={{ backgroundColor: colors.surface2, borderRadius: radius.md, padding: 12 }}>
+    <Icon name={icon} size={18} color={colors.primaryInk} />
     <View style={{ flex: 1 }}>
       <T weight="bold" size={14}>
         {title}
@@ -26,22 +27,24 @@ const Note = ({ icon, title, body }: { icon: string; title: string; body?: strin
         </T>
       ) : null}
     </View>
-  </Row>
-);
+  </Row>);
+};
 
-const Fact = ({ label, value }: { label: string; value: string }) => (
-  <Row gap={4}>
+const Fact = ({ label, value }: { label: string; value: string }) => {
+  const colors = useColors();
+  return (<Row gap={4}>
     <T size={12} color={colors.textLight}>
       {label}
     </T>
     <T size={12} weight="bold" ltr>
       {value}
     </T>
-  </Row>
-);
+  </Row>);
+};
 
 /** The per-quiz history: pages of sessions that expand into their question reviews. */
 export function QuizHistory({ userId }: { userId: number }) {
+  const colors = useColors();
   const t = useCopy(analysisCopy).history;
   const { lang } = useLang();
   const [sessions, setSessions] = useState<any[]>([]);
@@ -103,7 +106,7 @@ export function QuizHistory({ userId }: { userId: number }) {
   if (error) {
     return (
       <View style={{ gap: 8, alignItems: 'center' }}>
-        <T color={colors.error}>{t.error}</T>
+        <T color={colors.errorInk}>{t.error}</T>
         <Button label={t.retry} variant="secondary" size="sm" full={false} onPress={() => void fetchSessions()} />
       </View>
     );
@@ -141,7 +144,7 @@ export function QuizHistory({ userId }: { userId: number }) {
                 {!d ? (
                   <Spinner size="sm" />
                 ) : d.failed ? (
-                  <T color={colors.error}>{t.error}</T>
+                  <T color={colors.errorInk}>{t.error}</T>
                 ) : d.is_old_session ? (
                   <Note icon="info" title={t.oldSession} body={t.oldSessionHint} />
                 ) : !d.question_attempts?.length ? (
@@ -184,6 +187,7 @@ export function QuizHistory({ userId }: { userId: number }) {
  * reviews the reasoning.
  */
 export function FinalExams({ userId }: { userId: number }) {
+  const colors = useColors();
   const t = useCopy(analysisCopy).finals;
   const { lang } = useLang();
   const [sessions, setSessions] = useState<any[]>([]);
@@ -244,7 +248,7 @@ export function FinalExams({ userId }: { userId: number }) {
   if (error) {
     return (
       <View style={{ gap: 8, alignItems: 'center' }}>
-        <T color={colors.error}>{t.error}</T>
+        <T color={colors.errorInk}>{t.error}</T>
         <Button label={t.retry} variant="secondary" size="sm" full={false} onPress={() => void fetchSessions()} />
       </View>
     );
@@ -286,7 +290,7 @@ export function FinalExams({ userId }: { userId: number }) {
                     <T color={colors.textLight}>{t.loadingDetails}</T>
                   </Row>
                 ) : qs.failed ? (
-                  <T color={colors.error}>{t.error}</T>
+                  <T color={colors.errorInk}>{t.error}</T>
                 ) : qs.length === 0 ? (
                   <Note icon="clipboard" title={t.noQuestions} />
                 ) : (
@@ -324,6 +328,7 @@ export function FinalExams({ userId }: { userId: number }) {
 
 /** One quiz's numbers, laid out as figures. */
 export function LastQuizSummary({ latest, onRefresh }: { latest: any; onRefresh: () => void }) {
+  const colors = useColors();
   const t = useCopy(analysisCopy).lastQuiz;
   const { lang } = useLang();
   if (!latest?.id) return <T color={colors.textLight}>{t.noPrevious}</T>;
@@ -372,6 +377,7 @@ export function LastQuizSummary({ latest, onRefresh }: { latest: any; onRefresh:
 
 /** The attempts of the latest quiz, five at a time. */
 export function AttemptsList({ attempts }: { attempts: any[] }) {
+  const colors = useColors();
   const t = useCopy(analysisCopy).attempts;
   const { lang } = useLang();
   const [showAll, setShowAll] = useState(false);

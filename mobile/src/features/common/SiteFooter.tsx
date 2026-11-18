@@ -4,13 +4,14 @@ import { router, Href } from 'expo-router';
 import { PLAY_BUILD, SUPPORT_EMAIL, TELEGRAM_CHANNEL_URL } from '@/config';
 import { useCommon } from '@/i18n';
 import { useLayout } from '@/lib/layout';
-import { colors } from '@/theme';
+import { useColors } from '@/theme';
 import { Columns, Divider, Row, T } from '@/ui';
 
 type FooterLink = { label: string; to?: Href; url?: string };
 
 /** The site footer: information and legal links, contact, disclaimer. */
 export function SiteFooter() {
+  const colors = useColors();
   const t = useCommon();
   const f = t.footer;
   const { columns } = useLayout();
@@ -60,7 +61,7 @@ export function SiteFooter() {
   return (
     <View style={{ gap: 16, paddingVertical: 8 }}>
       <Divider />
-      <T weight="extrabold" size={22} color={colors.primary} ltr>
+      <T weight="extrabold" size={22} color={colors.primaryInk} ltr>
         SQB
       </T>
       <T size={13} color={colors.textMedium}>
@@ -75,7 +76,7 @@ export function SiteFooter() {
             <Row wrap gap={14}>
               {g.links.map((l) => (
                 <TouchableOpacity key={l.label} onPress={() => open(l)} hitSlop={6} accessibilityRole="link">
-                  <T size={13} color={colors.primary} ltr={l.label === SUPPORT_EMAIL}>
+                  <T size={13} color={colors.primaryInk} ltr={l.label === SUPPORT_EMAIL}>
                     {l.label}
                   </T>
                 </TouchableOpacity>

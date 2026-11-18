@@ -8,7 +8,7 @@ import supportCopy from '@/i18n/copy/support.js';
 import { api } from '@/lib/api';
 import { priceLadder, trackFunnel } from '@/lib/analytics';
 import { useAuth } from '@/lib/auth';
-import { colors, radius } from '@/theme';
+import { useColors, radius } from '@/theme';
 import { Button, Card, Icon, Notice, Row, Screen, ScreenHeader, Spinner, T } from '@/ui';
 import { CheckoutWebView } from './CheckoutWebView';
 import {
@@ -30,6 +30,7 @@ type Status = 'loading' | 'ready' | 'blocked' | 'error' | 'unavailable';
  * the invite links a group buyer is really paying for.
  */
 export default function SubscribeScreen() {
+  const colors = useColors();
   const { user, refreshSubscription } = useAuth();
   const t = useCopy(supportCopy).subscribe;
   const app = useApp();
@@ -151,7 +152,7 @@ export default function SubscribeScreen() {
     return (
       <Screen header={header}>
         <Card style={{ gap: 12, alignItems: 'center' }}>
-          <Icon name={status === 'error' ? 'wifi-off' : 'info'} size={34} color={colors.primary} />
+          <Icon name={status === 'error' ? 'wifi-off' : 'info'} size={34} color={colors.primaryInk} />
           <T color={colors.textMedium} align="center">
             {status === 'error' ? t.loadError : t.blocked}
           </T>
@@ -180,10 +181,10 @@ export default function SubscribeScreen() {
             </T>
           </View>
           <View style={{ flex: 1 }}>
-            <T weight="bold" size={13} color={colors.primary}>
+            <T weight="bold" size={13} color={colors.primaryInk}>
               {t.newSetTitle}
             </T>
-            <T size={12} color={colors.primary}>
+            <T size={12} color={colors.primaryInk}>
               {t.newSetBody}
             </T>
           </View>
@@ -225,7 +226,7 @@ export default function SubscribeScreen() {
                 </View>
               ) : copy.badge ? (
                 <View style={{ backgroundColor: colors.successBg, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 1 }}>
-                  <T weight="bold" size={10} color={colors.success}>
+                  <T weight="bold" size={10} color={colors.successInk}>
                     {copy.badge}
                   </T>
                 </View>
@@ -239,7 +240,7 @@ export default function SubscribeScreen() {
                     {offer.was}
                   </T>
                 ) : null}
-                <T weight="extrabold" size={22} color={colors.primary} ltr>
+                <T weight="extrabold" size={22} color={colors.primaryInk} ltr>
                   {plan.priceHalalas / 100}
                 </T>
               </Row>
@@ -264,7 +265,7 @@ export default function SubscribeScreen() {
               {selectedOffer.was}
             </T>
           ) : null}
-          <T weight="extrabold" size={40} color={colors.primary} ltr style={{ lineHeight: 48 }}>
+          <T weight="extrabold" size={40} color={colors.primaryInk} ltr style={{ lineHeight: 48 }}>
             {riyals != null ? riyals : '—'}
           </T>
           <T weight="bold" size={14} color={colors.textMedium} style={{ marginBottom: 8 }}>
@@ -275,7 +276,7 @@ export default function SubscribeScreen() {
           {selected ? (t.plans[selected.id as keyof typeof t.plans] as { period: string } | undefined)?.period : ''}
         </T>
         {selectedOffer ? (
-          <T size={12} color={colors.success} weight="semibold">
+          <T size={12} color={colors.successInk} weight="semibold">
             {t.saveNote(selectedOffer.saved, selectedOffer.pct)}
           </T>
         ) : null}
@@ -335,7 +336,7 @@ export default function SubscribeScreen() {
       <View style={{ gap: 6 }}>
         {perks.map((perk) => (
           <Row key={perk} gap={8} align="flex-start">
-            <Icon name="check" size={16} color={colors.success} strokeWidth={3} />
+            <Icon name="check" size={16} color={colors.successInk} strokeWidth={3} />
             <T size={13} style={{ flex: 1 }}>
               {perk}
             </T>
@@ -353,23 +354,23 @@ export default function SubscribeScreen() {
         </Row>
         <TouchableOpacity onPress={() => (isGroup ? router.replace('/subscribe') : router.push('/groups'))} accessibilityRole="link">
           <Row gap={8}>
-            <Icon name={isGroup ? 'user' : 'users'} size={15} color={colors.primary} />
-            <T size={13} weight="semibold" color={colors.primary}>
+            <Icon name={isGroup ? 'user' : 'users'} size={15} color={colors.primaryInk} />
+            <T size={13} weight="semibold" color={colors.primaryInk}>
               {isGroup ? t.crossToIndividual : t.crossToGroup}
             </T>
           </Row>
         </TouchableOpacity>
         <T size={12} color={colors.textLight}>
           {t.policyBefore}{' '}
-          <T size={12} color={colors.primary} onPress={() => router.push('/terms')}>
+          <T size={12} color={colors.primaryInk} onPress={() => router.push('/terms')}>
             {t.terms}
           </T>
           .
         </T>
         <TouchableOpacity onPress={() => router.push('/refund-policy')} accessibilityRole="link">
           <Row gap={6}>
-            <Icon name="shield-check" size={14} color={colors.primary} />
-            <T size={12} color={colors.primary} weight="semibold">
+            <Icon name="shield-check" size={14} color={colors.primaryInk} />
+            <T size={12} color={colors.primaryInk} weight="semibold">
               {t.guaranteeLink}
             </T>
           </Row>

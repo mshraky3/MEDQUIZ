@@ -1,7 +1,7 @@
 import React from 'react';
 import { TouchableOpacity } from 'react-native';
 import { useLang } from '@/i18n';
-import { colors, radius } from '@/theme';
+import { useColors, radius } from '@/theme';
 import { Icon, Row, T } from '@/ui';
 
 /**
@@ -10,10 +10,11 @@ import { Icon, Row, T } from '@/ui';
  * while reading Arabic), the pattern people recognise fastest.
  */
 export function LanguageToggle({ compact = false, dark = false }: { compact?: boolean; dark?: boolean }) {
+  const colors = useColors();
   const { lang, setLang } = useLang();
   const next = lang === 'ar' ? 'en' : 'ar';
   const label = compact ? next.toUpperCase() : next === 'ar' ? 'العربية' : 'English';
-  const fg = dark ? colors.white : colors.primary;
+  const fg = dark ? colors.white : colors.primaryInk;
   return (
     <TouchableOpacity
       onPress={() => setLang(next)}

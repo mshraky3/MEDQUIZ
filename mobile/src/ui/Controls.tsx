@@ -12,7 +12,7 @@ import {
 import { useCopy, useLang } from '@/i18n/LanguageContext';
 import { useLayout } from '@/lib/layout';
 import authCopy from '@/i18n/copy/auth.js';
-import { colors, fontFamilies, radius } from '@/theme';
+import { useColors, fontFamilies, radius } from '@/theme';
 import { Icon } from './Icon';
 import { Row } from './Layout';
 import { T } from './Text';
@@ -49,13 +49,14 @@ export function Button({
   style,
   accessibilityLabel,
 }: ButtonProps) {
+  const colors = useColors();
   const s = BUTTON_SIZES[size];
   const { targetScale } = useLayout();
   const off = disabled || loading;
   const palette = {
     primary: { bg: colors.primary, fg: colors.white, border: colors.primary },
-    secondary: { bg: colors.surface, fg: colors.primary, border: colors.border },
-    ghost: { bg: 'transparent', fg: colors.primary, border: 'transparent' },
+    secondary: { bg: colors.surface, fg: colors.primaryInk, border: colors.border },
+    ghost: { bg: 'transparent', fg: colors.primaryInk, border: 'transparent' },
     danger: { bg: colors.error, fg: colors.white, border: colors.error },
     success: { bg: colors.success, fg: colors.white, border: colors.success },
   }[variant];
@@ -105,6 +106,7 @@ type ChipProps = {
 
 /** A selectable pill (quiz launcher choices, filters). */
 export function Chip({ label, selected = false, onPress, sub, icon, disabled }: ChipProps) {
+  const colors = useColors();
   return (
     <TouchableOpacity
       accessibilityRole="button"
@@ -123,8 +125,8 @@ export function Chip({ label, selected = false, onPress, sub, icon, disabled }: 
       }}
     >
       <Row gap={6}>
-        {icon ? <Icon name={icon} size={14} color={selected ? colors.primary : colors.textMedium} /> : null}
-        <T weight="semibold" size={13} color={selected ? colors.primary : colors.text}>
+        {icon ? <Icon name={icon} size={14} color={selected ? colors.primaryInk : colors.textMedium} /> : null}
+        <T weight="semibold" size={13} color={selected ? colors.primaryInk : colors.text}>
           {label}
         </T>
         {sub ? (
@@ -149,6 +151,7 @@ type InputProps = Omit<TextInputProps, 'style'> & {
 };
 
 export function Input({ label, error, ltr = false, hint, style, inputStyle, trailing, secureTextEntry, ...rest }: InputProps) {
+  const colors = useColors();
   const { isRTL, lang } = useLang();
   const login = useCopy(authCopy).login;
   const [focused, setFocused] = useState(false);
@@ -181,7 +184,7 @@ export function Input({ label, error, ltr = false, hint, style, inputStyle, trai
             setFocused(false);
             rest.onBlur?.(e);
           }}
-          placeholderTextColor="#94a3b8"
+          placeholderTextColor={colors.placeholder}
           style={[
             {
               flex: 1,
@@ -209,7 +212,7 @@ export function Input({ label, error, ltr = false, hint, style, inputStyle, trai
         {trailing}
       </Row>
       {error ? (
-        <T size={12} color={colors.error}>
+        <T size={12} color={colors.errorInk}>
           {error}
         </T>
       ) : hint ? (
@@ -224,6 +227,7 @@ export function Input({ label, error, ltr = false, hint, style, inputStyle, trai
 type CheckboxProps = { checked: boolean; onChange: (next: boolean) => void; children: React.ReactNode; error?: boolean };
 
 export function Checkbox({ checked, onChange, children, error }: CheckboxProps) {
+  const colors = useColors();
   return (
     <TouchableOpacity
       accessibilityRole="checkbox"
@@ -258,7 +262,7 @@ export function Link({
   label,
   onPress,
   size = 14,
-  color = colors.primary,
+  color,
   weight = 'semibold',
 }: {
   label: string;
@@ -267,9 +271,10 @@ export function Link({
   color?: string;
   weight?: 'regular' | 'medium' | 'semibold' | 'bold';
 }) {
+  const colors = useColors();
   return (
     <TouchableOpacity onPress={onPress} accessibilityRole="link" hitSlop={8}>
-      <T weight={weight} size={size} color={color}>
+      <T weight={weight} size={size} color={color ?? colors.primaryInk}>
         {label}
       </T>
     </TouchableOpacity>

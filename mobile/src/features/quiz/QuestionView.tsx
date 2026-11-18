@@ -6,18 +6,18 @@ import { useAuth } from '@/lib/auth';
 import { useLayout } from '@/lib/layout';
 import { PALETTE_WIDTH } from './QuestionPalette';
 import { formatClock } from '@/lib/stats';
-import { colors, radius } from '@/theme';
+import { useColors, radius, type Palette } from '@/theme';
 import { Button, Card, Icon, ProgressBar, Row, Screen, T } from '@/ui';
 import { ExplanationPanel } from '@/features/common/ExplanationPanel';
 import { OPTION_KEYS, Question } from './quizLogic';
 import { QuestionImages } from './QuestionImages';
 import { ReportDialog } from './ReportDialog';
 
-const timerColor = (seconds: number | null) => {
+const timerColor = (colors: Palette, seconds: number | null) => {
   if (!seconds) return colors.textMedium;
-  if (seconds <= 60) return colors.error;
-  if (seconds <= 300) return colors.warning;
-  return colors.success;
+  if (seconds <= 60) return colors.errorInk;
+  if (seconds <= 300) return colors.warningInk;
+  return colors.successInk;
 };
 
 type Props = {
@@ -54,6 +54,7 @@ export function QuestionView({
   onFinish,
   onExit,
 }: Props) {
+  const colors = useColors();
   const t = useCopy(quizCopy).quiz;
   const { isRTL } = useLang();
   const { user } = useAuth();
@@ -66,7 +67,7 @@ export function QuestionView({
 
   const stemBlock = (
     <>
-        <T weight="bold" size={13} color={colors.primary}>
+        <T weight="bold" size={13} color={colors.primaryInk}>
           {t.questionLabel(number)}
         </T>
         <Card pad={16}>
@@ -104,8 +105,8 @@ export function QuestionView({
                   <T ltr size={15} style={{ flex: 1 }} weight={isSelected || isCorrect ? 'semibold' : 'regular'}>
                     {option || t.optionUnavailable}
                   </T>
-                  {isCorrect ? <Icon name="check-circle" size={20} color={colors.success} /> : null}
-                  {isWrong ? <Icon name="x-circle" size={20} color={colors.error} /> : null}
+                  {isCorrect ? <Icon name="check-circle" size={20} color={colors.successInk} /> : null}
+                  {isWrong ? <Icon name="x-circle" size={20} color={colors.errorInk} /> : null}
                 </Row>
               </TouchableOpacity>
             );
@@ -156,8 +157,8 @@ export function QuestionView({
             </T>
             {timed ? (
               <Row gap={5} style={{ minWidth: 70, justifyContent: 'flex-end' }}>
-                <Icon name="clock" size={15} color={timerColor(timeRemaining)} />
-                <T weight="bold" size={15} ltr color={timerColor(timeRemaining)}>
+                <Icon name="clock" size={15} color={timerColor(colors, timeRemaining)} />
+                <T weight="bold" size={15} ltr color={timerColor(colors, timeRemaining)}>
                   {formatClock(timeRemaining ?? 0)}
                 </T>
               </Row>

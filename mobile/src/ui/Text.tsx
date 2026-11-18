@@ -2,7 +2,7 @@ import React, { createContext, useContext } from 'react';
 import { StyleProp, Text as RNText, TextProps, TextStyle } from 'react-native';
 import { useLang } from '@/i18n/LanguageContext';
 import { useLayout } from '@/lib/layout';
-import { colors, fontFamilies, FontWeight } from '@/theme';
+import { useColors, fontFamilies, FontWeight } from '@/theme';
 
 export type TProps = TextProps & {
   weight?: FontWeight;
@@ -32,6 +32,7 @@ const NestedText = createContext(false);
  * (repeating them on nested text makes the lines uneven).
  */
 export function T({ weight = 'regular', size, color, ltr = false, align = 'start', lh, style, children, ...rest }: TProps) {
+  const colors = useColors();
   const { lang, isRTL } = useLang();
   const nested = useContext(NestedText);
   const { textScale } = useLayout();

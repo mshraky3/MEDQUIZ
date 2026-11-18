@@ -5,7 +5,7 @@ import { useCommon } from '@/i18n';
 import { api } from '@/lib/api';
 import { timeAgo } from '@/lib/stats';
 import { appRouteForWebPath } from '@/lib/webPaths';
-import { colors } from '@/theme';
+import { useColors } from '@/theme';
 import { Button, Card, EmptyState, Row, Screen, ScreenHeader, Spinner, T } from '@/ui';
 
 type Notification = { id: number; title: string; body?: string | null; ctaUrl?: string | null; read: boolean; createdAt: string };
@@ -16,6 +16,7 @@ type Notification = { id: number; title: string; body?: string | null; ctaUrl?: 
  * lapse). It is not a marketing channel, which is what keeps it worth opening.
  */
 export default function NotificationsScreen() {
+  const colors = useColors();
   const t = useCommon().notifications;
   const [items, setItems] = useState<Notification[]>([]);
   const [unread, setUnread] = useState(0);

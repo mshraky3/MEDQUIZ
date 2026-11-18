@@ -6,7 +6,7 @@ import summariesCopy from '@/i18n/copy/summaries.js';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { userTrack } from '@/lib/tracks';
-import { colors, radius, shadow } from '@/theme';
+import { useColors, radius, shadow } from '@/theme';
 import { Button, Card, EmptyState, Icon, Row, Screen, Spinner, T, goBack } from '@/ui';
 import { LessonCommands, LessonWebView } from './LessonWebView';
 import { QuestionCard } from './QuestionCard';
@@ -49,6 +49,7 @@ type LessonViewProps = {
 };
 
 export function LessonView({ slug: slugProp, onClose }: LessonViewProps) {
+  const colors = useColors();
   const params = useLocalSearchParams<{ slug: string }>();
   const slug = slugProp ?? params.slug;
   const { user } = useAuth();
@@ -149,7 +150,7 @@ export function LessonView({ slug: slugProp, onClose }: LessonViewProps) {
     return (
       <Screen>
         <Card pad={20} style={{ gap: 12, alignItems: 'center' }}>
-          <Icon name="lock" size={36} color={colors.warning} />
+          <Icon name="lock" size={36} color={colors.warningInk} />
           <T ltr weight="extrabold" size={19} align="center">
             {step.title}
           </T>
@@ -176,7 +177,7 @@ export function LessonView({ slug: slugProp, onClose }: LessonViewProps) {
           <Row gap={10} style={{ paddingHorizontal: 14, paddingVertical: 10 }}>
             <View style={{ flex: 1 }}>
               <Row gap={6}>
-                <Icon name={section.icon} size={15} color={section.accent || colors.primary} />
+                <Icon name={section.icon} size={15} color={section.accent || colors.primaryInk} />
                 <T ltr size={12} weight="bold" color={colors.textMedium} numberOfLines={1} style={{ flex: 1 }}>
                   {sectionLabel.primary}
                 </T>
@@ -228,7 +229,7 @@ export function LessonView({ slug: slugProp, onClose }: LessonViewProps) {
                   }}
                 >
                   <Row gap={6}>
-                    <T size={13} weight="bold" color={on ? colors.primary : colors.text}>
+                    <T size={13} weight="bold" color={on ? colors.primaryInk : colors.text}>
                       {label}
                     </T>
                     {count > 0 ? (
@@ -260,8 +261,8 @@ export function LessonView({ slug: slugProp, onClose }: LessonViewProps) {
                 backgroundColor: isDone ? colors.successBg : colors.surface,
               }}
             >
-              <Icon name={isDone ? 'check' : 'circle'} size={15} color={isDone ? colors.success : colors.textLight} />
-              <T size={12} weight="semibold" color={isDone ? colors.success : colors.textMedium}>
+              <Icon name={isDone ? 'check' : 'circle'} size={15} color={isDone ? colors.successInk : colors.textLight} />
+              <T size={12} weight="semibold" color={isDone ? colors.successInk : colors.textMedium}>
                 {isDone ? t.panelStepDone : t.panelMarkDone}
               </T>
             </TouchableOpacity>
@@ -339,8 +340,8 @@ export function LessonView({ slug: slugProp, onClose }: LessonViewProps) {
                         backgroundColor: tool === def.id ? colors.infoBg : colors.surface2,
                       }}
                     >
-                      <Icon name={def.icon} size={18} color={tool === def.id ? colors.primary : colors.textMedium} />
-                      <T size={10} weight="semibold" color={tool === def.id ? colors.primary : colors.textMedium}>
+                      <Icon name={def.icon} size={18} color={tool === def.id ? colors.primaryInk : colors.textMedium} />
+                      <T size={10} weight="semibold" color={tool === def.id ? colors.primaryInk : colors.textMedium}>
                         {t.tools[def.labelKey]}
                       </T>
                     </TouchableOpacity>
