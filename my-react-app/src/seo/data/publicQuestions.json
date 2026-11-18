@@ -1,14 +1,20 @@
 {
-  "generatedAt": "2026-10-10",
+  "generatedAt": "2026-11-18",
   "perSpecialty": 24,
   "minExplanation": 500,
   "count": 240,
-  "bankTotal": 13036,
+  "bankTotal": 16495,
   "collections": [
     {
       "source": "DentalExplained",
       "track": "dental",
       "total": 2601,
+      "published": 0
+    },
+    {
+      "source": "DentalRecall2025",
+      "track": "dental",
+      "total": 954,
       "published": 0
     },
     {
@@ -36,9 +42,15 @@
       "published": 0
     },
     {
+      "source": "MedicalOctoberRecall",
+      "track": "medical",
+      "total": 1483,
+      "published": 0
+    },
+    {
       "source": "MedicalMidgard",
       "track": "medical",
-      "total": 1280,
+      "total": 1279,
       "published": 53
     },
     {
@@ -50,14 +62,26 @@
     {
       "source": "MedicalGameBoy",
       "track": "medical",
-      "total": 545,
+      "total": 544,
       "published": 9
+    },
+    {
+      "source": "MedicalNovemberRecall",
+      "track": "medical",
+      "total": 428,
+      "published": 0
     },
     {
       "source": "NursingConfirmed",
       "track": "nursing",
-      "total": 1514,
+      "total": 1513,
       "published": 118
+    },
+    {
+      "source": "NursingRecall",
+      "track": "nursing",
+      "total": 737,
+      "published": 0
     },
     {
       "source": "NursingMostRepeated",
