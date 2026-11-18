@@ -50,6 +50,7 @@ const PERSONAL_TABLES = [
     ['temp_link_accounts', 'user_id'],
     ['success_stories', 'user_id'],
     ['question_reports', 'user_id'],
+    ['android_testers', 'account_id'], // Play e-mail of the tester offer (table may not exist yet: skipped)
 ];
 
 /**
