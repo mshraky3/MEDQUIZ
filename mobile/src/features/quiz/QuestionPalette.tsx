@@ -1,7 +1,7 @@
 import React from 'react';
 import { ScrollView, TouchableOpacity, View } from 'react-native';
 import { useApp, useLang } from '@/i18n';
-import { colors, radius } from '@/theme';
+import { useColors, radius } from '@/theme';
 import { Card, Row, T } from '@/ui';
 import { paletteCell } from './quizLogic';
 
@@ -22,6 +22,7 @@ export function QuestionPalette({
   answers: Record<number, string>;
   onGo: (index: number) => void;
 }) {
+  const colors = useColors();
   const app = useApp().palette;
   const { isRTL } = useLang();
   const answered = Object.keys(answers).length;
@@ -55,7 +56,7 @@ export function QuestionPalette({
                   backgroundColor: state === 'current' ? colors.primary : state === 'answered' ? colors.infoBg : colors.surface,
                 }}
               >
-                <T ltr weight="bold" size={13} color={state === 'current' ? colors.white : state === 'answered' ? colors.primary : colors.textMedium}>
+                <T ltr weight="bold" size={13} color={state === 'current' ? colors.white : state === 'answered' ? colors.primaryInk : colors.textMedium}>
                   {i + 1}
                 </T>
               </TouchableOpacity>

@@ -4,7 +4,7 @@ import Svg, { Path } from 'react-native-svg';
 import { GOOGLE_WEB_CLIENT_ID, PLAY_BUILD } from '@/config';
 import { useApp } from '@/i18n';
 import { api } from '@/lib/api';
-import { colors, radius } from '@/theme';
+import { useColors, radius } from '@/theme';
 import { Spinner, T } from '@/ui';
 
 /**
@@ -67,6 +67,7 @@ const GoogleG = () => (
 );
 
 function Divider({ label }: { label: string }) {
+  const colors = useColors();
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
       <View style={{ flex: 1, height: StyleSheet.hairlineWidth * 2, backgroundColor: colors.border }} />
@@ -79,6 +80,7 @@ function Divider({ label }: { label: string }) {
 }
 
 export function GoogleButton({ mode, dividerLabel, dividerPosition = 'before', track, onSuccess, onError }: Props) {
+  const colors = useColors();
   const app = useApp();
   const [busy, setBusy] = useState(false);
   if (!GOOGLE_SIGN_IN_AVAILABLE) return null;

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View } from 'react-native';
 import { useCopy } from '@/i18n';
 import summariesCopy from '@/i18n/copy/summaries.js';
-import { colors } from '@/theme';
+import { useColors } from '@/theme';
 import { Button, Card, Icon, Row, T } from '@/ui';
 import { LessonQuestion, QuestionCard } from './QuestionCard';
 
@@ -34,6 +34,7 @@ export function PathCheckpoint({
   onPass: () => void;
   onRedo: () => void;
 }) {
+  const colors = useColors();
   const t = useCopy(summariesCopy).checkpoint;
   const [answers, setAnswers] = useState<Record<number, boolean>>({});
   const questions = milestone.checkpoint.questions;
@@ -46,8 +47,8 @@ export function PathCheckpoint({
     <Card style={{ gap: 12, borderColor: passed ? colors.success : colors.border }}>
       <View style={{ gap: 4 }}>
         <Row gap={6}>
-          <Icon name={passed ? 'check-circle' : 'help-circle'} size={14} color={passed ? colors.success : colors.primary} />
-          <T weight="bold" size={12} color={passed ? colors.success : colors.primary}>
+          <Icon name={passed ? 'check-circle' : 'help-circle'} size={14} color={passed ? colors.successInk : colors.primaryInk} />
+          <T weight="bold" size={12} color={passed ? colors.successInk : colors.primaryInk}>
             {passed ? t.passed : t.label}
           </T>
         </Row>
@@ -78,7 +79,7 @@ export function PathCheckpoint({
 
       <Row justify="space-between" gap={10} wrap>
         <Row gap={6}>
-          {answered > 0 ? <Icon name="target" size={13} color={colors.primary} /> : null}
+          {answered > 0 ? <Icon name="target" size={13} color={colors.primaryInk} /> : null}
           <T size={13} color={colors.textLight}>
             {answered === 0 ? t.notAttempted : t.score(correct, answered)}
           </T>

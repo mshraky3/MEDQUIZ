@@ -11,7 +11,7 @@ import { readQuizMode } from '@/lib/quizMode';
 import { accuracyTone } from '@/lib/stats';
 import { bankLabel, examLabel, normalizeTrack, specialtiesOf, trackLabel, userTrack } from '@/lib/tracks';
 import { useLayout } from '@/lib/layout';
-import { colors, radius, toneColor } from '@/theme';
+import { useColors, useTones, radius } from '@/theme';
 import { Button, Card, Chevron, Icon, Notice, Row, T } from '@/ui';
 import { TabScreen } from '@/features/common/TabScreen';
 import { AchievementBadges } from './AchievementBadges';
@@ -43,6 +43,7 @@ type Stats = { total_quizzes: number; total_questions_answered: number; avg_accu
 type TopicRow = { question_type: string; total_answered: number | string; accuracy: number | string };
 
 function SegMeter({ blocks }: { blocks: number }) {
+  const colors = useColors();
   const { isRTL } = useLang();
   return (
     <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', gap: 3, flex: 1 }}>
@@ -63,6 +64,8 @@ function SegMeter({ blocks }: { blocks: number }) {
  * starting a quiz.
  */
 export default function HubScreen() {
+  const colors = useColors();
+  const tones = useTones();
   const { user, updateUser } = useAuth();
   const t = useCopy(quizCopy).hub;
   const { lang } = useLang();
@@ -206,7 +209,7 @@ export default function HubScreen() {
       >
         <Row gap={12}>
           <View style={{ width: 44, height: 44, borderRadius: radius.md, backgroundColor: colors.surfaceTint, alignItems: 'center', justifyContent: 'center' }}>
-            <Icon name={icon} size={22} color={colors.primary} />
+            <Icon name={icon} size={22} color={colors.primaryInk} />
           </View>
           <View style={{ flex: 1 }}>
             <Row gap={8} wrap>
@@ -258,7 +261,7 @@ export default function HubScreen() {
             <T size={13} color={colors.textMedium}>
               {t.stepQuizDesc(bankLabel(myTrack, lang))}
             </T>
-            <T size={12} weight="semibold" color={colors.primary}>
+            <T size={12} weight="semibold" color={colors.primaryInk}>
               {quizStat}
             </T>
           </View>
@@ -301,10 +304,10 @@ export default function HubScreen() {
                       {fmt(featured.total)} {t.questionsUnit} · {t.doneShort(pctOf(featured))}
                     </T>
                     <Row gap={2}>
-                      <T weight="bold" size={12} color={colors.primary}>
+                      <T weight="bold" size={12} color={colors.primaryInk}>
                         {t.startShort}
                       </T>
-                      <Chevron size={15} color={colors.primary} />
+                      <Chevron size={15} color={colors.primaryInk} />
                     </Row>
                   </Row>
                 </View>
@@ -368,7 +371,7 @@ export default function HubScreen() {
               >
                 <Row gap={10}>
                   <View style={{ width: 36, height: 36, borderRadius: radius.md, backgroundColor: colors.surfaceTint, alignItems: 'center', justifyContent: 'center' }}>
-                    <Icon name={r.icon} size={18} color={colors.primary} />
+                    <Icon name={r.icon} size={18} color={colors.primaryInk} />
                   </View>
                   <View style={{ flex: 1, gap: 2 }}>
                     <T weight="bold" size={15}>
@@ -376,7 +379,7 @@ export default function HubScreen() {
                     </T>
                     {isNext ? (
                       <View style={{ alignSelf: 'flex-start', backgroundColor: colors.warningBg, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 1 }}>
-                        <T weight="bold" size={10} color={colors.warning}>
+                        <T weight="bold" size={10} color={colors.warningInk}>
                           {r.key === weakestKey ? t.weakest : t.leastCovered}
                         </T>
                       </View>
@@ -403,7 +406,7 @@ export default function HubScreen() {
                       weight="extrabold"
                       size={14}
                       ltr
-                      color={started && r.solidSample ? toneColor[accuracyTone(r.accuracy)] : colors.textLight}
+                      color={started && r.solidSample ? tones.color[accuracyTone(r.accuracy)] : colors.textLight}
                     >
                       {loading ? '' : started ? `${r.accuracy}%` : '—'}
                     </T>
@@ -433,7 +436,7 @@ export default function HubScreen() {
       {wrongCount && wrongCount > 0 ? (
         <TouchableOpacity activeOpacity={0.85} onPress={() => router.push('/(tabs)/review')} accessibilityRole="button">
           <Row gap={12} style={{ backgroundColor: colors.warningBg, borderRadius: radius.lg, padding: 14 }}>
-            <Icon name="alert-triangle" size={22} color={colors.warning} />
+            <Icon name="alert-triangle" size={22} color={colors.warningInk} />
             <View style={{ flex: 1 }}>
               <T weight="bold" size={15}>
                 {t.reviewTitle}
@@ -460,7 +463,7 @@ export default function HubScreen() {
               {t.telegramCtaSubtitle}
             </T>
           </View>
-          <T weight="bold" size={12} color={colors.primary}>
+          <T weight="bold" size={12} color={colors.primaryInk}>
             {t.telegramCtaButton}
           </T>
         </Row>
@@ -495,7 +498,7 @@ export default function HubScreen() {
       <Row wrap gap={10}>
         {tiles.map((tile) => (
           <Card key={tile.k} pad={12} style={{ width: twoCol ? '23%' : '48%', flexGrow: 1, alignItems: 'center', gap: 2 }}>
-            <T weight="extrabold" size={22} color={colors.primary} ltr align="center">
+            <T weight="extrabold" size={22} color={colors.primaryInk} ltr align="center">
               {loading ? ' ' : tile.value}
             </T>
             <T size={12} color={colors.textLight} align="center">
@@ -507,14 +510,14 @@ export default function HubScreen() {
 
       {bankEmpty || summariesEmpty ? (
         <Notice kind="info">
-          <T weight="bold" size={14} color={colors.primary}>
+          <T weight="bold" size={14} color={colors.primaryInk}>
             {bankEmpty && summariesEmpty
               ? t.noticeBoth(trackLabel(myTrack, lang))
               : bankEmpty
                 ? t.noticeBank(trackLabel(myTrack, lang))
                 : t.noticeSummaries(trackLabel(myTrack, lang))}
           </T>
-          <T size={13} color={colors.primary}>
+          <T size={13} color={colors.primaryInk}>
             {t.noticeBody(examLabel(myTrack, lang))}
             {!bankEmpty && t.noticeQuestionsReady}
             {!summariesEmpty && t.noticeSummariesReady}

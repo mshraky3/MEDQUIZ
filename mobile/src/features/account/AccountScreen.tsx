@@ -6,7 +6,7 @@ import accountCopy from '@/i18n/copy/account.js';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { specialtiesOf, userTrack } from '@/lib/tracks';
-import { colors, radius } from '@/theme';
+import { useColors, radius } from '@/theme';
 import { Button, Card, Icon, Notice, ProgressBar, Row, Screen, ScreenHeader, Spinner, T } from '@/ui';
 import { ExamDateCard, GoalCard, StreakCard } from './StudyPlan';
 import { PLAY_BUILD } from '@/config';
@@ -19,6 +19,7 @@ import { PLAY_BUILD } from '@/config';
  * the only reminder anyone gets that a term is running out.
  */
 export default function AccountScreen() {
+  const colors = useColors();
   const { user, refreshSubscription } = useAuth();
   const t = useCopy(accountCopy);
   const { lang } = useLang();
@@ -129,7 +130,7 @@ export default function AccountScreen() {
                   paddingVertical: 4,
                 }}
               >
-                <T weight="bold" size={13} color={isPaid ? colors.success : isLegacy ? colors.primary : colors.textMedium}>
+                <T weight="bold" size={13} color={isPaid ? colors.successInk : isLegacy ? colors.primaryInk : colors.textMedium}>
                   {statusLabel()}
                 </T>
               </View>
@@ -166,8 +167,8 @@ export default function AccountScreen() {
               </T>
             ) : (
               <Row gap={8} align="flex-start" style={{ backgroundColor: colors.successBg, borderRadius: radius.md, padding: 10 }}>
-                <Icon name="shield-check" size={16} color={colors.success} />
-                <T size={13} color={colors.success} style={{ flex: 1 }}>
+                <Icon name="shield-check" size={16} color={colors.successInk} />
+                <T size={13} color={colors.successInk} style={{ flex: 1 }}>
                   {t.noAutoRenew}
                 </T>
               </Row>

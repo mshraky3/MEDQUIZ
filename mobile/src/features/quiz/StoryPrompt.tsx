@@ -4,7 +4,7 @@ import { useCopy, useLang } from '@/i18n';
 import successStoriesCopy from '@/i18n/copy/successStories.js';
 import { api } from '@/lib/api';
 import { KEYS, getItem, setItem } from '@/lib/storage';
-import { colors, radius } from '@/theme';
+import { useColors, radius } from '@/theme';
 import { Button, Card, Checkbox, Icon, Input, Row, T } from '@/ui';
 
 /**
@@ -16,6 +16,7 @@ import { Button, Card, Checkbox, Icon, Input, Row, T } from '@/ui';
  * without it too, so this is not the only gate, just the honest one.
  */
 export function StoryPrompt({ username, onClose }: { username: string; onClose: () => void }) {
+  const colors = useColors();
   const t = useCopy(successStoriesCopy);
   const { lang } = useLang();
   const f = t.form;
@@ -56,7 +57,7 @@ export function StoryPrompt({ username, onClose }: { username: string; onClose: 
     return (
       <View style={shell}>
         <Row gap={10} align="flex-start">
-          <Icon name="check-circle" size={22} color={colors.success} />
+          <Icon name="check-circle" size={22} color={colors.successInk} />
           <View style={{ flex: 1 }}>
             <T weight="bold">{f.thanksTitle}</T>
             <T size={13} color={colors.textMedium}>
@@ -73,7 +74,7 @@ export function StoryPrompt({ username, onClose }: { username: string; onClose: 
     return (
       <View style={shell}>
         <Row gap={10} align="flex-start">
-          <Icon name="star" size={22} color={colors.warning} />
+          <Icon name="star" size={22} color={colors.warningInk} />
           <View style={{ flex: 1 }}>
             <T weight="bold">{t.prompt.title}</T>
             <T size={13} color={colors.textMedium}>
@@ -118,7 +119,7 @@ export function StoryPrompt({ username, onClose }: { username: string; onClose: 
         {f.consentNote}
       </T>
       {error ? (
-        <T size={13} color={colors.error}>
+        <T size={13} color={colors.errorInk}>
           {error}
         </T>
       ) : null}

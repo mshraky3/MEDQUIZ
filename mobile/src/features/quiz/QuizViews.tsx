@@ -9,7 +9,7 @@ import { calculateBestWorstTopics, formatDuration, totalsFromTopics } from '@/li
 import { useAuth } from '@/lib/auth';
 import { useLayout } from '@/lib/layout';
 import { useLoad } from '@/lib/useLoad';
-import { colors, radius } from '@/theme';
+import { useColors, radius } from '@/theme';
 import { Button, Card, Dialog, Icon, Row, Screen, Spinner, T } from '@/ui';
 import { ExplanationPanel } from '@/features/common/ExplanationPanel';
 import type { AnswerRecord } from './quizLogic';
@@ -19,6 +19,7 @@ import { PLAY_BUILD } from '@/config';
 import { AccountStatusButton } from '@/features/subscribe/AccountStatusButton';
 
 export function LoadingView() {
+  const colors = useColors();
   const t = useCopy(quizCopy).quiz;
   return (
     <Screen>
@@ -36,12 +37,13 @@ export function LoadingView() {
 }
 
 export function ErrorView({ message, onRetry, onBack }: { message: string; onRetry?: () => void; onBack: () => void }) {
+  const colors = useColors();
   const t = useCopy(quizCopy).quiz;
   return (
     <Screen>
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 }}>
         <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: colors.errorBg, alignItems: 'center', justifyContent: 'center' }}>
-          <Icon name="alert-triangle" size={30} color={colors.error} />
+          <Icon name="alert-triangle" size={30} color={colors.errorInk} />
         </View>
         <T weight="bold" size={19} align="center">
           {t.errorTitle}
@@ -68,6 +70,7 @@ export function ResumeDialog({
   onResume: () => void;
   onStartNew: () => void;
 }) {
+  const colors = useColors();
   const app = useApp().quizApp;
   return (
     <Dialog visible blocking>
@@ -95,6 +98,7 @@ export function CategoryCompleteView({
   onRestart: () => void;
   onBack: () => void;
 }) {
+  const colors = useColors();
   const t = useCopy(quizCopy).complete;
   const { lang } = useLang();
   return (
@@ -102,7 +106,7 @@ export function CategoryCompleteView({
       <View style={{ flex: 1, justifyContent: 'center' }}>
         <Card pad={22} style={{ alignItems: 'center', gap: 12 }}>
           <View style={{ width: 76, height: 76, borderRadius: 38, backgroundColor: colors.warningBg, alignItems: 'center', justifyContent: 'center' }}>
-            <Icon name="trophy" size={40} color={colors.warning} />
+            <Icon name="trophy" size={40} color={colors.warningInk} />
           </View>
           <T weight="extrabold" size={21} align="center">
             {t.title}
@@ -112,7 +116,7 @@ export function CategoryCompleteView({
           </T>
           {total > 0 ? (
             <View style={{ alignItems: 'center' }}>
-              <T weight="extrabold" size={34} color={colors.primary} ltr>
+              <T weight="extrabold" size={34} color={colors.primaryInk} ltr>
                 {formatNumber(total, lang)}
               </T>
               <T size={13} color={colors.textLight}>
@@ -134,6 +138,7 @@ export function CategoryCompleteView({
  * waiting), then the ask. If the numbers cannot load, the ask renders on its own.
  */
 export function AllowanceSpentView({ userId, onBack }: { userId?: number; onBack: () => void }) {
+  const colors = useColors();
   const t = useCopy(quizCopy).quiz;
   const { lang } = useLang();
   const { data: stats, loading } = useLoad(
@@ -169,7 +174,7 @@ export function AllowanceSpentView({ userId, onBack }: { userId?: number; onBack
         <Card pad={22} style={{ gap: 14 }}>
           {hasProof ? (
             <>
-              <T weight="bold" size={12} color={colors.primary}>
+              <T weight="bold" size={12} color={colors.primaryInk}>
                 {t.spent.eyebrow}
               </T>
               <T weight="extrabold" size={22}>
@@ -177,7 +182,7 @@ export function AllowanceSpentView({ userId, onBack }: { userId?: number; onBack
               </T>
               <Row gap={12}>
                 <Card flat style={{ flex: 1, alignItems: 'center' }} pad={12}>
-                  <T weight="extrabold" size={26} color={colors.primary} ltr>
+                  <T weight="extrabold" size={26} color={colors.primaryInk} ltr>
                     {stats!.answered}
                   </T>
                   <T size={12} color={colors.textLight}>
@@ -185,7 +190,7 @@ export function AllowanceSpentView({ userId, onBack }: { userId?: number; onBack
                   </T>
                 </Card>
                 <Card flat style={{ flex: 1, alignItems: 'center' }} pad={12}>
-                  <T weight="extrabold" size={26} color={colors.primary} ltr>
+                  <T weight="extrabold" size={26} color={colors.primaryInk} ltr>
                     {Math.round(stats!.accuracy)}%
                   </T>
                   <T size={12} color={colors.textLight}>
@@ -195,7 +200,7 @@ export function AllowanceSpentView({ userId, onBack }: { userId?: number; onBack
               </Row>
               {worstLabel ? (
                 <Row gap={8} align="flex-start">
-                  <Icon name="target" size={16} color={colors.warning} />
+                  <Icon name="target" size={16} color={colors.warningInk} />
                   <T size={14} style={{ flex: 1 }}>
                     {t.spent.weakest(worstLabel, Math.round(stats!.worst!.accuracy))}
                   </T>
@@ -203,7 +208,7 @@ export function AllowanceSpentView({ userId, onBack }: { userId?: number; onBack
               ) : null}
               {stats!.wrongCount > 0 ? (
                 <Row gap={8} align="flex-start">
-                  <Icon name="alert-triangle" size={16} color={colors.warning} />
+                  <Icon name="alert-triangle" size={16} color={colors.warningInk} />
                   <T size={14} style={{ flex: 1 }}>
                     {t.spent.wrong(stats!.wrongCount)}
                   </T>
@@ -213,7 +218,7 @@ export function AllowanceSpentView({ userId, onBack }: { userId?: number; onBack
             </>
           ) : (
             <View style={{ alignItems: 'center', gap: 10 }}>
-              <Icon name="lock" size={38} color={colors.primary} />
+              <Icon name="lock" size={38} color={colors.primaryInk} />
               <T weight="extrabold" size={20} align="center">
                 {t.paywallSpentTitle}
               </T>
@@ -233,12 +238,13 @@ export function AllowanceSpentView({ userId, onBack }: { userId?: number; onBack
 
 /** The other two 402s: an unanswered backlog (go finish it) or a subscriber-only quiz type. */
 export function PaywallView({ backlog, onBack }: { backlog: boolean; onBack: () => void }) {
+  const colors = useColors();
   const t = useCopy(quizCopy).quiz;
   return (
     <Screen>
       <View style={{ flex: 1, justifyContent: 'center' }}>
         <Card pad={22} style={{ alignItems: 'center', gap: 12 }}>
-          <Icon name={backlog ? 'refresh' : 'lock'} size={40} color={colors.primary} />
+          <Icon name={backlog ? 'refresh' : 'lock'} size={40} color={colors.primaryInk} />
           <T weight="extrabold" size={20} align="center">
             {backlog ? t.paywallBacklogTitle : t.paywallSubscriberTitle}
           </T>
@@ -281,6 +287,7 @@ export function ResultView({
   onAnother,
   onHome,
 }: ResultProps) {
+  const colors = useColors();
   const t = useCopy(quizCopy).result;
   const q = useCopy(quizCopy).quiz;
   const app = useApp().quizApp;
@@ -304,7 +311,7 @@ export function ResultView({
     <>
       {completedTopics.length > 0 ? (
         <Row gap={10} style={{ backgroundColor: colors.warningBg, borderRadius: radius.lg, padding: 14 }} align="flex-start">
-          <Icon name="trophy" size={20} color={colors.warning} />
+          <Icon name="trophy" size={20} color={colors.warningInk} />
           <T size={14} style={{ flex: 1 }} weight="semibold">
             {t.completedBannerBefore}{' '}
             {completedTopics.map((c) => `${getTypeLabel(c.type, lang)} · ${getSourceLabel(c.source, lang)}`).join(lang === 'ar' ? '، ' : ', ')}
@@ -349,8 +356,8 @@ export function ResultView({
       ) : submitState === 'failed' ? (
         <Card style={{ borderColor: colors.error, gap: 8 }} flat>
           <Row gap={8} align="flex-start">
-            <Icon name="alert-triangle" size={17} color={colors.error} />
-            <T size={13} color={colors.error} style={{ flex: 1 }}>
+            <Icon name="alert-triangle" size={17} color={colors.errorInk} />
+            <T size={13} color={colors.errorInk} style={{ flex: 1 }}>
               {app.saveFailed}
             </T>
           </Row>
@@ -358,7 +365,7 @@ export function ResultView({
         </Card>
       ) : submitState === 'sent' ? (
         <Row gap={6} justify="center">
-          <Icon name="check-circle" size={15} color={colors.success} />
+          <Icon name="check-circle" size={15} color={colors.successInk} />
           <T size={12} color={colors.textLight}>
             {app.saved}
           </T>
@@ -406,7 +413,7 @@ export function ResultView({
                     opacity: disabled ? 0.45 : 1,
                   }}
                 >
-                  <T weight="semibold" size={13} color={on ? colors.primary : colors.text}>
+                  <T weight="semibold" size={13} color={on ? colors.primaryInk : colors.text}>
                     {key === 'wrong' ? t.filterWrong(wrongCount) : t.filterAll(answers.length)}
                   </T>
                 </TouchableOpacity>
@@ -416,7 +423,7 @@ export function ResultView({
 
           {visible.length === 0 ? (
             <Row gap={8} justify="center">
-              <Icon name="sparkles" size={16} color={colors.success} />
+              <Icon name="sparkles" size={16} color={colors.successInk} />
               <T color={colors.textMedium}>{t.noWrong}</T>
             </Row>
           ) : (
@@ -434,8 +441,8 @@ export function ResultView({
                     {getTypeLabel(answer.topic, lang)}
                   </T>
                   <Row gap={4}>
-                    <Icon name={answer.isCorrect ? 'check-circle' : 'x-circle'} size={14} color={answer.isCorrect ? colors.success : colors.error} />
-                    <T weight="bold" size={12} color={answer.isCorrect ? colors.success : colors.error}>
+                    <Icon name={answer.isCorrect ? 'check-circle' : 'x-circle'} size={14} color={answer.isCorrect ? colors.successInk : colors.errorInk} />
+                    <T weight="bold" size={12} color={answer.isCorrect ? colors.successInk : colors.errorInk}>
                       {answer.isCorrect ? t.correct : t.wrong}
                     </T>
                   </Row>
@@ -446,7 +453,7 @@ export function ResultView({
                 <View style={{ gap: 6 }}>
                   {answer.selected ? (
                     <View style={{ backgroundColor: answer.isCorrect ? colors.successBg : colors.errorBg, borderRadius: radius.md, padding: 10, gap: 2 }}>
-                      <T size={11} weight="bold" color={answer.isCorrect ? colors.success : colors.error}>
+                      <T size={11} weight="bold" color={answer.isCorrect ? colors.successInk : colors.errorInk}>
                         {t.yourAnswer}
                       </T>
                       <T ltr size={14}>
@@ -455,14 +462,14 @@ export function ResultView({
                     </View>
                   ) : (
                     <View style={{ backgroundColor: colors.errorBg, borderRadius: radius.md, padding: 10 }}>
-                      <T size={13} color={colors.error} weight="semibold">
+                      <T size={13} color={colors.errorInk} weight="semibold">
                         {t.unanswered}
                       </T>
                     </View>
                   )}
                   {!answer.isCorrect ? (
                     <View style={{ backgroundColor: colors.successBg, borderRadius: radius.md, padding: 10, gap: 2 }}>
-                      <T size={11} weight="bold" color={colors.success}>
+                      <T size={11} weight="bold" color={colors.successInk}>
                         {t.correctAnswer}
                       </T>
                       <T ltr size={14}>

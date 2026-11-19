@@ -5,7 +5,7 @@ import { formatDate, formatNumber, useCopy, useLang } from '@/i18n';
 import landingCopy from '@/i18n/copy/landing.js';
 import { api } from '@/lib/api';
 import { MEDICAL, NURSING, TRACKS, TrackKey, pick } from '@/lib/tracks';
-import { colors, radius } from '@/theme';
+import { useColors, radius } from '@/theme';
 import { useLayout } from '@/lib/layout';
 import { Button, Card, Columns, Icon, Row, Screen, T } from '@/ui';
 import { LanguageToggle } from '@/features/common/LanguageToggle';
@@ -45,11 +45,12 @@ const EXPLANATION_SAMPLE = {
 type LiveStats = { questionsTotal: number; summaryDecks?: number; contentUpdatedAt?: string };
 
 function SectionHead({ pill, title, body }: { pill?: string; title: string; body?: string }) {
+  const colors = useColors();
   return (
     <View style={{ gap: 6 }}>
       {pill ? (
         <View style={{ alignSelf: 'flex-start', backgroundColor: colors.infoBg, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3 }}>
-          <T weight="bold" size={12} color={colors.primary}>
+          <T weight="bold" size={12} color={colors.primaryInk}>
             {pill}
           </T>
         </View>
@@ -64,6 +65,7 @@ function SectionHead({ pill, title, body }: { pill?: string; title: string; body
 
 /** The signed-out front door: what SQB is, what it costs, and how to start. */
 export default function WelcomeScreen() {
+  const colors = useColors();
   const t = useCopy(landingCopy);
   const { lang } = useLang();
   const { isTablet, size, columns } = useLayout();
@@ -122,7 +124,7 @@ export default function WelcomeScreen() {
                 justifyContent: 'center',
               }}
             >
-              <Icon name={point.icon} size={21} color={colors.primary} />
+              <Icon name={point.icon} size={21} color={colors.primaryInk} />
             </View>
             <View style={{ flex: 1 }}>
               <T weight="bold" size={15}>
@@ -139,8 +141,8 @@ export default function WelcomeScreen() {
   const explainSample = (
     <Card style={{ gap: 8 }}>
           <Row gap={8}>
-            <Icon name="lightbulb" size={16} color={colors.primary} />
-            <T weight="bold" size={14} color={colors.primary}>
+            <Icon name="lightbulb" size={16} color={colors.primaryInk} />
+            <T weight="bold" size={14} color={colors.primaryInk}>
               {t.explain.sampleTitle}
             </T>
           </Row>
@@ -193,7 +195,7 @@ export default function WelcomeScreen() {
         </Row>
       </TouchableOpacity>
       <View style={{ alignSelf: 'flex-start', backgroundColor: colors.infoBg, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 4 }}>
-        <T weight="bold" size={12} color={colors.primary}>
+        <T weight="bold" size={12} color={colors.primaryInk}>
           {t.hero.pill}
         </T>
       </View>
@@ -221,7 +223,7 @@ export default function WelcomeScreen() {
       <View style={{ gap: 6 }}>
         {(PLAY_BUILD ? t.hero.trust.slice(0, 3) : t.hero.trust).map((item: string) => (
           <Row key={item} gap={8}>
-            <Icon name="check-circle" size={16} color={colors.success} />
+            <Icon name="check-circle" size={16} color={colors.successInk} />
             <T size={14} color={colors.textMedium} style={{ flex: 1 }}>
               {item}
             </T>
@@ -230,16 +232,16 @@ export default function WelcomeScreen() {
       </View>
       {stats ? (
         <Row wrap gap={14}>
-          <T size={13} weight="semibold" color={colors.primary}>
+          <T size={13} weight="semibold" color={colors.primaryInk}>
             {t.hero.liveQuestions(formatNumber(stats.questionsTotal, lang))}
           </T>
           {stats.summaryDecks ? (
-            <T size={13} weight="semibold" color={colors.primary}>
+            <T size={13} weight="semibold" color={colors.primaryInk}>
               {t.hero.liveDecks(formatNumber(stats.summaryDecks, lang))}
             </T>
           ) : null}
           {stats.contentUpdatedAt ? (
-            <T size={13} weight="semibold" color={colors.primary}>
+            <T size={13} weight="semibold" color={colors.primaryInk}>
               {t.hero.liveUpdated(formatDate(stats.contentUpdatedAt, lang))}
             </T>
           ) : null}
@@ -253,13 +255,13 @@ export default function WelcomeScreen() {
       width="wide"
       header={
         <Row justify="space-between" style={{ paddingHorizontal: 16, paddingVertical: 10 }}>
-          <T weight="extrabold" size={22} color={colors.primary} ltr>
+          <T weight="extrabold" size={22} color={colors.primaryInk} ltr>
             SQB
           </T>
           <Row gap={8}>
             <LanguageToggle compact />
             <TouchableOpacity onPress={() => router.push('/login')} hitSlop={8} accessibilityRole="button">
-              <T weight="bold" size={14} color={colors.primary}>
+              <T weight="bold" size={14} color={colors.primaryInk}>
                 {t.topbar.login}
               </T>
             </TouchableOpacity>
@@ -300,7 +302,7 @@ export default function WelcomeScreen() {
                   justifyContent: 'center',
                 }}
               >
-                <Icon name={st.icon} size={24} color={colors.primary} />
+                <Icon name={st.icon} size={24} color={colors.primaryInk} />
               </View>
               <View style={{ flex: 1 }}>
                 <T weight="extrabold" size={17}>
@@ -311,7 +313,7 @@ export default function WelcomeScreen() {
                 </T>
               </View>
               <View style={{ backgroundColor: colors.successBg, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 3 }}>
-                <T weight="bold" size={11} color={colors.success}>
+                <T weight="bold" size={11} color={colors.successInk}>
                   {t.tracks.ready}
                 </T>
               </View>
@@ -349,7 +351,7 @@ export default function WelcomeScreen() {
             style={[{ gap: 10 }, compareCols > 1 ? { flex: 1 } : null, col.key === 'sqb' ? { borderColor: colors.primary, borderWidth: 2 } : null]}
           >
             <Row gap={10}>
-              <Icon name={col.icon} size={20} color={col.key === 'sqb' ? colors.primary : colors.textMedium} />
+              <Icon name={col.icon} size={20} color={col.key === 'sqb' ? colors.primaryInk : colors.textMedium} />
               <T weight="extrabold" size={16} style={{ flex: 1 }}>
                 {col.label}
               </T>
@@ -447,7 +449,7 @@ export default function WelcomeScreen() {
               gap={6}
               style={{ backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.border, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 7 }}
             >
-              <Icon name={point.icon} size={15} color={colors.primary} />
+              <Icon name={point.icon} size={15} color={colors.primaryInk} />
               <T size={12} weight="semibold" style={{ flexShrink: 1 }}>
                 {point.title}
               </T>
@@ -462,7 +464,7 @@ export default function WelcomeScreen() {
             {t.value.plan}
           </T>
           <Row gap={6} align="flex-end">
-            <T weight="extrabold" size={40} color={colors.primary} ltr style={{ lineHeight: 48 }}>
+            <T weight="extrabold" size={40} color={colors.primaryInk} ltr style={{ lineHeight: 48 }}>
               {t.value.amount}
             </T>
             <T weight="bold" size={14} color={colors.textMedium} style={{ marginBottom: 8 }}>
@@ -474,7 +476,7 @@ export default function WelcomeScreen() {
           </T>
           {t.value.included.map((item: string) => (
             <Row key={item} gap={8} align="flex-start">
-              <Icon name="check" size={16} color={colors.success} strokeWidth={3} />
+              <Icon name="check" size={16} color={colors.successInk} strokeWidth={3} />
               <T size={13} style={{ flex: 1 }}>
                 {item}
               </T>
@@ -488,7 +490,7 @@ export default function WelcomeScreen() {
 
         <Card style={{ gap: 10, borderColor: colors.primary, borderWidth: 2 }}>
           <View style={{ alignSelf: 'flex-start', backgroundColor: colors.successBg, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3 }}>
-            <T weight="bold" size={12} color={colors.success}>
+            <T weight="bold" size={12} color={colors.successInk}>
               {t.value.group.badge}
             </T>
           </View>
@@ -508,7 +510,7 @@ export default function WelcomeScreen() {
                   {tier.each}
                 </T>
               </View>
-              <T weight="extrabold" size={16} color={colors.primary}>
+              <T weight="extrabold" size={16} color={colors.primaryInk}>
                 {tier.price}
               </T>
             </Row>

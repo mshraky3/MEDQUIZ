@@ -3,7 +3,7 @@ import { ActivityIndicator, Modal, Pressable, ScrollView, StyleProp, TouchableOp
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLang } from '@/i18n/LanguageContext';
 import { useKeyboardHeight } from '@/lib/useKeyboardHeight';
-import { colors, radius, shadow } from '@/theme';
+import { useColors, radius, shadow, type Palette } from '@/theme';
 import { Icon } from './Icon';
 import { Row } from './Layout';
 import { T } from './Text';
@@ -12,8 +12,9 @@ type SpinnerProps = { size?: 'sm' | 'md' | 'lg'; label?: string; fullScreen?: bo
 
 /** The one canonical loading indicator. */
 export function Spinner({ size = 'md', label, fullScreen = false }: SpinnerProps) {
+  const colors = useColors();
   const dim = size === 'sm' ? 'small' : 'large';
-  const node = <ActivityIndicator size={dim} color={colors.primary} accessibilityLabel={label || 'Loading'} />;
+  const node = <ActivityIndicator size={dim} color={colors.primaryInk} accessibilityLabel={label || 'Loading'} />;
   if (fullScreen) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 32, minHeight: 240 }}>
@@ -39,12 +40,13 @@ export function Spinner({ size = 'md', label, fullScreen = false }: SpinnerProps
 
 type NoticeKind = 'error' | 'warning' | 'success' | 'info';
 
-const NOTICE = {
-  error: { fg: colors.error, bg: colors.errorBg, icon: 'alert-triangle' },
-  warning: { fg: colors.warning, bg: colors.warningBg, icon: 'alert-triangle' },
-  success: { fg: colors.success, bg: colors.successBg, icon: 'check-circle' },
-  info: { fg: colors.primary, bg: colors.infoBg, icon: 'info' },
-} as const;
+const noticeStyles = (colors: Palette) =>
+  ({
+    error: { fg: colors.errorInk, bg: colors.errorBg, icon: 'alert-triangle' },
+    warning: { fg: colors.warningInk, bg: colors.warningBg, icon: 'alert-triangle' },
+    success: { fg: colors.successInk, bg: colors.successBg, icon: 'check-circle' },
+    info: { fg: colors.primaryInk, bg: colors.infoBg, icon: 'info' },
+  }) as const;
 
 /** The inline alert box (login errors, hints, session-expired notices). */
 /**
@@ -68,7 +70,8 @@ export function Notice({
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
 }) {
-  const n = NOTICE[kind];
+  const colors = useColors();
+  const n = noticeStyles(colors)[kind];
   const text = textOnly(children);
   return (
     <Row
@@ -107,6 +110,7 @@ export function Dialog({
   blocking?: boolean;
   scroll?: boolean;
 }) {
+  const colors = useColors();
   const insets = useSafeAreaInsets();
   const keyboard = useKeyboardHeight();
   return (
@@ -153,24 +157,25 @@ export function Dialog({
 
 export function ProgressBar({
   pct,
-  color = colors.primary,
+  color,
   height = 8,
-  track = colors.surfaceTint,
+  track,
 }: {
   pct: number;
   color?: string;
   height?: number;
   track?: string;
 }) {
+  const colors = useColors();
   const { isRTL } = useLang();
   const clamped = Math.max(0, Math.min(100, Number.isFinite(pct) ? pct : 0));
   return (
     <View
       accessibilityRole="progressbar"
       accessibilityValue={{ min: 0, max: 100, now: Math.round(clamped) }}
-      style={{ height, borderRadius: height, backgroundColor: track, overflow: 'hidden', flexDirection: isRTL ? 'row-reverse' : 'row' }}
+      style={{ height, borderRadius: height, backgroundColor: track ?? colors.surfaceTint, overflow: 'hidden', flexDirection: isRTL ? 'row-reverse' : 'row' }}
     >
-      <View style={{ width: `${clamped}%`, backgroundColor: color, borderRadius: height }} />
+      <View style={{ width: `${clamped}%`, backgroundColor: color ?? colors.primary, borderRadius: height }} />
     </View>
   );
 }
@@ -189,6 +194,7 @@ export function EmptyState({
   children?: React.ReactNode;
   tone?: 'neutral' | 'error';
 }) {
+  const colors = useColors();
   return (
     <View style={{ alignItems: 'center', gap: 10, paddingVertical: 28, paddingHorizontal: 16 }}>
       <View
@@ -201,7 +207,7 @@ export function EmptyState({
           backgroundColor: tone === 'error' ? colors.errorBg : colors.surfaceTint,
         }}
       >
-        <Icon name={icon} size={28} color={tone === 'error' ? colors.error : colors.primary} />
+        <Icon name={icon} size={28} color={tone === 'error' ? colors.errorInk : colors.primaryInk} />
       </View>
       <T weight="bold" size={17} align="center">
         {title}
@@ -217,9 +223,11 @@ export function EmptyState({
 }
 
 /** Small coloured badge (tags, "new", counts). */
-export function Badge({ label, color = colors.primary, bg = colors.infoBg, icon }: { label: string; color?: string; bg?: string; icon?: string }) {
+export function Badge({ label, color, bg, icon }: { label: string; color?: string; bg?: string; icon?: string }) {
+  const colors = useColors();
+  color = color ?? colors.primaryInk;
   return (
-    <Row gap={5} style={{ backgroundColor: bg, borderRadius: radius.pill, paddingHorizontal: 9, paddingVertical: 3, alignSelf: 'flex-start' }}>
+    <Row gap={5} style={{ backgroundColor: bg ?? colors.infoBg, borderRadius: radius.pill, paddingHorizontal: 9, paddingVertical: 3, alignSelf: 'flex-start' }}>
       {icon ? <Icon name={icon} size={12} color={color} /> : null}
       <T weight="bold" size={11} color={color}>
         {label}
@@ -235,7 +243,7 @@ export function ListRow({
   subtitle,
   onPress,
   right,
-  iconColor = colors.primary,
+  iconColor,
 }: {
   icon?: string;
   title: string;
@@ -244,6 +252,7 @@ export function ListRow({
   right?: React.ReactNode;
   iconColor?: string;
 }) {
+  const colors = useColors();
   const content = (
     <Row gap={12} style={{ paddingVertical: 14, paddingHorizontal: 14 }}>
       {icon ? (
@@ -257,7 +266,7 @@ export function ListRow({
             justifyContent: 'center',
           }}
         >
-          <Icon name={icon} size={19} color={iconColor} />
+          <Icon name={icon} size={19} color={iconColor ?? colors.primaryInk} />
         </View>
       ) : null}
       <View style={{ flex: 1 }}>

@@ -77,6 +77,7 @@ export const KEYS = {
   user: 'sqb.user',
   token: 'sqb.sessionToken',
   lang: 'sqb_lang',
+  theme: 'sqb_theme',
   quizMode: 'sqb_quiz_mode',
   cookieConsent: 'sqb.consent',
   quizSave: (slot: string) => `sqb_quiz_${slot}`,

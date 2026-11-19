@@ -6,7 +6,7 @@ import { useApp, useCopy } from '@/i18n';
 import authCopy from '@/i18n/copy/auth.js';
 import { ApiError, api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { colors } from '@/theme';
+import { useColors } from '@/theme';
 import { Button, Dialog, Input, Link, Notice, Row, T } from '@/ui';
 import { AuthShell, TermsDialog } from './parts';
 import { GoogleButton } from './GoogleButton';
@@ -18,6 +18,7 @@ type LoginResponse = { user?: any; sessionToken: string; showTerms?: boolean };
  * subscription: a free-tier account signs in to its own dashboard like anyone.
  */
 export default function LoginScreen() {
+  const colors = useColors();
   const copy = useCopy(authCopy).login;
   const app = useApp();
   const { signIn, sessionExpired, clearExpiredNotice } = useAuth();
@@ -161,7 +162,7 @@ export default function LoginScreen() {
       {error ? <Notice kind="error">{error}</Notice> : null}
       {noGoogleAccount ? (
         <Notice kind="warning">
-          <T size={14} color={colors.warning} weight="medium">
+          <T size={14} color={colors.warningInk} weight="medium">
             {copy.googleNoAccount}{' '}
           </T>
           <Link label={PLAY_BUILD ? app.webAccount.loginLink : copy.googleNoAccountCta} onPress={() => router.push('/signup')} />

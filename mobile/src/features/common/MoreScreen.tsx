@@ -9,9 +9,10 @@ import { formatDate, useApp, useCommon, useLang } from '@/i18n';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { useLayout } from '@/lib/layout';
-import { colors, radius } from '@/theme';
+import { useColors, radius } from '@/theme';
 import { Button, Card, Chevron, Divider, Icon, ListRow, Row, T } from '@/ui';
 import { LanguageToggle } from './LanguageToggle';
+import { ThemeChoice } from './ThemeChoice';
 import { TabScreen } from './TabScreen';
 
 /**
@@ -20,6 +21,7 @@ import { TabScreen } from './TabScreen';
  * its navbar menu and footer.
  */
 export default function MoreScreen() {
+  const colors = useColors();
   const { user, signOut } = useAuth();
   const common = useCommon();
   const app = useApp();
@@ -109,7 +111,7 @@ export default function MoreScreen() {
       <Card style={{ gap: 6 }}>
         <Row gap={12}>
           <View style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: colors.infoBg, alignItems: 'center', justifyContent: 'center' }}>
-            <Icon name="user" size={24} color={colors.primary} />
+            <Icon name="user" size={24} color={colors.primaryInk} />
           </View>
           <View style={{ flex: 1 }}>
             <T size={12} color={colors.textLight}>
@@ -122,7 +124,7 @@ export default function MoreScreen() {
         </Row>
         {expiry ? (
           <View style={{ alignSelf: 'flex-start', backgroundColor: colors.successBg, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3 }}>
-            <T size={12} weight="bold" color={colors.success}>
+            <T size={12} weight="bold" color={colors.successInk}>
               {expiry}
             </T>
           </View>
@@ -172,6 +174,8 @@ export default function MoreScreen() {
           <LanguageToggle />
         </Row>
         <Divider />
+        <ThemeChoice />
+        <Divider />
         <Row justify="space-between">
           <View>
             <T weight="bold" size={15}>
@@ -192,7 +196,7 @@ export default function MoreScreen() {
         </Row>
         {updateMsg ? (
           <Row gap={8} align="flex-start" style={{ backgroundColor: colors.surface2, borderRadius: radius.md, padding: 10 }}>
-            <Icon name={updateReady ? 'refresh' : 'check-circle'} size={16} color={colors.primary} />
+            <Icon name={updateReady ? 'refresh' : 'check-circle'} size={16} color={colors.primaryInk} />
             <T size={13} style={{ flex: 1 }}>
               {updateMsg}
             </T>

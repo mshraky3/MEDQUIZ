@@ -7,7 +7,7 @@ import authCopy from '@/i18n/copy/auth.js';
 import { ApiError, api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { TRACKS, TRACK_KEYS, TrackKey, normalizeTrack, pick } from '@/lib/tracks';
-import { colors } from '@/theme';
+import { useColors } from '@/theme';
 import { Button, Checkbox, Icon, Input, Link, Notice, Row, Span, Spinner, T } from '@/ui';
 import { GOOGLE_SIGN_IN_AVAILABLE, GoogleButton } from './GoogleButton';
 import { AuthShell, TermsDialog, TrackDialog } from './parts';
@@ -32,6 +32,7 @@ const openFirstQuiz = () =>
  *  - seat:   a paid group seat (/join/:token), no code, the claimer picks a track.
  */
 export default function SignupScreen({ mode, token }: { mode: SignupMode; token?: string }) {
+  const colors = useColors();
   const t = useCopy(authCopy).signup;
   const { lang } = useLang();
   const { signIn, user: signedInUser } = useAuth();
@@ -298,7 +299,7 @@ export default function SignupScreen({ mode, token }: { mode: SignupMode; token?
     return (
       <AuthShell canGoBack={false}>
         <View style={{ alignItems: 'center', gap: 10, paddingVertical: 12 }}>
-          <Icon name="check-circle" size={56} color={colors.success} />
+          <Icon name="check-circle" size={56} color={colors.successInk} />
           <T weight="extrabold" size={20} align="center">
             {t.successTitle}
           </T>
@@ -367,7 +368,7 @@ export default function SignupScreen({ mode, token }: { mode: SignupMode; token?
               paddingVertical: 3,
             }}
           >
-            <T weight="bold" size={12} color={colors.primary}>
+            <T weight="bold" size={12} color={colors.primaryInk}>
               {pillText}
             </T>
           </View>
@@ -380,10 +381,10 @@ export default function SignupScreen({ mode, token }: { mode: SignupMode; token?
 
       {isSeat && seatExpiresAt ? (
         <Notice kind="info">
-          <T weight="bold" size={14} color={colors.primary}>
+          <T weight="bold" size={14} color={colors.primaryInk}>
             {t.seatCalloutTitle}
           </T>
-          <T size={13} color={colors.primary}>
+          <T size={13} color={colors.primaryInk}>
             {t.seatCalloutBody(formatDate(seatExpiresAt, lang))}
           </T>
         </Notice>
@@ -393,7 +394,7 @@ export default function SignupScreen({ mode, token }: { mode: SignupMode; token?
         <>
           {trackLocked ? (
             <Row gap={8} style={{ backgroundColor: colors.surface2, borderRadius: 12, padding: 12 }}>
-              <Icon name={TRACKS[inviteTrack || 'medical'].icon} size={18} color={colors.primary} />
+              <Icon name={TRACKS[inviteTrack || 'medical'].icon} size={18} color={colors.primaryInk} />
               <T size={13} style={{ flex: 1 }}>
                 {t.trackLockedPrefix} <Span weight="bold" size={13}>{trackName(inviteTrack)}</Span> {t.trackLockedSuffix}
               </T>
@@ -410,7 +411,7 @@ export default function SignupScreen({ mode, token }: { mode: SignupMode; token?
                   justifyContent: 'center',
                 }}
               >
-                <Icon name={studyTrack ? TRACKS[studyTrack].icon : 'help-circle'} size={20} color={colors.primary} />
+                <Icon name={studyTrack ? TRACKS[studyTrack].icon : 'help-circle'} size={20} color={colors.primaryInk} />
               </View>
               <View style={{ flex: 1 }}>
                 <T size={12} color={colors.textLight}>
@@ -478,11 +479,11 @@ export default function SignupScreen({ mode, token }: { mode: SignupMode; token?
               <Checkbox checked={agreed} onChange={setAgreed}>
                 <T size={13}>
                   {t.agreePrefix}{' '}
-                  <Span size={13} color={colors.primary} weight="semibold" onPress={() => router.push('/terms')}>
+                  <Span size={13} color={colors.primaryInk} weight="semibold" onPress={() => router.push('/terms')}>
                     {t.termsLink}
                   </Span>{' '}
                   {t.and}{' '}
-                  <Span size={13} color={colors.primary} weight="semibold" onPress={() => router.push('/privacy')}>
+                  <Span size={13} color={colors.primaryInk} weight="semibold" onPress={() => router.push('/privacy')}>
                     {t.privacyLink}
                   </Span>
                 </T>

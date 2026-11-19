@@ -55,7 +55,7 @@ src/features/       one folder per area: auth, hub, quiz, analysis, summaries, a
 src/ui/             design-system components (Text, Layout, Controls, Feedback, DatePicker)
 src/lib/            api client, auth, storage, tracks, stats, formatting, route mapping
 src/i18n/           language context, app-only strings (appCopy.ts) and the copied website copy
-src/theme/          colours, spacing, fonts (values from the website's index.css)
+src/theme/          light + dark palettes, ThemeProvider/useColors(), saved System/Light/Dark choice, spacing, fonts (values from the website's index.css)
 scripts/            sync scripts (below)
 docs/               STATUS, GOOGLE_SIGN_IN, PLAY_STORE_PAYMENTS
 ```
@@ -112,5 +112,6 @@ Do not change `API_URL` away from `https://medquiz.vercel.app`: it is compiled i
 - The brand is always written **SQB** in user-facing text.
 - Exam names and question text are never translated.
 - Every user-facing string has an Arabic and an English version in the same place; never hard-code a language or a `dir`.
+- Colours come from `const colors = useColors()` (never a module-level colour constant): the app has a light and a dark theme (`src/theme/palettes.ts`, same tokens as the website). Brand/status colours used as TEXT or icon colour use the `*Ink` twin (`colors.primaryInk`, `errorInk`...); fills keep `colors.primary` etc. The user's choice (System / Light / Dark, default System) is saved under `sqb_theme` and set on the More tab. `app.json` `userInterfaceStyle` is `automatic`, so changing it needs a new native build. Lesson pages and the card form stay light on purpose (website lesson CSS / Moyasar markup).
 - The app never sends email; the API does, through the central email gateway.
 - Never commit credentials, keystores (`*.jks`) or `google-services.json`.

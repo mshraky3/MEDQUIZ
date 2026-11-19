@@ -8,7 +8,7 @@ import { useAuth } from '@/lib/auth';
 import { getSourceLabel, getTypeLabel } from '@/lib/labels';
 import { getItem, setItem } from '@/lib/storage';
 import type { Specialty } from '@/lib/tracks';
-import { colors, radius } from '@/theme';
+import { useColors, radius } from '@/theme';
 import { Button, Card, DatePickerDialog, Dialog, Icon, Input, Row, T, toISO } from '@/ui';
 
 const TYPE_PRESETS: Record<string, number[]> = {
@@ -21,16 +21,18 @@ const TYPE_PRESETS: Record<string, number[]> = {
 // strokeDashoffset behave as a 0-100% fill.
 const RING_CIRCUMFERENCE = 2 * Math.PI * 34;
 
-const LinkBtn = ({ label, onPress, muted }: { label: string; onPress: () => void; muted?: boolean }) => (
-  <TouchableOpacity onPress={onPress} hitSlop={8} accessibilityRole="button">
-    <T weight="semibold" size={13} color={muted ? colors.textLight : colors.primary}>
+const LinkBtn = ({ label, onPress, muted }: { label: string; onPress: () => void; muted?: boolean }) => {
+  const colors = useColors();
+  return (<TouchableOpacity onPress={onPress} hitSlop={8} accessibilityRole="button">
+    <T weight="semibold" size={13} color={muted ? colors.textLight : colors.primaryInk}>
       {label}
     </T>
-  </TouchableOpacity>
-);
+  </TouchableOpacity>);
+};
 
-const Choice = ({ label, on, onPress }: { label: string; on: boolean; onPress: () => void }) => (
-  <TouchableOpacity
+const Choice = ({ label, on, onPress }: { label: string; on: boolean; onPress: () => void }) => {
+  const colors = useColors();
+  return (<TouchableOpacity
     onPress={onPress}
     accessibilityRole="button"
     accessibilityState={{ selected: on }}
@@ -43,11 +45,11 @@ const Choice = ({ label, on, onPress }: { label: string; on: boolean; onPress: (
       backgroundColor: on ? colors.infoBg : colors.surface,
     }}
   >
-    <T size={12} weight="semibold" color={on ? colors.primary : colors.text}>
+    <T size={12} weight="semibold" color={on ? colors.primaryInk : colors.text}>
       {label}
     </T>
-  </TouchableOpacity>
-);
+  </TouchableOpacity>);
+};
 
 type Goal = {
   goalType: 'questions' | 'quizzes' | 'accuracy';
@@ -67,6 +69,7 @@ type Goal = {
  * specialties) and the server drops any that are sent.
  */
 export function GoalCard({ specialties, sources }: { specialties: Specialty[]; sources: { key: string }[] }) {
+  const colors = useColors();
   const t = useCopy(quizCopy).hub;
   const { lang } = useLang();
   const g = t.goal;
@@ -148,7 +151,7 @@ export function GoalCard({ specialties, sources }: { specialties: Specialty[]; s
     return (
       <Card style={{ gap: 14 }}>
         <Row gap={8}>
-          <Icon name="target" size={17} color={colors.primary} />
+          <Icon name="target" size={17} color={colors.primaryInk} />
           <T weight="bold" size={16}>
             {g.title}
           </T>
@@ -255,7 +258,7 @@ export function GoalCard({ specialties, sources }: { specialties: Specialty[]; s
         ) : null}
 
         {error ? (
-          <T size={13} color={colors.error}>
+          <T size={13} color={colors.errorInk}>
             {error}
           </T>
         ) : null}
@@ -270,7 +273,7 @@ export function GoalCard({ specialties, sources }: { specialties: Specialty[]; s
       <Card style={{ gap: 10 }}>
         <Row gap={12} align="flex-start">
           <View style={{ width: 44, height: 44, borderRadius: radius.md, backgroundColor: colors.surfaceTint, alignItems: 'center', justifyContent: 'center' }}>
-            <Icon name="target" size={24} color={colors.primary} />
+            <Icon name="target" size={24} color={colors.primaryInk} />
           </View>
           <View style={{ flex: 1 }}>
             <T weight="bold" size={15}>
@@ -298,7 +301,7 @@ export function GoalCard({ specialties, sources }: { specialties: Specialty[]; s
     <Card style={{ gap: 14, borderColor: goal.achieved ? colors.success : colors.border }}>
       <Row justify="space-between">
         <Row gap={8}>
-          <Icon name="target" size={17} color={colors.primary} />
+          <Icon name="target" size={17} color={colors.primaryInk} />
           <T weight="bold" size={16}>
             {g.title}
           </T>
@@ -319,7 +322,7 @@ export function GoalCard({ specialties, sources }: { specialties: Specialty[]; s
               cx={40}
               cy={40}
               r={34}
-              stroke={goal.achieved ? colors.success : colors.primary}
+              stroke={goal.achieved ? colors.successInk : colors.primaryInk}
               strokeWidth={8}
               fill="none"
               strokeLinecap="round"
@@ -363,8 +366,8 @@ export function GoalCard({ specialties, sources }: { specialties: Specialty[]; s
             </Row>
           ) : null}
           {goal.achieved ? (
-            <T size={13} weight="bold" color={colors.success}>
-              {g.achieved} <T size={13} color={colors.success}>{g.achievedBody}</T>
+            <T size={13} weight="bold" color={colors.successInk}>
+              {g.achieved} <T size={13} color={colors.successInk}>{g.achievedBody}</T>
             </T>
           ) : (
             <T size={13} color={colors.textMedium}>
@@ -399,15 +402,15 @@ export function GoalCard({ specialties, sources }: { specialties: Specialty[]; s
               </T>
             ) : delta > 0 ? (
               <Row gap={4}>
-                <Icon name="trending-up" size={14} color={colors.success} />
-                <T size={12} color={colors.success} weight="semibold">
+                <Icon name="trending-up" size={14} color={colors.successInk} />
+                <T size={12} color={colors.successInk} weight="semibold">
                   {p.improved(delta)}
                 </T>
               </Row>
             ) : delta < 0 ? (
               <Row gap={4}>
-                <Icon name="trending-down" size={14} color={colors.error} />
-                <T size={12} color={colors.error} weight="semibold">
+                <Icon name="trending-down" size={14} color={colors.errorInk} />
+                <T size={12} color={colors.errorInk} weight="semibold">
                   {p.declined(Math.abs(delta))}
                 </T>
               </Row>
@@ -444,6 +447,7 @@ const addDays = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth(), 
  * resitting should be asked, because deleting it would also switch off reminders.
  */
 export function ExamDateCard({ questionsRemaining }: { questionsRemaining: number }) {
+  const colors = useColors();
   const t = useCopy(quizCopy).hub;
   const { lang } = useLang();
   const e = t.exam;
@@ -558,7 +562,7 @@ export function ExamDateCard({ questionsRemaining }: { questionsRemaining: numbe
   const head = (
     <Row justify="space-between">
       <Row gap={8}>
-        <Icon name="calendar" size={16} color={colors.primary} />
+        <Icon name="calendar" size={16} color={colors.primaryInk} />
         <T weight="bold" size={16}>
           {e.title}
         </T>
@@ -578,7 +582,7 @@ export function ExamDateCard({ questionsRemaining }: { questionsRemaining: numbe
         <Card style={{ gap: 10 }}>
           <Row gap={12} align="flex-start">
             <View style={{ width: 44, height: 44, borderRadius: radius.md, backgroundColor: colors.surfaceTint, alignItems: 'center', justifyContent: 'center' }}>
-              <Icon name="calendar" size={22} color={colors.primary} />
+              <Icon name="calendar" size={22} color={colors.primaryInk} />
             </View>
             <View style={{ flex: 1 }}>
               <T weight="bold" size={15}>
@@ -589,7 +593,7 @@ export function ExamDateCard({ questionsRemaining }: { questionsRemaining: numbe
               </T>
             </View>
           </Row>
-          {error ? <T size={13} color={colors.error}>{error}</T> : null}
+          {error ? <T size={13} color={colors.errorInk}>{error}</T> : null}
           <Button label={e.setCta} size="sm" onPress={() => openPicker('card')} loading={saving} />
         </Card>
         {picker}
@@ -597,7 +601,7 @@ export function ExamDateCard({ questionsRemaining }: { questionsRemaining: numbe
         <Dialog visible={askOpen && !picking} onClose={dismissAsk}>
           <View style={{ gap: 10, alignItems: 'center' }}>
             <View style={{ width: 52, height: 52, borderRadius: radius.lg, backgroundColor: colors.surfaceTint, alignItems: 'center', justifyContent: 'center' }}>
-              <Icon name="calendar" size={26} color={colors.primary} />
+              <Icon name="calendar" size={26} color={colors.primaryInk} />
             </View>
             <T weight="extrabold" size={18} align="center">
               {e.askTitle}
@@ -622,7 +626,7 @@ export function ExamDateCard({ questionsRemaining }: { questionsRemaining: numbe
             </TouchableOpacity>
           </View>
           {error ? (
-            <T size={13} color={colors.error}>
+            <T size={13} color={colors.errorInk}>
               {error}
             </T>
           ) : null}
@@ -653,6 +657,7 @@ export function ExamDateCard({ questionsRemaining }: { questionsRemaining: numbe
   const days = exam.daysRemaining;
   // Urgency is earned by the real number, never invented.
   const accent = days <= 3 ? colors.error : days <= 14 ? colors.warning : colors.primary;
+  const accentInk = days <= 3 ? colors.errorInk : days <= 14 ? colors.warningInk : colors.primaryInk;
   const weeks = Math.round(days / 7);
   const pace = questionsRemaining > 0 && days >= PACE_MIN_DAYS && days <= PACE_MAX_DAYS ? Math.ceil(questionsRemaining / days) : null;
 
@@ -661,16 +666,16 @@ export function ExamDateCard({ questionsRemaining }: { questionsRemaining: numbe
       <Card style={{ gap: 8, borderColor: accent }}>
         {head}
         {days === 0 ? (
-          <T weight="extrabold" size={22} color={accent}>
+          <T weight="extrabold" size={22} color={accentInk}>
             {e.today}
           </T>
         ) : days === 1 ? (
-          <T weight="extrabold" size={22} color={accent}>
+          <T weight="extrabold" size={22} color={accentInk}>
             {e.tomorrow}
           </T>
         ) : (
           <Row gap={8} align="flex-end">
-            <T weight="extrabold" size={40} color={accent} ltr style={{ lineHeight: 48 }}>
+            <T weight="extrabold" size={40} color={accentInk} ltr style={{ lineHeight: 48 }}>
               {fmt(days)}
             </T>
             <T size={14} color={colors.textMedium} style={{ marginBottom: 8 }}>
@@ -683,7 +688,7 @@ export function ExamDateCard({ questionsRemaining }: { questionsRemaining: numbe
           {days >= 14 ? ` · ${e.weeksLeft(weeks)}` : ''}
         </T>
         {pace != null ? (
-          <T size={13} color={colors.primary} weight="semibold">
+          <T size={13} color={colors.primaryInk} weight="semibold">
             {e.perDay(fmt(pace))}
           </T>
         ) : null}
@@ -703,6 +708,7 @@ const ymd = (d: Date) => toISO(d);
  * or about to break it?" and shows the last seven days as a strip.
  */
 export function StreakCard({ streak, onStartToday }: { streak: any; onStartToday: () => void }) {
+  const colors = useColors();
   const t = useCopy(quizCopy).hub;
   const { lang } = useLang();
   const s = t.streak;
@@ -735,7 +741,7 @@ export function StreakCard({ streak, onStartToday }: { streak: any; onStartToday
       <Card style={{ gap: 10 }}>
         <Row gap={12} align="flex-start">
           <View style={{ width: 44, height: 44, borderRadius: radius.md, backgroundColor: colors.warningBg, alignItems: 'center', justifyContent: 'center' }}>
-            <Icon name="flame" size={22} color={colors.warning} />
+            <Icon name="flame" size={22} color={colors.warningInk} />
           </View>
           <View style={{ flex: 1 }}>
             <T weight="bold" size={15}>
@@ -755,7 +761,7 @@ export function StreakCard({ streak, onStartToday }: { streak: any; onStartToday
     <Card style={{ gap: 12, borderColor: studiedToday ? colors.success : colors.warning }}>
       <Row justify="space-between">
         <Row gap={8}>
-          <Icon name="flame" size={16} color={colors.warning} />
+          <Icon name="flame" size={16} color={colors.warningInk} />
           <T weight="bold" size={16}>
             {s.title}
           </T>
@@ -768,7 +774,7 @@ export function StreakCard({ streak, onStartToday }: { streak: any; onStartToday
       </Row>
 
       <Row gap={8} align="flex-end" accessibilityLabel={s.aria(current)}>
-        <T weight="extrabold" size={40} color={colors.warning} ltr style={{ lineHeight: 48 }}>
+        <T weight="extrabold" size={40} color={colors.warningInk} ltr style={{ lineHeight: 48 }}>
           {fmt(current)}
         </T>
         <T size={14} color={colors.textMedium} style={{ marginBottom: 8 }}>
@@ -801,12 +807,12 @@ export function StreakCard({ streak, onStartToday }: { streak: any; onStartToday
       </Row>
 
       {studiedToday ? (
-        <T size={13} weight="semibold" color={colors.success}>
+        <T size={13} weight="semibold" color={colors.successInk}>
           {s.safeToday}
         </T>
       ) : (
         <Row gap={10} wrap>
-          <T size={13} weight="semibold" color={colors.warning}>
+          <T size={13} weight="semibold" color={colors.warningInk}>
             {s.atRisk}
           </T>
           <LinkBtn label={s.startToday} onPress={onStartToday} />

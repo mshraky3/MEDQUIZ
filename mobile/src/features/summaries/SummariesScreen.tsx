@@ -7,7 +7,7 @@ import summariesCopy from '@/i18n/copy/summaries.js';
 import { useAuth } from '@/lib/auth';
 import { LIST_PANE_WIDTH, useLayout } from '@/lib/layout';
 import { examLabel, trackLabel, userTrack } from '@/lib/tracks';
-import { colors, radius } from '@/theme';
+import { useColors, radius } from '@/theme';
 import { Button, Card, Chevron, EmptyState, Icon, Input, ProgressBar, Row, Screen, Spinner, T } from '@/ui';
 import { AppBar, FreeAllowanceBanner } from '@/features/common/chrome';
 import { LessonView } from './LessonScreen';
@@ -30,6 +30,7 @@ type Guide = {
 };
 
 const Ring = ({ pct, color }: { pct: number; color: string }) => {
+  const colors = useColors();
   const c = 2 * Math.PI * 16;
   return (
     <View style={{ width: 40, height: 40 }}>
@@ -70,6 +71,7 @@ const Ring = ({ pct, color }: { pct: number; color: string }) => {
  * text, questions) is English in both.
  */
 export default function SummariesScreen() {
+  const colors = useColors();
   const { user } = useAuth();
   const t = useCopy(summariesCopy);
   const { lang, isRTL } = useLang();
@@ -236,8 +238,8 @@ export default function SummariesScreen() {
               {t.stepNo(step.no)}
             </T>
             <Row gap={4}>
-              <Icon name="lock" size={12} color={colors.warning} />
-              <T weight="bold" size={12} color={colors.warning}>
+              <Icon name="lock" size={12} color={colors.warningInk} />
+              <T weight="bold" size={12} color={colors.warningInk}>
                 {t.lockedTag}
               </T>
             </Row>
@@ -265,15 +267,15 @@ export default function SummariesScreen() {
           </T>
           {state === 'done' ? (
             <Row gap={4}>
-              <Icon name="check" size={12} color={colors.success} strokeWidth={3} />
-              <T weight="bold" size={12} color={colors.success}>
+              <Icon name="check" size={12} color={colors.successInk} strokeWidth={3} />
+              <T weight="bold" size={12} color={colors.successInk}>
                 {t.stateDone}
               </T>
             </Row>
           ) : state === 'current' ? (
             <Row gap={4}>
-              <Icon name="zap" size={12} color={colors.primary} />
-              <T weight="bold" size={12} color={colors.primary}>
+              <Icon name="zap" size={12} color={colors.primaryInk} />
+              <T weight="bold" size={12} color={colors.primaryInk}>
                 {t.stateCurrent}
               </T>
             </Row>
@@ -284,14 +286,14 @@ export default function SummariesScreen() {
           )}
           {isResume ? (
             <Row gap={4}>
-              <Icon name="clock" size={12} color={colors.warning} />
-              <T weight="bold" size={12} color={colors.warning}>
+              <Icon name="clock" size={12} color={colors.warningInk} />
+              <T weight="bold" size={12} color={colors.warningInk}>
                 {t.stateResume}
               </T>
             </Row>
           ) : null}
           {!isSubscriber && step.free ? (
-            <T weight="bold" size={12} color={colors.success}>
+            <T weight="bold" size={12} color={colors.successInk}>
               {t.freeTag}
             </T>
           ) : null}
@@ -342,8 +344,8 @@ export default function SummariesScreen() {
               backgroundColor: state === 'done' ? colors.successBg : colors.surface,
             }}
           >
-            <Icon name={state === 'done' ? 'check' : 'circle'} size={13} color={state === 'done' ? colors.success : colors.textLight} />
-            <T size={12} weight="semibold" color={state === 'done' ? colors.success : colors.textMedium}>
+            <Icon name={state === 'done' ? 'check' : 'circle'} size={13} color={state === 'done' ? colors.successInk : colors.textLight} />
+            <T size={12} weight="semibold" color={state === 'done' ? colors.successInk : colors.textMedium}>
               {state === 'done' ? t.marked : t.markDone}
             </T>
           </TouchableOpacity>
@@ -356,8 +358,8 @@ export default function SummariesScreen() {
     <Screen header={header} scrollRef={scrollRef} contentStyle={{ gap: 16 }} maxWidth={twoPane ? 0 : undefined}>
       <View style={{ gap: 10 }}>
         <Row gap={6}>
-          <Icon name="rocket" size={14} color={colors.primary} />
-          <T weight="bold" size={12} color={colors.primary}>
+          <Icon name="rocket" size={14} color={colors.primaryInk} />
+          <T weight="bold" size={12} color={colors.primaryInk}>
             {t.eyebrow}
           </T>
         </Row>
@@ -439,7 +441,7 @@ export default function SummariesScreen() {
         {finished ? (
           <Card pad={14} style={{ gap: 4, borderColor: colors.success }}>
             <Row gap={8}>
-              <Icon name="trophy" size={22} color={colors.warning} />
+              <Icon name="trophy" size={22} color={colors.warningInk} />
               <T weight="extrabold" size={15}>
                 {t.pathComplete}
               </T>
@@ -452,8 +454,8 @@ export default function SummariesScreen() {
         ) : resumeStep ? (
           <Card pad={14} style={{ gap: 6, borderColor: colors.primary, borderWidth: 2 }}>
             <Row gap={8}>
-              <Icon name={resuming ? 'clock' : freshStart ? 'flag' : 'zap'} size={18} color={colors.primary} />
-              <T weight="bold" size={12} color={colors.primary}>
+              <Icon name={resuming ? 'clock' : freshStart ? 'flag' : 'zap'} size={18} color={colors.primaryInk} />
+              <T weight="bold" size={12} color={colors.primaryInk}>
                 {resuming ? t.resumeKicker : freshStart ? t.startKicker : t.nextKicker}
               </T>
             </Row>
@@ -576,7 +578,7 @@ export default function SummariesScreen() {
                       <View style={{ flex: 1, gap: 2 }}>
                         <T size={12} color={colors.textLight}>
                           {t.milestoneKicker(m.order, milestones.length)} · <T size={12} color={colors.textLight} ltr>{m.tagline}</T>
-                          {isCurrent ? <T size={12} weight="bold" color={colors.primary}>{`  ${t.youAreHere}`}</T> : null}
+                          {isCurrent ? <T size={12} weight="bold" color={colors.primaryInk}>{`  ${t.youAreHere}`}</T> : null}
                         </T>
                         <Row gap={8}>
                           <Icon name={m.icon} size={18} color={m.accent} />
@@ -624,7 +626,7 @@ export default function SummariesScreen() {
           })}
 
           <Card pad={16} style={{ gap: 6, alignItems: 'center', borderColor: finished ? colors.warning : colors.border }}>
-            <Icon name="trophy" size={26} color={finished ? colors.warning : colors.textLight} />
+            <Icon name="trophy" size={26} color={finished ? colors.warningInk : colors.textLight} />
             <T weight="extrabold" size={16} align="center">
               {finished ? t.endTitleDone : t.endTitle}
             </T>

@@ -4,7 +4,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { router } from 'expo-router';
 import { SITE_URL } from '@/config';
 import { useApp } from '@/i18n';
-import { colors } from '@/theme';
+import { useColors } from '@/theme';
 import { Button, Card, Icon, Screen, ScreenHeader, T } from '@/ui';
 
 /**
@@ -13,6 +13,7 @@ import { Button, Card, Icon, Screen, ScreenHeader, T } from '@/ui';
  * page, so an invite or seat link keeps working: /signup, /signup/<token> or /join/<token>.
  */
 export default function WebAccountScreen({ path = '/signup' }: { path?: string }) {
+  const colors = useColors();
   const t = useApp().webAccount;
   const url = `${SITE_URL}${path}`;
   const openWebsite = () => WebBrowser.openBrowserAsync(url).catch(() => Linking.openURL(url));
@@ -21,7 +22,7 @@ export default function WebAccountScreen({ path = '/signup' }: { path?: string }
   return (
     <Screen width="form" header={<ScreenHeader title={t.title} />}>
       <Card pad={22} style={{ alignItems: 'center', gap: 12 }}>
-        <Icon name="user" size={38} color={colors.primary} />
+        <Icon name="user" size={38} color={colors.primaryInk} />
         <T color={colors.textMedium} align="center">
           {t.body}
         </T>

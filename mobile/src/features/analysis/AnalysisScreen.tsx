@@ -9,7 +9,7 @@ import { getSourceLabel, getTypeLabel } from '@/lib/labels';
 import { readQuizMode } from '@/lib/quizMode';
 import { accuracyTone, calculateBestWorstTopics } from '@/lib/stats';
 import { pick, specialtiesOf, userTrack } from '@/lib/tracks';
-import { colors, radius, toneColor } from '@/theme';
+import { useColors, useTones, radius } from '@/theme';
 import { Button, Card, Dialog, Icon, Input, ProgressBar, Row, Screen, Spinner, T } from '@/ui';
 import { AppBar } from '@/features/common/chrome';
 import { AttemptsList, FinalExams, LastQuizSummary, QuizHistory } from './sections';
@@ -23,6 +23,7 @@ const SECTION_IDS = ['an-specialties', 'an-sources', 'an-activity', 'an-mocks', 
 type SectionId = (typeof SECTION_IDS)[number];
 
 function Section({ id, title, hint, onLayout, children }: { id: string; title: string; hint?: string; onLayout: (id: string, y: number) => void; children: React.ReactNode }) {
+  const colors = useColors();
   return (
     <View style={{ gap: 10 }} onLayout={(e: LayoutChangeEvent) => onLayout(id, e.nativeEvent.layout.y)}>
       <View style={{ gap: 2 }}>
@@ -45,6 +46,8 @@ function Section({ id, title, hint, onLayout, children }: { id: string; title: s
  * mock exams and the last quiz's review. Every section opens in place.
  */
 export default function AnalysisScreen() {
+  const colors = useColors();
+  const tones = useTones();
   const { user } = useAuth();
   const t = useCopy(analysisCopy);
   const { lang } = useLang();
@@ -306,7 +309,7 @@ export default function AnalysisScreen() {
           <>
             <Row justify="space-between" align="flex-start" gap={12}>
               <View style={{ alignItems: 'center', flex: 1 }}>
-                <T weight="extrabold" size={44} ltr color={toneColor[accuracyTone(overallAccuracy)]} style={{ lineHeight: 54 }}>
+                <T weight="extrabold" size={44} ltr color={tones.color[accuracyTone(overallAccuracy)]} style={{ lineHeight: 54 }}>
                   {overallAccuracy == null ? '—' : `${overallAccuracy.toFixed(0)}%`}
                 </T>
                 <T size={12} color={colors.textLight}>
@@ -346,7 +349,7 @@ export default function AnalysisScreen() {
               <View style={{ gap: 8, backgroundColor: colors.surface2, borderRadius: radius.md, padding: 12 }}>
                 <T size={13}>
                   {t.nextStep.weakestLabel}: <T weight="bold" size={13}>{worstLabel}</T>{' '}
-                  <T weight="bold" size={13} ltr color={toneColor[accuracyTone(worst.accuracy)]}>
+                  <T weight="bold" size={13} ltr color={tones.color[accuracyTone(worst.accuracy)]}>
                     {Number(worst.accuracy).toFixed(0)}%
                   </T>
                 </T>
@@ -415,11 +418,11 @@ export default function AnalysisScreen() {
 
       {loadError ? (
         <Row gap={8} justify="space-between" style={{ backgroundColor: colors.errorBg, borderRadius: radius.md, padding: 12 }}>
-          <T size={13} color={colors.error} style={{ flex: 1 }}>
+          <T size={13} color={colors.errorInk} style={{ flex: 1 }}>
             {loadError}
           </T>
           <TouchableOpacity onPress={() => void handleRefresh()} accessibilityLabel={t.retry} accessibilityRole="button">
-            <Icon name="refresh" size={18} color={colors.error} />
+            <Icon name="refresh" size={18} color={colors.errorInk} />
           </TouchableOpacity>
         </Row>
       ) : null}
@@ -432,7 +435,7 @@ export default function AnalysisScreen() {
       {/* Danger zone: irreversible, so it sits apart. Subscribers only, matching the server. */}
       {isSubscriber ? (
         <Card style={{ gap: 10, borderColor: colors.error }} flat>
-          <T weight="bold" size={14} color={colors.error}>
+          <T weight="bold" size={14} color={colors.errorInk}>
             {t.reset.zoneTitle}
           </T>
           <T size={13} color={colors.textMedium}>
@@ -455,7 +458,7 @@ export default function AnalysisScreen() {
 
       <Dialog visible={showReset} onClose={() => !resetting && setShowReset(false)}>
         <Row gap={8}>
-          <Icon name="alert-triangle" size={19} color={colors.error} />
+          <Icon name="alert-triangle" size={19} color={colors.errorInk} />
           <T weight="bold" size={17} style={{ flex: 1 }}>
             {t.reset.modalTitle}
           </T>
@@ -463,15 +466,15 @@ export default function AnalysisScreen() {
         <T color={colors.textMedium}>{t.reset.lead}</T>
         {(t.reset.items as string[]).map((item) => (
           <Row key={item} gap={8} align="flex-start">
-            <T color={colors.error}>•</T>
+            <T color={colors.errorInk}>•</T>
             <T size={13} style={{ flex: 1 }}>
               {item}
             </T>
           </Row>
         ))}
         <Row gap={6} align="flex-start">
-          <Icon name="check-circle" size={14} color={colors.success} />
-          <T size={13} color={colors.success} style={{ flex: 1 }}>
+          <Icon name="check-circle" size={14} color={colors.successInk} />
+          <T size={13} color={colors.successInk} style={{ flex: 1 }}>
             {t.reset.keep}
           </T>
         </Row>
@@ -483,7 +486,7 @@ export default function AnalysisScreen() {
           autoCorrect={false}
           editable={!resetting}
         />
-        {resetError ? <T size={13} color={colors.error}>{resetError}</T> : null}
+        {resetError ? <T size={13} color={colors.errorInk}>{resetError}</T> : null}
         <Row gap={10}>
           <View style={{ flex: 1 }}>
             <Button label={t.reset.cancel} variant="secondary" onPress={() => setShowReset(false)} disabled={resetting} />

@@ -5,7 +5,7 @@ import type { BottomTabBarProps } from 'expo-router/build/react-navigation/botto
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useApp, useLang } from '@/i18n';
 import { useLayout } from '@/lib/layout';
-import { colors } from '@/theme';
+import { useColors } from '@/theme';
 import { Icon, Row, T } from '@/ui';
 
 const TAB_ICONS: Record<string, string> = {
@@ -18,6 +18,7 @@ const TAB_ICONS: Record<string, string> = {
 
 /** Bottom navigation. Laid out by the app (not Android) so it mirrors in Arabic. */
 function TabBar({ state, navigation }: BottomTabBarProps) {
+  const colors = useColors();
   const insets = useSafeAreaInsets();
   const app = useApp();
   const { isRTL } = useLang();
@@ -51,12 +52,12 @@ function TabBar({ state, navigation }: BottomTabBarProps) {
           gap: 6,
         }}
       >
-        <T weight="extrabold" size={20} color={colors.primary} ltr style={{ marginBottom: 14 }}>
+        <T weight="extrabold" size={20} color={colors.primaryInk} ltr style={{ marginBottom: 14 }}>
           SQB
         </T>
         {state.routes.map((route, index) => {
           const focused = state.index === index;
-          const color = focused ? colors.primary : colors.textLight;
+          const color = focused ? colors.primaryInk : colors.textLight;
           return (
             <TouchableOpacity
               key={route.key}
@@ -103,7 +104,7 @@ function TabBar({ state, navigation }: BottomTabBarProps) {
       <Row justify="space-around" align="flex-end" style={{ width: '100%', maxWidth: 640, alignSelf: 'center' }}>
         {state.routes.map((route, index) => {
           const focused = state.index === index;
-          const color = focused ? colors.primary : colors.textLight;
+          const color = focused ? colors.primaryInk : colors.textLight;
           const onPress = () => onTab(route, focused);
           return (
             <TouchableOpacity

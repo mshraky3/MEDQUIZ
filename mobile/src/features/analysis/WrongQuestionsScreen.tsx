@@ -6,7 +6,7 @@ import analysisCopy from '@/i18n/copy/analysis.js';
 import { api, isAborted } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { getSourceLabel, getTypeLabel } from '@/lib/labels';
-import { colors } from '@/theme';
+import { useColors } from '@/theme';
 import { Button, EmptyState, Icon, Input, Row, Spinner, T } from '@/ui';
 import { TabScreen } from '@/features/common/TabScreen';
 import { ReviewCard } from './parts';
@@ -24,6 +24,7 @@ const LIMIT = 20;
  * chips always describe the same result set.
  */
 export default function WrongQuestionsScreen() {
+  const colors = useColors();
   const t = useCopy(analysisCopy).wrong;
   const { lang } = useLang();
   const { user } = useAuth();
@@ -164,7 +165,7 @@ export default function WrongQuestionsScreen() {
                       }}
                     >
                       <Row gap={6}>
-                        <T size={12} weight="semibold" color={on ? colors.primary : colors.text}>
+                        <T size={12} weight="semibold" color={on ? colors.primaryInk : colors.text}>
                           {f.question_type ? getTypeLabel(f.question_type, lang) : t.filterAll}
                         </T>
                         {f.total != null ? (

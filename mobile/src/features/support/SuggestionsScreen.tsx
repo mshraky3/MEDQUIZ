@@ -6,7 +6,7 @@ import supportCopy from '@/i18n/copy/support.js';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { userTrack } from '@/lib/tracks';
-import { colors, radius } from '@/theme';
+import { useColors, radius } from '@/theme';
 import { Button, Card, Chip, Icon, Input, Notice, Row, Screen, ScreenHeader, T } from '@/ui';
 
 // The values are stable keys stored server-side; only labels are localised.
@@ -15,6 +15,7 @@ const PRIORITIES = ['low', 'medium', 'high'] as const;
 
 /** /suggestions: tell us what to build or fix. Reachable signed out. */
 export default function SuggestionsScreen() {
+  const colors = useColors();
   const t = useCopy(supportCopy).suggestions;
   const { user } = useAuth();
   const [form, setForm] = useState<{ category: (typeof CATEGORIES)[number]; title: string; description: string; priority: (typeof PRIORITIES)[number] }>({
@@ -61,7 +62,7 @@ export default function SuggestionsScreen() {
     return (
       <Screen width="form" header={header}>
         <Card pad={22} style={{ alignItems: 'center', gap: 12 }}>
-          <Icon name="check-circle" size={52} color={colors.success} />
+          <Icon name="check-circle" size={52} color={colors.successInk} />
           <T weight="extrabold" size={20} align="center">
             {t.successTitle}
           </T>
@@ -78,7 +79,7 @@ export default function SuggestionsScreen() {
     <Screen width="form" header={header}>
       <View style={{ gap: 8, alignItems: 'center' }}>
         <View style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: colors.warningBg, alignItems: 'center', justifyContent: 'center' }}>
-          <Icon name="lightbulb" size={30} color={colors.warning} />
+          <Icon name="lightbulb" size={30} color={colors.warningInk} />
         </View>
         <T color={colors.textMedium} align="center">
           {t.subtitle}
@@ -86,8 +87,8 @@ export default function SuggestionsScreen() {
       </View>
 
       <Row gap={8} align="flex-start" style={{ backgroundColor: colors.infoBg, borderRadius: radius.md, padding: 12 }}>
-        <Icon name="info" size={16} color={colors.primary} />
-        <T size={13} color={colors.primary} style={{ flex: 1 }}>
+        <Icon name="info" size={16} color={colors.primaryInk} />
+        <T size={13} color={colors.primaryInk} style={{ flex: 1 }}>
           {t.banner}
         </T>
       </Row>

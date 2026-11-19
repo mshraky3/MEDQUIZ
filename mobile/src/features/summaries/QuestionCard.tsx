@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { TouchableOpacity, View } from 'react-native';
 import { useCopy } from '@/i18n';
 import summariesCopy from '@/i18n/copy/summaries.js';
-import { colors, radius } from '@/theme';
+import { useColors, radius } from '@/theme';
 import { Card, Icon, Row, Span, T } from '@/ui';
 
 const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
@@ -31,6 +31,7 @@ export function QuestionCard({
   number: number;
   onAnswer?: (isCorrect: boolean) => void;
 }) {
+  const colors = useColors();
   const t = useCopy(summariesCopy).question;
   const [selected, setSelected] = useState<number | null>(null);
   const revealed = selected !== null;
@@ -45,7 +46,7 @@ export function QuestionCard({
   return (
     <Card pad={14} style={{ gap: 10 }}>
       <T ltr size={15} weight="semibold">
-        <Span ltr size={15} weight="extrabold" color={colors.primary}>
+        <Span ltr size={15} weight="extrabold" color={colors.primaryInk}>
           {`Q${number}  `}
         </Span>
         {q}
@@ -76,15 +77,15 @@ export function QuestionCard({
                     justifyContent: 'center',
                   }}
                 >
-                  <T ltr size={12} weight="bold" color={colors.primary}>
+                  <T ltr size={12} weight="bold" color={colors.primaryInk}>
                     {LETTERS[i]}
                   </T>
                 </View>
                 <T ltr size={14} style={{ flex: 1 }}>
                   {opt}
                 </T>
-                {correct ? <Icon name="check" size={16} color={colors.success} strokeWidth={3} /> : null}
-                {wrong ? <Icon name="x" size={16} color={colors.error} strokeWidth={3} /> : null}
+                {correct ? <Icon name="check" size={16} color={colors.successInk} strokeWidth={3} /> : null}
+                {wrong ? <Icon name="x" size={16} color={colors.errorInk} strokeWidth={3} /> : null}
               </Row>
             </TouchableOpacity>
           );
@@ -93,8 +94,8 @@ export function QuestionCard({
       {revealed ? (
         <View style={{ gap: 4 }}>
           <Row gap={6}>
-            <Icon name={selected === answer ? 'check' : 'x'} size={15} color={selected === answer ? colors.success : colors.error} strokeWidth={3} />
-            <T weight="bold" size={14} color={selected === answer ? colors.success : colors.error}>
+            <Icon name={selected === answer ? 'check' : 'x'} size={15} color={selected === answer ? colors.successInk : colors.errorInk} strokeWidth={3} />
+            <T weight="bold" size={14} color={selected === answer ? colors.successInk : colors.errorInk}>
               {selected === answer ? t.correct : t.incorrect}
             </T>
           </Row>

@@ -5,7 +5,7 @@ import { useApp, useCopy, useLang } from '@/i18n';
 import authCopy from '@/i18n/copy/auth.js';
 import { useLayout } from '@/lib/layout';
 import { TRACK_KEYS, TRACKS, TrackKey, pick } from '@/lib/tracks';
-import { colors, radius } from '@/theme';
+import { useColors, radius } from '@/theme';
 import { LanguageToggle } from '@/features/common/LanguageToggle';
 import { Button, Card, Checkbox, Dialog, Icon, Row, Screen, T, goBack } from '@/ui';
 
@@ -14,6 +14,7 @@ import { Button, Card, Checkbox, Dialog, Icon, Row, Screen, T, goBack } from '@/
  * switch) over a centred card on the page background.
  */
 export function AuthShell({ children, canGoBack = true }: { children: React.ReactNode; canGoBack?: boolean }) {
+  const colors = useColors();
   const app = useApp();
   const { isTablet } = useLayout();
   return (
@@ -42,7 +43,7 @@ export function AuthShell({ children, canGoBack = true }: { children: React.Reac
           ) : (
             <View style={{ width: 38 }} />
           )}
-          <T weight="extrabold" size={20} color={colors.primary} ltr>
+          <T weight="extrabold" size={20} color={colors.primaryInk} ltr>
             SQB
           </T>
           <LanguageToggle compact />
@@ -68,6 +69,7 @@ export function TermsDialog({
   busy?: boolean;
   onAccept: () => void;
 }) {
+  const colors = useColors();
   const terms = useCopy(authCopy).terms;
   const [checked, setChecked] = React.useState(false);
   return (
@@ -139,12 +141,13 @@ export function TrackDialog({
   onSelect: (key: TrackKey) => void;
   onConfirm: () => void;
 }) {
+  const colors = useColors();
   const t = useCopy(authCopy).trackModal;
   const { lang } = useLang();
   return (
     <Dialog visible={visible} blocking>
       <View style={{ gap: 4 }}>
-        <T weight="bold" size={12} color={colors.primary}>
+        <T weight="bold" size={12} color={colors.primaryInk}>
           {t.eyebrow}
         </T>
         <T weight="extrabold" size={19}>
@@ -184,7 +187,7 @@ export function TrackDialog({
                   justifyContent: 'center',
                 }}
               >
-                <Icon name={def.icon} size={24} color={colors.primary} />
+                <Icon name={def.icon} size={24} color={colors.primaryInk} />
               </View>
               <View style={{ flex: 1 }}>
                 <T weight="extrabold" size={16}>
@@ -194,7 +197,7 @@ export function TrackDialog({
                   {pick(def.exam, lang)}
                 </T>
               </View>
-              {selected ? <Icon name="check-circle" size={22} color={colors.primary} /> : null}
+              {selected ? <Icon name="check-circle" size={22} color={colors.primaryInk} /> : null}
             </Row>
             <T size={13} color={colors.textMedium}>
               {pick(def.blurb, lang)}

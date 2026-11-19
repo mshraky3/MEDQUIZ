@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { TouchableOpacity, View } from 'react-native';
 import { useCopy, useLang } from '@/i18n/LanguageContext';
 import appCopy from '@/i18n/appCopy';
-import { colors, radius } from '@/theme';
+import { useColors, radius } from '@/theme';
 import { Button } from './Controls';
 import { Icon } from './Icon';
 import { Dialog } from './Feedback';
@@ -35,6 +35,7 @@ type Props = {
  * digits like the rest of the app, and mirrors in Arabic.
  */
 export function DatePickerDialog({ visible, value, min, max, title, confirmLabel, cancelLabel, onConfirm, onClose }: Props) {
+  const colors = useColors();
   const { lang } = useLang();
   const app = useCopy(appCopy);
   const minDate = fromISO(min) || new Date();

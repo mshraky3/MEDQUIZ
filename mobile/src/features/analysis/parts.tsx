@@ -3,13 +3,14 @@ import { TouchableOpacity, View } from 'react-native';
 import { formatNumber, useCopy, useLang } from '@/i18n';
 import analysisCopy from '@/i18n/copy/analysis.js';
 import { Tone } from '@/lib/stats';
-import { colors, radius, toneBg, toneColor } from '@/theme';
+import { useColors, useTones, radius } from '@/theme';
 import { Button, Card, Icon, ProgressBar, Row, T } from '@/ui';
 import { ExplanationPanel } from '@/features/common/ExplanationPanel';
 import { QuestionImages } from '@/features/quiz/QuestionImages';
 
 /** A small labelled chip used in review card headers. */
 export function Badge2({ icon, label }: { icon: string; label: string }) {
+  const colors = useColors();
   return (
     <Row gap={5} style={{ backgroundColor: colors.surface2, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 3 }}>
       <Icon name={icon} size={12} color={colors.textMedium} />
@@ -21,9 +22,10 @@ export function Badge2({ icon, label }: { icon: string; label: string }) {
 }
 
 export function AccuracyPill({ pct, tone }: { pct: number; tone: Tone }) {
+  const tones = useTones();
   return (
-    <View style={{ backgroundColor: toneBg[tone], borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3 }}>
-      <T weight="extrabold" size={13} color={toneColor[tone]} ltr>
+    <View style={{ backgroundColor: tones.bg[tone], borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3 }}>
+      <T weight="extrabold" size={13} color={tones.color[tone]} ltr>
         {Math.round(pct)}%
       </T>
     </View>
@@ -54,6 +56,7 @@ type ReviewProps = {
  * list, the last-quiz review and the session / mock-exam histories.
  */
 export function ReviewCard(p: ReviewProps) {
+  const colors = useColors();
   return (
     <Card pad={14} style={{ gap: 10 }}>
       <Row gap={6} wrap>
@@ -62,8 +65,8 @@ export function ReviewCard(p: ReviewProps) {
         {p.dateLabel ? <Badge2 icon="calendar" label={p.dateLabel} /> : null}
         {p.result ? (
           <Row gap={4}>
-            <Icon name={p.result.correct ? 'check-circle' : 'x-circle'} size={14} color={p.result.correct ? colors.success : colors.error} />
-            <T weight="bold" size={12} color={p.result.correct ? colors.success : colors.error}>
+            <Icon name={p.result.correct ? 'check-circle' : 'x-circle'} size={14} color={p.result.correct ? colors.successInk : colors.errorInk} />
+            <T weight="bold" size={12} color={p.result.correct ? colors.successInk : colors.errorInk}>
               {p.result.label}
             </T>
           </Row>
@@ -75,7 +78,7 @@ export function ReviewCard(p: ReviewProps) {
       <QuestionImages images={p.images} />
       <View style={{ gap: 6 }}>
         <View style={{ backgroundColor: p.isCorrect ? colors.successBg : colors.errorBg, borderRadius: radius.md, padding: 10, gap: 2 }}>
-          <T size={11} weight="bold" color={p.isCorrect ? colors.success : colors.error}>
+          <T size={11} weight="bold" color={p.isCorrect ? colors.successInk : colors.errorInk}>
             {p.yourAnswerLabel}
           </T>
           <T ltr size={14}>
@@ -84,7 +87,7 @@ export function ReviewCard(p: ReviewProps) {
         </View>
         {!p.isCorrect ? (
           <View style={{ backgroundColor: colors.successBg, borderRadius: radius.md, padding: 10, gap: 2 }}>
-            <T size={11} weight="bold" color={colors.success}>
+            <T size={11} weight="bold" color={colors.successInk}>
               {p.correctAnswerLabel}
             </T>
             <T ltr size={14}>
@@ -109,6 +112,7 @@ export function Pager({
   onPage: (p: number) => void;
   labels: { previous: string; next: string; pageOf: (p: number, total: number) => string };
 }) {
+  const colors = useColors();
   if (totalPages <= 1) return null;
   return (
     <Row justify="space-between" gap={10}>
@@ -148,6 +152,7 @@ export const BREAKDOWN_SORTS = {
  * coverage (how much of the bank has been seen) on one baseline.
  */
 export function BreakdownTable({ rows, onPractise }: { rows: BreakdownRow[]; onPractise?: (row: BreakdownRow) => void }) {
+  const colors = useColors();
   const t = useCopy(analysisCopy).report;
   const { lang } = useLang();
   const [sort, setSort] = React.useState<keyof typeof BREAKDOWN_SORTS>('weakest');
@@ -183,7 +188,7 @@ export function BreakdownTable({ rows, onPractise }: { rows: BreakdownRow[]; onP
                 backgroundColor: on ? colors.infoBg : colors.surface,
               }}
             >
-              <T size={12} weight="semibold" color={on ? colors.primary : colors.textMedium}>
+              <T size={12} weight="semibold" color={on ? colors.primaryInk : colors.textMedium}>
                 {label}
               </T>
             </TouchableOpacity>
@@ -197,7 +202,7 @@ export function BreakdownTable({ rows, onPractise }: { rows: BreakdownRow[]; onP
           <Card key={row.key} pad={14} style={{ gap: 10 }}>
             <Row gap={10}>
               <View style={{ width: 34, height: 34, borderRadius: radius.md, backgroundColor: colors.surfaceTint, alignItems: 'center', justifyContent: 'center' }}>
-                <Icon name={row.icon || 'book'} size={17} color={colors.primary} />
+                <Icon name={row.icon || 'book'} size={17} color={colors.primaryInk} />
               </View>
               <T weight="bold" size={15} style={{ flex: 1 }}>
                 {row.label}

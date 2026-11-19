@@ -16,7 +16,7 @@ import appCopy from '@/i18n/appCopy';
 import { useKeyboardHeight } from '@/lib/useKeyboardHeight';
 import { ContentWidth, useLayout } from '@/lib/layout';
 import { chunk } from '@/lib/layoutLogic';
-import { colors, radius, shadow } from '@/theme';
+import { useColors, radius, shadow } from '@/theme';
 import { Icon } from './Icon';
 import { T } from './Text';
 
@@ -54,6 +54,7 @@ type CardProps = ViewProps & { pad?: number; style?: StyleProp<ViewStyle>; flat?
 
 /** An opaque panel: the site uses no glass or translucency anywhere. */
 export function Card({ pad = 16, flat = false, style, ...rest }: CardProps) {
+  const colors = useColors();
   return (
     <View
       {...rest}
@@ -73,6 +74,7 @@ export function Card({ pad = 16, flat = false, style, ...rest }: CardProps) {
 }
 
 export function Divider({ style }: { style?: StyleProp<ViewStyle> }) {
+  const colors = useColors();
   return <View style={[{ height: StyleSheet.hairlineWidth * 2, backgroundColor: colors.borderLight }, style]} />;
 }
 
@@ -92,6 +94,7 @@ type HeaderProps = {
 };
 
 export function ScreenHeader({ title, subtitle, noBack, right, onBack }: HeaderProps) {
+  const colors = useColors();
   const app = useCopy(appCopy);
   return (
     <Row
@@ -169,13 +172,14 @@ export function Screen({
   scroll = true,
   contentStyle,
   refreshControl,
-  bg = colors.bg,
+  bg,
   maxWidth,
   width,
   wideHeader = false,
   padded = true,
   scrollRef,
 }: ScreenProps) {
+  const colors = useColors();
   const insets = useSafeAreaInsets();
   const layout = useLayout();
   const cap = maxWidth !== undefined ? maxWidth : width ? layout.capFor(width) : layout.contentMaxWidth;
@@ -193,7 +197,7 @@ export function Screen({
     </View>
   );
   return (
-    <View style={{ flex: 1, backgroundColor: bg, paddingTop: header ? 0 : insets.top }}>
+    <View style={{ flex: 1, backgroundColor: bg ?? colors.bg, paddingTop: header ? 0 : insets.top }}>
       {header ? (
         <View style={{ paddingTop: insets.top, backgroundColor: colors.surface, borderBottomWidth: StyleSheet.hairlineWidth * 2, borderBottomColor: colors.border }}>
           {/* The bar spans the window; what is in it lines up with the content column below. */}
