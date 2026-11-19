@@ -15,6 +15,7 @@ working-projects `INFRASTRUCTURE.md` (outside this repo; on the owner's machine:
 | `NATIONAL_DAY_OFFER_2026-09.md` | The live offer, the **original price ladder** (what to restore), and how to end or revert the offer. |
 | `DATABASE_MOVE_2026-09.md` | Koyeb -> Supabase: what changed in code, how to switch, how to roll back. |
 | `VERCEL_CPU_NOTES_2026-09.md` | What was cut to stay under Vercel's free CPU limit (Sep), why Fluid compute was turned off and what changed with it (Oct 2026), and how to verify/revert. |
+| `CONTENT_INTAKE.md` | Which kind of new study file (recall PDFs, notes decks, textbooks) can become what, with the code that exists (2026-11-16). |
 | `DESIGN_MAP.md` | Page-by-page UI map, stylesheet ownership, CSS invariants. First file to read before touching UI. |
 | `SEO_WEEKLY_CHECK.md` | The 10-minute weekly Search Console routine and its log. |
 | `GROWTH_PLAN.md` | SEO/conversion backlog with status. The backlog **is deployed** (see its correction note). |
