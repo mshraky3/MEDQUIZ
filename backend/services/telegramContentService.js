@@ -7,13 +7,18 @@
  * the same day nursing is added to the bot, not before.
  */
 
-import { MEDICAL, TRACKS } from '../config/tracks.js';
+import { MEDICAL, NURSING, DENTAL, TRACKS } from '../config/tracks.js';
 
 /** English label for a question_type — tracks.js only exports the Arabic one (specialtyLabel). */
 function specialtyLabelEn(questionType) {
     const hit = TRACKS[MEDICAL].specialties.find((s) => s.key === questionType);
     return hit ? hit.labelEn : questionType;
 }
+
+/** The three exam tracks the channel rotates through: one poll per track per day. */
+export const CHANNEL_TRACKS = [MEDICAL, NURSING, DENTAL];
+
+const HAS_EXPLANATION = "q.explanation IS NOT NULL AND BTRIM(q.explanation) <> ''";
 
 /** The four options in DB column order, and which index is correct. */
 function toPollShape(q) {
@@ -40,8 +45,9 @@ export const NO_PLACEHOLDER_OPTIONS = ['option1', 'option2', 'option3', 'option4
  * least-recently-posted. `featuredSource` (optional) restricts the pass to one
  * collection a question belongs to (questions.sources).
  */
-async function pickChannelQuestionFrom(db, featuredSource, { fallbackToOldest = true } = {}) {
-    const params = [MEDICAL];
+async function pickChannelQuestionFrom(db, featuredSource, { fallbackToOldest = true, track = MEDICAL, requireExplanation = false } = {}) {
+    const params = [track];
+    const explCond = requireExplanation ? `AND ${HAS_EXPLANATION}` : '';
     let sourceCond = '';
     if (featuredSource) {
         params.push(featuredSource);
@@ -49,7 +55,7 @@ async function pickChannelQuestionFrom(db, featuredSource, { fallbackToOldest = 
     }
     const fresh = await db.query(`
         SELECT ${QUESTION_COLUMNS} FROM questions q
-        WHERE track = $1 AND ${NO_PLACEHOLDER_OPTIONS} ${sourceCond}
+        WHERE track = $1 AND ${NO_PLACEHOLDER_OPTIONS} ${sourceCond} ${explCond}
           AND NOT EXISTS (
               SELECT 1 FROM telegram_sent_questions tsq
               WHERE tsq.question_id = q.id AND tsq.context = 'channel'
@@ -62,7 +68,7 @@ async function pickChannelQuestionFrom(db, featuredSource, { fallbackToOldest = 
 
     const oldest = await db.query(`
         SELECT ${QUESTION_COLUMNS} FROM questions q
-        WHERE track = $1 AND ${NO_PLACEHOLDER_OPTIONS} ${sourceCond}
+        WHERE track = $1 AND ${NO_PLACEHOLDER_OPTIONS} ${sourceCond} ${explCond}
         ORDER BY (
             SELECT MAX(sent_at) FROM telegram_sent_questions tsq
             WHERE tsq.question_id = q.id AND tsq.context = 'channel'
@@ -78,15 +84,23 @@ async function pickChannelQuestionFrom(db, featuredSource, { fallbackToOldest = 
  * options are never picked. When `featuredSource` is given, a question from that
  * collection is preferred and the general bank is only the fallback.
  */
-export async function pickChannelQuestion(db, { featuredSource = null } = {}) {
+export async function pickChannelQuestion(db, { featuredSource = null, track = MEDICAL } = {}) {
+    // Questions WITH an explanation come first (the poll shows it after the vote);
+    // an unexplained question is only used when none is left for the track.
+    const explained = await pickWithFeatured(db, featuredSource, track, true);
+    if (explained) return explained;
+    return pickWithFeatured(db, featuredSource, track, false);
+}
+
+async function pickWithFeatured(db, featuredSource, track, requireExplanation) {
     if (featuredSource) {
         // Fresh featured questions only: once those are used up the general bank
         // (fresh first, then least-recently-posted) takes over, instead of the
         // channel re-posting the featured set.
-        const featured = await pickChannelQuestionFrom(db, featuredSource, { fallbackToOldest: false });
+        const featured = await pickChannelQuestionFrom(db, featuredSource, { fallbackToOldest: false, track, requireExplanation });
         if (featured) return featured;
     }
-    return pickChannelQuestionFrom(db, null);
+    return pickChannelQuestionFrom(db, null, { track, requireExplanation, fallbackToOldest: !requireExplanation });
 }
 
 /** Random question for a /quiz DM — light dedupe against that user's last 20 answers. */
@@ -229,6 +243,45 @@ export async function channelPostsToday(db) {
         `SELECT COUNT(*)::int AS c FROM telegram_sent_questions WHERE context = 'channel' AND sent_at::date = CURRENT_DATE`
     );
     return rows[0].c;
+}
+
+/** Posts of one kind ('channel' polls, 'channel_explained') sent today. */
+export async function channelPostsTodayFor(db, context) {
+    const { rows } = await db.query(
+        `SELECT COUNT(*)::int AS c FROM telegram_sent_questions WHERE context = $1 AND sent_at::date = CURRENT_DATE`,
+        [context]
+    );
+    return rows[0].c;
+}
+
+/**
+ * The question for a track's "explained question" post: the hardest one
+ * students actually answered (5+ attempts, under 60% right) among questions
+ * that have an explanation; for a track with no such data yet, a random
+ * explained one. Not posted in this form in the last 90 days.
+ */
+export async function pickExplainedQuestion(db, track) {
+    const base = `
+        FROM questions q
+        WHERE q.track = $1 AND ${NO_PLACEHOLDER_OPTIONS} AND ${HAS_EXPLANATION}
+          AND NOT EXISTS (
+              SELECT 1 FROM telegram_sent_questions tsq
+              WHERE tsq.question_id = q.id AND tsq.context = 'channel_explained'
+                AND tsq.sent_at > NOW() - INTERVAL '90 days'
+          )`;
+    const hard = await db.query(`
+        SELECT ${QUESTION_COLUMNS}
+        ${base}
+          AND q.id IN (
+              SELECT question_id FROM user_question_attempts
+              GROUP BY question_id
+              HAVING COUNT(*) >= 5 AND AVG(CASE WHEN is_correct THEN 1 ELSE 0 END) < 0.6
+          )
+        ORDER BY (SELECT AVG(CASE WHEN a.is_correct THEN 1 ELSE 0 END) FROM user_question_attempts a WHERE a.question_id = q.id) ASC
+        LIMIT 1
+    `, [track]);
+    const row = hard.rows[0] || (await db.query(`SELECT ${QUESTION_COLUMNS} ${base} ORDER BY RANDOM() LIMIT 1`, [track])).rows[0];
+    return row ? { ...row, ...toPollShape(row), isHard: Boolean(hard.rows[0]) } : null;
 }
 
 /** Log an outbound message for scheduled deletion (channel posts only — see telegramClient.deleteMessage). */

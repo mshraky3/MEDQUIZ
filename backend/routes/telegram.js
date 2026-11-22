@@ -19,7 +19,7 @@ import {
     recordQuizAnswer, computeWeakTopics,
 } from '../services/telegramContentService.js';
 import {
-    runDailyChannelPostJob, runWeeklyWeakTopicsJob, runWeeklyChannelSummaryJob, runMessageCleanupJob,
+    runDailyChannelPostJob, runDailyExplainedPostJob, runWeeklyWeakTopicsJob, runWeeklyChannelSummaryJob, runMessageCleanupJob,
     postChannelAnnouncement,
 } from '../services/telegramJobs.js';
 
@@ -156,7 +156,9 @@ router.post('/api/telegram/webhook', verifyTelegramSecret, async (req, res) => {
 router.get('/api/cron/telegram-daily', cronAuth, async (req, res) => {
     try {
         const result = await runDailyChannelPostJob(req.db);
-        res.json({ success: true, ...result });
+        // Rides along on the same schedule: one explained question a day (capped inside).
+        const explained = await runDailyExplainedPostJob(req.db).catch((err) => ({ sent: false, error: err.message }));
+        res.json({ success: true, ...result, explained });
     } catch (err) {
         logger.error('cron/telegram-daily error:', err);
         res.status(500).json({ success: false, error: err.message });
@@ -187,8 +189,7 @@ router.get('/api/cron/telegram-channel-summary', cronAuth, async (req, res) => {
     }
 });
 
-// Deletes channel messages past their scheduled TTL (10d for daily questions,
-// 7d for the weekly summary card). Call once a day.
+// Deletes channel messages past their scheduled TTL (14d for everything the bot posts). Call once a day.
 router.get('/api/cron/telegram-cleanup', cronAuth, async (req, res) => {
     try {
         const result = await runMessageCleanupJob(req.db);
