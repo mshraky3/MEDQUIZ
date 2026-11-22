@@ -32,7 +32,7 @@ const nationalDayCopy = {
     ar: {
         // The slim bar across the top of the landing page.
         strip: {
-            label: 'اليوم الوطني الـ96',
+            label: 'الجمعة البيضاء',
             deal: (fourMonth) => `أربعة أشهر بـ${fourMonth} ريالاً`,
             dealFull: (fourMonth, annual) => `أربعة أشهر بـ${fourMonth} ريالاً وسنة بـ${annual} ريالاً`,
             cta: 'اطّلع على العرض',
@@ -60,14 +60,14 @@ const nationalDayCopy = {
 
         // The compact banner on /subscribe and /groups.
         banner: {
-            title: 'عرض اليوم الوطني الـ96',
+            title: 'عرض الجمعة البيضاء',
         },
-        saveNote: (saved, pct) => `عرض اليوم الوطني — توفّر ${saved} ريالاً (${pct}%)`,
+        saveNote: (saved, pct) => `عرض الجمعة البيضاء — توفّر ${saved} ريالاً (${pct}%)`,
 
         section: {
-            sectionLabel: 'عرض اليوم الوطني',
-            title: (fourMonth) => `اليوم الوطني الـ96: أربعة أشهر بـ${fourMonth} ريالاً`,
-            body: 'نحتفل بالوطن مع كل طالب يستعد لاختبار الترخيص، بأسعار خاصة لفترة محدودة. كل الخطط دفعة واحدة وبدون تجديد تلقائي.',
+            sectionLabel: 'الجمعة البيضاء',
+            title: (fourMonth) => `الجمعة البيضاء: أربعة أشهر بـ${fourMonth} ريالاً`,
+            body: 'أسعار الجمعة البيضاء لكل طالب يستعد لاختبار الترخيص، لخمسة أيام فقط. كل الخطط دفعة واحدة وبدون تجديد تلقائي.',
             currency: 'ريال',
             fourMonth: {
                 name: 'أربعة أشهر',
@@ -111,7 +111,7 @@ const nationalDayCopy = {
         // the price card and the comparison table never contradict the offer.
         pricing: {
             line: (fourMonth, wasFourMonth, annual, wasAnnual) =>
-                `أربعة أشهر بـ ${fourMonth} ريالاً بدلاً من ${wasFourMonth} · سنة بـ ${annual} ريالاً بدلاً من ${wasAnnual} — عرض اليوم الوطني`,
+                `أربعة أشهر بـ ${fourMonth} ريالاً بدلاً من ${wasFourMonth} · سنة بـ ${annual} ريالاً بدلاً من ${wasAnnual} — عرض الجمعة البيضاء`,
             compareCost: (annual) => `من 50 ريالاً شهرياً — وسنة كاملة بـ${annual} ريالاً`,
             groupBadge: (pct) => `وفّر حتى ${pct}% للحساب`,
             tier: (seats, months, price, each) => ({
@@ -124,7 +124,7 @@ const nationalDayCopy = {
 
     en: {
         strip: {
-            label: 'Saudi National Day 96',
+            label: 'White Friday',
             deal: (fourMonth) => `Four months for SAR ${fourMonth}`,
             dealFull: (fourMonth, annual) => `Four months for SAR ${fourMonth}, a year for SAR ${annual}`,
             cta: 'See the offer',
@@ -146,14 +146,14 @@ const nationalDayCopy = {
         limited: 'Limited-time offer',
 
         banner: {
-            title: 'National Day 96 offer',
+            title: 'White Friday offer',
         },
-        saveNote: (saved, pct) => `National Day offer — you save SAR ${saved} (${pct}%)`,
+        saveNote: (saved, pct) => `White Friday offer — you save SAR ${saved} (${pct}%)`,
 
         section: {
-            sectionLabel: 'National Day offer',
-            title: (fourMonth) => `National Day 96: four months for SAR ${fourMonth}`,
-            body: 'We are celebrating with every student preparing for a licensing exam, with special prices for a limited time. Every plan is a single payment with no auto-renewal.',
+            sectionLabel: 'White Friday',
+            title: (fourMonth) => `White Friday: four months for SAR ${fourMonth}`,
+            body: 'White Friday prices for every student preparing for a licensing exam, for five days only. Every plan is a single payment with no auto-renewal.',
             currency: 'SAR',
             fourMonth: {
                 name: 'Four months',
@@ -189,7 +189,7 @@ const nationalDayCopy = {
 
         pricing: {
             line: (fourMonth, wasFourMonth, annual, wasAnnual) =>
-                `Four months for SAR ${fourMonth}, down from ${wasFourMonth} · a year for SAR ${annual}, down from ${wasAnnual} — National Day offer`,
+                `Four months for SAR ${fourMonth}, down from ${wasFourMonth} · a year for SAR ${annual}, down from ${wasAnnual} — White Friday offer`,
             compareCost: (annual) => `From SAR 50 a month — a whole year for SAR ${annual}`,
             groupBadge: (pct) => `Save up to ${pct}% per seat`,
             tier: (seats, months, price, each) => ({

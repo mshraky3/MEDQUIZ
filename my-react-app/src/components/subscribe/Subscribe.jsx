@@ -15,6 +15,7 @@ import { GoldenBanner } from '../common/GoldenMonths.jsx';
 // The card shell (.login-card, .btn, .alert-box) lives in Login.css. Import it
 // explicitly — landing on /subscribe directly would otherwise render unstyled.
 import '../login/Login.css';
+import { SHOW_GROUP_PLANS } from '../../config/features.js';
 import './Subscribe.css';
 
 // Moyasar embedded payment form (Moyasar.js). 1.16.0 is the latest CDN build
@@ -586,12 +587,12 @@ const Subscribe = () => {
                                 <Icon name="user" size={15} />
                                 {t.crossToIndividual}
                             </Link>
-                        ) : (
+                        ) : SHOW_GROUP_PLANS ? (
                             <Link to="/groups" className="subscribe-crosslink">
                                 <Icon name="users" size={15} />
                                 {t.crossToGroup}
                             </Link>
-                        )}
+                        ) : null}
 
                         <p className="subscribe-policy">
                             {t.policyBefore}{' '}
