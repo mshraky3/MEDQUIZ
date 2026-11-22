@@ -245,6 +245,21 @@ export async function channelPostsToday(db) {
     return rows[0].c;
 }
 
+/**
+ * Posts of one kind sent today whose question belongs to one of `tracks`. A channel is
+ * counted through the tracks it carries (telegram_sent_questions.chat_id is a bigint
+ * and cannot hold an @handle), so a channel shared by two tracks shares one daily cap.
+ */
+export async function channelPostsTodayForTracks(db, context, tracks) {
+    const { rows } = await db.query(
+        `SELECT COUNT(*)::int AS c
+           FROM telegram_sent_questions tsq JOIN questions q ON q.id = tsq.question_id
+          WHERE tsq.context = $1 AND tsq.sent_at::date = CURRENT_DATE AND q.track = ANY($2::text[])`,
+        [context, tracks]
+    );
+    return rows[0].c;
+}
+
 /** Posts of one kind ('channel' polls, 'channel_explained') sent today. */
 export async function channelPostsTodayFor(db, context) {
     const { rows } = await db.query(
