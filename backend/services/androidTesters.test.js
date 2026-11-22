@@ -94,7 +94,7 @@ test('the offer is off unless ANDROID_TESTERS_OFFER_ENABLED is exactly "true"', 
     assert.equal(isAndroidTestersOfferEnabled(), true);
     delete process.env.ANDROID_TESTERS_OFFER_ENABLED;
     assert.equal(ANDROID_TESTERS_CAP, 15);
-    assert.equal(ANDROID_TESTER_MONTHS, 3);
+    assert.equal(ANDROID_TESTER_MONTHS, 1);
 });
 
 test('e-mail check and the canonical key', () => {
@@ -212,7 +212,7 @@ test('race: the same address from two accounts at once gives one spot', { skip }
     assert.equal((await pg.query('SELECT COUNT(*)::int AS n FROM android_testers')).rows[0].n, 1);
 });
 
-test('redeem: only a tester, only from the Android app, 3 months, once', { skip }, async () => {
+test('redeem: only a tester, only from the Android app, 1 month, once', { skip }, async () => {
     const { db, pg } = await setup();
     await joinAndroidTesters(db, 1, 'tester1@school.edu.sa');
     assert.deepEqual(await redeemTesterOffer(db, 2, { platform: 'android-app' }), { granted: false, reason: 'not_a_tester' });
@@ -222,9 +222,9 @@ test('redeem: only a tester, only from the Android app, 3 months, once', { skip 
     const before = Date.now();
     const out = await redeemTesterOffer(db, 1, { platform: 'android-app' });
     assert.equal(out.granted, true);
-    assert.equal(out.months, 3);
+    assert.equal(out.months, 1);
     const days = (new Date(out.expiresAt).getTime() - before) / 86400000;
-    assert.ok(days > 88 && days < 93, `about three months, got ${days} days`);
+    assert.ok(days > 28 && days < 32, `about one month, got ${days} days`);
 
     const acc = (await pg.query('SELECT subscription_status, is_admin_created, subscription_expiry_date FROM accounts WHERE id = 1')).rows[0];
     assert.equal(acc.subscription_status, 'active');
@@ -305,7 +305,7 @@ test('routes: every endpoint answers 404 while the flag is off', { skip }, async
     } finally { await s.close(); }
 });
 
-test('routes: join, refuse, export, and the Android sign-in call grants the 3 months', { skip }, async () => {
+test('routes: join, refuse, export, and the Android sign-in call grants the 1 month', { skip }, async () => {
     process.env.ANDROID_TESTERS_OFFER_ENABLED = 'true';
     delete process.env.APP_FREE_MONTH_ENABLED;
     process.env.OWNER_TESTER_EMAILS = 'owner@example.com';
@@ -344,7 +344,7 @@ test('routes: join, refuse, export, and the Android sign-in call grants the 3 mo
         const app = await s.call('POST', '/api/app/free-month', { platform: 'android-app' });
         assert.equal(app.status, 200);
         assert.equal(app.json.granted, true);
-        assert.equal(app.json.months, 3);
+        assert.equal(app.json.months, 1);
         assert.equal((await s.call('POST', '/api/app/free-month', { platform: 'android-app' })).json.granted, false);
         assert.equal((await pg.query(`SELECT COUNT(*)::int AS n FROM payment_events WHERE event_type = 'android_tester_offer'`)).rows[0].n, 1);
     } finally {

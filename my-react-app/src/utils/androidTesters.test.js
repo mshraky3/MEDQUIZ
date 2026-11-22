@@ -35,6 +35,6 @@ test('Arabic and English copy have the same keys, brand is SQB, no emoji, no men
     assert.ok(!/another account|حساب آخر/i.test(JSON.stringify([copy.ar.errors.emailTaken, copy.en.errors.emailTaken])), 'neutral: never says who uses an address');
     assert.ok(!/\p{Extended_Pictographic}/u.test(text), 'no emoji');
     assert.ok(!/rating|review|تقييم|مراجعة/i.test(text), 'Play policy: nothing about ratings or reviews');
-    assert.match(copy.en.spots(7), /7/);
-    assert.match(copy.ar.spots(7), /7/);
+    assert.ok(!/\b15\b|١٥/.test(JSON.stringify([copy.ar, copy.en])), 'the seat count is never shown to students');
+    assert.match(copy.en.spots(7), /Limited/);
 });
