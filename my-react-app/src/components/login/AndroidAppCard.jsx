@@ -1,6 +1,6 @@
 import React from 'react';
 import Icon from '../common/Icon.jsx';
-import { useCopy } from '../../i18n';
+import { useCopy, LocaleLink as Link } from '../../i18n';
 import androidAppCopy from '../../i18n/copy/androidApp.js';
 import { androidAppConfig, isAndroidCardVisible } from '../../utils/androidApp.js';
 import './AndroidAppCard.css';
@@ -12,7 +12,7 @@ export default function AndroidAppCard({ config } = {}) {
     const copy = useCopy(androidAppCopy);
     const resolved = config || androidAppConfig(env);
     if (!isAndroidCardVisible(resolved)) return null;
-    const { testerUrl, downloadUrl, freeMonth } = resolved;
+    const { freeMonth } = resolved;
 
     return (
         <aside className="android-card" aria-label={copy.title}>
@@ -28,8 +28,10 @@ export default function AndroidAppCard({ config } = {}) {
             <p className="android-card-body">{copy.body}</p>
             {freeMonth ? <p className="android-card-gift">{copy.freeMonth}</p> : null}
             <div className="android-card-actions">
-                <a className="btn primary" href={testerUrl} target="_blank" rel="noopener noreferrer">{copy.join}</a>
-                <a className="btn android-card-secondary" href={downloadUrl} target="_blank" rel="noopener noreferrer">{copy.download}</a>
+                {/* The Play links only work for emails already on the test list, so a
+                    stranger tapping them gets a Google error. The way in is the account
+                    page card, which collects the email; the opt-in link appears there. */}
+                <Link className="btn primary" to="/account">{copy.join}</Link>
             </div>
             <p className="android-card-note">{copy.note}</p>
         </aside>
