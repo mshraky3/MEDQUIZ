@@ -859,3 +859,71 @@
     border-color: var(--border-color, #d4deee);
     color: var(--primary-dark-ink, var(--primary-dark, #1d4ed8));
 }
+
+/* ---------------------------------------------------- simplified hub (Nov 2026) --
+   One column, one progress line, one featured collection, a quiet row of links.
+   Appended last on purpose: these rules replace the old two-column layout, the
+   four stat tiles, the segmented meters and the side cards. */
+
+.hubx .hubx-grid,
+.hubx .hubx-grid {
+    display: block;
+    max-width: 860px;
+    margin-inline: auto;
+}
+
+@media (min-width: 980px) {
+    .hubx .hubx-grid { display: block; grid-template-columns: none; }
+}
+
+.hubx .hubx-progress {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    margin: 14px 0 0;
+    font-size: var(--text-sm, 0.9rem);
+    color: rgba(255, 255, 255, 0.88); /* sits on the blue header */
+}
+
+.hubx .hubx-progress b {
+    color: #ffffff;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+/* The rows no longer carry the ten-block meter; the coverage text takes its column. */
+.hubx .hubx-spec-meter { align-self: center; }
+
+.hubx .hubx-col-main { gap: 16px; }
+
+.hubx .hubx-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 10px;
+    margin-top: 6px;
+    padding-top: 18px;
+    border-top: 1px solid var(--hubx-line, var(--border-light, #e6ecf7));
+}
+
+.hubx .hubx-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 10px 16px;
+    border: 1px solid var(--hubx-line, var(--border-color, #d4deee));
+    border-radius: 999px;
+    background: var(--surface, #ffffff);
+    color: var(--text-dark, #0f1e3d);
+    font: inherit;
+    font-size: var(--text-sm, 0.9rem);
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition: border-color 150ms ease, background-color 150ms ease;
+}
+
+.hubx .hubx-link:hover { border-color: var(--primary-color, #2563eb); background: var(--surface-tint, #e1eafb); }
+.hubx .hubx-link:focus-visible { outline: 3px solid var(--primary-light, #3b82f6); outline-offset: 2px; }
+.hubx .hubx-link.is-next { border-color: var(--primary-color, #2563eb); }

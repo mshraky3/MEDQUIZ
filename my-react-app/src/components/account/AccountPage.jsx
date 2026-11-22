@@ -6,6 +6,7 @@ import { UserContext } from '../../UserContext';
 import Spinner from '../common/Spinner.jsx';
 import Icon from '../common/Icon.jsx';
 import { SHOW_GROUP_PLANS } from '../../config/features.js';
+import AchievementBadges from '../common/AchievementBadges.jsx';
 import SEO from '../common/SEO.jsx';
 import { useCommon, useCopy, useLang } from '../../i18n';
 import { formatDate } from '../../i18n/format.js';
@@ -264,6 +265,9 @@ const AccountPage = () => {
 
                         {/* Android testers offer: renders nothing until the server switches it on. */}
                         <AndroidTestersCard username={user.username} sessionToken={sessionToken} />
+
+                        {/* Badges used to sit at the bottom of the study hub; they live here now. */}
+                        {user?.id && <AchievementBadges userId={user.id} />}
 
                         <section className="account-card">
                             <h2 className="account-subheading">{common.theme.label}</h2>

@@ -5,7 +5,6 @@ import { track } from '@vercel/analytics';
 import './QUIZS.css';
 import './QuizsHub.css';
 
-import AchievementBadges from '../common/AchievementBadges.jsx';
 import Icon from '../common/Icon.jsx';
 import QuizLauncher from './QuizLauncher.jsx';
 import { UserContext } from '../../UserContext';
@@ -21,13 +20,6 @@ const SOURCE = 'MidgardGameBoy';
 
 // The collection promoted on the Questions panel while it is the freshest.
 const FEATURED_SOURCE = 'MedicalNovemberRecall';
-
-// Blocks in a specialty's coverage meter. A continuous bar is the obvious
-// choice and the wrong one here: a student who has answered 18 of 1,308
-// questions is at 1.4%, which renders as an invisible sliver and reads as a
-// broken widget. Ten discrete blocks always light at least one, so "barely
-// started" looks deliberate — which is also the honest message.
-const METER_BLOCKS = 10;
 
 // Below this many answered questions, an accuracy figure is noise: 100% off
 // eight questions is not a strength and 0% off two is not a weakness. Under
@@ -206,13 +198,9 @@ const QUIZS = () => {
         // questions and read as "topic finished".
         const total = content?.questionsByType?.[key] || 0;
         const available = !content || total > 0;
-        const coverage = total > 0 ? (answered / total) * 100 : 0;
-        const blocks = answered > 0
-            ? Math.max(1, Math.min(METER_BLOCKS, Math.round((coverage / 100) * METER_BLOCKS)))
-            : 0;
         return {
             key, icon, label: getTypeLabel(key, lang),
-            answered, accuracy, available, total, blocks,
+            answered, accuracy, available, total,
             solidSample: answered >= MIN_ACCURACY_SAMPLE,
         };
     });
@@ -319,7 +307,6 @@ const QUIZS = () => {
     // The collections this track can practise from, straight from the server.
     const sources = Array.isArray(content?.selectableSources) ? content.selectableSources : [];
     const featuredSource = sources.find((x) => x.key === FEATURED_SOURCE) || null;
-    const otherSources = sources.filter((x) => x !== featuredSource);
     const quizStep = steps.find((x) => x.key === 'quiz');
     const sideSteps = steps.filter((x) => x.key !== 'quiz');
     const pctOf = (x) => Math.min(100, Math.max(0, x.completedPct || 0));
@@ -336,14 +323,14 @@ const QUIZS = () => {
                     </div>
                 </div>
 
-                <div className="hubx-stats" aria-label={t.kpiSummary}>
-                    {tiles.map((tile) => (
-                        <div className={`hubx-stat${loading ? ' is-loading' : ''}`} key={tile.k}>
-                            <b><bdi>{loading ? '' : tile.value}</bdi></b>
-                            <span>{tile.label}</span>
-                        </div>
-                    ))}
-                </div>
+                {/* One quiet line instead of four tiles: where the student is. */}
+                {!loading && hasHistory && (
+                    <p className="hubx-progress" aria-label={t.kpiSummary}>
+                        {tiles.filter((tile) => tile.k !== 'quiz').map((tile) => (
+                            <span key={tile.k}><b><bdi>{tile.value}</bdi></b> {tile.label}</span>
+                        ))}
+                    </p>
+                )}
             </header>
 
             {/* A track whose bank hasn't been loaded yet says so, once, at the
@@ -402,10 +389,10 @@ const QUIZS = () => {
                             </div>
                         </div>
 
-                        {sources.length > 1 && !bankEmpty && (
+                        {featuredSource && !bankEmpty && (
                             <div className="hubx-qsources">
                                 <h3>{t.pickCollection}</h3>
-                                {featuredSource && (
+                                {(
                                     <button type="button" className="hubx-qfeature" onClick={() => startQuizFrom(featuredSource.key)}>
                                         <span className="hubx-qfeature-head">
                                             <strong><bdi>{getSourceLabel(featuredSource.key, lang)}</bdi></strong>
@@ -418,17 +405,6 @@ const QUIZS = () => {
                                         </span>
                                     </button>
                                 )}
-                                <div className="hubx-qgrid">
-                                    {otherSources.map((x) => (
-                                        <button type="button" className="hubx-qtile" key={x.key} onClick={() => startQuizFrom(x.key)}>
-                                            <span className="hubx-qtile-body">
-                                                <strong><bdi>{getSourceLabel(x.key, lang)}</bdi></strong>
-                                                <span><bdi>{fmt(x.total)}</bdi> {t.questionsUnit} · {t.doneShort(pctOf(x))}</span>
-                                            </span>
-                                            <span className="hubx-qtile-go" aria-hidden="true"><Icon name={arrow} size={16} /></span>
-                                        </button>
-                                    ))}
-                                </div>
                             </div>
                         )}
                     </section>
@@ -482,15 +458,6 @@ const QUIZS = () => {
                                     </span>
 
                                     <span className="hubx-spec-meter">
-                                        <span
-                                            className="hubx-segs"
-                                            role="img"
-                                            aria-label={started ? t.specCoverageAria(r.label, fmt(r.answered), fmt(r.total)) : t.specAriaEmpty(r.label)}
-                                        >
-                                            {Array.from({ length: METER_BLOCKS }, (_, i) => (
-                                                <span key={i} className={`hubx-seg${i < r.blocks ? ' is-on' : ''}`} />
-                                            ))}
-                                        </span>
                                         <span className="hubx-spec-sub">
                                             {loading
                                                 ? <span className="hubx-skel" />
@@ -529,30 +496,6 @@ const QUIZS = () => {
             </section>
                 </div>
 
-                <aside className="hubx-col-side">
-                    {sideSteps.map((x) => (
-                        <button
-                            type="button"
-                            key={x.key}
-                            className={`hubx-side-card${x.key === nextStep ? ' is-next' : ''}`}
-                            onClick={x.onClick}
-                        >
-                            <span className="hubx-step-icon"><Icon name={x.icon} size={22} /></span>
-                            <span className="hubx-side-body">
-                                <strong>
-                                    {x.title}
-                                    {x.key === nextStep && <span className="hubx-step-flag">{t.startHere}</span>}
-                                </strong>
-                                <span>{x.stat}</span>
-                            </span>
-                            <span className="hubx-side-go" aria-hidden="true"><Icon name={arrow} size={18} /></span>
-                        </button>
-                    ))}
-
-            {/* The wrong-answer review list. It used to be a permanent navbar
-                link with no context; it lives here instead, where it can say
-                how many are actually waiting — and it disappears when there
-                are none, rather than offering an empty room. */}
             {wrongCount > 0 && (
                 <button type="button" className="hubx-review" onClick={() => navigate('/wrong-questions')}>
                     <span className="hubx-review-icon" aria-hidden="true"><Icon name="alert-triangle" size={19} /></span>
@@ -563,29 +506,26 @@ const QUIZS = () => {
                     <span className="hubx-review-go" aria-hidden="true"><Icon name={arrow} size={18} /></span>
                 </button>
             )}
-
-            {/* Its own strip rather than a fourth cell in the stats row, where a
-                promo sat among three figures and read as one of them. */}
-            <a
-                className="hubx-tg"
-                href="https://t.me/sqb_exam"
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => { try { track('hub_telegram_cta'); } catch (e) { /* analytics is best-effort */ } }}
-            >
-                <span className="hubx-tg-icon" aria-hidden="true">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z" /></svg>
-                </span>
-                <span className="hubx-tg-text">
-                    <strong>{t.telegramCtaTitle}</strong>
-                    <span>{t.telegramCtaSubtitle}</span>
-                </span>
-                <span className="hubx-tg-go">{t.telegramCtaButton}</span>
-            </a>
-                </aside>
+                <nav className="hubx-links">
+                    {sideSteps.map((x) => (
+                        <button type="button" key={x.key} className={`hubx-link${x.key === nextStep ? ' is-next' : ''}`} onClick={x.onClick}>
+                            <Icon name={x.icon} size={17} aria-hidden="true" />
+                            <span>{x.title}</span>
+                        </button>
+                    ))}
+                    <a
+                        className="hubx-link"
+                        href="https://t.me/sqb_exam"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => { try { track('hub_telegram_cta'); } catch (e) { /* analytics is best-effort */ } }}
+                    >
+                        <Icon name="telegram" size={17} aria-hidden="true" />
+                        <span>{t.telegramCtaTitle}</span>
+                    </a>
+                </nav>
             </div>
 
-            {id && <AchievementBadges userId={id} />}
         </div>
     );
 };
