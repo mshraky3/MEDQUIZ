@@ -1,6 +1,7 @@
 /**
  * Android tester offer (OFF BY DEFAULT): the first 15 students who join the Play
- * closed-test list get 3 months free when they sign in from the Android app.
+ * closed-test list get 1 month free when they sign in from the Android app. The number of
+ * seats is never shown to students (owner, 2026-11-22: say "first few users").
  *
  * Nothing here runs unless ANDROID_TESTERS_OFFER_ENABLED is exactly "true". The
  * table comes from migrations/002_android_testers.sql (written, not run).
@@ -25,7 +26,7 @@ import { computeNewExpiry, getCurrency } from './paymentService.js';
 import { APP_PLATFORM_MARKER } from './appFreeMonth.js';
 
 export const ANDROID_TESTERS_CAP = 15;
-export const ANDROID_TESTER_MONTHS = 3;
+export const ANDROID_TESTER_MONTHS = 1;
 export const ANDROID_TESTER_EVENT = 'android_tester_offer';
 // Arbitrary constant for pg_advisory_xact_lock: serialises joins only.
 const JOIN_LOCK_KEY = 7340015;

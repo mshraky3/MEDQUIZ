@@ -12,7 +12,7 @@ import './AndroidTestersCard.css';
 const TESTER_URL = cleanLink((import.meta.env || {}).VITE_ANDROID_TESTER_URL);
 
 /**
- * "Android testers offer" on /account: the first 15 students who join get 3 months
+ * "Android testers offer" on /account: the first few students who join get 1 month
  * free when they sign in from the Android app. Everything comes from the server:
  * while the offer is off (ANDROID_TESTERS_OFFER_ENABLED) the status call answers 404
  * and the card renders nothing, so it is invisible until the owner switches it on.
