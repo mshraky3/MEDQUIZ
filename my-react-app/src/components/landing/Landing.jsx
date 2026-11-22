@@ -22,6 +22,7 @@ import ThemeAnnouncement from './ThemeAnnouncement.jsx';
 import RecallAnnouncement from './RecallAnnouncement.jsx';
 import TelegramCard from './TelegramCard.jsx';
 import { useGoldenMonths } from '../../utils/goldenMonths.js';
+import { SHOW_GROUP_PLANS } from '../../config/features.js';
 import './Landing.css';
 
 /**
@@ -570,7 +571,7 @@ const Landing = () => {
                 side — the group plan used to be a subdued band beneath the
                 individual card and was easy to scroll past. /groups renders
                 for logged-out visitors too, so the card can link there directly. */}
-            <div className="pricing-cards">
+            <div className={SHOW_GROUP_PLANS ? 'pricing-cards' : 'pricing-cards pricing-cards-single'}>
               <aside className="price-card" aria-label={t.value.priceCardLabel}>
                 <p className="price-card-plan">{t.value.plan}</p>
                 <div className="price-card-amount">
@@ -589,6 +590,7 @@ const Landing = () => {
                 <p className="price-card-note">{t.value.note}</p>
               </aside>
 
+              {SHOW_GROUP_PLANS && (
               <aside className="price-card price-card-group" aria-label={t.value.group.title}>
                 <span className="price-card-badge">
                   {nd && ndGroupPct > 0 ? tnd.pricing.groupBadge(ndGroupPct) : t.value.group.badge}
@@ -606,6 +608,7 @@ const Landing = () => {
                 </div>
                 <Link to="/groups" className="btn primary price-card-cta">{t.value.group.cta}</Link>
               </aside>
+              )}
             </div>
           </Reveal>
 

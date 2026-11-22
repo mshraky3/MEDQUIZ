@@ -1,5 +1,6 @@
 import React from 'react';
 
+import { SHOW_GROUP_PLANS } from '../../config/features.js';
 import Icon from './Icon.jsx';
 import { useCommon, useLang, LanguageToggle, LocaleLink as Link } from '../../i18n';
 import storiesData from '../../seo/data/successStories.json';
@@ -38,7 +39,7 @@ const Footer = () => {
     { to: '/faq', label: t.nav.faq },
     // Group plans are otherwise advertised in exactly one place (the landing
     // band). This is the link that reaches them from every other page.
-    { to: '/groups', label: t.footer.groupPlans },
+    ...(SHOW_GROUP_PLANS ? [{ to: '/groups', label: t.footer.groupPlans }] : []),
     // Suggestions is reachable from /contact only now (a button there) — not
     // its own nav entry. Its route and SEO stay published; just the link.
     { to: '/contact', label: t.footer.contactUs },

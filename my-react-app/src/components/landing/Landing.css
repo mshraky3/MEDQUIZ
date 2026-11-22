@@ -822,6 +822,11 @@
   align-items: stretch;
 }
 
+.pricing-cards-single {
+  grid-template-columns: minmax(0, 560px);
+  justify-content: center;
+}
+
 /* ── Explanations section ─────────────────────────────────────────
    Copy on one side, a replica of the real explanation panel on the other.
    The replica reuses .explain-point's card language so it reads as part of
