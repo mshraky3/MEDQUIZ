@@ -5,6 +5,7 @@ import Globals from '../../global.js';
 import { UserContext } from '../../UserContext';
 import Spinner from '../common/Spinner.jsx';
 import Icon from '../common/Icon.jsx';
+import { SHOW_GROUP_PLANS } from '../../config/features.js';
 import SEO from '../common/SEO.jsx';
 import { useCommon, useCopy, useLang } from '../../i18n';
 import { formatDate } from '../../i18n/format.js';
@@ -275,10 +276,12 @@ const AccountPage = () => {
                                     {isPaid ? t.renewCta : t.subscribeCta}
                                 </button>
                             )}
-                            <button type="button" className="account-secondary" onClick={() => navigate('/groups')}>
-                                <Icon name="users" size={16} />
-                                {hasGroup ? t.groupCta : t.groupBuyCta}
-                            </button>
+                            {(SHOW_GROUP_PLANS || hasGroup) && (
+                                <button type="button" className="account-secondary" onClick={() => navigate('/groups')}>
+                                    <Icon name="users" size={16} />
+                                    {hasGroup ? t.groupCta : t.groupBuyCta}
+                                </button>
+                            )}
                             <button type="button" className="account-secondary" onClick={() => navigate('/contact')}>
                                 <Icon name="message-circle" size={16} />
                                 {t.contactCta}
