@@ -13,9 +13,9 @@ import { useCopy, useLang, LanguageToggle, LocaleLink as Link, formatNumber, for
 import ThemeToggle from '../../theme/ThemeToggle.jsx';
 import landingCopy from '../../i18n/copy/landing.js';
 import nationalDayCopy from '../../i18n/copy/nationalDay.js';
-import { NationalDayStrip } from '../common/NationalDayOffer.jsx';
+import { WhiteFridayStrip } from '../common/WhiteFridayOffer.jsx';
 import { useNationalDayOffer } from '../../utils/nationalDay.js';
-import NationalDaySection from './NationalDaySection.jsx';
+import WhiteFridaySection from './WhiteFridaySection.jsx';
 import { GoldenStrip } from '../common/GoldenMonths.jsx';
 import GoldenMonthsSection from './GoldenMonthsSection.jsx';
 import ThemeAnnouncement from './ThemeAnnouncement.jsx';
@@ -218,7 +218,7 @@ const Landing = () => {
       {/* Explicit dir: index.css sets body{direction:ltr}, which would cancel
           the documentElement dir for everything inside. */}
       <div className={`landing-body${nd || gm ? ' has-nd' : ''}`} dir={dir} lang={lang}>
-        {nd ? <NationalDayStrip offer={nd.offer} plans={nd.plans} /> : gm && <GoldenStrip offer={gm.offer} />}
+        {nd ? <WhiteFridayStrip offer={nd.offer} plans={nd.plans} /> : gm && <GoldenStrip offer={gm.offer} />}
         <header className="landing-topbar">
           <span className="landing-brand">SQB</span>
           <div className="landing-topbar-actions">
@@ -324,11 +324,11 @@ const Landing = () => {
 
         <div className="landing-shell">
 
-          {/* The National Day celebration and offer. First thing under the
+          {/* The White Friday offer. First thing under the
               hero on purpose: a visitor who arrives for the occasion should
               not have to scroll past the product pitch to find it. */}
           {nd && (
-            <NationalDaySection
+            <WhiteFridaySection
               offer={nd.offer}
               plans={nd.plans}
               isAuthenticated={isAuthenticated}

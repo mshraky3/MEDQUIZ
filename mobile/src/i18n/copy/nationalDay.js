@@ -1,5 +1,3 @@
-// AUTO-COPIED from my-react-app/src/i18n/copy/nationalDay.js. Do not edit here:
-// change the website's file, then run `npm run sync:copy` in mobile/.
 /**
  * National Day offer copy — the 96th Saudi National Day, 23 September 2026.
  *
@@ -67,8 +65,11 @@ const nationalDayCopy = {
         section: {
             sectionLabel: 'الجمعة البيضاء',
             title: (fourMonth) => `الجمعة البيضاء: أربعة أشهر بـ${fourMonth} ريالاً`,
-            body: 'أسعار الجمعة البيضاء لكل طالب يستعد لاختبار الترخيص، لخمسة أيام فقط. كل الخطط دفعة واحدة وبدون تجديد تلقائي.',
+            body: 'أسعار الجمعة البيضاء لكل طالب يستعد لاختبار الترخيص، لفترة محدودة. كل الخطط دفعة واحدة وبدون تجديد تلقائي.',
             currency: 'ريال',
+            upTo: 'خصم يصل إلى',
+            off: 'على الاشتراك',
+            chips: ['دفعة واحدة', 'بدون تجديد تلقائي', 'ابدأ بـ10 أسئلة مجانية'],
             fourMonth: {
                 name: 'أربعة أشهر',
                 save: (n) => `وفّر ${n} ريالاً`,
@@ -153,8 +154,11 @@ const nationalDayCopy = {
         section: {
             sectionLabel: 'White Friday',
             title: (fourMonth) => `White Friday: four months for SAR ${fourMonth}`,
-            body: 'White Friday prices for every student preparing for a licensing exam, for five days only. Every plan is a single payment with no auto-renewal.',
+            body: 'White Friday prices for every student preparing for a licensing exam, for a limited time. Every plan is a single payment with no auto-renewal.',
             currency: 'SAR',
+            upTo: 'Up to',
+            off: 'off your plan',
+            chips: ['One payment', 'No auto-renewal', 'Start with 10 free questions'],
             fourMonth: {
                 name: 'Four months',
                 save: (n) => `Save SAR ${n}`,

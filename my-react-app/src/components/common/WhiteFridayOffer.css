@@ -1,0 +1,157 @@
+/* White Friday: top strip and checkout banner.
+   Campaign code, see the removal note in WhiteFridayOffer.jsx.
+
+   wf- prefixed (global CSS, chunks never unload). Opaque panels, no
+   backdrop-filter, finite animation only. These are campaign surfaces drawn
+   for a light page, so their colours are fixed and do not follow the theme
+   (same rule as the old offer cards).
+
+   Palette: ink #0a0f1f, paper #ffffff, sticker yellow #ffd23f, link blue #2563eb.
+   Contrast: white on ink 18:1, ink on yellow 13:1, yellow on ink 13:1. */
+
+.wf-strip,
+.wf-banner {
+  --wf-ink: #0a0f1f;
+  --wf-paper: #ffffff;
+  --wf-yellow: #ffd23f;
+  --wf-blue: #2563eb;
+}
+
+/* The sticker: slightly tilted, one pop on arrival, then still. */
+.wf-sticker {
+  flex: none;
+  display: inline-block;
+  padding: 4px 10px 5px;
+  border-radius: 6px;
+  background: var(--wf-yellow, #ffd23f);
+  color: var(--wf-ink, #0a0f1f);
+  font-size: 12.5px;
+  font-weight: 900;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  transform: rotate(-3deg);
+  animation: wf-pop 420ms cubic-bezier(0.2, 1.4, 0.4, 1) 1 both;
+}
+
+@keyframes wf-pop {
+  from { transform: rotate(-3deg) scale(0.6); opacity: 0; }
+  to { transform: rotate(-3deg) scale(1); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wf-sticker { animation: none; }
+}
+
+/* ── Strip ────────────────────────────────────────────────────────────────
+   Height is --nd-bar-h (an animated property set on .landing-body), shared
+   with the topbar and hero offsets, so the page eases down as one. */
+.wf-strip {
+  position: relative;
+  z-index: 6; /* above .landing-topbar (5) */
+  box-sizing: border-box;
+  height: var(--nd-bar-h, 40px);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding-inline: 16px;
+  background: var(--wf-ink);
+  border-bottom: 2px solid var(--wf-yellow);
+  color: var(--wf-paper);
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.wf-strip:focus-visible {
+  outline: 2px solid var(--wf-yellow);
+  outline-offset: -4px;
+}
+
+.wf-strip-text {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.wf-strip-deal-full { display: none; }
+
+.wf-strip-clock {
+  padding-inline-start: 14px;
+  border-inline-start: 1px solid rgba(255, 255, 255, 0.28);
+  color: rgba(255, 255, 255, 0.92);
+  font-weight: 600;
+}
+
+.wf-strip-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: var(--wf-paper);
+  color: var(--wf-ink);
+  font-size: 12.5px;
+  font-weight: 800;
+  transition: background-color 150ms ease;
+}
+
+.wf-strip:hover .wf-strip-cta { background: var(--wf-yellow); }
+
+@media (min-width: 900px) {
+  .wf-strip-deal-short { display: none; }
+  .wf-strip-deal-full { display: inline; }
+}
+
+@media (max-width: 760px) {
+  .wf-strip-clock { display: none; }
+}
+
+@media (max-width: 520px) {
+  .wf-strip { gap: 10px; font-size: 13px; }
+  .wf-strip-cta-text { display: none; }
+  .wf-strip-cta { padding: 4px 6px; }
+  .wf-strip-text { flex: 0 1 auto; overflow: hidden; }
+  .wf-strip-deal { overflow: hidden; text-overflow: ellipsis; }
+}
+
+/* ── Banner on /subscribe and /groups ───────────────────────────────────── */
+.wf-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-sizing: border-box;
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: var(--wf-ink);
+  border-inline-start: 6px solid var(--wf-yellow);
+  color: var(--wf-paper);
+  text-align: start;
+}
+
+.wf-banner-body {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* Bare strong gets a theme colour; the banner is always ink, so say white. */
+.wf-banner-body strong {
+  color: #ffffff;
+  font-size: 14.5px;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.wf-banner .nd-countdown,
+.wf-banner-date {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.wf-banner .nd-countdown svg { color: var(--wf-yellow); }
