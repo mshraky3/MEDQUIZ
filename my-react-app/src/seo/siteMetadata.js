@@ -622,6 +622,13 @@ ${guidesTeaserHtml(guidesCopy.ar.hub, {
         robots: 'noindex, nofollow, noarchive',
         structuredData: [routePageData('/quizs', 'اختيار الاختبار | SQB', 'صفحة داخلية لاختيار جلسة التدريب.')]
     },
+    '/exam': {
+        title: 'وضع الاختبار | SQB',
+        description: 'صفحة داخلية لجلسة اختبار محاكية داخل منصة SQB.',
+        keywords: 'وضع الاختبار SQB',
+        robots: 'noindex, nofollow, noarchive',
+        structuredData: [routePageData('/exam', 'وضع الاختبار | SQB', 'صفحة جلسة اختبار محاكية داخلية.')]
+    },
     '/suggestions': {
         title: 'الاقتراحات والأفكار | SQB',
         description: 'صفحة داخلية لإرسال اقتراحات المستخدمين إلى منصة SQB.',
@@ -719,6 +726,7 @@ const enOverlay = {
     '/login': { title: 'Log in | SQB', description: 'Log in to your SQB account to continue studying.' },
     '/signup': { title: 'Create a free account | SQB', description: 'Create an SQB account and start practising for the SMLE, SNLE and Prometric exams.' },
     '/quizs': { title: 'Start a quiz | SQB', description: 'Choose how many questions to practise and which mode to use.' },
+    '/exam': { title: 'Exam mode | SQB', description: 'An exam-style simulation inside SQB.' },
     '/suggestions': { title: 'Suggestions and ideas | SQB', description: 'Send the SQB team your suggestions.' },
     '/analysis': { title: 'Performance analytics | SQB', description: 'Your performance analytics inside SQB.' },
     '/summaries': { title: 'Study material | SQB', description: 'Topic summaries inside SQB — members-only content.' },

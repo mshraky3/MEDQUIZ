@@ -99,13 +99,18 @@ const FinalExams = ({ userId }) => {
           const score = Number(s.score) || 0;
           const open = openId === s.id;
           const qs = questions[s.id];
+          // Exam mode sessions carry their part scores in session_metadata.exam.
+          const exam = s.session_metadata && typeof s.session_metadata === 'object' ? s.session_metadata.exam : null;
+          const examParts = exam && Array.isArray(exam.parts) ? exam.parts : [];
           const perMinute = s.time_taken > 0 ? (s.total_questions / (s.time_taken / 60)).toFixed(1) : null;
           return (
             <div className="ap-sess" key={s.id}>
               <div className="ap-sess-head">
                 <span className="ap-sess-when">
                   <span className="ap-sess-title">
-                    {getTypeLabel(s.question_type, lang)} — {getSourceLabel(s.source, lang)}
+                    {exam
+                      ? t.examTitle(String(exam.key || s.source).toUpperCase(), exam.mode === 'demo')
+                      : <>{getTypeLabel(s.question_type, lang)} — {getSourceLabel(s.source, lang)}</>}
                   </span>
                   <span className="ap-sess-date">{formatDate(s.start_time)}</span>
                 </span>
@@ -122,6 +127,20 @@ const FinalExams = ({ userId }) => {
                   <span className="ap-sess-fact">{t.timeEfficiency} <b><bdi>{perMinute}</bdi></b> {t.perMinute}</span>
                 )}
               </div>
+
+              {examParts.length > 0 && (
+                <div className="ap-sess-facts">
+                  {examParts.map((p) => (
+                    <span className="ap-sess-fact" key={p.index}>
+                      <b><bdi>{examParts.length === 1
+                        ? t.examOnePart(p.correct, p.questions, Math.round(p.percent))
+                        : t.examPart(p.index, p.correct, p.questions, Math.round(p.percent))}</bdi></b>
+                      {p.endedBy === 'timeout' ? ` · ${t.examTimedOut}` : ''}
+                    </span>
+                  ))}
+                  {exam.flagsUsed > 0 && <span className="ap-sess-fact">{t.examFlags(exam.flagsUsed)}</span>}
+                </div>
+              )}
 
               <div className="ap-sess-foot">
                 <button type="button" className="ap-more" aria-expanded={open} onClick={() => toggle(s.id)}>

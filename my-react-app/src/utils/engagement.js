@@ -30,7 +30,7 @@ const FLUSH_INTERVAL_MS = 5 * 60 * 1000;
 /** Map a pathname to one of the product areas worth telling apart. */
 export function sectionForPath(pathname) {
     const p = (pathname || '').toLowerCase();
-    if (p.startsWith('/quizs') || p.startsWith('/quiz/')) return 'quizzes';
+    if (p.startsWith('/quizs') || p.startsWith('/quiz/') || p === '/exam') return 'quizzes';
     if (p.startsWith('/summaries')) return 'summaries';
     if (p.startsWith('/analysis') || p.startsWith('/wrong-questions')) return 'analytics';
     return 'other';

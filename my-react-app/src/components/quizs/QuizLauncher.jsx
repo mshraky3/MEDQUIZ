@@ -104,13 +104,6 @@ const QuizLauncher = ({ id, contentStatus }) => {
     const [selectedTimer, setSelectedTimer] = useState(null);
     const [customTimerMinutes, setCustomTimerMinutes] = useState(15);
 
-    const [showFinalQuizType, setShowFinalQuizType] = useState(false);
-    const [showFinalQuizTime, setShowFinalQuizTime] = useState(false);
-    const [selectedFinalType, setSelectedFinalType] = useState('');
-    const [finalQuizQuestionsCount, setFinalQuizQuestionsCount] = useState(0);
-    const [finalQuizTimeLimit, setFinalQuizTimeLimit] = useState(30);
-    const [loadingFinalCount, setLoadingFinalCount] = useState(false);
-
     const [showCongratulations, setShowCongratulations] = useState(false);
     const [congratulationsData, setCongratulationsData] = useState(null);
 
@@ -285,55 +278,11 @@ const QuizLauncher = ({ id, contentStatus }) => {
         });
     };
 
-    // ---- Final quiz flow: type → time (kept as its own modal) ----
-    const handleFinalTypeSelect = async (type) => {
-        setSelectedFinalType(type);
-        setShowFinalQuizType(false);
-        setFinalQuizQuestionsCount(0);
+    // ---- Exam mode: the old final quiz (pick a type, set a time) is replaced by /exam,
+    // an exam-style simulation with the real exam's question count, parts and time.
+    const openExamMode = () => navigate('/exam');
 
-        if (!user || !sessionToken) {
-            setShowFinalQuizTime(true);
-            return;
-        }
-
-        setLoadingFinalCount(true);
-        setShowFinalQuizTime(true);
-        try {
-            const response = await apiClient.get('/final-quiz/questions-count', {
-                params: { questionType: type, source: activeSource },
-            });
-            setFinalQuizQuestionsCount(response.data.totalQuestions || 0);
-        } catch (error) {
-            console.error('Error fetching questions count:', error);
-            setFinalQuizQuestionsCount(0);
-        } finally {
-            setLoadingFinalCount(false);
-        }
-    };
-
-    const startFinalQuiz = (timeLimit) => {
-        // Guard against an empty pool so we never navigate to /quiz/0.
-        if (!finalQuizQuestionsCount || finalQuizQuestionsCount < 1) return;
-        setShowFinalQuizTime(false);
-        navigate(`/quiz/${finalQuizQuestionsCount}`, {
-            // A final quiz is a mock exam: never revealed mid-quiz, whatever the
-            // launcher's mode preference is set to.
-            state: { id, types: selectedFinalType, source: activeSource, timer: timeLimit, isFinalQuiz: true, mode: EXAM }
-        });
-    };
-
-    const handleFinalTimeSelect = (timeLimit) => {
-        setFinalQuizTimeLimit(timeLimit);
-        startFinalQuiz(timeLimit);
-    };
-
-    const handleFinalTimeConfirm = () => {
-        const timeLimit = Math.min(300, Math.max(30, finalQuizTimeLimit || 30));
-        setFinalQuizTimeLimit(timeLimit);
-        startFinalQuiz(timeLimit);
-    };
-
-    const anyModalOpen = showFinalQuizType || showFinalQuizTime || showCongratulations;
+    const anyModalOpen = showCongratulations;
 
     if (bankEmpty) {
         return (
@@ -600,11 +549,11 @@ const QuizLauncher = ({ id, contentStatus }) => {
                         </div>
 
                         {user && sessionToken && (
-                            <button type="button" className="ql-final" onClick={() => setShowFinalQuizType(true)}>
+                            <button type="button" className="ql-final" onClick={openExamMode}>
                                 <span className="ql-final-icon" aria-hidden="true"><Icon name="target" size={19} /></span>
                                 <span className="ql-final-text">
-                                    <strong>{t.finalQuiz}</strong>
-                                    <span>{t.finalTypeDesc}</span>
+                                    <strong>{t.examMode}</strong>
+                                    <span>{t.examModeDesc}</span>
                                 </span>
                                 <span className="ql-final-go" aria-hidden="true">
                                     <Icon name={dir === 'rtl' ? 'chevron-left' : 'chevron-right'} size={18} />
@@ -614,82 +563,6 @@ const QuizLauncher = ({ id, contentStatus }) => {
                     </aside>
                 </div>
             </div>
-
-            {/* Final Quiz Type Selection Modal */}
-            {showFinalQuizType && (
-                <div className="custom-source-selector-modal" dir={dir}>
-                    <div className="custom-modal-content">
-                        <h2><Icon name="target" size={20} /> {t.finalTypeTitle}</h2>
-                        <p className="final-quiz-description">{t.finalTypeDesc}</p>
-                        <div className="custom-source-buttons">
-                            {availableTypes.map((type) => (
-                                <button key={type} onClick={() => handleFinalTypeSelect(type)} className="custom-source-btn">
-                                    {getTypeLabel(type, lang)}
-                                </button>
-                            ))}
-                        </div>
-                        <div className="custom-modal-buttons">
-                            <button onClick={() => setShowFinalQuizType(false)} className="custom-cancel-btn">{t.cancel}</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Final Quiz Time Selection Modal */}
-            {showFinalQuizTime && (
-                <div className="custom-timer-selector-modal" dir={dir}>
-                    <div className="custom-modal-content">
-                        <h2><Icon name="target" size={20} /> {t.finalTimeTitle}</h2>
-                        <p className="final-quiz-description">
-                            {loadingFinalCount
-                                ? t.finalCounting
-                                : t.finalAvailable(finalQuizQuestionsCount, getTypeLabel(selectedFinalType, lang))}
-                        </p>
-                        {!loadingFinalCount && finalQuizQuestionsCount < 1 ? (
-                            <>
-                                <p className="final-quiz-note">{t.finalNotEnough}</p>
-                                <div className="custom-modal-buttons">
-                                    <button onClick={() => { setShowFinalQuizTime(false); setShowFinalQuizType(true); }} className="custom-cancel-btn">
-                                        {t.finalPickOther}
-                                    </button>
-                                </div>
-                            </>
-                        ) : (
-                            <>
-                                <p className="final-quiz-note">{t.finalIncludesAll}</p>
-                                <div className="timer-options">
-                                    <button onClick={() => handleFinalTimeSelect(30)} className="timer-option-btn" disabled={loadingFinalCount}>{t.final30}</button>
-                                    <button onClick={() => handleFinalTimeSelect(60)} className="timer-option-btn" disabled={loadingFinalCount}>{t.final60}</button>
-                                    <button onClick={() => handleFinalTimeSelect(90)} className="timer-option-btn" disabled={loadingFinalCount}>{t.final90}</button>
-                                    <button onClick={() => handleFinalTimeSelect(120)} className="timer-option-btn" disabled={loadingFinalCount}>{t.final120}</button>
-                                </div>
-                                <div className="custom-timer-input">
-                                    <label htmlFor="finalQuizTime">{t.finalCustomLabel}</label>
-                                    <div className="timer-input-container">
-                                        <input
-                                            id="finalQuizTime"
-                                            type="number"
-                                            min="30"
-                                            max="300"
-                                            value={finalQuizTimeLimit}
-                                            onChange={(e) => setFinalQuizTimeLimit(parseInt(e.target.value) || 30)}
-                                            className="custom-timer-number-input"
-                                            placeholder={t.finalCustomPlaceholder}
-                                        />
-                                        <span className="time-unit">{t.minutes}</span>
-                                    </div>
-                                </div>
-                                <div className="custom-modal-buttons">
-                                    <button onClick={handleFinalTimeConfirm} className="custom-start-btn" disabled={loadingFinalCount}>
-                                        {t.startFinal}
-                                    </button>
-                                    <button onClick={() => setShowFinalQuizTime(false)} className="custom-cancel-btn">{t.cancel}</button>
-                                </div>
-                            </>
-                        )}
-                    </div>
-                </div>
-            )}
 
             {/* Congratulations Popup */}
             <CongratulationsPopup

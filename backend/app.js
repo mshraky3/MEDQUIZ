@@ -26,6 +26,8 @@ import accountingRouter from './routes/accounting.js';
 import engagementRouter from './routes/engagement.js';
 import funnelRouter, { recordFunnelEvent } from './routes/funnel.js';
 import goalsRouter from './routes/goals.js';
+import examRouter from './routes/exam.js';
+import { EXAM_DEMO_DDL } from './services/examService.js';
 import notificationsRouter from './routes/notifications.js';
 import examDateRouter from './routes/examDate.js';
 import appFreeMonthRouter from './routes/appFreeMonth.js';
@@ -1750,6 +1752,16 @@ const ensureQuestionImagesSchema = async () => {
 };
 // Kicked off from bootstrapAll() below.
 
+// Exam mode: one row per account that took its free demo (services/examService.js).
+const ensureExamSchema = async () => {
+    try {
+        for (const statement of EXAM_DEMO_DDL) await db.query(statement);
+        logger.info('exam_demo_claims table ensured');
+    } catch (err) {
+        reportBootstrapFailure('ensureExamSchema', err);
+    }
+};
+
 const ensureSummariesTables = async () => {
     try {
         await db.query(`
@@ -2047,7 +2059,8 @@ const ensureOAuthColumns = async () => {
 // 15: question_images + question_image_links (additive, ensureQuestionImagesSchema).
 // 16: check_valid_quiz_source rebuilt again to accept MedicalNovemberRecall, DentalRecall2025 and NursingRecall
 //     (the 16 Nov 2026 batch; the code imports no data, see docs/CONTENT_INTAKE.md).
-const SCHEMA_BOOTSTRAP_VERSION = 16;
+// 17: exam_demo_claims (additive, ensureExamSchema): one free exam-mode demo per account.
+const SCHEMA_BOOTSTRAP_VERSION = 17;
 const _versionGuard = newGuardState();
 async function bootstrapAll() {
     // A failed or slow version check must NEVER start the full DDL list (7 Nov 2026: 25 instances x ~100 statements
@@ -2076,6 +2089,7 @@ async function bootstrapAll() {
     await ensureSuggestionsTable();
     await ensureSummariesTables();
     await ensureQuestionImagesSchema();
+    await ensureExamSchema();
     await ensureTelegramSchema();
     await ensureOAuthColumns();
     try {
@@ -8162,6 +8176,10 @@ app.use('/api/engagement', (req, res, next) => { req.db = db; next(); }, engagem
 // Pre-signup/pre-login funnel events: POST /api/funnel (unauthenticated,
 // rate-limited) + GET /api/funnel/admin.
 app.use('/api/funnel', (req, res, next) => { req.db = db; next(); }, funnelRouter);
+
+// Exam mode (exam-style simulation of the track's licensing exam). Session-only: the track and the
+// account come from requireSession, never from the request. See routes/exam.js.
+app.use('/api/exam', requireSession, (req, res, next) => { req.db = db; next(); }, examRouter);
 
 // Study goals and the in-app notification feed. Both resolve the account from
 // the validated session (req.accountId set by requireSession), never from the

@@ -359,6 +359,17 @@ CSS is listed in load order. `+shell` = `index.css` + `Navbar.css` + `Footer.css
 - **Breakpoints** 768 / 600 / 480 / 360
 - **Defects** **`A1` (`.question-card` / `.question-text` are unscoped here and also defined by 4 other stylesheets)**, `A2` (`.unanswered-popup-overlay` at z 1000), `C2` (`.restart-button { margin-left }`), `D5`
 
+#### `/exam` — exam mode (exam-style simulation)
+
+- **Component** `exam/ExamPage.jsx` (state machine in `examEngine.js`, clock in `examClock.js` + `useExamClock.js`, reload restore in `examStorage.js`) with `ExamPick`, `ExamRules`, `ExamRunner`, `ExamNavigator`, `ExamReview`, `ExamBreak`, `ExamResult`, `ExamTools` (calculator + lab-values drawers). Copy `i18n/copy/exam.js` (ar + en).
+- **CSS** `exam/exam.css`, everything under `.exm`, classes `exm-` prefixed, no keyframes, tokens only (dark works through them), panels opaque. Overlay layers use `--z-modal` (the runner) and `--z-popover` (drawers).
+- **Shell** deliberately **not** `Layout`: the route is `withBoundary('/exam', <RequireAuth>…)`, so there is no app bar and no footer. Pick, rules, break and result screens carry a slim `.exm-top` bar (brand link back to `/quizs`, theme and language toggles). The runner is a fixed full-screen layer (`.exm-run`) above everything, with its own header (part, question N of M, progress, absolute-deadline clock, Finish Part), a numbered navigator (left in LTR, right in RTL; below 768px it is a bottom sheet opened from the footer), the question, and a footer (flag, calculator, lab values, Back/Next).
+- **Breakpoints** 767 / 768-1023 (tablet: narrower navigator column) / 480. 768 itself is the tablet layout.
+- **Direction** the chrome follows the site language; the stem and the four options are `dir="ltr"` islands (exam material, never translated). Clock digits are always LTR.
+- **Not colour alone** answered = filled tile with a tick, unanswered = hollow, flagged = dashed border + flag icon, current = heavy ring; the selected option has a check mark and a filled letter badge.
+- **Data** `GET /api/exam/config`, `POST /api/exam/start`, `POST /api/exam/demo/submit` (backend `routes/exam.js`, exam shapes in `backend/config/exams.js`); a paid exam is saved by the existing `POST /final-quiz/submit` with `session_metadata.exam` (part scores, flags used). The history tab in `/analysis` (`FinalExams.jsx`, now headed "Exam history") shows the part scores.
+- **Replaced** the launcher's "final quiz" button and its two modals (`QuizLauncher.jsx` now has one "Exam mode" entry to `/exam`). The old `/quiz/:n` final-quiz route, `/final-quiz/*` endpoints and history tables still work for old links; the `final*` copy keys stay because the Android app uses them. The launcher modal rules in `QUIZS.css` (`.custom-source-selector-modal` etc.) are now unused by the launcher and can go in a later cleanup.
+
 #### `/analysis` — the worst-affected page
 
 - **Component** `analysis/Analysis.jsx` composing **5** sub-components: `BreakdownTable`, `QuizHistory`, `FinalExams`, `LastQuizSummary`, `QuestionAttemptsTable`
