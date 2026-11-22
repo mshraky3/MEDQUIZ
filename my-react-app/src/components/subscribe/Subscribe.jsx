@@ -9,7 +9,7 @@ import Icon from '../common/Icon.jsx';
 import { useCopy, useLang } from '../../i18n';
 import supportCopy from '../../i18n/copy/support.js';
 import nationalDayCopy from '../../i18n/copy/nationalDay.js';
-import { NationalDayBanner } from '../common/NationalDayOffer.jsx';
+import { WhiteFridayBanner } from '../common/WhiteFridayOffer.jsx';
 import goldenMonthsCopy from '../../i18n/copy/goldenMonths.js';
 import { GoldenBanner } from '../common/GoldenMonths.jsx';
 // The card shell (.login-card, .btn, .alert-box) lives in Login.css. Import it
@@ -393,7 +393,7 @@ const Subscribe = () => {
                         )}
                     </div>
 
-                    {ndOffer && plans.some((p) => p.offerId) && <NationalDayBanner offer={ndOffer} />}
+                    {ndOffer && plans.some((p) => p.offerId) && <WhiteFridayBanner offer={ndOffer} />}
                     {gmOffer && plans.some((p) => p.bonusMonths) && <GoldenBanner offer={gmOffer} />}
 
                     {/* The September 2026 recall set is SMLE (medicine) only, so a

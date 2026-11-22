@@ -9,7 +9,7 @@ import SEO from '../common/SEO.jsx';
 import { useCopy, useLang } from '../../i18n';
 import { formatDate } from '../../i18n/format.js';
 import groupsCopy from '../../i18n/copy/groups.js';
-import { NationalDayBanner } from '../common/NationalDayOffer.jsx';
+import { WhiteFridayBanner } from '../common/WhiteFridayOffer.jsx';
 // The buy-a-seat CTA matches the button style used on /subscribe (which this
 // page also funnels a buyer to for the individual plans) — was previously
 // the plainer global default, a jarring style change across a single click.
@@ -159,7 +159,7 @@ const GroupsPage = () => {
                 {state === 'ready' && groups.length === 0 && (
                     <section className="groups-buy">
                         <h2 className="groups-section-title">{t.chooseTitle}</h2>
-                        {ndOffer && plans.some((p) => p.offerId) && <NationalDayBanner offer={ndOffer} />}
+                        {ndOffer && plans.some((p) => p.offerId) && <WhiteFridayBanner offer={ndOffer} />}
                         <div className="groups-plan-grid">
                             {plans.map((plan) => {
                               const saving = savingsFor(plan);
