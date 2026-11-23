@@ -14,11 +14,9 @@
  *   560 (SMLE) and 500 (SNLE) on a 200-800 scaled score. SNLE blueprint:
  *   adult 40 / maternal-child 30 / fundamentals 20 / management 10 percent.
  *
- *   SDLE: NO verified format exists. `confirmed: false` makes the site say so
- *   on the rules screen. The numbers below are a clearly labelled PRACTICE
- *   length (100 questions, one part, 120 minutes), not the official format.
- *   When the official format is confirmed, change this block (and flip
- *   `confirmed`) and nothing else.
+ *   SDLE: no dental guide is on file. By the owner's decision (2026-11-23) it uses
+ *   the same sitting as the other two. If a dental guide says otherwise, change
+ *   that block only.
  *
  * `passMark` is information only. A scaled score cannot be reproduced from a
  * raw count (the guides say so), so the result screen shows a percentage and
@@ -80,15 +78,18 @@ export const EXAMS = {
     [DENTAL]: {
         key: 'sdle',
         track: DENTAL,
-        confirmed: false,
-        practiceLength: true,
-        questions: 100,
-        parts: 1,
+        // Owner decision 2026-11-23: SDLE uses the same sitting as SMLE and SNLE (200
+        // questions, two parts of 100, 120 minutes each, 30-minute break) until a dental
+        // specific guide says otherwise. No dental pass mark is known, so none is shown.
+        confirmed: true,
+        practiceLength: false,
+        questions: 200,
+        parts: 2,
         questionsPerPart: 100,
         minutesPerPart: 120,
-        breakMinutes: 0,
+        breakMinutes: 30,
         optionsPerQuestion: 4,
-        pilotUnscoredMaxPct: 0,
+        pilotUnscoredMaxPct: 10,
         negativeMarking: false,
         passMark: null,
         blueprint: null,

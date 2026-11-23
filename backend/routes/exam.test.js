@@ -163,8 +163,8 @@ test('config: entitlement and exam shape per account', { skip }, async () => {
 
         const dental = await api.call('paid-den', 'GET', '/api/exam/config');
         assert.equal(dental.body.full.exam.key, 'sdle');
-        assert.equal(dental.body.full.exam.confirmed, false);
-        assert.equal(dental.body.full.exam.practiceLength, true);
+        assert.equal(dental.body.full.exam.confirmed, true);
+        assert.equal(dental.body.full.exam.practiceLength, false);
         assert.equal(dental.body.full.capped, true);
         assert.equal(dental.body.full.served, 60);
         assert.equal((await api.call('nobody', 'GET', '/api/exam/config')).status, 401);
@@ -226,11 +226,11 @@ test('dental start: smaller pool caps the count and the response says so', { ski
         const r = await api.call('paid-den', 'POST', '/api/exam/start', {});
         assert.equal(r.status, 200);
         assert.equal(r.body.exam.key, 'sdle');
-        assert.equal(r.body.exam.confirmed, false);
-        assert.equal(r.body.requested, 100);
+        assert.equal(r.body.exam.confirmed, true);
+        assert.equal(r.body.requested, 200);
         assert.equal(r.body.served, 60);
         assert.equal(r.body.capped, true);
-        assert.deepEqual(r.body.parts.map((p) => [p.questions, p.minutes]), [[60, 72]]);
+        assert.deepEqual(r.body.parts.map((p) => [p.questions, p.minutes]), [[30, 36], [30, 36]]);
         assert.ok(r.body.notes.some((n) => n.code === 'pool_short'));
         assertRules(r.body.questions);
     } finally { await api.close(); await db.close(); }

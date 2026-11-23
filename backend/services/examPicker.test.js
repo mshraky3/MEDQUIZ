@@ -199,7 +199,7 @@ test('the exam payload carries no explanation and no internal fields', () => {
     assert.deepEqual(Object.keys(shaped).sort(), ['correct_option', 'id', 'option1', 'option2', 'option3', 'option4', 'question_text', 'question_type', 'source'].sort());
 });
 
-test('part plan: SMLE is 100 + 100 at 120 minutes, a smaller pool keeps the pace, SDLE and demo are one part', () => {
+test('part plan: SMLE is 100 + 100 at 120 minutes, a smaller pool keeps the pace, SDLE is split like the other two, a demo is one part', () => {
     const smle = buildPartPlan(EXAMS.medical, 200);
     assert.deepEqual(smle.map((p) => [p.questions, p.minutes]), [[100, 120], [100, 120]]);
     assert.deepEqual(smle.map((p) => [p.from, p.to]), [[0, 100], [100, 200]]);
@@ -208,24 +208,26 @@ test('part plan: SMLE is 100 + 100 at 120 minutes, a smaller pool keeps the pace
     const odd = buildPartPlan(EXAMS.medical, 51);
     assert.equal(odd[0].questions + odd[1].questions, 51);
     const sdle = buildPartPlan(EXAMS.dental, 100);
-    assert.deepEqual(sdle.map((p) => [p.questions, p.minutes]), [[100, 120]]);
+    assert.deepEqual(sdle.map((p) => [p.questions, p.minutes]), [[50, 60], [50, 60]]);
     const demo = buildPartPlan(runConfig('medical', { demo: true }), 20);
     assert.deepEqual(demo.map((p) => [p.questions, p.minutes]), [[20, 24]]);
     assert.deepEqual(buildPartPlan(EXAMS.medical, 0), []);
     assert.deepEqual(buildPartPlan(EXAMS.medical, 1).map((p) => p.questions), [1]);
 });
 
-test('config: the published numbers, and dental is marked unconfirmed', () => {
+test('config: the published numbers, and dental uses the same sitting (owner, 2026-11-23)', () => {
     assert.equal(EXAMS.medical.questions, 200);
     assert.equal(EXAMS.medical.minutesPerPart, 120);
     assert.equal(EXAMS.medical.breakMinutes, 30);
     assert.equal(EXAMS.medical.passMark.pass, 560);
     assert.equal(EXAMS.nursing.passMark.pass, 500);
     assert.deepEqual(EXAMS.nursing.blueprint.map((d) => d.pct), [40, 30, 20, 10]);
-    assert.equal(EXAMS.dental.confirmed, false);
-    assert.equal(EXAMS.dental.practiceLength, true);
+    assert.equal(EXAMS.dental.confirmed, true);
+    assert.equal(EXAMS.dental.practiceLength, false);
+    assert.equal(EXAMS.dental.questions, 200);
+    assert.equal(EXAMS.dental.parts, 2);
     assert.equal(EXAMS.dental.passMark, null);
-    assert.equal(publicExamConfig(EXAMS.dental).confirmed, false);
+    assert.equal(publicExamConfig(EXAMS.dental).confirmed, true);
     const demo = runConfig('nursing', { demo: true });
     assert.equal(demo.questions, 20);
     assert.equal(demo.parts, 1);
