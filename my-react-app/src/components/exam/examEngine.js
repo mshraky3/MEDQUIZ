@@ -29,7 +29,7 @@ export function createExam(payload, now = Date.now()) {
     const exam = payload.exam || {};
     return {
         v: STATE_VERSION,
-        mode: payload.mode === 'demo' ? 'demo' : 'full',
+        mode: 'full',
         examKey: exam.key,
         confirmed: exam.confirmed !== false,
         practiceLength: !!exam.practiceLength,
@@ -282,7 +282,7 @@ export function examMetadata(state, score) {
     };
 }
 
-/** The body for POST /final-quiz/submit (paid) or /api/exam/demo/submit (free). */
+/** The body for POST /final-quiz/submit. */
 export function buildSubmission(state, questions, score, { userId } = {}) {
     const attempts = questions.map((q) => {
         const given = state.answers[q.id];
@@ -295,15 +295,6 @@ export function buildSubmission(state, questions, score, { userId } = {}) {
         };
     });
     const meta = examMetadata(state, score);
-    if (state.mode === 'demo') {
-        return {
-            questionAttempts: attempts.map(({ questionId, userAnswer, timeTaken }) => ({ questionId, userAnswer, timeTaken })),
-            timeTaken: score.secondsUsed,
-            timeLimit: score.secondsAllowed,
-            flagsUsed: meta.flagsUsed,
-            sessionMetadata: { confirmed: state.confirmed },
-        };
-    }
     return {
         userId,
         questionType: EXAM_SESSION_TYPE,

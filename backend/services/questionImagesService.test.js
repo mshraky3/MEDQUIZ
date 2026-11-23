@@ -109,7 +109,7 @@ test('validateImageEntry rejects unsafe keys and incomplete tables', () => {
 
 test('app.js wires the tables, version bump, attach call and route', () => {
     const src = fs.readFileSync(path.join(here, '..', 'app.js'), 'utf8');
-    assert.match(src, /SCHEMA_BOOTSTRAP_VERSION = (1[5-9]|[2-9]\d)/);
+    assert.match(src, /SCHEMA_BOOTSTRAP_VERSION = 16/);
     assert.match(src, /await ensureQuestionImagesSchema\(\)/);
     assert.match(src, /await attachQuestionImages\(db, served\)/);
     assert.match(src, /app\.use\('\/api\/question-images'/);

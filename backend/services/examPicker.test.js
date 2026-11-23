@@ -199,7 +199,7 @@ test('the exam payload carries no explanation and no internal fields', () => {
     assert.deepEqual(Object.keys(shaped).sort(), ['correct_option', 'id', 'option1', 'option2', 'option3', 'option4', 'question_text', 'question_type', 'source'].sort());
 });
 
-test('part plan: SMLE is 100 + 100 at 120 minutes, a smaller pool keeps the pace, SDLE is split like the other two, a demo is one part', () => {
+test('part plan: SMLE is 100 + 100 at 120 minutes, a smaller pool keeps the pace, SDLE is split like the other two', () => {
     const smle = buildPartPlan(EXAMS.medical, 200);
     assert.deepEqual(smle.map((p) => [p.questions, p.minutes]), [[100, 120], [100, 120]]);
     assert.deepEqual(smle.map((p) => [p.from, p.to]), [[0, 100], [100, 200]]);
@@ -209,8 +209,6 @@ test('part plan: SMLE is 100 + 100 at 120 minutes, a smaller pool keeps the pace
     assert.equal(odd[0].questions + odd[1].questions, 51);
     const sdle = buildPartPlan(EXAMS.dental, 100);
     assert.deepEqual(sdle.map((p) => [p.questions, p.minutes]), [[50, 60], [50, 60]]);
-    const demo = buildPartPlan(runConfig('medical', { demo: true }), 20);
-    assert.deepEqual(demo.map((p) => [p.questions, p.minutes]), [[20, 24]]);
     assert.deepEqual(buildPartPlan(EXAMS.medical, 0), []);
     assert.deepEqual(buildPartPlan(EXAMS.medical, 1).map((p) => p.questions), [1]);
 });
@@ -228,11 +226,8 @@ test('config: the published numbers, and dental uses the same sitting (owner, 20
     assert.equal(EXAMS.dental.parts, 2);
     assert.equal(EXAMS.dental.passMark, null);
     assert.equal(publicExamConfig(EXAMS.dental).confirmed, true);
-    const demo = runConfig('nursing', { demo: true });
-    assert.equal(demo.questions, 20);
-    assert.equal(demo.parts, 1);
-    assert.equal(demo.breakMinutes, 0);
-    assert.equal(demo.key, 'snle');
+    assert.equal(runConfig('nursing').key, 'snle');
+    assert.equal(runConfig('nursing').questions, 200);
 });
 
 test('every nursing specialty of the blueprint exists in tracks.js, each exactly once', async () => {

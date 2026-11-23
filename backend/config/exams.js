@@ -96,46 +96,18 @@ export const EXAMS = {
     },
 };
 
-/**
- * The free-tier demo: one per account, same interface, one short part. The pace
- * (minutes per question) matches the real exam's 120 minutes for 100 questions.
- */
-export const DEMO_EXAM = {
-    questions: 20,
-    parts: 1,
-    minutesPerQuestion: 1.2,
-};
-
-/** How long an unsubmitted demo can be resumed after it was started (hours). */
-export const DEMO_RESUME_HOURS = 3;
-
 export function examForTrack(track) {
     return EXAMS[track] || EXAMS[MEDICAL];
 }
 
-/**
- * The exam this run uses: the track's template, or its demo cut-down. A demo
- * keeps the track's key, blueprint and confirmed flag (so the nursing demo is
- * still spread 40/30/20/10 where the pool allows) but is one short part.
- */
-export function runConfig(track, { demo = false } = {}) {
-    const base = examForTrack(track);
-    if (!demo) return base;
-    return {
-        ...base,
-        questions: DEMO_EXAM.questions,
-        parts: DEMO_EXAM.parts,
-        questionsPerPart: DEMO_EXAM.questions,
-        minutesPerPart: Math.ceil(DEMO_EXAM.questions * DEMO_EXAM.minutesPerQuestion),
-        breakMinutes: 0,
-        pilotUnscoredMaxPct: 0,
-        demo: true,
-    };
+/** The exam this run uses: the track's template. */
+export function runConfig(track) {
+    return examForTrack(track);
 }
 
 /**
  * Split `served` questions into the config's parts. A full pool gives the
- * published 100 + 100; a smaller pool (or a short demo) keeps the same pace
+ * published 100 + 100; a smaller pool keeps the same pace
  * (minutes per question) instead of leaving 120 minutes for 40 questions.
  * Returns [{ index (1-based), questions, minutes, from, to }] where from/to are
  * 0-based positions in the served list (to is exclusive).
@@ -163,7 +135,6 @@ export function publicExamConfig(config) {
         key: config.key,
         confirmed: config.confirmed,
         practiceLength: config.practiceLength,
-        demo: !!config.demo,
         questions: config.questions,
         parts: config.parts,
         questionsPerPart: config.questionsPerPart,

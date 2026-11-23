@@ -288,21 +288,7 @@ test('paid save body fits /final-quiz/submit and carries part scores and flags i
     assert.equal(JSON.stringify(body).includes('explanation'), false);
 });
 
-test('demo save body has no user id, no key, and the unconfirmed flag survives', () => {
-    const p = payload(20, { mode: 'demo', exam: { key: 'sdle', confirmed: false, practiceLength: true, breakMinutes: 0 }, parts: [{ index: 1, questions: 20, minutes: 24, from: 0, to: 20 }] });
-    const questions = mkQuestions(20);
-    let s = startPart(createExam(p, T0), T0);
-    s = finishPart(s, T0 + 5 * MIN, 'user');
-    assert.equal(s.stage, 'done');
-    const body = buildSubmission(s, questions, scoreExam(s, questions), { userId: 7 });
-    assert.equal(body.userId, undefined);
-    assert.equal(body.questionType, undefined);
-    assert.deepEqual(Object.keys(body.questionAttempts[0]).sort(), ['questionId', 'timeTaken', 'userAnswer']);
-    assert.equal(body.sessionMetadata.confirmed, false);
-    assert.equal(body.timeLimit, 1440);
-});
-
-test('a one-part exam with no break (SDLE practice length) never enters the break stage', () => {
+test('a one-part exam with no break never enters the break stage', () => {
     const p = payload(10, { exam: { key: 'sdle', confirmed: false, breakMinutes: 0 }, parts: [{ index: 1, questions: 10, minutes: 120, from: 0, to: 10 }] });
     const s = finishPart(startPart(createExam(p, T0), T0), T0 + MIN, 'user');
     assert.equal(s.stage, 'done');

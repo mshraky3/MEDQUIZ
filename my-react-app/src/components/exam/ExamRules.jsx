@@ -19,7 +19,6 @@ const ExamRules = ({ state, onBegin, onCancel }) => {
             <div className="exm-pick-head">
                 <span className="exm-kicker">
                     <Icon name="clipboard" size={14} /> <bdi>{label}</bdi>
-                    {state.mode === 'demo' ? ` · ${t.result.demoTag}` : ''}
                 </span>
                 <h1>{t.rules.title}</h1>
                 <p>{t.rules.lead}</p>

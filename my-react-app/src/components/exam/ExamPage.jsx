@@ -102,11 +102,11 @@ const ExamPage = () => {
     }, []);
 
     // ---- start
-    const start = useCallback(async ({ demo }) => {
+    const start = useCallback(async () => {
         setPhase('starting');
         setError(null);
         try {
-            const res = await apiClient.post('/api/exam/start', { demo: !!demo });
+            const res = await apiClient.post('/api/exam/start');
             const state = createExam(res.data, Date.now());
             const questions = res.data.questions;
             if (accountId) {
@@ -119,9 +119,9 @@ const ExamPage = () => {
             setPhase('exam');
         } catch (err) {
             const code = err?.response?.data?.code;
-            setError(code === 'DEMO_USED' ? t.errors.demoUsed : code === 'NO_QUESTIONS' ? t.errors.noQuestions : t.errors.start);
+            setError(code === 'SUBSCRIPTION_REQUIRED' ? t.errors.subscribe : code === 'NO_QUESTIONS' ? t.errors.noQuestions : t.errors.start);
             setPhase('error');
-            if (code === 'DEMO_USED') loadConfig();
+            if (code === 'SUBSCRIPTION_REQUIRED') loadConfig();
         }
     }, [accountId, loadConfig, t.errors]);
 
@@ -148,8 +148,7 @@ const ExamPage = () => {
         setSaveStatus('saving');
         try {
             const body = buildSubmission(state, questions, score, { userId: user?.id });
-            const url = state.mode === 'demo' ? '/api/exam/demo/submit' : '/final-quiz/submit';
-            const res = await postWithRetry(url, body);
+            const res = await postWithRetry('/final-quiz/submit', body);
             const sessionId = res.data.sessionId;
             act((s) => ({ ...s, saved: { sessionId } }));
             setSaveStatus('saved');

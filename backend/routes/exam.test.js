@@ -4,7 +4,7 @@
  * node_modules/@electric-sql/pglite, otherwise these tests are skipped.
  * The routes are mounted on a throwaway express app whose stand-in for
  * requireSession reads the account from a test header, so what is under test is
- * the exam router itself: entitlement, picking rules, the demo claim, saving.
+ * the exam router itself: entitlement, picking rules, a locked free account.
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -14,7 +14,6 @@ import http from 'node:http';
 import express from 'express';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import examRouter from './exam.js';
-import { EXAM_DEMO_DDL } from '../services/examService.js';
 import { normaliseText } from '../services/examPicker.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -53,7 +52,6 @@ async function setup() {
             question_id integer, user_answer varchar(255) NOT NULL, correct_answer varchar(255) NOT NULL,
             is_correct boolean, time_taken integer DEFAULT 0, created_at timestamp DEFAULT now());
     `);
-    for (const ddl of EXAM_DEMO_DDL) await db.exec(ddl);
 
     // accounts: 1 paid medical, 2 free medical, 3 paid nursing, 4 paid dental, 5 free nursing
     await db.query(`INSERT INTO accounts (username, track, subscription_status, subscription_expiry_date) VALUES
@@ -156,10 +154,9 @@ test('config: entitlement and exam shape per account', { skip }, async () => {
         assert.equal(paid.body.full.exam.confirmed, true);
         assert.deepEqual(paid.body.full.parts.map((p) => [p.questions, p.minutes]), [[100, 120], [100, 120]]);
         assert.equal(paid.body.full.served, 200);
-        assert.equal(paid.body.demo.served, 20);
 
         const free = await api.call('free-med', 'GET', '/api/exam/config');
-        assert.equal(free.body.entitlement, 'demo');
+        assert.equal(free.body.entitlement, 'locked');
 
         const dental = await api.call('paid-den', 'GET', '/api/exam/config');
         assert.equal(dental.body.full.exam.key, 'sdle');
@@ -236,128 +233,17 @@ test('dental start: smaller pool caps the count and the response says so', { ski
     } finally { await api.close(); await db.close(); }
 });
 
-test('free account: no full exam, one 20-question demo, a second one is refused', { skip }, async () => {
+test('free account: the exam is locked, nothing is served and nothing is saved', { skip }, async () => {
     const db = await setup();
     const api = await serve(db);
     try {
-        const demo = await api.call('free-med', 'POST', '/api/exam/start', {});
-        assert.equal(demo.status, 200);
-        assert.equal(demo.body.mode, 'demo');
-        assert.equal(demo.body.questions.length, 20);
-        assert.deepEqual(demo.body.parts.map((p) => [p.questions, p.minutes]), [[20, 24]]);
-        assert.equal(demo.body.exam.demo, true);
-        assertRules(demo.body.questions);
-
-        const claim = (await db.query('SELECT question_ids, submitted_at FROM exam_demo_claims')).rows;
-        assert.equal(claim.length, 1);
-        assert.equal(claim[0].question_ids.length, 20);
-        assert.equal(claim[0].submitted_at, null);
-
-        // asking again before saving resumes the SAME questions in the same order
-        const again = await api.call('free-med', 'POST', '/api/exam/start', {});
-        assert.equal(again.status, 200);
-        assert.equal(again.body.resumed, true);
-        assert.deepEqual(again.body.questions.map((x) => x.id), demo.body.questions.map((x) => x.id));
-        assert.equal((await api.call('free-med', 'GET', '/api/exam/config')).body.entitlement, 'demo_resume');
-
-        // save it: server-graded, idempotent
-        const attempts = demo.body.questions.map((x, i) => ({
-            questionId: x.id, userAnswer: i < 12 ? x.correct_option : (i < 18 ? x.option1 : ''), timeTaken: 30,
-        }));
-        const save = await api.call('free-med', 'POST', '/api/exam/demo/submit', { questionAttempts: attempts, timeTaken: 600, timeLimit: 1440, flagsUsed: 2 });
-        assert.equal(save.status, 200);
-        assert.equal(save.body.success, true);
-        assert.equal(save.body.alreadySaved, false);
-        assert.equal(save.body.score, 60);
-        const sess = (await db.query('SELECT * FROM final_review_sessions')).rows;
-        assert.equal(sess.length, 1);
-        assert.equal(sess[0].total_questions, 20);
-        assert.equal(sess[0].correct_answers, 12);
-        assert.equal(sess[0].question_type, 'exam');
-        assert.equal(sess[0].source, 'smle-demo');
-        assert.equal(sess[0].session_metadata.exam.mode, 'demo');
-        assert.equal(sess[0].session_metadata.exam.parts[0].answered, 18);
-        assert.equal(sess[0].session_metadata.exam.parts[0].correct, 12);
-        assert.equal(sess[0].session_metadata.exam.flagsUsed, 2);
-        assert.equal((await db.query('SELECT COUNT(*)::int c FROM final_quiz_attempts')).rows[0].c, 20);
-        const blank = (await db.query(`SELECT COUNT(*)::int c FROM final_quiz_attempts WHERE user_answer = '' AND is_correct = false`)).rows[0].c;
-        assert.equal(blank, 2);
-
-        const replay = await api.call('free-med', 'POST', '/api/exam/demo/submit', { questionAttempts: attempts, timeTaken: 600, timeLimit: 1440 });
-        assert.equal(replay.status, 200);
-        assert.equal(replay.body.alreadySaved, true);
-        assert.equal(replay.body.sessionId, save.body.sessionId);
-        assert.equal((await db.query('SELECT COUNT(*)::int c FROM final_review_sessions')).rows[0].c, 1);
-
-        // the demo is now used
-        const second = await api.call('free-med', 'POST', '/api/exam/start', {});
-        assert.equal(second.status, 403);
-        assert.equal(second.body.code, 'DEMO_USED');
-        assert.equal((await api.call('free-med', 'GET', '/api/exam/config')).body.entitlement, 'demo_used');
-    } finally { await api.close(); await db.close(); }
-});
-
-test('an unsaved demo cannot be resumed after the window', { skip }, async () => {
-    const db = await setup();
-    const api = await serve(db);
-    try {
-        const first = await api.call('free-med', 'POST', '/api/exam/start', {});
-        assert.equal(first.status, 200);
-        await db.query(`UPDATE exam_demo_claims SET claimed_at = NOW() - INTERVAL '4 hours'`);
-        const late = await api.call('free-med', 'POST', '/api/exam/start', {});
-        assert.equal(late.status, 403);
-        assert.equal(late.body.code, 'DEMO_USED');
-    } finally { await api.close(); await db.close(); }
-});
-
-test('parallel demo starts: only one wins the claim', { skip }, async () => {
-    const db = await setup();
-    const api = await serve(db);
-    try {
-        const results = await Promise.all([1, 2, 3].map(() => api.call('free-nur', 'POST', '/api/exam/start', {})));
-        const ok = results.filter((r) => r.status === 200);
-        // a loser either lost the INSERT (403) or arrived after the pin and resumed: never a second distinct demo
-        assert.ok(ok.length >= 1);
-        const sets = new Set(ok.map((r) => r.body.questions.map((x) => x.id).join(',')));
-        assert.equal(sets.size, 1, 'every 200 shows the same demo');
-        assert.equal((await db.query('SELECT COUNT(*)::int c FROM exam_demo_claims')).rows[0].c, 1);
-    } finally { await api.close(); await db.close(); }
-});
-
-test('demo submit refuses answers that are not from the claimed demo, and a paid account has nothing to save', { skip }, async () => {
-    const db = await setup();
-    const api = await serve(db);
-    try {
-        const none = await api.call('free-med', 'POST', '/api/exam/demo/submit', { questionAttempts: [] });
-        assert.equal(none.status, 403);
-        assert.equal(none.body.code, 'NO_DEMO');
-
-        const demo = await api.call('free-med', 'POST', '/api/exam/start', {});
-        const foreign = (await db.query(`SELECT id FROM questions WHERE track = 'nursing' LIMIT 1`)).rows[0].id;
-        const bad = await api.call('free-med', 'POST', '/api/exam/demo/submit', { questionAttempts: [{ questionId: foreign, userAnswer: 'B choice' }] });
-        assert.equal(bad.status, 400);
-        assert.equal(bad.body.code, 'BAD_ATTEMPTS');
+        const r = await api.call('free-med', 'POST', '/api/exam/start', {});
+        assert.equal(r.status, 403);
+        assert.equal(r.body.code, 'SUBSCRIPTION_REQUIRED');
+        assert.equal(r.body.questions, undefined);
+        assert.equal((await api.call('free-med', 'GET', '/api/exam/config')).body.entitlement, 'locked');
         assert.equal((await db.query('SELECT COUNT(*)::int c FROM final_review_sessions')).rows[0].c, 0);
-        // an answer that is not one of the options counts as unanswered, never as correct
-        const first = demo.body.questions[0];
-        const ok = await api.call('free-med', 'POST', '/api/exam/demo/submit', { questionAttempts: [{ questionId: first.id, userAnswer: 'made up' }] });
-        assert.equal(ok.status, 200);
-        assert.equal(ok.body.score, 0);
-
-        const paid = await api.call('paid-med', 'POST', '/api/exam/demo/submit', { questionAttempts: [] });
-        assert.equal(paid.status, 403);
-    } finally { await api.close(); await db.close(); }
-});
-
-test('a start that cannot find questions does not burn the demo', { skip }, async () => {
-    const db = await setup();
-    await db.query(`DELETE FROM questions WHERE track = 'nursing'`);
-    const api = await serve(db);
-    try {
-        const r = await api.call('free-nur', 'POST', '/api/exam/start', {});
-        assert.equal(r.status, 404);
-        assert.equal((await db.query('SELECT COUNT(*)::int c FROM exam_demo_claims')).rows[0].c, 0);
-    } finally { await api.close(); await db.close(); }
+    } finally { await api.close(); }
 });
 
 test('the router never reads a track, user id or exam key from the request', () => {

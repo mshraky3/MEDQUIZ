@@ -109,7 +109,7 @@ const FinalExams = ({ userId }) => {
                 <span className="ap-sess-when">
                   <span className="ap-sess-title">
                     {exam
-                      ? t.examTitle(String(exam.key || s.source).toUpperCase(), exam.mode === 'demo')
+                      ? t.examTitle(String(exam.key || s.source).toUpperCase())
                       : <>{getTypeLabel(s.question_type, lang)} — {getSourceLabel(s.source, lang)}</>}
                   </span>
                   <span className="ap-sess-date">{formatDate(s.start_time)}</span>

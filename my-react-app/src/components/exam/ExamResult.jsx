@@ -22,7 +22,6 @@ const ExamResult = ({ state, score, saveStatus, onRetrySave, onNewExam }) => {
     const fmt = (n) => formatNumber(n, lang);
     const pct = (n) => `${fmt(Math.round(n * 10) / 10)}%`;
     const label = String(state.examKey).toUpperCase();
-    const isDemo = state.mode === 'demo';
     const partTotal = score.parts.length;
 
     const [reviewOpen, setReviewOpen] = useState(false);
@@ -52,7 +51,7 @@ const ExamResult = ({ state, score, saveStatus, onRetrySave, onNewExam }) => {
         <div className="exm-result">
             <div className="exm-pick-head">
                 <span className="exm-kicker">
-                    <Icon name="trophy" size={14} /> <bdi>{label}</bdi>{isDemo ? ` · ${t.result.demoTag}` : ''}
+                    <Icon name="trophy" size={14} /> <bdi>{label}</bdi>
                 </span>
                 <h1>{t.result.title}</h1>
             </div>
@@ -69,7 +68,7 @@ const ExamResult = ({ state, score, saveStatus, onRetrySave, onNewExam }) => {
                     <li>{t.result.timeUsed}: <b><bdi>{formatDuration(score.secondsUsed)}</bdi></b></li>
                 </ul>
                 <p className="exm-muted exm-small">{t.result.percentNote}</p>
-                {state.passMark && !isDemo && (
+                {state.passMark && (
                     <p className="exm-muted exm-small">
                         {t.rules.passInfo(fmt(state.passMark.pass), fmt(state.passMark.scaleMin), fmt(state.passMark.scaleMax))}
                     </p>
@@ -134,13 +133,6 @@ const ExamResult = ({ state, score, saveStatus, onRetrySave, onNewExam }) => {
                 </ul>
             </section>
 
-            {isDemo && (
-                <section className="exm-card exm-upsell">
-                    <h2 className="exm-h2">{t.result.demoUpsellTitle}</h2>
-                    <p className="exm-muted">{t.result.demoUpsellBody}</p>
-                    <button type="button" className="exm-btn exm-btn-primary" onClick={() => navigate('/subscribe')}>{t.result.subscribe}</button>
-                </section>
-            )}
 
             {sessionId && (
                 <section className="exm-card">

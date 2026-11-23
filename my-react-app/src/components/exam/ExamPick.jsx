@@ -21,8 +21,8 @@ export const ExamFacts = ({ plan, exam, t, fmt }) => {
 
 /**
  * Pick the exam. The account has one track, so one exam: SMLE, SNLE or SDLE
- * (the server decides, nothing is chosen here). A paid account starts it; a
- * free account gets the one-time demo in the same interface.
+ * (the server decides, nothing is chosen here). A paid account starts it; any
+ * other account sees that a subscription is needed.
  */
 const ExamPick = ({ config, onStart }) => {
     const t = useCopy(examCopy);
@@ -30,11 +30,10 @@ const ExamPick = ({ config, onStart }) => {
     const navigate = useNavigate();
     const fmt = (n) => formatNumber(n, lang);
 
-    const { entitlement, full, demo } = config;
+    const { entitlement, full } = config;
     const exam = full.exam;
     const label = String(exam.key).toUpperCase();
     const isFull = entitlement === 'full';
-    const demoMinutes = demo.parts.reduce((s, p) => s + p.minutes, 0);
 
     return (
         <div className="exm-pick">
@@ -72,33 +71,18 @@ const ExamPick = ({ config, onStart }) => {
                 )}
 
                 {isFull ? (
-                    <button type="button" className="exm-btn exm-btn-primary exm-btn-wide" onClick={() => onStart({ demo: false })} disabled={full.served < 1}>
+                    <button type="button" className="exm-btn exm-btn-primary exm-btn-wide" onClick={() => onStart()} disabled={full.served < 1}>
                         <Icon name="rocket" size={17} /> {t.pick.startFull}
                     </button>
                 ) : (
                     <>
-                        <p className="exm-muted">{entitlement === 'demo_used' ? t.pick.demoUsedBody : t.pick.fullLockedBody}</p>
-                        {entitlement === 'demo_used' && (
-                            <div className="exm-actions">
-                                <button type="button" className="exm-btn exm-btn-primary" onClick={() => navigate('/subscribe')}>{t.pick.subscribe}</button>
-                            </div>
-                        )}
+                        <p className="exm-muted">{t.pick.fullLockedBody}</p>
+                        <div className="exm-actions">
+                            <button type="button" className="exm-btn exm-btn-primary" onClick={() => navigate('/subscribe')}>{t.pick.subscribe}</button>
+                        </div>
                     </>
                 )}
             </section>
-
-            {!isFull && entitlement !== 'demo_used' && (
-                <section className="exm-card exm-demo-card" aria-labelledby="exm-demo-title">
-                    <h2 id="exm-demo-title" className="exm-h2">{t.pick.demoTitle}</h2>
-                    <p className="exm-muted">{t.pick.demoBody(fmt(demo.served), fmt(demoMinutes))}</p>
-                    <div className="exm-actions">
-                        <button type="button" className="exm-btn exm-btn-primary" onClick={() => onStart({ demo: true })} disabled={demo.served < 1}>
-                            {entitlement === 'demo_resume' ? t.pick.resumeDemo : t.pick.startDemo}
-                        </button>
-                        <button type="button" className="exm-btn" onClick={() => navigate('/subscribe')}>{t.pick.subscribe}</button>
-                    </div>
-                </section>
-            )}
 
             <p className="exm-pick-foot"><Link to="/quizs?view=custom" className="exm-link">{t.pick.backToQuizzes}</Link></p>
         </div>

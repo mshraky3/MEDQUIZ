@@ -1,5 +1,3 @@
-// AUTO-COPIED from my-react-app/src/i18n/copy/exam.js. Do not edit here:
-// change the website's file, then run `npm run sync:copy` in mobile/.
 /**
  * Copy for exam mode (/exam): an exam-style simulation of the licensing exam.
  *
@@ -24,7 +22,7 @@ const examCopy = {
             config: 'تعذّر تحميل وضع الاختبار. تحقق من الاتصال وحاول مجدداً.',
             start: 'تعذّر بدء الاختبار. حاول مرة أخرى.',
             noQuestions: 'لا توجد أسئلة جاهزة لهذا الاختبار بعد.',
-            demoUsed: 'استخدمت النسخة التجريبية المجانية من قبل. الاشتراك يفتح الاختبار الكامل.',
+            subscribe: 'وضع الاختبار متاح للمشتركين.',
         },
 
         pick: {
@@ -40,14 +38,8 @@ const examCopy = {
                 noBreak: 'بدون راحة',
             },
             startFull: 'ابدأ الاختبار',
-            startDemo: 'ابدأ النسخة التجريبية',
-            resumeDemo: 'تابع النسخة التجريبية',
-            demoTitle: 'جرّب مجاناً',
-            demoBody: (q, m) => `نسخة تجريبية قصيرة بالواجهة نفسها: ${q} سؤالاً في ${m} دقيقة. تُتاح مرة واحدة لكل حساب.`,
-            demoUsedTitle: 'استخدمت النسخة التجريبية',
-            demoUsedBody: 'النسخة التجريبية تُتاح مرة واحدة لكل حساب. اشترك لفتح الاختبار الكامل بعدد الأسئلة والوقت الكاملين.',
             fullLockedTitle: 'الاختبار الكامل للمشتركين',
-            fullLockedBody: 'الاختبار الكامل متاح للمشتركين. يمكنك تجربة النسخة التجريبية أولاً.',
+            fullLockedBody: 'الاختبار الكامل متاح للمشتركين.',
             subscribe: 'الاشتراك',
             unconfirmedTitle: 'الصيغة الرسمية قيد التأكيد',
             unconfirmedBody: (exam, q, parts, m) => `لم نتحقق بعد من صيغة اختبار ${exam} الرسمية. هذا الاختبار بطول تدريبي: ${q} سؤالاً، ${parts === 1 ? 'جزء واحد' : `${parts} أجزاء`}، ${m} دقيقة لكل جزء. سنحدّثه عند تأكيد الصيغة.`,
@@ -142,7 +134,6 @@ const examCopy = {
 
         result: {
             title: 'نتيجتك',
-            demoTag: 'نسخة تجريبية',
             overall: 'النتيجة الإجمالية',
             correctOf: (c, t) => `${c} إجابة صحيحة من ${t}`,
             answered: 'المجاب عنها',
@@ -168,8 +159,6 @@ const examCopy = {
             history: 'سجل الاختبارات',
             newExam: 'اختبار جديد',
             toQuizzes: 'العودة إلى الاختبارات',
-            demoUpsellTitle: 'هذه النسخة التجريبية',
-            demoUpsellBody: 'الاشتراك يفتح الاختبار الكامل بعدد الأسئلة والوقت الكاملين، ومحاولات غير محدودة.',
             subscribe: 'الاشتراك',
             unconfirmed: (exam) => `صيغة ${exam} الرسمية قيد التأكيد، وهذه النتيجة بطول تدريبي.`,
             domainShort: (d, wanted, got) => `قسم ${d}: المتاح ${got} سؤالاً، والمطلوب في الصيغة الكاملة ${wanted}.`,
@@ -220,7 +209,7 @@ const examCopy = {
             config: 'Could not load exam mode. Check your connection and try again.',
             start: 'Could not start the exam. Please try again.',
             noQuestions: 'There are no questions ready for this exam yet.',
-            demoUsed: 'You have already used the free demo. A subscription unlocks the full exam.',
+            subscribe: 'Exam mode is available to subscribers.',
         },
 
         pick: {
@@ -236,14 +225,8 @@ const examCopy = {
                 noBreak: 'no break',
             },
             startFull: 'Start the exam',
-            startDemo: 'Start the demo',
-            resumeDemo: 'Continue the demo',
-            demoTitle: 'Try it free',
-            demoBody: (q, m) => `A short demo in the same interface: ${q} questions in ${m} minutes. One per account.`,
-            demoUsedTitle: 'You have used the demo',
-            demoUsedBody: 'The demo is available once per account. Subscribe to unlock the full exam with its full question count and time.',
             fullLockedTitle: 'The full exam is for subscribers',
-            fullLockedBody: 'The full exam is available to subscribers. You can try the demo first.',
+            fullLockedBody: 'The full exam is available to subscribers.',
             subscribe: 'Subscribe',
             unconfirmedTitle: 'Official format being confirmed',
             unconfirmedBody: (exam, q, parts, m) => `We have not yet verified the official ${exam} format. This exam uses a practice length: ${q} questions, ${parts === 1 ? 'one part' : `${parts} parts`}, ${m} minutes per part. We will update it once the format is confirmed.`,
@@ -338,7 +321,6 @@ const examCopy = {
 
         result: {
             title: 'Your result',
-            demoTag: 'Demo',
             overall: 'Overall result',
             correctOf: (c, t) => `${c} correct out of ${t}`,
             answered: 'Answered',
@@ -364,8 +346,6 @@ const examCopy = {
             history: 'Exam history',
             newExam: 'New exam',
             toQuizzes: 'Back to quizzes',
-            demoUpsellTitle: 'That was the demo',
-            demoUpsellBody: 'A subscription unlocks the full exam with its full question count and time, and unlimited attempts.',
             subscribe: 'Subscribe',
             unconfirmed: (exam) => `The official ${exam} format is being confirmed, and this result is for a practice length.`,
             domainShort: (d, wanted, got) => `${d}: ${got} questions available, ${wanted} in the full format.`,

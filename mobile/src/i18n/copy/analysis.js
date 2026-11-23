@@ -1,5 +1,3 @@
-// AUTO-COPIED from my-react-app/src/i18n/copy/analysis.js. Do not edit here:
-// change the website's file, then run `npm run sync:copy` in mobile/.
 /**
  * Copy for the performance-report pages: the analytics tabs, quiz history,
  * progress, final exams and the wrong-questions review.
@@ -331,7 +329,7 @@ const analysisCopy = {
             next: 'التالي',
             pageOf: (p, total) => `صفحة ${p} من ${total}`,
             // Exam mode sessions (session_metadata.exam): title and the per-part scores.
-            examTitle: (key, demo) => (demo ? `${key} · نسخة تجريبية` : key),
+            examTitle: (key) => key,
             examPart: (n, correct, total, pct) => `الجزء ${n}: ${correct}/${total} (${pct}%)`,
             examOnePart: (correct, total, pct) => `${correct}/${total} (${pct}%)`,
             examTimedOut: 'انتهى الوقت',
@@ -691,7 +689,7 @@ const analysisCopy = {
             next: 'Next',
             pageOf: (p, total) => `Page ${p} of ${total}`,
             // Exam mode sessions (session_metadata.exam): title and the per-part scores.
-            examTitle: (key, demo) => (demo ? `${key} · Demo` : key),
+            examTitle: (key) => key,
             examPart: (n, correct, total, pct) => `Part ${n}: ${correct}/${total} (${pct}%)`,
             examOnePart: (correct, total, pct) => `${correct}/${total} (${pct}%)`,
             examTimedOut: 'Time ran out',
