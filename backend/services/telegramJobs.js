@@ -10,12 +10,14 @@ import { deleteMessagesAsUser, isUserbotConfigured } from './telegramUserClient.
 import { weeklyDigestMessage } from './telegramMessages.js';
 import { renderTopicCard } from './telegramImageService.js';
 import {
-    pickChannelQuestion, recordSentQuestion, channelPostsToday, channelPostsTodayFor, pickExplainedQuestion, CHANNEL_TRACKS,
+    pickChannelQuestion, recordSentQuestion, channelPostsToday, channelPostsTodayFor, channelPostsTodayForTracks, pickExplainedQuestion, CHANNEL_TRACKS,
     findDueForWeeklyDigest, computeWeakTopics, stampWeeklyDigestSent, markBlocked,
     pickChannelSummary, recordSentSummary, recordSentMessage, findMessagesDueForDeletion, removeSentMessageLog,
 } from './telegramContentService.js';
 
-const CHANNEL = () => process.env.TELEGRAM_CHANNEL || '@sqb_exam';
+import { channelFor, hasSeparateChannels, mainChannel, tracksOn } from './telegramChannels.js';
+
+const CHANNEL = () => mainChannel();
 const DAILY_CHANNEL_CAP = 3;
 // Everything the bot posts to the channel is cleared after 14 days, so the
 // channel never becomes a free copy of the question bank (owner, 2026-11-22).
@@ -23,33 +25,53 @@ const CHANNEL_QUESTION_TTL_DAYS = 14;
 const CHANNEL_SUMMARY_TTL_DAYS = 14;
 const CHANNEL_EXPLAINED_TTL_DAYS = 14;
 
-/** One channel question, up to 3/day (call this endpoint 3x/day on a schedule — the cap makes it safe to over-call). */
-export async function runDailyChannelPostJob(db) {
-    const postedToday = await channelPostsToday(db);
-    if (postedToday >= DAILY_CHANNEL_CAP) {
-        return { sent: false, reason: `daily cap reached (${postedToday}/${DAILY_CHANNEL_CAP})` };
-    }
-    // While a collection is being promoted, two of the day's three polls come from
-    // it. Set TELEGRAM_FEATURED_SOURCE to an empty string to turn this off; the
-    // default is the October 2026 recall set (September was the default until the October import).
-    const featured = process.env.TELEGRAM_FEATURED_SOURCE ?? 'MedicalOctoberRecall';
-    // One poll per track per day: slot 0 medical (SMLE), 1 nursing (SNLE), 2 dental
-    // (SDLE). The featured collection only ever applies to the medical slot.
-    const track = CHANNEL_TRACKS[postedToday % CHANNEL_TRACKS.length];
+/** One poll for `track` into `channel`, and its bookkeeping (14-day clearing included). */
+async function postPoll(db, track, channel, featured) {
     const q = await pickChannelQuestion(db, { featuredSource: track === 'medical' && featured ? featured : null, track });
-    if (!q) return { sent: false, reason: `no questions in the bank for ${track}` };
-
-    const message = await sendQuizPoll(CHANNEL(), {
+    if (!q) return { sent: false, track, reason: `no questions in the bank for ${track}` };
+    const message = await sendQuizPoll(channel, {
         question: q.question_text,
         options: q.options,
         correctOptionIndex: q.correctOptionIndex,
         explanation: q.explanation || undefined,
         isAnonymous: true, // required for channel polls
-        replyMarkup: siteButton('Practice more on SQB', 'channel_daily'),
+        replyMarkup: siteButton('Practice more on SQB', `channel_daily_${track}`),
     });
     await recordSentQuestion(db, { questionId: q.id, context: 'channel' });
-    await recordSentMessage(db, { chatId: CHANNEL(), messageId: message.message_id, deleteAfterDays: CHANNEL_QUESTION_TTL_DAYS });
-    return { sent: true, questionId: q.id, track, postedToday: postedToday + 1 };
+    await recordSentMessage(db, { chatId: channel, messageId: message.message_id, deleteAfterDays: CHANNEL_QUESTION_TTL_DAYS });
+    return { sent: true, questionId: q.id, track, channel };
+}
+
+/**
+ * Channel polls, up to 3/day (the cron calls this 3x/day; the cap makes it safe to over-call).
+ * One channel for everything (default): one poll per call, the track rotating SMLE, SNLE, SDLE.
+ * Separate track channels (TELEGRAM_CHANNEL_SNLE / _SDLE set): every call gives each channel
+ * its own poll, each with its own 3/day cap.
+ */
+export async function runDailyChannelPostJob(db) {
+    // While a collection is being promoted, two of the day's three polls come from
+    // it. Set TELEGRAM_FEATURED_SOURCE to an empty string to turn this off.
+    const featured = process.env.TELEGRAM_FEATURED_SOURCE ?? 'MedicalOctoberRecall';
+
+    if (hasSeparateChannels()) {
+        const results = [];
+        for (const track of CHANNEL_TRACKS) {
+            const channel = channelFor(track);
+            const done = await channelPostsTodayForTracks(db, 'channel', tracksOn(channel));
+            if (done >= DAILY_CHANNEL_CAP) { results.push({ sent: false, track, reason: `daily cap reached (${done}/${DAILY_CHANNEL_CAP})` }); continue; }
+            try { results.push(await postPoll(db, track, channel, track === 'medical' && done < 2 ? featured : null)); }
+            catch (err) { results.push({ sent: false, track, error: err.message }); }
+        }
+        return { sent: results.some((r) => r.sent), results };
+    }
+
+    const postedToday = await channelPostsToday(db);
+    if (postedToday >= DAILY_CHANNEL_CAP) {
+        return { sent: false, reason: `daily cap reached (${postedToday}/${DAILY_CHANNEL_CAP})` };
+    }
+    const track = CHANNEL_TRACKS[postedToday % CHANNEL_TRACKS.length];
+    const out = await postPoll(db, track, CHANNEL(), postedToday < 2 ? featured : null);
+    return { ...out, postedToday: postedToday + 1 };
 }
 
 const escapeHtml = (v) => String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -62,13 +84,30 @@ const TRACK_LABEL = { medical: 'SMLE', nursing: 'SNLE', dental: 'SDLE' };
  * the same effort. At most one per day: the cron calls this three times a day.
  */
 export async function runDailyExplainedPostJob(db, { now = new Date() } = {}) {
+    if (hasSeparateChannels()) {
+        // Every track has (or shares) a channel: each gets its own explained question daily.
+        const results = [];
+        for (const track of CHANNEL_TRACKS) {
+            const channel = channelFor(track);
+            if (await channelPostsTodayForTracks(db, 'channel_explained', [track]) >= 1) {
+                results.push({ sent: false, track, reason: 'already posted today' });
+                continue;
+            }
+            try { results.push(await postExplained(db, track, channel)); }
+            catch (err) { results.push({ sent: false, track, error: err.message }); }
+        }
+        return { sent: results.some((r) => r.sent), results };
+    }
     if (await channelPostsTodayFor(db, 'channel_explained') >= 1) {
         return { sent: false, reason: 'already posted today' };
     }
     const dayNumber = Math.floor(now.getTime() / 86400000);
-    const track = CHANNEL_TRACKS[dayNumber % CHANNEL_TRACKS.length];
+    return postExplained(db, CHANNEL_TRACKS[dayNumber % CHANNEL_TRACKS.length], CHANNEL());
+}
+
+async function postExplained(db, track, channel) {
     const q = await pickExplainedQuestion(db, track);
-    if (!q) return { sent: false, reason: `no explained question for ${track}` };
+    if (!q) return { sent: false, track, reason: `no explained question for ${track}` };
 
     const letters = ['A', 'B', 'C', 'D'];
     const options = q.options.map((o, i) => `${letters[i]}. ${escapeHtml(o)}`).join('\n');
@@ -84,10 +123,10 @@ export async function runDailyExplainedPostJob(db, { now = new Date() } = {}) {
         '👇 Answer and explanation (tap to reveal)',
         `<tg-spoiler><b>${answer}</b>\n\n${escapeHtml(q.explanation)}</tg-spoiler>`,
     ].join('\n').slice(0, 4000);
-    const message = await sendMessage(CHANNEL(), body, { reply_markup: siteButton('Practice more on SQB', 'channel_explained') });
+    const message = await sendMessage(channel, body, { reply_markup: siteButton('Practice more on SQB', `channel_explained_${track}`) });
     await recordSentQuestion(db, { questionId: q.id, context: 'channel_explained' });
-    await recordSentMessage(db, { chatId: CHANNEL(), messageId: message.message_id, deleteAfterDays: CHANNEL_EXPLAINED_TTL_DAYS });
-    return { sent: true, questionId: q.id, track, hard: q.isHard };
+    await recordSentMessage(db, { chatId: channel, messageId: message.message_id, deleteAfterDays: CHANNEL_EXPLAINED_TTL_DAYS });
+    return { sent: true, questionId: q.id, track, channel, hard: q.isHard };
 }
 
 /** Weekly (dedupe-stamped, actually checked daily) weak-topics DM for eligible bot users. */
