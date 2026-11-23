@@ -225,6 +225,9 @@ const quizCopy = {
             customCount: 'عدد مخصص',
             questionsCount: (n) => `${n} سؤال`,
             finalQuiz: 'اختبار نهائي',
+            // The launcher's entry to /exam (exam mode). The final* keys below stay: the Android app still uses them.
+            examMode: 'وضع الاختبار',
+            examModeDesc: 'جلسة محاكاة بوقت الاختبار الفعلي وأجزائه، مع مراجعة بعد النهاية',
 
             startQuiz: 'ابدأ الاختبار',
             cancel: 'إلغاء',
@@ -582,6 +585,9 @@ const quizCopy = {
             customCount: 'Custom number',
             questionsCount: (n) => `${n} questions`,
             finalQuiz: 'Final quiz',
+            // The launcher's entry to /exam (exam mode). The final* keys below stay: the Android app still uses them.
+            examMode: 'Exam mode',
+            examModeDesc: 'An exam-style simulation: timed parts, a break, and a review at the end',
 
             startQuiz: 'Start the quiz',
             cancel: 'Cancel',

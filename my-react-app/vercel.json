@@ -43,6 +43,7 @@
 
         { "source": "/quizs", "destination": "/" },
         { "source": "/quiz/:numQuestions", "destination": "/" },
+        { "source": "/exam", "destination": "/" },
         { "source": "/analysis", "destination": "/" },
         { "source": "/wrong-questions", "destination": "/" },
         { "source": "/summaries", "destination": "/" },

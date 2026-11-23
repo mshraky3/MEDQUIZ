@@ -1,5 +1,3 @@
-// AUTO-COPIED from my-react-app/src/i18n/copy/analysis.js. Do not edit here:
-// change the website's file, then run `npm run sync:copy` in mobile/.
 /**
  * Copy for the performance-report pages: the analytics tabs, quiz history,
  * progress, final exams and the wrong-questions review.
@@ -73,7 +71,7 @@ const analysisCopy = {
             bySpecialty: 'حسب التخصص',
             progress: 'التقدم',
             quizHistory: 'سجل الاختبارات',
-            mockExams: 'الاختبارات النهائية',
+            mockExams: 'سجل الاختبارات',
             lastQuizReview: 'مراجعة آخر اختبار',
             expand: 'عرض',
             collapse: 'إخفاء',
@@ -100,7 +98,7 @@ const analysisCopy = {
             specialtiesHint: 'الدقة تقيس صحة إجاباتك. التغطية تقيس كم سؤالاً حللت من البنك.',
             sources: 'أداؤك حسب المصدر',
             activity: 'نشاطك',
-            mockExams: 'الاختبارات النهائية',
+            mockExams: 'سجل الاختبارات',
             lastQuiz: 'مراجعة آخر اختبار',
             jump: 'أقسام التقرير',
         },
@@ -330,6 +328,12 @@ const analysisCopy = {
             previous: 'السابق',
             next: 'التالي',
             pageOf: (p, total) => `صفحة ${p} من ${total}`,
+            // Exam mode sessions (session_metadata.exam): title and the per-part scores.
+            examTitle: (key) => key,
+            examPart: (n, correct, total, pct) => `الجزء ${n}: ${correct}/${total} (${pct}%)`,
+            examOnePart: (correct, total, pct) => `${correct}/${total} (${pct}%)`,
+            examTimedOut: 'انتهى الوقت',
+            examFlags: (n) => `علّمت ${n} للمراجعة`,
         },
 
         wrong: {
@@ -429,7 +433,7 @@ const analysisCopy = {
             bySpecialty: 'By specialty',
             progress: 'Progress',
             quizHistory: 'Quiz history',
-            mockExams: 'Mock exams',
+            mockExams: 'Exam history',
             lastQuizReview: 'Last quiz review',
             expand: 'Expand',
             collapse: 'Collapse',
@@ -456,7 +460,7 @@ const analysisCopy = {
             specialtiesHint: 'Accuracy is how many you got right. Coverage is how much of the bank you have seen.',
             sources: 'How you do by source',
             activity: 'Your activity',
-            mockExams: 'Mock exams',
+            mockExams: 'Exam history',
             lastQuiz: 'Last quiz review',
             jump: 'Report sections',
         },
@@ -684,6 +688,12 @@ const analysisCopy = {
             previous: 'Previous',
             next: 'Next',
             pageOf: (p, total) => `Page ${p} of ${total}`,
+            // Exam mode sessions (session_metadata.exam): title and the per-part scores.
+            examTitle: (key) => key,
+            examPart: (n, correct, total, pct) => `Part ${n}: ${correct}/${total} (${pct}%)`,
+            examOnePart: (correct, total, pct) => `${correct}/${total} (${pct}%)`,
+            examTimedOut: 'Time ran out',
+            examFlags: (n) => `${n} flagged for review`,
         },
 
         wrong: {

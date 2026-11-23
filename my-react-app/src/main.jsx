@@ -46,6 +46,7 @@ const Login = lazy(() => import('./components/login/Login'));
 const ADD = lazy(() => import('./components/ADD/ADD.jsx'));
 const QUIZS = lazy(() => import('./components/quizs/QUIZS.jsx'));
 const QUIZ = lazy(() => import('./components/Quiz/QUIZ.jsx'));
+const ExamModePage = lazy(() => import('./components/exam/ExamPage.jsx'));
 const ADDQ = lazy(() => import('./components/ADD/ADDQ.jsx'));
 const Analysis = lazy(() => import('./components/analysis/Analysis.jsx'));
 const WrongQuestions = lazy(() => import('./components/analysis/WrongQuestions.jsx'));
@@ -239,6 +240,8 @@ const router = createBrowserRouter([{
   // Signed-in
   authed('/quizs', <QUIZS />),
   authed('/quiz/:numQuestions', <QUIZ />),
+  // Exam mode: its own full-screen test-centre layout, so no app bar and no footer around it.
+  withBoundary('/exam', <RequireAuth>{lazyEl(<ExamModePage />)}</RequireAuth>),
   authed('/analysis', <Analysis />),
   authed('/wrong-questions', <WrongQuestions />),
   authed('/summaries', <SummariesPage />),

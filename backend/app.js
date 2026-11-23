@@ -26,6 +26,7 @@ import accountingRouter from './routes/accounting.js';
 import engagementRouter from './routes/engagement.js';
 import funnelRouter, { recordFunnelEvent } from './routes/funnel.js';
 import goalsRouter from './routes/goals.js';
+import examRouter from './routes/exam.js';
 import notificationsRouter from './routes/notifications.js';
 import examDateRouter from './routes/examDate.js';
 import appFreeMonthRouter from './routes/appFreeMonth.js';
@@ -8162,6 +8163,10 @@ app.use('/api/engagement', (req, res, next) => { req.db = db; next(); }, engagem
 // Pre-signup/pre-login funnel events: POST /api/funnel (unauthenticated,
 // rate-limited) + GET /api/funnel/admin.
 app.use('/api/funnel', (req, res, next) => { req.db = db; next(); }, funnelRouter);
+
+// Exam mode (exam-style simulation of the track's licensing exam). Session-only: the track and the
+// account come from requireSession, never from the request. See routes/exam.js.
+app.use('/api/exam', requireSession, (req, res, next) => { req.db = db; next(); }, examRouter);
 
 // Study goals and the in-app notification feed. Both resolve the account from
 // the validated session (req.accountId set by requireSession), never from the
