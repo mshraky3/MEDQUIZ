@@ -10,15 +10,18 @@ import { deleteMessagesAsUser, isUserbotConfigured } from './telegramUserClient.
 import { weeklyDigestMessage } from './telegramMessages.js';
 import { renderTopicCard } from './telegramImageService.js';
 import {
-    pickChannelQuestion, recordSentQuestion, channelPostsToday,
+    pickChannelQuestion, recordSentQuestion, channelPostsToday, channelPostsTodayFor, pickExplainedQuestion, CHANNEL_TRACKS,
     findDueForWeeklyDigest, computeWeakTopics, stampWeeklyDigestSent, markBlocked,
     pickChannelSummary, recordSentSummary, recordSentMessage, findMessagesDueForDeletion, removeSentMessageLog,
 } from './telegramContentService.js';
 
 const CHANNEL = () => process.env.TELEGRAM_CHANNEL || '@sqb_exam';
 const DAILY_CHANNEL_CAP = 3;
-const CHANNEL_QUESTION_TTL_DAYS = 10;
-const CHANNEL_SUMMARY_TTL_DAYS = 7;
+// Everything the bot posts to the channel is cleared after 14 days, so the
+// channel never becomes a free copy of the question bank (owner, 2026-11-22).
+const CHANNEL_QUESTION_TTL_DAYS = 14;
+const CHANNEL_SUMMARY_TTL_DAYS = 14;
+const CHANNEL_EXPLAINED_TTL_DAYS = 14;
 
 /** One channel question, up to 3/day (call this endpoint 3x/day on a schedule — the cap makes it safe to over-call). */
 export async function runDailyChannelPostJob(db) {
@@ -30,8 +33,11 @@ export async function runDailyChannelPostJob(db) {
     // it. Set TELEGRAM_FEATURED_SOURCE to an empty string to turn this off; the
     // default is the October 2026 recall set (September was the default until the October import).
     const featured = process.env.TELEGRAM_FEATURED_SOURCE ?? 'MedicalOctoberRecall';
-    const q = await pickChannelQuestion(db, { featuredSource: featured && postedToday < 2 ? featured : null });
-    if (!q) return { sent: false, reason: 'no questions in the bank' };
+    // One poll per track per day: slot 0 medical (SMLE), 1 nursing (SNLE), 2 dental
+    // (SDLE). The featured collection only ever applies to the medical slot.
+    const track = CHANNEL_TRACKS[postedToday % CHANNEL_TRACKS.length];
+    const q = await pickChannelQuestion(db, { featuredSource: track === 'medical' && featured ? featured : null, track });
+    if (!q) return { sent: false, reason: `no questions in the bank for ${track}` };
 
     const message = await sendQuizPoll(CHANNEL(), {
         question: q.question_text,
@@ -43,7 +49,45 @@ export async function runDailyChannelPostJob(db) {
     });
     await recordSentQuestion(db, { questionId: q.id, context: 'channel' });
     await recordSentMessage(db, { chatId: CHANNEL(), messageId: message.message_id, deleteAfterDays: CHANNEL_QUESTION_TTL_DAYS });
-    return { sent: true, questionId: q.id, postedToday: postedToday + 1 };
+    return { sent: true, questionId: q.id, track, postedToday: postedToday + 1 };
+}
+
+const escapeHtml = (v) => String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const TRACK_LABEL = { medical: 'SMLE', nursing: 'SNLE', dental: 'SDLE' };
+
+/**
+ * One "explained question" a day: the question and options, with the answer and
+ * the FULL explanation behind a spoiler (a poll's own explanation is cut at 200
+ * characters). The track rotates by day (SMLE, SNLE, SDLE), so every exam gets
+ * the same effort. At most one per day: the cron calls this three times a day.
+ */
+export async function runDailyExplainedPostJob(db, { now = new Date() } = {}) {
+    if (await channelPostsTodayFor(db, 'channel_explained') >= 1) {
+        return { sent: false, reason: 'already posted today' };
+    }
+    const dayNumber = Math.floor(now.getTime() / 86400000);
+    const track = CHANNEL_TRACKS[dayNumber % CHANNEL_TRACKS.length];
+    const q = await pickExplainedQuestion(db, track);
+    if (!q) return { sent: false, reason: `no explained question for ${track}` };
+
+    const letters = ['A', 'B', 'C', 'D'];
+    const options = q.options.map((o, i) => `${letters[i]}. ${escapeHtml(o)}`).join('\n');
+    const answer = `${letters[q.correctOptionIndex]}. ${escapeHtml(q.options[q.correctOptionIndex])}`;
+    const head = q.isHard ? '🔥 One of the hardest questions this week' : '📘 Explained question';
+    const body = [
+        `<b>${head} · ${TRACK_LABEL[track]}</b>`,
+        '',
+        escapeHtml(q.question_text),
+        '',
+        options,
+        '',
+        '👇 Answer and explanation (tap to reveal)',
+        `<tg-spoiler><b>${answer}</b>\n\n${escapeHtml(q.explanation)}</tg-spoiler>`,
+    ].join('\n').slice(0, 4000);
+    const message = await sendMessage(CHANNEL(), body, { reply_markup: siteButton('Practice more on SQB', 'channel_explained') });
+    await recordSentQuestion(db, { questionId: q.id, context: 'channel_explained' });
+    await recordSentMessage(db, { chatId: CHANNEL(), messageId: message.message_id, deleteAfterDays: CHANNEL_EXPLAINED_TTL_DAYS });
+    return { sent: true, questionId: q.id, track, hard: q.isHard };
 }
 
 /** Weekly (dedupe-stamped, actually checked daily) weak-topics DM for eligible bot users. */
