@@ -10,6 +10,8 @@ import { TRACKS, TRACK_KEYS, normalizeTrack, pick } from '../../utils/tracks.js'
 import { useCopy, useLang } from '../../i18n';
 import { formatDate } from '../../i18n/format.js';
 import authCopy from '../../i18n/copy/auth.js';
+import androidTestersCopy from '../../i18n/copy/androidTesters.js';
+import { rememberAndroidReturn, hasAndroidReturn, takeAndroidReturn } from '../../utils/androidReturn.js';
 import OAuthButtons, { GOOGLE_SIGN_IN_AVAILABLE } from '../login/OAuthButtons.jsx';
 import TrackModal from '../common/TrackModal.jsx';
 import '../login/Login.css';
@@ -101,6 +103,12 @@ const Signup = () => {
     // rather than leaving the card with no primary way to sign up.
     const [emailFormOpen, setEmailFormOpen] = useState(!!token || !GOOGLE_SIGN_IN_AVAILABLE);
     const location = useLocation();
+
+    // Arrived from the landing page's Android testers offer: every way out of
+    // this page goes back there instead of the first quiz (utils/androidReturn.js).
+    const nextParam = searchParams.get('next');
+    useEffect(() => { rememberAndroidReturn(nextParam); }, [nextParam]);
+    const androidCopy = useCopy(androidTestersCopy);
     const t = useCopy(authCopy).signup;
     const terms = useCopy(authCopy).terms;
     const { lang, dir } = useLang();
@@ -258,7 +266,9 @@ const Signup = () => {
             // for the reason above `firstQuiz`.
             const { path, state } = firstQuiz(loginRes.data.user?.id);
             setTimeout(() => {
-                navigate(path, { replace: true, state });
+                const back = takeAndroidReturn(lang);
+                if (back) navigate(back, { replace: true });
+                else navigate(path, { replace: true, state });
             }, 1200);
         } catch (err) {
             setTimeout(() => {
@@ -409,7 +419,9 @@ const Signup = () => {
         // the analysis and the wrong-answer list they came back for.
         setUser(data.user, data.sessionToken);
         safeTrack('signup_success', { entryType: 'google-oauth', studyTrack });
-        navigate('/quizs', { replace: true, state: data });
+        const back = takeAndroidReturn(lang);
+        if (back) navigate(back, { replace: true });
+        else navigate('/quizs', { replace: true, state: data });
     };
 
     const handleOAuthError = () => {
@@ -428,7 +440,9 @@ const Signup = () => {
             );
             safeTrack('signup_success', { entryType: 'google-oauth', studyTrack });
             const { path, state } = firstQuiz(oauthSession.id);
-            navigate(path, { replace: true, state });
+            const back = takeAndroidReturn(lang);
+            if (back) navigate(back, { replace: true });
+            else navigate(path, { replace: true, state });
         } catch (err) {
             setError(t.errCreate);
         } finally {
@@ -446,7 +460,7 @@ const Signup = () => {
                         <p style={{ color: 'var(--text-dark, #0f1e3d)', fontWeight: 600, marginBottom: 8 }}>
                             {isGroupSeat ? t.successSeat : isTempLink ? t.successInvite : t.successFree}
                         </p>
-                        <p style={{ color: 'var(--muted)' }}>{t.successRedirect}</p>
+                        <p style={{ color: 'var(--muted)' }}>{hasAndroidReturn() ? androidCopy.returningNotice : t.successRedirect}</p>
                     </div>
                 </div>
             </div>

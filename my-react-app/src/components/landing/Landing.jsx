@@ -21,6 +21,10 @@ import GoldenMonthsSection from './GoldenMonthsSection.jsx';
 import ThemeAnnouncement from './ThemeAnnouncement.jsx';
 import RecallAnnouncement from './RecallAnnouncement.jsx';
 import TelegramCard from './TelegramCard.jsx';
+import AndroidTestersSection from './AndroidTestersSection.jsx';
+import AndroidTestersTeaser from './AndroidTestersTeaser.jsx';
+import useAndroidOffer from './useAndroidOffer.js';
+import { clearAndroidReturn } from '../../utils/androidReturn.js';
 import { useGoldenMonths } from '../../utils/goldenMonths.js';
 import { SHOW_GROUP_PLANS } from '../../config/features.js';
 import './Landing.css';
@@ -82,6 +86,8 @@ const Landing = () => {
   const nd = useNationalDayOffer();
   // Golden Months (a free bonus month, no price change), or null when off.
   const gm = useGoldenMonths();
+  // Android testers offer: one request, drawn as a hero line and a section.
+  const androidOffer = useAndroidOffer();
 
   /**
    * The two student populations the platform serves. `ready` reflects whether
@@ -195,10 +201,13 @@ const Landing = () => {
   // event with the exact same payload — making it impossible to tell which
   // one converts.
   const trackSignupClick = (placement) => {
+    // Signing up from any other button is not the Android offer's return trip.
+    clearAndroidReturn();
     trackFunnel('landing_cta_signup_click', { placement });
   };
 
   const handleLogin = () => {
+    clearAndroidReturn();
     safeTrack('landing_cta_login_click', { section: 'landing' });
     navigate('/login');
   };
@@ -274,6 +283,7 @@ const Landing = () => {
                   {t.heroReturning.secondary}
                 </button>
               </div>
+              <AndroidTestersTeaser view={androidOffer.view} />
             </>
           ) : (
             <>
@@ -293,6 +303,8 @@ const Landing = () => {
                   {t.hero.secondary}
                 </button>
               </div>
+              {/* Below the signup button, so it never moves it down. */}
+              <AndroidTestersTeaser view={androidOffer.view} />
               <ul className="hero-trust">
                 {t.hero.trust.map((item) => <li key={item}>{item}</li>)}
               </ul>
@@ -349,6 +361,11 @@ const Landing = () => {
               onCta={trackSignupClick}
             />
           )}
+
+          {/* Android testers offer (the only place it is shown). Under the live
+              offer so the hero's signup button and the price offer keep their
+              places; renders nothing while the API has it switched off. */}
+          <AndroidTestersSection offer={androidOffer} />
 
           {/* Dark mode launch note (Oct 2026). Under any live offer, above the
               product pitch; hides itself after its end date. */}

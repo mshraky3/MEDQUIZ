@@ -226,6 +226,7 @@ const legalCopy = {
                         { p: 'عند دخولك موقعنا قد نجمع تلقائياً معلومات عن جهازك، منها نوع المتصفح وعنوان IP والمنطقة الزمنية وبعض ملفات تعريف الارتباط المخزّنة على جهازك. كما نجمع معلومات عن الصفحات التي تزورها، والموقع أو عبارة البحث التي أوصلتك إلينا، وكيفية تفاعلك مع الموقع.' },
                         { h3: 'تطبيق أندرويد وتسجيل الدخول بحساب Google' },
                         { p: 'يستخدم تطبيق SQB لأندرويد حسابك نفسه وبياناتك نفسها على الموقع، وتُنشأ الحسابات عبر الموقع. وإذا سجّلت الدخول بحساب Google فإننا نستخدم البريد الإلكتروني الموثَّق للحساب ومعرّف حساب Google لربطه بحسابك في SQB. ولا نعرض إعلانات ولا نستخدم معرّفات إعلانية.' },
+                        { p: 'إذا انضممت من الموقع إلى برنامج مجرّبي تطبيق أندرويد فإننا نحفظ بريد حساب Google الذي تكتبه لمتجر Google Play مرتبطًا بحسابك، ونضيفه إلى قائمة الاختبار لدى Google، ولا نستخدمه إلا لهذا البرنامج. يُحذف مع حذف حسابك، ويمكنك طلب حذفه من صفحة التواصل.' },
                     ],
                 },
                 {
@@ -646,6 +647,7 @@ const legalCopy = {
                         { p: 'When you access our website we may automatically collect certain information about your device, including your browser, IP address, time zone and some of the cookies installed on your device. We also collect information about the pages you visit, the site or search terms that referred you to us, and how you interact with our website.' },
                         { h3: 'Android app and Google sign-in' },
                         { p: 'The SQB Android app uses the same SQB account and the same data as the website, and accounts are created on the website. If you sign in with Google, we use the verified e-mail address of your Google account and Google’s account identifier to link it to your SQB account. We do not show advertisements and do not use advertising identifiers.' },
+                        { p: 'If you join the Android app tester programme on the website, we store the Google Play account e-mail you type, linked to your SQB account, add it to the test list held by Google, and use it only for that programme. It is deleted when your account is deleted, and you can ask us to delete it from the contact page.' },
                     ],
                 },
                 {

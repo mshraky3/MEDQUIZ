@@ -7,6 +7,7 @@ import publicQuestionsCopy from '../../i18n/copy/publicQuestions.js';
 import SEO from '../common/SEO.jsx';
 import { completeSeo, questionPath, specialtySeo } from '../../seo/publicQuestions.js';
 import usePublicQuestions from './usePublicQuestions.js';
+import TrackTelegramLink from '../common/TrackTelegramLink.jsx';
 import { Breadcrumb, SignupCta, PublicQuestionsError } from './PublicQuestionsShared.jsx';
 import './PublicQuestions.css';
 
@@ -50,6 +51,7 @@ const QuestionsSpecialty = () => {
             </section>
 
             <SignupCta t={t} />
+            <TrackTelegramLink track={group.track} />
 
             {siblings.length > 0 && (
                 <nav className="pq-siblings" aria-label={t.specialty.siblingsTitle}>

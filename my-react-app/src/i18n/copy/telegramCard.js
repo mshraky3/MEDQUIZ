@@ -10,12 +10,14 @@ const telegramCardCopy = {
         title: 'انضم لقناة SQB على تلجرام',
         body: 'أسئلة وتحديثات تصلك مباشرة',
         cta: 'انضم للقناة',
+        trackTitle: (exam) => `قناة SQB لاختبار ${exam} على تلجرام`,
     },
     en: {
         label: 'SQB Telegram channel',
         title: 'Join the SQB Telegram channel',
         body: 'Questions and updates, straight to your phone',
         cta: 'Join the channel',
+        trackTitle: (exam) => `The SQB ${exam} channel on Telegram`,
     },
 };
 

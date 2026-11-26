@@ -1,4 +1,8 @@
-import React from 'react';
+import React, { useContext } from 'react';
+import { useLocation } from 'react-router-dom';
+import { UserContext } from '../../UserContext';
+import { userTrack } from '../../utils/tracks.js';
+import { telegramUrl, trackForPath } from '../../utils/telegramChannels.js';
 
 import { SHOW_GROUP_PLANS } from '../../config/features.js';
 import Icon from './Icon.jsx';
@@ -25,6 +29,10 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
   const t = useCommon();
   const { dir } = useLang();
+  // The channel of the page's exam, else of the signed-in student's track.
+  const { pathname } = useLocation();
+  const account = useContext(UserContext)?.user;
+  const channelUrl = telegramUrl(trackForPath(pathname) || (account ? userTrack(account) : null));
 
   const links = [
     { to: '/about', label: t.nav.about },
@@ -76,7 +84,7 @@ const Footer = () => {
             </a>
             <a
               className="footer-icon-btn"
-              href="https://t.me/sqb_exam"
+              href={channelUrl}
               target="_blank"
               rel="noopener noreferrer"
               aria-label={t.footer.telegram}

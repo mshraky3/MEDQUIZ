@@ -21,6 +21,8 @@
  *
  * React-free and browser-free: runs under Node at build time.
  */
+import telegramCardCopy from '../i18n/copy/telegramCard.js';
+import { trackTelegramHtml } from '../utils/telegramChannels.js';
 import examGuidesCopy, {
     EXAMS_ROOT,
     EXAM_KEYS,
@@ -272,7 +274,8 @@ export function buildExamRoutes({ lang = 'ar', footerNav = '' } = {}) {
         const hub = { cards: resolved.cards, listLabel: copyFor(lang).listLabel };
         return {
             path: localizedPath(path, lang),
-            html: `${guideArticleHtml(resolved.page, { lang, hub, currentPath: path })}${footerNav}`,
+            html: `${guideArticleHtml(resolved.page, { lang, hub, currentPath: path })}${
+                resolved.exam === 'snle' ? trackTelegramHtml('nursing', telegramCardCopy[lang] || telegramCardCopy.ar) : ''}${footerNav}`,
             seo: examSeo(path, lang),
         };
     });

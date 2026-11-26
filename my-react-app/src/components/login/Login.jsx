@@ -9,7 +9,7 @@ import { safeGetItem } from '../../utils/safeStorage.js';
 import { useCopy, useLang } from '../../i18n';
 import authCopy from '../../i18n/copy/auth.js';
 import OAuthButtons from './OAuthButtons.jsx';
-import AndroidAppCard from './AndroidAppCard.jsx';
+import { takeAndroidReturn } from '../../utils/androidReturn.js';
 
 const Login = () => {
   const { setUser, user, sessionToken } = useContext(UserContext);
@@ -34,7 +34,7 @@ const Login = () => {
   const location = useLocation();
   const copy = useCopy(authCopy).login;
   const terms = useCopy(authCopy).terms;
-  const { dir } = useLang();
+  const { dir, lang } = useLang();
 
   // Handle success message from signup redirect
   useEffect(() => {
@@ -152,7 +152,8 @@ const Login = () => {
         setLoading(false);
         // Return the user to the protected page they were sent here from
         // (set by RequireAuth), defaulting to the quizzes dashboard.
-        const redirectTo = location.state?.from || '/quizs';
+        // A visitor who started from the Android testers offer goes back to it.
+        const redirectTo = location.state?.from || takeAndroidReturn(lang) || '/quizs';
         navigate(redirectTo, { state: response.data });
       })
       .catch((err) => {
@@ -194,7 +195,7 @@ const Login = () => {
     }
 
     setUser(data.user, data.sessionToken);
-    const redirectTo = location.state?.from || '/quizs';
+    const redirectTo = location.state?.from || takeAndroidReturn(lang) || '/quizs';
     navigate(redirectTo, { state: data });
   };
 
@@ -222,7 +223,7 @@ const Login = () => {
         { headers: { Authorization: `Bearer ${sessionToken}` } }
       );
       setLoading(false);
-      navigate('/quizs');
+      navigate(takeAndroidReturn(lang) || '/quizs');
     } catch (err) {
       setLoading(false);
       setError(copy.acceptTermsError);
@@ -333,8 +334,6 @@ const Login = () => {
               </div>
             </form>
           </div>
-          {/* Hidden until the tester and download links are configured. */}
-          <AndroidAppCard />
         </div>
 
         {/* Terms of Use Popup */}

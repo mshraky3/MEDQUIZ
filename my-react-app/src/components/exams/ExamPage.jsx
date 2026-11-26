@@ -1,6 +1,7 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import GuideArticle from '../guides/GuideArticle.jsx';
+import TrackTelegramLink from '../common/TrackTelegramLink.jsx';
 import SEO from '../common/SEO.jsx';
 import { LocaleLink as Link, useLang } from '../../i18n';
 import { stripLocale } from '../../seo/locales.js';
@@ -45,6 +46,7 @@ const ExamPage = () => {
         <main className="exams-page" dir={dir}>
             <SEO {...seo} />
             <GuideArticle guide={page} />
+            {resolved.exam === 'snle' && <TrackTelegramLink track="nursing" />}
 
             {siblings.length > 0 && (
                 <nav className="exams-related" aria-label={relatedLabel}>

@@ -1,0 +1,196 @@
+/* Android testers offer on the landing page (AndroidTestersSection.jsx). atl-
+   prefixed. Semantic tokens only, so light and dark both come from index.css and
+   theme/palette.css; opaque; no animation; logical properties so Arabic (RTL)
+   and English mirror without a hardcoded direction. */
+.atl-card {
+  margin-block-end: 20px;
+  padding: 22px 24px;
+  border: 2px solid var(--fg-2563eb);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  text-align: start;
+  overflow-wrap: anywhere;
+  min-width: 0;
+  /* Clear of the top of the screen when scrolled to from signup. */
+  scroll-margin-block-start: 76px;
+}
+
+.atl-head { display: flex; align-items: center; gap: 12px; }
+.atl-heading { min-width: 0; }
+
+.atl-icon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--bg-2563eb-a090);
+  color: var(--fg-2563eb);
+}
+
+.atl-pill { display: block; font-size: 12.5px; font-weight: 800; color: var(--fg-2563eb); }
+.atl-title { margin: 0; font-size: 21px; font-weight: 900; line-height: 1.35; color: var(--text-dark); }
+
+.atl-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 14px 32px;
+  margin-block-start: 14px;
+}
+
+.atl-info, .atl-action, .atl-form, .atl-done { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+
+.atl-card p { margin: 0; }
+.atl-card .atl-gift {
+  align-self: flex-start;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--bg-2563eb-a090);
+  color: var(--text-dark);
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 1.5;
+}
+.atl-body { font-size: 15px; line-height: 1.75; color: var(--text-medium); }
+.atl-terms, .atl-hint { font-size: 13px; line-height: 1.7; color: var(--text-light); }
+.atl-hint a { color: var(--fg-2563eb); font-weight: 700; }
+.atl-saudi {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
+  font-weight: 800;
+  line-height: 1.6;
+  color: var(--text-dark);
+}
+.atl-saudi svg { flex: none; }
+.atl-lead, .atl-full, .atl-label { font-size: 14px; font-weight: 800; line-height: 1.7; color: var(--text-dark); }
+.atl-error { font-size: 14px; font-weight: 700; color: var(--fg-dc2626); }
+
+.atl-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  counter-reset: atl-step;
+}
+.atl-steps li {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding-inline-start: 36px;
+  min-height: 26px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text-medium);
+  counter-increment: atl-step;
+}
+.atl-steps li::before {
+  content: counter(atl-step);
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block-start: 0;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--bg-2563eb-a090);
+  color: var(--fg-2563eb);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.atl-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 6px 14px;
+  border: 1px solid var(--fg-2563eb);
+  border-radius: 10px;
+  color: var(--fg-2563eb);
+  font-weight: 800;
+  text-decoration: none;
+}
+.atl-link:hover { text-decoration: underline; }
+.atl-link:focus-visible { outline: 2px solid var(--fg-2563eb); outline-offset: 2px; }
+
+.atl-input {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 46px;
+  padding: 11px 12px;
+  border: 1px solid var(--line-e2e8f0);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text-dark);
+  /* 16px: below that, iOS Safari zooms the page on focus. */
+  font-size: 16px;
+}
+.atl-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.atl-card .atl-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  min-height: 46px;
+  text-align: center;
+  text-decoration: none;
+}
+
+.atl-done-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--text-dark);
+}
+.atl-next { margin: 0; font-size: 14px; font-weight: 900; color: var(--text-dark); }
+
+/* The hero line that jumps to the section. */
+.atl-teaser {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-sizing: border-box;
+  max-width: min(420px, 100%);
+  margin: 14px auto 0;
+  padding: 8px 14px;
+  border: 1.5px solid var(--fg-2563eb);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--text-dark);
+  text-align: start;
+  text-decoration: none;
+}
+.atl-teaser .atl-icon { width: 36px; height: 36px; border-radius: 10px; }
+.atl-teaser svg { flex: none; }
+.atl-teaser-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.5; }
+.atl-teaser-text strong { font-size: 14px; font-weight: 900; }
+.atl-teaser-text span { font-size: 12.5px; font-weight: 700; color: var(--fg-2563eb); }
+.atl-teaser:focus-visible { outline: 2px solid var(--fg-2563eb); outline-offset: 2px; }
+
+@media (max-width: 760px) {
+  .atl-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 480px) {
+  .atl-card { padding: 16px 14px; }
+  .atl-title { font-size: 18px; }
+  .atl-body { font-size: 14px; }
+}

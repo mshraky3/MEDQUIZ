@@ -1,31 +1,67 @@
 /**
- * The "Android testers offer" card on /account.
+ * The "Android testers offer" section on the landing page
+ * (components/landing/AndroidTestersSection.jsx). It is the only place the offer
+ * is shown (owner, 2026-11-26: not on /login, not on /account). The copy speaks
+ * to new students; accounts the server still accepts can use it too.
  *
- * Website-only: the Android app has no such card, so mobile/scripts/sync-copy.mjs
+ * Website-only: the Android app has no such section, so mobile/scripts/sync-copy.mjs
  * skips this file (see its SKIP list).
  *
  * Wording is deliberate (Google Play policy, see mobile/docs/PLAY-LAUNCH-CHECKLIST.md):
  * it is a tester programme that asks for feedback; it never asks for a rating or a
- * review. Plain numbers are formatted by the card with formatNumber.
+ * review, and the number of seats is never shown.
+ *
+ * Two sets of "next steps" for someone who joined:
+ *   stepsGroup   VITE_ANDROID_GROUP_URL is set: the student joins the Google Group
+ *                that is the Play closed-test list, so nothing waits for the owner.
+ *   stepsManual  not set: the owner adds each e-mail to the Play list by hand, so
+ *                the test link only works after that. Do not promise faster.
  */
 const androidTestersCopy = {
     ar: {
-        pill: 'عرض المجرّبين',
-        title: 'جرّب SQB على أندرويد',
-        body: 'نجرّب تطبيق SQB على هواتف أندرويد مع مجموعة صغيرة من الطلاب ونحتاج إلى ملاحظاتهم. من ينضم إلى المجرّبين يحصل على شهر مجاني على حساب SQB الخاص به، يُستخدم في الموقع وفي التطبيق، ويُضاف عند تسجيل الدخول من تطبيق أندرويد. العرض لأوائل المستخدمين فقط ولفترة محدودة.',
+        pill: 'تطبيق أندرويد · للطلاب الجدد',
+        teaserTitle: 'انضم إلى مجرّبي تطبيق أندرويد',
+        title: 'انضم إلى مجرّبي SQB على أندرويد',
+        gift: 'شهر مجاني لأوائل المجرّبين',
+        body: 'نجرّب تطبيق SQB على هواتف أندرويد ونحتاج إلى ملاحظاتك لتحسينه. من ينضم إلى المجرّبين يحصل على شهر مجاني على حسابه، يعمل في الموقع وفي التطبيق، ويُضاف عند أول تسجيل دخول من تطبيق أندرويد.',
+        terms: 'لأوائل المستخدمين ولفترة محدودة، للحسابات التي لم تدفع من قبل وليس لديها اشتراك أو منحة حالية.',
+        saudi: 'الاختبار المغلق متاح حاليًا في السعودية فقط.',
+        guestSteps: [
+            'أنشئ حسابك المجاني.',
+            'نعيدك إلى هنا لتكتب بريد Google الذي تستخدمه في Google Play.',
+            'تظهر لك خطوات تنزيل التطبيق.',
+        ],
+        guestCta: 'أنشئ حسابًا وانضم',
+        memberLead: 'خطوة واحدة: اكتب بريد Google الذي تستخدمه على هاتف أندرويد.',
         spots: () => 'مقاعد محدودة لأوائل المستخدمين فقط',
         full: 'اكتملت مقاعد هذا العرض. شكرًا لاهتمامك.',
         emailLabel: 'بريد حساب Google على هاتفك',
-        emailHint: 'هو البريد الذي تستخدمه في متجر Google Play على هاتف أندرويد.',
+        emailHint: 'هو البريد الذي تستخدمه في متجر Google Play. نحفظه لإضافتك إلى قائمة الاختبار.',
+        privacyLink: 'سياسة الخصوصية',
         join: 'انضم إلى المجرّبين',
         joining: 'جارٍ الانضمام...',
         limit: 'مقعد واحد لكل حساب، والمقاعد بالأسبقية.',
         joinedTitle: 'تم تسجيلك في قائمة المجرّبين',
-        joinedBody: (email) => `سجّلنا ${email} وسنضيفه إلى قائمة الاختبار في Google Play. افتح الرابط التالي من هاتف أندرويد بنفس حساب Google ووافق على الانضمام، ثم نزّل التطبيق وسجّل الدخول بحساب SQB. يُضاف الشهر المجاني إلى حسابك تلقائيًا عند أول تسجيل دخول من تطبيق أندرويد، ويعمل في الموقع وفي التطبيق.`,
-        optIn: 'افتح رابط الانضمام على هاتف أندرويد',
-        noLink: 'سيظهر رابط الانضمام هنا عندما يكون جاهزًا.',
+        savedAs: 'البريد المسجّل:',
+        nextTitle: 'خطواتك التالية',
+        stepsGroup: {
+            group: 'انضم إلى مجموعة Google الخاصة بالمجرّبين بحساب Google نفسه الذي سجّلته.',
+            optIn: 'من هاتف أندرويد، وبالحساب نفسه، افتح رابط الاختبار ووافق على الانضمام.',
+            install: 'نزّل التطبيق من Google Play وسجّل الدخول بحساب SQB.',
+        },
+        stepsManual: {
+            wait: 'نضيف بريدك يدويًا إلى قائمة الاختبار في Google Play، وعادةً يتم ذلك خلال يوم.',
+            optIn: 'رابط الاختبار لا يعمل إلا بعد إضافة بريدك. بعدها افتحه من هاتف أندرويد بالحساب نفسه ووافق على الانضمام. إذا ظهرت رسالة خطأ من Google فأعد المحاولة لاحقًا.',
+            install: 'نزّل التطبيق من Google Play وسجّل الدخول بحساب SQB.',
+        },
+        openGroup: 'افتح مجموعة Google',
+        openOptIn: 'افتح رابط الاختبار',
+        openDownload: 'تنزيل التطبيق من Google Play',
+        noLink: 'سيظهر رابط الاختبار هنا عندما يكون جاهزًا.',
+        monthNote: 'يُضاف الشهر المجاني إلى حسابك تلقائيًا عند أول تسجيل دخول من تطبيق أندرويد.',
         redeemedTitle: 'تم تفعيل شهرك المجاني',
-        redeemedBody: 'سجّلت الدخول من تطبيق أندرويد وأُضيف شهر مجاني إلى حساب SQB الخاص بك، وتعمل في الموقع وفي التطبيق. شكرًا لتجربتك.',
+        redeemedBody: 'سجّلت الدخول من تطبيق أندرويد وأُضيف شهر مجاني إلى حسابك في SQB، ويعمل في الموقع وفي التطبيق. شكرًا لتجربتك.',
+        returningNotice: 'جاري تسجيل دخولك وإعادتك لإكمال الانضمام إلى المجرّبين...',
         errors: {
             invalidEmail: 'اكتب بريدًا إلكترونيًا صحيحًا.',
             emailTaken: 'لا يمكن استخدام هذا البريد. جرّب بريد حساب Google آخر.',
@@ -36,22 +72,49 @@ const androidTestersCopy = {
         },
     },
     en: {
-        pill: 'Testers offer',
-        title: 'Try SQB on Android',
-        body: 'We are testing the SQB app on Android phones with a small group of students and we want their feedback. Everyone who joins the testers gets 1 free month on their SQB account, usable on the website and in the app, added when they sign in from the Android app. The offer is for the first few users only and for a limited time.',
+        pill: 'Android app · for new students',
+        teaserTitle: 'Join the Android app testers',
+        title: 'Join the SQB Android testers',
+        gift: 'A free month for the first testers',
+        body: 'We are testing the SQB app on Android phones and we need your feedback to improve it. Everyone who joins the testers gets 1 free month on their account, usable on the website and in the app, added the first time they sign in from the Android app.',
+        terms: 'For the first few users and for a limited time, for accounts that have never paid and have no current plan or grant.',
+        saudi: 'The closed test is currently available in Saudi Arabia only.',
+        guestSteps: [
+            'Create your free account.',
+            'We bring you back here to enter the Google email you use in Google Play.',
+            'You then see the steps to get the app.',
+        ],
+        guestCta: 'Create an account and join',
+        memberLead: 'One step: enter the Google email you use on your Android phone.',
         spots: () => 'Limited seats, first few users only',
         full: 'All seats for this offer are taken. Thank you for your interest.',
         emailLabel: 'Google account email on your phone',
-        emailHint: 'The email you use in Google Play on your Android phone.',
+        emailHint: 'The email you use in Google Play. We save it to add you to the test list.',
+        privacyLink: 'Privacy policy',
         join: 'Join the testers',
         joining: 'Joining...',
         limit: 'One spot per account, first come first served.',
         joinedTitle: 'You are on the testers list',
-        joinedBody: (email) => `We saved ${email} and will add it to the Google Play test list. Open the link below on your Android phone with the same Google account and accept, then install the app and sign in with your SQB account. The free month is added to your account automatically the first time you sign in from the Android app, and they work on the website and in the app.`,
-        optIn: 'Open the join link on your Android phone',
-        noLink: 'The join link will appear here when it is ready.',
+        savedAs: 'Saved email:',
+        nextTitle: 'Your next steps',
+        stepsGroup: {
+            group: 'Join the testers Google Group with the same Google account you entered.',
+            optIn: 'On your Android phone, with that same account, open the test link and accept.',
+            install: 'Install the app from Google Play and sign in with your SQB account.',
+        },
+        stepsManual: {
+            wait: 'We add your email to the Google Play test list by hand, usually within a day.',
+            optIn: 'The test link works only after your email has been added. Then open it on your Android phone with the same account and accept. If Google shows an error, try again later.',
+            install: 'Install the app from Google Play and sign in with your SQB account.',
+        },
+        openGroup: 'Open the Google Group',
+        openOptIn: 'Open the test link',
+        openDownload: 'Get the app on Google Play',
+        noLink: 'The test link will appear here when it is ready.',
+        monthNote: 'The free month is added to your account automatically the first time you sign in from the Android app.',
         redeemedTitle: 'Your free month is active',
         redeemedBody: 'You signed in from the Android app and 1 free month was added to your SQB account, usable on the website and in the app. Thank you for testing.',
+        returningNotice: 'Logging you in and taking you back to finish joining the testers…',
         errors: {
             invalidEmail: 'Enter a valid email address.',
             emailTaken: 'This address cannot be used. Try another Google account email.',

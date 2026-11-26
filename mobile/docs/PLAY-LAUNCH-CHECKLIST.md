@@ -162,7 +162,7 @@ manipulate placement, and a legitimate acquisition channel otherwise (old source
 3. Reviewer test account: create it, paste into App access.
 4. Google Cloud: second Android OAuth client with Play's App signing SHA-1 (section 2).
 5. After 12 testers x 14 days: Dashboard > Apply for production (answer the test questions: who tested, feedback, what changed).
-6. Vercel project `medquiz-react` (SPA): set `VITE_ANDROID_TESTER_URL` and `VITE_ANDROID_DOWNLOAD_URL` (and `VITE_ANDROID_FREE_MONTH` only if decided), then redeploy. The card appears only when both links are valid https links.
+6. Vercel project `medquiz-react` (SPA): set `VITE_ANDROID_TESTER_URL` and `VITE_ANDROID_DOWNLOAD_URL` (and `VITE_ANDROID_FREE_MONTH` only if decided), then redeploy. Since 2026-11-26 there is no login-page or account-page card: the tester offer is a section on the landing page only, switched by the API (`ANDROID_TESTERS_OFFER_ENABLED`). These links only fill the next steps of a joined tester (`VITE_ANDROID_GROUP_URL`, optional, replaces the "we add your e-mail by hand" step). `VITE_ANDROID_FREE_MONTH` is no longer read.
 
 ## 8. Decisions needed from the owner
 1. **Card wording and the free month** (section 6): safest variant, or the free-month line on the card?

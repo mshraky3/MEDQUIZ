@@ -8,6 +8,7 @@ import SEO from '../common/SEO.jsx';
 import ExplanationText from '../common/ExplanationText.jsx';
 import { completeSeo, questionPath, questionSeo, relatedQuestions, specialtyPath, stemBody } from '../../seo/publicQuestions.js';
 import usePublicQuestions from './usePublicQuestions.js';
+import TrackTelegramLink from '../common/TrackTelegramLink.jsx';
 import { Breadcrumb, SignupCta, PublicQuestionsError } from './PublicQuestionsShared.jsx';
 import './PublicQuestions.css';
 
@@ -95,6 +96,7 @@ const QuestionPage = () => {
             </article>
 
             <SignupCta t={t} />
+            <TrackTelegramLink track={question.track} />
 
             {related.length > 0 && (
                 <nav className="pq-related" aria-label={t.question.relatedTitle(question.specialtyLabelAr)}>

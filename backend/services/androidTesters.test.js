@@ -28,7 +28,7 @@ const {
     evaluateTesterOffer, joinAndroidTesters, redeemTesterOffer, getOfferStatus,
     buildTesterExport, exportToCsv,
 } = svc;
-const { default: testersRouter, androidTestersAdminRouter } = await import('../routes/androidTesters.js');
+const { default: testersRouter, androidTestersAdminRouter, androidTestersPublicRouter } = await import('../routes/androidTesters.js');
 const { default: appRouter } = await import('../routes/appFreeMonth.js');
 
 let PGlite;
@@ -277,6 +277,7 @@ async function serve(db, accountId) {
     const app = express();
     app.use(express.json());
     const withDb = (req, _res, next) => { req.db = db; req.accountId = accountId; next(); };
+    app.use('/api/public/android-testers', withDb, androidTestersPublicRouter);
     app.use('/api/android-testers', withDb, testersRouter);
     app.use('/api/admin/android-testers', withDb, androidTestersAdminRouter);
     app.use('/api/app', withDb, appRouter);
@@ -413,6 +414,24 @@ test('routes: with the table missing (migration not run) the answer is 503 and t
         await s.close();
         delete process.env.ANDROID_TESTERS_OFFER_ENABLED;
         delete process.env.APP_FREE_MONTH_ENABLED;
+    }
+});
+
+test('public switch: 404 while off, then open or full, never a count or an address', { skip }, async () => {
+    delete process.env.ANDROID_TESTERS_OFFER_ENABLED;
+    const { db } = await setup();
+    const s = await serve(db, 1);
+    try {
+        assert.equal((await s.call('GET', '/api/public/android-testers')).status, 404);
+        process.env.ANDROID_TESTERS_OFFER_ENABLED = 'true';
+        assert.deepEqual((await s.call('GET', '/api/public/android-testers')).json, { success: true, open: true });
+        for (let i = 1; i <= ANDROID_TESTERS_CAP; i += 1) {
+            assert.equal((await joinAndroidTesters(db, i, 'pub' + i + '@school.edu.sa')).joined, true);
+        }
+        assert.deepEqual((await s.call('GET', '/api/public/android-testers')).json, { success: true, open: false });
+    } finally {
+        await s.close();
+        delete process.env.ANDROID_TESTERS_OFFER_ENABLED;
     }
 });
 
