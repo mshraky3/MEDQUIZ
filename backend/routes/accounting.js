@@ -11,7 +11,8 @@ import { adminAuth } from '../middleware/adminAuth.js';
 import {
     fetchPaidEvents, summarize, sar, vatConfig, splitVat, reconcileWithGateway,
 } from '../services/accountingService.js';
-import { riyadhMonthKey } from '../services/adminMetricsService.js';
+import { riyadhMonthKey, cashoutSnapshot } from '../services/adminMetricsService.js';
+import { fetchLiveSettlements } from '../services/moyasarSettlements.js';
 import { TRACK_KEYS, trackLabelEn } from '../config/tracks.js';
 import { buildInvoicePdf, invoiceNumberFor } from '../services/invoiceService.js';
 import { logger } from '../utils/observability.js';
@@ -120,6 +121,28 @@ router.get('/summary', async (req, res) => {
     } catch (err) {
         logger.error('[accounting/summary] failed:', err);
         res.status(500).json({ success: false, message: 'Failed to build accounting summary' });
+    }
+});
+
+/**
+ * GET /api/accounting/cashout
+ * What Moyasar has sent to the bank since the last recorded cash-out, and what
+ * is paid but not sent yet. Asks Moyasar live; the date filters do not apply.
+ */
+router.get('/cashout', async (req, res) => {
+    let settlements;
+    try {
+        settlements = await fetchLiveSettlements();
+    } catch (err) {
+        // The message only: an axios error object carries the secret key.
+        logger.error(`[accounting/cashout] settlements unavailable: ${err.message}`);
+        return res.status(502).json({ success: false, message: 'Could not read settlements from Moyasar' });
+    }
+    try {
+        res.json({ success: true, ...await cashoutSnapshot(req.db, { settlements }) });
+    } catch (err) {
+        logger.error('[accounting/cashout] failed:', err);
+        res.status(500).json({ success: false, message: 'Failed to build the cash-out summary' });
     }
 });
 

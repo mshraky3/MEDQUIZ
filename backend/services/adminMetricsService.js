@@ -66,6 +66,74 @@ export const SQL_FREE_TIER = `NOT ${SQL_HAS_ACCESS}`;
 export const SQL_FREE_TRYING = `${SQL_FREE_TIER} AND free_questions_used < COALESCE(free_allowance, ${LEGACY_FREE_QUESTION_ALLOWANCE})`;
 export const SQL_FREE_EXHAUSTED = `${SQL_FREE_TIER} AND free_questions_used >= COALESCE(free_allowance, ${LEGACY_FREE_QUESTION_ALLOWANCE})`;
 
+/** Calendar day (YYYY-MM-DD) in Riyadh time. */
+export function riyadhDayKey(date) {
+    return new Date(new Date(date).getTime() + 3 * 3600 * 1000).toISOString().slice(0, 10);
+}
+
+const isDay = (v) => /^\d{4}-\d{2}-\d{2}$/.test(v)
+    && !Number.isNaN(Date.parse(v)) && new Date(v).toISOString().startsWith(v);
+
+/**
+ * The two cash-out settings. Both live in the server environment, not in code:
+ * the repository is public, and a new cash-out must not need a code change.
+ *
+ *   CASHOUT_LAST      "<day of the cash-out>:<day of the newest settlement it took>"
+ *   OWNER_SHARE_RATIO the owner's part of a bank amount, between 0 and 1
+ *
+ * A missing or unreadable value yields null, never a guess.
+ */
+export function cashoutConfig(env = process.env) {
+    const [on = '', through = '', ...rest] = String(env.CASHOUT_LAST || '').trim().split(':');
+    const lastCashout = !rest.length && isDay(on) && isDay(through) && through <= on
+        ? { date: on, coversThrough: through } : null;
+    const ratio = Number(env.OWNER_SHARE_RATIO);
+    return { lastCashout, ownerShareRatio: ratio > 0 && ratio <= 1 ? ratio : null };
+}
+
+/**
+ * Money in the bank that has not been cashed out, plus money still on its way.
+ *
+ * "Settled" is what Moyasar says it sent to the bank (not a bank statement).
+ * "Not yet settled" is every live ledger payment that no settlement lists, so
+ * its fee can still be an estimate. Without a recorded cash-out the uncashed
+ * figures are null: the all-time total would pass for money in the bank.
+ */
+export async function cashoutSnapshot(db, { settlements, config = cashoutConfig() }) {
+    const rows = await fetchPaidEvents(db);
+    const settledIds = new Set(settlements.flatMap((s) => s.paymentIds));
+    const pending = rows.filter((r) => !settledIds.has(r.gatewayRef) && r.netHalalas > 0);
+    const sum = (list, key) => list.reduce((n, x) => n + x[key], 0);
+
+    const { lastCashout, ownerShareRatio } = config;
+    const uncashed = lastCashout && settlements
+        .filter((s) => riyadhDayKey(s.createdAt) > lastCashout.coversThrough)
+        .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+        .map((s) => ({
+            date: riyadhDayKey(s.createdAt),
+            amountHalalas: s.amountHalalas,
+            paymentCount: new Set(s.paymentIds).size,
+        }));
+    const uncashedHalalas = uncashed ? sum(uncashed, 'amountHalalas') : null;
+
+    return {
+        lastCashout,
+        ownerShareRatio,
+        uncashed,
+        uncashedHalalas,
+        ownerShareHalalas: uncashed && ownerShareRatio
+            ? Math.round(uncashedHalalas * ownerShareRatio) : null,
+        unsettled: {
+            count: pending.length,
+            grossHalalas: sum(pending, 'grossHalalas'),
+            netHalalas: sum(pending, 'netHalalas'),
+            estimatedCount: pending.filter((r) => r.estimated).length,
+            oldestDate: pending.length
+                ? riyadhDayKey(Math.min(...pending.map((r) => new Date(r.receivedAt)))) : null,
+        },
+    };
+}
+
 /**
  * Revenue snapshot — wraps the canonical ledger. Every money figure the admin
  * panel displays (dashboard headline, growth page, accounting page) comes
