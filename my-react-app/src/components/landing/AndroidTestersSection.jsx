@@ -15,13 +15,14 @@ import './AndroidTestersSection.css';
 const CONFIG = androidAppConfig(import.meta.env || {});
 
 /**
- * The Android testers offer, on the landing page only. The whole join happens
- * here: a visitor creates an account and is brought back to #android-testers,
- * then types their Google Play e-mail and sees the next steps.
+ * The Android testers offer. The whole join happens here: a visitor creates an
+ * account and is brought back to #android-testers, then types their Google Play
+ * e-mail and sees the next steps. The study home opens this same section from
+ * its small card (AndroidTestersHubCard.jsx) with placement="hub".
  *
  * What to show comes from useAndroidOffer.js (the API is the switch).
  */
-const AndroidTestersSection = ({ offer }) => {
+const AndroidTestersSection = ({ offer, placement = 'landing' }) => {
     const t = useCopy(androidTestersCopy);
     const { hash } = useLocation();
     const { view, status, setStatus, username, sessionToken } = offer;
@@ -56,6 +57,8 @@ const AndroidTestersSection = ({ offer }) => {
     // "Card seen": once per tab session for each state, and only when on screen.
     useEffect(() => {
         const node = sectionRef.current;
+        // On the study home the small card has already counted the view.
+        if (placement !== 'landing') return undefined;
         if (!visible || !node || typeof IntersectionObserver === 'undefined') return undefined;
         const key = `sqb_android_seen_${view}`;
         const observer = new IntersectionObserver((entries) => {
@@ -67,9 +70,9 @@ const AndroidTestersSection = ({ offer }) => {
         }, { threshold: 0.35 });
         observer.observe(node);
         return () => observer.disconnect();
-    }, [visible, view]);
+    }, [visible, view, placement]);
 
-    const clicked = (button) => trackFunnel('android_offer_click', { button });
+    const clicked = (button) => trackFunnel('android_offer_click', { button, placement });
 
     const startSignup = () => {
         // Set here as well as on /signup, so the "already have an account? log in"
@@ -96,7 +99,7 @@ const AndroidTestersSection = ({ offer }) => {
                 setError(t.errors[joinErrorKey(data.reason)] || t.errors.generic);
                 return;
             }
-            trackFunnel('android_offer_joined');
+            trackFunnel('android_offer_joined', { placement });
             setStatus((prev) => ({
                 ...prev, joined: true, playEmail: data.playEmail, left: data.left, redeemed: false,
             }));

@@ -1,8 +1,8 @@
 /**
- * The "Android testers offer" section on the landing page
- * (components/landing/AndroidTestersSection.jsx). It is the only place the offer
- * is shown (owner, 2026-11-26: not on /login, not on /account). The copy speaks
- * to new students; accounts the server still accepts can use it too.
+ * The "Android testers offer": the section on the landing page
+ * (components/landing/AndroidTestersSection.jsx) and the closable card on the
+ * study home (AndroidTestersHubCard.jsx) for signed-in accounts the server still
+ * accepts (owner, 2026-11-26 evening). Not on /login and not on /account.
  *
  * Website-only: the Android app has no such section, so mobile/scripts/sync-copy.mjs
  * skips this file (see its SKIP list).
@@ -19,7 +19,12 @@
  */
 const androidTestersCopy = {
     ar: {
-        pill: 'تطبيق أندرويد · للطلاب الجدد',
+        pill: 'تطبيق أندرويد · نسخة تجريبية',
+        hubShow: 'التفاصيل والانضمام',
+        hubShowJoined: 'اعرض خطوات التنزيل',
+        hubJoinedTitle: 'أنت في قائمة مجرّبي أندرويد',
+        hubHide: 'إخفاء التفاصيل',
+        hubDismiss: 'إغلاق البطاقة',
         teaserTitle: 'انضم إلى مجرّبي تطبيق أندرويد',
         title: 'انضم إلى مجرّبي SQB على أندرويد',
         gift: 'شهر مجاني لأوائل المجرّبين',
@@ -47,12 +52,12 @@ const androidTestersCopy = {
         stepsGroup: {
             group: 'انضم إلى مجموعة Google الخاصة بالمجرّبين بحساب Google نفسه الذي سجّلته.',
             optIn: 'من هاتف أندرويد، وبالحساب نفسه، افتح رابط الاختبار ووافق على الانضمام.',
-            install: 'نزّل التطبيق من Google Play وسجّل الدخول بحساب SQB.',
+            install: 'نزّل التطبيق من Google Play وسجّل الدخول بحساب SQB نفسه. إذا كنت تدخل بحساب Google فاستخدم زر Google.',
         },
         stepsManual: {
             wait: 'نضيف بريدك يدويًا إلى قائمة الاختبار في Google Play، وعادةً يتم ذلك خلال يوم.',
             optIn: 'رابط الاختبار لا يعمل إلا بعد إضافة بريدك. بعدها افتحه من هاتف أندرويد بالحساب نفسه ووافق على الانضمام. إذا ظهرت رسالة خطأ من Google فأعد المحاولة لاحقًا.',
-            install: 'نزّل التطبيق من Google Play وسجّل الدخول بحساب SQB.',
+            install: 'نزّل التطبيق من Google Play وسجّل الدخول بحساب SQB نفسه. إذا كنت تدخل بحساب Google فاستخدم زر Google.',
         },
         openGroup: 'افتح مجموعة Google',
         openOptIn: 'افتح رابط الاختبار',
@@ -72,7 +77,12 @@ const androidTestersCopy = {
         },
     },
     en: {
-        pill: 'Android app · for new students',
+        pill: 'Android app · test version',
+        hubShow: 'Details and join',
+        hubShowJoined: 'Show install steps',
+        hubJoinedTitle: 'You are on the Android testers list',
+        hubHide: 'Hide details',
+        hubDismiss: 'Close this card',
         teaserTitle: 'Join the Android app testers',
         title: 'Join the SQB Android testers',
         gift: 'A free month for the first testers',
@@ -100,12 +110,12 @@ const androidTestersCopy = {
         stepsGroup: {
             group: 'Join the testers Google Group with the same Google account you entered.',
             optIn: 'On your Android phone, with that same account, open the test link and accept.',
-            install: 'Install the app from Google Play and sign in with your SQB account.',
+            install: 'Install the app from Google Play and sign in with the same SQB account. If you sign in with Google, use the Google button.',
         },
         stepsManual: {
             wait: 'We add your email to the Google Play test list by hand, usually within a day.',
             optIn: 'The test link works only after your email has been added. Then open it on your Android phone with the same account and accept. If Google shows an error, try again later.',
-            install: 'Install the app from Google Play and sign in with your SQB account.',
+            install: 'Install the app from Google Play and sign in with the same SQB account. If you sign in with Google, use the Google button.',
         },
         openGroup: 'Open the Google Group',
         openOptIn: 'Open the test link',
