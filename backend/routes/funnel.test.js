@@ -16,7 +16,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { FUNNEL_EVENTS } from './funnel.js';
+import { FUNNEL_EVENTS, scrubProps } from './funnel.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const CLIENT_SRC = path.join(__dirname, '..', '..', 'my-react-app', 'src');
@@ -88,4 +88,14 @@ test('the whitelist holds no unreachable names', () => {
     const orphans = [...FUNNEL_EVENTS]
         .filter((event) => !emitted.has(event) && !serverSide.has(event) && !retired.has(event));
     assert.deepEqual(orphans, [], `nothing emits these: ${orphans.join(', ')}`);
+});
+
+test('gateway text is capped and long numbers are masked before storage', () => {
+    const safe = scrubProps({ message: `declined 4111 1111 1111 1111 ${'x'.repeat(400)}`, status: 'failed', plan: 'annual', amountHalalas: 29900 });
+    assert.ok(safe.message.startsWith('declined # '));
+    assert.equal(safe.message.length, 150);
+    assert.equal(safe.status, 'failed');
+    assert.equal(safe.amountHalalas, 29900);
+    assert.equal(scrubProps({ message: { number: '4111111111111111' } }).message, null);
+    assert.deepEqual(scrubProps(null), {});
 });

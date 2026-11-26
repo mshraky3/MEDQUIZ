@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { trackFunnel } from '../../utils/analytics.js';
+import { callbackSignal, safeStatus, scrubGatewayText } from '../../utils/paymentSignals.js';
 import Globals from '../../global.js';
 import { UserContext } from '../../UserContext';
 import Spinner from '../common/Spinner.jsx';
@@ -36,17 +37,20 @@ const PaymentCallback = () => {
 
         const paymentId = params.get('id');
         const moyasarStatus = params.get('status'); // 'paid' | 'failed' | null
+        // Logging only: gateway status and message from the URL, plus the plan
+        // and amount remembered from the attempt.
+        const signal = callbackSignal(params.toString());
 
         if (!paymentId) {
             setState('failed');
             setMessage(t.noPaymentInfo);
-            trackFunnel('payment_failed', { reason: 'no_payment_info' });
+            trackFunnel('payment_failed', { reason: 'no_payment_info', stage: 'callback', ...signal });
             return;
         }
         if (moyasarStatus && moyasarStatus !== 'paid') {
             setState('failed');
             setMessage(params.get('message') || reasonText('not_paid'));
-            trackFunnel('payment_failed', { reason: 'not_paid' });
+            trackFunnel('payment_failed', { reason: 'not_paid', stage: 'callback', ...signal });
             return;
         }
 
@@ -81,12 +85,22 @@ const PaymentCallback = () => {
                 } else {
                     setState('failed');
                     setMessage(reasonText(data.reason));
-                    trackFunnel('payment_failed', { reason: data.reason || 'unknown' });
+                    trackFunnel('payment_failed', {
+                        reason: data.reason || 'unknown', stage: 'verify', ...signal,
+                    });
                 }
             } catch (err) {
                 setState('failed');
                 setMessage(reasonText(err.response?.data?.reason));
-                trackFunnel('payment_failed', { reason: err.response?.data?.reason || 'exception' });
+                // /verify answers 402 for a payment that does not check out,
+                // with the gateway status when it was simply not paid.
+                trackFunnel('payment_failed', {
+                    reason: err.response?.data?.reason || 'exception', stage: 'verify', ...signal,
+                    status: safeStatus(err.response?.data?.status) || signal.status,
+                    message: scrubGatewayText(err.response?.data?.message || (err.response ? null : err.message))
+                        || signal.message,
+                    httpStatus: err.response?.status ?? null,
+                });
             }
         })();
     }, [user, sessionToken, params, navigate, setUser]);
