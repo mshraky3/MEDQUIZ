@@ -194,3 +194,65 @@
   .atl-title { font-size: 18px; }
   .atl-body { font-size: 14px; }
 }
+
+/* The study home card (AndroidTestersHubCard.jsx): one compact row that opens
+   the full section under it. The class pairs outrank the hub's bare p rules. */
+.atl-hub { margin-block-end: 18px; min-width: 0; }
+.atl-hub .atl-card { margin-block: 10px 0; }
+.atl-hub-bar {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+  padding: 12px 14px;
+  padding-inline-end: 52px;
+  border: 1.5px solid var(--fg-2563eb);
+  border-radius: 16px;
+  background: var(--surface);
+  text-align: start;
+}
+.atl-hub-text {
+  flex: 1 1 200px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.6;
+}
+.atl-hub-text strong { font-size: 15px; font-weight: 900; color: var(--text-dark); }
+.atl-hub-gift { font-size: 13.5px; font-weight: 800; color: var(--fg-2563eb); }
+.atl-hub-note { font-size: 12.5px; color: var(--text-light); }
+.atl-hub .atl-hub-open {
+  min-height: 44px;
+  margin: 0;
+  padding: 8px 16px;
+  border: 1px solid var(--fg-2563eb);
+  border-radius: 10px;
+  background: var(--bg-2563eb-a090);
+  color: var(--fg-2563eb);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.atl-hub .atl-hub-close {
+  position: absolute;
+  inset-block-start: 6px;
+  inset-inline-end: 6px;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-light);
+  cursor: pointer;
+}
+.atl-hub-open:focus-visible, .atl-hub-close:focus-visible { outline: 2px solid var(--fg-2563eb); outline-offset: 2px; }
+
+@media (max-width: 480px) {
+  .atl-hub .atl-hub-open { width: 100%; }
+}

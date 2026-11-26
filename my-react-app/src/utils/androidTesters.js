@@ -1,6 +1,6 @@
 /**
- * Logic of the "Android testers offer" section on the landing page
- * (components/landing/AndroidTestersSection.jsx).
+ * Logic of the "Android testers offer": the section on the landing page
+ * (components/landing/AndroidTestersSection.jsx) and the study home card.
  * The server decides everything (both status routes answer 404 until
  * ANDROID_TESTERS_OFFER_ENABLED=true on the API); this file only turns its answers
  * into a view and a refusal reason into a message key.
@@ -39,6 +39,19 @@ export function landingView({ authReady, signedIn, publicState, status }) {
     if (!authReady) return 'hidden';
     if (signedIn) return offerView(status);
     return publicState?.success === true && publicState.open === true ? 'guest' : 'hidden';
+}
+
+/** localStorage key of "I closed the study home card", per account (no e-mail in it). */
+export const hubDismissKey = (accountId) => `sqb_android_hub_dismissed_${accountId}`;
+
+/**
+ * The study home card: only for an account that can still join, or that joined
+ * and has not signed in from the app yet. Everyone else (paid, granted, full,
+ * already redeemed, offer off) sees nothing there.
+ * @returns {'join'|'joined'|null}
+ */
+export function hubCardView(view) {
+    return view === 'join' || view === 'joined' ? view : null;
 }
 
 /** Key into the card's copy.errors for a refusal reason from POST /join. */

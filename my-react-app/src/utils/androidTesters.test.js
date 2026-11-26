@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { looksLikeEmail, offerView, landingView, joinErrorKey } from './androidTesters.js';
+import { looksLikeEmail, offerView, landingView, joinErrorKey, hubCardView, hubDismissKey } from './androidTesters.js';
 import copy from '../i18n/copy/androidTesters.js';
 
 test('email shape', () => {
@@ -50,4 +50,13 @@ test('Arabic and English copy have the same keys, brand is SQB, no emoji, no men
     assert.ok(!/rating|review|تقييم|مراجعة/i.test(text), 'Play policy: nothing about ratings or reviews');
     assert.ok(!/\b15\b|١٥/.test(JSON.stringify([copy.ar, copy.en])), 'the seat count is never shown to students');
     assert.match(copy.en.spots(7), /Limited/);
+});
+
+test('study home card: only for an account that can join or has joined', () => {
+    assert.equal(hubCardView('join'), 'join');
+    assert.equal(hubCardView('joined'), 'joined');
+    for (const view of ['hidden', 'guest', 'full', 'redeemed', undefined]) assert.equal(hubCardView(view), null, String(view));
+    // A paid account is answered "has_paid" by the server, so nothing is drawn.
+    assert.equal(hubCardView(offerView({ success: true, left: 5, joined: false, reason: 'has_paid' })), null);
+    assert.equal(hubDismissKey(7), 'sqb_android_hub_dismissed_7');
 });

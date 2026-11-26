@@ -7,6 +7,7 @@ import './QuizsHub.css';
 
 import Icon from '../common/Icon.jsx';
 import QuizLauncher from './QuizLauncher.jsx';
+import AndroidTestersHubCard from '../landing/AndroidTestersHubCard.jsx';
 import { UserContext } from '../../UserContext';
 import { getTypeLabel } from '../../utils/typeLabels';
 import { getSourceLabel } from '../../utils/sourceLabels';
@@ -333,6 +334,9 @@ const QUIZS = () => {
                     </p>
                 )}
             </header>
+
+            {/* Android testers offer: small, closable, never blocks the page. */}
+            <AndroidTestersHubCard key={id} accountId={id} />
 
             {/* A track whose bank hasn't been loaded yet says so, once, at the
                 top — rather than letting the student discover it by starting a
