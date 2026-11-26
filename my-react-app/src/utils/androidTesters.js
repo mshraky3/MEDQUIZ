@@ -1,7 +1,8 @@
 /**
- * Logic of the "Android testers offer" card on /account (components/account/AndroidTestersCard.jsx).
- * The server decides everything (GET /api/android-testers/status answers 404 until
- * ANDROID_TESTERS_OFFER_ENABLED=true on the API); this file only turns its answer
+ * Logic of the "Android testers offer" section on the landing page
+ * (components/landing/AndroidTestersSection.jsx).
+ * The server decides everything (both status routes answer 404 until
+ * ANDROID_TESTERS_OFFER_ENABLED=true on the API); this file only turns its answers
  * into a view and a refusal reason into a message key.
  */
 
@@ -26,6 +27,18 @@ export function offerView(status) {
     if (INELIGIBLE.has(status.reason)) return 'hidden';
     if (status.left <= 0 || status.reason === 'full') return 'full';
     return 'join';
+}
+
+/**
+ * What the landing section shows. A signed-out visitor sees the offer only while
+ * the public switch says it is open (off, full or unknown: nothing). A signed-in
+ * visitor gets the answer for their own account.
+ * @returns {'hidden'|'guest'|'join'|'full'|'joined'|'redeemed'}
+ */
+export function landingView({ authReady, signedIn, publicState, status }) {
+    if (!authReady) return 'hidden';
+    if (signedIn) return offerView(status);
+    return publicState?.success === true && publicState.open === true ? 'guest' : 'hidden';
 }
 
 /** Key into the card's copy.errors for a refusal reason from POST /join. */

@@ -9,6 +9,7 @@ import publicQuestionsCopy from '../../i18n/copy/publicQuestions.js';
 import usePublicQuestions from '../questions/usePublicQuestions.js';
 import { SignupCta } from '../questions/PublicQuestionsShared.jsx';
 import FaqBlock from '../questions/FaqBlock.jsx';
+import TrackTelegramLink from '../common/TrackTelegramLink.jsx';
 import {
     HONESTY_NOTE_AR,
     HONESTY_NOTE_EN,
@@ -69,6 +70,10 @@ const PastPaperCollection = () => {
                     )}
                 </p>
                 <p className="pq-note">{isEn ? HONESTY_NOTE_EN : HONESTY_NOTE_AR}</p>
+                {/* Same rule as the prerendered page (seo/pastPapers.js). */}
+                {collection.track !== 'medical' && collection.samples.length > 0 && (
+                    <p><Link className="pq-cta-btn" to={`/signup?track=${collection.track}`}>{t.collection.tryFree}</Link></p>
+                )}
             </header>
 
             {collection.specialties.length > 0 && (
@@ -105,6 +110,7 @@ const PastPaperCollection = () => {
             )}
 
             <SignupCta t={questionsT} />
+            <TrackTelegramLink track={collection.track} />
 
             <FaqBlock title={t.faqTitle} items={t.faq(collection.bankTotal, collection.collectionCount)} />
 

@@ -23,9 +23,15 @@ name: Scheduled jobs
 
 on:
   schedule:
-    # Times are UTC. Saudi Arabia is UTC+3, so these land at roughly
-    # 10:00, 16:00 and 21:00 local — morning, afternoon and evening study time.
-    - cron: '0 7,13,18 * * *'   # telegram-daily (capped at 3 posts/day server-side)
+    # Times are UTC. Saudi Arabia is UTC+3.
+    # telegram-daily is scheduled early ON PURPOSE: GitHub starts schedules late.
+    # Seen 2026-09-19..11-26: 1.6 to 7 h late in Sep/Oct, and in November roughly
+    # 3.5 to 11 h, often only 2 of the 3 slots a day (the old 07:00/13:00/18:00
+    # times posted as late as 04:11 in Riyadh). With a 3.5 to 11 h delay,
+    # 02:37 / 05:37 / 08:37 UTC land between about 09:00 and 22:40 in Riyadh.
+    # If GitHub ever runs on time again these post at 05:37 / 08:37 / 11:37
+    # Riyadh: re-check the run history then. Minute 37 avoids the busy :00.
+    - cron: '37 2,5,8 * * *'    # telegram-daily (capped at 3 posts/day server-side)
     - cron: '30 2 * * *'        # daily cleanup + lifecycle emails
     - cron: '0 8 * * 6'         # weekly: weak-topics DMs (channel topic-summary post is off)
     - cron: '15 * * * *'        # hourly: broadcast drain + welcome emails
@@ -81,7 +87,7 @@ jobs:
             eod)            group=eod ;;
             *)
               case "${SCHEDULE:-}" in
-                '0 7,13,18 * * *') group=telegram-daily ;;
+                '37 2,5,8 * * *')  group=telegram-daily ;;
                 '30 2 * * *')      group=daily ;;
                 '0 8 * * 6')       group=weekly ;;
                 '15 * * * *')      group=hourly ;;

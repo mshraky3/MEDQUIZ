@@ -1,6 +1,7 @@
 /**
  * Android tester offer routes (all answer 404 until ANDROID_TESTERS_OFFER_ENABLED=true).
  *
+ *   GET  /api/public/android-testers   (public)   { open } for the signed-out landing page
  *   GET  /api/android-testers/status   (session)  spots left + this account's state
  *   POST /api/android-testers/join     (session)  { email } take a spot
  *   GET  /api/admin/android-testers/export (admin key)  ?format=csv|emails|json
@@ -11,8 +12,11 @@
  */
 import express from 'express';
 import { logger } from '../utils/observability.js';
+import { sendMail } from '../services/mailer.js';
+import { renderOwnerMail } from '../services/ownerMail.js';
+import { OWNER_EMAIL } from '../config/recipients.js';
 import {
-    isAndroidTestersOfferEnabled, getOfferStatus, joinAndroidTesters,
+    isAndroidTestersOfferEnabled, getOfferStatus, getPublicOfferState, joinAndroidTesters,
     buildTesterExport, exportToCsv,
 } from '../services/androidTesters.js';
 
@@ -31,6 +35,32 @@ function failure(res, err, what) {
     return res.status(500).json({ success: false, message: 'Something went wrong' });
 }
 
+/**
+ * Tell the owner someone joined: until the Play list is a Google Group, the
+ * address has to be added by hand and the student was told "usually within a
+ * day". A mail failure never undoes the join.
+ */
+async function notifyOwnerOfTester({ playEmail, left }) {
+    try {
+        const mail = renderOwnerMail({
+            status: 'attention',
+            title: 'Android tester',
+            headline: 'A student joined the Android testers list.',
+            sections: [{ rows: [
+                ['Google Play email', playEmail, { bold: true }],
+                ['Seats left', String(left)],
+            ] }],
+            todo: 'If the Play closed test still uses the email list, add this address in Play Console (Closed testing - Alpha, Testers) within a day. If it already uses the Google Group, nothing to do.',
+        });
+        await sendMail({
+            name: 'SQB', to: OWNER_EMAIL, subject: 'New Android tester',
+            html: mail.html, text: mail.text, event: 'medqize.owner.android_tester_joined',
+        });
+    } catch (err) {
+        logger.error('[android-testers] owner mail failed:', err);
+    }
+}
+
 const router = express.Router();
 
 router.get('/status', async (req, res) => {
@@ -46,10 +76,32 @@ router.post('/join', async (req, res) => {
     if (!isAndroidTestersOfferEnabled()) return res.status(404).json(NOT_FOUND);
     try {
         const result = await joinAndroidTesters(req.db, req.accountId, req.body?.email);
-        if (result.joined) return res.json({ success: true, ...result });
+        if (result.joined) {
+            // Awaited: a serverless function may be frozen once it has answered.
+            await notifyOwnerOfTester(result);
+            return res.json({ success: true, ...result });
+        }
         res.status(REFUSAL_STATUS[result.reason] || 409).json({ success: false, ...result });
     } catch (err) {
         failure(res, err, 'join');
+    }
+});
+
+export const androidTestersPublicRouter = express.Router();
+
+// Every signed-out landing view asks this and the answer is the same for all, so
+// the CDN answers most of them (Vercel Hobby CPU). Cached copies are shared by
+// the www and bare domains: any origin, no credentials, like /api/public/stats.
+androidTestersPublicRouter.get('/', async (req, res) => {
+    res.set('Access-Control-Allow-Origin', '*');
+    res.removeHeader('Access-Control-Allow-Credentials');
+    if (!isAndroidTestersOfferEnabled()) return res.status(404).json(NOT_FOUND);
+    try {
+        const state = await getPublicOfferState(req.db);
+        res.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+        res.json({ success: true, ...state });
+    } catch (err) {
+        failure(res, err, 'public state');
     }
 });
 

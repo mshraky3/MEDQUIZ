@@ -19,6 +19,8 @@
  * time.
  */
 
+import telegramCardCopy from '../i18n/copy/telegramCard.js';
+import { trackTelegramHtml } from '../utils/telegramChannels.js';
 import publicQuestionsCopy from '../i18n/copy/publicQuestions.js';
 import { capDescription, capTitle, fitText, TITLE_TARGET, DESCRIPTION_TARGET } from './fitText.js';
 import { explanationHtml, explanationPlain } from './explanation.js';
@@ -194,6 +196,7 @@ ${options}
         </section>
       </article>
 ${ctaHtml(t, lang)}
+${trackTelegramHtml(question.track, telegramCardCopy[lang] || telegramCardCopy.ar)}
 ${related.length ? `      <nav class="pq-related" aria-label="${escapeHtml(t.question.relatedTitle(specialtyLabel))}" dir="${dir}">
         <h2>${escapeHtml(t.question.relatedTitle(specialtyLabel))}</h2>
         <ul>
@@ -255,6 +258,7 @@ ${items}
         </ol>
       </section>
 ${ctaHtml(t, lang)}
+${trackTelegramHtml(group.track, telegramCardCopy[lang] || telegramCardCopy.ar)}
 ${siblings ? `      <nav class="pq-siblings" aria-label="${escapeHtml(t.specialty.siblingsTitle)}">
         <h2>${escapeHtml(t.specialty.siblingsTitle)}</h2>
 ${siblings}

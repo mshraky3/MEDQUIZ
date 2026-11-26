@@ -10,6 +10,7 @@ import QuizLauncher from './QuizLauncher.jsx';
 import { UserContext } from '../../UserContext';
 import { getTypeLabel } from '../../utils/typeLabels';
 import { getSourceLabel } from '../../utils/sourceLabels';
+import { telegramUrl } from '../../utils/telegramChannels.js';
 import { specialtiesOf, userTrack, examLabel, bankLabel, trackLabel, normalizeTrack } from '../../utils/tracks.js';
 import { readQuizMode } from '../../utils/quizMode.js';
 import { useCopy, useLang, formatNumber } from '../../i18n';
@@ -515,7 +516,7 @@ const QUIZS = () => {
                     ))}
                     <a
                         className="hubx-link"
-                        href="https://t.me/sqb_exam"
+                        href={telegramUrl(myTrack)}
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={() => { try { track('hub_telegram_cta'); } catch (e) { /* analytics is best-effort */ } }}

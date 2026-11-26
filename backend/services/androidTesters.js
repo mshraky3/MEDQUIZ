@@ -100,6 +100,12 @@ async function rollbackQuietly(client) {
     try { await client.query('ROLLBACK'); } catch { /* connection already gone */ }
 }
 
+/** The signed-out landing switch: is there still room? No counts, nothing personal. */
+export async function getPublicOfferState(db) {
+    const { rows: [count] } = await db.query('SELECT COUNT(*)::int AS taken FROM android_testers');
+    return { open: (count?.taken ?? 0) < ANDROID_TESTERS_CAP };
+}
+
 /** What the card shows: spots left, whether this account joined, whether it may. */
 export async function getOfferStatus(db, accountId) {
     const { rows: [count] } = await db.query('SELECT COUNT(*)::int AS taken FROM android_testers');

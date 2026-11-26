@@ -14,8 +14,8 @@ const outDir = resolve(here, '../src/i18n/copy');
 const check = process.argv.includes('--check');
 
 // install.js is the PWA "add to home screen" prompt: meaningless inside the app.
-// androidApp.js is the login-page card that promotes the app: website only.
-const SKIP = new Set(['install.js', 'androidApp.js', 'androidTesters.js']);
+// androidTesters.js is the landing-page tester offer that promotes the app: website only.
+const SKIP = new Set(['install.js', 'androidTesters.js']);
 
 const banner = (from) =>
   `// AUTO-COPIED from my-react-app/src/i18n/${from}. Do not edit here:\n` +

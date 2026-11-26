@@ -30,7 +30,7 @@ import examRouter from './routes/exam.js';
 import notificationsRouter from './routes/notifications.js';
 import examDateRouter from './routes/examDate.js';
 import appFreeMonthRouter from './routes/appFreeMonth.js';
-import androidTestersRouter, { androidTestersAdminRouter } from './routes/androidTesters.js';
+import androidTestersRouter, { androidTestersAdminRouter, androidTestersPublicRouter } from './routes/androidTesters.js';
 import groupRoutes from './routes/groups.js';
 import trialRouter from './routes/trial.js';
 import telegramRouter from './routes/telegram.js';
@@ -8180,6 +8180,7 @@ app.use('/api/exam-date', requireSession, (req, res, next) => { req.db = db; nex
 app.use('/api/app', requireSession, (req, res, next) => { req.db = db; next(); }, appFreeMonthRouter);
 // Android tester offer (first 15 students, 3 months free). All 404 until ANDROID_TESTERS_OFFER_ENABLED=true.
 // Needs migrations/002_android_testers.sql (owner runs it). Export for the Play list is admin-key only.
+app.use('/api/public/android-testers', (req, res, next) => { req.db = db; next(); }, androidTestersPublicRouter);
 app.use('/api/android-testers', requireSession, (req, res, next) => { req.db = db; next(); }, androidTestersRouter);
 app.use('/api/admin/android-testers', adminAuth, (req, res, next) => { req.db = db; next(); }, androidTestersAdminRouter);
 // Group subscriptions. No requireSession at mount: /seat/:token is a public

@@ -15,7 +15,6 @@ import { specialtiesOf, userTrack } from '../../utils/tracks.js';
 import ExamDateCard from '../quizs/ExamDateCard.jsx';
 import StreakCard from '../quizs/StreakCard.jsx';
 import GoalCard from '../quizs/GoalCard.jsx';
-import AndroidTestersCard from './AndroidTestersCard.jsx';
 import { ThemeChoice } from '../../theme/ThemeToggle.jsx';
 // The subscribe/renew CTA below matches the button style used on the page it
 // navigates to (/subscribe, styled via Login.css) — was previously the
@@ -262,9 +261,6 @@ const AccountPage = () => {
                                 />
                             </div>
                         </section>
-
-                        {/* Android testers offer: renders nothing until the server switches it on. */}
-                        <AndroidTestersCard username={user.username} sessionToken={sessionToken} />
 
                         {/* Badges used to sit at the bottom of the study hub; they live here now. */}
                         {user?.id && <AchievementBadges userId={user.id} />}

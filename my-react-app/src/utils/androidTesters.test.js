@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { looksLikeEmail, offerView, joinErrorKey } from './androidTesters.js';
+import { looksLikeEmail, offerView, landingView, joinErrorKey } from './androidTesters.js';
 import copy from '../i18n/copy/androidTesters.js';
 
 test('email shape', () => {
@@ -18,6 +18,19 @@ test('the card view follows the server answer', () => {
     for (const reason of ['has_paid', 'active_subscription', 'grandfathered', 'already_granted', 'email_not_verified']) {
         assert.equal(offerView({ success: true, left: 5, joined: false, reason }), 'hidden', reason);
     }
+});
+
+test('landing: guests need the open public switch, members get their own answer', () => {
+    const open = { success: true, open: true };
+    assert.equal(landingView({ authReady: false, signedIn: false, publicState: open }), 'hidden');
+    assert.equal(landingView({ authReady: true, signedIn: false, publicState: open }), 'guest');
+    for (const publicState of [null, { success: false }, { success: true, open: false }]) {
+        assert.equal(landingView({ authReady: true, signedIn: false, publicState }), 'hidden');
+    }
+    // A signed-in visitor never falls back to the guest offer.
+    assert.equal(landingView({ authReady: true, signedIn: true, publicState: open, status: null }), 'hidden');
+    assert.equal(landingView({ authReady: true, signedIn: true, status: { success: true, left: 2, reason: 'eligible' } }), 'join');
+    assert.equal(landingView({ authReady: true, signedIn: true, status: { success: true, left: 2, reason: 'has_paid' } }), 'hidden');
 });
 
 test('every refusal reason has a message in Arabic and English', () => {

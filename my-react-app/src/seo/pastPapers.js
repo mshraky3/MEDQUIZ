@@ -29,6 +29,8 @@ import {
     specialtyPath,
 } from './publicQuestions.js';
 
+import telegramCardCopy from '../i18n/copy/telegramCard.js';
+import { trackTelegramHtml } from '../utils/telegramChannels.js';
 import pastPapersCopy from '../i18n/copy/pastPapers.js';
 import { faqHtml, faqPageSchema } from './faqSchema.js';
 import {
@@ -321,6 +323,11 @@ export function collectionPageHtml(collection, allCollections = [], lang = 'ar')
     const isEn = lang === 'en';
     const note = isEn ? HONESTY_NOTE_EN : HONESTY_NOTE_AR;
     const trackLabel = examFor(collection.track);
+    // SNLE and SDLE: where a list of samples pushes the signup box far down the
+    // page, the same offer also gets a button above it.
+    const tryFree = collection.track !== 'medical' && collection.samples.length
+        ? `\n        <p><a class="pq-cta-btn" href="${localizedPath('/signup', lang)}?track=${collection.track}">${escapeHtml(t.collection.tryFree)}</a></p>`
+        : '';
 
     const specialties = collection.specialties
         .map((s) => `          <li><a href="${localizedPath(s.path, lang)}">${escapeHtml(isEn ? s.labelEn : s.labelAr)}</a> — ${escapeHtml(t.collection.openCount(s.count))}</li>`)
@@ -346,7 +353,7 @@ export function collectionPageHtml(collection, allCollections = [], lang = 'ar')
         <p class="pq-kicker">${escapeHtml(collection.labelEn)}</p>
         <h1>${escapeHtml(isEn ? collection.labelEn : collection.labelAr)}</h1>
         <p>${escapeHtml(t.collection.intro(isEn ? collection.blurbEn : collection.blurbAr, collection.total, trackLabel))}</p>
-        <p class="pq-note">${escapeHtml(note)}</p>
+        <p class="pq-note">${escapeHtml(note)}</p>${tryFree}
       </header>
 ${collection.specialties.length ? `      <section>
         <h2>${escapeHtml(t.collection.specialtiesTitle)}</h2>
@@ -361,6 +368,7 @@ ${samples}
         </ol>
       </section>` : ''}
 ${ctaHtml(t, lang)}
+${trackTelegramHtml(collection.track, telegramCardCopy[lang] || telegramCardCopy.ar)}
 ${faqHtml(collectionsFaqItems(collection, lang), t.faqTitle)}
 ${siblings ? `      <nav class="pq-siblings" aria-label="${escapeHtml(t.collection.siblingsTitle)}">
         <h2>${escapeHtml(t.collection.siblingsTitle)}</h2>

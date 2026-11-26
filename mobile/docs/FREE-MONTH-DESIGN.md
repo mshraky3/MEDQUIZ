@@ -55,4 +55,4 @@ Reuse the admin-grant mechanism. New files only: `backend/services/appFreeMonth.
 3. On Vercel `medquiz` set `APP_FREE_MONTH_ENABLED=true`, redeploy. Do NOT touch any `PLAN_*` variable.
 4. Check with one test account on the Android build: sign in, see paid access on the account screen, sign in again
    (no second month), see the `payment_events` row in the admin view.
-5. For the website card set `VITE_ANDROID_FREE_MONTH=true` on `medquiz-react` only when step 3 is live.
+5. (Obsolete since 2026-11-26: the website login card and `VITE_ANDROID_FREE_MONTH` were removed; the landing-page tester section is switched by the API.)

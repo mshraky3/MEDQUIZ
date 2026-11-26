@@ -46,6 +46,10 @@ const OUTCOME_EVENTS = [
     { event: 'subscribe_form_ready', label: 'Card form shown', of: 'subscribe_view' },
     { event: 'subscribe_form_blocked', label: 'Card form did NOT appear (blocked)', of: 'subscribe_view' },
     { event: 'subscribe_form_error', label: 'Card form failed to start', of: 'subscribe_view' },
+    // Android testers offer on the landing page (2026-11-26).
+    { event: 'android_offer_view', label: 'Android offer seen', of: 'landing_view' },
+    { event: 'android_offer_click', label: 'Android offer: button clicked', of: 'android_offer_view' },
+    { event: 'android_offer_joined', label: 'Android offer: joined', of: 'android_offer_view' },
     // Retired 2026-08-08 — nothing emits this any more. Kept so a past cohort's
     // count still renders instead of the step just vanishing from the page.
     { event: 'trial_started', label: 'Free trial started (retired)', of: 'signup_otp_verified' },

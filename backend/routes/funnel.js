@@ -63,6 +63,12 @@ export const FUNNEL_EVENTS = new Set([
     'subscribe_form_ready',
     'subscribe_form_blocked',
     'subscribe_form_error',
+    // Added 2026-11-26: the Android testers offer on the landing page. `view`:
+    // the section was on screen (once per tab per state); `click`: one of its
+    // buttons or links (props.button); `joined`: the join call succeeded.
+    'android_offer_view',
+    'android_offer_click',
+    'android_offer_joined',
 ]);
 
 const MAX_PROPS_BYTES = 2000;
