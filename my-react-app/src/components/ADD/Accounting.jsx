@@ -4,6 +4,7 @@ import Globals from '../../global.js';
 import Icon from '../common/Icon.jsx';
 import Spinner from '../common/Spinner.jsx';
 import AdminLayout from './AdminLayout.jsx';
+import CashoutPanel from './CashoutPanel.jsx';
 import './Accounting.css';
 
 /**
@@ -153,6 +154,8 @@ const Accounting = () => {
                         </button>
                     </div>
                 </header>
+
+                <CashoutPanel />
 
                 <div className="acc-filters">
                     <label>
