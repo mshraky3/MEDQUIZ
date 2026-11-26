@@ -69,9 +69,37 @@ export const FUNNEL_EVENTS = new Set([
     'android_offer_view',
     'android_offer_click',
     'android_offer_joined',
+    // Why a card payment did not complete (added 2026-11-26), from the Moyasar
+    // form (client: utils/paymentSignals.js). `invalid`: the form rejected a
+    // field itself; `created`: Moyasar created a payment (status initiated
+    // means it goes on to 3-D Secure); `error`: the form showed an error;
+    // `no_session`: back from the gateway while signed out. No card data.
+    'subscribe_pay_invalid',
+    'subscribe_pay_created',
+    'subscribe_pay_error',
+    'payment_return_no_session',
 ]);
 
 const MAX_PROPS_BYTES = 2000;
+const MAX_TEXT_PROP = 150;
+
+/**
+ * Second line of defence for the free-text props that can carry gateway text.
+ * The client already scrubs (utils/paymentSignals.js), but an old tab or a
+ * direct POST need not: cap the length and mask any run of four or more digits.
+ */
+export function scrubProps(props) {
+    const safe = { ...(props ?? {}) };
+    for (const key of ['message', 'status']) {
+        if (safe[key] == null) continue;
+        safe[key] = typeof safe[key] === 'string'
+            ? safe[key].slice(0, 1000)
+                .replace(/\p{Nd}(?:[^\p{L}\p{Nd}]{0,3}\p{Nd}){3,}/gu, '#')
+                .slice(0, MAX_TEXT_PROP)
+            : null;
+    }
+    return safe;
+}
 
 /**
  * Best-effort insert — callers (client beacon, subscriptionGuard) must never
@@ -80,7 +108,7 @@ const MAX_PROPS_BYTES = 2000;
 export async function recordFunnelEvent(db, { accountId = null, anonId = null, event, props = {} }) {
     if (!FUNNEL_EVENTS.has(event)) return;
     try {
-        const safeProps = JSON.stringify(props ?? {}).slice(0, MAX_PROPS_BYTES);
+        const safeProps = JSON.stringify(scrubProps(props)).slice(0, MAX_PROPS_BYTES);
         await db.query(
             `INSERT INTO funnel_events (account_id, anon_id, event, props) VALUES ($1, $2, $3, $4::jsonb)`,
             [accountId, anonId ? String(anonId).slice(0, 64) : null, event, safeProps]

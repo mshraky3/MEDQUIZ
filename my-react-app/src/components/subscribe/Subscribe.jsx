@@ -2,6 +2,9 @@ import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import axios from 'axios';
 import { trackFunnel } from '../../utils/analytics.js';
+import {
+    createdPaymentSignal, failureMessage, readInvalidFields, rememberAttempt,
+} from '../../utils/paymentSignals.js';
 import Globals from '../../global.js';
 import { UserContext } from '../../UserContext';
 import Spinner from '../common/Spinner.jsx';
@@ -211,6 +214,18 @@ const Subscribe = () => {
         // Form health, recorded as events: before this a Moyasar script that never
         // loaded, or a form that never rendered, looked like "didn't pay".
         const formStartedAt = Date.now();
+        // Payment failure logging (see utils/paymentSignals.js). It only watches:
+        // nothing it does may reach the form, so every send is wrapped, and it is
+        // capped per mounted form so repeated taps cannot flood the table.
+        let signalsLeft = 20;
+        let formFailures = 0; // how many times on_failure has fired
+        const logSignal = (send) => {
+            try {
+                if (signalsLeft <= 0) return;
+                signalsLeft -= 1;
+                send();
+            } catch (_) { /* logging must never affect checkout */ }
+        };
         // Read the ref once, here, rather than in the cleanup below: by the time
         // cleanup runs the component may already be unmounting and the ref
         // nulled, and this is the node whose children we need to tear down.
@@ -236,6 +251,7 @@ const Subscribe = () => {
                 host.appendChild(target);
 
                 const planLabel = t.plans[plan.id]?.label || plan.id;
+                const attempt = { plan: plan.id, amountHalalas: plan.priceHalalas };
                 // A group buyer goes back to /groups, where their new invite
                 // links are — not to the quizzes dashboard, which would leave
                 // them wondering what they just bought.
@@ -247,6 +263,29 @@ const Subscribe = () => {
                     description: t.paymentDescription(user.id, planLabel),
                     publishable_api_key: publishableKey,
                     callback_url: `${window.location.origin}/payment/callback${next}`,
+                    // Moyasar created a payment (any status, including failed)
+                    // and has not redirected to 3-D Secure yet.
+                    // DANGER: mpf 1.16.0 cancels the payment if this returns
+                    // false, and breaks it if this throws. Keep the block body,
+                    // return nothing, keep it synchronous, never touch `payment`.
+                    on_completed: (payment) => {
+                        logSignal(() => {
+                            rememberAttempt(attempt);
+                            trackFunnel('subscribe_pay_created', {
+                                stage: 'gateway_created', ...createdPaymentSignal(payment), ...attempt,
+                            });
+                        });
+                    },
+                    // The form is showing an error: API refusal (card country,
+                    // invalid request), declined card, network, Apple Pay.
+                    on_failure: (failure) => {
+                        formFailures += 1;
+                        logSignal(() => {
+                            trackFunnel('subscribe_pay_error', {
+                                stage: 'form_failure', message: failureMessage(failure), ...attempt,
+                            });
+                        });
+                    },
                     methods: ['creditcard', 'applepay'],
                     supported_networks: ['visa', 'mastercard', 'mada'],
                     apple_pay: {
@@ -307,6 +346,22 @@ const Subscribe = () => {
                             amountHalalas: plan.priceHalalas, plan: plan.id,
                         });
                     }, { once: true });
+                    // Every submit: did the form reject a field itself? That
+                    // fires no Moyasar callback. The short wait lets the form
+                    // draw its error first.
+                    form.addEventListener('submit', () => {
+                        const failuresBefore = formFailures;
+                        setTimeout(() => logSignal(() => {
+                            // A field marked by the API's own answer is an
+                            // on_failure, already logged above.
+                            if (formFailures !== failuresBefore) return;
+                            const invalid = readInvalidFields(form);
+                            if (!invalid) return;
+                            trackFunnel('subscribe_pay_invalid', {
+                                stage: 'client_validation', ...invalid, ...attempt,
+                            });
+                        }), 60);
+                    });
                 };
                 watchdog = setTimeout(checkForForm, 500);
             } catch (err) {

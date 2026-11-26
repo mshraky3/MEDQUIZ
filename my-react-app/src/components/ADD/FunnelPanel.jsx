@@ -40,6 +40,13 @@ const MAIN_FUNNEL = [
 const OUTCOME_EVENTS = [
     { event: 'signup_otp_failed', label: 'OTP failed', of: 'signup_otp_sent' },
     { event: 'payment_failed', label: 'Payment failed', of: 'subscribe_pay_click' },
+    // Where a card attempt stopped (added 2026-11-26). The gateway's status and
+    // message are in funnel_events.props. "created" with status initiated and no
+    // later success or failure means 3-D Secure was not completed.
+    { event: 'subscribe_pay_invalid', label: 'Card form rejected a field (nothing sent to Moyasar)', of: 'subscribe_pay_click' },
+    { event: 'subscribe_pay_created', label: 'Moyasar created a payment (any status, before 3-D Secure)', of: 'subscribe_pay_click' },
+    { event: 'subscribe_pay_error', label: 'Card form showed a payment error', of: 'subscribe_pay_click' },
+    { event: 'payment_return_no_session', label: 'Returned from payment while signed out', of: 'subscribe_pay_click' },
     // Health of the Moyasar card form on /subscribe (added 2026-10-11): shown vs
     // not shown. "blocked" = the form never appeared within 8 s; "error" = it
     // could not even start (config or script load failed).

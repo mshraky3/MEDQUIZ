@@ -1,6 +1,8 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { UserContext } from '../../UserContext';
+import { trackFunnel } from '../../utils/analytics.js';
+import { callbackSignal } from '../../utils/paymentSignals.js';
 import Spinner from './Spinner.jsx';
 import FreeAllowanceBanner from './FreeAllowanceBanner.jsx';
 
@@ -20,6 +22,18 @@ import FreeAllowanceBanner from './FreeAllowanceBanner.jsx';
 const RequireAuth = ({ children }) => {
   const { user, sessionToken, authReady } = useContext(UserContext);
   const location = useLocation();
+
+  // Logging only. A return from the payment gateway with no session (another
+  // browser or an in-app browser, cleared storage) is redirected below before
+  // PaymentCallback can record anything.
+  const lostPaymentReturn = authReady && (!user || !sessionToken)
+    && location.pathname === '/payment/callback';
+  useEffect(() => {
+    if (!lostPaymentReturn) return;
+    trackFunnel('payment_return_no_session', {
+      stage: 'callback_no_session', ...callbackSignal(location.search),
+    });
+  }, [lostPaymentReturn, location.search]);
 
   if (!authReady) {
     return (
