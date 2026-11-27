@@ -20,7 +20,8 @@ const Result = ({
   isFinalQuiz,
   onRetry,
   userId,
-  completedTopics = []
+  completedTopics = [],
+  shownTotal = totalQuestions
 }) => {
   const navigate = useNavigate();
   const t = useCopy(quizCopy).result;
@@ -73,6 +74,9 @@ const Result = ({
       )}
       <h2>{t.title}</h2>
       <p>{t.score(correctAnswers, totalQuestions)}</p>
+      {shownTotal > totalQuestions && (
+        <p className="result-early-note">{t.earlyNote(totalQuestions, shownTotal)}</p>
+      )}
       <p>{t.accuracy} <strong>{accuracy}%</strong></p>
       <p>{t.duration} <strong>{formatDuration(duration)}</strong></p>
 

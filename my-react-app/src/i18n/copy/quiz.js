@@ -281,6 +281,12 @@ const quizCopy = {
             next: 'التالي',
             finish: 'إنهاء الاختبار',
 
+            finishNow: 'أنهِ الآن وشاهد نتيجتي',
+            finishNowTitle: 'تنهي الاختبار الآن؟',
+            finishNowBody: (answered, total) => `أجبت على ${answered} من ${total}. نتيجتك تُحسب من الأسئلة التي أجبت عنها فقط، وما تركته لا يُحسب خطأ.`,
+            finishNowConfirm: 'اعرض نتيجتي',
+            finishNowCancel: 'أكمل الاختبار',
+
             loadingTitle: 'جاري تحميل الأسئلة',
             loadingBody: 'جاري تجهيز الاختبار...',
 
@@ -336,6 +342,7 @@ const quizCopy = {
             completedBannerBefore: '🎉 مبروك! أنهيت جميع أسئلة',
             title: 'اكتمل الاختبار!',
             score: (correct, total) => `${correct}/${total} صحيح`,
+            earlyNote: (answered, total) => `أنهيت الاختبار مبكراً: النتيجة من الأسئلة التي أجبت عنها (${answered} من ${total}).`,
             accuracy: 'الدقة:',
             duration: 'الوقت المستغرق:',
             another: 'اختبار آخر',
@@ -641,6 +648,12 @@ const quizCopy = {
             next: 'Next',
             finish: 'Finish the quiz',
 
+            finishNow: 'Finish now and see my result',
+            finishNowTitle: 'Finish the quiz now?',
+            finishNowBody: (answered, total) => `You answered ${answered} of ${total}. Your result covers only the questions you answered, and the ones you left are not marked wrong.`,
+            finishNowConfirm: 'See my result',
+            finishNowCancel: 'Keep going',
+
             loadingTitle: 'Loading your questions',
             loadingBody: 'Setting up your quiz…',
 
@@ -698,6 +711,7 @@ const quizCopy = {
             completedBannerBefore: '🎉 Congratulations! You have finished every question in',
             title: 'Quiz complete!',
             score: (correct, total) => `${correct}/${total} correct`,
+            earlyNote: (answered, total) => `Finished early: this result covers the questions you answered (${answered} of ${total}).`,
             accuracy: 'Accuracy:',
             duration: 'Time taken:',
             another: 'Another quiz',

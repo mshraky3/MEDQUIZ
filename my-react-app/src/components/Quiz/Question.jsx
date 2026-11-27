@@ -17,6 +17,7 @@ const Question = ({
   onNextQuestion,
   onPreviousQuestion,
   onFinishQuiz,
+  onFinishNow,
   timeRemaining,
   timerMinutes,
   userId,
@@ -133,6 +134,12 @@ const Question = ({
                   : <>{t.next}{dir === 'rtl' ? ' \u2190' : ' \u2192'}</>}
               </button>
             </div>
+
+            {onFinishNow && (
+              <button type="button" className="finish-now-button" onClick={onFinishNow}>
+                {t.finishNow}
+              </button>
+            )}
           </div>
         </div>
       </div>

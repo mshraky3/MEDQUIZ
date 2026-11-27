@@ -19,6 +19,8 @@ import { useCopy, useLang } from '../../i18n';
 import quizCopy from '../../i18n/copy/quiz.js';
 import { safeGetSessionItem, safeSetSessionItem, safeRemoveSessionItem } from '../../utils/safeStorage.js';
 import { saveAttempts } from '../../utils/attemptsSync.js';
+import { submittedSet, canFinishEarly, countAnswered } from '../../utils/finishEarly.js';
+import FinishNowDialog from './FinishNowDialog.jsx';
 
 /**
  * The per-question record the result screen reviews. Built in two places (the
@@ -143,6 +145,9 @@ const QUIZ = () => {
   // to be the same flag, which is why a failed submit could never be retried.
   const [dataSent, setDataSent] = useState(false);
   const sendingRef = useRef(false);
+  // Which quiz on this screen is current. "Another quiz" bumps it, so a save
+  // still running for the previous one cannot mark the new quiz as sent.
+  const attemptRef = useRef(0);
   const [retryCount, setRetryCount] = useState(0);
   // Category completion: the selected type+source has no unseen questions left.
   const [categoryDone, setCategoryDone] = useState(null);
@@ -174,6 +179,9 @@ const QUIZ = () => {
   const [unansweredCount, setUnansweredCount] = useState(0);
   const [countdown, setCountdown] = useState(2);
   const [finalDuration, setFinalDuration] = useState(null);
+  // "Finish now and see my result": the quiz ends with only what was answered.
+  const [showFinishNow, setShowFinishNow] = useState(false);
+  const [finishedEarly, setFinishedEarly] = useState(false);
   // Set when the server answers 402: the free allowance is spent, or this quiz
   // type is subscriber-only. Rendered as an upsell screen, never a redirect.
   const [paywalled, setPaywalled] = useState(null);
@@ -398,6 +406,14 @@ const QUIZ = () => {
     setQuizFinished(true);
   };
 
+  const handleConfirmFinishNow = () => {
+    setShowFinishNow(false);
+    if (countAnswered(questions, questionAnswers) === 0) return;
+    setFinishedEarly(true);
+    setFinalDuration(Math.floor((Date.now() - quizStartTimeRef.current) / 1000));
+    setQuizFinished(true);
+  };
+
   // Drives the unanswered-questions popup's redirect countdown as a proper
   // effect, so the interval is always cleared — on unmount if the user
   // navigates away mid-countdown, and if the popup is retriggered — instead of
@@ -474,13 +490,15 @@ const QUIZ = () => {
     const sendQuizData = async () => {
       if (!id || dataSent || !quizFinished || finalDuration === null) return;
 
-      // Build answers array from questionAnswers
-      const validQuestions = questions.filter(isValidQuestion);
+      // Build answers array from questionAnswers. After "finish now" the set is
+      // the answered questions only: nothing else is scored, saved or charged.
+      const submitted = submittedSet(questions.filter(isValidQuestion), questionAnswers, finishedEarly);
+      const validQuestions = submitted.questions;
       if (validQuestions.length === 0) return;
       // buildAnswers maps every validQuestion 1:1, so finalAnswers.length can
       // never differ from validQuestions.length — that comparison used to
       // sit here too, permanently true and dead.
-      const finalAnswers = buildAnswers(validQuestions, questionAnswers);
+      const finalAnswers = buildAnswers(validQuestions, submitted.answers);
 
       // Re-entry guard, and NOT setDataSent(true).
       //
@@ -494,6 +512,8 @@ const QUIZ = () => {
       // after the server has actually acknowledged the session.
       if (sendingRef.current) return;
       sendingRef.current = true;
+      const attemptId = attemptRef.current;
+      const isCurrentAttempt = () => attemptRef.current === attemptId;
       const duration = finalDuration;
       const totalQuestions = finalAnswers.length;
       const correctCount = finalAnswers.filter(a => a.isCorrect).length;
@@ -580,12 +600,12 @@ const QUIZ = () => {
         };
 
         const sessionRes = await postSession();
-        setDataSent(true);
+        if (isCurrentAttempt()) setDataSent(true);
         const quiz_session_id = sessionRes.data.id;
 
         // The server tells us which (type, source) topics this quiz just
         // completed, so the results screen can congratulate the user.
-        if (Array.isArray(sessionRes.data.completedCategories) && sessionRes.data.completedCategories.length > 0) {
+        if (isCurrentAttempt() && Array.isArray(sessionRes.data.completedCategories) && sessionRes.data.completedCategories.length > 0) {
           setCompletedTopics(sessionRes.data.completedCategories);
         }
 
@@ -645,13 +665,13 @@ const QUIZ = () => {
         // screen (or the answers-changed effect firing again) submits once
         // more. apiClient has already reported the failure to the error
         // tracker, which is how these surface to the owner.
-        sendingRef.current = false;
+        if (isCurrentAttempt()) sendingRef.current = false;
         console.error("Error sending quiz data:", error);
       }
     };
 
     sendQuizData();
-  }, [quizFinished, questionAnswers, questions, id, dataSent, finalDuration, isFinalQuiz, source, timerMinutes, types]);
+  }, [quizFinished, finishedEarly, questionAnswers, questions, id, dataSent, finalDuration, isFinalQuiz, source, timerMinutes, types]);
 
   if (loading) {
     return <Loading />;
@@ -724,8 +744,9 @@ const QUIZ = () => {
   }
 
   if (quizFinished) {
-    const validQuestions = questions.filter(isValidQuestion);
-    const finalAnswers = buildAnswers(validQuestions, questionAnswers);
+    const shown = questions.filter(isValidQuestion);
+    const submitted = submittedSet(shown, questionAnswers, finishedEarly);
+    const finalAnswers = buildAnswers(submitted.questions, submitted.answers);
 
     const correctCount = finalAnswers.filter(a => a.isCorrect).length;
     const totalQuestions = finalAnswers.length;
@@ -743,6 +764,7 @@ const QUIZ = () => {
         isFinalQuiz={isFinalQuiz}
         userId={id}
         completedTopics={completedTopics}
+        shownTotal={shown.length}
         onRetry={() => {
           // "Another quiz" means a NEW set. This used to reset the answers and
           // replay the same `questions`, so students got the identical ten
@@ -756,7 +778,14 @@ const QUIZ = () => {
           setQuestionAnswers({});
           setRevealedIndexes(new Set());
           setQuizFinished(false);
+          // The next quiz gets its own save. Without releasing the latch here
+          // it was never sent at all.
+          attemptRef.current += 1;
+          sendingRef.current = false;
           setDataSent(false);
+          setCompletedTopics([]);
+          setFinishedEarly(false);
+          setShowFinishNow(false);
           setFinalDuration(null);
           deadlineRef.current = timerMinutes ? Date.now() + timerMinutes * 60000 : null;
           setTimeRemaining(timerMinutes ? timerMinutes * 60 : null);
@@ -800,11 +829,25 @@ const QUIZ = () => {
         onNextQuestion={handleNextQuestion}
         onPreviousQuestion={handlePreviousQuestion}
         onFinishQuiz={handleFinishQuiz}
+        onFinishNow={
+          canFinishEarly({ questions, answers: questionAnswers, currentIndex: currentQuestionIndex, isFinalQuiz })
+            ? () => setShowFinishNow(true)
+            : undefined
+        }
         timeRemaining={timeRemaining}
         timerMinutes={timerMinutes}
         userId={user?.id}
         userEmail={user?.email}
       />
+
+      {showFinishNow && (
+        <FinishNowDialog
+          answered={countAnswered(questions, questionAnswers)}
+          total={questions.length}
+          onConfirm={handleConfirmFinishNow}
+          onCancel={() => setShowFinishNow(false)}
+        />
+      )}
 
       {/* Unanswered Questions Popup */}
       {showUnansweredPopup && (
