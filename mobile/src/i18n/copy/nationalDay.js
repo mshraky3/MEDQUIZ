@@ -1,3 +1,5 @@
+// AUTO-COPIED from my-react-app/src/i18n/copy/nationalDay.js. Do not edit here:
+// change the website's file, then run `npm run sync:copy` in mobile/.
 /**
  * National Day offer copy — the 96th Saudi National Day, 23 September 2026.
  *

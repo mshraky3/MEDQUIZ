@@ -21,7 +21,10 @@
  * time.
  */
 
+import telegramCardCopy from '@/i18n/copy/telegramCard.js';
+import { telegramHubBoxHtml, trackTelegramHtml } from './telegramChannels.js';
 import publicQuestionsCopy from '@/i18n/copy/publicQuestions.js';
+import { capDescription, capTitle, fitText, TITLE_TARGET, DESCRIPTION_TARGET } from './fitText.js';
 import { explanationHtml, explanationPlain } from './explanation.js';
 import { faqHtml, faqPageSchema } from './faqSchema.js';
 import {
@@ -194,7 +197,8 @@ ${options}
           ${explanationHtml(question.explanation)}
         </section>
       </article>
-${ctaHtml(t, lang)}
+${ctaHtml(t, lang, question.track)}
+${trackTelegramHtml(question.track, telegramCardCopy[lang] || telegramCardCopy.ar)}
 ${related.length ? `      <nav class="pq-related" aria-label="${escapeHtml(t.question.relatedTitle(specialtyLabel))}" dir="${dir}">
         <h2>${escapeHtml(t.question.relatedTitle(specialtyLabel))}</h2>
         <ul>
@@ -214,11 +218,13 @@ ${relatedLinks}
  * words — they used to differ slightly per page, for no reason anyone could
  * have defended.
  */
-function ctaHtml(t, lang) {
+const signupHref = (lang, track) => `${localizedPath('/signup', lang)}${track ? `?track=${track}` : ''}`;
+
+function ctaHtml(t, lang, track) {
     return `      <section class="pq-cta" dir="${dirFor(lang)}">
         <h2>${escapeHtml(t.cta.title)}</h2>
         <p>${escapeHtml(t.cta.body)}</p>
-        <a class="pq-cta-btn" href="${localizedPath('/signup', lang)}">${escapeHtml(t.cta.button)}</a>
+        <a class="pq-cta-btn" href="${signupHref(lang, track)}">${escapeHtml(t.cta.button)}</a>
         <p class="pq-cta-note">${escapeHtml(t.cta.note)}</p>
       </section>`;
 }
@@ -248,6 +254,7 @@ export function specialtyPageHtml(group, allSpecialties = [], lang = 'ar') {
         <p class="pq-kicker">${escapeHtml(group.labelEn)}</p>
         <h1>${escapeHtml(t.specialty.title(label))}</h1>
         <p>${escapeHtml(t.specialty.intro(group.questions.length, label))}</p>
+        <p><a class="pq-cta-btn" href="${signupHref(lang, group.track)}">${escapeHtml(t.cta.button)}</a></p>
       </header>
       <section>
         <h2>${escapeHtml(t.specialty.listTitle)}</h2>
@@ -255,7 +262,8 @@ export function specialtyPageHtml(group, allSpecialties = [], lang = 'ar') {
 ${items}
         </ol>
       </section>
-${ctaHtml(t, lang)}
+${ctaHtml(t, lang, group.track)}
+${trackTelegramHtml(group.track, telegramCardCopy[lang] || telegramCardCopy.ar)}
 ${siblings ? `      <nav class="pq-siblings" aria-label="${escapeHtml(t.specialty.siblingsTitle)}">
         <h2>${escapeHtml(t.specialty.siblingsTitle)}</h2>
 ${siblings}
@@ -295,6 +303,7 @@ ${items}
       </header>
 ${groups}
 ${ctaHtml(t, lang)}
+${telegramHubBoxHtml(telegramCardCopy[lang] || telegramCardCopy.ar, lang)}
 ${faqHtml(hubFaqItems(index, lang), t.faqTitle)}
     </main>
   `;
@@ -370,12 +379,19 @@ export function questionSeo(question, lang = 'ar') {
     const t = publicQuestionsCopy[lang] || publicQuestionsCopy.ar;
     const routePath = questionPath(question);
     const label = lang === 'en' ? question.specialtyLabelEn : question.specialtyLabelAr;
+    // Title: size the headline so "headline | specialty | SQB" is about 60 characters.
+    const suffixLength = t.seo.questionTitle('', question.specialtyLabelEn).length;
+    const headlineMax = Math.max(20, TITLE_TARGET - suffixLength);
     return {
         path: routePath,
-        title: t.seo.questionTitle(question.headline, question.specialtyLabelEn),
-        description: t.seo
-            .questionDescription(question.headline, question.specialtyLabelAr, question.specialtyLabelEn)
-            .slice(0, 300),
+        title: t.seo.questionTitle(fitText(question.headline, headlineMax), question.specialtyLabelEn),
+        description: fitText(
+            t.seo.questionDescription(
+                fitText(question.headline, 90), question.specialtyLabelAr, question.specialtyLabelEn,
+            ),
+            DESCRIPTION_TARGET,
+            { ellipsis: true },
+        ),
         keywords: t.seo.questionKeywords(question.specialtyLabelAr, question.specialtyLabelEn),
         structuredData: [
             quizSchema(question, routePath, lang),
@@ -456,10 +472,10 @@ const DEFAULT_ROBOTS = 'index, follow, max-image-preview:large, max-snippet:-1, 
  */
 export function completeSeo(partial, lang = 'ar') {
     return {
-        title: partial.title,
-        description: partial.description,
+        title: capTitle(partial.title),
+        description: capDescription(partial.description),
         keywords: partial.keywords,
-        image: `${SITE_ORIGIN}/og-image.svg`,
+        image: `${SITE_ORIGIN}/og-image.png`,
         imageAlt: partial.title,
         url: absoluteUrl(localizedPath(partial.path, lang)),
         type: 'article',

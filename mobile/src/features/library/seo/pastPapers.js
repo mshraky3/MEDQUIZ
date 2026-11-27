@@ -30,6 +30,8 @@ import {
     specialtyPath,
 } from './publicQuestions.js';
 
+import telegramCardCopy from '@/i18n/copy/telegramCard.js';
+import { telegramHubBoxHtml, trackTelegramHtml } from './telegramChannels.js';
 import pastPapersCopy from '@/i18n/copy/pastPapers.js';
 import { faqHtml, faqPageSchema } from './faqSchema.js';
 import {
@@ -65,6 +67,13 @@ const COLLECTION_META = {
         labelEn: 'October 2026 Recall (SMLE)',
         blurbAr: 'أسئلة SMLE التي نقلها المتقدمون بعد اختبارات أكتوبر 2026.',
         blurbEn: 'SMLE questions candidates reported after the October 2026 sittings.',
+    },
+    MedicalNovemberRecall: {
+        slug: 'smle-november-recall',
+        labelAr: 'تجميعة نوفمبر 2026 للطب البشري',
+        labelEn: 'November 2026 Recall (SMLE)',
+        blurbAr: 'أسئلة SMLE جديدة مجمّعة من ذاكرة المتقدمين بعد اختبارات نوفمبر 2026.',
+        blurbEn: 'New SMLE questions compiled from candidates’ memory after the November 2026 sittings.',
     },
     MedicalSeptemberRecall: {
         slug: 'smle-september-recall',
@@ -108,6 +117,13 @@ const COLLECTION_META = {
         blurbAr: 'أسئلة SNLE الأكثر تكراراً بين الدورات، وهي أعلى ما يستحق المراجعة قبل الاختبار.',
         blurbEn: 'The SNLE questions that recur most across sittings — the highest-yield revision before the exam.',
     },
+    NursingRecall: {
+        slug: 'snle-recall',
+        labelAr: 'تجميعات التمريض',
+        labelEn: 'Nursing Recalls (SNLE)',
+        blurbAr: 'أسئلة SNLE جديدة مجمّعة من ذاكرة المتقدمين. قد تحتاج بعض الإجابات إلى مراجعة.',
+        blurbEn: 'New SNLE questions compiled from candidates’ memory. Some answers may need a second look.',
+    },
     DentalExplained: {
         slug: 'sdle-core',
         labelAr: 'المجموعة الأساسية — طب الأسنان',
@@ -121,6 +137,13 @@ const COLLECTION_META = {
         labelEn: 'Recall 2026 (SDLE)',
         blurbAr: 'أسئلة SDLE التي نقلها المتقدمون في اختبارات 2026.',
         blurbEn: 'SDLE questions candidates reported in the 2026 sittings.',
+    },
+    DentalRecall2025: {
+        slug: 'sdle-recall-2025',
+        labelAr: 'تجميعات 2025 — طب الأسنان',
+        labelEn: 'Recall 2025 (SDLE)',
+        blurbAr: 'أسئلة SDLE جديدة مجمّعة من ذاكرة المتقدمين في اختبارات 2025.',
+        blurbEn: 'New SDLE questions compiled from candidates’ memory of the 2025 sittings.',
     },
     DentalRecall2024: {
         slug: 'sdle-recall-2024',
@@ -238,11 +261,11 @@ export function collectionsFaqItems({ bankTotal, collectionCount }, lang = 'ar')
 }
 
 /** The signup CTA, shared with the question pages' wording. */
-function ctaHtml(t, lang) {
+function ctaHtml(t, lang, track) {
     return `      <section class="pq-cta" dir="${dirFor(lang)}">
         <h2>${escapeHtml(t.cta.title)}</h2>
         <p>${escapeHtml(t.cta.body)}</p>
-        <a class="pq-cta-btn" href="${localizedPath('/signup', lang)}">${escapeHtml(t.cta.button)}</a>
+        <a class="pq-cta-btn" href="${localizedPath('/signup', lang)}${track ? `?track=${track}` : ''}">${escapeHtml(t.cta.button)}</a>
         <p class="pq-cta-note">${escapeHtml(t.cta.note)}</p>
       </section>`;
 }
@@ -282,6 +305,7 @@ ${items}
       </header>
 ${groups}
 ${ctaHtml(t, lang)}
+${telegramHubBoxHtml(telegramCardCopy[lang] || telegramCardCopy.ar, lang)}
 ${faqHtml(collectionsFaqItems(data, lang), t.faqTitle)}
       <nav class="pq-siblings" aria-label="${escapeHtml(t.relatedLinksLabel)}">
         <a href="${localizedPath(QUESTIONS_ROOT, lang)}">${escapeHtml(t.links.allQuestions)}</a>
@@ -297,6 +321,11 @@ export function collectionPageHtml(collection, allCollections = [], lang = 'ar')
     const isEn = lang === 'en';
     const note = isEn ? HONESTY_NOTE_EN : HONESTY_NOTE_AR;
     const trackLabel = examFor(collection.track);
+    // Where a list of samples pushes the signup box far down the page, the same
+    // offer also gets a button above it.
+    const tryFree = collection.samples.length
+        ? `\n        <p><a class="pq-cta-btn" href="${localizedPath('/signup', lang)}?track=${collection.track}">${escapeHtml(t.collection.tryFree)}</a></p>`
+        : '';
 
     const specialties = collection.specialties
         .map((s) => `          <li><a href="${localizedPath(s.path, lang)}">${escapeHtml(isEn ? s.labelEn : s.labelAr)}</a> — ${escapeHtml(t.collection.openCount(s.count))}</li>`)
@@ -322,7 +351,7 @@ export function collectionPageHtml(collection, allCollections = [], lang = 'ar')
         <p class="pq-kicker">${escapeHtml(collection.labelEn)}</p>
         <h1>${escapeHtml(isEn ? collection.labelEn : collection.labelAr)}</h1>
         <p>${escapeHtml(t.collection.intro(isEn ? collection.blurbEn : collection.blurbAr, collection.total, trackLabel))}</p>
-        <p class="pq-note">${escapeHtml(note)}</p>
+        <p class="pq-note">${escapeHtml(note)}</p>${tryFree}
       </header>
 ${collection.specialties.length ? `      <section>
         <h2>${escapeHtml(t.collection.specialtiesTitle)}</h2>
@@ -336,7 +365,8 @@ ${samples ? `      <section>
 ${samples}
         </ol>
       </section>` : ''}
-${ctaHtml(t, lang)}
+${ctaHtml(t, lang, collection.track)}
+${trackTelegramHtml(collection.track, telegramCardCopy[lang] || telegramCardCopy.ar)}
 ${faqHtml(collectionsFaqItems(collection, lang), t.faqTitle)}
 ${siblings ? `      <nav class="pq-siblings" aria-label="${escapeHtml(t.collection.siblingsTitle)}">
         <h2>${escapeHtml(t.collection.siblingsTitle)}</h2>
@@ -370,7 +400,7 @@ function completeSeo(partial, lang = 'ar') {
         title: partial.title,
         description: partial.description,
         keywords: partial.keywords,
-        image: `${SITE_ORIGIN}/og-image.svg`,
+        image: `${SITE_ORIGIN}/og-image.png`,
         imageAlt: partial.title,
         url: absoluteUrl(localizedPath(partial.path, lang)),
         type: 'article',

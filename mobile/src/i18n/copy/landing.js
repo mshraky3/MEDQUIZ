@@ -27,10 +27,10 @@ const landingCopy = {
             secondary: 'تسجيل الخروج',
         },
         hero: {
-            // New-collection notice above the pill, shown while the October set is the freshest addition.
+            // New-collection notice above the pill, shown while the November sets are the freshest addition.
             newTag: 'جديد',
-            newSet: 'مجموعة أكتوبر 2026 لاختبار SMLE: أسئلة تدريبية جديدة بنمط الاختبار الحالي، والمزيد قادم',
-            pill: 'مساران: طب بشري وتمريض · ابدأ بـ 10 أسئلة مجانية',
+            newSet: 'تجميعات نوفمبر 2026 الجديدة لاختبارات SMLE وSNLE وSDLE',
+            pill: 'ثلاثة مسارات: طب بشري وتمريض وأسنان · ابدأ بـ 10 أسئلة مجانية',
             title: 'تدرّب بذكاء، واجتَز اختبار الترخيص بثقة',
             body: 'بنك أسئلة محدّث على نمط البرومترك، مع تفسير واضح لكل إجابة وتحليل فوري يكشف نقاط ضعفك ويرتّب أولويات مراجعتك — كل ما تحتاجه للوصول إلى درجتك المستهدفة في مكان واحد.',
             primary: 'ابدأ بـ 10 أسئلة مجانية',
@@ -52,7 +52,7 @@ const landingCopy = {
             ],
             // Rendered only when config/examDates.js has a real, verified future
             // date — otherwise ExamCountdown renders nothing.
-            examCountdown: (days) => `الاختبار القادم بعد ${days} ${days === 1 ? 'يوم' : 'يوماً'}`,
+            examCountdown: (days) => `فترة الاختبار القادمة تبدأ بعد ${days === 1 ? 'يوم واحد' : days === 2 ? 'يومين' : `${days} ${days <= 10 ? 'أيام' : 'يوماً'}`}`,
             scrollCue: 'تصفّح',
         },
 
@@ -111,7 +111,7 @@ const landingCopy = {
             colFiles: 'ملفات وتجميعات متناثرة',
             colCourses: 'الدورات التحضيرية',
             rows: [
-                { label: 'التكلفة', sqb: 'من 50 ريالاً شهرياً — و300 للسنة كاملة', files: 'مجانية لكن مبعثرة وغير موثوقة', courses: 'آلاف الريالات' },
+                { label: 'التكلفة', sqb: 'من 50 ريالاً شهرياً — و299 للسنة كاملة', files: 'مجانية لكن مبعثرة وغير موثوقة', courses: 'آلاف الريالات' },
                 { label: 'تحديث المحتوى', sqb: 'تجميعات شهرية مدقّقة', files: 'غير منتظم وبدون تدقيق', courses: 'ينتهي بانتهاء الدورة' },
                 { label: 'شرح الإجابات', sqb: 'تفسير كامل لكل سؤال: الفكرة والتشخيص والعلاج', files: 'إجابات بلا شرح غالباً', courses: 'يعتمد على المحاضر' },
                 { label: 'تحليل الأداء والأخطاء', sqb: 'تحليلات تلقائية بعد كل جلسة', files: 'يدوي — إن وُجد', courses: 'غير متوفر غالباً' },
@@ -142,7 +142,7 @@ const landingCopy = {
             currency: 'ريال / شهر',
             perMonth: 'أربعة أشهر بـ 129 ريالاً بدلاً من 200 · 299 ريالاً للسنة · واشتراكات جماعية للأصدقاء',
             included: [
-                'بنك أسئلة شامل لاختبارك — SMLE أو SNLE — يُحدَّث باستمرار',
+                'بنك أسئلة شامل لاختبارك — SMLE أو SNLE أو SDLE — يُحدَّث باستمرار',
                 'تفسير واضح لكل إجابة',
                 'ملخصات مركّزة على النقاط عالية التكرار',
                 'اختبارات محاكية بتوقيت حقيقي',
@@ -217,8 +217,8 @@ const landingCopy = {
         },
         hero: {
             newTag: 'New',
-            newSet: 'October 2026 set for the SMLE: new practice questions in the current exam style, more coming',
-            pill: 'Two tracks: medicine and nursing · Start with 10 free questions',
+            newSet: 'New November 2026 recall sets for the SMLE, SNLE and SDLE',
+            pill: 'Three tracks: medicine, nursing and dental · Start with 10 free questions',
             title: 'Practise smarter, and walk into your licensing exam confident',
             body: 'A question bank updated to the Prometric style, a clear explanation for every answer, and instant analytics that expose your weak spots and tell you what to revise next — everything you need to hit your target score, in one place.',
             primary: 'Start with 10 free questions',
@@ -332,7 +332,7 @@ const landingCopy = {
             currency: 'SAR / month',
             perMonth: 'Four months for SAR 129, down from 200 · SAR 299 for a year · group plans for study partners',
             included: [
-                'A full question bank for your exam — SMLE or SNLE — updated continually',
+                'A full question bank for your exam — SMLE, SNLE or SDLE — updated continually',
                 'A clear explanation for every answer',
                 'Focused, high-yield summaries',
                 'Timed mock exams under real exam conditions',

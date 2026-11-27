@@ -19,19 +19,39 @@ const check = process.argv.includes('--check');
 const SKIP = new Set(['install.js', 'androidTesters.js', 'telegramHub.js']);
 
 const banner = (from) =>
-  `// AUTO-COPIED from my-react-app/src/i18n/${from}. Do not edit here:\n` +
+  `// AUTO-COPIED from my-react-app/src/${from}. Do not edit here:\n` +
   `// change the website's file, then run \`npm run sync:copy\` in mobile/.\n`;
 
 const files = readdirSync(join(siteI18n, 'copy'))
   .filter((f) => f.endsWith('.js') && !SKIP.has(f))
-  .map((f) => ({ name: f, from: `copy/${f}`, src: readFileSync(join(siteI18n, 'copy', f), 'utf8') }));
+  .map((f) => ({
+    name: f,
+    from: `i18n/copy/${f}`,
+    src: readFileSync(join(siteI18n, 'copy', f), 'utf8').replace(
+      /from '\.\.\/\.\.\/seo\/examPaths\.js'/g,
+      "from './examPaths.js'",
+    ),
+  }));
+
+// examGuides.js takes its route constants from the website's seo/ folder; in the
+// app that file sits beside it.
+const examPaths = readFileSync(resolve(siteI18n, '../seo/examPaths.js'), 'utf8');
+files.push({ name: 'examPaths.js', from: 'seo/examPaths.js', src: examPaths });
 
 // common.js reads the language through a React hook; the app has its own.
 let common = readFileSync(join(siteI18n, 'common.js'), 'utf8');
 common = common
   .replace(/^import \{ useCopy \} from '\.\/LanguageContext\.jsx';\r?\n/m, '')
   .replace(/^export const useCommon = .*\r?\n/m, '');
-files.push({ name: 'common.js', from: 'common.js', src: common });
+files.push({ name: 'common.js', from: 'i18n/common.js', src: common });
+
+// A relative import that was not copied would only show up as a broken app.
+const copied = new Set(files.map((f) => `./${f.name}`));
+for (const { name, src } of files) {
+  for (const [, spec] of src.matchAll(/from '(\.{1,2}\/[^']+)'/g)) {
+    if (!copied.has(spec)) throw new Error(`${name} imports ${spec}: map it in sync-copy.mjs`);
+  }
+}
 
 if (!check) mkdirSync(outDir, { recursive: true });
 let drift = 0;
@@ -39,7 +59,8 @@ for (const { name, from, src } of files) {
   const body = banner(from) + src.replace(/\r\n/g, '\n');
   const target = join(outDir, name);
   if (check) {
-    const current = existsSync(target) ? readFileSync(target, 'utf8') : '';
+    // A Windows checkout (core.autocrlf) holds CRLF: line endings are not drift.
+    const current = existsSync(target) ? readFileSync(target, 'utf8').replace(/\r\n/g, '\n') : '';
     if (current !== body) {
       drift += 1;
       console.log(`drifted: ${name}`);

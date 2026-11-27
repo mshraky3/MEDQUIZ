@@ -1,3 +1,5 @@
+// AUTO-COPIED from my-react-app/src/i18n/copy/analysis.js. Do not edit here:
+// change the website's file, then run `npm run sync:copy` in mobile/.
 /**
  * Copy for the performance-report pages: the analytics tabs, quiz history,
  * progress, final exams and the wrong-questions review.

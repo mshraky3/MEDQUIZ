@@ -18,6 +18,7 @@ const supportCopy = {
             email: 'البريد الإلكتروني',
             telegram: 'قنوات تلجرام',
             telegramAll: 'كل القنوات في صفحة واحدة',
+            tiktok: 'تيك توك',
             suggestionsTitle: 'الاقتراحات والأفكار',
             suggestionsSubtitle: 'ساعدنا في تحسين التطبيق',
             formTitle: 'أرسل لنا رسالة وسنعود إليك',
@@ -133,12 +134,13 @@ const supportCopy = {
             perksToggle: 'ما الذي يشمله الاشتراك؟',
             newSetTag: 'جديد',
             newSetTitle: 'مجموعة أكتوبر 2026',
-            newSetBody: 'أسئلة تدريبية جديدة بنمط الاختبار الحالي، والمزيد قادم. بدون شرح مكتوب. مشمولة في كل الخطط.',
+            newSetBody: 'أسئلة تدريبية جديدة بنمط الاختبار الحالي، والمزيد قادم. مشمولة في كل الخطط.',
             secureNoteAfter: '. لا نقوم بتخزين بيانات بطاقتك على خوادمنا.',
             // Payment works only with Saudi-issued cards (the processor refuses
             // foreign ones), so say so before the form instead of after eight
             // failed attempts.
             cardsNote: 'الدفع متاح حالياً بالبطاقات الصادرة في السعودية فقط (مدى، فيزا، ماستركارد).',
+            cardNameHint: 'اكتب اسم حامل البطاقة بالإنجليزي: الاسم الأول والأخير',
             policyBefore: 'الاشتراك لا يُجدَّد تلقائياً — التجديد يدوي. بالمتابعة فإنك توافق على',
             terms: 'شروط الاستخدام',
             and: 'و',
@@ -176,6 +178,7 @@ const supportCopy = {
             email: 'Email',
             telegram: 'Telegram channels',
             telegramAll: 'All channels on one page',
+            tiktok: 'TikTok',
             suggestionsTitle: 'Suggestions and ideas',
             suggestionsSubtitle: 'Help us make the platform better',
             formTitle: 'Send us a message and we will get back to you',
@@ -287,13 +290,14 @@ const supportCopy = {
             secureNoteProvider: 'Moyasar',
             secureNoteAfter: '. We never store your card details on our servers.',
             cardsNote: 'Payment currently works with cards issued in Saudi Arabia only (mada, Visa, Mastercard).',
+            cardNameHint: 'Name on card in English letters: first and last name',
             // Label on the perks disclosure. The plan picker and the card form
             // are what someone opens this page for; the perks are the
             // supporting detail, one tap away instead of a third of the page.
             perksToggle: "What's included?",
             newSetTag: 'New',
             newSetTitle: 'October 2026 set',
-            newSetBody: 'New practice questions in the current exam style, with more to come. No written explanations. Included in every plan.',
+            newSetBody: 'New practice questions in the current exam style, with more to come. Included in every plan.',
             policyBefore: 'The subscription does not auto-renew — renewal is manual. By continuing you agree to the',
             terms: 'Terms of Use',
             and: 'and the',
