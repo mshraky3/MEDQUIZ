@@ -28,6 +28,12 @@ export const ATTEMPT_CHUNK_SIZE = 1000;
  * 1,000 rows, so 1,200 answers = 2 queries instead of 1,200). Same columns and
  * same defaults as the old per-row insert (`timeTaken || 0`).
  *
+ * A question with no answer (the timer ran out) is stored with user_answer '', as
+ * the website's timed mock sends it. The column is NOT NULL, and the Android app and
+ * the website's final-review exam send no field at all for a blank; without this one
+ * blank failed the whole statement. The row is kept, not skipped: the session totals
+ * are recomputed from these rows (services/sessionSummary.js).
+ *
  * @param {{query: Function}} db  pg Pool or Client
  * @param {number} sessionId      final_review_sessions.id (numeric)
  * @param {Array} attempts        [{questionId,userAnswer,correctAnswer,isCorrect,timeTaken}]
@@ -46,7 +52,7 @@ export async function insertFinalQuizAttempts(db, sessionId, attempts, chunkSize
             params.push(
                 sessionId,
                 attempt.questionId,
-                attempt.userAnswer,
+                attempt.userAnswer ?? '',
                 attempt.correctAnswer,
                 attempt.isCorrect,
                 attempt.timeTaken || 0
