@@ -14,6 +14,7 @@ import Question from './Question';
 import QuizComplete from './QuizComplete';
 import AllowanceSpent from './AllowanceSpent.jsx';
 import { getSourceLabel } from '../../utils/sourceLabels';
+import { answeredIds } from '../../utils/answeredIds.js';
 import { UserContext } from '../../UserContext';
 import { useCopy, useLang } from '../../i18n';
 import quizCopy from '../../i18n/copy/quiz.js';
@@ -550,7 +551,8 @@ const QUIZ = () => {
             avg_time_per_question: parseFloat((duration / totalQuestions).toFixed(2)),
             topics_covered: topicsCovered,
             source: source === 'mix' ? 'general' : source,
-            question_ids: questionIds
+            question_ids: questionIds,
+            answered_question_ids: answeredIds(finalAnswers)
           };
         }
 

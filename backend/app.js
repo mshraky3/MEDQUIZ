@@ -67,6 +67,7 @@ import { makeCheckCompletionHandler } from './services/completionCheck.js';
 import { runRecallImport } from './services/recallImportService.js';
 import { markQuestionsSeen, MAX_SEEN_IDS } from './services/seenService.js';
 import { recordAttemptsBatch } from './services/attemptsBatch.js';
+import { quizUsage } from './services/quizUsage.js';
 import { insertFinalQuizAttempts, jsonBodyParser, FINAL_QUIZ_JSON_LIMIT } from './services/finalQuizAttempts.js';
 import { ensureQuestionImagesTables, attachQuestionImages } from './services/questionImagesService.js';
 import { isDisposableEmail, DISPOSABLE_EMAIL_MESSAGE } from './utils/disposableEmail.js';
@@ -4709,6 +4710,8 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
         topics_covered,
         source,
         question_ids,
+        // The ones that got an answer (see services/quizUsage.js).
+        answered_question_ids,
         question_attempts = [], // Array of question attempts with details
         quiz_type = 'practice',
         difficulty_level = 'mixed',
@@ -4942,9 +4945,10 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
         // a student who spent their trial on quizzes they closed used to arrive
         // at the paywall having seen none of what the subscription offers.
         //
-        // Billed on the questions in the submission rather than a client-sent
-        // count of "answered", since the client controls both — and the number
-        // it cannot lie its way past is the served counter, which the cap reads.
+        // Billed on what the client says was answered (a timed quiz that runs out
+        // submits every question but is not charged for the blank ones). The
+        // client controls that list, as it controls question_ids; the number it
+        // cannot lie its way past is the served counter, which the cap reads.
         // Under-reporting here just walks an account into the backlog block
         // sooner, so it is self-limiting.
         //
@@ -4952,9 +4956,12 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
         // the student's result is what they earned, and a counter is not worth
         // a 500 over. The WHERE clause re-confirms the free-tier condition
         // server-side so a paid account is never debited.
-        const billable = Array.isArray(question_ids) && question_ids.length > 0
-            ? question_ids.length
-            : Number(total_questions) || 0;
+        const usage = quizUsage({
+            questionIds: question_ids,
+            answeredQuestionIds: answered_question_ids,
+            totalQuestions: total_questions,
+        });
+        const billable = usage.billable;
         if (billable > 0) {
             try {
                 await db.query(
@@ -4992,12 +4999,12 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
         let milestones = [];
         try {
             // Record question progress for each answered question (parallelized)
-            if (question_ids && question_ids.length > 0) {
+            if (usage.questionIds.length > 0) {
                 const questionDetails = await db.query(`
                     SELECT id, question_type, source, sources
                     FROM questions
                     WHERE id = ANY($1)
-                `, [question_ids]);
+                `, [usage.questionIds]);
 
                 // Parallelize question progress inserts for better performance
                 const progressPromises = questionDetails.rows.map(question =>
