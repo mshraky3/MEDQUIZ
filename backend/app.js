@@ -67,6 +67,7 @@ import { makeCheckCompletionHandler } from './services/completionCheck.js';
 import { runRecallImport } from './services/recallImportService.js';
 import { markQuestionsSeen, MAX_SEEN_IDS } from './services/seenService.js';
 import { recordAttemptsBatch } from './services/attemptsBatch.js';
+import { spendFreeAllowance } from './services/quizCharge.js';
 import { insertFinalQuizAttempts, jsonBodyParser, FINAL_QUIZ_JSON_LIMIT } from './services/finalQuizAttempts.js';
 import { ensureQuestionImagesTables, attachQuestionImages } from './services/questionImagesService.js';
 import { isDisposableEmail, DISPOSABLE_EMAIL_MESSAGE } from './utils/disposableEmail.js';
@@ -4863,6 +4864,8 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
         );
 
         let result;
+        // True only when an EARLIER request saved this quiz and charged for it.
+        let savedByEarlierRequest = false;
         if (Number(retry_attempt) > 0) {
             const existing = await findAlreadyRecorded();
             if (existing.rows.length > 0) {
@@ -4870,6 +4873,7 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
                     user_id, id: existing.rows[0].id, retry_attempt,
                 });
                 result = existing;
+                savedByEarlierRequest = true;
             }
         }
 
@@ -4950,26 +4954,19 @@ app.post('/quiz-sessions', requireSession, async (req, res) => {
         //
         // Runs after the session row is committed and never fails the request:
         // the student's result is what they earned, and a counter is not worth
-        // a 500 over. The WHERE clause re-confirms the free-tier condition
-        // server-side so a paid account is never debited.
-        const billable = Array.isArray(question_ids) && question_ids.length > 0
-            ? question_ids.length
-            : Number(total_questions) || 0;
-        if (billable > 0) {
-            try {
-                await db.query(
-                    `UPDATE accounts
-                        SET free_questions_used = LEAST(COALESCE(free_allowance, ${LEGACY_FREE_QUESTION_ALLOWANCE}), free_questions_used + $1::int)
-                      WHERE id = $2
-                        AND is_admin_created = FALSE
-                        AND grandfathered_at IS NULL
-                        AND NOT (subscription_status = 'active'
-                                 AND subscription_expiry_date > NOW())`,
-                    [billable, user_id]
-                );
-            } catch (err) {
-                logger.error('Failed to spend free allowance on submit', err);
-            }
+        // a 500 over. services/quizCharge.js re-confirms the free-tier condition
+        // so a paid account is never debited, and a re-sent quiz that is already
+        // saved is not charged a second time.
+        try {
+            await spendFreeAllowance(db, {
+                userId: user_id,
+                questionIds: question_ids,
+                totalQuestions: total_questions,
+                legacyAllowance: LEGACY_FREE_QUESTION_ALLOWANCE,
+                alreadyRecorded: savedByEarlierRequest,
+            });
+        } catch (err) {
+            logger.error('Failed to spend free allowance on submit', err);
         }
 
         // ── Everything below is BOOKKEEPING, and must never fail the request ──

@@ -164,6 +164,49 @@
 }
 
 
+/* Finish now and see my result */
+.finish-now-button {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 14px;
+  padding: 10px 16px;
+  background: transparent;
+  color: var(--fg-2563eb);
+  border: 1px dashed var(--line-dbe6fb);
+  border-radius: 12px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.finish-now-button:hover {
+  background: var(--bg-eef4ff);
+}
+
+.finish-now-popup.unanswered-popup h3 {
+  color: var(--text-dark);
+}
+
+.finish-now-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.finish-now-actions .nav-button {
+  width: 100%;
+  height: auto;
+  min-height: 44px;
+}
+
+.quiz-result .result-early-note {
+  font-size: 0.95rem;
+  color: var(--text-light);
+}
+
+
 /* Unanswered Popup */
 .unanswered-popup-overlay {
   position: fixed;
