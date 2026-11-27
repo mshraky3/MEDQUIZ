@@ -44,3 +44,25 @@ export function testerSteps(config, copy) {
         { key: 'install', text: texts.install, href: config.downloadUrl, linkLabel: copy.openDownload },
     ];
 }
+
+/**
+ * The same steps as testerSteps, shown one at a time when a Google Group is the
+ * tester list (components/landing/AndroidTesterGuide.jsx). Sign-in is its own
+ * step because the free month starts there.
+ */
+export function guideSteps(config, guide, { googleAccount = false } = {}) {
+    const links = { group: config.groupUrl, optin: config.testerUrl, install: config.downloadUrl, signin: '' };
+    return Object.keys(links).map((key) => {
+        const step = guide.steps[key];
+        const lines = key === 'signin'
+            ? [step.open, googleAccount ? step.google : step.password, step.done]
+            : step.lines;
+        return { key, title: step.title, lines, href: links[key], button: step.button || '' };
+    });
+}
+
+/** A stored step number, kept inside the list. */
+export function clampStep(value, count) {
+    const n = Number.parseInt(value, 10);
+    return Number.isFinite(n) ? Math.min(Math.max(n, 0), count - 1) : 0;
+}

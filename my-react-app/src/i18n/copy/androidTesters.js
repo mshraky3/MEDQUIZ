@@ -33,7 +33,7 @@ const androidTestersCopy = {
         saudi: 'الاختبار المغلق متاح حاليًا في السعودية فقط.',
         guestSteps: [
             'أنشئ حسابك المجاني.',
-            'نعيدك إلى هنا لتكتب بريد Google الذي تستخدمه في Google Play.',
+            'نعيدك إلى هنا لتنضم إلى المجرّبين.',
             'تظهر لك خطوات تنزيل التطبيق.',
         ],
         guestCta: 'أنشئ حسابًا وانضم',
@@ -49,6 +49,49 @@ const androidTestersCopy = {
         joinedTitle: 'تم تسجيلك في قائمة المجرّبين',
         savedAs: 'البريد المسجّل:',
         nextTitle: 'خطواتك التالية',
+        oneTap: {
+            lead: 'سنسجّلك بهذا البريد:',
+            check: 'تأكّد أنه نفس البريد المستخدم في متجر Google Play على هاتفك.',
+            join: 'نعم، سجّلني',
+            other: 'أستخدم بريدًا آخر في هاتفي',
+        },
+        guide: {
+            progress: 'الخطوة {n} من {total}',
+            account: 'استخدم دائمًا هذا البريد:',
+            back: 'رجوع للخطوة السابقة',
+            helpTitle: 'ما اشتغلت معك؟',
+            help: [
+                'استخدم هاتف أندرويد.',
+                'تأكّد أنك داخل بنفس البريد الظاهر هنا. إذا عندك أكثر من حساب Google فبدّل الحساب.',
+                'إذا فتحت الموقع من داخل تيك توك أو تيليجرام أو إنستغرام، فافتحه في متصفح Chrome.',
+                'إذا ظهر أن التطبيق غير متاح، فانتظر قليلًا ثم جرّب مرة أخرى.',
+                'التطبيق متاح حاليًا في السعودية فقط.',
+            ],
+            steps: {
+                group: {
+                    title: 'انضم إلى مجموعة المجرّبين',
+                    lines: ['اضغط الزر بالأسفل.', 'في صفحة Google اضغط زر الانضمام إلى المجموعة (Join group).', 'بعدها ارجع إلى هذه الصفحة.'],
+                    button: 'افتح المجموعة',
+                },
+                optin: {
+                    title: 'وافق على تجربة التطبيق',
+                    lines: ['اضغط الزر بالأسفل.', 'في الصفحة التي تفتح اضغط زر الانضمام إلى الاختبار (Become a tester).', 'بعدها ارجع إلى هذه الصفحة.'],
+                    button: 'افتح صفحة الاختبار',
+                },
+                install: {
+                    title: 'نزّل التطبيق',
+                    lines: ['اضغط الزر بالأسفل.', 'في Google Play اضغط تثبيت (Install).'],
+                    button: 'افتح Google Play',
+                },
+                signin: {
+                    title: 'سجّل الدخول وخذ شهرك المجاني',
+                    open: 'افتح تطبيق SQB على هاتفك.',
+                    google: 'اضغط زر الدخول بحساب Google واختر نفس حسابك في SQB.',
+                    password: 'سجّل الدخول بنفس اسم المستخدم وكلمة المرور في SQB.',
+                    done: 'يُضاف الشهر المجاني تلقائيًا. لا تحتاج إلى أي خطوة أخرى.',
+                },
+            },
+        },
         stepsGroup: {
             group: 'انضم إلى مجموعة Google الخاصة بالمجرّبين بحساب Google نفسه الذي سجّلته.',
             optIn: 'من هاتف أندرويد، وبالحساب نفسه، افتح رابط الاختبار ووافق على الانضمام.',
@@ -91,7 +134,7 @@ const androidTestersCopy = {
         saudi: 'The closed test is currently available in Saudi Arabia only.',
         guestSteps: [
             'Create your free account.',
-            'We bring you back here to enter the Google email you use in Google Play.',
+            'We bring you back here to join the testers.',
             'You then see the steps to get the app.',
         ],
         guestCta: 'Create an account and join',
@@ -107,6 +150,49 @@ const androidTestersCopy = {
         joinedTitle: 'You are on the testers list',
         savedAs: 'Saved email:',
         nextTitle: 'Your next steps',
+        oneTap: {
+            lead: 'We will sign you up with this email:',
+            check: 'Check that it is the same email your phone uses in Google Play.',
+            join: 'Yes, sign me up',
+            other: 'My phone uses another email',
+        },
+        guide: {
+            progress: 'Step {n} of {total}',
+            account: 'Always use this email:',
+            back: 'Back to the previous step',
+            helpTitle: 'Not working?',
+            help: [
+                'Use an Android phone.',
+                'Check that you are signed in with the email shown here. If you have more than one Google account, switch to it.',
+                'If you opened this site inside TikTok, Telegram or Instagram, open it in Chrome.',
+                'If it says the app is not available, wait a while and try again.',
+                'The app is currently available in Saudi Arabia only.',
+            ],
+            steps: {
+                group: {
+                    title: 'Join the testers group',
+                    lines: ['Tap the button below.', 'On the Google page, tap the button to join the group (Join group).', 'Then come back to this page.'],
+                    button: 'Open the group',
+                },
+                optin: {
+                    title: 'Accept the app test',
+                    lines: ['Tap the button below.', 'On the page that opens, tap the button to join the test (Become a tester).', 'Then come back to this page.'],
+                    button: 'Open the test page',
+                },
+                install: {
+                    title: 'Install the app',
+                    lines: ['Tap the button below.', 'In Google Play, tap Install.'],
+                    button: 'Open Google Play',
+                },
+                signin: {
+                    title: 'Sign in and get your free month',
+                    open: 'Open the SQB app on your phone.',
+                    google: 'Tap the Google button and choose the same account you use for SQB.',
+                    password: 'Sign in with the same SQB username and password.',
+                    done: 'The free month is added automatically. There is nothing else to do.',
+                },
+            },
+        },
         stepsGroup: {
             group: 'Join the testers Google Group with the same Google account you entered.',
             optIn: 'On your Android phone, with that same account, open the test link and accept.',

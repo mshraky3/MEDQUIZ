@@ -25,7 +25,7 @@ const svc = await import('./androidTesters.js');
 const {
     ANDROID_TESTERS_CAP, ANDROID_TESTER_MONTHS, ANDROID_TESTER_EVENT,
     isAndroidTestersOfferEnabled, cleanPlayEmail, emailKey, ownerTesterEmails,
-    evaluateTesterOffer, joinAndroidTesters, redeemTesterOffer, getOfferStatus,
+    evaluateTesterOffer, joinAndroidTesters, redeemTesterOffer, getOfferStatus, suggestPlayEmail,
     buildTesterExport, exportToCsv,
 } = svc;
 const { default: testersRouter, androidTestersAdminRouter, androidTestersPublicRouter } = await import('../routes/androidTesters.js');
@@ -72,7 +72,7 @@ function poolOver(pg) {
 async function setup() {
     const pg = new PGlite();
     await pg.exec(`
-        CREATE TABLE accounts (id INT PRIMARY KEY, email_verified BOOLEAN DEFAULT TRUE,
+        CREATE TABLE accounts (id INT PRIMARY KEY, email TEXT, google_id TEXT, email_verified BOOLEAN DEFAULT TRUE,
             subscription_status TEXT, subscription_expiry_date TIMESTAMPTZ,
             is_admin_created BOOLEAN NOT NULL DEFAULT FALSE, grandfathered_at TIMESTAMPTZ,
             renewal_reminder_stage TEXT);
@@ -439,4 +439,12 @@ test('app.js mounts the admin export behind adminAuth and the session routes beh
     const src = fs.readFileSync(path.join(here, '..', 'app.js'), 'utf8');
     assert.match(src, /app\.use\('\/api\/admin\/android-testers', adminAuth,/);
     assert.match(src, /app\.use\('\/api\/android-testers', requireSession,/);
+});
+
+test('only a known Google address is suggested for one-tap joining', () => {
+    assert.equal(suggestPlayEmail({ email: 'Me@Gmail.com', google: false }), 'me@gmail.com');
+    assert.equal(suggestPlayEmail({ email: 'me@school.edu.sa', google: true }), 'me@school.edu.sa');
+    assert.equal(suggestPlayEmail({ email: 'me@hotmail.com', google: false }), null);
+    assert.equal(suggestPlayEmail({ email: null, google: true }), null);
+    assert.equal(suggestPlayEmail(undefined), null);
 });
