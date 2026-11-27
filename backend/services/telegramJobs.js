@@ -12,7 +12,7 @@ import { renderTopicCard } from './telegramImageService.js';
 import {
     pickChannelQuestion, recordSentQuestion, channelPostsToday, channelPostsTodayFor, channelPostsTodayForTracks, pickExplainedQuestion, CHANNEL_TRACKS,
     findDueForWeeklyDigest, computeWeakTopics, stampWeeklyDigestSent, markBlocked,
-    pickChannelSummary, recordSentSummary, recordSentMessage, findMessagesDueForDeletion, removeSentMessageLog,
+    pickChannelSummary, recordSentSummary, recordSentMessage, findMessagesDueForDeletion, removeSentMessageLog, parkUndeletableMessage,
 } from './telegramContentService.js';
 
 import { channelFor, hasSeparateChannels, mainChannel, tracksOn } from './telegramChannels.js';
@@ -204,9 +204,12 @@ export async function postChannelAnnouncement(db, { text, buttonText, buttonUrl,
  * below is really only a fallback for before the one-time userbot login is
  * done (see scripts/telegramUserLogin.js).
  */
+const BOT_DELETE_LIMIT_MS = 48 * 60 * 60 * 1000;
+
 export async function runMessageCleanupJob(db) {
     const due = await findMessagesDueForDeletion(db);
     let deleted = 0;
+    let parked = 0;
     const errors = [];
 
     if (isUserbotConfigured()) {
@@ -226,7 +229,7 @@ export async function runMessageCleanupJob(db) {
                 for (const row of rows) errors.push({ id: row.id, error: err.message });
             }
         }
-        return { deleted, candidates: due.length, errors };
+        return { deleted, parked, candidates: due.length, errors };
     }
 
     for (const row of due) {
@@ -241,12 +244,19 @@ export async function runMessageCleanupJob(db) {
             // blip) is likely transient: keep the row logged so tomorrow's
             // run retries it, instead of silently abandoning a message that
             // is still sitting in the channel.
+            // "message can't be deleted" on a post older than the Bot API's
+            // limit is permanent: set it aside. On a younger post it points to
+            // lost admin rights, so that stays an error and is retried.
+            const tooOld = !(Date.now() - new Date(row.created_at).getTime() < BOT_DELETE_LIMIT_MS);
             if (/message to delete not found/i.test(err.message || '')) {
                 await removeSentMessageLog(db, row.id);
+            } else if (tooOld && /message can't be deleted/i.test(err.message || '')) {
+                await parkUndeletableMessage(db, row.id);
+                parked++;
             } else {
                 errors.push({ id: row.id, error: err.message });
             }
         }
     }
-    return { deleted, candidates: due.length, errors };
+    return { deleted, parked, candidates: due.length, errors };
 }

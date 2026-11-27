@@ -38,6 +38,7 @@
 import { sendMail, SUPPORT_REPLY_TO } from './mailer.js';
 import { TRACKS, normalizeTrack } from '../config/tracks.js';
 import { unsubUrl } from '../routes/admin-broadcast.js';
+import { listPlansForDisplay, getOfferInfo } from './paymentService.js';
 
 const SITE = 'https://www.smle-question-bank.com';
 const SUPPORT_EMAIL = SUPPORT_REPLY_TO;
@@ -431,12 +432,50 @@ export const sendFeedbackEmail = async (to, username, track, opts = {}) => {
  *
  * @param {{questionsAnswered:number, accuracy:number, quizzesCompleted:number}} stats
  */
+
+/**
+ * The price lines of that mail, from the live plan list: the same numbers the
+ * checkout charges at `nowMs`, offer included. Never type a price here. While
+ * an offer is live it also says until when (a mail can be opened after it) and
+ * what the regular price is.
+ */
+export function individualPriceLines(lang, nowMs = Date.now()) {
+  const plans = new Map(listPlansForDisplay('individual', nowMs).map((p) => [p.id, p]));
+  const sar = (halalas) => String(halalas / 100);
+  const monthly = sar(plans.get('monthly').priceHalalas);
+  const four = plans.get('four_month');
+  const year = plans.get('annual');
+  const prices = T(lang,
+    `${monthly} ريالاً شهرياً · ${sar(four.priceHalalas)} لأربعة أشهر · ${sar(year.priceHalalas)} للسنة`,
+    `SAR ${monthly} a month · ${sar(four.priceHalalas)} for four months · ${sar(year.priceHalalas)} for a year`);
+
+  const offer = getOfferInfo(nowMs);
+  const cut = [
+    [four, T(lang, 'لأربعة أشهر', 'for four months')],
+    [year, T(lang, 'للسنة', 'for a year')],
+  ].filter(([plan]) => plan.offerId);
+  if (!offer || cut.length === 0) return { prices, offer: '' };
+
+  const until = offer.endsAt
+    ? new Intl.DateTimeFormat(lang === 'en' ? 'en-GB' : 'ar-SA-u-ca-gregory-nu-latn',
+        { timeZone: 'Asia/Riyadh', day: 'numeric', month: 'long' }).format(new Date(offer.endsAt))
+    : '';
+  const regular = cut.map(([plan, label]) => `${sar(plan.regularPriceHalalas)} ${label}`).join(' · ');
+  return {
+    prices,
+    offer: T(lang,
+      `يشمل سعر عرض ${until ? `ينتهي يوم ${until} (بتوقيت الرياض)` : 'لفترة محدودة'}. السعر المعتاد: ${regular}.`,
+      `Includes an offer price ${until ? `that ends on ${until} (Riyadh time)` : 'for a limited time'}. Regular price: ${regular}.`),
+  };
+}
+
 export const sendTrialEndedEmail = async (to, username, track, stats = {}, opts = {}) => {
   const lang = normalizeLang(opts.lang);
   const c = copyFor(track, lang);
   const answered = Number(stats.questionsAnswered) || 0;
   const accuracy = Math.round(Number(stats.accuracy) || 0);
   const didSomething = answered > 0;
+  const priceLines = individualPriceLines(lang, opts.nowMs);
 
   const statsBlock = didSomething ? `
             <table cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:24px;">
@@ -518,9 +557,9 @@ export const sendTrialEndedEmail = async (to, username, track, stats = {}, opts 
             </table>
             <div style="background:#0b1021;border-radius:12px;padding:18px 22px;margin-bottom:26px;border:1px solid #1e293b;">
               <p style="margin:0 0 4px;font-size:12.5px;color:#94a3b8;">
-                ${T(lang, '50 ريالاً شهرياً · 129 لأربعة أشهر · 299 للسنة',
-                          'SAR 50 a month · 129 for four months · 299 for a year')}
+                ${priceLines.prices}
               </p>
+              ${priceLines.offer ? `<p style="margin:6px 0 0;font-size:12.5px;color:#fbbf24;line-height:1.7;">${priceLines.offer}</p>` : ''}
               <p style="margin:8px 0 0;font-size:12px;color:#64748b;">
                 ${T(lang, 'دفعة واحدة، بدون تجديد تلقائي. وهناك اشتراكات جماعية إن كنتم مجموعة تذاكر معاً.',
                           'One payment, no automatic renewal. Group plans are available if you are studying together.')}

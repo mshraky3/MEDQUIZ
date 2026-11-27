@@ -598,6 +598,9 @@ const Subscribe = () => {
                         charges them. Everything that is not the act of paying
                         sits below it, so the form is the first thing under the
                         price. */}
+                    {/* Moyasar rejects a card name that is not Latin letters or
+                        is a single word, so say it before they type. */}
+                    {status === 'ready' && <p className="subscribe-cardhint">{t.cardNameHint}</p>}
                     <div
                         className="mysr-host"
                         ref={hostRef}

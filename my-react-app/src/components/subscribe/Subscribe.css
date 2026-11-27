@@ -402,6 +402,13 @@
     color: var(--primary-color-ink, var(--primary-color, #2563eb));
 }
 
+.subscribe-cardhint {
+    margin: 0 0 8px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-light);
+}
+
 .mysr-form {
     margin-top: 8px;
 }

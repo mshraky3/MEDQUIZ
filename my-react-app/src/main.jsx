@@ -24,7 +24,7 @@ import './theme/palette.css'
 import App from './App.jsx';
 import { createBrowserRouter, RouterProvider, Navigate, Outlet } from 'react-router-dom';
 import { createRoot } from 'react-dom/client';
-import { captureTouch } from './utils/analytics.js';
+import { captureTouch, captureLandingAttribution } from './utils/analytics.js';
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 
@@ -285,6 +285,9 @@ const router = createBrowserRouter([{
 
 // Remember which campaign link brought this visit (any page, not only landing).
 captureTouch();
+// And where a new visitor came from, whichever page they landed on: search and
+// ChatGPT mostly land on the question and past-paper pages.
+captureLandingAttribution();
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

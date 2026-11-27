@@ -64,6 +64,7 @@ test('never started: candidate query keeps every safety guard', async () => {
         'never_started_email_sent_at IS NULL',
         'free_questions_used',
         'user_quiz_sessions',
+        'NOT EXISTS (SELECT 1 FROM user_question_progress uqp WHERE uqp.user_id = a.id)',
         'email_verified = TRUE',
         'email_opt_out',
         'is_admin_created = FALSE',

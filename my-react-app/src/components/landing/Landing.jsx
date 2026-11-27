@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { safeTrack, trackFunnel, captureLandingAttribution } from '../../utils/analytics.js';
+import { safeTrack, trackFunnel } from '../../utils/analytics.js';
 import Icon from '../common/Icon.jsx';
 import HeroArt from './HeroArt.jsx';
 import ExamCountdown from './ExamCountdown.jsx';
@@ -18,7 +18,6 @@ import { useNationalDayOffer } from '../../utils/nationalDay.js';
 import WhiteFridaySection from './WhiteFridaySection.jsx';
 import { GoldenStrip } from '../common/GoldenMonths.jsx';
 import GoldenMonthsSection from './GoldenMonthsSection.jsx';
-import ThemeAnnouncement from './ThemeAnnouncement.jsx';
 import RecallAnnouncement from './RecallAnnouncement.jsx';
 import TelegramCard from './TelegramCard.jsx';
 import AndroidTestersSection from './AndroidTestersSection.jsx';
@@ -137,11 +136,6 @@ const Landing = () => {
     { key: 'files', label: t.compare.colFiles, icon: 'folder' },
     { key: 'courses', label: t.compare.colCourses, icon: 'users' },
   ];
-
-  // First-touch attribution — fires once per browser ever, not on every visit.
-  useEffect(() => {
-    captureLandingAttribution();
-  }, []);
 
   // Bank size and deck count, counted from the database on request rather than
   // typed into the copy. /api/public/stats has existed (and been cached) for a
@@ -370,7 +364,6 @@ const Landing = () => {
           {/* Dark mode launch note (Oct 2026). Under any live offer, above the
               product pitch; hides itself after its end date. */}
           <RecallAnnouncement />
-          <ThemeAnnouncement />
           <TelegramCard />
 
           {/* Two tracks, one platform. Placed high on the page so a nursing

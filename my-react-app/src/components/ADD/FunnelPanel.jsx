@@ -24,7 +24,7 @@ import { PALETTE, AXIS_TICK, GRID, TOOLTIP } from './ui/chartTheme.js';
  * the outcomes sit next to it as context, not inside the funnel math.
  */
 const MAIN_FUNNEL = [
-    { event: 'landing_view', label: 'Viewed the landing page' },
+    { event: 'landing_view', label: 'New visitor, first page (any page)' },
     { event: 'landing_cta_signup_click', label: 'Clicked a signup CTA' },
     { event: 'signup_view', label: 'Viewed the signup page' },
     { event: 'signup_track_selected', label: 'Chose a study track' },

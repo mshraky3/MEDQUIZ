@@ -137,6 +137,7 @@ const supportCopy = {
             // foreign ones), so say so before the form instead of after eight
             // failed attempts.
             cardsNote: 'الدفع متاح حالياً بالبطاقات الصادرة في السعودية فقط (مدى، فيزا، ماستركارد).',
+            cardNameHint: 'اكتب اسم حامل البطاقة بالإنجليزي: الاسم الأول والأخير',
             policyBefore: 'الاشتراك لا يُجدَّد تلقائياً — التجديد يدوي. بالمتابعة فإنك توافق على',
             terms: 'شروط الاستخدام',
             and: 'و',
@@ -285,6 +286,7 @@ const supportCopy = {
             secureNoteProvider: 'Moyasar',
             secureNoteAfter: '. We never store your card details on our servers.',
             cardsNote: 'Payment currently works with cards issued in Saudi Arabia only (mada, Visa, Mastercard).',
+            cardNameHint: 'Name on card in English letters: first and last name',
             // Label on the perks disclosure. The plan picker and the card form
             // are what someone opens this page for; the perks are the
             // supporting detail, one tap away instead of a third of the page.
