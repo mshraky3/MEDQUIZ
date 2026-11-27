@@ -49,7 +49,8 @@ let drift = 0;
 for (const f of files) {
   const body = f.raw ? f.body : banner(f.from) + f.body;
   if (check) {
-    const current = existsSync(f.target) ? readFileSync(f.target, 'utf8') : '';
+    // A Windows checkout (core.autocrlf) holds CRLF: line endings are not drift.
+    const current = existsSync(f.target) ? readFileSync(f.target, 'utf8').replace(/\r\n/g, '\n') : '';
     if (current !== body) {
       drift += 1;
       console.log(`drifted: ${f.target.replace(out, 'summaries')}`);

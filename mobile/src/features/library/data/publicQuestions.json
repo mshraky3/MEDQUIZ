@@ -1,14 +1,20 @@
 {
-  "generatedAt": "2026-10-10",
+  "generatedAt": "2026-11-27",
   "perSpecialty": 24,
   "minExplanation": 500,
   "count": 240,
-  "bankTotal": 13036,
+  "bankTotal": 16849,
   "collections": [
     {
       "source": "DentalExplained",
       "track": "dental",
       "total": 2601,
+      "published": 0
+    },
+    {
+      "source": "DentalRecall2025",
+      "track": "dental",
+      "total": 954,
       "published": 0
     },
     {
@@ -36,9 +42,21 @@
       "published": 0
     },
     {
+      "source": "MedicalNovemberRecall",
+      "track": "medical",
+      "total": 1966,
+      "published": 0
+    },
+    {
+      "source": "MedicalOctoberRecall",
+      "track": "medical",
+      "total": 1483,
+      "published": 0
+    },
+    {
       "source": "MedicalMidgard",
       "track": "medical",
-      "total": 1280,
+      "total": 1279,
       "published": 53
     },
     {
@@ -50,14 +68,20 @@
     {
       "source": "MedicalGameBoy",
       "track": "medical",
-      "total": 545,
+      "total": 544,
       "published": 9
     },
     {
       "source": "NursingConfirmed",
       "track": "nursing",
-      "total": 1514,
+      "total": 1513,
       "published": 118
+    },
+    {
+      "source": "NursingRecall",
+      "track": "nursing",
+      "total": 737,
+      "published": 0
     },
     {
       "source": "NursingMostRepeated",
@@ -359,8 +383,8 @@
       "specialty": "medicine",
       "specialtyLabelEn": "Medicine",
       "specialtyLabelAr": "الباطنة",
-      "headline": "Patient came to your clinic today he mentioned he had a recent and complaining of mild abdominal pain after…",
-      "stem": "Patient came to your clinic today he mentioned he had a recent and complaining of mild abdominal pain after accident. O/E: Vitally stable. Mild abdominal pain mainly in the right upper quadrant. No other complaints or findings. Vitals were all listed, all were normal BP: 110/70 SURE RR: I think 18 temp: 36.6 ? What is the most appropriate next step?",
+      "headline": "Patient came to your clinic today complaining of mild abdominal pain after a recent accident.",
+      "stem": "Patient came to your clinic today complaining of mild abdominal pain after a recent accident. O/E: Vitally stable. Mild abdominal pain mainly in the right upper quadrant. No other complaints or findings. Vitals were all normal: BP 110/70, RR 18, temp 36.6. What is the most appropriate next step?",
       "options": [
         "Abdominal ultrasound",
         "Refer him to emergency department for further evaluation",
@@ -2301,9 +2325,9 @@
       "stem": "What is the correct order for abdominal assessment?",
       "options": [
         "Inspection, Auscultation, Percussion, Palpation",
-        "didn't recall",
-        "didn't recall",
-        "didn't recall"
+        "Palpation, Inspection, Auscultation, Percussion",
+        "Auscultation, Inspection, Palpation, Percussion",
+        "Inspection, Palpation, Percussion, Auscultation"
       ],
       "correctIndex": 0,
       "explanation": "**Core Concept:** The sequence of abdominal assessment differs from other body systems to prevent altering bowel sounds and causing discomfort that could affect the rest of the examination.\n**Clinical Presentation:**\n- N/A (Physical examination technique)\n**Diagnosis:**\n- N/A\n**Management:**\n- *Acute:* The correct sequence is *Inspection, Auscultation, Percussion, and Palpation*. Auscultation must be done before percussion and palpation, as these actions can stimulate bowel activity and create false bowel sounds.\n- *Definitive:* Document findings systematically, noting any masses, organomegaly, or abnormal sounds.",
@@ -2320,9 +2344,8 @@
       "stem": "What does the ethical principle of Beneficence refer to?",
       "options": [
         "actions that promote the well-being of others; taking positive actions to help clients",
-        "didn't recall",
-        "didn't recall",
-        "didn't recall"
+        "avoiding harm to others; refraining from actions that may injure clients",
+        "respecting the right of others to decide; letting clients make their own choices"
       ],
       "correctIndex": 0,
       "explanation": "**Core Concept:** Beneficence is a fundamental ethical principle in healthcare that mandates providers to take positive actions to promote the well-being, health, and safety of their patients. It goes beyond merely avoiding harm (non-maleficence) to actively doing good and acting in the best interest of the client.\n**Clinical Presentation:**\n- N/A (Ethical concept).\n- Complications of violating beneficence: Neglect, failure to rescue, and substandard care.\n**Diagnosis:**\n- First-line/Gold Standard: Ethical decision-making frameworks and institutional ethics committee consultations when facing moral dilemmas.\n**Management:**\n- Acute: Advocate for the patient's needs, provide compassionate care, and ensure all interventions are evidence-based and aimed at improving patient outcomes.\n- Definitive: Continuous ethics education, fostering a culture of patient-centered care, and balancing beneficence with patient autonomy.",
@@ -2772,8 +2795,8 @@
       "specialty": "medical surgical nursing",
       "specialtyLabelEn": "Medical-Surgical Nursing",
       "specialtyLabelAr": "التمريض الباطني والجراحي",
-      "headline": "1196.",
-      "stem": "1196. Site of iilestomy :",
+      "headline": "Site of ileostomy:",
+      "stem": "Site of ileostomy:",
       "options": [
         "Left lower",
         "Right lower",
@@ -3136,12 +3159,12 @@
       "headline": "What is the normal structure of the Umbilical Cord?",
       "stem": "What is the normal structure of the Umbilical Cord?",
       "options": [
-        "One big vein and two small arteries",
-        "didn't recall",
-        "didn't recall",
-        "didn't recall"
+        "Two big veins and one small artery",
+        "One big vein and one small artery",
+        "Two big veins and two small arteries",
+        "One big vein and two small arteries"
       ],
-      "correctIndex": 0,
+      "correctIndex": 3,
       "explanation": "Core Concept: The normal umbilical cord contains three blood vessels: one large umbilical vein and two smaller umbilical arteries. The single vein carries oxygenated, nutrient-rich blood from the placenta to the fetus, while the two arteries carry deoxygenated, waste-rich blood from the fetus back to the placenta.\n\nClinical Presentation:\n- Normal cord: Three vessels, covered by Wharton's jelly.\n- Single Umbilical Artery (SUA): Associated with an increased risk of congenital anomalies (cardiac, renal, chromosomal).\n\nDiagnosis:\n- First-line diagnostic plan: Visual inspection and counting of the cord vessels immediately after delivery.\n- Gold standard test: Prenatal or postnatal ultrasound and comprehensive fetal anomaly scan if a single umbilical artery is identified.\n\nManagement:\n- Acute management: Proper clamping and cutting of the cord after birth. Routine newborn care.\n- Gold standard long-term/definitive management: If a two-vessel cord (SUA) is found, conduct a thorough pediatric evaluation, including renal and cardiac ultrasounds, to rule out associated congenital defects.",
       "source": "NursingConfirmed"
     },
@@ -3250,12 +3273,12 @@
       "headline": "642.",
       "stem": "642. Puerperal sepsis symptoms include:",
       "options": [
-        "Temperature of 38C or higher 2 – 10 days postpartum",
-        "didn't recall",
-        "didn't recall",
-        "didn't recall"
+        "Temperature below 36C 2 – 10 days postpartum",
+        "Bradycardia and scanty lochia in the first week",
+        "Temperature of 37.5C on the first postpartum day",
+        "Temperature of 38C or higher 2 – 10 days postpartum"
       ],
-      "correctIndex": 0,
+      "correctIndex": 3,
       "explanation": "**Core Concept:** Puerperal sepsis (postpartum infection) is an infection of the reproductive tract occurring after childbirth. The Joint Commission on Maternal Health defines it using specific temperature criteria to distinguish it from normal postpartum physiological changes (like breast engorgement).\n**Clinical Presentation:**\n- Fever, chills, malaise, anorexia.\n- Pelvic pain, uterine tenderness, foul-smelling lochia.\n**Diagnosis:**\n- *First-line:* The classic definition is a *temperature of 38°C (100.4°F) or higher on any two of the first 10 days postpartum, exclusive of the first 24 hours*.\n- *Gold Standard:* Blood cultures, endometrial cultures, and CBC.\n**Management:**\n- *Acute:* Obtain cultures and initiate broad-spectrum IV antibiotics (e.g., Clindamycin and Gentamicin).\n- *Definitive:* Supportive care, hydration, antipyretics, and monitoring for complications like pelvic abscess or septic pelvic thrombophlebitis.",
       "source": "NursingConfirmed"
     },
@@ -3266,8 +3289,8 @@
       "specialty": "pediatric nursing",
       "specialtyLabelEn": "Pediatric Nursing",
       "specialtyLabelAr": "تمريض الأطفال",
-      "headline": "- year-old child was admitted with suspected appendicitis.",
-      "stem": "- year-old child was admitted with suspected appendicitis. A nurse was evaluating the child’s condition and the mother stated that the child did have his bowel movement for the past two days and requested for natives. What is the risk of giving laxative to patient with appendicitis?",
+      "headline": "A child was admitted with suspected appendicitis.",
+      "stem": "A child was admitted with suspected appendicitis. A nurse was evaluating the child’s condition and the mother stated that the child did have his bowel movement for the past two days and requested for laxatives. What is the risk of giving laxative to patient with appendicitis?",
       "options": [
         "Pain",
         "Fever",
@@ -3308,9 +3331,9 @@
       "stem": "What is the Alhj vaccine?",
       "options": [
         "Hib vaccine (meningitis vaccine)",
-        "didn't recall",
-        "didn't recall",
-        "didn't recall"
+        "BCG vaccine (tuberculosis vaccine)",
+        "Rotavirus vaccine (diarrhea vaccine)",
+        "MMR vaccine (measles vaccine)"
       ],
       "correctIndex": 0,
       "explanation": "**Core Concept:** The question refers to meningitis prevention vaccines. The *Hib (Haemophilus influenzae type b)* vaccine is a crucial childhood immunization that prevents Hib meningitis, epiglottitis, and pneumonia.\n**Clinical Presentation:**\n- N/A (Preventive immunology)\n**Diagnosis:**\n- N/A\n**Management:**\n- *Acute:* Administer the *Hib vaccine* according to the national immunization schedule (typically at 2, 4, 6, and 12-15 months) to prevent life-threatening bacterial meningitis.\n- *Definitive:* Ensure completion of the primary series and booster doses to maintain long-term immunity.",
@@ -3421,12 +3444,12 @@
       "headline": "A physician has ordered gavage feeding every 4 hours for A 12-week-old infant with failure to thrive.",
       "stem": "A physician has ordered gavage feeding every 4 hours for A 12-week-old infant with failure to thrive. in order to know how far toinsert the feeding tube.The nurse should measure the distancefrom which of the following?",
       "options": [
+        "The corner of the infant's mouth to the earlobe only",
         "The tip of the infant's nose to the ear and then to the xiphoid process of the sternum",
-        "didn't recall",
-        "didn't recall",
-        "didn't recall"
+        "The tip of the infant's nose to the chin and then to the clavicle",
+        "The earlobe to the sternal notch and then to the pubic bone"
       ],
-      "correctIndex": 0,
+      "correctIndex": 1,
       "explanation": "Core Concept: For infant gavage feeding, the feeding tube insertion length is measured using the NEX method: from the tip of the nose to the earlobe and then down to the xiphoid process. This estimates the distance needed for the tube tip to reach the stomach and reduces the risk of pulmonary placement or post-pyloric insertion.\nClinical Presentation: • Failure to thrive may present with poor feeding, poor weight gain, dehydration, and delayed growth. • Tube-feeding complications can include aspiration, vomiting, tube misplacement, mucosal trauma, and respiratory distress.\nDiagnosis: 1) First-line: measure the NEX distance externally before insertion and secure the tube at the measured length. 2) Gold standard: radiographic confirmation of tube tip position; bedside gastric aspirate pH testing supports correct gastric placement when X-ray is not immediately available.\nManagement: Acute - measure correctly, insert the tube gently, verify placement before each feed, and stop feeding if respiratory distress occurs. Definitive/long-term - scheduled gavage feeds, strict intake/output monitoring, daily weights, and caregiver education on safe feeding techniques.",
       "source": "NursingConfirmed"
     },
@@ -4087,9 +4110,9 @@
       "stem": "According to the recalled notes, Alzheimer's disease is associated with a deficiency in which neurotransmitter?",
       "options": [
         "Serotonin",
-        "didn't recall",
-        "didn't recall",
-        "didn't recall"
+        "Histamine",
+        "GABA",
+        "Dopamine"
       ],
       "correctIndex": 0,
       "explanation": "**Core Concept:** Alzheimer's disease is a neurodegenerative disorder characterized by cognitive decline. While acetylcholine deficiency is the primary hallmark, deficits in other neurotransmitters like *serotonin* and norepinephrine also occur, contributing significantly to the neuropsychiatric symptoms (depression, agitation).\n**Clinical Presentation:**\n- Memory loss, confusion, mood swings, depression, and behavioral changes.\n**Diagnosis:**\n- *First-line:* Cognitive assessments (MMSE, MoCA).\n- *Gold Standard:* Clinical diagnosis supported by PET scans (amyloid/tau) and ruling out reversible causes.\n**Management:**\n- *Acute:* Manage behavioral and mood symptoms; SSRIs may be used to address depression associated with serotonin deficits.\n- *Definitive:* Cholinesterase inhibitors (donepezil) and NMDA receptor antagonists (memantine) for cognitive symptoms.",
@@ -4315,9 +4338,9 @@
       "stem": "What is the antidote for Morphine?",
       "options": [
         "Naloxone (Narcan)",
-        "didn't recall",
-        "didn't recall",
-        "didn't recall"
+        "Flumazenil (Romazicon)",
+        "Vitamin K (Phytonadione)",
+        "N-acetylcysteine (Mucomyst)"
       ],
       "correctIndex": 0,
       "explanation": "**Core Concept:** Morphine is an opioid analgesic that can cause severe respiratory depression, sedation, and miosis in overdose. Naloxone is a competitive opioid receptor antagonist.\n**Clinical Presentation:**\n- Pinpoint pupils, respiratory depression, CNS depression, coma.\n**Diagnosis:**\n- *First-line:* Clinical assessment of respiratory rate and level of consciousness.\n- *Gold Standard:* N/A (Clinical emergency diagnosis).\n**Management:**\n- *Acute:* Administer *Naloxone (Narcan)* IV, IM, or intranasally to rapidly reverse opioid-induced respiratory depression.\n- *Definitive:* Continuous monitoring, as the half-life of naloxone is shorter than most opioids, which may require repeat doses or a continuous infusion to prevent renarcotization.",

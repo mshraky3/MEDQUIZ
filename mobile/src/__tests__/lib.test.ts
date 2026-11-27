@@ -221,6 +221,12 @@ describe('appRouteForWebPath (notification CTAs and doc links)', () => {
     expect(appRouteForWebPath('/exams/smle/format')).toBe('/exams/smle/format');
   });
 
+  it('opens signup with the track the exam dates page links to', () => {
+    expect(appRouteForWebPath('/signup?track=nursing')).toEqual({ pathname: '/signup', params: { track: 'nursing' } });
+    expect(appRouteForWebPath('/en/signup?track=dental')).toEqual({ pathname: '/signup', params: { track: 'dental' } });
+    expect(appRouteForWebPath('/signup')).toBe('/signup');
+  });
+
   it('strips the English prefix, queries and hashes', () => {
     expect(appRouteForWebPath('/en/analysis')).toBe('/(tabs)/analysis');
     expect(appRouteForWebPath('/en')).toBe('/(tabs)');

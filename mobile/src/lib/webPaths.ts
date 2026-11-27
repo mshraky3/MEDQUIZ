@@ -17,6 +17,10 @@ export function appRouteForWebPath(webPath: string | null | undefined): Href | n
   if (p === '/summaries') return '/(tabs)/summaries';
   const deck = /^\/summaries\/([^/]+)$/.exec(p);
   if (deck) return { pathname: '/summaries/[slug]', params: { slug: deck[1] } };
+  if (p === '/signup') {
+    const track = /(?:^|&)track=([a-z]+)/.exec(query)?.[1];
+    return track ? { pathname: '/signup', params: { track } } : '/signup';
+  }
   if (p === '/subscribe' || p === '/payment/callback') return '/subscribe';
   if (p === '/account') return '/account';
   if (p === '/groups') return '/groups';

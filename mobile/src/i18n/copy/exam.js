@@ -1,3 +1,5 @@
+// AUTO-COPIED from my-react-app/src/i18n/copy/exam.js. Do not edit here:
+// change the website's file, then run `npm run sync:copy` in mobile/.
 /**
  * Copy for exam mode (/exam): an exam-style simulation of the licensing exam.
  *
