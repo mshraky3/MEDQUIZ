@@ -28,6 +28,7 @@ export const INTEGRITY_CHECKS = [
         sql: `SELECT f.session_id, COUNT(*)::int AS n
                 FROM final_quiz_attempts f JOIN questions q ON q.id = f.question_id
                WHERE f.created_at > NOW() - ${WINDOW}
+                 AND f.user_answer <> '' -- a skipped question, not a wrong pairing
                  AND f.user_answer IS DISTINCT FROM q.option1 AND f.user_answer IS DISTINCT FROM q.option2
                  AND f.user_answer IS DISTINCT FROM q.option3 AND f.user_answer IS DISTINCT FROM q.option4
                GROUP BY 1 ORDER BY n DESC LIMIT 10`,
