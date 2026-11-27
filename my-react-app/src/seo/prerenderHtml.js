@@ -183,6 +183,7 @@ const FOOTER_NAV_LINKS = [
     { href: '/exams', ar: 'اختبارات الهيئة: الشكل والتوزيع ودرجة النجاح', en: 'The exams: format, blueprint and pass mark' },
     { href: '/questions', ar: 'أسئلة تدريبية مجانية', en: 'Free practice questions' },
     { href: '/past-papers', ar: 'تجميعات أسئلة SMLE وSNLE', en: 'SMLE & SNLE question collections' },
+    { href: '/telegram', ar: 'قنوات SQB على تلجرام', en: 'SQB Telegram channels' },
     ...(HAS_STORIES
         ? [{ href: '/success-stories', ar: 'قصص نجاح الطلاب', en: 'Student success stories' }]
         : []),

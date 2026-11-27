@@ -5,13 +5,19 @@
  *
  * React-free and browser-free: the build-time prerender imports it too.
  */
-import { stripLocale } from '../seo/locales.js';
+import { localizedPath, stripLocale } from '../seo/locales.js';
 
 export const TELEGRAM_CHANNELS = {
     medical: 'sqb_exam',
     nursing: 'sqb_snle',
     dental: 'sqb_sdle',
 };
+
+/** The one page that lists every channel (components/telegram/TelegramHub.jsx). */
+export const TELEGRAM_HUB_PATH = '/telegram';
+
+/** Display order of the channels when nothing says which one comes first. */
+export const CHANNEL_ORDER = ['medical', 'nursing', 'dental'];
 
 /** The channel link for a track; anything unknown gets the main (medicine) channel. */
 export function telegramUrl(track) {
@@ -31,19 +37,44 @@ export function trackForPath(pathname = '/') {
     return null;
 }
 
-const EXAM = { nursing: 'SNLE', dental: 'SDLE' };
+const EXAM = { medical: 'SMLE', nursing: 'SNLE', dental: 'SDLE' };
 
 /**
- * The "this exam has its own channel" box for the prerendered nursing and dental
- * pages; '' for medicine and mixed pages. Same markup and words as the React
- * components/common/TrackTelegramLink.jsx. `copy` is telegramCardCopy[lang].
+ * Every channel, the student's own first and marked `own`. With no track (or an
+ * unknown one) the default order is kept and nothing is marked.
+ */
+export function orderedChannels(ownTrack = null) {
+    const own = CHANNEL_ORDER.includes(ownTrack) ? ownTrack : null;
+    const order = own ? [own, ...CHANNEL_ORDER.filter((track) => track !== own)] : CHANNEL_ORDER;
+    return order.map((track) => ({
+        track,
+        exam: EXAM[track],
+        handle: `@${TELEGRAM_CHANNELS[track]}`,
+        url: telegramUrl(track),
+        own: track === own,
+    }));
+}
+
+/**
+ * The "this exam has its own channel" box for the prerendered public pages of one
+ * track; '' for mixed pages (they use telegramHubBoxHtml). Same markup and words
+ * as the React components/common/TrackTelegramLink.jsx. `copy` is
+ * telegramCardCopy[lang].
  */
 export function trackTelegramHtml(track, copy) {
-    if (!EXAM[track]) return '';
+    if (!CHANNEL_ORDER.includes(track)) return '';
     return `      <aside class="trk-tg">
         <p>${copy.trackTitle(EXAM[track])}</p>
         <a class="trk-tg-btn" href="${telegramUrl(track)}" target="_blank" rel="noopener noreferrer">${copy.cta}</a>
       </aside>`;
 }
 
-export const trackExamName = (track) => EXAM[track] || '';
+/** The box for a page about no single exam: it sends the reader to the hub. */
+export function telegramHubBoxHtml(copy, lang) {
+    return `      <aside class="trk-tg">
+        <p>${copy.hubBoxTitle}</p>
+        <a class="trk-tg-btn" href="${localizedPath(TELEGRAM_HUB_PATH, lang)}">${copy.hubBoxCta}</a>
+      </aside>`;
+}
+
+export const trackExamName = (track) => (CHANNEL_ORDER.includes(track) ? EXAM[track] : '');

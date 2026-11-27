@@ -4,8 +4,10 @@ import Icon from '../common/Icon.jsx';
 import Spinner from '../common/Spinner.jsx';
 import { UserContext } from '../../UserContext';
 import { userTrack } from '../../utils/tracks.js';
+import { TELEGRAM_HUB_PATH, orderedChannels } from '../../utils/telegramChannels.js';
+import { trackTelegramClick } from '../../utils/telegramClick.js';
 import Globals from '../../global.js';
-import { useCopy, useLang } from '../../i18n';
+import { LocaleLink, useCopy, useLang } from '../../i18n';
 import supportCopy from '../../i18n/copy/support.js';
 import './Contact.css';
 
@@ -99,12 +101,6 @@ ${t.mailFooter}
             title: t.email,
             value: 'alshraky3@gmail.com',
             link: 'mailto:alshraky3@gmail.com'
-        },
-        {
-            icon: 'telegram',
-            title: t.telegram,
-            value: '@sqb_exam',
-            link: 'https://t.me/sqb_exam'
         }
     ];
 
@@ -166,6 +162,33 @@ ${t.mailFooter}
                                     </div>
                                 </div>
                             ))}
+                            {/* All three channels, the student's own first. */}
+                            <div className="contact-info-item contact-telegram">
+                                <div className="info-icon">
+                                    <Icon name="telegram" size={22} />
+                                </div>
+                                <div className="info-content">
+                                    <h3>{t.telegram}</h3>
+                                    <ul className="contact-tg-list">
+                                        {orderedChannels(user ? userTrack(user) : null).map((c) => (
+                                            <li key={c.track}>
+                                                <a
+                                                    href={c.url}
+                                                    className="info-link"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    onClick={() => trackTelegramClick(c.track, 'contact')}
+                                                >
+                                                    <span>{c.exam}</span> <bdi>{c.handle}</bdi>
+                                                </a>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                    <LocaleLink to={TELEGRAM_HUB_PATH} className="info-link contact-tg-all">
+                                        {t.telegramAll}
+                                    </LocaleLink>
+                                </div>
+                            </div>
                         </div>
 
                         {/* The one entry point to /suggestions left in the app —

@@ -78,6 +78,11 @@ export const FUNNEL_EVENTS = new Set([
     'subscribe_pay_created',
     'subscribe_pay_error',
     'payment_return_no_session',
+    // Added 2026-11-27: a click on a link to one of the SQB Telegram channels.
+    // props.track is the channel (medical | nursing | dental), props.placement
+    // where the link sat (landing, hub, result_nudge, public_page, contact,
+    // footer, study_home). Client: utils/telegramClick.js.
+    'telegram_channel_click',
 ]);
 
 const MAX_PROPS_BYTES = 2000;

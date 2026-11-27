@@ -1,0 +1,100 @@
+/* /telegram (TelegramHub.jsx and its prerendered twin). tgh- prefixed;
+   semantic tokens so it is right in light and dark; logical properties. */
+.tgh-page {
+  flex: 1 0 auto;
+  width: 100%;
+  max-width: 960px;
+  margin-inline: auto;
+  padding: var(--page-pad-block, 24px) var(--page-pad-inline, 16px) 40px;
+  box-sizing: border-box;
+  font-family: var(--font-family-primary);
+}
+.tgh-breadcrumb { font-size: 14px; }
+.tgh-breadcrumb a { color: var(--fg-2563eb); font-weight: 700; text-decoration: none; }
+.tgh-hero { text-align: center; margin-block: 12px 20px; }
+.tgh-page .tgh-kicker { margin: 0 0 4px; font-size: 14px; font-weight: 800; color: var(--fg-2563eb); }
+.tgh-hero h1 { margin: 0; font-size: clamp(24px, 5vw, 34px); font-weight: 900; line-height: 1.35; color: var(--text-dark); }
+.tgh-hero p:last-child { margin: 8px 0 0; font-size: 16px; line-height: 1.7; color: var(--text-medium); }
+
+.tgh-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tgh-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  text-align: start;
+}
+.tgh-card--own { border: 2px solid var(--fg-2563eb); padding: 15px; }
+.tgh-card-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.tgh-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #229ed9;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+.tgh-badge {
+  padding: 4px 12px;
+  border: 1px solid var(--fg-2563eb);
+  border-radius: 999px;
+  background: var(--surface-tint);
+  color: var(--text-dark);
+  font-size: 13px;
+  font-weight: 800;
+}
+.tgh-card h2 { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin: 4px 0 0; line-height: 1.4; }
+.tgh-exam { font-size: 24px; font-weight: 900; color: var(--text-dark); }
+.tgh-field { font-size: 15px; font-weight: 700; color: var(--text-medium); }
+.tgh-page .tgh-handle { margin: 0 0 8px; font-size: 14px; color: var(--text-light); }
+.tgh-join {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  margin-block-start: auto;
+  padding: 8px 14px;
+  border: 1px solid #2563eb;
+  border-radius: 12px;
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 800;
+  text-align: center;
+  text-decoration: none;
+}
+.tgh-join:hover { background: #1d4ed8; border-color: #1d4ed8; color: #ffffff; }
+.tgh-card--other .tgh-join { background: var(--surface); border-color: var(--fg-2563eb); color: var(--fg-2563eb); }
+.tgh-card--other .tgh-join:hover { background: var(--surface-2); }
+.tgh-join:focus-visible, .tgh-breadcrumb a:focus-visible { outline: 3px solid var(--fg-2563eb); outline-offset: 2px; }
+
+.tgh-points {
+  margin-block-start: 20px;
+  padding: 16px 18px;
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  background: var(--surface);
+  text-align: start;
+}
+.tgh-points h2 { margin: 0 0 10px; font-size: 18px; font-weight: 900; color: var(--text-dark); }
+.tgh-points ul { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.tgh-points li { display: flex; align-items: flex-start; gap: 10px; font-size: 15px; line-height: 1.6; color: var(--text-medium); }
+.tgh-points li svg { flex-shrink: 0; margin-block-start: 4px; color: var(--fg-2563eb); }
+.tgh-page .tgh-note { margin: 16px 0 0; font-size: 13px; line-height: 1.7; text-align: center; color: var(--text-light); }
+
+@media (max-width: 760px) {
+  .tgh-grid { grid-template-columns: 1fr; gap: 12px; }
+}

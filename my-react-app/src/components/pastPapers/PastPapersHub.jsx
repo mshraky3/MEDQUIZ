@@ -8,6 +8,7 @@ import publicQuestionsCopy from '../../i18n/copy/publicQuestions.js';
 import usePublicQuestions from '../questions/usePublicQuestions.js';
 import { SignupCta } from '../questions/PublicQuestionsShared.jsx';
 import FaqBlock from '../questions/FaqBlock.jsx';
+import { TelegramHubBox } from '../common/TrackTelegramLink.jsx';
 import {
     HONESTY_NOTE_AR,
     HONESTY_NOTE_EN,
@@ -79,6 +80,7 @@ const PastPapersHub = () => {
             ))}
 
             <SignupCta t={questionsT} />
+            <TelegramHubBox />
 
             <FaqBlock title={t.faqTitle} items={t.faq(data.bankTotal, data.collectionCount)} />
 

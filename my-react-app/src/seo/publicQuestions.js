@@ -20,7 +20,7 @@
  */
 
 import telegramCardCopy from '../i18n/copy/telegramCard.js';
-import { trackTelegramHtml } from '../utils/telegramChannels.js';
+import { telegramHubBoxHtml, trackTelegramHtml } from '../utils/telegramChannels.js';
 import publicQuestionsCopy from '../i18n/copy/publicQuestions.js';
 import { capDescription, capTitle, fitText, TITLE_TARGET, DESCRIPTION_TARGET } from './fitText.js';
 import { explanationHtml, explanationPlain } from './explanation.js';
@@ -298,6 +298,7 @@ ${items}
       </header>
 ${groups}
 ${ctaHtml(t, lang)}
+${telegramHubBoxHtml(telegramCardCopy[lang] || telegramCardCopy.ar, lang)}
 ${faqHtml(hubFaqItems(index, lang), t.faqTitle)}
     </main>
   `;

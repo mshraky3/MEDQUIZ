@@ -30,7 +30,7 @@ import {
 } from './publicQuestions.js';
 
 import telegramCardCopy from '../i18n/copy/telegramCard.js';
-import { trackTelegramHtml } from '../utils/telegramChannels.js';
+import { telegramHubBoxHtml, trackTelegramHtml } from '../utils/telegramChannels.js';
 import pastPapersCopy from '../i18n/copy/pastPapers.js';
 import { faqHtml, faqPageSchema } from './faqSchema.js';
 import {
@@ -308,6 +308,7 @@ ${items}
       </header>
 ${groups}
 ${ctaHtml(t, lang)}
+${telegramHubBoxHtml(telegramCardCopy[lang] || telegramCardCopy.ar, lang)}
 ${faqHtml(collectionsFaqItems(data, lang), t.faqTitle)}
       <nav class="pq-siblings" aria-label="${escapeHtml(t.relatedLinksLabel)}">
         <a href="${localizedPath(QUESTIONS_ROOT, lang)}">${escapeHtml(t.links.allQuestions)}</a>

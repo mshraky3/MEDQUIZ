@@ -117,6 +117,7 @@ const SITEMAP_HINTS = {
   '/about': { priority: '0.7', changefreq: 'monthly' },
   '/faq': { priority: '0.7', changefreq: 'monthly' },
   '/groups': { priority: '0.7', changefreq: 'monthly' },
+  '/telegram': { priority: '0.6', changefreq: 'monthly' },
   '/privacy': { priority: '0.4', changefreq: 'yearly' },
   '/terms': { priority: '0.4', changefreq: 'yearly' },
   '/refund-policy': { priority: '0.4', changefreq: 'yearly' },
@@ -239,7 +240,7 @@ function buildLlmsTxt(routes) {
     ['Study guides', (p) => p === '/guides' || p.startsWith('/guides/')],
     ['Practice questions, open to everyone', (p) => p === QUESTIONS_ROOT || p.startsWith(`${QUESTIONS_ROOT}/`)],
     ['Past-paper collections', (p) => p === PAST_PAPERS_ROOT || p.startsWith(`${PAST_PAPERS_ROOT}/`)],
-    ['About the platform', (p) => ['/', '/about', '/faq', '/contact', '/groups', SUCCESS_STORIES_ROOT].includes(p)],
+    ['About the platform', (p) => ['/', '/about', '/faq', '/contact', '/groups', '/telegram', SUCCESS_STORIES_ROOT].includes(p)],
     ['Policies', (p) => ['/privacy', '/terms', '/refund-policy', '/delete-account'].includes(p)],
   ];
 

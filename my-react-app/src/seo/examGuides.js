@@ -22,7 +22,7 @@
  * React-free and browser-free: runs under Node at build time.
  */
 import telegramCardCopy from '../i18n/copy/telegramCard.js';
-import { trackTelegramHtml } from '../utils/telegramChannels.js';
+import { telegramHubBoxHtml, trackForPath, trackTelegramHtml } from '../utils/telegramChannels.js';
 import examGuidesCopy, {
     EXAMS_ROOT,
     EXAM_KEYS,
@@ -267,6 +267,13 @@ export function examSeo(path, lang = 'ar') {
 /* Build-time routes                                                   */
 /* ------------------------------------------------------------------ */
 
+/** The channel box of an exam's own pages; shared pages lead to the hub. */
+function examTelegramHtml(path, lang) {
+    const copy = telegramCardCopy[lang] || telegramCardCopy.ar;
+    const track = trackForPath(path);
+    return track ? trackTelegramHtml(track, copy) : telegramHubBoxHtml(copy, lang);
+}
+
 /** Every /exams route for one language, in the prerenderer's shape. */
 export function buildExamRoutes({ lang = 'ar', footerNav = '' } = {}) {
     return examRoutePaths().map((path) => {
@@ -275,7 +282,7 @@ export function buildExamRoutes({ lang = 'ar', footerNav = '' } = {}) {
         return {
             path: localizedPath(path, lang),
             html: `${guideArticleHtml(resolved.page, { lang, hub, currentPath: path })}${
-                resolved.exam === 'snle' ? trackTelegramHtml('nursing', telegramCardCopy[lang] || telegramCardCopy.ar) : ''}${footerNav}`,
+                examTelegramHtml(path, lang)}${footerNav}`,
             seo: examSeo(path, lang),
         };
     });
