@@ -135,7 +135,7 @@ const examGuidesCopy = {
                         heading: 'حسبة الوقت',
                         blocks: [
                             { p: '120 دقيقة على 100 سؤال تعني **72 ثانية لكل سؤال** في المتوسط، وهذا حساب مباشر على الأرقام المعلنة لا تقدير. من يقضي دقيقتين على سؤال واحد يكون قد اقترض الوقت من سؤالين آخرين.' },
-                            { p: 'القاعدة العملية: مرور واحد سريع تجيب فيه المباشر فوراً وتعلّم المتردد فيه، ثم جولة ثانية للمعلَّم. ولا تترك سؤالاً بلا إجابة — لا يوجد خصم على الخطأ في هذا الاختبار، والفراغ خسارة مؤكدة.' },
+                            { p: 'القاعدة العملية: مرور واحد سريع تجيب فيه المباشر فوراً وتعلّم المتردد فيه، ثم جولة ثانية للمعلَّم. أدلة المتقدم التي راجعناها (27 نوفمبر 2026) لا تذكر خصماً على الإجابة الخاطئة، وليس فيها نص ينفيه. راجع تعليمات اختبارك قبل يومه.' },
                         ],
                     },
                     {
@@ -720,7 +720,7 @@ const examGuidesCopy = {
                         heading: 'The arithmetic of the clock',
                         blocks: [
                             { p: '120 minutes across 100 questions is **72 seconds per question** on average. That is arithmetic on the published figures, not an estimate. Spend two minutes on one question and you have borrowed the time from two others.' },
-                            { p: 'The practical rule is one fast pass in which you answer what is straightforward and flag what is not, then a second round for the flagged ones. Never leave a question blank: there is no penalty for a wrong answer on this exam, so a blank is a guaranteed loss where a guess is not.' },
+                            { p: 'The practical rule is one fast pass in which you answer what is straightforward and flag what is not, then a second round for the flagged ones. The applicant guides we checked (27 Nov 2026) mention no deduction for wrong answers and do not rule one out. Check your exam’s instructions before test day.' },
                         ],
                     },
                     {

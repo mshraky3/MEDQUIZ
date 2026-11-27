@@ -204,7 +204,11 @@ export async function runComebackJob(db, { limit = 200, outOfTime = () => false 
  * Only accounts created on or after NEVER_STARTED_FROM are eligible. Older
  * never-started accounts already got the one-off "your free questions" mail of
  * 2026-10-11 and must not be swept up by a first run. Opening a quiz at all
- * (any quiz-session row) or spending any free question excludes the account.
+ * (any quiz-session row), spending any free question, or answering even one
+ * question excludes the account. Free questions are only charged when a quiz
+ * is submitted, so the live "seen on answer" rows (user_question_progress,
+ * written by POST /api/questions/seen) are what catch a student who answered
+ * and left: without that check 46 of 71 mails in 28 days went to them.
  * One mail per account, stamped in never_started_email_sent_at.
  */
 export const NEVER_STARTED_FROM = process.env.NEVER_STARTED_FROM || '2026-10-13T00:00:00+03:00';
@@ -221,6 +225,7 @@ export async function runNeverStartedJob(db, { limit = 100, outOfTime = () => fa
            AND a.never_started_email_sent_at IS NULL
            AND COALESCE(a.free_questions_used, 0) = 0
            AND NOT EXISTS (SELECT 1 FROM user_quiz_sessions s WHERE s.user_id = a.id)
+           AND NOT EXISTS (SELECT 1 FROM user_question_progress uqp WHERE uqp.user_id = a.id)
            AND a.email IS NOT NULL
            AND a.email_verified = TRUE
            AND a.isactive = TRUE

@@ -206,7 +206,7 @@ export function classifyReferrer(referrer, selfHost = '') {
 
 /**
  * Records where a visitor came from — once per browser, on their first ever
- * landing-page hit. Until this, there was no UTM capture and no
+ * page, whichever it is (called from main.jsx; `landingPath` says which). Until this, there was no UTM capture and no
  * document.referrer capture anywhere in the frontend (see
  * MONETIZATION_ANALYSIS_2026-08.md §3.5), so signups had no attributable
  * cause and a single riyal spent on ads would have been untraceable.
@@ -218,8 +218,12 @@ export function classifyReferrer(referrer, selfHost = '') {
  */
 export function captureLandingAttribution() {
     try {
+        // The owner's admin pages are not visits.
+        if (window.location.pathname.startsWith('/admin')) return;
         if (safeGetItem(ATTRIBUTION_KEY)) return;
         safeSetItem(ATTRIBUTION_KEY, '1');
+        // A browser that is already signed in is not a new visitor.
+        if (safeGetItem('sessionToken')) return;
 
         const params = new URLSearchParams(window.location.search);
         const utm = {};

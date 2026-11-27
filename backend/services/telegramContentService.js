@@ -310,10 +310,24 @@ export async function recordSentMessage(db, { chatId, messageId, deleteAfterDays
 /** Messages due for deletion right now. */
 export async function findMessagesDueForDeletion(db, limit = 50) {
     const { rows } = await db.query(
-        `SELECT id, chat_id, message_id FROM telegram_sent_messages WHERE delete_after <= NOW() ORDER BY delete_after LIMIT $1`,
+        `SELECT id, chat_id, message_id, created_at FROM telegram_sent_messages WHERE delete_after <= NOW() ORDER BY delete_after LIMIT $1`,
         [limit]
     );
     return rows;
+}
+
+/**
+ * Take a post Telegram will never let the bot delete out of the due queue.
+ * The queue is the oldest 50, so left in place these block every newer post.
+ * The row is kept (the post is still in the channel) and its date is moved
+ * exactly 100 years on, so the original is recoverable:
+ * delete_after - INTERVAL '100 years'. Nothing is deleted in Telegram.
+ */
+export async function parkUndeletableMessage(db, id) {
+    await db.query(
+        `UPDATE telegram_sent_messages SET delete_after = delete_after + INTERVAL '100 years' WHERE id = $1`,
+        [id]
+    );
 }
 
 export async function removeSentMessageLog(db, id) {
