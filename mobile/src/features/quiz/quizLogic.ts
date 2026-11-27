@@ -114,13 +114,18 @@ async function withBackoff<T>(task: () => Promise<T>, tries: number, sleep: (ms:
  * One request per answer, all at once, exhausted the database connection limit on a
  * 150-question quiz (7 Nov 2026). If the batch cannot be saved, falls back to the old
  * per-answer route, at most FALLBACK_CONCURRENCY at a time.
+ *
+ * A question the timer ran out on has no selected_option. JSON drops an undefined
+ * field and both routes require it, so one such entry made the server refuse the
+ * whole batch. There is no answer to save for it, so it is not sent.
  */
 export async function saveAttempts(
   post: (path: string, body: unknown) => Promise<unknown>,
-  attempts: { user_id: number; question_id: number; selected_option: unknown; is_correct: boolean; time_taken: number; quiz_session_id: number }[],
+  allAttempts: { user_id: number; question_id: number; selected_option: unknown; is_correct: boolean; time_taken: number; quiz_session_id: number }[],
   opts: { sessionId: number; userId: number; sleep?: (ms: number) => Promise<void>; concurrency?: number },
 ): Promise<{ failures: number; usedFallback: boolean }> {
   const sleep = opts.sleep ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
+  const attempts = allAttempts.filter((a) => a.selected_option !== undefined && a.selected_option !== null);
   if (attempts.length === 0) return { failures: 0, usedFallback: false };
   try {
     await withBackoff(
@@ -202,6 +207,10 @@ export function buildSessionPayload(args: {
     // check constraint stores 'general' for it.
     source: params.source === 'mix' ? 'general' : params.source,
     question_ids: validQuestions.map((q) => q.id),
+    // A timer that runs out submits the whole quiz for the score; only the
+    // answered ones are marked as seen and charged (backend quizUsage.js).
+    // An empty list means nothing was answered, so it is always sent.
+    answered_question_ids: answers.filter((a) => !!a.selected).map((a) => a.id),
   };
 }
 

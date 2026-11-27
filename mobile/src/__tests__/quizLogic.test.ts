@@ -76,7 +76,21 @@ describe('buildSessionPayload', () => {
       topics_covered: ['surgery', 'medicine', 'pediatrics'],
       source: 'MidgardGameBoy',
       question_ids: [1, 2, 3, 4],
+      answered_question_ids: [1, 2, 3, 4],
     });
+  });
+
+  it('regular quiz: a timer that runs out sends every question for the score, and only the answered ids', () => {
+    const partial = buildAnswers(QS, { 0: 'option1', 2: 'option1' });
+    const body: any = buildSessionPayload({ userId: 7, params: PARAMS, validQuestions: QS, answers: partial, durationSeconds: 60 });
+    expect(body).toMatchObject({ total_questions: 4, correct_answers: 1, quiz_accuracy: 25, question_ids: [1, 2, 3, 4] });
+    expect(body.answered_question_ids).toEqual([1, 3]);
+  });
+
+  it('regular quiz: nothing answered is an empty list, not a missing field', () => {
+    const body: any = buildSessionPayload({ userId: 7, params: PARAMS, validQuestions: QS, answers: buildAnswers(QS, {}), durationSeconds: 60 });
+    expect(body.question_ids).toEqual([1, 2, 3, 4]);
+    expect(body.answered_question_ids).toEqual([]);
   });
 
   it("stores the legacy 'mix' source as 'general' (the session check constraint)", () => {
@@ -102,6 +116,7 @@ describe('buildSessionPayload', () => {
       questionIds: [1, 2, 3, 4],
       sessionMetadata: { device: 'android', browser: 'sqb-app', timestamp: '2026-10-07T00:00:00.000Z' },
     });
+    expect(body).not.toHaveProperty('answered_question_ids');
     expect(body.questionAttempts).toHaveLength(4);
     expect(body.questionAttempts[1]).toEqual({ questionId: 2, userAnswer: 'option2', correctAnswer: 'option2', isCorrect: true, timeTaken: 25 });
   });
@@ -187,6 +202,53 @@ describe('saveAttempts', () => {
     expect(tries[1]).toBe(3);
     expect(tries[2]).toBe(1);
     expect(r).toEqual({ failures: 1, usedFallback: true });
+  });
+});
+
+describe('saveAttempts after a timer expiry (unanswered questions)', () => {
+  const sleep = async () => {};
+  const err = (status: number) => Object.assign(new Error('x'), { status });
+  // What both server routes do with the body that arrives: JSON drops an
+  // undefined field, and an attempt without selected_option is a 400.
+  const server = () =>
+    vi.fn(async (path: string, body: unknown) => {
+      const wire = JSON.parse(JSON.stringify(body));
+      const sent = path.endsWith('/batch') ? wire.attempts : [wire];
+      if (sent.some((a: object) => !('selected_option' in a))) throw err(400);
+    });
+  const attemptsFor = (picked: Record<number, string>) =>
+    buildAttemptPayloads({ userId: 7, sessionId: 99, validQuestions: QS, answers: buildAnswers(QS, picked), durationSeconds: 80 });
+
+  it('still saves the answered ones in ONE batch request', async () => {
+    const post = server();
+    const r = await saveAttempts(post, attemptsFor({ 0: 'option1', 2: 'option1' }), { sessionId: 99, userId: 7, sleep });
+    expect(r).toEqual({ failures: 0, usedFallback: false });
+    expect(post).toHaveBeenCalledTimes(1);
+    expect((post.mock.calls[0][1] as any).attempts.map((a: any) => a.question_id)).toEqual([1, 3]);
+  });
+
+  it('leaves out a null selected_option as well as an undefined one', async () => {
+    const post = server();
+    const attempts = attemptsFor({ 0: 'option1' }).map((a, i) => (i === 1 ? { ...a, selected_option: null } : a));
+    await saveAttempts(post, attempts, { sessionId: 99, userId: 7, sleep });
+    expect((post.mock.calls[0][1] as any).attempts.map((a: any) => a.question_id)).toEqual([1]);
+  });
+
+  it('sends nothing at all when no question was answered', async () => {
+    const post = server();
+    const r = await saveAttempts(post, attemptsFor({}), { sessionId: 99, userId: 7, sleep });
+    expect(post).not.toHaveBeenCalled();
+    expect(r).toEqual({ failures: 0, usedFallback: false });
+  });
+
+  it('keeps the unanswered ones out of the per-answer fallback too', async () => {
+    const post = vi.fn(async (path: string, _body: unknown) => {
+      if (path.endsWith('/batch')) throw err(404);
+    });
+    const r = await saveAttempts(post, attemptsFor({ 1: 'option2', 3: 'option1' }), { sessionId: 99, userId: 7, sleep });
+    const singles = post.mock.calls.filter(([path]) => path === '/question-attempts').map(([, b]: any) => b.question_id);
+    expect(singles.sort()).toEqual([2, 4]);
+    expect(r).toEqual({ failures: 0, usedFallback: true });
   });
 });
 
