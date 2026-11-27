@@ -72,6 +72,13 @@ export function ownerTesterEmails(env = process.env) {
     return out;
 }
 
+/** An address we know is a Google account (Google sign-up or Gmail), else null. */
+export function suggestPlayEmail(row) {
+    const clean = cleanPlayEmail(row?.email);
+    if (!clean) return null;
+    return row.google || /@(gmail|googlemail)\.com$/.test(clean) ? clean : null;
+}
+
 /**
  * Pure rule check shared by join and redeem. `history` is the account's
  * payment_events rows reduced to { event_type, status }.
@@ -93,6 +100,7 @@ export function evaluateTesterOffer(account, history = [], nowMs = Date.now()) {
 const ACCOUNT_SQL = `SELECT id, email_verified, subscription_status, subscription_expiry_date,
                             is_admin_created, grandfathered_at
                        FROM accounts WHERE id = $1`;
+const CONTACT_SQL = 'SELECT email, google_id IS NOT NULL AS google FROM accounts WHERE id = $1';
 const HISTORY_SQL = `SELECT event_type, status FROM payment_events
                       WHERE account_id = $1 AND (event_type = $2 OR status = 'paid')`;
 
@@ -122,7 +130,14 @@ export async function getOfferStatus(db, accountId) {
         redeemed: !!(mine && mine.redeemed_at),
         canJoin: false,
         reason: mine ? 'already_joined' : 'eligible',
+        suggestedEmail: null,
+        googleAccount: false,
     };
+    // The signed-in account's own address, so a student whose address is already a
+    // Google account joins with one tap instead of typing it.
+    const { rows: [own] } = await db.query(CONTACT_SQL, [accountId]);
+    status.googleAccount = !!own?.google;
+    if (!mine) status.suggestedEmail = suggestPlayEmail(own);
     if (!mine) {
         const { rows: [account] } = await db.query(ACCOUNT_SQL, [accountId]);
         const { rows: history } = await db.query(HISTORY_SQL, [accountId, ANDROID_TESTER_EVENT]);

@@ -256,3 +256,37 @@
 @media (max-width: 480px) {
   .atl-hub .atl-hub-open { width: 100%; }
 }
+
+/* One-tap join and the one-step-at-a-time guide. */
+.atl-card .atl-email { font-size: 17px; font-weight: 900; color: var(--text-dark); }
+.atl-guide { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.atl-card .atl-guide-progress { font-size: 13px; font-weight: 800; color: var(--fg-2563eb); }
+.atl-guide-title { margin: 0; font-size: 19px; font-weight: 900; line-height: 1.5; color: var(--text-dark); }
+.atl-card .atl-guide-account {
+  padding: 8px 12px;
+  border: 1px dashed var(--fg-2563eb);
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.7;
+  color: var(--text-dark);
+}
+.atl-guide .atl-steps li { font-size: 15.5px; color: var(--text-dark); }
+.atl-card .atl-textbtn {
+  align-self: center;
+  min-height: 44px;
+  margin: 0;
+  padding: 6px 12px;
+  border: 0;
+  background: transparent;
+  color: var(--fg-2563eb);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.atl-textbtn:focus-visible, .atl-help summary:focus-visible { outline: 2px solid var(--fg-2563eb); outline-offset: 2px; }
+.atl-help { font-size: 14px; line-height: 1.8; color: var(--text-medium); }
+.atl-help summary { min-height: 32px; font-weight: 800; color: var(--text-dark); cursor: pointer; }
+.atl-help ul { margin: 6px 0 0; padding-inline-start: 20px; }

@@ -4,7 +4,8 @@ import Globals from '../../global.js';
 import Icon from '../common/Icon.jsx';
 import { useCopy, LocaleLink as Link } from '../../i18n';
 import androidTestersCopy from '../../i18n/copy/androidTesters.js';
-import { androidAppConfig, testerSteps } from '../../utils/androidApp.js';
+import { androidAppConfig, testerSteps, guideSteps } from '../../utils/androidApp.js';
+import AndroidTesterGuide from './AndroidTesterGuide.jsx';
 import { looksLikeEmail, joinErrorKey } from '../../utils/androidTesters.js';
 import { ANDROID_ANCHOR, ANDROID_SIGNUP_PATH, rememberAndroidReturn, clearAndroidReturn } from '../../utils/androidReturn.js';
 import { trackFunnel } from '../../utils/analytics.js';
@@ -27,6 +28,7 @@ const AndroidTestersSection = ({ offer, placement = 'landing' }) => {
     const { hash } = useLocation();
     const { view, status, setStatus, username, sessionToken } = offer;
     const [email, setEmail] = useState('');
+    const [otherEmail, setOtherEmail] = useState(false);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
     const sectionRef = useRef(null);
@@ -82,17 +84,22 @@ const AndroidTestersSection = ({ offer, placement = 'landing' }) => {
         trackFunnel('landing_cta_signup_click', { placement: 'android_testers' });
     };
 
+    // One tap when the account's own address is a Google account.
+    const suggested = status?.suggestedEmail || '';
+    const oneTap = !!suggested && !otherEmail;
+
     const join = async (event) => {
         event.preventDefault();
         setError('');
-        if (!looksLikeEmail(email)) { setError(t.errors.invalidEmail); return; }
+        const chosen = oneTap ? suggested : email.trim();
+        if (!looksLikeEmail(chosen)) { setError(t.errors.invalidEmail); return; }
         clicked('join');
         setBusy(true);
         try {
             const response = await fetch(`${Globals.URL}/api/android-testers/join`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${sessionToken}` },
-                body: JSON.stringify({ username, email: email.trim() }),
+                body: JSON.stringify({ username, email: chosen }),
             });
             const data = await response.json().catch(() => ({}));
             if (!response.ok || !data.joined) {
@@ -152,6 +159,22 @@ const AndroidTestersSection = ({ offer, placement = 'landing' }) => {
 
                     {view === 'join' ? (
                         <form className="atl-form" onSubmit={join} noValidate>
+                            {oneTap ? (
+                                <>
+                                    <p className="atl-lead">{t.oneTap.lead}</p>
+                                    <p className="atl-email"><bdi>{suggested}</bdi></p>
+                                    <p className="atl-hint">{t.oneTap.check}</p>
+                                    {error ? <p className="atl-error" role="alert">{error}</p> : null}
+                                    <button type="submit" className="btn primary atl-btn" disabled={busy}>
+                                        {busy ? t.joining : t.oneTap.join}
+                                    </button>
+                                    <button type="button" className="atl-textbtn" onClick={() => { setError(''); setOtherEmail(true); }}>
+                                        {t.oneTap.other}
+                                    </button>
+                                    <p className="atl-hint"><Link to="/privacy">{t.privacyLink}</Link></p>
+                                </>
+                            ) : (
+                                <>
                             <p className="atl-lead">{t.memberLead}</p>
                             <label className="atl-label" htmlFor="atl-email">{t.emailLabel}</label>
                             <input
@@ -173,6 +196,8 @@ const AndroidTestersSection = ({ offer, placement = 'landing' }) => {
                                 {busy ? t.joining : t.join}
                             </button>
                             <p className="atl-hint">{t.limit}</p>
+                                </>
+                            )}
                         </form>
                     ) : null}
 
@@ -181,6 +206,17 @@ const AndroidTestersSection = ({ offer, placement = 'landing' }) => {
                     {view === 'joined' ? (
                         <div className="atl-done" aria-live="polite">
                             <p className="atl-done-title"><Icon name="check-circle" size={18} /> {t.joinedTitle}</p>
+                            {CONFIG.groupUrl ? (
+                                <AndroidTesterGuide
+                                    steps={guideSteps(CONFIG, t.guide, { googleAccount: !!status.googleAccount })}
+                                    guide={t.guide}
+                                    email={status.playEmail}
+                                    storageKey={'sqb_android_step_' + username}
+                                    onOpen={clicked}
+                                    noLink={t.noLink}
+                                />
+                            ) : (
+                                <>
                             <p className="atl-body">{t.savedAs} <bdi>{status.playEmail}</bdi></p>
                             <h3 className="atl-next">{t.nextTitle}</h3>
                             <ol className="atl-steps">
@@ -203,6 +239,8 @@ const AndroidTestersSection = ({ offer, placement = 'landing' }) => {
                                 ))}
                             </ol>
                             <p className="atl-hint">{t.monthNote}</p>
+                                </>
+                            )}
                         </div>
                     ) : null}
 
