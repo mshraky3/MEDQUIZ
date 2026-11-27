@@ -8,6 +8,7 @@ import { completeSeo, hubSeo } from '../../seo/publicQuestions.js';
 import usePublicQuestions from './usePublicQuestions.js';
 import { Breadcrumb, SignupCta, PublicQuestionsError } from './PublicQuestionsShared.jsx';
 import FaqBlock from './FaqBlock.jsx';
+import { TelegramHubBox } from '../common/TrackTelegramLink.jsx';
 import './PublicQuestions.css';
 
 /** /questions — the library hub, one card per specialty. */
@@ -54,6 +55,7 @@ const QuestionsHub = () => {
             ))}
 
             <SignupCta t={t} />
+            <TelegramHubBox />
 
             <FaqBlock title={t.faqTitle} items={t.faq(index.total, index.bankTotal || index.total)} />
         </main>

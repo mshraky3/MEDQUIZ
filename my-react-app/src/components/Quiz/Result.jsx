@@ -9,6 +9,7 @@ import quizCopy from '../../i18n/copy/quiz.js';
 import { formatDuration } from '../../utils/formatDuration';
 import { UserContext } from '../../UserContext';
 import StoryPrompt, { useStoryPrompt } from '../successStories/StoryPrompt.jsx';
+import ResultTelegramNudge from './ResultTelegramNudge.jsx';
 
 const Result = ({
   correctAnswers,
@@ -91,6 +92,10 @@ const Result = ({
           {t.viewAnalysis}
         </button>
       </div>
+
+      {/* Under the actions so it never moves them, and not beside the story
+          request: one ask per screen. */}
+      <ResultTelegramNudge user={user} blocked={showStoryPrompt} />
 
       {answers.length > 0 && (
         <section className="result-review">

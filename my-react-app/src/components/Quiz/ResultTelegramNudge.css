@@ -1,0 +1,54 @@
+/* Telegram invitation on the quiz result screen (ResultTelegramNudge.jsx).
+   tgn- prefixed; semantic tokens; logical properties. Text sits in strong and
+   span so the `.quiz-result p` sizes do not reach it. */
+.tgn-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-block-start: 20px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  background: var(--surface-2);
+  text-align: start;
+}
+.tgn-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #229ed9;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+.tgn-text { display: flex; flex-direction: column; align-items: flex-start; flex: 1; min-width: 0; }
+.tgn-title { font-size: 15px; font-weight: 800; line-height: 1.5; color: var(--text-dark); }
+.tgn-body { font-size: 13px; line-height: 1.6; color: var(--text-medium); }
+.tgn-join {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--fg-2563eb);
+  text-decoration: underline;
+}
+.tgn-close {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin: -4px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-medium);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.tgn-close:hover { background: var(--surface-tint); color: var(--text-dark); }
+.tgn-close:focus-visible, .tgn-join:focus-visible { outline: 3px solid var(--fg-2563eb); outline-offset: 2px; }

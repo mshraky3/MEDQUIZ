@@ -57,6 +57,9 @@ const OUTCOME_EVENTS = [
     { event: 'android_offer_view', label: 'Android offer seen', of: 'landing_view' },
     { event: 'android_offer_click', label: 'Android offer: button clicked', of: 'android_offer_view' },
     { event: 'android_offer_joined', label: 'Android offer: joined', of: 'android_offer_view' },
+    // A click on any link to a Telegram channel (2026-11-27). Which channel and
+    // where it sat are in funnel_events.props (track, placement).
+    { event: 'telegram_channel_click', label: 'Telegram channel link clicked (any placement)', of: 'landing_view' },
     // Retired 2026-08-08 — nothing emits this any more. Kept so a past cohort's
     // count still renders instead of the step just vanishing from the page.
     { event: 'trial_started', label: 'Free trial started (retired)', of: 'signup_otp_verified' },

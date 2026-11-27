@@ -12,6 +12,7 @@ import { UserContext } from '../../UserContext';
 import { getTypeLabel } from '../../utils/typeLabels';
 import { getSourceLabel } from '../../utils/sourceLabels';
 import { telegramUrl } from '../../utils/telegramChannels.js';
+import { trackTelegramClick } from '../../utils/telegramClick.js';
 import { specialtiesOf, userTrack, examLabel, bankLabel, trackLabel, normalizeTrack } from '../../utils/tracks.js';
 import { readQuizMode } from '../../utils/quizMode.js';
 import { useCopy, useLang, formatNumber } from '../../i18n';
@@ -523,7 +524,7 @@ const QUIZS = () => {
                         href={telegramUrl(myTrack)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        onClick={() => { try { track('hub_telegram_cta'); } catch (e) { /* analytics is best-effort */ } }}
+                        onClick={() => trackTelegramClick(myTrack, 'study_home')}
                     >
                         <Icon name="telegram" size={17} aria-hidden="true" />
                         <span>{t.telegramCtaTitle}</span>

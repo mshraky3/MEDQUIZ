@@ -1,4 +1,6 @@
 import guidesCopy from '../i18n/copy/guides.js';
+import telegramHubCopy from '../i18n/copy/telegramHub.js';
+import { telegramHubHtml } from './telegramHub.js';
 import { guideArticleHtml, guidesHubHtml, guidesTeaserHtml, siteFooterNavHtml } from './prerenderHtml.js';
 import { capDescription, capTitle } from './fitText.js';
 import { EN_PRERENDER, FAQ_ITEMS_EN, enLandingHtml, enQuestionsTeaserHtml } from './staticPrerenderEn.js';
@@ -565,6 +567,29 @@ ${guidesTeaserHtml(guidesCopy.ar.hub, {
         keywords: 'اختبار SMLE, اختبار SNLE, الهيئة السعودية للتخصصات الصحية, درجة النجاح, شروط التقديم',
         alternates: ['ar-SA', 'ar', 'x-default']
     },
+    // Every Telegram channel on one page. Copy and body live with the page
+    // (i18n/copy/telegramHub.js, seo/telegramHub.js).
+    '/telegram': {
+        title: telegramHubCopy.ar.meta.title,
+        description: telegramHubCopy.ar.meta.description,
+        keywords: telegramHubCopy.ar.meta.keywords,
+        alternates: ['ar-SA', 'ar', 'x-default'],
+        structuredData: [
+            routePageData('/telegram', telegramHubCopy.ar.title, telegramHubCopy.ar.meta.description),
+            breadcrumbs([
+                { name: 'الرئيسية', path: '/' },
+                { name: telegramHubCopy.ar.title, path: '/telegram' }
+            ])
+        ],
+        structuredDataEn: [
+            { ...routePageData('/en/telegram', telegramHubCopy.en.title, telegramHubCopy.en.meta.description), inLanguage: 'en' },
+            breadcrumbs([
+                { name: 'Home', path: '/en' },
+                { name: telegramHubCopy.en.title, path: '/en/telegram' }
+            ])
+        ],
+        prerenderHtml: telegramHubHtml('ar')
+    },
     '/questions': {
         title: 'أسئلة تدريبية مجانية لاختبار SMLE وSNLE | SQB',
         description: 'أسئلة تدريبية بنمط اختبار الهيئة السعودية للتخصصات الصحية، مع الإجابة الصحيحة وشرح مكتوب لكل سؤال، مفتوحة بدون حساب.',
@@ -712,6 +737,7 @@ const enOverlay = {
     '/about': { title: 'About us | SQB', description: 'Who is behind SQB, what the platform offers, and how it helps you prepare for the SMLE, SNLE and Prometric exams.' },
     '/faq': { title: 'Frequently asked questions | SQB', description: 'Answers to the most common questions about SQB: subscriptions, the question bank, the nursing track, refunds and support.' },
     '/contact': { title: 'Contact us | SQB', description: 'Get in touch with the SQB team by email for help, feedback or billing questions.' },
+    '/telegram': { title: telegramHubCopy.en.meta.title, description: telegramHubCopy.en.meta.description },
     '/privacy': { title: 'Privacy Policy | SQB', description: 'How SQB collects, uses and protects your personal data.' },
     '/terms': { title: 'Terms of Service | SQB', description: 'The terms that govern your use of the SQB platform.' },
     '/refund-policy': { title: 'Refund Policy | SQB', description: 'When and how you can request a refund for an SQB subscription.' },
@@ -831,6 +857,7 @@ function englishPrerenderFor(path) {
             })
         });
     }
+    if (path === '/telegram') return telegramHubHtml('en');
     if (path === '/guides') return guidesHubHtml(guidesCopy.en.hub, { lang: 'en' });
 
     const guideKey = EN_GUIDE_KEYS[path];

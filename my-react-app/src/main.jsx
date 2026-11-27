@@ -58,6 +58,7 @@ const Bank = lazy(() => import('./components/ADD/Bank.jsx'));
 const Accounting = lazy(() => import('./components/ADD/Accounting.jsx'));
 const Signup = lazy(() => import('./components/signup/Signup.jsx'));
 const Contact = lazy(() => import('./components/contact/Contact.jsx'));
+const TelegramHub = lazy(() => import('./components/telegram/TelegramHub.jsx'));
 const Privacy = lazy(() => import('./components/legal/Privacy.jsx'));
 const Terms = lazy(() => import('./components/legal/Terms.jsx'));
 const RefundPolicy = lazy(() => import('./components/legal/RefundPolicy.jsx'));
@@ -196,6 +197,8 @@ const router = createBrowserRouter([{
   pubNoFooter('/join/:token', <Signup />),
   pub('/forgot-password', <ForgotPassword />),
   pub('/contact', <Contact />),
+  // Every Telegram channel on one page (/tg in vercel.json redirects here).
+  pub('/telegram', <TelegramHub />),
   pub('/about', <About />),
   pub('/faq', <FAQ />),
   pub('/privacy', <Privacy />),

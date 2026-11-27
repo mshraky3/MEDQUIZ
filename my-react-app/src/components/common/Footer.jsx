@@ -2,7 +2,8 @@ import React, { useContext } from 'react';
 import { useLocation } from 'react-router-dom';
 import { UserContext } from '../../UserContext';
 import { userTrack } from '../../utils/tracks.js';
-import { telegramUrl, trackForPath } from '../../utils/telegramChannels.js';
+import { TELEGRAM_HUB_PATH, telegramUrl, trackForPath } from '../../utils/telegramChannels.js';
+import { trackTelegramClick } from '../../utils/telegramClick.js';
 
 import { SHOW_GROUP_PLANS } from '../../config/features.js';
 import Icon from './Icon.jsx';
@@ -32,7 +33,8 @@ const Footer = () => {
   // The channel of the page's exam, else of the signed-in student's track.
   const { pathname } = useLocation();
   const account = useContext(UserContext)?.user;
-  const channelUrl = telegramUrl(trackForPath(pathname) || (account ? userTrack(account) : null));
+  const channelTrack = trackForPath(pathname) || (account ? userTrack(account) : 'medical');
+  const channelUrl = telegramUrl(channelTrack);
 
   const links = [
     { to: '/about', label: t.nav.about },
@@ -44,6 +46,8 @@ const Footer = () => {
     ...(storyCount > 0 ? [{ to: '/success-stories', label: t.footer.successStories }] : []),
     { to: '/questions', label: t.footer.freeQuestions },
     { to: '/past-papers', label: t.footer.collections },
+    // Every Telegram channel in one place; the icon above goes to one of them.
+    { to: TELEGRAM_HUB_PATH, label: t.footer.telegramChannels },
     { to: '/faq', label: t.nav.faq },
     // Group plans are otherwise advertised in exactly one place (the landing
     // band). This is the link that reaches them from every other page.
@@ -89,6 +93,7 @@ const Footer = () => {
               rel="noopener noreferrer"
               aria-label={t.footer.telegram}
               title={t.footer.telegram}
+              onClick={() => trackTelegramClick(channelTrack, 'footer')}
             >
               <Icon name="telegram" size={17} />
             </a>

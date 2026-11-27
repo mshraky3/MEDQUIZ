@@ -16,7 +16,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { FUNNEL_EVENTS, scrubProps } from './funnel.js';
+import { FUNNEL_EVENTS, recordFunnelEvent, scrubProps } from './funnel.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const CLIENT_SRC = path.join(__dirname, '..', '..', 'my-react-app', 'src');
@@ -88,6 +88,20 @@ test('the whitelist holds no unreachable names', () => {
     const orphans = [...FUNNEL_EVENTS]
         .filter((event) => !emitted.has(event) && !serverSide.has(event) && !retired.has(event));
     assert.deepEqual(orphans, [], `nothing emits these: ${orphans.join(', ')}`);
+});
+
+test('a Telegram channel click is stored with its channel and placement', async () => {
+    const calls = [];
+    const db = { query: async (sql, params) => { calls.push({ sql, params }); return { rows: [] }; } };
+    await recordFunnelEvent(db, {
+        anonId: 'anon-1',
+        event: 'telegram_channel_click',
+        props: { track: 'nursing', placement: 'result_nudge', utm_source: 'tiktok' },
+    });
+    assert.equal(calls.length, 1);
+    assert.match(calls[0].sql, /INSERT INTO funnel_events/);
+    assert.deepEqual(calls[0].params.slice(0, 3), [null, 'anon-1', 'telegram_channel_click']);
+    assert.deepEqual(JSON.parse(calls[0].params[3]), { track: 'nursing', placement: 'result_nudge', utm_source: 'tiktok' });
 });
 
 test('gateway text is capped and long numbers are masked before storage', () => {

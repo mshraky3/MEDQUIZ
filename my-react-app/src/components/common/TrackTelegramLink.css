@@ -1,5 +1,5 @@
-/* Track channel box on nursing and dental public pages (TrackTelegramLink.jsx and
-   the prerendered twin). trk-tg prefixed; semantic tokens; logical properties. */
+/* Telegram channel box on public pages (TrackTelegramLink.jsx and the
+   prerendered twin). trk-tg prefixed; semantic tokens; logical properties. */
 .trk-tg {
   display: flex;
   flex-wrap: wrap;

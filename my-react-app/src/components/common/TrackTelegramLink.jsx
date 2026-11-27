@@ -1,11 +1,11 @@
 import React from 'react';
-import { useCopy } from '../../i18n';
-import { safeTrack } from '../../utils/analytics.js';
+import { LocaleLink as Link, useCopy } from '../../i18n';
 import telegramCardCopy from '../../i18n/copy/telegramCard.js';
-import { telegramUrl, trackExamName } from '../../utils/telegramChannels.js';
+import { TELEGRAM_HUB_PATH, telegramUrl, trackExamName } from '../../utils/telegramChannels.js';
+import { trackTelegramClick } from '../../utils/telegramClick.js';
 import './TrackTelegramLink.css';
 
-/** The nursing or dental channel, on that track's public pages. Draws nothing for medicine. */
+/** A track's channel, on that track's public pages. Draws nothing without a track. */
 const TrackTelegramLink = ({ track }) => {
     const t = useCopy(telegramCardCopy);
     const exam = trackExamName(track);
@@ -18,10 +18,21 @@ const TrackTelegramLink = ({ track }) => {
                 href={telegramUrl(track)}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={() => safeTrack('track_telegram_click', { track })}
+                onClick={() => trackTelegramClick(track, 'public_page')}
             >
                 {t.cta}
             </a>
+        </aside>
+    );
+};
+
+/** The same box on a public page about no single exam: it leads to /telegram. */
+export const TelegramHubBox = () => {
+    const t = useCopy(telegramCardCopy);
+    return (
+        <aside className="trk-tg">
+            <p>{t.hubBoxTitle}</p>
+            <Link className="trk-tg-btn" to={TELEGRAM_HUB_PATH}>{t.hubBoxCta}</Link>
         </aside>
     );
 };

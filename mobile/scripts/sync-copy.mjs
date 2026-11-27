@@ -15,7 +15,8 @@ const check = process.argv.includes('--check');
 
 // install.js is the PWA "add to home screen" prompt: meaningless inside the app.
 // androidTesters.js is the landing-page tester offer that promotes the app: website only.
-const SKIP = new Set(['install.js', 'androidTesters.js']);
+// telegramHub.js is the text of the website's /telegram page, which the app does not have.
+const SKIP = new Set(['install.js', 'androidTesters.js', 'telegramHub.js']);
 
 const banner = (from) =>
   `// AUTO-COPIED from my-react-app/src/i18n/${from}. Do not edit here:\n` +
