@@ -48,6 +48,8 @@ test('app.js wiring: the charge, progress rows and topic completion use the same
     const route = src.slice(start, src.indexOf('\n});', start));
     assert.match(route, /answered_question_ids,/);
     assert.match(route, /const usage = quizUsage\(\{\s*questionIds: question_ids,\s*answeredQuestionIds: answered_question_ids,\s*totalQuestions: total_questions,?\s*\}\);/);
-    assert.match(route, /const billable = usage\.billable;/);
+    // The charge is inline here, or goes through spendFreeAllowance (PR 57). Passing
+    // the full question list there would charge the unanswered ones again.
+    assert.match(route, /const billable = usage\.billable;|questionIds: usage\.questionIds,\s*totalQuestions: usage\.billable,/);
     assert.match(route, /if \(usage\.questionIds\.length > 0\) \{[\s\S]{0,300}WHERE id = ANY\(\$1\)\s*`, \[usage\.questionIds\]\);/);
 });
