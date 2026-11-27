@@ -46,6 +46,7 @@ import {
 import summaryContent from './content/summaryHtml/index.js';
 import { notifyBackendError, configureAlertThrottle } from './services/errorNotificationService.js';
 import { recomputeSessionSummary } from './services/sessionSummary.js';
+import { saveFinalQuiz } from './services/finalQuizSave.js';
 import { validationMode, judgeAttempts, judgeAnswer, loadQuestionsById, summarizeJudgements } from './services/attemptValidation.js';
 import { deleteAccountData, DELETION_OUTCOME } from './services/accountDeletionService.js';
 // Shared logging + the "no silent 500" interceptor. logger and
@@ -7769,11 +7770,9 @@ app.post('/final-quiz/submit', requireSession, requireOwnBodyUser('userId'), sub
         sessionMetadata,
         questionIds = [], // Array of question IDs used in the quiz
         questionAttempts = [], // Array of question attempts with user answers
-        // See the identical field on POST /quiz-sessions. QUIZ.jsx submits both
-        // endpoints through the same retrying helper, so this one needs the
-        // same guard: without it a first attempt that committed but never
-        // reached the browser would come back as a SECOND mock-exam result in
-        // the student's history.
+        // See the identical field on POST /quiz-sessions. The web and Android
+        // clients retry this endpoint too, so it needs a guard of its own:
+        // services/finalQuizSave.js.
         retry_attempt = 0
     } = req.body;
 
@@ -7794,96 +7793,21 @@ app.post('/final-quiz/submit', requireSession, requireOwnBodyUser('userId'), sub
 
         const score = totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
 
-        logger.info('Inserting final quiz session into database', {
-            userId,
-            questionType,
-            source,
-            totalQuestions,
-            correctAnswers,
-            score,
-            timeTaken,
-            timeLimit
-        });
-        // Only on a declared retry, so the normal path costs nothing: has this
-        // exact submission already been recorded in the last two minutes?
-        let result = null;
-        if (Number(retry_attempt) > 0) {
-            const already = await db.query(
-                `SELECT id, session_id FROM final_review_sessions
-                  WHERE user_id = $1 AND total_questions = $2 AND correct_answers = $3
-                    AND time_taken IS NOT DISTINCT FROM $4
-                    AND start_time > NOW() - INTERVAL '2 minutes'
-                  ORDER BY id DESC LIMIT 1`,
-                [userId, totalQuestions, correctAnswers, timeTaken]
-            );
-            if (already.rows.length > 0) {
-                logger.info('Client retried a final-quiz submission that had already been recorded', {
-                    userId, id: already.rows[0].id, retry_attempt,
-                });
-                result = already;
-            }
-        }
-
-        if (!result) result = await db.query(`
-            INSERT INTO final_review_sessions (
-                user_id,
-                question_type,
-                source,
-                total_questions,
-                correct_answers,
-                score,
-                time_taken,
-                time_limit,
-                end_time,
-                session_metadata,
-                question_ids
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP, $9, $10)
-            RETURNING id, session_id
-        `, [
-            userId,
-            questionType,
-            source,
-            totalQuestions,
-            correctAnswers,
-            score,
-            timeTaken,
-            timeLimit,
-            JSON.stringify(sessionMetadata || {}),
-            questionIds
-        ]);
-
-        const sessionId = result.rows[0].id;
-        const sessionUuid = result.rows[0].session_id;
-
-        logger.info('Final quiz session inserted successfully', {
-            sessionId,
-            sessionUuid,
-            userId,
-            score
-        });
-
-        // Insert question attempts if provided
-        if (questionAttempts && questionAttempts.length > 0) {
-            logger.info('Inserting question attempts', {
-                sessionId,
-                attemptsCount: questionAttempts.length
-            });
-
+        // Everything that only reads runs before the save, so a failure up to
+        // here writes nothing and the transaction stays short.
+        let attemptsToStore = [];
+        let unpaired = null; // reported after the save, when the session has an id
+        const hasAttempts = Boolean(questionAttempts && questionAttempts.length > 0);
+        if (hasAttempts) {
             // Server-side pairing check (services/attemptValidation.js): the key and
             // is_correct come from the questions table, not from the browser.
-            let attemptsToStore = questionAttempts;
+            attemptsToStore = questionAttempts;
             const mode = validationMode();
             if (mode !== 'off') {
                 const questions = await loadQuestionsById(db, questionAttempts.map((a) => a.questionId));
                 const judged = questionAttempts.map((a) => judgeAnswer(questions.get(Number(a.questionId)), a.userAnswer));
                 const bad = judged.filter((v) => v.status === 'not_an_option' || v.status === 'unknown_question').length;
-                if (bad > 0) {
-                    logger.warn('ATTEMPT_NOT_AN_OPTION', { userId, sessionId, bad, total: judged.length, mode });
-                    if (bad >= 3 && bad >= Math.ceil(judged.length * 0.2)) {
-                        notifyBackendError(new Error('ATTEMPT_PAIRING_SUSPECT: final exam answers do not belong to their questions'), req,
-                            { userId, sessionId, bad, total: judged.length, mode }).catch(() => { /* already logged */ });
-                    }
-                }
+                if (bad > 0) unpaired = { bad, total: judged.length, mode };
                 attemptsToStore = questionAttempts
                     .map((a, i) => {
                         const v = judged[i];
@@ -7894,18 +7818,47 @@ app.post('/final-quiz/submit', requireSession, requireOwnBodyUser('userId'), sub
                     })
                     .filter((a, i) => !(mode === 'enforce' && (judged[i].status === 'not_an_option' || judged[i].status === 'unknown_question')));
             }
+        }
 
-            // One multi-row INSERT per 1,000 answers instead of one query per
-            // answer (1,200 round trips inside a 60 s function before).
-            await insertFinalQuizAttempts(db, sessionId, attemptsToStore);
+        // The history row and its answers (one multi-row INSERT per 1,000, not
+        // 1,200 round trips inside a 60 s function) commit together or not at
+        // all, and a declared retry of an exam already saved adds nothing.
+        const saved = await saveFinalQuiz(db, {
+            userId,
+            questionType,
+            source,
+            totalQuestions,
+            correctAnswers,
+            score,
+            timeTaken,
+            timeLimit,
+            sessionMetadata,
+            questionIds
+        }, attemptsToStore, { isRetry: Number(retry_attempt) > 0 });
+
+        const sessionId = saved.id;
+        const sessionUuid = saved.sessionUuid;
+
+        if (saved.reused) {
+            logger.info('Client retried a final-quiz submission that had already been recorded', {
+                userId, id: sessionId, retry_attempt,
+            });
+        }
+
+        if (unpaired) {
+            logger.warn('ATTEMPT_NOT_AN_OPTION', { userId, sessionId, ...unpaired });
+            if (unpaired.bad >= 3 && unpaired.bad >= Math.ceil(unpaired.total * 0.2)) {
+                notifyBackendError(new Error('ATTEMPT_PAIRING_SUSPECT: final exam answers do not belong to their questions'), req,
+                    { userId, sessionId, ...unpaired }).catch(() => { /* already logged */ });
+            }
+        }
+
+        if (hasAttempts) {
+            // After the commit on purpose: it swallows its own errors, and a
+            // failed statement inside a transaction turns COMMIT into a rollback.
             await recomputeSessionSummary(db, sessionId, userId, {
                 final: true,
                 onError: (e) => logger.warn('Final session summary recompute failed', { error: e.message }),
-            });
-
-            logger.info('Question attempts inserted successfully', {
-                sessionId,
-                attemptsCount: questionAttempts.length
             });
         }
 
