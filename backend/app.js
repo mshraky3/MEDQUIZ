@@ -1828,6 +1828,41 @@ const ensureSummariesTables = async () => {
                 updated_at = NOW()
         `);
 
+        // Dental-track decks and the internal-medicine specialty decks.
+        await db.query(`
+            INSERT INTO summaries (slug, title, title_en, question_type, description, r2_prefix, category, is_overview, sort_order, track)
+            VALUES
+                ('restorative-dentistry', 'المعالجة التحفظية', 'Restorative Dentistry', 'restorative dentistry', 'ملخص المعالجة التحفظية لأهم المواضيع المتكررة في الأسئلة.', 'summaries/restorative-dentistry/', 'طب الأسنان', FALSE, 10, 'dental'),
+                ('endodontics', 'علاج الجذور', 'Endodontics', 'endodontics', 'ملخص علاج الجذور لأهم المواضيع المتكررة في الأسئلة.', 'summaries/endodontics/', 'طب الأسنان', FALSE, 11, 'dental'),
+                ('periodontics', 'أمراض اللثة', 'Periodontics', 'periodontics', 'ملخص أمراض اللثة لأهم المواضيع المتكررة في الأسئلة.', 'summaries/periodontics/', 'طب الأسنان', FALSE, 12, 'dental'),
+                ('oral-surgery', 'جراحة الفم', 'Oral and Maxillofacial Surgery', 'oral surgery', 'ملخص جراحة الفم لأهم المواضيع المتكررة في الأسئلة.', 'summaries/oral-surgery/', 'طب الأسنان', FALSE, 13, 'dental'),
+                ('oral-medicine-and-radiology', 'طب الفم والأشعة', 'Oral Medicine and Radiology', 'oral medicine and radiology', 'ملخص طب الفم والأشعة لأهم المواضيع المتكررة في الأسئلة.', 'summaries/oral-medicine-and-radiology/', 'طب الأسنان', FALSE, 14, 'dental'),
+                ('medical-dentistry', 'طب الأسنان للمرضى ذوي الحالات الطبية', 'Medical Dentistry', 'medical dentistry', 'ملخص طب الأسنان للمرضى ذوي الحالات الطبية لأهم المواضيع المتكررة في الأسئلة.', 'summaries/medical-dentistry/', 'طب الأسنان', FALSE, 15, 'dental'),
+                ('pediatric-dentistry', 'طب أسنان الأطفال', 'Pediatric Dentistry', 'pediatric dentistry', 'ملخص طب أسنان الأطفال لأهم المواضيع المتكررة في الأسئلة.', 'summaries/pediatric-dentistry/', 'طب الأسنان', FALSE, 16, 'dental'),
+                ('orthodontics', 'تقويم الأسنان', 'Orthodontics', 'orthodontics', 'ملخص تقويم الأسنان لأهم المواضيع المتكررة في الأسئلة.', 'summaries/orthodontics/', 'طب الأسنان', FALSE, 17, 'dental'),
+                ('removable-prosthodontics', 'التركيبات المتحركة', 'Removable Prosthodontics', 'removable prosthodontics', 'ملخص التركيبات المتحركة لأهم المواضيع المتكررة في الأسئلة.', 'summaries/removable-prosthodontics/', 'طب الأسنان', FALSE, 18, 'dental'),
+                ('fixed-prosthodontics', 'التركيبات الثابتة', 'Fixed Prosthodontics', 'fixed prosthodontics', 'ملخص التركيبات الثابتة لأهم المواضيع المتكررة في الأسئلة.', 'summaries/fixed-prosthodontics/', 'طب الأسنان', FALSE, 19, 'dental'),
+                ('implant-dentistry', 'زراعة الأسنان', 'Implant Dentistry', 'implant dentistry', 'ملخص زراعة الأسنان لأهم المواضيع المتكررة في الأسئلة.', 'summaries/implant-dentistry/', 'طب الأسنان', FALSE, 20, 'dental'),
+                ('dental-materials', 'مواد طب الأسنان', 'Dental Materials', 'dental materials', 'ملخص مواد طب الأسنان لأهم المواضيع المتكررة في الأسئلة.', 'summaries/dental-materials/', 'طب الأسنان', FALSE, 21, 'dental'),
+                ('professionalism-and-infection-control', 'المهنية ومكافحة العدوى', 'Professionalism and Infection Control', 'professionalism and infection control', 'ملخص المهنية ومكافحة العدوى لأهم المواضيع المتكررة في الأسئلة.', 'summaries/professionalism-and-infection-control/', 'طب الأسنان', FALSE, 22, 'dental'),
+                ('pulmonology', 'الأمراض الصدرية', 'Pulmonology', 'medicine', 'ملخص الأمراض الصدرية لأهم المواضيع المتكررة في الأسئلة.', 'summaries/pulmonology/', 'الباطنة', FALSE, 23, 'medical'),
+                ('nephrology', 'أمراض الكلى', 'Nephrology', 'medicine', 'ملخص أمراض الكلى لأهم المواضيع المتكررة في الأسئلة.', 'summaries/nephrology/', 'الباطنة', FALSE, 24, 'medical'),
+                ('neurology', 'الأمراض العصبية', 'Neurology', 'medicine', 'ملخص الأمراض العصبية لأهم المواضيع المتكررة في الأسئلة.', 'summaries/neurology/', 'الباطنة', FALSE, 25, 'medical'),
+                ('gastroenterology', 'الجهاز الهضمي', 'Gastroenterology', 'medicine', 'ملخص الجهاز الهضمي لأهم المواضيع المتكررة في الأسئلة.', 'summaries/gastroenterology/', 'الباطنة', FALSE, 26, 'medical'),
+                ('hematology', 'أمراض الدم', 'Hematology', 'medicine', 'ملخص أمراض الدم لأهم المواضيع المتكررة في الأسئلة.', 'summaries/hematology/', 'الباطنة', FALSE, 27, 'medical'),
+                ('endocrinology-infectious', 'الغدد الصماء والأمراض المعدية', 'Endocrinology & Infectious Diseases', 'medicine', 'ملخص الغدد الصماء والأمراض المعدية لأهم المواضيع المتكررة في الأسئلة.', 'summaries/endocrinology-infectious/', 'الباطنة', FALSE, 28, 'medical'),
+                ('rheumatology', 'الروماتيزم', 'Rheumatology', 'medicine', 'ملخص الروماتيزم لأهم المواضيع المتكررة في الأسئلة.', 'summaries/rheumatology/', 'الباطنة', FALSE, 29, 'medical')
+            ON CONFLICT (slug) DO UPDATE SET
+                title = EXCLUDED.title,
+                title_en = EXCLUDED.title_en,
+                question_type = EXCLUDED.question_type,
+                description = EXCLUDED.description,
+                category = EXCLUDED.category,
+                sort_order = EXCLUDED.sort_order,
+                track = EXCLUDED.track,
+                updated_at = NOW()
+        `);
+
         // Sync authored HTML content (repo files are the source of truth).
         for (const [slug, html] of Object.entries(summaryContent)) {
             await db.query(
@@ -2048,7 +2083,7 @@ const ensureOAuthColumns = async () => {
 // 15: question_images + question_image_links (additive, ensureQuestionImagesSchema).
 // 16: check_valid_quiz_source rebuilt again to accept MedicalNovemberRecall, DentalRecall2025 and NursingRecall
 //     (the 16 Nov 2026 batch; the code imports no data, see docs/CONTENT_INTAKE.md).
-const SCHEMA_BOOTSTRAP_VERSION = 16;
+const SCHEMA_BOOTSTRAP_VERSION = 17;
 const _versionGuard = newGuardState();
 async function bootstrapAll() {
     // A failed or slow version check must NEVER start the full DDL list (7 Nov 2026: 25 instances x ~100 statements

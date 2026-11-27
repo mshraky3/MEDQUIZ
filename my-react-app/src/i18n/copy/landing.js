@@ -27,7 +27,7 @@ const landingCopy = {
         hero: {
             // New-collection notice above the pill, shown while the November sets are the freshest addition.
             newTag: 'جديد',
-            newSet: 'تجميعات نوفمبر 2026 الجديدة لاختبارات SMLE وSNLE وSDLE (بدون شرح مكتوب)',
+            newSet: 'تجميعات نوفمبر 2026 الجديدة لاختبارات SMLE وSNLE وSDLE',
             pill: 'مساران: طب بشري وتمريض · ابدأ بـ 10 أسئلة مجانية',
             title: 'تدرّب بذكاء، واجتَز اختبار الترخيص بثقة',
             body: 'بنك أسئلة محدّث على نمط البرومترك، مع تفسير واضح لكل إجابة وتحليل فوري يكشف نقاط ضعفك ويرتّب أولويات مراجعتك — كل ما تحتاجه للوصول إلى درجتك المستهدفة في مكان واحد.',
@@ -215,7 +215,7 @@ const landingCopy = {
         },
         hero: {
             newTag: 'New',
-            newSet: 'New November 2026 recall sets for the SMLE, SNLE and SDLE (no written explanations)',
+            newSet: 'New November 2026 recall sets for the SMLE, SNLE and SDLE',
             pill: 'Two tracks: medicine and nursing · Start with 10 free questions',
             title: 'Practise smarter, and walk into your licensing exam confident',
             body: 'A question bank updated to the Prometric style, a clear explanation for every answer, and instant analytics that expose your weak spots and tell you what to revise next — everything you need to hit your target score, in one place.',

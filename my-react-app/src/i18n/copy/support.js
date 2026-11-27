@@ -130,7 +130,7 @@ const supportCopy = {
             perksToggle: 'ما الذي يشمله الاشتراك؟',
             newSetTag: 'جديد',
             newSetTitle: 'مجموعة أكتوبر 2026',
-            newSetBody: 'أسئلة تدريبية جديدة بنمط الاختبار الحالي، والمزيد قادم. بدون شرح مكتوب. مشمولة في كل الخطط.',
+            newSetBody: 'أسئلة تدريبية جديدة بنمط الاختبار الحالي، والمزيد قادم. مشمولة في كل الخطط.',
             secureNoteAfter: '. لا نقوم بتخزين بيانات بطاقتك على خوادمنا.',
             // Payment works only with Saudi-issued cards (the processor refuses
             // foreign ones), so say so before the form instead of after eight
@@ -289,7 +289,7 @@ const supportCopy = {
             perksToggle: "What's included?",
             newSetTag: 'New',
             newSetTitle: 'October 2026 set',
-            newSetBody: 'New practice questions in the current exam style, with more to come. No written explanations. Included in every plan.',
+            newSetBody: 'New practice questions in the current exam style, with more to come. Included in every plan.',
             policyBefore: 'The subscription does not auto-renew — renewal is manual. By continuing you agree to the',
             terms: 'Terms of Use',
             and: 'and the',
