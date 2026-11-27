@@ -407,7 +407,7 @@ export function PastPapersHubScreen() {
           {t.hub.title}
         </T>
         <T color={colors.textMedium}>{t.hub.intro(collections.bankTotal, collections.collections.length)}</T>
-        {/* Stated up front rather than in a footnote: SCFHS and Prometric do not publish past papers. */}
+        {/* Stated up front rather than in a footnote: where these come from and that they can hold mistakes. */}
         <Card flat pad={12} style={{ backgroundColor: colors.warningBg, borderColor: colors.warning }}>
           <T size={13} color={colors.textMedium}>
             {note}

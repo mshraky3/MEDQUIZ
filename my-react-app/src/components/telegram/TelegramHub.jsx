@@ -66,8 +66,6 @@ const TelegramHub = () => {
                     ))}
                 </ul>
             </section>
-
-            <p className="tgh-note">{t.note}</p>
         </main>
     );
 };

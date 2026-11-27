@@ -58,10 +58,6 @@ const faqCopy = {
                 answer: 'يمكنك البدء فوراً بخطوات بسيطة:\n1. أنشئ حسابك وأكّد بريدك للحصول على 10 أسئلة مجانية\n2. ابدأ أول اختبار سريع\n3. عندما تنتهي أسئلتك المجانية، اختر الخطة التي تناسبك للمتابعة\n4. واصل يومياً لرفع مستواك قبل الاختبار',
             },
             {
-                question: 'هل المنصة تابعة للهيئة السعودية للتخصصات الصحية؟',
-                answer: 'لا. SQB منصة تعليمية مستقلة غير تابعة للهيئة السعودية للتخصصات الصحية (SCFHS) أو شركة Prometric أو أي جهة رسمية، والأسئلة المقدَّمة للتدريب والممارسة فقط.',
-            },
-            {
                 question: 'كيف أتواصل مع الدعم؟',
                 answer: 'يمكنك التواصل معنا عبر:\n• البريد الإلكتروني: alshraky3@gmail.com (أضف رقم واتساب في رسالتك إن أردت أن نتابع معك عليه)\n• صفحة الاتصال على الموقع',
             },
@@ -128,10 +124,6 @@ const faqCopy = {
             {
                 question: 'How do I subscribe?',
                 answer: 'You can start right away:\n1. Create your account and confirm your email to get your 10 free questions\n2. Take your first quick quiz\n3. When your free questions run out, pick the plan that suits you\n4. Keep going daily to build your score before the exam',
-            },
-            {
-                question: 'Is the platform affiliated with SCFHS?',
-                answer: 'No. SQB is an independent educational platform, not affiliated with the Saudi Commission for Health Specialties (SCFHS), Prometric, or any official body. The questions are for practice only.',
             },
             {
                 question: 'How do I contact support?',

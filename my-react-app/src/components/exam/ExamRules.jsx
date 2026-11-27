@@ -57,7 +57,6 @@ const ExamRules = ({ state, onBegin, onCancel }) => {
             {state.passMark && (
                 <p className="exm-muted exm-small">{t.rules.passInfo(fmt(state.passMark.pass), fmt(state.passMark.scaleMin), fmt(state.passMark.scaleMax))}</p>
             )}
-            <p className="exm-muted exm-small">{t.rules.disclaimer}</p>
 
             <div className="exm-actions">
                 <button type="button" className="exm-btn exm-btn-primary" onClick={onBegin}>

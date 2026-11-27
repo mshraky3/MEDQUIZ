@@ -11,9 +11,8 @@
  *
  * On the wording: the URL and the headings use the phrase people search for,
  * but the copy never claims these are official papers. They are recall-based
- * collections compiled and reviewed by SQB — SCFHS and Prometric do not
- * publish past papers, and the site already carries a disclaimer saying it is
- * unaffiliated with either. Saying "past papers" in a heading and "reviewed
+ * collections compiled and reviewed by SQB. The independence statement lives
+ * only in the Terms and the footer (owner, 27 Nov 2026). Saying "past papers" in a heading and "reviewed
  * collections" in the body would be having it both ways, so the body says what
  * they are in the first sentence.
  *
@@ -220,22 +219,18 @@ function escapeHtml(value = '') {
 }
 
 export const HONESTY_NOTE_EN =
-    'Neither SCFHS nor Prometric publishes past exam papers. What you find here are '
+    'What you find here are '
     + 'question collections assembled by the SQB team from what candidates report after '
-    + 'sitting the exam. Recalled questions and answers can contain mistakes. '
-    + 'This platform is not affiliated with SCFHS or Prometric.';
+    + 'sitting the exam. Recalled questions and answers can contain mistakes.';
 
 export const HONESTY_NOTE_AR =
-    'لا تنشر الهيئة السعودية للتخصصات الصحية ولا Prometric أوراق اختبارات سابقة. '
-    + 'ما تجده هنا تجميعات أسئلة أعدّها فريق SQB اعتماداً على ما ينقله المتقدمون بعد الاختبار، '
-    + 'وقد يحتوي السؤال المنقول من الذاكرة أو إجابته على أخطاء. المنصة غير تابعة للهيئة أو Prometric.';
+    'ما تجده هنا تجميعات أسئلة أعدّها فريق SQB اعتماداً على ما ينقله المتقدمون بعد الاختبار، '
+    + 'وقد يحتوي السؤال المنقول من الذاكرة أو إجابته على أخطاء.';
 
 /**
  * The collections FAQ, from the same copy the React pages render.
  *
- * The first entry is the "are these official past papers?" answer, and it is
- * first on purpose: it is the question the URL invites, and burying it would
- * make the page's phrasing feel like a trick.
+ * There is no "are these official?" entry: see the note at the top of this file.
  */
 export function collectionsFaqItems({ bankTotal, collectionCount }, lang = 'ar') {
     const t = pastPapersCopy[lang] || pastPapersCopy.ar;

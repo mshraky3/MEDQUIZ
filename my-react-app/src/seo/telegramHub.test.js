@@ -72,5 +72,6 @@ test('Telegram copy makes no count, recall or affiliation claim', () => {
     const all = [...strings(hubCopy), ...strings(cardCopy)].join('\n');
     assert.ok(!/\d{2,}|[\u0660-\u0669]/.test(all), 'no numbers');
     assert.ok(!/subscriber|recall|real exam|مشترك|تجميعات|المسربة/i.test(all));
-    assert.match(hubCopy.en.note, /not affiliated/);
+    // the independence statement lives in the Terms and the footer only
+    assert.ok(!/affiliat|independent platform|منصة مستقلة|تابعة/i.test(all));
 });

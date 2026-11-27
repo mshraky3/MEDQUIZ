@@ -45,10 +45,6 @@ const pastPapersCopy = {
         faqTitle: 'أسئلة شائعة عن التجميعات',
         faq: (bankTotal, n) => [
             {
-                q: 'هل هذه أوراق اختبارات SMLE سابقة رسمية؟',
-                a: 'لا. لا تنشر الهيئة السعودية للتخصصات الصحية ولا Prometric أوراق اختبارات سابقة، وأي جهة تدّعي بيع أوراق رسمية فهي غير صادقة. ما تجده هنا مجموعات أسئلة تدريبية أعدّها فريق SQB، وقد يحتوي بعضها أو إجابته على أخطاء.',
-            },
-            {
                 q: 'ما الفرق بين التجميعات؟',
                 a: `البنك مبني من ${n} تجميعات تضم ${bankTotal} سؤالاً في المجموع (قد يرد السؤال الواحد في أكثر من تجميعة). بعضها مرتبط بمصدر معروف بين المتقدمين مثل Midgard وGameBoy، وبعضها مجموعات مبنية على معيار: «الأسئلة المؤكدة» هي ما ورد في أكثر من مصدر، و«الأكثر تكراراً» هي الأكثر ورودًا عبر مصادر البنك.`,
             },
@@ -114,10 +110,6 @@ const pastPapersCopy = {
 
         faqTitle: 'Questions about the collections',
         faq: (bankTotal, n) => [
-            {
-                q: 'Are these official past SMLE papers?',
-                a: 'No. Neither SCFHS nor Prometric publishes past exam papers, and anyone claiming to sell official papers is not being straight with you. What you find here are practice-question collections prepared by the SQB team. Some questions or answers may contain mistakes.',
-            },
             {
                 q: 'What is the difference between the collections?',
                 a: `The bank is built from ${n} collections holding ${bankTotal} questions in total (one question can appear in more than one collection). Some carry a name candidates already know, such as Midgard and GameBoy; others are grouped by a rule — "Confirmed" means the question appears in more than one source, "Most repeated" means it recurs most often across the bank's sources.`,

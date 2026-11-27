@@ -38,7 +38,6 @@ ${cards}
 ${t.points.map((point) => `          <li>${escapeHtml(point)}</li>`).join('\n')}
         </ul>
       </section>
-      <p class="tgh-note">${escapeHtml(t.note)}</p>
     </main>
   `;
 }

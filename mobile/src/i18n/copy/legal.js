@@ -82,7 +82,7 @@ const legalCopy = {
                         { p: 'المحتوى المقدَّم في المنصة لأغراض تعليمية ومعلوماتية فقط. ورغم حرصنا على دقّته وتحديثه:' },
                         {
                             ul: [
-                                'لسنا تابعين لشركة Prometric أو الهيئة السعودية للتخصصات الصحية (SCFHS) أو أي جهة ترخيص رسمية',
+                                'SQB منصة مستقلة وليست الاختبار الرسمي، ولسنا تابعين لشركة Prometric أو الهيئة السعودية للتخصصات الصحية (SCFHS) أو أي جهة ترخيص رسمية',
                                 'أسئلتنا مواد تدريبية وقد لا تطابق محتوى الاختبار الفعلي',
                                 'النجاح على منصتنا لا يضمن النجاح في اختبار SMLE الفعلي',
                                 'على المستخدم التحقق من المعلومات عبر المصادر الرسمية',
@@ -418,10 +418,6 @@ const legalCopy = {
                     ],
                 },
                 {
-                    heading: 'إخلاء المسؤولية',
-                    blocks: [{ p: 'SQB منصة تعليمية مستقلة غير تابعة للهيئة السعودية للتخصصات الصحية (SCFHS) أو شركة Prometric أو أي جهة رسمية. الأسئلة المقدَّمة للتدريب والممارسة فقط ولا تمثّل الاختبار الفعلي.' }],
-                },
-                {
                     heading: 'تواصل معنا',
                     blocks: [
                         { p: 'نرحّب بأسئلتك واقتراحاتك. يمكنك التواصل معنا عبر:' },
@@ -505,7 +501,7 @@ const legalCopy = {
                         { p: 'The content provided on SQB is for educational and informational purposes only. While we work to keep it accurate and up to date:' },
                         {
                             ul: [
-                                'We are not affiliated with Prometric, SCFHS, or any official licensing body',
+                                'SQB is an independent platform and is not the official exam. We are not affiliated with Prometric, SCFHS, or any official licensing body',
                                 'Our questions are practice material and may not reflect actual exam content',
                                 'Success on our platform does not guarantee success in the actual SMLE exam',
                                 'You should verify information against official sources',
@@ -837,10 +833,6 @@ const legalCopy = {
                         { h3: 'Summaries rewritten and updated' },
                         { p: '15 July 2026 — We rewrote the summaries and refreshed their content so they are clearer and more focused on the high-yield points.' },
                     ],
-                },
-                {
-                    heading: 'Disclaimer',
-                    blocks: [{ p: 'SQB is an independent educational platform, not affiliated with the Saudi Commission for Health Specialties (SCFHS), Prometric, or any official body. The questions are for practice only and do not represent the actual exam.' }],
                 },
                 {
                     heading: 'Contact us',

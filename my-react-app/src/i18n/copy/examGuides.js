@@ -639,7 +639,6 @@ const examGuidesCopy = {
             blocks: [
                 { p: `كل رقم في هذه الصفحة منقول من **${docName}** الصادر عن الهيئة السعودية للتخصصات الصحية، النسخة المنشورة على موقع الهيئة، وقد قُرئت في ${retrieved}.` },
                 { p: `الهيئة تحدّث هذه الأدلة من حين لآخر. **قبل التقديم، افتح الدليل الحالي على موقع الهيئة وتأكّد بنفسك:** [[${url}|الملف الرسمي (PDF)]]. أي صفحة على الإنترنت، بما فيها هذه، قد تتأخّر عن الوثيقة الرسمية، وهذه الصفحة ليست بديلاً عنها.` },
-                { p: 'وSQB منصة تعليمية مستقلة غير تابعة للهيئة السعودية للتخصصات الصحية ولا لشركة Prometric.' },
             ],
         }),
     },
@@ -1222,7 +1221,6 @@ const examGuidesCopy = {
             blocks: [
                 { p: `Every figure on this page is transcribed from the **${docName}**, published by the Saudi Commission for Health Specialties, in the edition on the Commission’s website, read on ${retrieved}.` },
                 { p: `SCFHS revises these guides from time to time. **Before you apply, open the current guide on the Commission’s site and check for yourself:** [[${url}|the official PDF]]. Any page on the internet, this one included, can lag behind the official document, and this is not a substitute for it.` },
-                { p: 'SQB is an independent educational platform, not affiliated with the Saudi Commission for Health Specialties or with Prometric.' },
             ],
         }),
     },
