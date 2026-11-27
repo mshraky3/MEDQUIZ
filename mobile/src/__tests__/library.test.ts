@@ -78,11 +78,11 @@ describe('past-paper collections', () => {
     expect(data.tracks.flatMap((t: any) => t.collections)).toHaveLength(data.collections.length);
   });
 
-  it('states that these are not official papers, in both languages', () => {
-    expect(HONESTY_NOTE_EN).toMatch(/not affiliated/i);
-    expect(HONESTY_NOTE_EN).toMatch(/Prometric/);
-    expect(HONESTY_NOTE_AR).toMatch(/Prometric/);
-    expect(HONESTY_NOTE_AR).toMatch(/غير تابعة/);
+  it('says the collections can hold mistakes, and leaves the affiliation line to the terms and footer', () => {
+    expect(HONESTY_NOTE_EN).toMatch(/can contain mistakes/);
+    expect(HONESTY_NOTE_AR).toMatch(/أخطاء/);
+    expect(HONESTY_NOTE_EN).not.toMatch(/affiliated|Prometric/i);
+    expect(HONESTY_NOTE_AR).not.toMatch(/تابعة|Prometric/);
   });
 });
 

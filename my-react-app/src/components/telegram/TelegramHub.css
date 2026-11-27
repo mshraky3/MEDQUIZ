@@ -93,7 +93,6 @@
 .tgh-points ul { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
 .tgh-points li { display: flex; align-items: flex-start; gap: 10px; font-size: 15px; line-height: 1.6; color: var(--text-medium); }
 .tgh-points li svg { flex-shrink: 0; margin-block-start: 4px; color: var(--fg-2563eb); }
-.tgh-page .tgh-note { margin: 16px 0 0; font-size: 13px; line-height: 1.7; text-align: center; color: var(--text-light); }
 
 @media (max-width: 760px) {
   .tgh-grid { grid-template-columns: 1fr; gap: 12px; }

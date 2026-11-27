@@ -213,9 +213,9 @@ function buildSitemap(routes) {
  *
  * Worth having because assistants are already a channel here: more visits
  * arrived from ChatGPT and Perplexity last month than from Bing. An assistant
- * that has to guess the shape of a site from one page guesses badly, and the
- * thing it most often gets wrong about this one is the affiliation — hence the
- * disclaimer near the top, in the same words the footer uses.
+ * that has to guess the shape of a site from one page guesses badly. The
+ * independence statement is not repeated here: it lives only in the Terms and
+ * the footer (owner, 27 Nov 2026).
  *
  * Generated from the same route list the sitemap is built from, so it cannot
  * drift from what actually exists. Individual question pages are left out on
@@ -265,9 +265,7 @@ function buildLlmsTxt(routes) {
 > illustrated topic summaries, performance analytics, and study guides.
 > Separate tracks — medical, nursing and dental — with their own questions, summaries and analytics.
 
-SQB is an independent educational platform. It is **not affiliated with the
-Saudi Commission for Health Specialties (SCFHS) or with Prometric**, and
-nothing on it is an official source for exam rules. Where a page states exam
+Where a page states exam
 logistics it names the SCFHS document it was taken from; the Commission's own
 applicant guide at scfhs.org.sa is what governs.
 

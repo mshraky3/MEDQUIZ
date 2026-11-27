@@ -52,9 +52,8 @@ const PastPapersHub = () => {
                 <p className="pq-kicker">{t.hub.kicker}</p>
                 <h1>{t.hub.title}</h1>
                 <p>{t.hub.intro(data.bankTotal, data.collections.length)}</p>
-                {/* Stated up front rather than in a footnote: SCFHS and Prometric
-                    do not publish past papers, and the heading uses the phrase
-                    people search for. */}
+                {/* Stated up front rather than in a footnote: where these
+                    collections come from and that they can hold mistakes. */}
                 <p className="pq-note">{lang === 'en' ? HONESTY_NOTE_EN : HONESTY_NOTE_AR}</p>
             </header>
 

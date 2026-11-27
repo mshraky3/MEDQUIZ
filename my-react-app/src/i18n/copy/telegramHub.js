@@ -26,7 +26,6 @@ const telegramHubCopy = {
             'أسئلة مشروحة كل يوم',
             'ملفات مراجعة',
         ],
-        note: 'SQB منصة مستقلة، وليست تابعة للهيئة السعودية للتخصصات الصحية ولا لشركة Prometric.',
     },
     en: {
         meta: {
@@ -48,7 +47,6 @@ const telegramHubCopy = {
             'Explained questions every day',
             'Review files',
         ],
-        note: 'SQB is an independent platform. It is not affiliated with the Saudi Commission for Health Specialties or with Prometric.',
     },
 };
 

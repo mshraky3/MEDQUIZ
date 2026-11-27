@@ -53,7 +53,7 @@ const authCopy = {
             accept: 'أوافق على شروط الاستخدام',
             continue: 'متابعة',
             sections: [
-                { heading: 'هدف المنصة', body: 'جميع الأسئلة والمواد المتاحة هنا جُمعت بجهود طلابية فردية ولا ترتبط بأي جهة تعليمية أو صحية رسمية. الغرض منها تعليمي بحت للمراجعة والتحضير.' },
+                { heading: 'هدف المنصة', body: 'جميع الأسئلة والمواد المتاحة هنا جُمعت بجهود طلابية فردية ولا ترتبط بأي جهة تعليمية أو صحية رسمية، ومنها الهيئة السعودية للتخصصات الصحية (SCFHS) وPrometric، وSQB ليست الاختبار الرسمي. الغرض منها تعليمي بحت للمراجعة والتحضير.' },
                 { heading: 'تنبيه حول الدقة', body: 'نبذل قصارى جهدنا للحفاظ على دقة المحتوى، لكن قد توجد أخطاء أو معلومات ناقصة. لا نضمن صحة أو اكتمال أو موثوقية أي مادة، ويجب الرجوع للمصادر الرسمية عند الاستعداد للاختبارات.' },
                 { heading: 'سياسات الحساب', body: 'أنت مسؤول عن سرية بيانات الدخول. يمنع مشاركة الحساب مع أشخاص غير مصرح لهم، وللإدارة الحق في إيقاف أو حذف أي حساب مخالف.' },
             ],
@@ -266,7 +266,7 @@ const authCopy = {
             accept: 'I agree to the Terms of Use',
             continue: 'Continue',
             sections: [
-                { heading: 'What this platform is for', body: 'Every question and all material here was collected through individual student effort and is not connected to any official educational or health authority. It is purely educational, for revision and preparation.' },
+                { heading: 'What this platform is for', body: 'Every question and all material here was collected through individual student effort and is not connected to any official educational or health authority, including SCFHS and Prometric. SQB is not the official exam. It is purely educational, for revision and preparation.' },
                 { heading: 'A note on accuracy', body: 'We do our best to keep the content accurate, but errors and gaps are possible. We do not guarantee that any material is correct, complete or reliable, and you should consult official sources when preparing for your exam.' },
                 { heading: 'Account rules', body: 'You are responsible for keeping your login details private. Sharing your account with unauthorised people is not allowed, and we may suspend or delete any account that breaks this rule.' },
             ],

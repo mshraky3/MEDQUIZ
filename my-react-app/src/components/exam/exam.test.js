@@ -390,8 +390,8 @@ test('copy: Arabic and English have the same keys, no brand but SQB, no affiliat
     const flat = JSON.stringify(examCopy, (k, v) => (typeof v === 'function' ? v(1, 2, 3, 4) : v));
     assert.ok(!/MEDQ?UIZE?/i.test(flat));
     assert.ok(!/same as the real exam|identical to the real exam|official SCFHS exam|مطابق للاختبار الحقيقي|نفس الاختبار الحقيقي/i.test(flat));
-    // it says it is NOT affiliated; it must never say it IS
-    assert.ok(!/(affiliated with|endorsed by|approved by|official partner|in partnership with)/i.test(JSON.stringify(examCopy.en).replace(/not affiliated with or endorsed by/gi, '')));
+    // never claims a relationship; the "not affiliated" line itself lives in the Terms and footer only
+    assert.ok(!/(affiliated with|endorsed by|approved by|official partner|in partnership with)/i.test(JSON.stringify(examCopy.en)));
     assert.ok(!/prometric/i.test(flat), 'no provider is named');
     // never a question count in copy
     assert.ok(!/\b\d{3,5}\s+(questions|سؤال)/i.test(flat.replace(/200|100|120/g, '')));
