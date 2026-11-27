@@ -16,6 +16,45 @@ test('150 answers = exactly ONE request', async () => {
   assert.deepEqual(r, { failures: 0, usedFallback: false });
 });
 
+// A timer that runs out submits the whole quiz, unanswered questions included. Their
+// selected_option is undefined, JSON drops it, and the server refused the WHOLE batch.
+const timedOut = () => mk(5).map((a, i) => (i < 2 ? a : { ...a, selected_option: undefined, is_correct: false }));
+// What both server routes require, applied to the body as it arrives over the wire.
+const serverLike = (calls) => async (url, body) => {
+  const wire = JSON.parse(JSON.stringify(body));
+  calls.push([url, wire]);
+  const rows = url.endsWith('/batch') ? wire.attempts : [wire];
+  if (rows.some((a) => a.selected_option === undefined)) throw httpErr(400);
+};
+
+test('timer expiry: unanswered questions are left out and the batch is accepted in ONE request', async () => {
+  const calls = [];
+  const r = await saveAttempts(serverLike(calls), timedOut(), { sessionId: 9, userId: 1, sleep });
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0][0], '/question-attempts/batch');
+  assert.deepEqual(calls[0][1].attempts.map((a) => a.question_id), [1, 2]);
+  assert.deepEqual(r, { failures: 0, usedFallback: false });
+});
+
+test('timer expiry with nothing answered sends no request at all', async () => {
+  const calls = [];
+  const none = mk(3).map((a) => ({ ...a, selected_option: undefined }));
+  const r = await saveAttempts(serverLike(calls), none, { sessionId: 9, userId: 1, sleep });
+  assert.equal(calls.length, 0);
+  assert.deepEqual(r, { failures: 0, usedFallback: false });
+});
+
+test('the per-answer fallback skips unanswered questions too', async () => {
+  const singles = [];
+  const post = async (url, body) => {
+    if (url.endsWith('/batch')) throw httpErr(404);
+    singles.push(body.question_id);
+  };
+  const r = await saveAttempts(post, timedOut(), { sessionId: 9, userId: 1, sleep });
+  assert.deepEqual(singles.sort(), [1, 2]);
+  assert.deepEqual(r, { failures: 0, usedFallback: true });
+});
+
 test('a 503 on the batch is retried (batch is idempotent) before any fallback', async () => {
   let n = 0;
   const r = await saveAttempts(async () => { n += 1; if (n < 3) throw httpErr(503); }, mk(10), { sessionId: 9, userId: 1, sleep });

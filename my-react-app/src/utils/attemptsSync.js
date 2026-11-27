@@ -28,11 +28,16 @@ async function withBackoff(task, tries, sleep) {
 }
 
 /**
+ * A question the timer ran out on has no selected_option. JSON drops an undefined
+ * field and both routes require it, so one such entry made the server refuse the
+ * whole batch. There is no answer to save for it, so it is not sent.
+ *
  * @param {(url:string, body:object)=>Promise} post  e.g. apiClient.post
- * @param {Array} attempts  bodies of the old POST /question-attempts (same fields)
+ * @param {Array} allAttempts  bodies of the old POST /question-attempts (same fields)
  * @returns {Promise<{failures:number, usedFallback:boolean}>}
  */
-export async function saveAttempts(post, attempts, { sessionId, userId, sleep = defaultSleep, concurrency = FALLBACK_CONCURRENCY } = {}) {
+export async function saveAttempts(post, allAttempts, { sessionId, userId, sleep = defaultSleep, concurrency = FALLBACK_CONCURRENCY } = {}) {
+  const attempts = allAttempts.filter((a) => a.selected_option !== undefined && a.selected_option !== null);
   if (!attempts.length) return { failures: 0, usedFallback: false };
   try {
     await withBackoff(
