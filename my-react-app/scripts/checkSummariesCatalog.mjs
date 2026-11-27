@@ -14,7 +14,7 @@ const ok = (c, m) => { console.log((c?'  ok   ':'  FAIL ')+m); if(!c) bad++; };
 ok(EMPTY_PATH_SHAPE.totalSteps === 0 && Array.isArray(EMPTY_PATH_SHAPE.milestones),
    'EMPTY_PATH_SHAPE is fully shaped and empty');
 
-for (const track of ['medical','nursing']) {
+for (const track of ['medical','nursing','dental']) {
   const secs = await loadSections(track);
   const p = await loadPath(track);
   ok(secs.length > 0, `${track}: ${secs.length} sections load`);

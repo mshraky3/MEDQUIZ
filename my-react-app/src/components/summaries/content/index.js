@@ -21,7 +21,7 @@
 // (or loadPath() in pathMeta.js), both of which cache per track, so it is one
 // network round-trip on first visit and a resolved promise afterwards.
 // ---------------------------------------------------------------------------
-import { MEDICAL, NURSING, normalizeTrack } from '../../../utils/tracks.js';
+import { MEDICAL, NURSING, DENTAL, normalizeTrack } from '../../../utils/tracks.js';
 
 // Order matters — it is the order the sections appear in the guided path.
 const LOADERS = {
@@ -32,6 +32,15 @@ const LOADERS = {
         () => import('./obgyn.js'),
         () => import('./medicine.js'),
         () => import('./surgery.js'),
+        // Internal medicine by specialty (deeper than the Medicine section).
+        () => import('./specialtyCardiology.js'),
+        () => import('./specialtyPulmonology.js'),
+        () => import('./specialtyNephrology.js'),
+        () => import('./specialtyNeurology.js'),
+        () => import('./specialtyGastroenterology.js'),
+        () => import('./specialtyHematology.js'),
+        () => import('./specialtyEndocrinologyInfectious.js'),
+        () => import('./specialtyRheumatology.js'),
     ],
     // Order follows the SNLE blueprint: the foundations first, then the biggest
     // clinical block, then the life-stage specialties, then pharmacology.
@@ -42,6 +51,21 @@ const LOADERS = {
         () => import('./pediatricNursing.js'),
         () => import('./mentalHealthNursing.js'),
         () => import('./nursingPharmacology.js'),
+    ],
+    [DENTAL]: [
+        () => import('./dentalRestorativeDentistry.js'),
+        () => import('./dentalEndodontics.js'),
+        () => import('./dentalPeriodontics.js'),
+        () => import('./dentalOralSurgery.js'),
+        () => import('./dentalOralMedicineAndRadiology.js'),
+        () => import('./dentalMedicalDentistry.js'),
+        () => import('./dentalPediatricDentistry.js'),
+        () => import('./dentalOrthodontics.js'),
+        () => import('./dentalRemovableProsthodontics.js'),
+        () => import('./dentalFixedProsthodontics.js'),
+        () => import('./dentalImplantDentistry.js'),
+        () => import('./dentalDentalMaterials.js'),
+        () => import('./dentalProfessionalismAndInfectionControl.js'),
     ],
 };
 

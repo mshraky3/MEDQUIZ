@@ -71,8 +71,8 @@ const COLLECTION_META = {
         slug: 'smle-november-recall',
         labelAr: 'تجميعة نوفمبر 2026 للطب البشري',
         labelEn: 'November 2026 Recall (SMLE)',
-        blurbAr: 'أسئلة SMLE جديدة مجمّعة من ذاكرة المتقدمين بعد اختبارات نوفمبر 2026. بدون شرح مكتوب.',
-        blurbEn: 'New SMLE questions compiled from candidates’ memory after the November 2026 sittings. No written explanations.',
+        blurbAr: 'أسئلة SMLE جديدة مجمّعة من ذاكرة المتقدمين بعد اختبارات نوفمبر 2026.',
+        blurbEn: 'New SMLE questions compiled from candidates’ memory after the November 2026 sittings.',
     },
     MedicalSeptemberRecall: {
         slug: 'smle-september-recall',
@@ -120,8 +120,8 @@ const COLLECTION_META = {
         slug: 'snle-recall',
         labelAr: 'تجميعات التمريض',
         labelEn: 'Nursing Recalls (SNLE)',
-        blurbAr: 'أسئلة SNLE جديدة مجمّعة من ذاكرة المتقدمين. بدون شرح مكتوب، وقد تحتاج بعض الإجابات إلى مراجعة.',
-        blurbEn: 'New SNLE questions compiled from candidates’ memory. No written explanations, and some answers may need a second look.',
+        blurbAr: 'أسئلة SNLE جديدة مجمّعة من ذاكرة المتقدمين. قد تحتاج بعض الإجابات إلى مراجعة.',
+        blurbEn: 'New SNLE questions compiled from candidates’ memory. Some answers may need a second look.',
     },
     DentalExplained: {
         slug: 'sdle-core',
@@ -141,8 +141,8 @@ const COLLECTION_META = {
         slug: 'sdle-recall-2025',
         labelAr: 'تجميعات 2025 — طب الأسنان',
         labelEn: 'Recall 2025 (SDLE)',
-        blurbAr: 'أسئلة SDLE جديدة مجمّعة من ذاكرة المتقدمين في اختبارات 2025. بدون شرح مكتوب.',
-        blurbEn: 'New SDLE questions compiled from candidates’ memory of the 2025 sittings. No written explanations.',
+        blurbAr: 'أسئلة SDLE جديدة مجمّعة من ذاكرة المتقدمين في اختبارات 2025.',
+        blurbEn: 'New SDLE questions compiled from candidates’ memory of the 2025 sittings.',
     },
     DentalRecall2024: {
         slug: 'sdle-recall-2024',

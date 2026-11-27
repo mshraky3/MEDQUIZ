@@ -26,6 +26,91 @@ import { normalizeTrack } from '@/lib/tracks';
 
 // One line per milestone: what finishing it actually gets the student.
 const MILESTONE_COPY = {
+    /* ---- Dental track and medicine specialties ---- */
+    'restorative-dentistry': {
+        tagline: "Save the tooth",
+        goal: "Diagnose caries, protect the pulp and choose the right restoration.",
+    },
+    endodontics: {
+        tagline: "Read the pulp",
+        goal: "Turn symptoms and tests into a pulpal and periapical diagnosis, then pick the treatment.",
+    },
+    periodontics: {
+        tagline: "The supporting tissues",
+        goal: "Classify periodontal disease and follow the treatment sequence from cleaning to surgery.",
+    },
+    'oral-surgery': {
+        tagline: "Extractions and beyond",
+        goal: "Plan extractions, manage complications and spread of infection.",
+    },
+    'oral-medicine-and-radiology': {
+        tagline: "Lesions and images",
+        goal: "Recognise oral lesions and read the common radiographic appearances.",
+    },
+    'medical-dentistry': {
+        tagline: "The medically complex patient",
+        goal: "Know when to proceed, modify or defer dental care, and how to handle emergencies.",
+    },
+    'pediatric-dentistry': {
+        tagline: "The young patient",
+        goal: "Behaviour, pulp therapy, trauma and prevention in children.",
+    },
+    orthodontics: {
+        tagline: "Growth and bite",
+        goal: "Classify malocclusion and know when and how to intervene.",
+    },
+    'removable-prosthodontics': {
+        tagline: "Complete and partial dentures",
+        goal: "Design, record and troubleshoot removable prostheses.",
+    },
+    'fixed-prosthodontics': {
+        tagline: "Crowns and bridges",
+        goal: "Preparation, impressions, cements and the reasons restorations fail.",
+    },
+    'implant-dentistry': {
+        tagline: "Replace with implants",
+        goal: "Plan implant cases and recognise and manage complications.",
+    },
+    'dental-materials': {
+        tagline: "What each material does",
+        goal: "Match material properties to the clinical job.",
+    },
+    'professionalism-and-infection-control': {
+        tagline: "Safe and ethical practice",
+        goal: "Infection control, sterilisation, ethics and consent.",
+    },
+    cardiology: {
+        tagline: "The heart in depth",
+        goal: "Go deeper on chest pain, heart failure, rhythm and valve questions.",
+    },
+    pulmonology: {
+        tagline: "Breathlessness in depth",
+        goal: "Airway disease, infection, clots and pleural problems.",
+    },
+    nephrology: {
+        tagline: "Kidneys and electrolytes",
+        goal: "Kidney injury, glomerular disease, electrolytes and acid–base.",
+    },
+    neurology: {
+        tagline: "Brain and nerves",
+        goal: "Stroke, seizures, headache and weakness.",
+    },
+    gastroenterology: {
+        tagline: "Gut and liver",
+        goal: "Liver disease, bowel disease, bleeding and the pancreas.",
+    },
+    hematology: {
+        tagline: "Blood and clotting",
+        goal: "Anaemias, bleeding, clotting and blood cancers.",
+    },
+    'endocrinology-infectious': {
+        tagline: "Hormones and infection",
+        goal: "Diabetes and endocrine emergencies, plus the common infections.",
+    },
+    rheumatology: {
+        tagline: "Joints and autoimmunity",
+        goal: "Arthritis, lupus, vasculitis and bone health.",
+    },
     pediatrics: {
         tagline: 'Read a sick child',
         goal: 'Recognise the classic pediatric presentations, know the first move in each, and walk into the pediatrics block without guessing.',
