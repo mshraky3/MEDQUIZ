@@ -1,5 +1,6 @@
 import React from 'react';
 import Icon from '../common/Icon.jsx';
+import { LocaleLink as Link } from '../../i18n';
 import { nextExamDateAny } from '../../config/examDates.js';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -16,10 +17,10 @@ const ExamCountdown = ({ copy }) => {
     const days = Math.max(1, Math.ceil((next.getTime() - Date.now()) / MS_PER_DAY));
 
     return (
-        <div className="exam-countdown">
+        <Link className="exam-countdown" to="/exams/dates">
             <Icon name="calendar" size={16} />
             <span>{copy(days)}</span>
-        </div>
+        </Link>
     );
 };
 

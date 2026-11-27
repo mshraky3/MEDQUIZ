@@ -50,7 +50,7 @@ const landingCopy = {
             ],
             // Rendered only when config/examDates.js has a real, verified future
             // date — otherwise ExamCountdown renders nothing.
-            examCountdown: (days) => `الاختبار القادم بعد ${days} ${days === 1 ? 'يوم' : 'يوماً'}`,
+            examCountdown: (days) => `فترة الاختبار القادمة تبدأ بعد ${days === 1 ? 'يوم واحد' : days === 2 ? 'يومين' : `${days} ${days <= 10 ? 'أيام' : 'يوماً'}`}`,
             scrollCue: 'تصفّح',
         },
 

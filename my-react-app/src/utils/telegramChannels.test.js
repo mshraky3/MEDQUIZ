@@ -43,7 +43,6 @@ test('every prerendered past-paper page links its own channel only; the tracks w
         for (const c of collections) {
             const html = collectionPageHtml(c, collections, lang);
             assert.deepEqual(channelsIn(html), [telegramUrl(c.track)], `${c.slug} ${lang} channel`);
-            if (c.track === 'medical') continue;
             // A signup button comes before any long list of samples.
             const button = html.indexOf('pq-cta-btn');
             assert.ok(button > 0, c.slug);

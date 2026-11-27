@@ -11,6 +11,8 @@ import { useCommon, useLang, LanguageToggle, LocaleLink as Link } from '../../i1
 import storiesData from '../../seo/data/successStories.json';
 import './Footer.css';
 
+import { TIKTOK_URL } from '../../config/social.js';
+
 /**
  * Compact, mobile-first footer.
  *
@@ -108,6 +110,7 @@ const Footer = () => {
           {links.map((link) => (
             <Link key={link.to} to={link.to}>{link.label}</Link>
           ))}
+          <a href={TIKTOK_URL} target="_blank" rel="noopener noreferrer">{t.footer.tiktok}</a>
         </nav>
 
         <div className="footer-bottom">

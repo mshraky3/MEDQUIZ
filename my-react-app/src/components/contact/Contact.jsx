@@ -6,6 +6,7 @@ import { UserContext } from '../../UserContext';
 import { userTrack } from '../../utils/tracks.js';
 import { TELEGRAM_HUB_PATH, orderedChannels } from '../../utils/telegramChannels.js';
 import { trackTelegramClick } from '../../utils/telegramClick.js';
+import { TIKTOK_HANDLE, TIKTOK_URL } from '../../config/social.js';
 import Globals from '../../global.js';
 import { LocaleLink, useCopy, useLang } from '../../i18n';
 import supportCopy from '../../i18n/copy/support.js';
@@ -187,6 +188,9 @@ ${t.mailFooter}
                                     <LocaleLink to={TELEGRAM_HUB_PATH} className="info-link contact-tg-all">
                                         {t.telegramAll}
                                     </LocaleLink>
+                                    <a href={TIKTOK_URL} className="info-link contact-tg-all" target="_blank" rel="noopener noreferrer">
+                                        {t.tiktok} <bdi>{TIKTOK_HANDLE}</bdi>
+                                    </a>
                                 </div>
                             </div>
                         </div>

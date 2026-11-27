@@ -7,7 +7,7 @@ import * as paths from './examPaths.js';
 
 test('light route list equals the full module list, in the same order', () => {
     assert.deepEqual(light(), full());
-    assert.equal(light().length, 13);
+    assert.equal(light().length, 14);
 });
 
 test('copy module still re-exports the same constants and helpers', () => {

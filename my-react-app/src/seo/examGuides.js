@@ -8,6 +8,7 @@
  *   /exams                       both exams side by side
  *   /exams/format                shared — the two exams are built identically
  *   /exams/test-day              shared — same centres, same rules
+ *   /exams/dates                 shared — SCFHS testing periods (cites its own page)
  *   /exams/{smle,snle}           per-exam hub
  *   /exams/{smle,snle}/blueprint
  *   /exams/{smle,snle}/passing-score
@@ -72,6 +73,7 @@ const KEYWORDS = {
         root: 'اختبارات الهيئة السعودية للتخصصات الصحية, SMLE, SNLE, اختبار الرخصة السعودية',
         'format': 'شكل اختبار SMLE, عدد أسئلة SNLE, مدة اختبار الهيئة, الأسئلة التجريبية',
         'test-day': 'يوم اختبار SMLE, ما تحتاجه في مركز بروميتريك, هوية اختبار الهيئة, التأخر عن الاختبار',
+        'dates': 'مواعيد اختبار SMLE, مواعيد اختبار SNLE, مواعيد اختبار SDLE, فترات اختبارات الهيئة 2027',
         blueprint: (label) => `توزيع اختبار ${label}, ${label} blueprint, مواضيع اختبار ${label}, نسب اختبار ${label}`,
         'passing-score': (label) => `درجة النجاح في ${label}, نتيجة اختبار ${label}, مقياس 200 800, متى تظهر نتيجة ${label}`,
         eligibility: (label) => `شروط التقديم على ${label}, تسجيل اختبار ${label}, تصريح الجدولة, حجز موعد بروميتريك`,
@@ -81,6 +83,7 @@ const KEYWORDS = {
         root: 'SCFHS exams, SMLE, SNLE, Saudi licensing exam, Saudi Commission for Health Specialties',
         'format': 'SMLE format, SNLE format, how many questions SMLE, pilot questions, exam timing',
         'test-day': 'SMLE test day, Prometric Saudi, exam ID requirements, arriving late for SMLE',
+        'dates': 'SMLE exam dates, SNLE exam dates, SDLE exam dates, SCFHS testing periods 2027',
         blueprint: (label) => `${label} blueprint, ${label} content outline, ${label} topics, what is on the ${label}`,
         'passing-score': (label) => `${label} passing score, ${label} results, 200-800 scale, when do ${label} results come out`,
         eligibility: (label) => `${label} eligibility, ${label} registration, scheduling permit, book ${label} Prometric`,
@@ -158,7 +161,10 @@ export function resolveExamRoute(path, lang = 'ar') {
     if (segments.length === 1) {
         const [key] = segments;
         if (SHARED_PAGES.includes(key)) {
-            return { kind: 'shared', page: withSource(t.shared[key], lang, 'shared'), cards: rootCards(lang) };
+            // The dates come from a web page, not from the applicant guides,
+            // so that page carries its own source section.
+            const page = key === 'dates' ? t.shared[key] : withSource(t.shared[key], lang, 'shared');
+            return { kind: 'shared', page, cards: rootCards(lang) };
         }
         if (EXAM_KEYS.includes(key)) {
             return { kind: 'hub', exam: key, page: t.exams[key].hub, cards: hubCards(lang, key) };
