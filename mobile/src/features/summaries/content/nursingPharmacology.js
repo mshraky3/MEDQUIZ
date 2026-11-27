@@ -687,7 +687,7 @@ const nursingPharmacology = {
                     source: 'SNLE recall',
                 },
                 {
-                    q: "A male client has received a prescription for orlistat for weight and nutrition management. In addition to the medication, client states plan to take a multivitamin. what teaching should a nurse provide?",
+                    q: "A male client has received a prescription for orlistat for weight and nutrition management. In addition to the medication, client states plan to take a multivitamin. What teaching should a nurse provide?",
                     options: ["Following a well-balanced diet is a much healthier approach to good nutrition than depending on a multivitamin. Be sure to take the multivitamin and the medication at least two hours apart","As a nutritional supplement, orlistat contains all the recommended daily vitamins and minerals","Multivitamins are contraindicated during treatment with weight control medications such","as orlistat"],
                     answer: 0,
                     source: 'SNLE recall',

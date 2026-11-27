@@ -410,7 +410,7 @@ const dentalDentalMaterials = {
                         "Yttria-stabilized zirconia"
                     ],
                     "answer": 1,
-                    "explanation": "Feldspathic porcelain is predominantly glass based. Leucite-reinforced and lithium-disilicate ceramics contain larger crystalline fractions, while zirconia is a polycrystalline ceramic with no glassy matrix. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. Dental ceramic classification and composition. Page",
+                    "explanation": "Feldspathic porcelain is predominantly glass based. Leucite-reinforced and lithium-disilicate ceramics contain larger crystalline fractions, while zirconia is a polycrystalline ceramic with no glassy matrix. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. Dental ceramic classification and composition.",
                     "source": "SDLE bank"
                 },
                 {
@@ -701,7 +701,7 @@ const dentalDentalMaterials = {
                         "Rubbery stage"
                     ],
                     "answer": 0,
-                    "explanation": "At the dough stage the material is cohesive and nonsticky enough to pack and adapt while retaining plasticity. Packing too early or too late increases processing defects. Reference: Anusavice KJ et al. Phillips' Science of Dental Materials. Manipulation of acrylic denture-base resin. Page",
+                    "explanation": "At the dough stage the material is cohesive and nonsticky enough to pack and adapt while retaining plasticity. Packing too early or too late increases processing defects. Reference: Anusavice KJ et al. Phillips' Science of Dental Materials. Manipulation of acrylic denture-base resin.",
                     "source": "SDLE bank"
                 },
                 {
@@ -845,7 +845,7 @@ const dentalDentalMaterials = {
                         "Zinc-phosphate alloy"
                     ],
                     "answer": 1,
-                    "explanation": "Cobalt-chromium alloys are widely used for cast RPD frameworks because they provide high rigidity and strength at relatively small cross-sectional dimensions. Titanium and noble alloys may be used in selected circumstances. Reference: Anusavice KJ et al. Phillips' Science of Dental Materials. Base-metal alloys for removable partial denture frameworks. Page",
+                    "explanation": "Cobalt-chromium alloys are widely used for cast RPD frameworks because they provide high rigidity and strength at relatively small cross-sectional dimensions. Titanium and noble alloys may be used in selected circumstances. Reference: Anusavice KJ et al. Phillips' Science of Dental Materials. Base-metal alloys for removable partial denture frameworks.",
                     "source": "SDLE bank"
                 },
                 {

@@ -44,7 +44,7 @@ const pastPapersCopy = {
         faq: (bankTotal, n) => [
             {
                 q: 'هل هذه أوراق اختبارات SMLE سابقة رسمية؟',
-                a: 'لا. لا تنشر الهيئة السعودية للتخصصات الصحية ولا Prometric أوراق اختبارات سابقة، وأي جهة تدّعي بيع أوراق رسمية فهي غير صادقة. ما تجده هنا مجموعات أسئلة تدريبية أعدّها فريق SQB، روجعت إجاباتها وصيغت على نمط الاختبار الحالي.',
+                a: 'لا. لا تنشر الهيئة السعودية للتخصصات الصحية ولا Prometric أوراق اختبارات سابقة، وأي جهة تدّعي بيع أوراق رسمية فهي غير صادقة. ما تجده هنا مجموعات أسئلة تدريبية أعدّها فريق SQB، وقد يحتوي بعضها أو إجابته على أخطاء.',
             },
             {
                 q: 'ما الفرق بين التجميعات؟',
@@ -114,7 +114,7 @@ const pastPapersCopy = {
         faq: (bankTotal, n) => [
             {
                 q: 'Are these official past SMLE papers?',
-                a: 'No. Neither SCFHS nor Prometric publishes past exam papers, and anyone claiming to sell official papers is not being straight with you. What you find here are practice-question collections prepared by the SQB team, answer-checked and written in the current exam style.',
+                a: 'No. Neither SCFHS nor Prometric publishes past exam papers, and anyone claiming to sell official papers is not being straight with you. What you find here are practice-question collections prepared by the SQB team. Some questions or answers may contain mistakes.',
             },
             {
                 q: 'What is the difference between the collections?',

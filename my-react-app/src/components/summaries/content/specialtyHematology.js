@@ -682,9 +682,9 @@ const specialtyHematology = {
                     "source": "SMLE recall"
                 },
                 {
-                    "q": "4 years old starting experiencing bone pain, fever, and something for 3 weeks. Examination: abdominal hepatosplenomegaly only Labs: platelet 70 WBC 30 Hgb low ( between 8-11 ? ) Nothing else is given What is the indicated diagnostic test?",
+                    "q": "4 years old started experiencing bone pain and fever for 3 weeks. Examination: abdominal hepatosplenomegaly only. Labs: platelet 70, WBC 30, Hgb low (between 8-11 (?)). What is the indicated diagnostic test?",
                     "options": [
-                        "Epstein bar PCR",
+                        "Epstein-Barr PCR",
                         "Bone marrow biopsy"
                     ],
                     "answer": 1,

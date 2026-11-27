@@ -113,7 +113,7 @@ const dentalImplantDentistry = {
                         "Carbon-steel curette"
                     ],
                     "answer": 0,
-                    "explanation": "A plastic curette is nonmetallic and is less likely to scratch a smooth titanium surface during routine debridement. Instrument selection still depends on surface roughness, access, deposit type, and the intended procedure. Reference: Newman MG et al. Newman and Carranza's Clinical Periodontology. Implant maintenance section. Page",
+                    "explanation": "A plastic curette is nonmetallic and is less likely to scratch a smooth titanium surface during routine debridement. Instrument selection still depends on surface roughness, access, deposit type, and the intended procedure. Reference: Newman MG et al. Newman and Carranza's Clinical Periodontology. Implant maintenance section.",
                     "source": "SDLE bank"
                 },
                 {
@@ -125,7 +125,7 @@ const dentalImplantDentistry = {
                         "Every 8-9 months"
                     ],
                     "answer": 1,
-                    "explanation": "High-risk patients require individualized, close supportive peri-implant care, commonly at 3-4-month intervals. The interval should be adjusted to disease history, inflammation, plaque control, smoking, diabetes, prosthesis cleansability, and adherence. Reference: Newman MG et al. Newman and Carranza's Clinical Periodontology. Supportive periodontal and peri-implant care sections. Page",
+                    "explanation": "High-risk patients require individualized, close supportive peri-implant care, commonly at 3-4-month intervals. The interval should be adjusted to disease history, inflammation, plaque control, smoking, diabetes, prosthesis cleansability, and adherence. Reference: Newman MG et al. Newman and Carranza's Clinical Periodontology. Supportive periodontal and peri-implant care sections.",
                     "source": "SDLE bank"
                 }
             ],
@@ -451,7 +451,7 @@ const dentalImplantDentistry = {
                         "Thick keratinized mucosa"
                     ],
                     "answer": 2,
-                    "explanation": "Low-density posterior maxillary bone can make adequate primary stability difficult to obtain. Excessive micromotion during healing can prevent predictable osseointegration and produce fibrous encapsulation. Reference: Misch CE. Contemporary Implant Dentistry. Bone density, primary stability, and healing sections. Page",
+                    "explanation": "Low-density posterior maxillary bone can make adequate primary stability difficult to obtain. Excessive micromotion during healing can prevent predictable osseointegration and produce fibrous encapsulation. Reference: Misch CE. Contemporary Implant Dentistry. Bone density, primary stability, and healing sections.",
                     "source": "SDLE bank"
                 },
                 {
@@ -676,7 +676,7 @@ const dentalImplantDentistry = {
                         "Telescopic crown"
                     ],
                     "answer": 1,
-                    "explanation": "A direct screw-retained implant crown can often be designed within approximately 4-5 mm of vertical space. Cement retention generally requires greater height for an abutment, cement space, and restorative material. Reference: Misch CE. Dental Implant Prosthetics. Crown-height space and retention sections. Page",
+                    "explanation": "A direct screw-retained implant crown can often be designed within approximately 4-5 mm of vertical space. Cement retention generally requires greater height for an abutment, cement space, and restorative material. Reference: Misch CE. Dental Implant Prosthetics. Crown-height space and retention sections.",
                     "source": "SDLE bank"
                 },
                 {
@@ -712,7 +712,7 @@ const dentalImplantDentistry = {
                         "Zirconia"
                     ],
                     "answer": 3,
-                    "explanation": "Zirconia is tooth-colored and reduces gray shine-through in an esthetically demanding anterior site, especially with thin peri-implant tissues. Connection design, strength, implant position, and restorative space must also be assessed. Reference: Misch CE. Dental Implant Prosthetics. Esthetic abutment-selection section. Page",
+                    "explanation": "Zirconia is tooth-colored and reduces gray shine-through in an esthetically demanding anterior site, especially with thin peri-implant tissues. Connection design, strength, implant position, and restorative space must also be assessed. Reference: Misch CE. Dental Implant Prosthetics. Esthetic abutment-selection section.",
                     "source": "SDLE bank"
                 },
                 {
@@ -837,7 +837,7 @@ const dentalImplantDentistry = {
                         "Mental nerve"
                     ],
                     "answer": 3,
-                    "explanation": "The mental nerve exits near the mandibular premolars and supplies sensation to the lower lip and chin. Immediate postoperative numbness in that distribution requires urgent neurosensory assessment and imaging. Reference: Misch CE. Contemporary Implant Dentistry. Mandibular anatomy and neurosensory-complication sections. Page",
+                    "explanation": "The mental nerve exits near the mandibular premolars and supplies sensation to the lower lip and chin. Immediate postoperative numbness in that distribution requires urgent neurosensory assessment and imaging. Reference: Misch CE. Contemporary Implant Dentistry. Mandibular anatomy and neurosensory-complication sections.",
                     "source": "SDLE bank"
                 },
                 {

@@ -63,7 +63,7 @@ const specialtyNeurology = {
                     "source": "SMLE recall"
                 },
                 {
-                    "q": "A woman in her 80s, presented to ER with Lt sided weakness of face, arm, and leg PE revealed Lt sided hemiplegia CT : age related changes with no hemorrhagic changes At which threshold should antihypertensives be initiated?",
+                    "q": "A woman in her 80s presented to ER with Lt sided weakness of face, arm, and leg. PE revealed Lt sided hemiplegia. CT: age related changes with no hemorrhagic changes. At which threshold should antihypertensives be initiated?",
                     "options": [
                         "140/90",
                         "150/100",
@@ -318,7 +318,7 @@ const specialtyNeurology = {
                     "source": "SMLE recall"
                 },
                 {
-                    "q": "A child fell down and he became sleepy and started to vomit. Upon examination there is swelling on the head, leftsided weakness CT showed: epidural hematoma What is “the best management” ?",
+                    "q": "A child fell down and he became sleepy and started to vomit. Upon examination there is swelling on the head, left-sided weakness. CT showed: epidural hematoma. What is “the best management”?",
                     "options": [
                         "Hematoma evacuation",
                         "Intubation and secure the airway",

@@ -74,7 +74,7 @@ const dentalFixedProsthodontics = {
                         "Periodontal preservation"
                     ],
                     "answer": 1,
-                    "explanation": "Short axial walls reduce surface area and permit tipping or rotational dislodgement of the crown. Adequate occlusal clearance does not compensate for inadequate wall height. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. Principles of tooth preparation section. Page",
+                    "explanation": "Short axial walls reduce surface area and permit tipping or rotational dislodgement of the crown. Adequate occlusal clearance does not compensate for inadequate wall height. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. Principles of tooth preparation section.",
                     "source": "SDLE bank"
                 },
                 {
@@ -98,7 +98,7 @@ const dentalFixedProsthodontics = {
                         "Place a post through the vital pulp"
                     ],
                     "answer": 2,
-                    "explanation": "Recurrent debonding requires evaluation of preparation height and taper, resistance form, fit, occlusion, contamination, and cement selection. Endodontic treatment and a post are not justified solely to retain a crown on a vital tooth. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. Retention and resistance form and cementation sections. Page",
+                    "explanation": "Recurrent debonding requires evaluation of preparation height and taper, resistance form, fit, occlusion, contamination, and cement selection. Endodontic treatment and a post are not justified solely to retain a crown on a vital tooth. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. Retention and resistance form and cementation sections.",
                     "source": "SDLE bank"
                 },
                 {
@@ -183,7 +183,7 @@ const dentalFixedProsthodontics = {
                         "Beveled shoulder"
                     ],
                     "answer": 1,
-                    "explanation": "The rounded tip of the instrument forms a concave cervical profile characteristic of a chamfer. A flat- ended instrument is used when a definite shoulder is intended. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. Finish-line design and rotary instruments. Page",
+                    "explanation": "The rounded tip of the instrument forms a concave cervical profile characteristic of a chamfer. A flat- ended instrument is used when a definite shoulder is intended. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. Finish-line design and rotary instruments.",
                     "source": "SDLE bank"
                 },
                 {
@@ -195,7 +195,7 @@ const dentalFixedProsthodontics = {
                         "Within the junctional epithelium"
                     ],
                     "answer": 2,
-                    "explanation": "Supragingival margins are easiest to finish, inspect, and clean and have the most favorable periodontal relationship. Subgingival placement should be reserved for a specific restorative or esthetic indication without violating supracrestal tissue attachment. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. Finish-line location and periodontal considerations sections. Page",
+                    "explanation": "Supragingival margins are easiest to finish, inspect, and clean and have the most favorable periodontal relationship. Subgingival placement should be reserved for a specific restorative or esthetic indication without violating supracrestal tissue attachment. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. Finish-line location and periodontal considerations sections.",
                     "source": "SDLE bank"
                 },
                 {
@@ -231,7 +231,7 @@ const dentalFixedProsthodontics = {
                         "2.0-2.5 mm"
                     ],
                     "answer": 2,
-                    "explanation": "Many all-ceramic systems require approximately 1.0-1.5 mm of marginal reduction to provide material bulk and a readable finish line. The exact preparation follows the selected ceramic and manufacturer instructions. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. All-ceramic crown preparation section. Page",
+                    "explanation": "Many all-ceramic systems require approximately 1.0-1.5 mm of marginal reduction to provide material bulk and a readable finish line. The exact preparation follows the selected ceramic and manufacturer instructions. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. All-ceramic crown preparation section.",
                     "source": "SDLE bank"
                 }
             ],
@@ -300,7 +300,7 @@ const dentalFixedProsthodontics = {
                         "9-fold increase"
                     ],
                     "answer": 1,
-                    "explanation": "Beam deflection is proportional to the cube of span length. Tripling the length therefore increases flexure by 3³, or 27 times, when material and cross-sectional dimensions remain constant. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. Biomechanical considerations for fixed dental prostheses. Page",
+                    "explanation": "Beam deflection is proportional to the cube of span length. Tripling the length therefore increases flexure by 3³, or 27 times, when material and cross-sectional dimensions remain constant. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. Biomechanical considerations for fixed dental prostheses.",
                     "source": "SDLE bank"
                 },
                 {
@@ -312,7 +312,7 @@ const dentalFixedProsthodontics = {
                         "Cantilever FPD from 16"
                     ],
                     "answer": 2,
-                    "explanation": "Retainers on 13 and 16 with pontics replacing 14 and 15 form a four-unit fixed dental prosthesis. Final treatment still requires assessment of abutment support, span biomechanics, caries risk, and patient preferences. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. Fixed dental prosthesis design and abutment selection. Page",
+                    "explanation": "Retainers on 13 and 16 with pontics replacing 14 and 15 form a four-unit fixed dental prosthesis. Final treatment still requires assessment of abutment support, span biomechanics, caries risk, and patient preferences. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. Fixed dental prosthesis design and abutment selection.",
                     "source": "SDLE bank"
                 },
                 {
@@ -324,7 +324,7 @@ const dentalFixedProsthodontics = {
                         "Maxillary canine prosthesis"
                     ],
                     "answer": 3,
-                    "explanation": "Maxillary canine replacement is often more biomechanically demanding because of canine-guidance forces and the pontic's relation to the interabutment axis. Abutment support and the complete occlusal design still govern the final plan. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. Biomechanics of replacing missing canines. Page",
+                    "explanation": "Maxillary canine replacement is often more biomechanically demanding because of canine-guidance forces and the pontic's relation to the interabutment axis. Abutment support and the complete occlusal design still govern the final plan. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. Biomechanics of replacing missing canines.",
                     "source": "SDLE bank"
                 },
                 {
@@ -422,7 +422,7 @@ const dentalFixedProsthodontics = {
                         "Full ridge-lap"
                     ],
                     "answer": 0,
-                    "explanation": "A properly contoured ovate provisional pontic can support the healing tissue and preserve a natural emergence form after extraction. Pressure must be controlled to avoid ischemia and the site must remain cleanable. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. Provisional pontic and tissue-conditioning sections. Page",
+                    "explanation": "A properly contoured ovate provisional pontic can support the healing tissue and preserve a natural emergence form after extraction. Pressure must be controlled to avoid ischemia and the site must remain cleanable. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. Provisional pontic and tissue-conditioning sections.",
                     "source": "SDLE bank"
                 },
                 {
@@ -434,7 +434,7 @@ const dentalFixedProsthodontics = {
                         "Minimal connector height"
                     ],
                     "answer": 0,
-                    "explanation": "A modified ridge-lap pontic contacts the facial aspect of the ridge to create a natural appearance while keeping the lingual tissue surface convex and accessible for cleaning. It avoids the broad concave contact of a full ridge-lap design. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. Pontic design section. Page",
+                    "explanation": "A modified ridge-lap pontic contacts the facial aspect of the ridge to create a natural appearance while keeping the lingual tissue surface convex and accessible for cleaning. It avoids the broad concave contact of a full ridge-lap design. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. Pontic design section.",
                     "source": "SDLE bank"
                 },
                 {
@@ -446,7 +446,7 @@ const dentalFixedProsthodontics = {
                         "Tissue inflammation"
                     ],
                     "answer": 3,
-                    "explanation": "A full ridge-lap pontic has a concave tissue surface that is difficult to clean and promotes plaque retention and mucosal inflammation. It is therefore generally avoided in favor of a cleansable pontic contour. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. Pontic design section. Page",
+                    "explanation": "A full ridge-lap pontic has a concave tissue surface that is difficult to clean and promotes plaque retention and mucosal inflammation. It is therefore generally avoided in favor of a cleansable pontic contour. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. Pontic design section.",
                     "source": "SDLE bank"
                 },
                 {
@@ -534,7 +534,7 @@ const dentalFixedProsthodontics = {
                         "Prevent caries"
                     ],
                     "answer": 0,
-                    "explanation": "A post is indicated when insufficient coronal tooth structure remains to retain a core. It does not reinforce the root, and unnecessary post-space preparation may weaken the tooth. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. Restoration of endodontically treated teeth. Page",
+                    "explanation": "A post is indicated when insufficient coronal tooth structure remains to retain a core. It does not reinforce the root, and unnecessary post-space preparation may weaken the tooth. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. Restoration of endodontically treated teeth.",
                     "source": "SDLE bank"
                 },
                 {
@@ -570,7 +570,7 @@ const dentalFixedProsthodontics = {
                         "Continue without irrigation"
                     ],
                     "answer": 2,
-                    "explanation": "Unexpected bleeding raises concern for root perforation or deviation from the canal. Instrumentation should stop and the location should be assessed radiographically, supplemented by magnification and other perforation-localization methods when needed. Reference: Hargreaves KM, Berman LH. Cohen's Pathways of the Pulp. Procedural accidents and root-perforation sections. Page",
+                    "explanation": "Unexpected bleeding raises concern for root perforation or deviation from the canal. Instrumentation should stop and the location should be assessed radiographically, supplemented by magnification and other perforation-localization methods when needed. Reference: Hargreaves KM, Berman LH. Cohen's Pathways of the Pulp. Procedural accidents and root-perforation sections.",
                     "source": "SDLE bank"
                 },
                 {
@@ -582,7 +582,7 @@ const dentalFixedProsthodontics = {
                         "Extract the tooth immediately"
                     ],
                     "answer": 1,
-                    "explanation": "Early dislodgement requires evaluation of caries, fracture, ferrule, post fit, preparation resistance, cementation, and occlusion before reuse or remake. Immediate recementation without identifying the cause risks another failure. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. Restoration of endodontically treated teeth and cementation sections. Page",
+                    "explanation": "Early dislodgement requires evaluation of caries, fracture, ferrule, post fit, preparation resistance, cementation, and occlusion before reuse or remake. Immediate recementation without identifying the cause risks another failure. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. Restoration of endodontically treated teeth and cementation sections.",
                     "source": "SDLE bank"
                 }
             ],
@@ -694,7 +694,7 @@ const dentalFixedProsthodontics = {
                         "Light-cured composite"
                     ],
                     "answer": 1,
-                    "explanation": "Directly polymerized PMMA produces relatively high exothermic heat and contains methyl methacrylate monomer that can irritate pulpal tissues. Its shrinkage also increases the risk of marginal discrepancy unless the technique controls polymerization. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. Provisional restorations section. Page",
+                    "explanation": "Directly polymerized PMMA produces relatively high exothermic heat and contains methyl methacrylate monomer that can irritate pulpal tissues. Its shrinkage also increases the risk of marginal discrepancy unless the technique controls polymerization. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. Provisional restorations section.",
                     "source": "SDLE bank"
                 },
                 {
@@ -706,7 +706,7 @@ const dentalFixedProsthodontics = {
                         "Prepare a deeper subgingival margin"
                     ],
                     "answer": 2,
-                    "explanation": "Persistent inflammation suggests a defective provisional contour, margin, contact, surface, or hygiene problem. Correct the cause and delay the final impression until the tissue becomes healthy and stable. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. Provisional-restoration and gingival-displacement sections. Page",
+                    "explanation": "Persistent inflammation suggests a defective provisional contour, margin, contact, surface, or hygiene problem. Correct the cause and delay the final impression until the tissue becomes healthy and stable. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. Provisional-restoration and gingival-displacement sections.",
                     "source": "SDLE bank"
                 }
             ],
@@ -776,7 +776,7 @@ const dentalFixedProsthodontics = {
                         "Edge-to-edge position"
                     ],
                     "answer": 0,
-                    "explanation": "A single crown in a stable, comfortable dentition is normally harmonized with the patient's existing maximum intercuspal position. Reorganizing the entire occlusion into centric relation is not justified for one crown without a separate indication. Reference: Okeson JP. Management of Temporomandibular Disorders and Occlusion. Maximum intercuspation and restorative treatment sections. Page",
+                    "explanation": "A single crown in a stable, comfortable dentition is normally harmonized with the patient's existing maximum intercuspal position. Reorganizing the entire occlusion into centric relation is not justified for one crown without a separate indication. Reference: Okeson JP. Management of Temporomandibular Disorders and Occlusion. Maximum intercuspation and restorative treatment sections.",
                     "source": "SDLE bank"
                 },
                 {
@@ -812,7 +812,7 @@ const dentalFixedProsthodontics = {
                         "Distal incline"
                     ],
                     "answer": 3,
-                    "explanation": "Protrusive posterior interferences occur between distal inclines of maxillary cusps and mesial inclines of mandibular cusps. Adjustment must preserve functional cusp tips and stable centric contacts. Reference: Okeson JP. Management of Temporomandibular Disorders and Occlusion. Selective occlusal adjustment section. Page",
+                    "explanation": "Protrusive posterior interferences occur between distal inclines of maxillary cusps and mesial inclines of mandibular cusps. Adjustment must preserve functional cusp tips and stable centric contacts. Reference: Okeson JP. Management of Temporomandibular Disorders and Occlusion. Selective occlusal adjustment section.",
                     "source": "SDLE bank"
                 },
                 {
@@ -824,7 +824,7 @@ const dentalFixedProsthodontics = {
                         "Fully adjustable articulator"
                     ],
                     "answer": 3,
-                    "explanation": "A fully adjustable articulator can be programmed with patient-specific three-dimensional border- movement records. Semi-adjustable instruments reproduce selected determinants but not the full individualized border envelope. Reference: Zarb GA et al. Prosthodontic Treatment for Edentulous Patients. Articulator classification and mandibular movement records. Page",
+                    "explanation": "A fully adjustable articulator can be programmed with patient-specific three-dimensional border- movement records. Semi-adjustable instruments reproduce selected determinants but not the full individualized border envelope. Reference: Zarb GA et al. Prosthodontic Treatment for Edentulous Patients. Articulator classification and mandibular movement records.",
                     "source": "SDLE bank"
                 }
             ],
@@ -897,7 +897,7 @@ const dentalFixedProsthodontics = {
                         "Excess occlusal clearance"
                     ],
                     "answer": 1,
-                    "explanation": "Air or fluid movement beneath a retainer indicates loss of cement seal or incomplete seating and permits microbial and food ingress. The prosthesis should be assessed for decementation, caries, fracture, fit, and removability. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. Fixed partial denture failure and cementation sections. Page",
+                    "explanation": "Air or fluid movement beneath a retainer indicates loss of cement seal or incomplete seating and permits microbial and food ingress. The prosthesis should be assessed for decementation, caries, fracture, fit, and removability. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. Fixed partial denture failure and cementation sections.",
                     "source": "SDLE bank"
                 },
                 {
@@ -921,7 +921,7 @@ const dentalFixedProsthodontics = {
                         "Remake the prosthesis"
                     ],
                     "answer": 3,
-                    "explanation": "An open, deficient margin cannot be predictably converted into a continuous, accurately fitting margin by polishing or adding restorative material. The defective prosthesis should be replaced after correcting its cause. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. Evaluation of marginal integrity and replacement of defective fixed restorations. Page",
+                    "explanation": "An open, deficient margin cannot be predictably converted into a continuous, accurately fitting margin by polishing or adding restorative material. The defective prosthesis should be replaced after correcting its cause. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. Evaluation of marginal integrity and replacement of defective fixed restorations.",
                     "source": "SDLE bank"
                 },
                 {
@@ -933,7 +933,7 @@ const dentalFixedProsthodontics = {
                         "Cohesive fracture"
                     ],
                     "answer": 3,
-                    "explanation": "A fracture contained within the ceramic is cohesive. Exposure of the underlying framework at the interface would instead indicate an adhesive or interfacial failure. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. Metal-ceramic failure and repair sections. Page",
+                    "explanation": "A fracture contained within the ceramic is cohesive. Exposure of the underlying framework at the interface would instead indicate an adhesive or interfacial failure. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. Metal-ceramic failure and repair sections.",
                     "source": "SDLE bank"
                 },
                 {
@@ -945,7 +945,7 @@ const dentalFixedProsthodontics = {
                         "Separate the investment"
                     ],
                     "answer": 0,
-                    "explanation": "Flux limits oxide formation and dissolves surface oxides, allowing molten solder to wet and flow across the parent alloy. It does not serve as the joining metal itself. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. Soldering and laboratory procedures section. Page",
+                    "explanation": "Flux limits oxide formation and dissolves surface oxides, allowing molten solder to wet and flow across the parent alloy. It does not serve as the joining metal itself. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. Soldering and laboratory procedures section.",
                     "source": "SDLE bank"
                 }
             ],
@@ -1026,7 +1026,7 @@ const dentalFixedProsthodontics = {
                         "Polyacrylic acid"
                     ],
                     "answer": 1,
-                    "explanation": "Hydrofluoric acid selectively dissolves the glassy phase of silica-based ceramics and creates micromechanical retention. Concentration and etching time must follow the ceramic and manufacturer protocol, and zirconia requires a different surface treatment. Reference: Sturdevant CM et al. Sturdevant's Art and Science of Operative Dentistry. Ceramic repair and adhesive treatment sections. Page",
+                    "explanation": "Hydrofluoric acid selectively dissolves the glassy phase of silica-based ceramics and creates micromechanical retention. Concentration and etching time must follow the ceramic and manufacturer protocol, and zirconia requires a different surface treatment. Reference: Sturdevant CM et al. Sturdevant's Art and Science of Operative Dentistry. Ceramic repair and adhesive treatment sections.",
                     "source": "SDLE bank"
                 },
                 {
@@ -1062,7 +1062,7 @@ const dentalFixedProsthodontics = {
                         "More than 3.0 mm"
                     ],
                     "answer": 2,
-                    "explanation": "Conservative enamel reduction of approximately 0.5-1.0 mm provides room for a metal retainer while preserving the bondable enamel substrate. Proximal grooves and occlusal clearance are designed according to the tooth and alloy. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. Resin-bonded fixed partial denture preparation section. Page",
+                    "explanation": "Conservative enamel reduction of approximately 0.5-1.0 mm provides room for a metal retainer while preserving the bondable enamel substrate. Proximal grooves and occlusal clearance are designed according to the tooth and alloy. Reference: Rosenstiel SF et al. Contemporary Fixed Prosthodontics. Resin-bonded fixed partial denture preparation section.",
                     "source": "SDLE bank"
                 }
             ],

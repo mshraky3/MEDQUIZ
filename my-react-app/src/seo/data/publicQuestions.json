@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-11-18",
+  "generatedAt": "2026-11-27",
   "perSpecialty": 24,
   "minExplanation": 500,
   "count": 240,
-  "bankTotal": 16495,
+  "bankTotal": 16849,
   "collections": [
     {
       "source": "DentalExplained",
@@ -42,6 +42,12 @@
       "published": 0
     },
     {
+      "source": "MedicalNovemberRecall",
+      "track": "medical",
+      "total": 1966,
+      "published": 0
+    },
+    {
       "source": "MedicalOctoberRecall",
       "track": "medical",
       "total": 1483,
@@ -64,12 +70,6 @@
       "track": "medical",
       "total": 544,
       "published": 9
-    },
-    {
-      "source": "MedicalNovemberRecall",
-      "track": "medical",
-      "total": 428,
-      "published": 0
     },
     {
       "source": "NursingConfirmed",
@@ -383,8 +383,8 @@
       "specialty": "medicine",
       "specialtyLabelEn": "Medicine",
       "specialtyLabelAr": "الباطنة",
-      "headline": "Patient came to your clinic today he mentioned he had a recent and complaining of mild abdominal pain after…",
-      "stem": "Patient came to your clinic today he mentioned he had a recent and complaining of mild abdominal pain after accident. O/E: Vitally stable. Mild abdominal pain mainly in the right upper quadrant. No other complaints or findings. Vitals were all listed, all were normal BP: 110/70 SURE RR: I think 18 temp: 36.6 ? What is the most appropriate next step?",
+      "headline": "Patient came to your clinic today complaining of mild abdominal pain after a recent accident.",
+      "stem": "Patient came to your clinic today complaining of mild abdominal pain after a recent accident. O/E: Vitally stable. Mild abdominal pain mainly in the right upper quadrant. No other complaints or findings. Vitals were all normal: BP 110/70, RR 18, temp 36.6. What is the most appropriate next step?",
       "options": [
         "Abdominal ultrasound",
         "Refer him to emergency department for further evaluation",
@@ -2796,8 +2796,8 @@
       "specialty": "medical surgical nursing",
       "specialtyLabelEn": "Medical-Surgical Nursing",
       "specialtyLabelAr": "التمريض الباطني والجراحي",
-      "headline": "1196.",
-      "stem": "1196. Site of iilestomy :",
+      "headline": "Site of ileostomy:",
+      "stem": "Site of ileostomy:",
       "options": [
         "Left lower",
         "Right lower",
@@ -3290,8 +3290,8 @@
       "specialty": "pediatric nursing",
       "specialtyLabelEn": "Pediatric Nursing",
       "specialtyLabelAr": "تمريض الأطفال",
-      "headline": "- year-old child was admitted with suspected appendicitis.",
-      "stem": "- year-old child was admitted with suspected appendicitis. A nurse was evaluating the child’s condition and the mother stated that the child did have his bowel movement for the past two days and requested for natives. What is the risk of giving laxative to patient with appendicitis?",
+      "headline": "A child was admitted with suspected appendicitis.",
+      "stem": "A child was admitted with suspected appendicitis. A nurse was evaluating the child’s condition and the mother stated that the child did have his bowel movement for the past two days and requested for laxatives. What is the risk of giving laxative to patient with appendicitis?",
       "options": [
         "Pain",
         "Fever",
