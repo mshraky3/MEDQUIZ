@@ -68,7 +68,7 @@ import { makeCheckCompletionHandler } from './services/completionCheck.js';
 import { runRecallImport } from './services/recallImportService.js';
 import { markQuestionsSeen, MAX_SEEN_IDS } from './services/seenService.js';
 import { recordAttemptsBatch } from './services/attemptsBatch.js';
-import { jsonBodyParser, FINAL_QUIZ_JSON_LIMIT } from './services/finalQuizAttempts.js';
+import { insertFinalQuizAttempts, jsonBodyParser, FINAL_QUIZ_JSON_LIMIT } from './services/finalQuizAttempts.js';
 import { ensureQuestionImagesTables, attachQuestionImages } from './services/questionImagesService.js';
 import { isDisposableEmail, DISPOSABLE_EMAIL_MESSAGE } from './utils/disposableEmail.js';
 
