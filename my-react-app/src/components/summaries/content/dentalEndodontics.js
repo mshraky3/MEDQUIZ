@@ -514,7 +514,7 @@ const dentalEndodontics = {
                     "source": "SDLE bank"
                 },
                 {
-                    "q": "Size of gates glidden 3 ?",
+                    "q": "Size of gates glidden 3?",
                     "options": [
                         "0.5",
                         "0.7",

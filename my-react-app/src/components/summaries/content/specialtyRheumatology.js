@@ -105,7 +105,7 @@ const specialtyRheumatology = {
                     "source": "SMLE recall"
                 },
                 {
-                    "q": "A 50-year-old man presented to the clinic with a 15-year history of multiple joints pain with daily significant moming stiffness that lasts for 3 hours. He has been admitted 3 times during the last year to the local hospital for treatment of bacterial pneumonia. Physical examination reveals multiple rheumatoid nodules and an enlarged spleen. He has active arthritis affecting multiple metacarpophalangeal (MCP) and proximal interphalangeal (PIP) joints symmetrically. Hands x- ray show severe erosive disease of the MCP and PIP joints. Bone marrow aspiration and biopsy reveals an excess of immature forms and maturation arrest with normal differential (see lab results). Test Result Normal Values Hb 90 130-170 g/L (Male) 120-160 g/L (Female) Platelets count 100 150-400 x 109/L WBC 2 4.5-10.5 x 109/L ESR 80 2-10 mm/h (Male) 3-15 mm/h (Female) Rheumatoid factor 400 <58 klU/L Which of the following is the most likely diagnosis?",
+                    "q": "A 50-year-old man presented to the clinic with a 15-year history of multiple joints pain with daily significant morning stiffness that lasts for 3 hours. He has been admitted 3 times during the last year to the local hospital for treatment of bacterial pneumonia. Physical examination reveals multiple rheumatoid nodules and an enlarged spleen. He has active arthritis affecting multiple metacarpophalangeal (MCP) and proximal interphalangeal (PIP) joints symmetrically. Hands x- ray show severe erosive disease of the MCP and PIP joints. Bone marrow aspiration and biopsy reveals an excess of immature forms and maturation arrest with normal differential (see lab results). Test Result Normal Values Hb 90 130-170 g/L (Male) 120-160 g/L (Female) Platelets count 100 150-400 x 109/L WBC 2 4.5-10.5 x 109/L ESR 80 2-10 mm/h (Male) 3-15 mm/h (Female) Rheumatoid factor 400 <58 klU/L Which of the following is the most likely diagnosis?",
                     "options": [
                         "Systemic lupus erythematosus",
                         "Feltys syndrome",
@@ -276,7 +276,7 @@ const specialtyRheumatology = {
                     "q": "Old pt with rheumatoid arthritis, now coming with symptoms of septic arthritis, the fluid aspiration from the knee is positive for septic arthritis, what to do next?",
                     "options": [
                         "Give IV antibiotics",
-                        "intrarticular steroids injection"
+                        "intraarticular steroids injection"
                     ],
                     "answer": 0,
                     "explanation": "Once joint aspiration confirms septic arthritis, and samples for culture have been taken, start IV antibiotics promptly to protect the cartilage, together with joint drainage. Initial choice covers Staphylococcus aureus. Intra-articular steroids are contraindicated in an infected joint.",

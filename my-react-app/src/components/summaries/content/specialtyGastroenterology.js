@@ -250,11 +250,11 @@ const specialtyGastroenterology = {
                     "source": "SMLE recall"
                 },
                 {
-                    "q": "From the following medications used to treat esophageal varices in vitally unstable (I mean he has tachycardia and hypotension) patient, which one is improving the mortality:",
+                    "q": "From the following medications used to treat esophageal varices in vitally unstable (tachycardia and hypotension) patient, which one is improving the mortality:",
                     "options": [
-                        "Ceftriaxon",
+                        "Ceftriaxone",
                         "PPI",
-                        "Octeriotide",
+                        "Octreotide",
                         "Packed RBC"
                     ],
                     "answer": 0,
@@ -520,7 +520,7 @@ const specialtyGastroenterology = {
 `,
             questions: [
                 {
-                    "q": "A 45-year-old man with a diagnosis of gastrosophageal reflux disease who is taking a maximum dose of pantoprazole for several weeks presents to the clinic with heartburn that is minimally improved with treatment. The patient verified that he is taking the medication 30 minutes before meals. He takes no other medications. His physical examination is unremarkable. Upper endoscopy findings are normal. Which of the following is the most appropriate next step in the management?",
+                    "q": "A 45-year-old man with a diagnosis of gastroesophageal reflux disease who is taking a maximum dose of pantoprazole for several weeks presents to the clinic with heartburn that is minimally improved with treatment. The patient verified that he is taking the medication 30 minutes before meals. He takes no other medications. His physical examination is unremarkable. Upper endoscopy findings are normal. Which of the following is the most appropriate next step in the management?",
                     "options": [
                         "Repeat endoscopy",
                         "Barium esophagogram",
@@ -717,7 +717,7 @@ const specialtyGastroenterology = {
                     "q": "A 32-year-old woman presents with dark urine and jaundice, denying any history of travel or alcohol use. She has right upper quadrant tenderness and scleral icterus. ANA and anti-smooth-muscle antibodies are positive; anti-GAD and anti-ICA are negative. Bilirubin is 85, AST 900 with a markedly raised ALT, and ALP 135. What is the next best step to confirm the diagnosis?",
                     "options": [
                         "Liver biopsy",
-                        "Mri and mrcp to identify the billary obstruction",
+                        "Mri and mrcp to identify the biliary obstruction",
                         "24 hour urine copper",
                         "Alpha fetoprotein"
                     ],

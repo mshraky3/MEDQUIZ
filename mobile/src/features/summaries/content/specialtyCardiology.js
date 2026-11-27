@@ -659,8 +659,7 @@ const specialtyCardiology = {
                     "options": [
                         "Increased cardiac output",
                         "Increased central venous pressure",
-                        "Increased systemic vascular resistance",
-                        "[Not recalled]"
+                        "Increased systemic vascular resistance"
                     ],
                     "answer": 0,
                     "explanation": "Septic shock from pneumonia is mainly distributive: inflammatory mediators dilate vessels and lower systemic vascular resistance. In the early, volume-resuscitated phase the heart compensates, so cardiac output is increased. Central venous pressure is usually low or normal because of venous pooling and capillary leak. This pattern separates sepsis from cardiogenic shock.",

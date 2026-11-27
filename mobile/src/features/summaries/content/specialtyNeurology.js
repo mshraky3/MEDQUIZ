@@ -65,7 +65,7 @@ const specialtyNeurology = {
                     "source": "SMLE recall"
                 },
                 {
-                    "q": "A woman in her 80s , presented to ER with Lt sided weakness of face , arm, and leg PE revealed Lt sided hemiplegia CT : age related changes with no hemorrhagic changes At which threshold should antihypertensives be initiated ?",
+                    "q": "A woman in her 80s, presented to ER with Lt sided weakness of face, arm, and leg PE revealed Lt sided hemiplegia CT : age related changes with no hemorrhagic changes At which threshold should antihypertensives be initiated?",
                     "options": [
                         "140/90",
                         "150/100",
@@ -226,7 +226,7 @@ const specialtyNeurology = {
                 {
                     "q": "Pt w recent stroke, carotid stenosis is 48%, already started on medical stroke prevention. What to do for carotid stenosis:",
                     "options": [
-                        "endarectomy",
+                        "endarterectomy",
                         "observe",
                         "insert stent"
                     ],
@@ -572,7 +572,7 @@ const specialtyNeurology = {
 </ul></div>`,
             questions: [
                 {
-                    "q": "Patient with MS come with UL weakness, diplopia Left eye not go medially , Nystagmus in right eye when abduction where is the site of lesion?",
+                    "q": "Patient with MS come with UL weakness, diplopia Left eye not go medially, Nystagmus in right eye when abduction where is the site of lesion?",
                     "options": [
                         "Lateral thalamic nuclei",
                         "Abducens nerve nucleus",
@@ -932,7 +932,7 @@ const specialtyNeurology = {
                     "source": "SMLE recall"
                 },
                 {
-                    "q": "A 20-year-old man with a history of high liver function test in the past presents, with tremors and dysarthria and dyskinesia. Slit-lamp examination reveals a greenish-brown ring at comeoscleral junction. Which of the following is the most likely diagnosis?",
+                    "q": "A 20-year-old man with a history of high liver function test in the past presents, with tremors and dysarthria and dyskinesia. Slit-lamp examination reveals a greenish-brown ring at corneoscleral junction. Which of the following is the most likely diagnosis?",
                     "options": [
                         "Antitrypsin deficiency",
                         "Hepatic hemangioma",

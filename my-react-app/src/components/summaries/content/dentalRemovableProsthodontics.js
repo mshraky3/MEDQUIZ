@@ -880,7 +880,7 @@ const dentalRemovableProsthodontics = {
                     "source": "SDLE recall"
                 },
                 {
-                    "q": "What is the advantage of using acrylic teeth instead of ceramic teeth in CD .",
+                    "q": "What is the advantage of using acrylic teeth instead of ceramic teeth in CD.",
                     "options": [
                         "Stain resistant",
                         "Wear resistance",

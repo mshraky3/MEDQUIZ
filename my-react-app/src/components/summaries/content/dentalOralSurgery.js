@@ -907,7 +907,7 @@ const dentalOralSurgery = {
                     "source": "SDLE recall"
                 },
                 {
-                    "q": "Patient with gummy smile , about 9mm of gingiva appears with incompetent lips , patient has normal upper lip length , what is the best treatment option in this case ?",
+                    "q": "Patient with gummy smile, about 9mm of gingiva appears with incompetent lips, patient has normal upper lip length, what is the best treatment option in this case?",
                     "options": [
                         "Botox injection",
                         "Lefort osteotomy",

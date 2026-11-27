@@ -353,7 +353,7 @@ const specialtyPulmonology = {
                     "source": "SMLE recall"
                 },
                 {
-                    "q": "An elderly man, known to have COPD, is brought to the Emergency Department with severe respiratory distress, cyanosis, and drowsiness. His upper airways are full of secretions. Vitals: BP: 90/60 mmHg , HR: 110/min , RR: 18/min , Temp: 38.0 °C , O₂ saturation: 74% ABG Results: HCO₃⁻: 36 mmol/L (↑, normal 22–28) , PCO₂: 7.99 kPa (↑, normal 4.7–6.0) pH: 7.24 (↓, acidemia) PO₂: 8.99 kPa (↓, normal 10.6–14.2) What is the best option in management?",
+                    "q": "An elderly man, known to have COPD, is brought to the Emergency Department with severe respiratory distress, cyanosis, and drowsiness. His upper airways are full of secretions. Vitals: BP: 90/60 mmHg, HR: 110/min, RR: 18/min, Temp: 38.0 °C, O₂ saturation: 74% ABG Results: HCO₃⁻: 36 mmol/L (↑, normal 22–28), PCO₂: 7.99 kPa (↑, normal 4.7–6.0) pH: 7.24 (↓, acidemia) PO₂: 8.99 kPa (↓, normal 10.6–14.2) What is the best option in management?",
                     "options": [
                         "Nasal CPAP",
                         "Mechanical ventilation",
@@ -809,7 +809,7 @@ const specialtyPulmonology = {
                         "Plain radiograph",
                         "Low dose CT",
                         "Bronchoscopy",
-                        "Sputum (option not fully recalled)"
+                        "Sputum"
                     ],
                     "answer": 1,
                     "explanation": "Screening for lung cancer means annual low dose CT in high risk smokers; chest radiograph and sputum cytology were tested and failed to reduce mortality.",

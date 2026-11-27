@@ -158,9 +158,7 @@ const specialtyHematology = {
                     "q": "A patient with known sickle cell disease presents with chest pain. Vital signs show hypoxia, with oxygen saturation of 80% on room air. He is started on IV fluids and antibiotics (piperacillin-tazobactam and vancomycin). Despite this, he continues to deteriorate clinically, with worsening hypoxia. What is the most appropriate next step in management?",
                     "options": [
                         "Add levofloxacin",
-                        "Exchange transfusion",
-                        "(option not recalled)",
-                        "(option not recalled)"
+                        "Exchange transfusion"
                     ],
                     "answer": 1,
                     "explanation": "Acute chest syndrome that keeps worsening on oxygen, antibiotics and fluids needs exchange transfusion to cut the HbS fraction; escalating antibiotics does not address the sickling that is driving the hypoxia.",
@@ -396,7 +394,7 @@ const specialtyHematology = {
                     "source": "SMLE bank"
                 },
                 {
-                    "q": "Which of the following is an absolute contraindication for thrombolvtic therapy?",
+                    "q": "Which of the following is an absolute contraindication for thrombolytic therapy?",
                     "options": [
                         "Pregnancy",
                         "Intracranial hemorrhage 2 years ago",
@@ -618,7 +616,7 @@ const specialtyHematology = {
                     "q": "A neonate presents with BLEEDING FROM THE UMBILICAL STUMP. Coagulation studies are abnormal (prolonged PT).",
                     "options": [
                         "hemophilia A",
-                        "Von wellibrand disease",
+                        "Von Willebrand disease",
                         "vit K deficiency",
                         "Thrombocytopenia"
                     ],
@@ -676,7 +674,7 @@ const specialtyHematology = {
 `,
             questions: [
                 {
-                    "q": "12 years old presented with fever and night sweat and painless cervical lymph nodes enlargment FNA: show Reed–Sternberg cells What the diagnosis?",
+                    "q": "12 years old presented with fever and night sweat and painless cervical lymph nodes enlargement FNA: show Reed–Sternberg cells What the diagnosis?",
                     "options": [
                         "AML",
                         "Hodgkin lymphoma"
@@ -751,7 +749,7 @@ const specialtyHematology = {
                     "source": "SMLE recall"
                 },
                 {
-                    "q": "Breast cancer patient developed febrile neutropenia, given IV pipracillin-tazobactam AND VANCOMYCIN, still no improvement for 5 days. ANC 400, what is the best next step?",
+                    "q": "Breast cancer patient developed febrile neutropenia, given IV piperacillin-tazobactam AND VANCOMYCIN, still no improvement for 5 days. ANC 400, what is the best next step?",
                     "options": [
                         "IV antifungal",
                         "IVIG",

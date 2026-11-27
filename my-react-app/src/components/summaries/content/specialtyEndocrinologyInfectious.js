@@ -368,15 +368,15 @@ const specialtyEndocrinologyInfectious = {
                     "options": [
                         "Cefuroxime",
                         "Vancomycin",
-                        "Gentamycin",
-                        "Flucioxacillin"
+                        "Gentamicin",
+                        "Flucloxacillin"
                     ],
                     "answer": 1,
                     "explanation": "Core Concept: Methicillin-resistant *Staphylococcus aureus* (MRSA) possesses the *mecA* gene, which encodes for penicillin-binding protein 2a (PBP2a), conferring resistance to almost all beta-lactam antibiotics (including penicillins, cephalosporins, and carbapenems). Clinical Presentation: · Sepsis: Fever, tachycardia, tachypnea, hypotension, altered mental status. · Source-specific symptoms (e.g., dysuria and flank pain for UTI, though MRSA UTI is rare and usually implies hematogenous spread or catheterization). Diagnosis: · First-line: Blood and urine cultures, Gram stain (Gram-positive cocci in clusters). · Gold standard: Culture and sensitivity testing confirming resistance to oxacillin/cefoxitin. Management: · Acute: Hemodynamic support, source control, and immediate empiric MRSA coverage. · Long-term/Definitive: Intravenous Vancomycin (a glycopeptide antibiotic) is the cornerstone of therapy for severe MRSA infections. Therapeutic drug monitoring (trough levels) is required. Alternatives include daptomycin or linezolid.",
                     "source": "SMLE bank"
                 },
                 {
-                    "q": "Diabetic patient, came with a pain that is out proportion, Bulle, Crepitus, pain extends further than the erythema I think there was discharge? weak pulse What to do next?",
+                    "q": "Diabetic patient, came with a pain that is out proportion, Bullae, Crepitus, pain extends further than the erythema weak pulse What to do next?",
                     "options": [
                         "LOCAL Debridement and IV Abx",
                         "Conservative wound healing",
@@ -434,7 +434,7 @@ const specialtyEndocrinologyInfectious = {
 `,
             questions: [
                 {
-                    "q": "6 years old Patient with clear case of brucellosis. Hx of Drink raw milk patint had pain in the knee. Which if the following is the first line treatment ?",
+                    "q": "6 years old Patient with clear case of brucellosis. Hx of Drink raw milk patient had pain in the knee. Which if the following is the first line treatment?",
                     "options": [
                         "Trimethoprim-Sulfamethoxazole + Rifampicin for 6 week",
                         "Doxycycline + Rifampicin for 6 week",
@@ -446,7 +446,7 @@ const specialtyEndocrinologyInfectious = {
                     "source": "SMLE recall"
                 },
                 {
-                    "q": "man presents to ER with fever, rigors and chills He also reports back pain, he has history of drinking unpasteurized milk. What is the most appropriate lab test?",
+                    "q": "Man presents to ER with fever, rigors and chills He also reports back pain, he has history of drinking unpasteurized milk. What is the most appropriate lab test?",
                     "options": [
                         "TB test",
                         "MRI spine",
@@ -548,7 +548,7 @@ const specialtyEndocrinologyInfectious = {
                     "source": "SMLE recall"
                 },
                 {
-                    "q": "patient ~46 years male with type 1 diabetes mellitus for >20 years, on insulin, presented with abdominal bloating and occasional epigastric discomfort. The question also mentioned something regarding a delayed/late postprandial rise in blood glucose in relation to the insulin response. Most appropriate investigation:",
+                    "q": "Patient ~46 years male with type 1 diabetes mellitus for >20 years, on insulin, presented with abdominal bloating and occasional epigastric discomfort. The question also mentioned something regarding a delayed/late postprandial rise in blood glucose in relation to the insulin response. Most appropriate investigation:",
                     "options": [
                         "US",
                         "CT",
@@ -621,12 +621,12 @@ const specialtyEndocrinologyInfectious = {
                     "source": "SMLE recall"
                 },
                 {
-                    "q": "adrenalectomy for a cortisol-secreting adenoma causing Cushing’s syndrome. Which of the following postoperative management plans is most appropriate for this patient?",
+                    "q": "Adrenalectomy for a cortisol-secreting adenoma causing Cushing’s syndrome. Which of the following postoperative management plans is most appropriate for this patient?",
                     "options": [
-                        "stess dose IV hydrocortisone and taper gradually",
+                        "stress dose IV hydrocortisone and taper gradually",
                         "Lifelong steroid",
                         "Stop steroids",
-                        "Fluconzole to mantine sodium"
+                        "Fluconazole to mantine sodium"
                     ],
                     "answer": 0,
                     "explanation": "Core Concept: In Cushing's syndrome caused by a unilateral cortisol-secreting adrenal adenoma, the chronic autonomous hypercortisolism profoundly suppresses the hypothalamic-pituitary-adrenal (HPA) axis and causes atrophy of the contralateral adrenal gland. Clinical Presentation: · Postoperative risk of acute adrenal crisis (hypotension, shock, hypoglycemia) if glucocorticoids are not supplemented. Diagnosis: · First-line tool: Clinical diagnosis of Cushing's syndrome and imaging of the adrenal glands. · Gold standard: Histopathological confirmation of the adenoma post-resection. Management: · Acute: Perioperative stress-dose IV hydrocortisone is mandatory to prevent acute adrenal insufficiency during the surgical stress response. · Long-term/Definitive: Gradual tapering to oral physiological replacement doses of glucocorticoids (e.g., hydrocortisone) until the suppressed HPA axis and contralateral adrenal gland recover, which can take several months to over a year. Lifelong steroids are not needed unless bilateral adrenalectomy was performed.",
@@ -963,7 +963,7 @@ const specialtyEndocrinologyInfectious = {
                     "options": [
                         "Give tetanus Vaccine (Or Shot?)",
                         "Tdap Booster",
-                        "Wait For Her To Develop Tetanus , Then Give Her Vaccine",
+                        "Wait For Her To Develop Tetanus, Then Give Her Vaccine",
                         "No Need"
                     ],
                     "answer": 1,

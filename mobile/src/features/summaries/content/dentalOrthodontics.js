@@ -221,11 +221,11 @@ const dentalOrthodontics = {
                     "source": "SDLE recall"
                 },
                 {
-                    "q": "11 yo male px with deficient mandible and retroclined lower anterior which appliance is suitable ?",
+                    "q": "11 yo male px with deficient mandible and retroclined lower anterior which appliance is suitable?",
                     "options": [
                         "twin block",
-                        "herpest",
-                        "frankle"
+                        "herpes",
+                        "Frankel"
                     ],
                     "answer": 0,
                     "explanation": "An 11-year-old with a deficient mandible is in the growth period, so a functional appliance that holds the mandible forward is suitable. The twin block is popular, comfortable and effective for Class II, and it can also help with the retroclined lower incisors by tipping them forward. Herbst and Frankel are other functional options.",

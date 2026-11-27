@@ -825,7 +825,7 @@ const specialtyNephrology = {
                     "source": "SMLE recall"
                 },
                 {
-                    "q": "A 67-year-old male presents with painless hematuria. What is the most appropriate diagnostic test ?",
+                    "q": "A 67-year-old male presents with painless hematuria. What is the most appropriate diagnostic test?",
                     "options": [
                         "Cystoscopy",
                         "CT abdomen",
