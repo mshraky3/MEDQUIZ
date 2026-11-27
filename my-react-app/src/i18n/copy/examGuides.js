@@ -55,6 +55,7 @@ import {
 export { EXAMS_ROOT, SHARED_PAGES, EXAM_PAGES, EXAM_KEYS, examPath, examPagePath, sharedPagePath };
 
 const SMLE_PDF = 'https://scfhs.org.sa/sites/default/files/2026-05/Saudi%20Medical%20Licensure%20Examination%20(SMLE)%20Blueprint_2026_0.pdf';
+const SCFHS_DATES_URL = 'https://scfhs.org.sa/en/Mumares/SPLE/DATES';
 const SNLE_PDF = 'https://scfhs.org.sa/sites/default/files/2025-09/SNLE%20Applicant%20Guide%20.pdf';
 
 const examGuidesCopy = {
@@ -96,6 +97,54 @@ const examGuidesCopy = {
 
         /* ---------------- Shared pages ---------------- */
         shared: {
+            // Dates read from SCFHS_DATES_URL on 27 Nov 2026. Update this page,
+            // its English twin and config/examDates.js together.
+            'dates': {
+                kicker: 'Exam Dates',
+                title: 'مواعيد اختبارات الهيئة 2026 و2027',
+                intro: 'فترات اختبارات الرخصة المهنية كما تنشرها الهيئة السعودية للتخصصات الصحية. المواعيد قابلة للتغيير.',
+                sections: [
+                    {
+                        heading: 'فترات الاختبار القادمة',
+                        blocks: [
+                            {
+                                ul: [
+                                    '**1 – 24 ديسمبر 2026**',
+                                    '**3 – 21 يناير 2027**',
+                                    '**1 – 25 فبراير 2027**',
+                                    '**17 مارس – 12 أبريل 2027**',
+                                    '**18 أبريل – 6 مايو 2027**',
+                                    '**24 مايو – 17 يونيو 2027**',
+                                    '**27 يونيو – 22 يوليو 2027**',
+                                    '**11 – 26 أغسطس 2027**',
+                                    '**5 – 23 سبتمبر 2027**',
+                                    '**3 – 21 أكتوبر 2027**',
+                                ],
+                            },
+                            { p: 'جدول الهيئة واحد لاختبارات الرخصة المهنية، ولا يخصص صفوفاً لاختبار بعينه. حالة التسجيل لكل فترة تتغير، فراجعها في صفحة الهيئة.' },
+                        ],
+                    },
+                    {
+                        heading: 'مصدر المواعيد',
+                        blocks: [
+                            { p: `[[${SCFHS_DATES_URL}|صفحة مواعيد الاختبارات في موقع الهيئة]]. آخر تحديث ظاهر فيها **26 نوفمبر 2026**، وقرأناها في 27 نوفمبر 2026.` },
+                            { p: 'تنبّه الهيئة إلى أن المواعيد قابلة للتحديث. **قبل أن تحجز أو ترتّب إجازتك، تأكد من صفحة الهيئة نفسها.**' },
+                        ],
+                    },
+                    {
+                        heading: 'ابدأ التحضير حسب تخصصك',
+                        blocks: [
+                            {
+                                ul: [
+                                    '[[/signup?track=medical|طب بشري (SMLE): ابدأ بـ 10 أسئلة مجانية]]',
+                                    '[[/signup?track=nursing|تمريض (SNLE): ابدأ بـ 10 أسئلة مجانية]]',
+                                    '[[/signup?track=dental|طب أسنان (SDLE): ابدأ بـ 10 أسئلة مجانية]]',
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            },
             'format': {
                 kicker: 'Exam Format',
                 title: 'شكل اختبارات الهيئة: كم سؤالاً وكم وقتاً',
@@ -680,6 +729,52 @@ const examGuidesCopy = {
         },
 
         shared: {
+            'dates': {
+                kicker: 'Exam Dates',
+                title: 'SCFHS exam dates, 2026 and 2027',
+                intro: 'Testing periods for the professional licensure exams, as published by the Saudi Commission for Health Specialties. Dates can change.',
+                sections: [
+                    {
+                        heading: 'Upcoming testing periods',
+                        blocks: [
+                            {
+                                ul: [
+                                    '**1 – 24 December 2026**',
+                                    '**3 – 21 January 2027**',
+                                    '**1 – 25 February 2027**',
+                                    '**17 March – 12 April 2027**',
+                                    '**18 April – 6 May 2027**',
+                                    '**24 May – 17 June 2027**',
+                                    '**27 June – 22 July 2027**',
+                                    '**11 – 26 August 2027**',
+                                    '**5 – 23 September 2027**',
+                                    '**3 – 21 October 2027**',
+                                ],
+                            },
+                            { p: 'The Commission publishes one table for its professional licensure exams and does not tie a row to a particular exam. Registration status changes, so check it on the Commission’s page.' },
+                        ],
+                    },
+                    {
+                        heading: 'Where these dates come from',
+                        blocks: [
+                            { p: `[[${SCFHS_DATES_URL}|The exam dates page on the Commission’s website]]. It showed **26 November 2026** as its last update when we read it on 27 November 2026.` },
+                            { p: 'The Commission says the dates are subject to updates. **Before you book or arrange leave, check its page yourself.**' },
+                        ],
+                    },
+                    {
+                        heading: 'Start preparing for your exam',
+                        blocks: [
+                            {
+                                ul: [
+                                    '[[/signup?track=medical|Medicine (SMLE): start with 10 free questions]]',
+                                    '[[/signup?track=nursing|Nursing (SNLE): start with 10 free questions]]',
+                                    '[[/signup?track=dental|Dentistry (SDLE): start with 10 free questions]]',
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            },
             'format': {
                 kicker: 'Exam Format',
                 title: 'How the Saudi licensing exams are built: questions, parts and timing',

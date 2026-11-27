@@ -8,7 +8,7 @@ import SEO from '../common/SEO.jsx';
 import { completeSeo, questionPath, specialtySeo } from '../../seo/publicQuestions.js';
 import usePublicQuestions from './usePublicQuestions.js';
 import TrackTelegramLink from '../common/TrackTelegramLink.jsx';
-import { Breadcrumb, SignupCta, PublicQuestionsError } from './PublicQuestionsShared.jsx';
+import { Breadcrumb, SignupCta, PublicQuestionsError, signupPath } from './PublicQuestionsShared.jsx';
 import './PublicQuestions.css';
 
 /** /questions/:specialty — every published question in one specialty. */
@@ -37,6 +37,7 @@ const QuestionsSpecialty = () => {
                 <p className="pq-kicker">{group.labelEn}</p>
                 <h1>{t.specialty.title(label)}</h1>
                 <p>{t.specialty.intro(group.questions.length, label)}</p>
+                <p><Link className="pq-cta-btn" to={signupPath(group.track)}>{t.cta.button}</Link></p>
             </header>
 
             <section>
@@ -50,7 +51,7 @@ const QuestionsSpecialty = () => {
                 </ol>
             </section>
 
-            <SignupCta t={t} />
+            <SignupCta t={t} track={group.track} />
             <TrackTelegramLink track={group.track} />
 
             {siblings.length > 0 && (

@@ -195,7 +195,7 @@ ${options}
           ${explanationHtml(question.explanation)}
         </section>
       </article>
-${ctaHtml(t, lang)}
+${ctaHtml(t, lang, question.track)}
 ${trackTelegramHtml(question.track, telegramCardCopy[lang] || telegramCardCopy.ar)}
 ${related.length ? `      <nav class="pq-related" aria-label="${escapeHtml(t.question.relatedTitle(specialtyLabel))}" dir="${dir}">
         <h2>${escapeHtml(t.question.relatedTitle(specialtyLabel))}</h2>
@@ -216,11 +216,13 @@ ${relatedLinks}
  * words — they used to differ slightly per page, for no reason anyone could
  * have defended.
  */
-function ctaHtml(t, lang) {
+const signupHref = (lang, track) => `${localizedPath('/signup', lang)}${track ? `?track=${track}` : ''}`;
+
+function ctaHtml(t, lang, track) {
     return `      <section class="pq-cta" dir="${dirFor(lang)}">
         <h2>${escapeHtml(t.cta.title)}</h2>
         <p>${escapeHtml(t.cta.body)}</p>
-        <a class="pq-cta-btn" href="${localizedPath('/signup', lang)}">${escapeHtml(t.cta.button)}</a>
+        <a class="pq-cta-btn" href="${signupHref(lang, track)}">${escapeHtml(t.cta.button)}</a>
         <p class="pq-cta-note">${escapeHtml(t.cta.note)}</p>
       </section>`;
 }
@@ -250,6 +252,7 @@ export function specialtyPageHtml(group, allSpecialties = [], lang = 'ar') {
         <p class="pq-kicker">${escapeHtml(group.labelEn)}</p>
         <h1>${escapeHtml(t.specialty.title(label))}</h1>
         <p>${escapeHtml(t.specialty.intro(group.questions.length, label))}</p>
+        <p><a class="pq-cta-btn" href="${signupHref(lang, group.track)}">${escapeHtml(t.cta.button)}</a></p>
       </header>
       <section>
         <h2>${escapeHtml(t.specialty.listTitle)}</h2>
@@ -257,7 +260,7 @@ export function specialtyPageHtml(group, allSpecialties = [], lang = 'ar') {
 ${items}
         </ol>
       </section>
-${ctaHtml(t, lang)}
+${ctaHtml(t, lang, group.track)}
 ${trackTelegramHtml(group.track, telegramCardCopy[lang] || telegramCardCopy.ar)}
 ${siblings ? `      <nav class="pq-siblings" aria-label="${escapeHtml(t.specialty.siblingsTitle)}">
         <h2>${escapeHtml(t.specialty.siblingsTitle)}</h2>

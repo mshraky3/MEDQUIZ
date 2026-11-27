@@ -9,8 +9,8 @@
  */
 export const EXAMS_ROOT = '/exams';
 
-/** The two shared pages, and the four each exam owns. */
-export const SHARED_PAGES = ['format', 'test-day'];
+/** The shared pages, and the four each exam owns. */
+export const SHARED_PAGES = ['format', 'test-day', 'dates'];
 export const EXAM_PAGES = ['blueprint', 'passing-score', 'eligibility', 'attempts'];
 export const EXAM_KEYS = ['smle', 'snle'];
 

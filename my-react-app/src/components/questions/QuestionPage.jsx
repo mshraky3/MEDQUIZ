@@ -95,7 +95,7 @@ const QuestionPage = () => {
                 </section>
             </article>
 
-            <SignupCta t={t} />
+            <SignupCta t={t} track={question.track} />
             <TrackTelegramLink track={question.track} />
 
             {related.length > 0 && (

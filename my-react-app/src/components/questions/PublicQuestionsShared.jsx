@@ -21,11 +21,14 @@ export const Breadcrumb = ({ t, trail = [] }) => (
     </nav>
 );
 
-export const SignupCta = ({ t }) => (
+/** `?track=` skips the track question on the signup page. */
+export const signupPath = (track) => (track ? `/signup?track=${track}` : '/signup');
+
+export const SignupCta = ({ t, track }) => (
     <section className="pq-cta">
         <h2>{t.cta.title}</h2>
         <p>{t.cta.body}</p>
-        <Link className="pq-cta-btn" to="/signup">{t.cta.button}</Link>
+        <Link className="pq-cta-btn" to={signupPath(track)}>{t.cta.button}</Link>
         <p className="pq-cta-note">{t.cta.note}</p>
     </section>
 );

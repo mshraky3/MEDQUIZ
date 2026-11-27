@@ -399,6 +399,7 @@
   background: var(--bg-f59e0b-a120);
   border: 1px solid rgba(245, 158, 11, 0.35);
   width: fit-content;
+  text-decoration: none;
 }
 
 .hero h1 {

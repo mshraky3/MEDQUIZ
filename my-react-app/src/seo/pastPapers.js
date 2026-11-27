@@ -259,11 +259,11 @@ export function collectionsFaqItems({ bankTotal, collectionCount }, lang = 'ar')
 }
 
 /** The signup CTA, shared with the question pages' wording. */
-function ctaHtml(t, lang) {
+function ctaHtml(t, lang, track) {
     return `      <section class="pq-cta" dir="${dirFor(lang)}">
         <h2>${escapeHtml(t.cta.title)}</h2>
         <p>${escapeHtml(t.cta.body)}</p>
-        <a class="pq-cta-btn" href="${localizedPath('/signup', lang)}">${escapeHtml(t.cta.button)}</a>
+        <a class="pq-cta-btn" href="${localizedPath('/signup', lang)}${track ? `?track=${track}` : ''}">${escapeHtml(t.cta.button)}</a>
         <p class="pq-cta-note">${escapeHtml(t.cta.note)}</p>
       </section>`;
 }
@@ -319,9 +319,9 @@ export function collectionPageHtml(collection, allCollections = [], lang = 'ar')
     const isEn = lang === 'en';
     const note = isEn ? HONESTY_NOTE_EN : HONESTY_NOTE_AR;
     const trackLabel = examFor(collection.track);
-    // SNLE and SDLE: where a list of samples pushes the signup box far down the
-    // page, the same offer also gets a button above it.
-    const tryFree = collection.track !== 'medical' && collection.samples.length
+    // Where a list of samples pushes the signup box far down the page, the same
+    // offer also gets a button above it.
+    const tryFree = collection.samples.length
         ? `\n        <p><a class="pq-cta-btn" href="${localizedPath('/signup', lang)}?track=${collection.track}">${escapeHtml(t.collection.tryFree)}</a></p>`
         : '';
 
@@ -363,7 +363,7 @@ ${samples ? `      <section>
 ${samples}
         </ol>
       </section>` : ''}
-${ctaHtml(t, lang)}
+${ctaHtml(t, lang, collection.track)}
 ${trackTelegramHtml(collection.track, telegramCardCopy[lang] || telegramCardCopy.ar)}
 ${faqHtml(collectionsFaqItems(collection, lang), t.faqTitle)}
 ${siblings ? `      <nav class="pq-siblings" aria-label="${escapeHtml(t.collection.siblingsTitle)}">
