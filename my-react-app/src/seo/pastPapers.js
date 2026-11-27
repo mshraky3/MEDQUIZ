@@ -243,13 +243,13 @@ function escapeHtml(value = '') {
 export const HONESTY_NOTE_EN =
     'Neither SCFHS nor Prometric publishes past exam papers. What you find here are '
     + 'question collections assembled by the SQB team from what candidates report after '
-    + 'sitting the exam, then answer-checked and rewritten to the current exam style. '
+    + 'sitting the exam. Recalled questions and answers can contain mistakes. '
     + 'This platform is not affiliated with SCFHS or Prometric.';
 
 export const HONESTY_NOTE_AR =
     'لا تنشر الهيئة السعودية للتخصصات الصحية ولا Prometric أوراق اختبارات سابقة. '
     + 'ما تجده هنا تجميعات أسئلة أعدّها فريق SQB اعتماداً على ما ينقله المتقدمون بعد الاختبار، '
-    + 'ثم روجعت إجاباتها وأُعيدت صياغتها على نمط الاختبار الحالي. المنصة غير تابعة للهيئة أو Prometric.';
+    + 'وقد يحتوي السؤال المنقول من الذاكرة أو إجابته على أخطاء. المنصة غير تابعة للهيئة أو Prometric.';
 
 /**
  * The collections FAQ, from the same copy the React pages render.

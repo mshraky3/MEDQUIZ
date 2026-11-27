@@ -317,7 +317,7 @@ const dentalPediatricDentistry = {
                         "Direct amalgam sealant"
                     ],
                     "answer": 0,
-                    "explanation": "A stainless-steel crown provides durable full-coronal coverage for a primary molar with extensive multisurface disease. Reference: American Academy of Pediatric Dentistry. Pediatric Restorative Dentistry. Stainless-steel crown indications. Reference Manual of Pediatric Dentistry. Page",
+                    "explanation": "A stainless-steel crown provides durable full-coronal coverage for a primary molar with extensive multisurface disease. Reference: American Academy of Pediatric Dentistry. Pediatric Restorative Dentistry. Stainless-steel crown indications. Reference Manual of Pediatric Dentistry.",
                     "source": "SDLE bank"
                 },
                 {
@@ -365,7 +365,7 @@ const dentalPediatricDentistry = {
                         "Never if the crown seats"
                     ],
                     "answer": 1,
-                    "explanation": "Trial seating permits assessment of fit and gross occlusal interference before cementation; occlusion should be verified again immediately after cementation. Reference: Dean JA. McDonald and Avery's Dentistry for the Child and Adolescent. Stainless-steel crown technique. Page",
+                    "explanation": "Trial seating permits assessment of fit and gross occlusal interference before cementation; occlusion should be verified again immediately after cementation. Reference: Dean JA. McDonald and Avery's Dentistry for the Child and Adolescent. Stainless-steel crown technique.",
                     "source": "SDLE bank"
                 }
             ],
@@ -434,7 +434,7 @@ const dentalPediatricDentistry = {
                         "Pea-sized nonfluoridated paste"
                     ],
                     "answer": 1,
-                    "explanation": "Children younger than three should use no more than a smear or rice-sized amount of fluoridated toothpaste under caregiver supervision; nocturnal bottle feeding should also be stopped. Reference: American Academy of Pediatric Dentistry. Fluoride Therapy. Reference Manual of Pediatric Dentistry. Page",
+                    "explanation": "Children younger than three should use no more than a smear or rice-sized amount of fluoridated toothpaste under caregiver supervision; nocturnal bottle feeding should also be stopped. Reference: American Academy of Pediatric Dentistry. Fluoride Therapy. Reference Manual of Pediatric Dentistry.",
                     "source": "SDLE bank"
                 },
                 {
@@ -482,7 +482,7 @@ const dentalPediatricDentistry = {
                         "Occlusal radiograph"
                     ],
                     "answer": 2,
-                    "explanation": "Horizontal bitewings provide high-resolution views of posterior proximal surfaces and crestal bone; vertical bitewings are used when greater bone coverage is needed. Reference: American Dental Association, US Food and Drug Administration. Dental Radiographic Examinations: Recommendations for Patient Selection and Limiting Radiation Exposure. Page",
+                    "explanation": "Horizontal bitewings provide high-resolution views of posterior proximal surfaces and crestal bone; vertical bitewings are used when greater bone coverage is needed. Reference: American Dental Association, US Food and Drug Administration. Dental Radiographic Examinations: Recommendations for Patient Selection and Limiting Radiation Exposure.",
                     "source": "SDLE bank"
                 }
             ],
@@ -579,7 +579,7 @@ const dentalPediatricDentistry = {
                         "On the root surface"
                     ],
                     "answer": 0,
-                    "explanation": "The loop should contact the adjacent tooth at the contact region to preserve the space without impinging on gingiva or interfering with occlusion. Reference: Dean JA. McDonald and Avery's Dentistry for the Child and Adolescent. Band-and-loop design. Page",
+                    "explanation": "The loop should contact the adjacent tooth at the contact region to preserve the space without impinging on gingiva or interfering with occlusion. Reference: Dean JA. McDonald and Avery's Dentistry for the Child and Adolescent. Band-and-loop design.",
                     "source": "SDLE bank"
                 },
                 {
@@ -591,7 +591,7 @@ const dentalPediatricDentistry = {
                         "1.7 mm"
                     ],
                     "answer": 3,
-                    "explanation": "The combined width difference between primary canine and molars and their permanent successors averages about 1.7 mm per side in the mandible. Reference: Proffit WR et al. Contemporary Orthodontics. Leeway space. Page",
+                    "explanation": "The combined width difference between primary canine and molars and their permanent successors averages about 1.7 mm per side in the mandible. Reference: Proffit WR et al. Contemporary Orthodontics. Leeway space.",
                     "source": "SDLE bank"
                 },
                 {
@@ -603,7 +603,7 @@ const dentalPediatricDentistry = {
                         "Permanent incisors, primary molars, then first molars"
                     ],
                     "answer": 2,
-                    "explanation": "The classic C-D-4 sequence first relieves incisor crowding, then accelerates first-premolar eruption so those premolars can be removed to guide canine eruption. Reference: Proffit WR et al. Contemporary Orthodontics. Serial extraction. Page",
+                    "explanation": "The classic C-D-4 sequence first relieves incisor crowding, then accelerates first-premolar eruption so those premolars can be removed to guide canine eruption. Reference: Proffit WR et al. Contemporary Orthodontics. Serial extraction.",
                     "source": "SDLE bank"
                 }
             ],
@@ -674,7 +674,7 @@ const dentalPediatricDentistry = {
                         "Short and straight"
                     ],
                     "answer": 2,
-                    "explanation": "Primary molar roots are slender and flare widely to accommodate the developing permanent successor between them. Reference: Dean JA. McDonald and Avery's Dentistry for the Child and Adolescent. Primary-tooth morphology. Page",
+                    "explanation": "Primary molar roots are slender and flare widely to accommodate the developing permanent successor between them. Reference: Dean JA. McDonald and Avery's Dentistry for the Child and Adolescent. Primary-tooth morphology.",
                     "source": "SDLE bank"
                 },
                 {
@@ -793,7 +793,7 @@ const dentalPediatricDentistry = {
                         "Voice control only"
                     ],
                     "answer": 0,
-                    "explanation": "Specific praise or another appropriate reward immediately following desired behavior increases the likelihood that the behavior will recur. Reference: American Academy of Pediatric Dentistry. Behavior Guidance for the Pediatric Dental Patient. Positive reinforcement. Reference Manual of Pediatric Dentistry. Page",
+                    "explanation": "Specific praise or another appropriate reward immediately following desired behavior increases the likelihood that the behavior will recur. Reference: American Academy of Pediatric Dentistry. Behavior Guidance for the Pediatric Dental Patient. Positive reinforcement. Reference Manual of Pediatric Dentistry.",
                     "source": "SDLE bank"
                 },
                 {

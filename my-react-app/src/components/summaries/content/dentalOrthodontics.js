@@ -74,7 +74,7 @@ const dentalOrthodontics = {
                         "Perfect alignment without an occlusal discrepancy"
                     ],
                     "answer": 1,
-                    "explanation": "Angle Class I malocclusion retains the normal anteroposterior first-molar relationship while crowding, spacing, rotations, or other malalignment is present. Reference: Proffit WR et al. Contemporary Orthodontics. Angle classification. Page",
+                    "explanation": "Angle Class I malocclusion retains the normal anteroposterior first-molar relationship while crowding, spacing, rotations, or other malalignment is present. Reference: Proffit WR et al. Contemporary Orthodontics. Angle classification.",
                     "source": "SDLE bank"
                 },
                 {
@@ -321,7 +321,7 @@ const dentalOrthodontics = {
                         "Bilateral posterior open bite from ankylosis"
                     ],
                     "answer": 0,
-                    "explanation": "In pseudo-Class III, premature contacts guide the mandible forward on closure, creating an anterior crossbite that can mimic skeletal Class III. Reference: Proffit WR et al. Contemporary Orthodontics. Class III malocclusion and functional shifts. Page",
+                    "explanation": "In pseudo-Class III, premature contacts guide the mandible forward on closure, creating an anterior crossbite that can mimic skeletal Class III. Reference: Proffit WR et al. Contemporary Orthodontics. Class III malocclusion and functional shifts.",
                     "source": "SDLE bank"
                 },
                 {

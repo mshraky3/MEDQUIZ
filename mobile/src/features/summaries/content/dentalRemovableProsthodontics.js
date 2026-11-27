@@ -68,7 +68,7 @@ const dentalRemovableProsthodontics = {
                         "Lingual plate"
                     ],
                     "answer": 1,
-                    "explanation": "A round wrought-wire retentive arm is more flexible than a comparable cast arm and can engage a deeper 0.02-inch undercut with less torque. It is commonly incorporated into a combination clasp. Reference: Carr AB et al. McCracken's Removable Partial Prosthodontics. Wrought-wire and combination clasp design. Page",
+                    "explanation": "A round wrought-wire retentive arm is more flexible than a comparable cast arm and can engage a deeper 0.02-inch undercut with less torque. It is commonly incorporated into a combination clasp. Reference: Carr AB et al. McCracken's Removable Partial Prosthodontics. Wrought-wire and combination clasp design.",
                     "source": "SDLE bank"
                 },
                 {
@@ -92,7 +92,7 @@ const dentalRemovableProsthodontics = {
                         "I-bar clasp"
                     ],
                     "answer": 1,
-                    "explanation": "A ring clasp nearly encircles a tilted molar to approach a favorable undercut from the appropriate direction. Adequate bracing and auxiliary support are required because of its long flexible arm. Reference: Carr AB et al. McCracken's Removable Partial Prosthodontics. Ring clasp indications and design. Page",
+                    "explanation": "A ring clasp nearly encircles a tilted molar to approach a favorable undercut from the appropriate direction. Adequate bracing and auxiliary support are required because of its long flexible arm. Reference: Carr AB et al. McCracken's Removable Partial Prosthodontics. Ring clasp indications and design.",
                     "source": "SDLE bank"
                 },
                 {
@@ -104,7 +104,7 @@ const dentalRemovableProsthodontics = {
                         "Ring clasp without a rest"
                     ],
                     "answer": 1,
-                    "explanation": "A combination clasp joins a flexible round wrought-wire retentive arm to cast framework components such as the rest, minor connector, and reciprocal arm or plate. Reference: Carr AB et al. McCracken's Removable Partial Prosthodontics. Combination clasp assembly. Page",
+                    "explanation": "A combination clasp joins a flexible round wrought-wire retentive arm to cast framework components such as the rest, minor connector, and reciprocal arm or plate. Reference: Carr AB et al. McCracken's Removable Partial Prosthodontics. Combination clasp assembly.",
                     "source": "SDLE bank"
                 },
                 {
@@ -116,7 +116,7 @@ const dentalRemovableProsthodontics = {
                         "Severe soft-tissue undercut"
                     ],
                     "answer": 3,
-                    "explanation": "A severe tissue undercut can prevent a bar clasp from approaching the tooth without impinging on movable mucosa. Other contraindications include inadequate vestibular depth and an interfering frenum. Reference: Carr AB et al. McCracken's Removable Partial Prosthodontics. Bar clasp indications and contraindications. Page",
+                    "explanation": "A severe tissue undercut can prevent a bar clasp from approaching the tooth without impinging on movable mucosa. Other contraindications include inadequate vestibular depth and an interfering frenum. Reference: Carr AB et al. McCracken's Removable Partial Prosthodontics. Bar clasp indications and contraindications.",
                     "source": "SDLE bank"
                 }
             ],
@@ -189,7 +189,7 @@ const dentalRemovableProsthodontics = {
                         "Class III"
                     ],
                     "answer": 0,
-                    "explanation": "Kennedy Class IV is a single bilateral edentulous area located anterior to the remaining natural teeth and crossing the midline. It has no modification spaces by definition. Reference: Carr AB et al. McCracken's Removable Partial Prosthodontics. Kennedy classification. Page",
+                    "explanation": "Kennedy Class IV is a single bilateral edentulous area located anterior to the remaining natural teeth and crossing the midline. It has no modification spaces by definition. Reference: Carr AB et al. McCracken's Removable Partial Prosthodontics. Kennedy classification.",
                     "source": "SDLE bank"
                 },
                 {
@@ -201,7 +201,7 @@ const dentalRemovableProsthodontics = {
                         "Class III"
                     ],
                     "answer": 3,
-                    "explanation": "Missing third molars not planned for replacement are ignored in Kennedy classification. The remaining tooth-bounded space at 35 is therefore a Class III arch without modification. Reference: Carr AB et al. McCracken's Removable Partial Prosthodontics. Applegate rules for Kennedy classification. Page",
+                    "explanation": "Missing third molars not planned for replacement are ignored in Kennedy classification. The remaining tooth-bounded space at 35 is therefore a Class III arch without modification. Reference: Carr AB et al. McCracken's Removable Partial Prosthodontics. Applegate rules for Kennedy classification.",
                     "source": "SDLE bank"
                 },
                 {
@@ -225,7 +225,7 @@ const dentalRemovableProsthodontics = {
                         "Bounded Class III modification"
                     ],
                     "answer": 0,
-                    "explanation": "The altered cast records distal-extension tissue support under controlled loading while preserving the framework-tooth relationship; it is used for Class I and II distal extensions, especially mandibular cases. Reference: Carr AB et al. McCracken's Removable Partial Prosthodontics. Altered-cast technique. Page",
+                    "explanation": "The altered cast records distal-extension tissue support under controlled loading while preserving the framework-tooth relationship; it is used for Class I and II distal extensions, especially mandibular cases. Reference: Carr AB et al. McCracken's Removable Partial Prosthodontics. Altered-cast technique.",
                     "source": "SDLE bank"
                 }
             ],
@@ -292,7 +292,7 @@ const dentalRemovableProsthodontics = {
                         "Acrylic mesh"
                     ],
                     "answer": 1,
-                    "explanation": "Broad contact with the anterior teeth allows the lingual plate to provide bracing, splinting, and potential indirect retention in a distal-extension RPD. Reference: Carr AB et al. McCracken's Removable Partial Prosthodontics. Lingual plate functions. Page",
+                    "explanation": "Broad contact with the anterior teeth allows the lingual plate to provide bracing, splinting, and potential indirect retention in a distal-extension RPD. Reference: Carr AB et al. McCracken's Removable Partial Prosthodontics. Lingual plate functions.",
                     "source": "SDLE bank"
                 },
                 {
@@ -304,7 +304,7 @@ const dentalRemovableProsthodontics = {
                         "Double lingual bar"
                     ],
                     "answer": 2,
-                    "explanation": "Six millimeters is generally inadequate for both gingival clearance and a rigid lingual bar; a lingual plate is preferred when otherwise suitable. Reference: Carr AB et al. McCracken's Removable Partial Prosthodontics. Lingual plate indications. Page",
+                    "explanation": "Six millimeters is generally inadequate for both gingival clearance and a rigid lingual bar; a lingual plate is preferred when otherwise suitable. Reference: Carr AB et al. McCracken's Removable Partial Prosthodontics. Lingual plate indications.",
                     "source": "SDLE bank"
                 },
                 {
@@ -316,7 +316,7 @@ const dentalRemovableProsthodontics = {
                         "Palatal plate RPD"
                     ],
                     "answer": 0,
-                    "explanation": "A swing-lock design uses a hinged labial bar with multiple struts and may be indicated when unfavorable tooth inclination or distribution prevents conventional clasping. Esthetics, vestibular depth, periodontal health, dexterity, and hygiene must be suitable. Reference: Carr AB et al. McCracken's Removable Partial Prosthodontics. Swing-lock removable partial dentures. Page",
+                    "explanation": "A swing-lock design uses a hinged labial bar with multiple struts and may be indicated when unfavorable tooth inclination or distribution prevents conventional clasping. Esthetics, vestibular depth, periodontal health, dexterity, and hygiene must be suitable. Reference: Carr AB et al. McCracken's Removable Partial Prosthodontics. Swing-lock removable partial dentures.",
                     "source": "SDLE bank"
                 },
                 {
@@ -397,7 +397,7 @@ const dentalRemovableProsthodontics = {
                         "Select shade and tooth mould"
                     ],
                     "answer": 0,
-                    "explanation": "Surveying identifies relative tooth and tissue contours, usable undercuts, guiding surfaces, and the most favorable path of placement and removal. Reference: Carr AB et al. McCracken's Removable Partial Prosthodontics. Surveying. Page",
+                    "explanation": "Surveying identifies relative tooth and tissue contours, usable undercuts, guiding surfaces, and the most favorable path of placement and removal. Reference: Carr AB et al. McCracken's Removable Partial Prosthodontics. Surveying.",
                     "source": "SDLE bank"
                 },
                 {
@@ -409,7 +409,7 @@ const dentalRemovableProsthodontics = {
                         "Wax knife"
                     ],
                     "answer": 2,
-                    "explanation": "Calibrated undercut gauges identify specified horizontal depths, commonly 0.01, 0.02, or 0.03 inch, below the height of contour. The analyzing rod evaluates contours and parallelism but does not quantify undercut depth. Reference: Carr AB et al. McCracken's Removable Partial Prosthodontics. Dental surveyor instruments. Page",
+                    "explanation": "Calibrated undercut gauges identify specified horizontal depths, commonly 0.01, 0.02, or 0.03 inch, below the height of contour. The analyzing rod evaluates contours and parallelism but does not quantify undercut depth. Reference: Carr AB et al. McCracken's Removable Partial Prosthodontics. Dental surveyor instruments.",
                     "source": "SDLE bank"
                 },
                 {
@@ -433,7 +433,7 @@ const dentalRemovableProsthodontics = {
                         "Yes, on the contralateral molar"
                     ],
                     "answer": 1,
-                    "explanation": "Indirect retention counters rotational lifting of distal-extension bases. A bounded tooth-supported Class III saddle lacks that tissueward fulcrum behavior and does not require an indirect retainer solely because of the space. Reference: Carr AB et al. McCracken's Removable Partial Prosthodontics. Indirect retention and Kennedy classification. Page",
+                    "explanation": "Indirect retention counters rotational lifting of distal-extension bases. A bounded tooth-supported Class III saddle lacks that tissueward fulcrum behavior and does not require an indirect retainer solely because of the space. Reference: Carr AB et al. McCracken's Removable Partial Prosthodontics. Indirect retention and Kennedy classification.",
                     "source": "SDLE bank"
                 },
                 {
@@ -445,7 +445,7 @@ const dentalRemovableProsthodontics = {
                         "Fixed treatment without surveying"
                     ],
                     "answer": 1,
-                    "explanation": "The definitive RPD design and surveyed path of insertion must be established first so crowns and other fixed restorations can incorporate appropriate guide planes, rests, contours, and retentive undercuts. Reference: Carr AB et al. McCracken's Removable Partial Prosthodontics. Diagnosis and sequencing of fixed and removable treatment. Page",
+                    "explanation": "The definitive RPD design and surveyed path of insertion must be established first so crowns and other fixed restorations can incorporate appropriate guide planes, rests, contours, and retentive undercuts. Reference: Carr AB et al. McCracken's Removable Partial Prosthodontics. Diagnosis and sequencing of fixed and removable treatment.",
                     "source": "SDLE bank"
                 }
             ],
@@ -542,7 +542,7 @@ const dentalRemovableProsthodontics = {
                         "Alginate wash only"
                     ],
                     "answer": 0,
-                    "explanation": "The admix technique uses low-fusing compound and impression compound to record a highly resorbed mandibular foundation functionally; neutral-zone recording addresses tooth and polished-surface position. Reference: Zarb GA et al. Prosthodontic Treatment for Edentulous Patients. Resorbed mandibular ridge impressions. Page",
+                    "explanation": "The admix technique uses low-fusing compound and impression compound to record a highly resorbed mandibular foundation functionally; neutral-zone recording addresses tooth and polished-surface position. Reference: Zarb GA et al. Prosthodontic Treatment for Edentulous Patients. Resorbed mandibular ridge impressions.",
                     "source": "SDLE bank"
                 },
                 {
@@ -566,7 +566,7 @@ const dentalRemovableProsthodontics = {
                         "Heavy-body only"
                     ],
                     "answer": 0,
-                    "explanation": "A mucostatic or selective window technique records mobile tissue with minimal pressure to reduce distortion and rebound. Reference: Zarb GA et al. Prosthodontic Treatment for Edentulous Patients. Flabby-ridge impressions. Page",
+                    "explanation": "A mucostatic or selective window technique records mobile tissue with minimal pressure to reduce distortion and rebound. Reference: Zarb GA et al. Prosthodontic Treatment for Edentulous Patients. Flabby-ridge impressions.",
                     "source": "SDLE bank"
                 }
             ],
@@ -640,7 +640,7 @@ const dentalRemovableProsthodontics = {
                         "Facial height minus OVD"
                     ],
                     "answer": 0,
-                    "explanation": "Freeway space is the difference between the vertical dimension at physiologic rest and the vertical dimension of occlusion. Both measurements should be repeated because rest position varies. Reference: Zarb GA et al. Prosthodontic Treatment for Edentulous Patients. Vertical dimension and interocclusal rest space. Page",
+                    "explanation": "Freeway space is the difference between the vertical dimension at physiologic rest and the vertical dimension of occlusion. Both measurements should be repeated because rest position varies. Reference: Zarb GA et al. Prosthodontic Treatment for Edentulous Patients. Vertical dimension and interocclusal rest space.",
                     "source": "SDLE bank"
                 },
                 {
@@ -652,7 +652,7 @@ const dentalRemovableProsthodontics = {
                         "Decrease freeway space"
                     ],
                     "answer": 3,
-                    "explanation": "These signs suggest loss of occlusal vertical dimension and excessive interocclusal rest space. Restoring an appropriate OVD decreases freeway space while supporting facial form, subject to phonetic and physiologic verification. Reference: Zarb GA et al. Prosthodontic Treatment for Edentulous Patients. Vertical dimension assessment. Page",
+                    "explanation": "These signs suggest loss of occlusal vertical dimension and excessive interocclusal rest space. Restoring an appropriate OVD decreases freeway space while supporting facial form, subject to phonetic and physiologic verification. Reference: Zarb GA et al. Prosthodontic Treatment for Edentulous Patients. Vertical dimension assessment.",
                     "source": "SDLE bank"
                 },
                 {
@@ -752,7 +752,7 @@ const dentalRemovableProsthodontics = {
                         "Adhesion"
                     ],
                     "answer": 3,
-                    "explanation": "Adhesion is attraction between unlike molecules at the saliva-denture and saliva-mucosa interfaces. Cohesion and surface tension also contribute, but harmful suction chambers are not required. Reference: Zarb GA et al. Prosthodontic Treatment for Edentulous Patients. Physical factors in complete-denture retention. Page",
+                    "explanation": "Adhesion is attraction between unlike molecules at the saliva-denture and saliva-mucosa interfaces. Cohesion and surface tension also contribute, but harmful suction chambers are not required. Reference: Zarb GA et al. Prosthodontic Treatment for Edentulous Patients. Physical factors in complete-denture retention.",
                     "source": "SDLE bank"
                 },
                 {
@@ -764,7 +764,7 @@ const dentalRemovableProsthodontics = {
                         "7–8 days"
                     ],
                     "answer": 1,
-                    "explanation": "Localized pressure and border overextension commonly produce soreness or ulceration within the first 24–48 hours, which is why an early post-insertion review is important. The denture should be adjusted according to the identified pressure area. Reference: Zarb GA et al. Prosthodontic Treatment for Edentulous Patients. Post-insertion adjustment of complete dentures. Page",
+                    "explanation": "Localized pressure and border overextension commonly produce soreness or ulceration within the first 24–48 hours, which is why an early post-insertion review is important. The denture should be adjusted according to the identified pressure area. Reference: Zarb GA et al. Prosthodontic Treatment for Edentulous Patients. Post-insertion adjustment of complete dentures.",
                     "source": "SDLE bank"
                 },
                 {
@@ -776,7 +776,7 @@ const dentalRemovableProsthodontics = {
                         "Short maxillary buccal flange"
                     ],
                     "answer": 2,
-                    "explanation": "An overextended or insufficiently relieved lower labial flange is displaced by frenum movement and traumatizes the adjacent mucosa. Pressure-indicator and functional border evaluation guide the required reduction. Reference: Zarb GA et al. Prosthodontic Treatment for Edentulous Patients. Post-insertion sore spots and border overextension. Page",
+                    "explanation": "An overextended or insufficiently relieved lower labial flange is displaced by frenum movement and traumatizes the adjacent mucosa. Pressure-indicator and functional border evaluation guide the required reduction. Reference: Zarb GA et al. Prosthodontic Treatment for Edentulous Patients. Post-insertion sore spots and border overextension.",
                     "source": "SDLE bank"
                 },
                 {
@@ -788,7 +788,7 @@ const dentalRemovableProsthodontics = {
                         "Balanced-occlusion error"
                     ],
                     "answer": 0,
-                    "explanation": "Edema develops after extractions or alveoloplasty and can prevent reinsertion when an immediate denture is removed during the initial postoperative period. The patient should be reviewed promptly rather than force the denture into place. Reference: Zarb GA et al. Prosthodontic Treatment for Edentulous Patients. Immediate dentures and postoperative care. Page",
+                    "explanation": "Edema develops after extractions or alveoloplasty and can prevent reinsertion when an immediate denture is removed during the initial postoperative period. The patient should be reviewed promptly rather than force the denture into place. Reference: Zarb GA et al. Prosthodontic Treatment for Edentulous Patients. Immediate dentures and postoperative care.",
                     "source": "SDLE bank"
                 },
                 {
@@ -866,7 +866,7 @@ const dentalRemovableProsthodontics = {
                         "Canine guidance only"
                     ],
                     "answer": 2,
-                    "explanation": "Bilateral posterior crossbite positions teeth over the supporting ridges and limits destabilizing leverage when the mandibular ridge lies buccal to the maxillary ridge on both sides. Reference: Zarb GA et al. Prosthodontic Treatment for Edentulous Patients. Posterior tooth arrangement. Page",
+                    "explanation": "Bilateral posterior crossbite positions teeth over the supporting ridges and limits destabilizing leverage when the mandibular ridge lies buccal to the maxillary ridge on both sides. Reference: Zarb GA et al. Prosthodontic Treatment for Edentulous Patients. Posterior tooth arrangement.",
                     "source": "SDLE bank"
                 },
                 {
@@ -902,7 +902,7 @@ const dentalRemovableProsthodontics = {
                         "Vertical force near the long axis"
                     ],
                     "answer": 0,
-                    "explanation": "Periodontal support tolerates forces directed along the tooth's long axis better than lateral or torquing forces. RPD design aims to minimize horizontal leverage on abutments through support, bracing, reciprocation, and stress control. Reference: Carr AB et al. McCracken's Removable Partial Prosthodontics. Biomechanics and control of forces on abutments. Page",
+                    "explanation": "Periodontal support tolerates forces directed along the tooth's long axis better than lateral or torquing forces. RPD design aims to minimize horizontal leverage on abutments through support, bracing, reciprocation, and stress control. Reference: Carr AB et al. McCracken's Removable Partial Prosthodontics. Biomechanics and control of forces on abutments.",
                     "source": "SDLE bank"
                 }
             ],
@@ -997,7 +997,7 @@ const dentalRemovableProsthodontics = {
                         "Increasing cusp height"
                     ],
                     "answer": 1,
-                    "explanation": "A resilient conditioner redistributes load while traumatized tissues recover before definitive impressions or reline/remake. Reference: Zarb GA et al. Prosthodontic Treatment for Edentulous Patients. Tissue conditioners. Page",
+                    "explanation": "A resilient conditioner redistributes load while traumatized tissues recover before definitive impressions or reline/remake. Reference: Zarb GA et al. Prosthodontic Treatment for Edentulous Patients. Tissue conditioners.",
                     "source": "SDLE bank"
                 },
                 {
@@ -1009,7 +1009,7 @@ const dentalRemovableProsthodontics = {
                         "Laboratory reline"
                     ],
                     "answer": 3,
-                    "explanation": "Residual-ridge remodeling after extraction commonly creates loss of adaptation. Once healing has stabilized, a definitive laboratory reline can refit a satisfactory denture base; severe design or occlusal defects may instead require remake. Reference: Zarb GA et al. Prosthodontic Treatment for Edentulous Patients. Immediate-denture maintenance and relining. Page",
+                    "explanation": "Residual-ridge remodeling after extraction commonly creates loss of adaptation. Once healing has stabilized, a definitive laboratory reline can refit a satisfactory denture base; severe design or occlusal defects may instead require remake. Reference: Zarb GA et al. Prosthodontic Treatment for Edentulous Patients. Immediate-denture maintenance and relining.",
                     "source": "SDLE bank"
                 },
                 {
@@ -1021,7 +1021,7 @@ const dentalRemovableProsthodontics = {
                         "Fabricate a new denture immediately"
                     ],
                     "answer": 0,
-                    "explanation": "A new wrought-wire retentive arm can often be attached to or incorporated into a repair of the existing framework. The abutment undercut, clasp design, metal fatigue, and cause of fracture must be corrected. Reference: Carr AB et al. McCracken's Removable Partial Prosthodontics. Repair of fractured clasp arms. Page",
+                    "explanation": "A new wrought-wire retentive arm can often be attached to or incorporated into a repair of the existing framework. The abutment undercut, clasp design, metal fatigue, and cause of fracture must be corrected. Reference: Carr AB et al. McCracken's Removable Partial Prosthodontics. Repair of fractured clasp arms.",
                     "source": "SDLE bank"
                 }
             ],
